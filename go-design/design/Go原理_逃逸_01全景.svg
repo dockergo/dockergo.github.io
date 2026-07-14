@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="500" viewBox="0 0 920 500" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="920" height="500" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">逃逸分析全景 · 栈分配 vs 堆分配的判定</text>
+
+  <!-- decision box (blue) -->
+  <rect x="290" y="50" width="340" height="62" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="460" y="77" font-size="12.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">判定：值 x 在其定义函数返回后仍可能被引用？</text>
+  <text x="460" y="97" font-size="10" fill="#5b7db1" text-anchor="middle">escape analysis · 编译期静态数据流分析</text>
+
+  <!-- branches -->
+  <path d="M460,112 V142 H245 V170" fill="none" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <path d="M460,112 V142 H675 V170" fill="none" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <text x="352" y="136" font-size="10.5" font-weight="600" fill="#4a8c60" text-anchor="middle">否 · 不被外部引用</text>
+  <text x="568" y="136" font-size="10.5" font-weight="600" fill="#a9822f" text-anchor="middle">是 · 活过函数栈帧</text>
+
+  <!-- stack card (green) -->
+  <rect x="55" y="172" width="380" height="94" rx="13" fill="#eef7f0" stroke="#bfe0c8" filter="url(#soft)"/>
+  <text x="71" y="196" font-size="13" font-weight="600" fill="#1d4a2b">留在栈 · stack allocation</text>
+  <text x="71" y="216" font-size="10.5" fill="#4a8c60">随栈帧自动回收 · 零 GC 成本 · 缓存局部性好</text>
+  <text x="71" y="234" font-size="10.5" fill="#4a8c60">分配几乎免费（仅移动 SP）</text>
+  <text x="71" y="252" font-size="10.5" fill="#4a8c60">new(T) / &amp;x 若不逃逸仍在栈 —— 不由语法定</text>
+
+  <!-- heap card (amber) -->
+  <rect x="485" y="172" width="380" height="94" rx="13" fill="#fdf6ec" stroke="#f0dcaf" filter="url(#soft)"/>
+  <text x="501" y="196" font-size="13" font-weight="600" fill="#6b4e16">逃逸到堆 · heap allocation</text>
+  <text x="501" y="216" font-size="10.5" fill="#a9822f">由 GC 管理 · 增加 GC 扫描与回收压力</text>
+  <text x="501" y="234" font-size="10.5" fill="#a9822f">分配更慢（走 mallocgc 路径）</text>
+  <text x="501" y="252" font-size="10.5" fill="#a9822f">逃逸越多 → 分配器 / GC 负载越重</text>
+
+  <!-- scenarios -->
+  <text x="55" y="300" font-size="11.5" font-weight="600" fill="#1d1d1f">典型逃逸场景（值的生命周期超出定义它的函数栈帧）</text>
+
+  <rect x="55" y="312" width="189" height="96" rx="11" fill="#fdf6ec" stroke="#f0dcaf"/>
+  <text x="68" y="337" font-size="11" font-weight="600" fill="#6b4e16">① 返回局部指针</text>
+  <text x="68" y="361" font-size="10" fill="#a9822f">return &amp;x —— x</text>
+  <text x="68" y="380" font-size="10" fill="#a9822f">活过函数，必逃逸</text>
+
+  <rect x="262" y="312" width="189" height="96" rx="11" fill="#fdf6ec" stroke="#f0dcaf"/>
+  <text x="275" y="337" font-size="11" font-weight="600" fill="#6b4e16">② 存入接口</text>
+  <text x="275" y="361" font-size="10" fill="#a9822f">any(x)：接口 data</text>
+  <text x="275" y="380" font-size="10" fill="#a9822f">需指针，常逃逸</text>
+
+  <rect x="469" y="312" width="189" height="96" rx="11" fill="#fdf6ec" stroke="#f0dcaf"/>
+  <text x="482" y="337" font-size="11" font-weight="600" fill="#6b4e16">③ 闭包捕获逃逸</text>
+  <text x="482" y="361" font-size="10" fill="#a9822f">闭包捕获且闭包或</text>
+  <text x="482" y="380" font-size="10" fill="#a9822f">容器本身逃逸</text>
+
+  <rect x="676" y="312" width="189" height="96" rx="11" fill="#fdf6ec" stroke="#f0dcaf"/>
+  <text x="689" y="337" font-size="11" font-weight="600" fill="#6b4e16">④ 大 / 不定对象</text>
+  <text x="689" y="361" font-size="10" fill="#a9822f">编译期大小不定的</text>
+  <text x="689" y="380" font-size="10" fill="#a9822f">大 slice / 变参</text>
+
+  <!-- note (purple) -->
+  <rect x="55" y="424" width="810" height="54" rx="12" fill="#f5f0fb" stroke="#ddcdf0"/>
+  <text x="71" y="447" font-size="11" font-weight="600" fill="#3d2a5a">要点</text>
+  <text x="71" y="467" font-size="10.5" fill="#7d5bb1">逃逸分析是纯编译期静态分析（运行期零判定开销）；它直接决定【分配器】的负载——留栈的对象越多，GC 压力越小。</text>
+</svg>

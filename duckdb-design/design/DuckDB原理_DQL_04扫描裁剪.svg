@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="470" viewBox="0 0 1020 470"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1020" height="470" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">扫描与裁剪 · 读得越少越快（以 WHERE year=2025 为例）</text>
+
+  <!-- 逻辑层次 -->
+  <rect x="30" y="50" width="420" height="330" rx="14" fill="#fff7e6" stroke="#f0dcae" filter="url(#soft)"/>
+  <text x="48" y="74" font-size="12.5" font-weight="600" fill="#7a4d00">表在存储里的层次（自顶向下裁剪）</text>
+
+  <rect x="48" y="88" width="384" height="40" rx="10" fill="#ffffff" stroke="#f0dcae"/>
+  <text x="240" y="113" font-size="11" font-weight="600" fill="#7a4d00" text-anchor="middle">DataTable → RowGroupCollection</text>
+
+  <rect x="48" y="140" width="120" height="220" rx="10" fill="#ffffff" stroke="#f0dcae"/>
+  <text x="108" y="162" font-size="10" font-weight="600" fill="#7a4d00" text-anchor="middle">RowGroup A</text>
+  <text x="108" y="180" font-size="8.5" fill="#9a7328" text-anchor="middle">122880 行</text>
+  <rect x="60" y="190" width="96" height="30" rx="6" fill="#eafaf1" stroke="#bce6cd"/><text x="108" y="209" font-size="8.5" fill="#0f5132" text-anchor="middle">year: 2023-24</text>
+  <text x="108" y="238" font-size="9" fill="#c0392b" text-anchor="middle" font-weight="600">✗ 裁掉</text>
+  <text x="108" y="254" font-size="8" fill="#b06a6a" text-anchor="middle">min/max 不含 2025</text>
+
+  <rect x="176" y="140" width="120" height="220" rx="10" fill="#ffffff" stroke="#f0dcae"/>
+  <text x="236" y="162" font-size="10" font-weight="600" fill="#7a4d00" text-anchor="middle">RowGroup B</text>
+  <text x="236" y="180" font-size="8.5" fill="#9a7328" text-anchor="middle">122880 行</text>
+  <rect x="188" y="190" width="96" height="30" rx="6" fill="#eafaf1" stroke="#bce6cd"/><text x="236" y="209" font-size="8.5" fill="#0f5132" text-anchor="middle">year: 2025</text>
+  <text x="236" y="238" font-size="9" fill="#0f5132" text-anchor="middle" font-weight="600">✓ 命中</text>
+  <rect x="188" y="252" width="96" height="24" rx="6" fill="#eef3fb" stroke="#bcd0ec"/><text x="236" y="268" font-size="8" fill="#1b2a4a" text-anchor="middle">ColumnSegment</text>
+  <rect x="188" y="280" width="96" height="24" rx="6" fill="#eef3fb" stroke="#bcd0ec"/><text x="236" y="296" font-size="8" fill="#1b2a4a" text-anchor="middle">压缩块解压</text>
+  <text x="236" y="324" font-size="8" fill="#9a7328" text-anchor="middle">只读需要的列</text>
+
+  <rect x="304" y="140" width="120" height="220" rx="10" fill="#ffffff" stroke="#f0dcae"/>
+  <text x="364" y="162" font-size="10" font-weight="600" fill="#7a4d00" text-anchor="middle">RowGroup C</text>
+  <text x="364" y="180" font-size="8.5" fill="#9a7328" text-anchor="middle">122880 行</text>
+  <rect x="316" y="190" width="96" height="30" rx="6" fill="#eafaf1" stroke="#bce6cd"/><text x="364" y="209" font-size="8.5" fill="#0f5132" text-anchor="middle">year: 2025-26</text>
+  <text x="364" y="238" font-size="9" fill="#0f5132" text-anchor="middle" font-weight="600">✓ 命中</text>
+  <text x="364" y="254" font-size="8" fill="#3f8f66" text-anchor="middle">再按向量级</text>
+  <text x="364" y="266" font-size="8" fill="#3f8f66" text-anchor="middle">过滤</text>
+
+  <!-- 三种裁剪手段 -->
+  <rect x="470" y="50" width="520" height="330" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="488" y="74" font-size="12.5" font-weight="600" fill="#1d1d1f">三层"少读"手段（优化器 + 扫描算子协作）</text>
+
+  <rect x="488" y="90" width="484" height="80" rx="11" fill="#f4eefb" stroke="#d9c9ef"/>
+  <text x="504" y="112" font-size="11.5" font-weight="600" fill="#3c1361">① RowGroup 裁剪（ROW_GROUP_PRUNER pass）</text>
+  <text x="504" y="132" font-size="10" fill="#7a5aa8">优化器把常量过滤条件与每个 RowGroup 的列统计（min/max zonemap）比对，</text>
+  <text x="504" y="150" font-size="10" fill="#7a5aa8">整段跳过不可能命中的 RowGroup —— 粗粒度、最省 I/O。</text>
+
+  <rect x="488" y="182" width="484" height="80" rx="11" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="504" y="204" font-size="11.5" font-weight="600" fill="#1b2a4a">② 谓词下推 + 投影下推（FILTER_PUSHDOWN / UNUSED_COLUMNS）</text>
+  <text x="504" y="224" font-size="10" fill="#5b7db1">把 WHERE 过滤推进扫描算子，边扫边滤；只读查询用到的列（列存天然）——</text>
+  <text x="504" y="242" font-size="10" fill="#5b7db1">未引用的列连解压都省掉。</text>
+
+  <rect x="488" y="274" width="484" height="90" rx="11" fill="#eafaf1" stroke="#bce6cd"/>
+  <text x="504" y="296" font-size="11.5" font-weight="600" fill="#0f5132">③ 后期物化（LATE_MATERIALIZATION）</text>
+  <text x="504" y="316" font-size="10" fill="#3f8f66">先用过滤/排序列定位命中行的 row id，最后才回取宽表其余列 —— </text>
+  <text x="504" y="334" font-size="10" fill="#3f8f66">避免搬运最终被丢弃的数据。配合自适应过滤（adaptive_filter）动态调整</text>
+  <text x="504" y="352" font-size="10" fill="#3f8f66">多个过滤条件的评估顺序，先算最能筛的。</text>
+
+  <line x1="450" y1="215" x2="470" y2="215" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+  <text x="30" y="410" font-size="10.5" fill="#86868b">粒度递进：RowGroup（段级）→ 向量（2048 行级）→ 行级 row id。越早裁掉越省——I/O、解压、CPU 依次递减。</text>
+  <text x="30" y="432" font-size="10.5" fill="#86868b">注：DuckDB 无用户手建的稀疏/跳数索引作为常规查询依赖；裁剪主要靠内建列统计 + ART（点查/约束）。</text>
+</svg>

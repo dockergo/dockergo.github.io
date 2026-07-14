@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="540" viewBox="0 0 920 540" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="920" height="540" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">SSA 表示 · Value / Block / Func（CFG）+ Op 语义与 .rules 重写规则</text>
+
+  <!-- Func container (blue = CFG owner) -->
+  <rect x="30" y="52" width="512" height="416" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="46" y="76" font-size="12.5" font-weight="600" fill="#1b2a4a">Func · 一个函数 = 一张控制流图 CFG</text>
+  <text x="46" y="94" font-size="10" fill="#5b7db1">持有若干 Block，块间以控制出口连边</text>
+
+  <!-- Block b1 (entry) -->
+  <rect x="58" y="108" width="200" height="176" rx="12" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="72" y="130" font-size="11.5" font-weight="600" fill="#1d1d1f">Block b1</text>
+  <text x="72" y="146" font-size="9.5" fill="#6e6e73">基本块 · 一串 Value + 一个控制出口</text>
+  <rect x="72" y="156" width="172" height="26" rx="6" fill="#f5f0fb" stroke="#ddcdf0"/>
+  <text x="82" y="173" font-size="10" fill="#3d2a5a">v1 = Arg &lt;int&gt;</text>
+  <rect x="72" y="186" width="172" height="26" rx="6" fill="#f5f0fb" stroke="#ddcdf0"/>
+  <text x="82" y="203" font-size="10" fill="#3d2a5a">v2 = Arg &lt;int&gt;</text>
+  <rect x="72" y="216" width="172" height="26" rx="6" fill="#f5f0fb" stroke="#ddcdf0"/>
+  <text x="82" y="233" font-size="10" fill="#3d2a5a">v3 = Add64 v1 v2</text>
+  <rect x="72" y="248" width="172" height="26" rx="6" fill="#fdf6ec" stroke="#f0dcaf"/>
+  <text x="82" y="265" font-size="10" fill="#6b4e16">If v4 → b2 else b3</text>
+
+  <!-- Block b2 -->
+  <rect x="58" y="304" width="200" height="98" rx="12" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="72" y="326" font-size="11.5" font-weight="600" fill="#1d1d1f">Block b2</text>
+  <rect x="72" y="336" width="172" height="26" rx="6" fill="#f5f0fb" stroke="#ddcdf0"/>
+  <text x="82" y="353" font-size="10" fill="#3d2a5a">v5 = Mul64 v3 v3</text>
+  <rect x="72" y="366" width="172" height="26" rx="6" fill="#eef7f0" stroke="#bfe0c8"/>
+  <text x="82" y="383" font-size="10" fill="#1d4a2b">Ret v5</text>
+
+  <!-- Block b3 -->
+  <rect x="342" y="304" width="182" height="98" rx="12" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="356" y="326" font-size="11.5" font-weight="600" fill="#1d1d1f">Block b3</text>
+  <rect x="356" y="336" width="154" height="26" rx="6" fill="#f5f0fb" stroke="#ddcdf0"/>
+  <text x="366" y="353" font-size="10" fill="#3d2a5a">v6 = Neg64 v3</text>
+  <rect x="356" y="366" width="154" height="26" rx="6" fill="#eef7f0" stroke="#bfe0c8"/>
+  <text x="366" y="383" font-size="10" fill="#1d4a2b">Ret v6</text>
+
+  <!-- CFG edges -->
+  <line x1="158" y1="284" x2="158" y2="302" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <text x="120" y="298" font-size="9" fill="#8e8e93">then</text>
+  <line x1="210" y1="284" x2="210" y2="294" stroke="#c7c7cc" stroke-width="1.5"/>
+  <line x1="210" y1="294" x2="433" y2="294" stroke="#c7c7cc" stroke-width="1.5"/>
+  <line x1="433" y1="294" x2="433" y2="302" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <text x="300" y="290" font-size="9" fill="#8e8e93">else</text>
+
+  <!-- Value anchor -->
+  <rect x="288" y="108" width="236" height="82" rx="12" fill="#f5f0fb" stroke="#ddcdf0" filter="url(#soft)"/>
+  <text x="302" y="130" font-size="11.5" font-weight="600" fill="#3d2a5a">Value · 单赋值三元</text>
+  <text x="302" y="149" font-size="10" fill="#7d5bb1">唯一 ID · Op（操作）· 参数列表</text>
+  <text x="302" y="167" font-size="10" fill="#7d5bb1">例 v3 = Add64 v1 v2（只赋值一次）</text>
+  <text x="302" y="183" font-size="9.5" fill="#a08fc0">value.go:21</text>
+
+  <!-- Block anchor -->
+  <rect x="288" y="204" width="236" height="80" rx="12" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="302" y="226" font-size="11.5" font-weight="600" fill="#1d1d1f">Block · 基本块</text>
+  <text x="302" y="245" font-size="10" fill="#6e6e73">顺序执行的一串 Value +</text>
+  <text x="302" y="262" font-size="10" fill="#6e6e73">末尾控制出口：If / Ret / Plain</text>
+  <text x="302" y="278" font-size="9.5" fill="#a3a3a8">block.go:13</text>
+
+  <!-- right column: Op semantics + rules -->
+  <!-- Op gen (purple) -->
+  <rect x="558" y="52" width="332" height="160" rx="14" fill="#f5f0fb" stroke="#ddcdf0" filter="url(#soft)"/>
+  <text x="574" y="76" font-size="12.5" font-weight="600" fill="#3d2a5a">Op · 操作语义</text>
+  <text x="574" y="95" font-size="10" fill="#7d5bb1">每个 Op 的类型/参数规格由 _gen 生成</text>
+  <rect x="574" y="106" width="300" height="42" rx="8" fill="#ffffff" stroke="#ddcdf0"/>
+  <text x="584" y="125" font-size="10" fill="#3a3a3c">机器无关 Op：Add64 / Const64 / Load…</text>
+  <text x="584" y="141" font-size="9.5" fill="#7d5bb1">lower 后换成机器相关 Op（如 AMD64ADDQ）</text>
+  <rect x="574" y="156" width="300" height="42" rx="8" fill="#eef7f0" stroke="#bfe0c8"/>
+  <text x="584" y="175" font-size="10" fill="#1d4a2b">代码生成器读 Op 表 → 知道如何翻指令</text>
+  <text x="584" y="191" font-size="9.5" fill="#4a8c60">Op 数量大，表驱动，避免手写分支</text>
+
+  <!-- rewrite rules (purple) -->
+  <rect x="558" y="228" width="332" height="240" rx="14" fill="#f5f0fb" stroke="#ddcdf0" filter="url(#soft)"/>
+  <text x="574" y="252" font-size="12.5" font-weight="600" fill="#3d2a5a">.rules · 重写规则（优化的表达方式）</text>
+  <text x="574" y="271" font-size="10" fill="#7d5bb1">左式模式匹配 SSA 子树，右式替换之</text>
+
+  <rect x="574" y="282" width="300" height="72" rx="8" fill="#ffffff" stroke="#ddcdf0"/>
+  <text x="584" y="302" font-size="10" font-weight="600" fill="#3d2a5a">常量折叠示例</text>
+  <text x="584" y="322" font-size="10" fill="#3a3a3c">(Add64 (Const64 c) (Const64 d))</text>
+  <text x="584" y="340" font-size="10" fill="#1d4a2b">&#160;&#160;=&gt; (Const64 [c+d])</text>
+
+  <rect x="574" y="362" width="300" height="46" rx="8" fill="#ffffff" stroke="#ddcdf0"/>
+  <text x="584" y="381" font-size="10" fill="#3a3a3c">两个常量相加 → 编译期直接算出结果</text>
+  <text x="584" y="398" font-size="9.5" fill="#7d5bb1">规则由工具展开成 Go 匹配代码，opt pass 应用</text>
+
+  <rect x="574" y="416" width="300" height="42" rx="8" fill="#fdf6ec" stroke="#f0dcaf"/>
+  <text x="584" y="435" font-size="9.5" fill="#6b4e16">规则里 =&gt; 与括号是纯文本 DSL；</text>
+  <text x="584" y="451" font-size="9.5" fill="#a9822f">含 &lt; &gt; &amp; 的类型标注需在源码中正确书写</text>
+
+  <!-- bottom note -->
+  <rect x="30" y="484" width="860" height="42" rx="11" fill="#f6f6f7" stroke="#e2e2e7"/>
+  <text x="46" y="503" font-size="10.5" font-weight="600" fill="#1d1d1f">「单赋值」的价值</text>
+  <text x="46" y="519" font-size="9.5" fill="#6e6e73">每个 Value 只被定义一次 → 数据流关系直接可读（def-use 唯一），使 cse / prove / 常量折叠等分析异常规整</text>
+</svg>

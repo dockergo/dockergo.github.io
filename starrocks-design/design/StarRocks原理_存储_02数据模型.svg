@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="420" viewBox="0 0 1080 420" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="420" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">StarRocks 四种数据模型 · KeysType</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">建表时定的存储语义;枚举在 tablet_schema.proto:45(DUP_KEYS=0 / UNIQUE_KEYS=1 / AGG_KEYS=2 / PRIMARY_KEYS=10),FE 侧 KeysType.java:17</text>
+
+  <!-- Card 1: Duplicate (amber) -->
+  <rect x="30" y="84" width="243" height="205" rx="13" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="151" y="112" font-size="11.5" font-weight="700" text-anchor="middle" fill="#5a3410">明细 Duplicate</text>
+  <rect x="96" y="124" width="110" height="20" rx="6" fill="#fff" stroke="#e8cf9a"/><text x="151" y="138" font-size="9" font-weight="600" text-anchor="middle" fill="#5a3410">DUP_KEYS = 0</text>
+  <rect x="86" y="152" width="130" height="20" rx="6" fill="#fdf6ea" stroke="#efdcb4"/><text x="151" y="166" font-size="9" text-anchor="middle" fill="#93762e">DUPLICATE KEY</text>
+  <text x="151" y="194" font-size="8.5" font-weight="600" text-anchor="middle" fill="#5a3410">不去重 · 全量留存</text>
+  <text x="151" y="212" font-size="8.3" text-anchor="middle" fill="#93762e">key 仅用于排序 / 前缀索引</text>
+  <text x="151" y="230" font-size="8.3" text-anchor="middle" fill="#93762e">仅追加,不做合并</text>
+  <text x="151" y="262" font-size="8.3" text-anchor="middle" fill="#93762e">读时跨 Rowset 归并</text>
+
+  <!-- Card 2: Aggregate (amber) -->
+  <rect x="289" y="84" width="243" height="205" rx="13" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="410" y="112" font-size="11.5" font-weight="700" text-anchor="middle" fill="#5a3410">聚合 Aggregate</text>
+  <rect x="355" y="124" width="110" height="20" rx="6" fill="#fff" stroke="#e8cf9a"/><text x="410" y="138" font-size="9" font-weight="600" text-anchor="middle" fill="#5a3410">AGG_KEYS = 2</text>
+  <rect x="345" y="152" width="130" height="20" rx="6" fill="#fdf6ea" stroke="#efdcb4"/><text x="410" y="166" font-size="9" text-anchor="middle" fill="#93762e">AGGREGATE KEY</text>
+  <text x="410" y="194" font-size="8.5" font-weight="600" text-anchor="middle" fill="#5a3410">同 key 按聚合函数合并</text>
+  <text x="410" y="212" font-size="8.3" text-anchor="middle" fill="#93762e">每列存 ColumnPB.aggregation</text>
+  <text x="410" y="230" font-size="8.3" text-anchor="middle" fill="#93762e">tablet_schema.proto:65</text>
+  <text x="410" y="262" font-size="8.3" text-anchor="middle" fill="#93762e">读时跨 Rowset 归并</text>
+
+  <!-- Card 3: Unique (amber, special case) -->
+  <rect x="548" y="84" width="243" height="205" rx="13" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="669" y="112" font-size="11.5" font-weight="700" text-anchor="middle" fill="#5a3410">更新 Unique</text>
+  <rect x="614" y="124" width="110" height="20" rx="6" fill="#fff" stroke="#e8cf9a"/><text x="669" y="138" font-size="9" font-weight="600" text-anchor="middle" fill="#5a3410">UNIQUE_KEYS = 1</text>
+  <rect x="604" y="152" width="130" height="20" rx="6" fill="#fdf6ea" stroke="#efdcb4"/><text x="669" y="166" font-size="9" text-anchor="middle" fill="#93762e">UNIQUE KEY</text>
+  <text x="669" y="194" font-size="8.5" font-weight="600" text-anchor="middle" fill="#5a3410">同 key 后写覆盖(REPLACE)</text>
+  <text x="669" y="212" font-size="8.3" text-anchor="middle" fill="#93762e">本质是聚合模型的特例</text>
+  <text x="669" y="230" font-size="8.3" text-anchor="middle" fill="#93762e">isAggregationFamily()=true</text>
+  <text x="669" y="262" font-size="8.3" text-anchor="middle" fill="#93762e">KeysType.java:23 · 读时归并</text>
+
+  <!-- Card 4: Primary Key (green) -->
+  <rect x="807" y="84" width="243" height="205" rx="13" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="928" y="112" font-size="11.5" font-weight="700" text-anchor="middle" fill="#12402a">主键 Primary Key</text>
+  <rect x="873" y="124" width="110" height="20" rx="6" fill="#fff" stroke="#bfe0cd"/><text x="928" y="138" font-size="9" font-weight="600" text-anchor="middle" fill="#12402a">PRIMARY_KEYS = 10</text>
+  <rect x="863" y="152" width="130" height="20" rx="6" fill="#e6f7ee" stroke="#bfe0cd"/><text x="928" y="166" font-size="9" text-anchor="middle" fill="#2f6f4f">PRIMARY KEY</text>
+  <text x="928" y="194" font-size="8.5" font-weight="600" text-anchor="middle" fill="#12402a">实时 upsert / delete</text>
+  <text x="928" y="212" font-size="8.3" text-anchor="middle" fill="#2f6f4f">读时无需归并去重</text>
+  <text x="928" y="230" font-size="8.3" text-anchor="middle" fill="#2f6f4f">持久化主键索引 + 删除向量</text>
+  <text x="928" y="262" font-size="8.3" text-anchor="middle" fill="#2f6f4f">去重挪到写期(见第三节)</text>
+
+  <!-- bottom summary: merge-on-read family vs write-time locate -->
+  <rect x="30" y="312" width="761" height="82" rx="12" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="46" y="334" font-size="10.5" font-weight="700" fill="#5a3410">明细 / 聚合 / 更新 —— 读时归并(Merge-on-Read)</text>
+  <text x="46" y="356" font-size="8.6" fill="#93762e">同 key 的多个版本分散在不同 Rowset,读时才跨 Rowset 合并(去重 / 聚合 / 覆盖)</text>
+  <text x="46" y="376" font-size="8.6" fill="#93762e">更新(Unique)= 聚合的 REPLACE 特例,三者共享同一条归并读路径</text>
+
+  <rect x="807" y="312" width="243" height="82" rx="12" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="823" y="334" font-size="10.5" font-weight="700" fill="#12402a">主键 —— 写时定位</text>
+  <text x="823" y="356" font-size="8.6" fill="#2f6f4f">主键索引直接记录"这行现在在哪"</text>
+  <text x="823" y="376" font-size="8.6" fill="#2f6f4f">读时直取活行,把去重成本挪到写期</text>
+
+  <line x1="410" y1="289" x2="410" y2="312" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="928" y1="289" x2="928" y2="312" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+</svg>

@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="560" viewBox="0 0 1060 560" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs><filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter></defs>
+  <rect width="1060" height="560" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">StorageLevel：5 个标志组合，速度 vs 内存 vs 容错权衡</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">StorageLevel.scala:39（useDisk/useMemory/useOffHeap/deserialized/replication:40-44）· cache()=persist(MEMORY_ONLY)（RDD.scala:205/:200）</text>
+  <!-- 5 flags -->
+  <rect x="40" y="72" width="980" height="60" rx="12" fill="#f4eefb" stroke="#d9c7ec"/>
+  <text x="60" y="94" font-size="10.5" font-weight="700" fill="#3d2a5a">5 个标志（StorageLevel private 构造）：</text>
+  <g font-size="8.5" text-anchor="middle">
+    <rect x="270" y="80" width="140" height="42" rx="7" fill="#fff" stroke="#d9c7ec"/><text x="340" y="98" font-weight="600" fill="#3d2a5a">useMemory</text><text x="340" y="113" fill="#7a5da5">用内存</text>
+    <rect x="420" y="80" width="130" height="42" rx="7" fill="#fff" stroke="#d9c7ec"/><text x="485" y="98" font-weight="600" fill="#3d2a5a">useDisk</text><text x="485" y="113" fill="#7a5da5">用磁盘</text>
+    <rect x="560" y="80" width="140" height="42" rx="7" fill="#fff" stroke="#d9c7ec"/><text x="630" y="98" font-weight="600" fill="#3d2a5a">useOffHeap</text><text x="630" y="113" fill="#7a5da5">堆外</text>
+    <rect x="710" y="80" width="150" height="42" rx="7" fill="#fff" stroke="#d9c7ec"/><text x="785" y="98" font-weight="600" fill="#3d2a5a">deserialized</text><text x="785" y="113" fill="#7a5da5">是否反序列化态</text>
+    <rect x="870" y="80" width="140" height="42" rx="7" fill="#fff" stroke="#d9c7ec"/><text x="940" y="98" font-weight="600" fill="#3d2a5a">replication</text><text x="940" y="113" fill="#7a5da5">副本数（默认1）</text>
+  </g>
+  <!-- table of levels -->
+  <g font-size="9">
+    <rect x="40" y="146" width="980" height="30" fill="#eef3fb" stroke="#bcd0ec"/>
+    <text x="130" y="166" font-weight="700" fill="#1b2a4a" text-anchor="middle">级别</text>
+    <text x="380" y="166" font-weight="700" fill="#1b2a4a" text-anchor="middle">内存/磁盘/序列化/副本</text>
+    <text x="760" y="166" font-weight="700" fill="#1b2a4a" text-anchor="middle">适用</text>
+    <rect x="40" y="176" width="980" height="30" fill="#f7fbff" stroke="#e6eef8"/>
+    <text x="130" y="196" font-weight="600" fill="#12402a" text-anchor="middle">MEMORY_ONLY（默认）</text><text x="380" y="196" fill="#4b4b50" text-anchor="middle">内存 · 反序列化 · 1</text><text x="760" y="196" fill="#4b4b50" text-anchor="middle">最快；装不下的分区丢（重算）</text>
+    <rect x="40" y="206" width="980" height="30" fill="#fff" stroke="#e6eef8"/>
+    <text x="130" y="226" font-weight="600" fill="#5a3410" text-anchor="middle">MEMORY_AND_DISK</text><text x="380" y="226" fill="#4b4b50" text-anchor="middle">内存+磁盘 · 反序列化 · 1</text><text x="760" y="226" fill="#4b4b50" text-anchor="middle">内存放不下溢到盘，不丢</text>
+    <rect x="40" y="236" width="980" height="30" fill="#f7fbff" stroke="#e6eef8"/>
+    <text x="130" y="256" font-weight="600" fill="#274a78" text-anchor="middle">MEMORY_ONLY_SER</text><text x="380" y="256" fill="#4b4b50" text-anchor="middle">内存 · 序列化 · 1</text><text x="760" y="256" fill="#4b4b50" text-anchor="middle">省内存，费 CPU（反序列化）</text>
+    <rect x="40" y="266" width="980" height="30" fill="#fff" stroke="#e6eef8"/>
+    <text x="130" y="286" font-weight="600" fill="#48484c" text-anchor="middle">DISK_ONLY</text><text x="380" y="286" fill="#4b4b50" text-anchor="middle">磁盘 · 序列化 · 1</text><text x="760" y="286" fill="#4b4b50" text-anchor="middle">全落盘，内存紧张时</text>
+    <rect x="40" y="296" width="980" height="30" fill="#f7fbff" stroke="#e6eef8"/>
+    <text x="130" y="316" font-weight="600" fill="#7a2230" text-anchor="middle">MEMORY_AND_DISK_2</text><text x="380" y="316" fill="#4b4b50" text-anchor="middle">内存+磁盘 · · 副本 2</text><text x="760" y="316" fill="#4b4b50" text-anchor="middle">存 2 份，抗节点故障</text>
+    <rect x="40" y="326" width="980" height="30" fill="#fff" stroke="#e6eef8"/>
+    <text x="130" y="346" font-weight="600" fill="#5a3410" text-anchor="middle">OFF_HEAP</text><text x="380" y="346" fill="#4b4b50" text-anchor="middle">堆外 · 序列化 · 1</text><text x="760" y="346" fill="#4b4b50" text-anchor="middle">Tungsten 堆外，绕 GC</text>
+  </g>
+  <rect x="40" y="372" width="980" height="76" rx="13" fill="#fdf9f0" stroke="#efe3cd"/>
+  <text x="60" y="396" font-size="11" font-weight="700" fill="#7a5a1e">如何选</text>
+  <text x="60" y="418" font-size="9.5" fill="#93762e">· 三维权衡：反序列化=快但占内存；序列化=省内存费 CPU；带 _2=多存副本抗故障（费空间）</text>
+  <text x="60" y="438" font-size="9" fill="#b08843">· 默认 MEMORY_ONLY 够快；大数据集防丢用 MEMORY_AND_DISK；内存紧用 _SER</text>
+  <rect x="40" y="460" width="980" height="56" rx="12" fill="#f7f7f9" stroke="#e6e6ea"/>
+  <text x="60" y="484" font-size="11" font-weight="700" fill="#1d1d1f">一句话</text>
+  <text x="60" y="506" font-size="10" fill="#4b4b50">StorageLevel 由 5 标志（内存/磁盘/堆外/序列化/副本）组合，cache 默认 MEMORY_ONLY——在速度、内存占用、容错间权衡。</text>
+</svg>

@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="530" viewBox="0 0 1080 530" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="530" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">StarRocks 心跳与 Tablet 上报对账 · HeartbeatMgr 探活 + ReportHandler 对账</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">FE 主动探活判存亡;BE 定期上报 Tablet,FE 按 reportVersion 排序对账,过期报丢弃</text>
+
+  <!-- FE side big container -->
+  <rect x="30" y="72" width="430" height="430" rx="13" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="50" y="96" font-size="12" font-weight="700" fill="#1b2a4a">FE(Leader)</text>
+
+  <!-- HeartbeatMgr -->
+  <rect x="50" y="112" width="390" height="150" rx="12" fill="#f3f7fc" stroke="#cfe0f2" filter="url(#soft)"/>
+  <text x="66" y="134" font-size="10.5" font-weight="700" fill="#274a78">HeartbeatMgr</text>
+  <text x="66" y="150" font-size="8" fill="#5b7db1">extends LeaderDaemon · system/HeartbeatMgr.java:87</text>
+  <text x="66" y="164" font-size="8" fill="#5b7db1">周期 heartbeat_timeout_second</text>
+  <rect x="66" y="176" width="358" height="34" rx="8" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="245" y="197" font-size="9" text-anchor="middle" fill="#1b2a4a">发 TMasterInfo 心跳探活 → 每个节点</text>
+  <rect x="66" y="216" width="358" height="34" rx="8" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="245" y="237" font-size="9" text-anchor="middle" fill="#1b2a4a">handleHbResponse 更新存活态 HbStatus</text>
+
+  <!-- ReportHandler -->
+  <rect x="50" y="278" width="390" height="212" rx="12" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="66" y="300" font-size="10.5" font-weight="700" fill="#5a3d78">ReportHandler</text>
+  <text x="66" y="316" font-size="8" fill="#8d6bb0">extends LeaderDaemon · leader/ReportHandler.java:152</text>
+  <text x="66" y="332" font-size="8" fill="#8d6bb0">handleReport → tabletReport(beId, tablets, reportVersion) :474</text>
+  <text x="66" y="354" font-size="9" font-weight="700" fill="#5a3d78">对账动作:</text>
+  <g>
+    <rect x="66" y="362" width="358" height="38" rx="8" fill="#fbeaea" stroke="#e6b8b8"/>
+    <text x="80" y="380" font-size="8.7" font-weight="600" fill="#8a2a2a">deleteFromMeta (:538)</text>
+    <text x="80" y="394" font-size="8" fill="#a5453a">BE 已无 → 从元数据删(持写锁分批让出)</text>
+  </g>
+  <g>
+    <rect x="66" y="404" width="358" height="38" rx="8" fill="#fff7e6" stroke="#e8cf9a"/>
+    <text x="80" y="422" font-size="8.7" font-weight="600" fill="#5a3410">handleMigration (:544)</text>
+    <text x="80" y="436" font-size="8" fill="#93762e">存储介质迁移 HDD ↔ SSD</text>
+  </g>
+  <g>
+    <rect x="66" y="446" width="358" height="38" rx="8" fill="#eafaf1" stroke="#bfe0cd"/>
+    <text x="80" y="464" font-size="8.7" font-weight="600" fill="#12402a">addReplica (:1567)</text>
+    <text x="80" y="478" font-size="8" fill="#2f6f4f">元数据需补的副本,加前再校验状态(:2421)</text>
+  </g>
+
+  <!-- BE/CN nodes -->
+  <rect x="620" y="112" width="430" height="150" rx="13" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="640" y="136" font-size="11.5" font-weight="700" fill="#5a3410">BE / CN 节点</text>
+  <text x="640" y="152" font-size="8" fill="#93762e">被探活方 + Tablet 上报发起方</text>
+  <g text-anchor="middle" font-size="8.5">
+    <rect x="640" y="164" width="126" height="80" rx="9" fill="#fef2e0" stroke="#e8cf9a"/><text x="703" y="188" font-size="9" font-weight="600" fill="#5a3410">BE-1</text><text x="703" y="208" fill="#93762e">回心跳</text><text x="703" y="224" fill="#93762e">定期上报 Tablet</text>
+    <rect x="776" y="164" width="126" height="80" rx="9" fill="#fef2e0" stroke="#e8cf9a"/><text x="839" y="188" font-size="9" font-weight="600" fill="#5a3410">BE-2</text><text x="839" y="208" fill="#93762e">回心跳</text><text x="839" y="224" fill="#93762e">上报 tablets+version</text>
+    <rect x="912" y="164" width="122" height="80" rx="9" fill="#fbeaea" stroke="#e6b8b8"/><text x="973" y="188" font-size="9" font-weight="600" fill="#8a2a2a">BE-3(dead)</text><text x="973" y="208" fill="#a5453a">连续心跳失败</text><text x="973" y="224" fill="#a5453a">副本→REPLICA_MISSING</text>
+  </g>
+
+  <!-- arrows FE<->BE -->
+  <path d="M440,193 L530,193 L530,180 L618,180" fill="none" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <text x="530" y="174" font-size="8" text-anchor="middle" fill="#86868b">① 发 TMasterInfo 心跳</text>
+  <path d="M618,210 L530,210 L530,224 L442,224" fill="none" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <text x="530" y="240" font-size="8" text-anchor="middle" fill="#86868b">② handleHbResponse</text>
+  <path d="M660,244 L660,300 L442,300 L442,320" fill="none" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <text x="560" y="294" font-size="8" text-anchor="middle" fill="#86868b">③ BE 定期上报 Tablet → ReportHandler</text>
+
+  <!-- reportVersion box -->
+  <rect x="620" y="278" width="430" height="120" rx="13" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="636" y="302" font-size="10.5" font-weight="700" fill="#1d1d1f">reportVersion · 排序丢弃过期报</text>
+  <g text-anchor="middle" font-size="8.5">
+    <rect x="636" y="314" width="180" height="66" rx="10" fill="#eafaf1" stroke="#bfe0cd"/><text x="726" y="338" font-size="9" font-weight="600" fill="#12402a">新报(version 大)</text><text x="726" y="358" fill="#2f6f4f">采纳,更新元数据</text><text x="726" y="374" fill="#2f6f4f">最终以最新为准</text>
+    <rect x="836" y="314" width="198" height="66" rx="10" fill="#fbeaea" stroke="#e6b8b8"/><text x="935" y="338" font-size="9" font-weight="600" fill="#8a2a2a">旧报(version 小)</text><text x="935" y="358" fill="#a5453a">丢弃,不覆盖新状态</text><text x="935" y="374" fill="#a5453a">防旧报导致状态错乱</text>
+  </g>
+
+  <!-- bottom note -->
+  <rect x="620" y="414" width="430" height="88" rx="13" fill="#f4eefb" stroke="#d9c7ec"/>
+  <text x="636" y="438" font-size="10" font-weight="700" fill="#5a3d78">对账闭环</text>
+  <text x="636" y="459" font-size="8.7" fill="#8d6bb0">· 心跳判存亡:节点连续失败标 dead,其上副本触发修复。</text>
+  <text x="636" y="477" font-size="8.7" fill="#8d6bb0">· 上报对账:以 BE 实况为准增删元数据副本(删/迁/补)。</text>
+  <text x="636" y="495" font-size="8.7" fill="#8d6bb0">· reportVersion 保证最终一致,过期报不回退状态。</text>
+</svg>

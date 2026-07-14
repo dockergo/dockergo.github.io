@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="560" viewBox="0 0 1080 560" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="560" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">StarRocks 存算分离 · 云原生表(Lake / Shared-Data)</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">数据交对象存储、Tablet 放置交 StarOS、计算节点 CN 无状态,靠 DataCache 分层缓存拉回本地盘级读延迟</text>
+
+  <!-- A: FE + StarManager (blue) -->
+  <rect x="30" y="70" width="1020" height="50" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="46" y="92" font-size="11" font-weight="700" fill="#1b2a4a">FE + StarManager · 放置权威(元数据 + Tablet 放置)</text>
+  <text x="46" y="110" font-size="8.5" fill="#5b7db1">云原生表 LakeTable extends OlapTable · fe/.../lake/LakeTable.java:58 —— 数据放对象存储,放置交 StarOS</text>
+
+  <!-- B: StarOSAgent (purple) -->
+  <rect x="30" y="140" width="1020" height="50" rx="12" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="46" y="162" font-size="11" font-weight="700" fill="#3d2a5a">StarOSAgent · lake/StarOSAgent.java:82 —— 建 shard group、解析某 shard 当前由哪个 CN 服务</text>
+  <text x="46" y="180" font-size="8.5" fill="#7a5a95">任何 CN 都能服务任何 Tablet(只需从对象存储拉元数据 + 数据)· tablet id 就是 StarOS Shard id</text>
+
+  <!-- C: CN row (blue, stateless), each with DataCache chip (green) -->
+  <g>
+    <rect x="30" y="210" width="324" height="106" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+    <text x="46" y="232" font-size="10.5" font-weight="700" fill="#1b2a4a">CN 1 · 纯计算 · 无状态</text>
+    <text x="46" y="250" font-size="8.3" fill="#5b7db1">从对象存储拉元数据 + 数据</text>
+    <rect x="44" y="262" width="296" height="42" rx="8" fill="#eafaf1" stroke="#bfe0cd"/><text x="58" y="281" font-size="8.6" font-weight="600" fill="#12402a">DataCache(本地)</text><text x="58" y="297" font-size="8" fill="#2f6f4f">内存 + 本地盘 starcache</text>
+
+    <rect x="378" y="210" width="324" height="106" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+    <text x="394" y="232" font-size="10.5" font-weight="700" fill="#1b2a4a">CN 2 · 纯计算 · 无状态</text>
+    <text x="394" y="250" font-size="8.3" fill="#5b7db1">挂了 StarOS 重分配 Shard 即可</text>
+    <rect x="392" y="262" width="296" height="42" rx="8" fill="#eafaf1" stroke="#bfe0cd"/><text x="406" y="281" font-size="8.6" font-weight="600" fill="#12402a">DataCache(本地)</text><text x="406" y="297" font-size="8" fill="#2f6f4f">内存 + 本地盘 starcache</text>
+
+    <rect x="726" y="210" width="324" height="106" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+    <text x="742" y="232" font-size="10.5" font-weight="700" fill="#1b2a4a">CN 3 · 可秒级弹性增减</text>
+    <text x="742" y="250" font-size="8.3" fill="#5b7db1">无需搬数据即可扩缩</text>
+    <rect x="740" y="262" width="296" height="42" rx="8" fill="#eafaf1" stroke="#bfe0cd"/><text x="754" y="281" font-size="8.6" font-weight="600" fill="#12402a">DataCache(本地)</text><text x="754" y="297" font-size="8" fill="#2f6f4f">内存 + 本地盘 starcache</text>
+  </g>
+
+  <!-- D: DataCache tiered (green) -->
+  <rect x="30" y="336" width="1020" height="72" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="46" y="358" font-size="11" font-weight="700" fill="#12402a">DataCache 分层缓存(前置在对象存储之前)· be/src/cache/datacache.h:49</text>
+  <rect x="46" y="368" width="300" height="30" rx="7" fill="#e6f7ee" stroke="#bfe0cd"/><text x="196" y="387" font-size="9" text-anchor="middle" fill="#12402a">第一层 · 内存缓存(最热)</text>
+  <rect x="358" y="368" width="300" height="30" rx="7" fill="#e6f7ee" stroke="#bfe0cd"/><text x="508" y="387" font-size="9" text-anchor="middle" fill="#12402a">第二层 · 本地盘 starcache</text>
+  <rect x="670" y="368" width="366" height="30" rx="7" fill="#fff" stroke="#bfe0cd"/><text x="853" y="387" font-size="8.6" text-anchor="middle" fill="#2f6f4f">回填由 LakeIOOptions{fill_data_cache, fill_meta_cache} 决定 · options.h:20</text>
+
+  <!-- E: Object store (amber) -->
+  <rect x="30" y="428" width="1020" height="56" rx="12" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="540" y="450" font-size="11" font-weight="700" text-anchor="middle" fill="#5a3410">对象存储 S3 / OSS(共享数据 + 版本化 TabletMetadata)</text>
+  <text x="540" y="470" font-size="8.5" text-anchor="middle" fill="#93762e">数据副本由对象存储管理;BE 侧 lake::Tablet 元数据驱动,Rowset 来自 get_rowsets(version) · lake/tablet.h:119</text>
+
+  <!-- flow arrows -->
+  <line x1="540" y1="120" x2="540" y2="140" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+  <line x1="540" y1="190" x2="540" y2="210" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+  <line x1="540" y1="316" x2="540" y2="336" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+  <path d="M508,408 L508,428" stroke="#c7c7cc" stroke-width="1.3" fill="none" marker-end="url(#ar)"/>
+  <path d="M572,428 L572,408" stroke="#c7c7cc" stroke-width="1.3" fill="none" marker-end="url(#ar)"/>
+  <text x="600" y="422" font-size="8" fill="#a1a1a6">未命中→回源 / 命中→本地盘级延迟</text>
+
+  <!-- facts strip -->
+  <rect x="30" y="500" width="1020" height="46" rx="10" fill="#ffffff" stroke="#ececf1"/>
+  <text x="46" y="518" font-size="9" font-weight="700" fill="#1d1d1f">关键事实</text>
+  <text x="46" y="536" font-size="8.3" fill="#6e6e73">· LakeTablet tablet id = StarOS Shard id:getShardId(){return getId();} · lake/LakeTablet.java:81</text>
+  <text x="560" y="518" font-size="8.3" fill="#6e6e73">· lake::TabletManager 按 tablet_id + LocationProvider 索引,与本地盘彻底解耦 · tablet_manager.h:61</text>
+  <text x="560" y="536" font-size="8.3" fill="#6e6e73">· 云原生主键索引落成 SSTable:LakePersistentIndex(LevelDB sstable + 布隆)· lake_persistent_index.h:44</text>
+</svg>

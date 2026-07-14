@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="500" viewBox="0 0 1000 500"
+     font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1000" height="500" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">训练闭环 · Keras 模型 + GradientTape + optimizer 一步训练</text>
+
+  <!-- 模型 -->
+  <rect x="30" y="52" width="940" height="86" rx="14" fill="#f4eefb" stroke="#d9c9ef" filter="url(#soft)"/>
+  <text x="52" y="76" font-size="12" font-weight="600" fill="#3c1361">① Keras Model / Layer —— 组织权重（每个 layer 持有 tf.Variable）</text>
+  <rect x="52" y="90" width="288" height="36" rx="9" fill="#ffffff" stroke="#d9c9ef"/><text x="196" y="113" font-size="9.5" fill="#3c1361" text-anchor="middle">layers 堆叠 · call(x) 定义前向</text>
+  <rect x="356" y="90" width="288" height="36" rx="9" fill="#ffffff" stroke="#d9c9ef"/><text x="500" y="113" font-size="9.5" fill="#3c1361" text-anchor="middle">model.trainable_variables 汇总权重</text>
+  <rect x="660" y="90" width="288" height="36" rx="9" fill="#ffffff" stroke="#d9c9ef"/><text x="804" y="113" font-size="9.5" fill="#3c1361" text-anchor="middle">变量在设备上持久、跨步更新</text>
+
+  <!-- 一步训练流水 -->
+  <rect x="30" y="158" width="940" height="210" rx="14" fill="#eafaf1" stroke="#bce6cd" filter="url(#soft)"/>
+  <text x="52" y="182" font-size="12.5" font-weight="600" fill="#0f5132">② 一步训练（train_step）—— GradientTape 记录前向，反向求梯度，optimizer 更新</text>
+  <rect x="52" y="196" width="200" height="70" rx="10" fill="#ffffff" stroke="#bce6cd"/><text x="152" y="224" font-size="9.5" font-weight="600" fill="#0f5132" text-anchor="middle">with GradientTape</text><text x="152" y="242" font-size="8.5" fill="#2f6f4f" text-anchor="middle">y = model(x)</text><text x="152" y="256" font-size="8.5" fill="#2f6f4f" text-anchor="middle">前向，tape 录 op</text>
+  <rect x="288" y="196" width="200" height="70" rx="10" fill="#ffffff" stroke="#bce6cd"/><text x="388" y="224" font-size="9.5" font-weight="600" fill="#0f5132" text-anchor="middle">loss = fn(y, t)</text><text x="388" y="242" font-size="8.5" fill="#2f6f4f" text-anchor="middle">算损失（标量）</text><text x="388" y="256" font-size="8.5" fill="#2f6f4f" text-anchor="middle">仍在 tape 内</text>
+  <rect x="524" y="196" width="200" height="70" rx="10" fill="#ffffff" stroke="#bce6cd"/><text x="624" y="224" font-size="9.5" font-weight="600" fill="#0f5132" text-anchor="middle">tape.gradient</text><text x="624" y="242" font-size="8.5" fill="#2f6f4f" text-anchor="middle">(loss, vars)</text><text x="624" y="256" font-size="8.5" fill="#2f6f4f" text-anchor="middle">逆序回放求 ∂loss/∂w</text>
+  <rect x="760" y="196" width="200" height="70" rx="10" fill="#f4eefb" stroke="#d9c9ef"/><text x="860" y="224" font-size="9.5" font-weight="600" fill="#3c1361" text-anchor="middle">optimizer</text><text x="860" y="242" font-size="8.5" fill="#7a4fb0" text-anchor="middle">.apply_gradients</text><text x="860" y="256" font-size="8.5" fill="#7a4fb0" text-anchor="middle">assign 更新权重</text>
+  <line x1="252" y1="231" x2="288" y2="231" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <line x1="488" y1="231" x2="524" y2="231" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <line x1="724" y1="231" x2="760" y2="231" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <!-- 回环 -->
+  <path d="M860,266 L860,296 L152,296 L152,266" stroke="#c7c7cc" stroke-width="1.4" fill="none" marker-end="url(#ar)"/>
+  <text x="506" y="312" font-size="9" fill="#a1a1a6" text-anchor="middle">下一个 batch 重复 —— 权重被 optimizer 逐步优化</text>
+  <text x="52" y="342" font-size="9.5" fill="#2f6f4f">backprop.py:705 GradientTape · 默认自动追踪读到的 trainable Variable；常量张量需 tape.watch()</text>
+  <text x="52" y="360" font-size="9.5" fill="#2f6f4f">整个 train_step 常用 @tf.function 包起来 → 追踪成图 → Grappler/XLA 优化提速</text>
+
+  <!-- 两种写法 -->
+  <rect x="30" y="388" width="940" height="92" rx="14" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="52" y="412" font-size="11.5" font-weight="600" fill="#1d1d1f">两种训练写法</text>
+  <text x="52" y="436" font-size="10" fill="#494950"><tspan font-weight="600" fill="#3c1361">高层</tspan>：model.compile(optimizer, loss) + model.fit(dataset) —— Keras 内部就是上面这套 train_step，帮你写好了循环。</text>
+  <text x="52" y="460" font-size="10" fill="#494950"><tspan font-weight="600" fill="#0f5132">自定义</tspan>：手写 GradientTape train_step —— 需要自定义损失/多优化器/GAN 等灵活场景时用。</text>
+</svg>

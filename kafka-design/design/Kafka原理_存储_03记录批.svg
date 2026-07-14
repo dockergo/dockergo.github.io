@@ -1,0 +1,107 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="556" viewBox="0 0 1080 556"
+     font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1080" height="556" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Kafka 记录批（DefaultRecordBatch magic v2）与追加路径</text>
+  <text x="30" y="50" font-size="12" fill="#a1a1a6">CRC-32C 覆盖 attributes 到批尾但排除 PartitionLeaderEpoch；写永远追加到 active segment 更新 LEO</text>
+
+  <!-- Record batch header layout -->
+  <text x="60" y="82" font-size="13" font-weight="700" fill="#5a3410">批头字段（DefaultRecordBatch.java:46）</text>
+  <!-- row of fields -->
+  <g>
+    <rect x="60" y="94" width="118" height="46" rx="9" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+    <text x="119" y="115" font-size="11" font-weight="600" fill="#5a3410" text-anchor="middle">BaseOffset</text>
+    <text x="119" y="131" font-size="9.5" fill="#93762e" text-anchor="middle">批起始 offset</text>
+
+    <rect x="184" y="94" width="118" height="46" rx="9" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+    <text x="243" y="115" font-size="11" font-weight="600" fill="#5a3410" text-anchor="middle">Length</text>
+    <text x="243" y="131" font-size="9.5" fill="#93762e" text-anchor="middle">批总长度</text>
+
+    <rect x="308" y="94" width="152" height="46" rx="9" fill="#fbeaea" stroke="#e6b8b8" filter="url(#soft)"/>
+    <text x="384" y="112" font-size="10.5" font-weight="600" fill="#7a2b2b" text-anchor="middle">PartitionLeaderEpoch</text>
+    <text x="384" y="130" font-size="9.5" fill="#a35555" text-anchor="middle">CRC 排除此字段</text>
+
+    <rect x="466" y="94" width="80" height="46" rx="9" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+    <text x="506" y="115" font-size="11" font-weight="600" fill="#5a3410" text-anchor="middle">Magic</text>
+    <text x="506" y="131" font-size="9.5" fill="#93762e" text-anchor="middle">= 2 (v2)</text>
+
+    <rect x="552" y="94" width="110" height="46" rx="9" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+    <text x="607" y="112" font-size="11" font-weight="600" fill="#12402a" text-anchor="middle">CRC</text>
+    <text x="607" y="130" font-size="9.5" fill="#2f6f4f" text-anchor="middle">CRC-32C</text>
+
+    <rect x="668" y="94" width="126" height="46" rx="9" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+    <text x="731" y="112" font-size="11" font-weight="600" fill="#5a3410" text-anchor="middle">Attributes</text>
+    <text x="731" y="130" font-size="9.5" fill="#93762e" text-anchor="middle">低3位=压缩编码</text>
+
+    <rect x="800" y="94" width="100" height="46" rx="9" fill="#f4eefb" stroke="#dcc9f0" filter="url(#soft)"/>
+    <text x="850" y="112" font-size="11" font-weight="600" fill="#4a2b6b" text-anchor="middle">ProducerId</text>
+    <text x="850" y="130" font-size="9.5" fill="#7c5aa6" text-anchor="middle">幂等 PID</text>
+
+    <rect x="906" y="94" width="114" height="46" rx="9" fill="#f4eefb" stroke="#dcc9f0" filter="url(#soft)"/>
+    <text x="963" y="112" font-size="11" font-weight="600" fill="#4a2b6b" text-anchor="middle">BaseSequence</text>
+    <text x="963" y="130" font-size="9.5" fill="#7c5aa6" text-anchor="middle">Seq + RecordsCount</text>
+  </g>
+
+  <!-- CRC span bracket -->
+  <polyline points="552,150 552,158 1020,158 1020,150" fill="none" stroke="#2f6f4f" stroke-width="1.3"/>
+  <text x="786" y="174" font-size="10.5" fill="#2f6f4f" text-anchor="middle">CRC-32C 覆盖 Attributes 到批尾（Broker 盖 epoch 不用重算，:67）</text>
+  <text x="384" y="174" font-size="10.5" fill="#a35555" text-anchor="middle">↑ epoch 在 CRC 覆盖范围外</text>
+  <text x="731" y="192" font-size="10.5" fill="#93762e" text-anchor="middle">COMPRESSION_CODEC_MASK = 0x07（:133），另有事务/控制标记位</text>
+
+  <!-- Append path -->
+  <rect x="60" y="212" width="960" height="150" rx="13" fill="#f5faf6" stroke="#cfe6d5" filter="url(#soft)"/>
+  <text x="80" y="238" font-size="13" font-weight="700" fill="#2c5a3a">追加路径（Leader 侧）</text>
+  <rect x="80" y="256" width="170" height="86" rx="10" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="165" y="286" font-size="11.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">appendAsLeader</text>
+  <text x="165" y="306" font-size="10" fill="#5b7db1" text-anchor="middle">UnifiedLog.java:1020</text>
+  <text x="165" y="324" font-size="10" fill="#5b7db1" text-anchor="middle">→ 私有 append (:1115)</text>
+
+  <rect x="284" y="256" width="170" height="86" rx="10" fill="#fff7e6" stroke="#e8cf9a"/>
+  <text x="369" y="286" font-size="11.5" font-weight="600" fill="#5a3410" text-anchor="middle">maybeRoll</text>
+  <text x="369" y="306" font-size="10" fill="#93762e" text-anchor="middle">判是否滚新段</text>
+  <text x="369" y="324" font-size="10" fill="#93762e" text-anchor="middle">UnifiedLog.java:1234</text>
+
+  <rect x="488" y="256" width="180" height="86" rx="10" fill="#fff7e6" stroke="#e8cf9a"/>
+  <text x="578" y="286" font-size="11.5" font-weight="600" fill="#5a3410" text-anchor="middle">localLog.append</text>
+  <text x="578" y="306" font-size="10" fill="#93762e" text-anchor="middle">写 active segment</text>
+  <text x="578" y="324" font-size="10" fill="#93762e" text-anchor="middle">更新 LEO（LocalLog:527）</text>
+
+  <rect x="702" y="256" width="298" height="86" rx="10" fill="#fff7e6" stroke="#e8cf9a"/>
+  <text x="851" y="286" font-size="11.5" font-weight="600" fill="#5a3410" text-anchor="middle">LogSegment.append</text>
+  <text x="851" y="306" font-size="10" fill="#93762e" text-anchor="middle">追加 FileRecords + 条件加索引</text>
+  <text x="851" y="324" font-size="10" fill="#93762e" text-anchor="middle">LogSegment.java:251,271</text>
+
+  <polyline points="250,299 284,299" fill="none" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <polyline points="454,299 488,299" fill="none" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <polyline points="668,299 702,299" fill="none" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- Roll triggers -->
+  <rect x="60" y="384" width="960" height="146" rx="13" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="80" y="410" font-size="13" font-weight="700" fill="#5a3410">滚段触发（shouldRoll，LogSegment.java:168）—— 任一满足即滚新 active segment</text>
+  <rect x="80" y="426" width="222" height="88" rx="10" fill="#ffffff" stroke="#e8cf9a"/>
+  <text x="191" y="458" font-size="12" font-weight="600" fill="#5a3410" text-anchor="middle">段大小超</text>
+  <text x="191" y="480" font-size="12" font-weight="700" fill="#8a5a1e" text-anchor="middle">segment.bytes</text>
+  <text x="191" y="500" font-size="10" fill="#93762e" text-anchor="middle">数据文件到上限</text>
+
+  <rect x="314" y="426" width="222" height="88" rx="10" fill="#ffffff" stroke="#e8cf9a"/>
+  <text x="425" y="458" font-size="12" font-weight="600" fill="#5a3410" text-anchor="middle">非空且超</text>
+  <text x="425" y="480" font-size="12" font-weight="700" fill="#8a5a1e" text-anchor="middle">segment.ms</text>
+  <text x="425" y="500" font-size="10" fill="#93762e" text-anchor="middle">段存活到时限</text>
+
+  <rect x="548" y="426" width="222" height="88" rx="10" fill="#ffffff" stroke="#e8cf9a"/>
+  <text x="659" y="458" font-size="12" font-weight="600" fill="#5a3410" text-anchor="middle">索引满</text>
+  <text x="659" y="480" font-size="11" fill="#93762e" text-anchor="middle">.index / .timeindex</text>
+  <text x="659" y="500" font-size="10" fill="#93762e" text-anchor="middle">映射空间写尽</text>
+
+  <rect x="782" y="426" width="238" height="88" rx="10" fill="#ffffff" stroke="#e8cf9a"/>
+  <text x="901" y="458" font-size="12" font-weight="600" fill="#5a3410" text-anchor="middle">offset 超相对 int 范围</text>
+  <text x="901" y="480" font-size="10.5" fill="#93762e" text-anchor="middle">相对 offset 用 4 字节</text>
+  <text x="901" y="500" font-size="10" fill="#93762e" text-anchor="middle">超出须换基准 offset</text>
+</svg>

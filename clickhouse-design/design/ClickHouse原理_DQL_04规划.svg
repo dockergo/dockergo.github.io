@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="560" viewBox="0 0 1060 560" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1060" height="560" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">规划：QueryTree → QueryPlan（IQueryPlanStep 组成的逻辑算子树）</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">Planner::buildQueryPlanIfNeeded (Planner.cpp:1373) · FROM/JOIN 子树 buildJoinTreeQueryPlan (:1616)</text>
+
+  <!-- example query plan tree -->
+  <text x="45" y="86" font-size="11" font-weight="700" fill="#274a78">例：SELECT sum(v) FROM t WHERE d='2024-01' GROUP BY k ORDER BY 1 LIMIT 10</text>
+  <g text-anchor="middle" font-size="8.5">
+    <rect x="420" y="98" width="220" height="40" rx="9" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/><text x="530" y="116" font-size="9.5" font-weight="600" fill="#1b2a4a">LimitStep (LIMIT 10)</text><text x="530" y="130" fill="#5b7db1">顶层</text>
+    <rect x="420" y="152" width="220" height="40" rx="9" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/><text x="530" y="170" font-size="9.5" font-weight="600" fill="#1b2a4a">SortingStep (ORDER BY)</text>
+    <rect x="420" y="206" width="220" height="40" rx="9" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/><text x="530" y="224" font-size="9.5" font-weight="600" fill="#1b2a4a">AggregatingStep (GROUP BY k)</text>
+    <rect x="420" y="260" width="220" height="40" rx="9" fill="#f3f7fc" stroke="#cfe0f2" filter="url(#soft)"/><text x="530" y="278" font-size="9.5" font-weight="600" fill="#274a78">FilterStep (WHERE d=…)</text>
+    <rect x="380" y="314" width="300" height="52" rx="9" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/><text x="530" y="334" font-size="9.5" font-weight="600" fill="#5a3410">ReadFromMergeTree</text><text x="530" y="350" fill="#93762e">源步：读存储（后续接收裁剪条件）</text>
+  </g>
+  <g stroke="#c7c7cc" stroke-width="1.5" fill="none">
+    <line x1="530" y1="138" x2="530" y2="152" marker-end="url(#ar)"/>
+    <line x1="530" y1="192" x2="530" y2="206" marker-end="url(#ar)"/>
+    <line x1="530" y1="246" x2="530" y2="260" marker-end="url(#ar)"/>
+    <line x1="530" y1="300" x2="530" y2="314" marker-end="url(#ar)"/>
+  </g>
+  <text x="700" y="128" font-size="8.5" fill="#8aa6cf">↑ 数据从底向上流</text>
+  <text x="700" y="340" font-size="8.5" fill="#8aa6cf">从叶（读）到根（LIMIT）</text>
+
+  <!-- join tree -->
+  <rect x="40" y="98" width="330" height="268" rx="13" fill="#f6f2fb" stroke="#d9c9ec"/>
+  <text x="205" y="120" font-size="11" font-weight="700" fill="#3d2a5a" text-anchor="middle">FROM/JOIN 子树独立构建</text>
+  <text x="60" y="142" font-size="9" fill="#7a5da5">buildJoinTreeQueryPlan（:1616）</text>
+  <text x="60" y="162" font-size="9" fill="#7a5da5">· 为每个表源建 ReadFromMergeTree</text>
+  <text x="60" y="180" font-size="9" fill="#7a5da5">· 为 JOIN 建 JoinStep</text>
+  <text x="60" y="198" font-size="9" fill="#7a5da5">· 此期选定 join 算法</text>
+  <text x="70" y="216" font-size="8.5" fill="#9a7cc4">chooseJoinAlgorithm（PlannerJoins.cpp:1219）</text>
+  <rect x="60" y="228" width="290" height="120" rx="9" fill="#faf7fd" stroke="#d9c9ec"/>
+  <text x="205" y="248" font-size="9" font-weight="600" fill="#3d2a5a" text-anchor="middle">QueryPlan 是"逻辑计划"</text>
+  <text x="205" y="268" font-size="8.5" fill="#7a5da5" text-anchor="middle">· 描述"做什么"（算子 + 顺序）</text>
+  <text x="205" y="286" font-size="8.5" fill="#7a5da5" text-anchor="middle">· 尚未绑定物理并行度/线程</text>
+  <text x="205" y="304" font-size="8.5" fill="#7a5da5" text-anchor="middle">· 优化 pass 在此树上做变换</text>
+  <text x="205" y="326" font-size="8.5" fill="#9a7cc4" text-anchor="middle">· 之后才 buildQueryPipeline</text>
+  <text x="205" y="342" font-size="8.5" fill="#9a7cc4" text-anchor="middle">转成物理 Processors 图</text>
+
+  <!-- right note -->
+  <rect x="700" y="152" width="320" height="214" rx="13" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="860" y="174" font-size="11" font-weight="700" fill="#12402a" text-anchor="middle">IQueryPlanStep：可组合的算子</text>
+  <text x="720" y="196" font-size="9" fill="#2f6f4f">常见 Step：</text>
+  <g text-anchor="start" font-size="8.5" fill="#2f6f4f">
+    <text x="730" y="216">· ReadFromMergeTree（源）</text>
+    <text x="730" y="234">· FilterStep（过滤）</text>
+    <text x="730" y="252">· ExpressionStep（表达式）</text>
+    <text x="730" y="270">· AggregatingStep（聚合）</text>
+    <text x="730" y="288">· SortingStep（排序）</text>
+    <text x="730" y="306">· JoinStep（连接）</text>
+    <text x="730" y="324">· LimitStep / UnionStep</text>
+  </g>
+  <text x="860" y="352" font-size="8.5" fill="#4c8567" text-anchor="middle">每个 Step 知道如何 updatePipeline</text>
+
+  <rect x="40" y="386" width="980" height="76" rx="12" fill="#f7f7f9" stroke="#e6e6ea"/>
+  <text x="60" y="410" font-size="11" font-weight="700" fill="#1d1d1f">一句话</text>
+  <text x="60" y="432" font-size="10" fill="#4b4b50">规划把语义树 QueryTree 变成逻辑算子树 QueryPlan：一棵从"读存储"叶子到"LIMIT"根、由 IQueryPlanStep 组成的树，</text>
+  <text x="60" y="449" font-size="10" fill="#4b4b50">描述"做什么、什么顺序"（含 join 算法选择），但还没绑定物理并行度——那是下一步优化与 Pipeline 构建的事。</text>
+</svg>

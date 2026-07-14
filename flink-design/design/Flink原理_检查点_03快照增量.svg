@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="520" viewBox="0 0 1080 520" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="520" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Flink 原理 · 快照（同步建资源 + 异步写盘 + 增量）</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">同步阶段只建资源不阻塞;异步阶段写/传;RocksDB 增量只传新增 SST 复用未变</text>
+
+  <!-- Phase: sync -->
+  <rect x="40" y="70" width="470" height="120" rx="13" fill="#f3f7fc" stroke="#cfe0f2" filter="url(#soft)"/>
+  <text x="56" y="92" font-size="11" font-weight="700" fill="#274a78">同步阶段（前台 · 短暂,不阻塞记录）</text>
+  <text x="56" y="110" font-size="8.2" fill="#5b7db1">AbstractStreamOperator.snapshotState(...) 返回 OperatorSnapshotFutures</text>
+  <g font-size="8.4" fill="#274a78">
+    <rect x="56" y="120" width="438" height="28" rx="7" fill="#ffffff" stroke="#cfe0f2"/><text x="70" y="138">拿状态引用 / 建快照资源(不拷数据)</text>
+    <rect x="56" y="154" width="438" height="28" rx="7" fill="#ffffff" stroke="#cfe0f2"/><text x="70" y="172">用户函数 CheckpointedFunction.snapshotState</text>
+  </g>
+
+  <line x1="510" y1="130" x2="546" y2="130" stroke="#86868b" stroke-width="1.6" marker-end="url(#ar)"/>
+  <text x="528" y="122" font-size="7.6" text-anchor="middle" fill="#6e6e73">交棒</text>
+
+  <!-- Phase: async -->
+  <rect x="546" y="70" width="494" height="120" rx="13" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="562" y="92" font-size="11" font-weight="700" fill="#5a3410">异步阶段（后台 · 真正写/传）</text>
+  <text x="562" y="110" font-size="8.2" fill="#93762e">AsyncSnapshotCallable + SnapshotStrategyRunner</text>
+  <g font-size="8.4" fill="#5a3410">
+    <rect x="562" y="120" width="462" height="28" rx="7" fill="#fdf6ea" stroke="#efdcb4"/><text x="576" y="138">把状态写盘 / 上传远端存储(HDFS/S3)</text>
+    <rect x="562" y="154" width="462" height="28" rx="7" fill="#fdf6ea" stroke="#efdcb4"/><text x="576" y="172">与前台记录处理并行,基本不停顿</text>
+  </g>
+
+  <line x1="540" y1="190" x2="540" y2="212" stroke="#86868b" stroke-width="1.6" marker-end="url(#ar)"/>
+
+  <!-- Incremental (RocksDB) -->
+  <rect x="40" y="214" width="1000" height="188" rx="14" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+  <text x="56" y="236" font-size="11" font-weight="700" fill="#5a3410">增量检查点（RocksDB · RocksIncrementalSnapshotStrategy）</text>
+  <text x="56" y="253" font-size="8.4" fill="#93762e">只上传新增的 SST 文件、复用未变的(uploadedSstFiles 跟踪)——大状态作业省大量 IO</text>
+
+  <!-- previous checkpoint SST set -->
+  <text x="56" y="278" font-size="9" font-weight="600" fill="#5a3410">上次检查点已上传的 SST</text>
+  <g text-anchor="middle" font-size="8" fill="#5a3410">
+    <rect x="56" y="286" width="90" height="30" rx="6" fill="#eafaf1" stroke="#bfe0cd"/><text x="101" y="305">SST-1</text>
+    <rect x="154" y="286" width="90" height="30" rx="6" fill="#eafaf1" stroke="#bfe0cd"/><text x="199" y="305">SST-2</text>
+    <rect x="252" y="286" width="90" height="30" rx="6" fill="#eafaf1" stroke="#bfe0cd"/><text x="297" y="305">SST-3</text>
+  </g>
+
+  <!-- this checkpoint -->
+  <text x="56" y="342" font-size="9" font-weight="600" fill="#5a3410">本次检查点 · 只传新增,复用未变</text>
+  <g text-anchor="middle" font-size="8" fill="#5a3410">
+    <rect x="56" y="350" width="90" height="30" rx="6" fill="#f0f0f4" stroke="#d2d2d7"/><text x="101" y="365" fill="#48484a">SST-1</text><text x="101" y="376" font-size="6.6" fill="#6e6e73">复用</text>
+    <rect x="154" y="350" width="90" height="30" rx="6" fill="#f0f0f4" stroke="#d2d2d7"/><text x="199" y="365" fill="#48484a">SST-2</text><text x="199" y="376" font-size="6.6" fill="#6e6e73">复用</text>
+    <rect x="252" y="350" width="90" height="30" rx="6" fill="#f0f0f4" stroke="#d2d2d7"/><text x="297" y="365" fill="#48484a">SST-3</text><text x="297" y="376" font-size="6.6" fill="#6e6e73">复用</text>
+    <rect x="350" y="350" width="90" height="30" rx="6" fill="#eafaf1" stroke="#bfe0cd"/><text x="395" y="365" fill="#12402a">SST-4</text><text x="395" y="376" font-size="6.6" fill="#2f6f4f">新增·上传</text>
+  </g>
+
+  <!-- arrow to handle -->
+  <line x1="470" y1="330" x2="620" y2="330" stroke="#86868b" stroke-width="1.6" marker-end="url(#ar)"/>
+  <text x="545" y="322" font-size="7.6" text-anchor="middle" fill="#93762e">产出</text>
+
+  <rect x="628" y="286" width="396" height="96" rx="12" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="826" y="312" font-size="10" font-weight="700" text-anchor="middle" fill="#12402a">IncrementalRemoteKeyedStateHandle</text>
+  <text x="826" y="332" font-size="8.2" text-anchor="middle" fill="#2f6f4f">引用复用的旧 SST + 本次新增 SST</text>
+  <text x="826" y="350" font-size="8.2" text-anchor="middle" fill="#2f6f4f">= 一份"增量状态句柄"</text>
+  <text x="826" y="368" font-size="7.8" text-anchor="middle" fill="#2f6f4f">开关 setEnableIncrementalCheckpointing</text>
+
+  <!-- bottom banner -->
+  <rect x="40" y="416" width="1000" height="42" rx="12" fill="#f0f0f4" stroke="#d2d2d7"/>
+  <text x="540" y="442" font-size="9.5" font-weight="700" text-anchor="middle" fill="#48484a">要点:大状态作业强烈建议开增量检查点——每次只传变化的 SST,省上传 IO</text>
+
+  <text x="40" y="480" font-size="8.4" fill="#6e6e73">同步/异步两阶段是"检查点不暂停处理"的关键:同步只在热路径短暂建资源,重活(写盘/上传)全在后台异步做。</text>
+</svg>

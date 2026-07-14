@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="940" height="560" viewBox="0 0 940 560" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="940" height="560" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">抢占双机制 · 异步信号抢占 与 协作式栈检查</text>
+
+  <!-- trigger -->
+  <rect x="330" y="50" width="280" height="66" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="470" y="76" font-size="13" font-weight="600" fill="#1b2a4a" text-anchor="middle">preemptone(pp)</text>
+  <text x="470" y="96" font-size="10.5" fill="#5b7db1" text-anchor="middle">要抢占某个跑太久的 G（sysmon / GC 发起）</text>
+  <text x="596" y="70" font-size="9" fill="#5b7db1" text-anchor="end">proc.go:6917</text>
+
+  <line x1="410" y1="116" x2="290" y2="150" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <line x1="530" y1="116" x2="650" y2="150" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- LEFT: cooperative (green -> ends with red flaw) -->
+  <rect x="40" y="152" width="420" height="358" rx="13" fill="#eef7f0" stroke="#bfe0c8" filter="url(#soft)"/>
+  <text x="60" y="180" font-size="13" font-weight="600" fill="#1d4a2b">① 协作式抢占 · morestack 栈检查</text>
+  <text x="60" y="199" font-size="10.5" fill="#4a8c60">编译器在每个函数序言插入栈检查</text>
+
+  <rect x="60" y="212" width="380" height="52" rx="10" fill="#ffffff" stroke="#bfe0c8"/>
+  <text x="74" y="234" font-size="11" font-weight="600" fill="#1d4a2b">置哨兵：stackguard0 = stackPreempt</text>
+  <text x="74" y="252" font-size="9.5" fill="#4a8c60">stackPreempt 是一个极大值哨兵（stack.go:133）</text>
+  <line x1="250" y1="264" x2="250" y2="278" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <rect x="60" y="280" width="380" height="52" rx="10" fill="#ffffff" stroke="#bfe0c8"/>
+  <text x="74" y="302" font-size="11" font-weight="600" fill="#1d4a2b">下次函数调用：序言比较 SP 与 stackguard0</text>
+  <text x="74" y="320" font-size="9.5" fill="#4a8c60">哨兵使检查"必失败" → 进入 morestack</text>
+  <line x1="250" y1="332" x2="250" y2="346" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <rect x="60" y="348" width="380" height="50" rx="10" fill="#ffffff" stroke="#bfe0c8"/>
+  <text x="74" y="370" font-size="11" font-weight="600" fill="#1d4a2b">morestack → newstack 识别哨兵</text>
+  <text x="74" y="388" font-size="9.5" fill="#4a8c60">发现是抢占请求 → 切到 g0，让出该 G</text>
+  <line x1="250" y1="398" x2="250" y2="412" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- flaw box (red) -->
+  <rect x="60" y="414" width="380" height="82" rx="11" fill="#fbeeee" stroke="#f0c4c4"/>
+  <text x="74" y="438" font-size="11.5" font-weight="600" fill="#7a1f1f">缺陷 · 紧密循环抢占不了</text>
+  <text x="74" y="459" font-size="10" fill="#b15b5b">无函数调用的死循环（如 for {}）永不进 morestack，</text>
+  <text x="74" y="477" font-size="10" fill="#b15b5b">哨兵永远检查不到 → Go 1.14 前此 G 无法被抢占</text>
+
+  <!-- RIGHT: async signal (blue) -->
+  <rect x="480" y="152" width="420" height="358" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="500" y="180" font-size="13" font-weight="600" fill="#1b2a4a">② 异步抢占 · 信号（Go 1.14+）</text>
+  <text x="500" y="199" font-size="10.5" fill="#5b7db1">门控 preemptMSupported &amp;&amp; asyncpreemptoff==0</text>
+  <text x="880" y="199" font-size="9" fill="#5b7db1" text-anchor="end">proc.go:6940</text>
+
+  <rect x="500" y="212" width="380" height="52" rx="10" fill="#ffffff" stroke="#cfe0f2"/>
+  <text x="514" y="234" font-size="11" font-weight="600" fill="#1b2a4a">preemptM(mp)：向目标 M 发 SIGURG</text>
+  <text x="514" y="252" font-size="9.5" fill="#5b7db1">不依赖被抢占 G 是否调用函数</text>
+  <text x="866" y="230" font-size="9" fill="#5b7db1" text-anchor="end">signal_unix.go:369</text>
+  <line x1="690" y1="264" x2="690" y2="278" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <rect x="500" y="280" width="380" height="52" rx="10" fill="#ffffff" stroke="#cfe0f2"/>
+  <text x="514" y="302" font-size="11" font-weight="600" fill="#1b2a4a">信号处理器捕获 SIGURG</text>
+  <text x="514" y="320" font-size="9.5" fill="#5b7db1">在安全点判断可抢占 → 注入调用 asyncPreempt</text>
+  <line x1="690" y1="332" x2="690" y2="346" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <rect x="500" y="348" width="380" height="52" rx="10" fill="#ffffff" stroke="#cfe0f2"/>
+  <text x="514" y="370" font-size="11" font-weight="600" fill="#1b2a4a">asyncPreempt 保存寄存器现场</text>
+  <text x="514" y="388" font-size="9.5" fill="#5b7db1">切到 g0 让出，G 置 _Gpreempted 待恢复</text>
+  <text x="866" y="366" font-size="9" fill="#5b7db1" text-anchor="end">preempt.go:305</text>
+  <line x1="690" y1="400" x2="690" y2="414" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- solves box (green) -->
+  <rect x="500" y="416" width="380" height="82" rx="11" fill="#eef7f0" stroke="#bfe0c8"/>
+  <text x="514" y="440" font-size="11.5" font-weight="600" fill="#1d4a2b">解决 · 紧密循环也能抢占</text>
+  <text x="514" y="461" font-size="10" fill="#4a8c60">信号可在任意安全点打断，不需函数调用点，</text>
+  <text x="514" y="479" font-size="10" fill="#4a8c60">补齐协作式的盲区 → GC STW 与公平调度得以保障</text>
+
+  <!-- bottom center note -->
+  <text x="470" y="536" font-size="10.5" fill="#6e6e73" text-anchor="middle">两机制并存：能进 morestack 就走协作式（开销低）；紧密循环等盲区由异步信号兜底。发起者主要是 sysmon（长跑 G）与 GC（STW 前停到安全点）。</text>
+</svg>

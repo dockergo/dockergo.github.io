@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="900" viewBox="0 0 1060 900" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1060" height="900" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">数据组织：Database → Table(MergeTree) → Partition → Part → Column/Stream → Granule/Mark → Page</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">核心信条：INSERT 直接落一个不可变 Part（无 MemTable/WAL）；主键是稀疏索引不是唯一约束</text>
+
+  <!-- Logical band -->
+  <rect x="24" y="66" width="1012" height="250" rx="16" fill="#f3f7fc" stroke="#e3ecf7"/>
+  <text x="42" y="88" font-size="12.5" font-weight="600" fill="#274a78">逻辑组织层（元数据 · .sql + Keeper）</text>
+  <!-- Physical band -->
+  <rect x="24" y="330" width="1012" height="546" rx="16" fill="#fdf9f0" stroke="#efe3cd"/>
+  <text x="42" y="352" font-size="12.5" font-weight="600" fill="#7a5a1e">物理存储层（本地盘上的不可变文件 · 一个 Part = 一个目录）</text>
+
+  <g text-anchor="middle">
+    <!-- Logical nodes -->
+    <rect x="420" y="100" width="220" height="46" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/><text x="530" y="120" font-size="12.5" font-weight="600" fill="#1b2a4a">Database</text><text x="530" y="137" font-size="9.5" fill="#5b7db1">命名空间 · Atomic/Replicated 引擎</text>
+    <rect x="360" y="162" width="340" height="52" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/><text x="530" y="184" font-size="12.5" font-weight="600" fill="#1b2a4a">Table · ENGINE = MergeTree(族)</text><text x="530" y="201" font-size="9.5" fill="#5b7db1">ORDER BY 排序键 · PARTITION BY · 列 Schema</text>
+    <rect x="380" y="230" width="300" height="66" rx="11" fill="#e9f1fb" stroke="#c4d8f0" filter="url(#soft)"/><text x="530" y="252" font-size="12" font-weight="600" fill="#1b2a4a">Partition 分区</text><text x="530" y="270" font-size="9.5" fill="#5b7db1">PARTITION BY 表达式的取值分组</text><text x="530" y="285" font-size="9.5" fill="#5b7db1">仅逻辑边界：DROP/TTL/move 的单位</text>
+
+    <!-- Physical: Parts row -->
+    <rect x="120" y="372" width="270" height="60" rx="11" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/><text x="255" y="395" font-size="11.5" font-weight="600" fill="#5a3410">Part　202401_1_1_0</text><text x="255" y="412" font-size="9" fill="#93762e">partition_minBlk_maxBlk_level</text><text x="255" y="425" font-size="9" fill="#93762e">一次 INSERT 的产物</text>
+    <rect x="410" y="372" width="270" height="60" rx="11" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/><text x="545" y="395" font-size="11.5" font-weight="600" fill="#5a3410">Part　202401_2_2_0</text><text x="545" y="412" font-size="9" fill="#93762e">不可变 · 后台 merge 才合并</text><text x="545" y="425" font-size="9" fill="#93762e">active/outdated 两态</text>
+    <rect x="700" y="372" width="270" height="60" rx="11" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/><text x="835" y="395" font-size="11.5" font-weight="600" fill="#5a3410">Part　202401_1_2_1</text><text x="835" y="412" font-size="9" fill="#93762e">merge 产物：min_max 合并 · level+1</text><text x="835" y="425" font-size="9" fill="#93762e">_1 = mutation 版本</text>
+
+    <!-- Part dir contents -->
+    <rect x="150" y="470" width="760" height="70" rx="12" fill="#fdf6ea" stroke="#efdcb4"/>
+    <text x="530" y="490" font-size="11" font-weight="600" fill="#5a3410" text-anchor="middle">一个 Part 目录里的文件（元数据 + 数据 + 索引）</text>
+    <text x="185" y="512" font-size="9.5" fill="#93762e" text-anchor="start">· columns.txt　列与类型</text>
+    <text x="185" y="527" font-size="9.5" fill="#93762e" text-anchor="start">· count.txt　总行数</text>
+    <text x="405" y="512" font-size="9.5" fill="#93762e" text-anchor="start">· checksums.txt　校验</text>
+    <text x="405" y="527" font-size="9.5" fill="#93762e" text-anchor="start">· partition.dat / minmax_*.idx</text>
+    <text x="640" y="512" font-size="9.5" fill="#93762e" text-anchor="start">· primary.idx　稀疏主键</text>
+    <text x="640" y="527" font-size="9.5" fill="#93762e" text-anchor="start">· 列 .bin / .mrk*　数据+标记</text>
+
+    <!-- Two part formats -->
+    <rect x="120" y="576" width="400" height="128" rx="12" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+    <text x="320" y="597" font-size="11.5" font-weight="700" fill="#5a3410">Wide 格式（大 Part · 默认 ≥10MB）</text>
+    <text x="320" y="614" font-size="9" fill="#93762e">每列独立文件 · 列级 IO 友好</text>
+    <rect x="140" y="626" width="110" height="62" rx="8" fill="#fdf6ea" stroke="#efdcb4"/><text x="195" y="650" font-size="9.5" fill="#5a3410">id.bin</text><text x="195" y="666" font-size="9.5" fill="#5a3410">id.mrk2</text><text x="195" y="681" font-size="8.5" fill="#93762e">列①</text>
+    <rect x="262" y="626" width="110" height="62" rx="8" fill="#fdf6ea" stroke="#efdcb4"/><text x="317" y="650" font-size="9.5" fill="#5a3410">ts.bin</text><text x="317" y="666" font-size="9.5" fill="#5a3410">ts.mrk2</text><text x="317" y="681" font-size="8.5" fill="#93762e">列②</text>
+    <rect x="384" y="626" width="118" height="62" rx="8" fill="#fdf6ea" stroke="#efdcb4"/><text x="443" y="650" font-size="9.5" fill="#5a3410">val.bin</text><text x="443" y="666" font-size="9.5" fill="#5a3410">val.mrk2</text><text x="443" y="681" font-size="8.5" fill="#93762e">列③</text>
+
+    <rect x="560" y="576" width="350" height="128" rx="12" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+    <text x="735" y="597" font-size="11.5" font-weight="700" fill="#5a3410">Compact 格式（小 Part）</text>
+    <text x="735" y="614" font-size="9" fill="#93762e">所有列挤进单文件 · 省 inode/寻道</text>
+    <rect x="585" y="626" width="300" height="62" rx="8" fill="#fdf6ea" stroke="#efdcb4"/><text x="735" y="652" font-size="10" font-weight="600" fill="#5a3410">data.bin ＋ data.mrk3</text><text x="735" y="672" font-size="9" fill="#93762e">列①列②列③ 顺序拼接于一文件</text>
+
+    <!-- Granule / Mark / Page bottom -->
+    <rect x="120" y="742" width="380" height="112" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+    <text x="310" y="763" font-size="11.5" font-weight="700" fill="#12402a">Granule 粒度 + Mark 标记</text>
+    <text x="310" y="781" font-size="9" fill="#2f6f4f">index_granularity 默认 8192 行 = 1 granule</text>
+    <rect x="140" y="792" width="340" height="50" rx="8" fill="#f2fbf6" stroke="#cdeadb"/>
+    <text x="310" y="810" font-size="9.5" fill="#12402a">Mark = (offset_in_compressed_file,</text>
+    <text x="310" y="825" font-size="9.5" fill="#12402a">offset_in_decompressed_block)</text>
+    <text x="310" y="838" font-size="8.5" fill="#2f6f4f">.mrk* 把 granule 映射到 .bin 中的物理位置</text>
+
+    <rect x="530" y="742" width="380" height="112" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+    <text x="720" y="763" font-size="11.5" font-weight="700" fill="#12402a">Page / 压缩块（IO + 编码 + 缓存单位）</text>
+    <text x="720" y="781" font-size="9" fill="#2f6f4f">列数据按压缩块存放 · codec 编码 → 压缩</text>
+    <rect x="550" y="792" width="340" height="50" rx="8" fill="#f2fbf6" stroke="#cdeadb"/>
+    <text x="720" y="811" font-size="9.5" fill="#12402a">读取时按 MarkRange 定位块 → 解压 → 向量化 Block</text>
+    <text x="720" y="828" font-size="8.5" fill="#2f6f4f">StoragePageCache / UncompressedCache 缓存于此</text>
+  </g>
+
+  <!-- arrows logical -->
+  <g stroke="#c7c7cc" stroke-width="1.5" fill="none">
+    <line x1="530" y1="146" x2="530" y2="162" marker-end="url(#ar)"/>
+    <line x1="530" y1="214" x2="530" y2="230" marker-end="url(#ar)"/>
+    <path d="M530,296 L530,352 L255,352 L255,372" marker-end="url(#ar)"/>
+    <path d="M530,296 L530,352 L545,352 L545,372" marker-end="url(#ar)"/>
+    <path d="M530,296 L530,352 L835,352 L835,372" marker-end="url(#ar)"/>
+    <path d="M545,432 L545,470" marker-end="url(#ar)"/>
+    <path d="M320,540 L320,576" marker-end="url(#ar)"/>
+    <path d="M735,540 L735,576" marker-end="url(#ar)"/>
+  </g>
+  <!-- merge arrow -->
+  <path d="M390,402 L410,402" stroke="#c7c7cc" stroke-width="1.4" fill="none" marker-end="url(#ar)"/>
+  <path d="M545,432 C620,450 700,450 720,432" stroke="#d8b48a" stroke-width="1.4" fill="none" stroke-dasharray="4 3" marker-end="url(#ar)"/>
+  <text x="690" y="452" font-size="8.5" fill="#b08843" text-anchor="middle">后台 merge</text>
+  <text x="70" y="490" font-size="9" fill="#a1a1a6" text-anchor="start" transform="rotate(-90 70 490)">Wide / Compact 二选一</text>
+</svg>

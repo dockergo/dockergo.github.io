@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="480" viewBox="0 0 1000 480"
+     font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1000" height="480" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">执行引擎 · 图模式数据流调度 vs eager 逐算子</text>
+
+  <!-- 图模式 Executor -->
+  <rect x="30" y="52" width="600" height="290" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="52" y="76" font-size="12.5" font-weight="600" fill="#1b2a4a">图模式：Executor 数据流调度（executor.cc:283 ExecutorState）</text>
+  <text x="52" y="98" font-size="9.5" fill="#5b7db1">节点入度归零即 ready → 执行 → 把输出传给后继 → 后继就绪则入队</text>
+
+  <!-- 迷你图 -->
+  <rect x="60" y="116" width="120" height="40" rx="8" fill="#ffffff" stroke="#bcd0ec"/><text x="120" y="140" font-size="9" fill="#1b2a4a" text-anchor="middle">A（就绪）</text>
+  <rect x="60" y="176" width="120" height="40" rx="8" fill="#ffffff" stroke="#bcd0ec"/><text x="120" y="200" font-size="9" fill="#1b2a4a" text-anchor="middle">B（就绪）</text>
+  <rect x="240" y="146" width="120" height="40" rx="8" fill="#eafaf1" stroke="#bce6cd"/><text x="300" y="170" font-size="9" fill="#0f5132" text-anchor="middle">C（等 A,B）</text>
+  <rect x="420" y="146" width="120" height="40" rx="8" fill="#ffffff" stroke="#bcd0ec"/><text x="480" y="170" font-size="9" fill="#1b2a4a" text-anchor="middle">D</text>
+  <line x1="180" y1="136" x2="240" y2="158" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+  <line x1="180" y1="196" x2="240" y2="174" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+  <line x1="360" y1="166" x2="420" y2="166" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+
+  <rect x="60" y="232" width="250" height="44" rx="9" fill="#ffffff" stroke="#bcd0ec"/><text x="185" y="254" font-size="9" font-weight="600" fill="#1b2a4a" text-anchor="middle">PropagateOutputs</text><text x="185" y="270" font-size="8" fill="#5b7db1" text-anchor="middle">A,B 完成→C 入度归零→就绪</text>
+  <rect x="326" y="232" width="278" height="44" rx="9" fill="#ffffff" stroke="#bcd0ec"/><text x="465" y="254" font-size="9" font-weight="600" fill="#1b2a4a" text-anchor="middle">ScheduleReady → 线程池并行执行</text><text x="465" y="270" font-size="8" fill="#5b7db1" text-anchor="middle">无依赖的节点天然并行</text>
+  <text x="52" y="302" font-size="9.5" fill="#5b7db1">图先按设备切分（partition），跨设备边插 Send/Recv 节点；每设备一个 Executor</text>
+  <text x="52" y="322" font-size="9" fill="#86868b">DirectSession 驱动本地图执行（direct_session.cc）</text>
+
+  <!-- eager -->
+  <rect x="650" y="52" width="320" height="290" rx="14" fill="#f4eefb" stroke="#d9c9ef" filter="url(#soft)"/>
+  <text x="672" y="76" font-size="12.5" font-weight="600" fill="#3c1361">eager 模式</text>
+  <text x="672" y="98" font-size="9.5" fill="#7a4fb0">无图、无调度器，逐 op 立即执行</text>
+  <rect x="672" y="112" width="278" height="44" rx="9" fill="#ffffff" stroke="#d9c9ef"/><text x="811" y="139" font-size="9" fill="#3c1361" text-anchor="middle">EagerLocalExecute（execute.cc:1734）</text>
+  <line x1="811" y1="156" x2="811" y2="170" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+  <rect x="672" y="170" width="278" height="44" rx="9" fill="#ffffff" stroke="#d9c9ef"/><text x="811" y="197" font-size="9" fill="#3c1361" text-anchor="middle">查 KernelAndDevice → 执行</text>
+  <line x1="811" y1="214" x2="811" y2="228" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+  <rect x="672" y="228" width="278" height="44" rx="9" fill="#eafaf1" stroke="#bce6cd"/><text x="811" y="255" font-size="9" fill="#0f5132" text-anchor="middle">可异步：AsyncExecuteNode 入队</text>
+  <text x="672" y="296" font-size="9" fill="#a58fc9">GPU 上 op 异步下发到 stream，</text>
+  <text x="672" y="314" font-size="9" fill="#a58fc9">Python 侧不阻塞等结果</text>
+
+  <!-- 收尾 -->
+  <rect x="30" y="362" width="940" height="98" rx="14" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="52" y="386" font-size="11.5" font-weight="600" fill="#1d1d1f">两条执行路径</text>
+  <text x="52" y="410" font-size="10" fill="#494950"><tspan font-weight="600" fill="#1b2a4a">图模式</tspan>：整图交给 Executor，按数据依赖自动并行、跨设备 Send/Recv；tf.function/SavedModel 走这条。</text>
+  <text x="52" y="434" font-size="10" fill="#494950"><tspan font-weight="600" fill="#3c1361">eager 模式</tspan>：一个 op 一次 EagerLocalExecute，靠 CUDA stream 异步拿并行；调试友好但无跨 op 调度优化。</text>
+  <text x="52" y="456" font-size="9.5" fill="#7a2a2a">共同点：最终都落到 OpKernel::Compute()；区别在"谁来编排一批 op 的执行顺序与并行"。</text>
+</svg>

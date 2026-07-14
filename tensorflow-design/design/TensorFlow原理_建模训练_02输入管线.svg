@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="440" viewBox="0 0 1000 440"
+     font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1000" height="440" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">tf.data 输入管线 · 声明式变换 + 后台预取</text>
+
+  <!-- 管线 -->
+  <rect x="30" y="52" width="940" height="120" rx="14" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="52" y="76" font-size="12.5" font-weight="600" fill="#5a3410">Dataset 变换链（惰性，声明式；dataset_ops.py:137 DatasetV2）</text>
+  <rect x="52" y="92" width="166" height="60" rx="10" fill="#ffffff" stroke="#e8cf9a"/><text x="135" y="116" font-size="9.5" font-weight="600" fill="#5a3410" text-anchor="middle">from_tensor_slices</text><text x="135" y="134" font-size="8.5" fill="#93762e" text-anchor="middle">源 :745</text>
+  <rect x="234" y="92" width="150" height="60" rx="10" fill="#ffffff" stroke="#e8cf9a"/><text x="309" y="116" font-size="9.5" font-weight="600" fill="#5a3410" text-anchor="middle">map(f)</text><text x="309" y="134" font-size="8.5" fill="#93762e" text-anchor="middle">逐元素变换</text>
+  <rect x="400" y="92" width="150" height="60" rx="10" fill="#ffffff" stroke="#e8cf9a"/><text x="475" y="116" font-size="9.5" font-weight="600" fill="#5a3410" text-anchor="middle">shuffle</text><text x="475" y="134" font-size="8.5" fill="#93762e" text-anchor="middle">缓冲区乱序</text>
+  <rect x="566" y="92" width="150" height="60" rx="10" fill="#ffffff" stroke="#e8cf9a"/><text x="641" y="116" font-size="9.5" font-weight="600" fill="#5a3410" text-anchor="middle">batch :1855</text><text x="641" y="134" font-size="8.5" fill="#93762e" text-anchor="middle">攒成批</text>
+  <rect x="732" y="92" width="216" height="60" rx="10" fill="#eafaf1" stroke="#bce6cd"/><text x="840" y="116" font-size="9.5" font-weight="600" fill="#0f5132" text-anchor="middle">prefetch(AUTOTUNE) :1241</text><text x="840" y="134" font-size="8.5" fill="#2f6f4f" text-anchor="middle">后台预取下一批</text>
+  <line x1="218" y1="122" x2="234" y2="122" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+  <line x1="384" y1="122" x2="400" y2="122" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+  <line x1="550" y1="122" x2="566" y2="122" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+  <line x1="716" y1="122" x2="732" y2="122" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+
+  <!-- overlap 时序 -->
+  <rect x="30" y="192" width="940" height="150" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="52" y="216" font-size="12" font-weight="600" fill="#1b2a4a">prefetch 让"数据准备"与"训练计算"在后台 overlap（AUTOTUNE 自动调缓冲）</text>
+  <text x="66" y="244" font-size="9.5" fill="#5b7db1">CPU 输入线程：</text>
+  <rect x="164" y="232" width="120" height="22" rx="6" fill="#fff7e6" stroke="#e8cf9a"/><text x="224" y="247" font-size="8.5" fill="#5a3410" text-anchor="middle">备 batch 2</text>
+  <rect x="292" y="232" width="120" height="22" rx="6" fill="#fff7e6" stroke="#e8cf9a"/><text x="352" y="247" font-size="8.5" fill="#5a3410" text-anchor="middle">备 batch 3</text>
+  <rect x="420" y="232" width="120" height="22" rx="6" fill="#fff7e6" stroke="#e8cf9a"/><text x="480" y="247" font-size="8.5" fill="#5a3410" text-anchor="middle">备 batch 4</text>
+  <text x="66" y="286" font-size="9.5" fill="#5b7db1">GPU 计算线程：</text>
+  <rect x="164" y="274" width="120" height="22" rx="6" fill="#eafaf1" stroke="#bce6cd"/><text x="224" y="289" font-size="8.5" fill="#0f5132" text-anchor="middle">训练 batch 1</text>
+  <rect x="292" y="274" width="120" height="22" rx="6" fill="#eafaf1" stroke="#bce6cd"/><text x="352" y="289" font-size="8.5" fill="#0f5132" text-anchor="middle">训练 batch 2</text>
+  <rect x="420" y="274" width="120" height="22" rx="6" fill="#eafaf1" stroke="#bce6cd"/><text x="480" y="289" font-size="8.5" fill="#0f5132" text-anchor="middle">训练 batch 3</text>
+  <text x="620" y="266" font-size="9.5" fill="#1b2a4a">GPU 训练第 N 批时，</text>
+  <text x="620" y="284" font-size="9.5" fill="#1b2a4a">CPU 已在备第 N+1 批 →</text>
+  <text x="620" y="302" font-size="9.5" fill="#1b2a4a">GPU 不空等数据</text>
+  <text x="66" y="326" font-size="9" fill="#a1a1a6">num_parallel_calls=AUTOTUNE 让 map 并行；AUTOTUNE = -1，运行时按吞吐动态调（dataset_ops.py:102）</text>
+
+  <!-- 收尾 -->
+  <rect x="30" y="362" width="940" height="58" rx="14" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="52" y="386" font-size="10.5" fill="#494950">口诀：<tspan font-weight="600" fill="#5a3410">source → map/shuffle/batch → prefetch</tspan>。惰性声明、迭代时才拉数据；prefetch 把 IO/预处理挪到后台，喂饱加速器。</text>
+  <text x="52" y="406" font-size="10.5" fill="#7a2a2a">GPU 利用率低、卡在等数据，第一件事就是加 prefetch(AUTOTUNE) 和 map 并行。</text>
+</svg>

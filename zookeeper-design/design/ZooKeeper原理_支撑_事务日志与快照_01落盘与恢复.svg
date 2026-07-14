@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="520" viewBox="0 0 960 520"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="960" height="520" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">持久化：WAL（TxnLog）+ 模糊快照（Snapshot）→ 恢复 = 快照 + 回放日志</text>
+
+  <!-- 写盘路径 -->
+  <rect x="30" y="52" width="900" height="150" rx="14" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="48" y="76" font-size="12" font-weight="600" fill="#7a4d00">写盘路径（SyncRequestProcessor 驱动）</text>
+  <rect x="60" y="94" width="180" height="48" rx="10" fill="#ffffff" stroke="#efdcb4"/><text x="150" y="114" font-size="9.5" font-weight="600" fill="#7a4d00" text-anchor="middle">① append 事务</text><text x="150" y="130" font-size="8" fill="#9a7328" text-anchor="middle">写入 TxnLog buffer</text>
+  <rect x="290" y="94" width="180" height="48" rx="10" fill="#ffffff" stroke="#efdcb4"/><text x="380" y="114" font-size="9.5" font-weight="600" fill="#7a4d00" text-anchor="middle">② 批量 flush</text><text x="380" y="130" font-size="8" fill="#9a7328" text-anchor="middle">commit() → channel.force</text>
+  <rect x="520" y="94" width="180" height="48" rx="10" fill="#fbeaea" stroke="#e7c3c3"/><text x="610" y="114" font-size="9.5" font-weight="600" fill="#7a2a2a" text-anchor="middle">③ fsync 落盘</text><text x="610" y="130" font-size="8" fill="#7a2a2a" text-anchor="middle">forceSync=yes（:155）</text>
+  <rect x="750" y="94" width="160" height="48" rx="10" fill="#eafaf1" stroke="#bce6cd"/><text x="830" y="114" font-size="9.5" font-weight="600" fill="#0f5132" text-anchor="middle">④ 回 Ack / 返回</text><text x="830" y="130" font-size="8" fill="#3f8f66" text-anchor="middle">已持久才算数</text>
+  <line x1="240" y1="118" x2="290" y2="118" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="470" y1="118" x2="520" y2="118" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="700" y1="118" x2="750" y2="118" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <text x="48" y="166" font-size="9" fill="#9a7328">· 预分配（FilePadding）：日志文件提前撑到固定大小，避免频繁扩展元数据写；magic "ZKLG"（FileTxnLog.java:102）。</text>
+  <text x="48" y="184" font-size="9" fill="#9a7328">· 批量：SyncRequestProcessor 把多条事务攒 batch 一次 flush + fsync，降低 fsync 次数（commit:394 → force:411）。</text>
+
+  <!-- 快照 -->
+  <rect x="30" y="220" width="440" height="180" rx="14" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="48" y="244" font-size="12" font-weight="600" fill="#2c5a3a">周期快照（fuzzy snapshot）</text>
+  <text x="48" y="266" font-size="9" fill="#2f6f4f">shouldSnapshot（SyncRequestProcessor:143）：</text>
+  <text x="48" y="282" font-size="9" fill="#2f6f4f">logCount &gt; snapCount/2 + randRoll</text>
+  <text x="48" y="298" font-size="9" fill="#2f6f4f">→ takeSnapshot：把整棵 DataTree 序列化</text>
+  <rect x="48" y="310" width="400" height="30" rx="7" fill="#ffffff" stroke="#cfe6d5"/><text x="248" y="329" font-size="8.5" fill="#2c5a3a" text-anchor="middle">snapshot.&lt;zxid&gt; 文件（含 zxid 水位）</text>
+  <text x="48" y="358" font-size="9" fill="#2f6f4f">· "模糊"：快照时不停写，故快照内可能含</text>
+  <text x="48" y="374" font-size="9" fill="#2f6f4f">部分未来事务 → 靠幂等 processTxn 修正。</text>
+  <text x="48" y="392" font-size="8" fill="#86868b">randRoll 打散各节点快照时刻，避免同时卡顿</text>
+
+  <!-- 恢复 -->
+  <rect x="490" y="220" width="440" height="180" rx="14" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="508" y="244" font-size="12" font-weight="600" fill="#1b2a4a">重启恢复（FileTxnSnapLog.restore:252）</text>
+  <rect x="510" y="258" width="400" height="30" rx="7" fill="#ffffff" stroke="#bcd0ec"/><text x="710" y="277" font-size="8.5" fill="#1b2a4a" text-anchor="middle">① 加载最新快照 → 重建 DataTree（deserialize:254）</text>
+  <rect x="510" y="294" width="400" height="30" rx="7" fill="#ffffff" stroke="#bcd0ec"/><text x="710" y="313" font-size="8.5" fill="#1b2a4a" text-anchor="middle">② 从快照 zxid+1 起回放 TxnLog（read:330）</text>
+  <rect x="510" y="330" width="400" height="30" rx="7" fill="#eafaf1" stroke="#bce6cd"/><text x="710" y="349" font-size="8.5" fill="#0f5132" text-anchor="middle">③ 得到崩溃前的最新状态（幂等重放）</text>
+  <text x="508" y="382" font-size="9" fill="#5b7db1">快照 = 定期全量存档；日志 = 快照后的增量 → 二者合起来无损恢复。</text>
+
+  <!-- 底部 -->
+  <rect x="30" y="418" width="900" height="82" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="48" y="442" font-size="11.5" font-weight="600" fill="#1d1d1f">要点</text>
+  <text x="48" y="464" font-size="9.5" fill="#494950">· FileTxnLog = WAL：先写日志再改内存树，崩溃可重放；FileSnap = 内存树的周期全量存档；FileTxnSnapLog 统管二者。</text>
+  <text x="48" y="484" font-size="9.5" fill="#494950">· 快照越频繁 → 恢复回放越少但运行时开销越大；snapCount 默认 100000，用 randRoll 打散避免全集群同时快照。</text>
+</svg>

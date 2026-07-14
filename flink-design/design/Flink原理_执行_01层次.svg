@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="500" viewBox="0 0 1080 500"
+     font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1080" height="500" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Flink 执行 · 层次：Task → StreamTask → 算子链</text>
+  <text x="30" y="50" font-size="11" fill="#a1a1a6">子任务在 TaskManager 里的运行层次;算子链在单线程里拉记录、推过链上各算子</text>
+
+  <!-- Task 外层 -->
+  <rect x="40" y="76" width="1000" height="392" rx="14" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="62" y="104" font-size="13" font-weight="700" fill="#5a3410">Task — TaskManager 的可运行单元</text>
+  <text x="62" y="126" font-size="10.5" fill="#93762e">run() → doRun() · loadAndInstantiateInvokable 建 TaskInvokable · restoreAndInvoke</text>
+
+  <!-- StreamTask 中层 -->
+  <rect x="64" y="140" width="952" height="312" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="86" y="167" font-size="12" font-weight="700" fill="#1b2a4a">StreamTask — 流作业的 invokable</text>
+  <text x="86" y="188" font-size="10.5" fill="#5b7db1">restore() → restoreInternal() · invoke() → runMailboxLoop()(单线程循环)</text>
+
+  <rect x="86" y="202" width="300" height="52" rx="9" fill="#ffffff" stroke="#ececf1"/>
+  <text x="102" y="224" font-size="11" font-weight="600" fill="#1b2a4a">restore() → restoreInternal()</text>
+  <text x="102" y="242" font-size="9.5" fill="#5b7db1">恢复状态后进入执行</text>
+  <path d="M 386,228 L 420,228" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <rect x="420" y="202" width="300" height="52" rx="9" fill="#ffffff" stroke="#ececf1"/>
+  <text x="436" y="224" font-size="11" font-weight="600" fill="#1b2a4a">invoke() → runMailboxLoop()</text>
+  <text x="436" y="242" font-size="9.5" fill="#5b7db1">进入 mailbox 单线程主循环</text>
+  <path d="M 720,228 L 754,228" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <rect x="754" y="202" width="240" height="52" rx="9" fill="#ffffff" stroke="#ececf1"/>
+  <text x="770" y="224" font-size="11" font-weight="600" fill="#1b2a4a">processInput</text>
+  <text x="770" y="242" font-size="9.5" fill="#5b7db1">默认动作:从输入拉记录</text>
+
+  <!-- 算子链 内层 -->
+  <rect x="86" y="270" width="908" height="168" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="108" y="297" font-size="12" font-weight="700" fill="#12402a">算子链(链化后的一串算子)— processInput 从输入拉记录、推过链上各算子</text>
+
+  <rect x="120" y="316" width="180" height="96" rx="10" fill="#ffffff" stroke="#ececf1"/>
+  <text x="210" y="360" font-size="12" font-weight="600" fill="#12402a" text-anchor="middle">source 算子</text>
+  <text x="210" y="382" font-size="9.5" fill="#2f6f4f" text-anchor="middle">拉入记录</text>
+  <path d="M 300,364 L 344,364" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="303" y="356" font-size="9" fill="#a1a1a6">推</text>
+
+  <rect x="344" y="316" width="180" height="96" rx="10" fill="#ffffff" stroke="#ececf1"/>
+  <text x="434" y="360" font-size="12" font-weight="600" fill="#12402a" text-anchor="middle">map 算子</text>
+  <text x="434" y="382" font-size="9.5" fill="#2f6f4f" text-anchor="middle">链内直接函数调用</text>
+  <path d="M 524,364 L 568,364" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="527" y="356" font-size="9" fill="#a1a1a6">推</text>
+
+  <rect x="568" y="316" width="180" height="96" rx="10" fill="#ffffff" stroke="#ececf1"/>
+  <text x="658" y="360" font-size="12" font-weight="600" fill="#12402a" text-anchor="middle">filter 算子</text>
+  <text x="658" y="382" font-size="9.5" fill="#2f6f4f" text-anchor="middle">免网络、免序列化</text>
+  <path d="M 748,364 L 792,364" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="751" y="356" font-size="9" fill="#a1a1a6">推</text>
+
+  <rect x="792" y="316" width="180" height="96" rx="10" fill="#ffffff" stroke="#ececf1"/>
+  <text x="882" y="360" font-size="12" font-weight="600" fill="#12402a" text-anchor="middle">sink 算子</text>
+  <text x="882" y="382" font-size="9.5" fill="#2f6f4f" text-anchor="middle">写出结果</text>
+</svg>

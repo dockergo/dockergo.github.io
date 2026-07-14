@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="520" viewBox="0 0 1080 520" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="520" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Kafka API · 投递语义（至多一次 / 至少一次 / 精确一次 EOS）</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">语义由生产端(acks/重试/幂等)与消费端(提交时机/隔离级别)共同决定;精确一次 = 幂等 + 事务 + read_committed</text>
+
+  <!-- table header -->
+  <rect x="30" y="70" width="180" height="34" rx="8" fill="#f0f0f4" stroke="#d2d2d7"/>
+  <text x="120" y="92" font-size="10" font-weight="700" fill="#48484a" text-anchor="middle">语义</text>
+  <rect x="216" y="70" width="410" height="34" rx="8" fill="#f4eefb" stroke="#d9c7ec"/>
+  <text x="421" y="92" font-size="10" font-weight="700" fill="#3d2a5a" text-anchor="middle">生产端</text>
+  <rect x="632" y="70" width="418" height="34" rx="8" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="841" y="92" font-size="10" font-weight="700" fill="#12402a" text-anchor="middle">消费端</text>
+
+  <!-- row 1 at-most-once -->
+  <rect x="30" y="110" width="180" height="66" rx="10" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="120" y="140" font-size="11" font-weight="700" fill="#5a3410" text-anchor="middle">至多一次</text>
+  <text x="120" y="158" font-size="8.3" fill="#93762e" text-anchor="middle">可能丢,不重复</text>
+  <rect x="216" y="110" width="410" height="66" rx="10" fill="#faf4fb" stroke="#e2d2ee"/>
+  <text x="230" y="136" font-size="9.4" fill="#5a3d78">acks=0 / 1,不重试</text>
+  <text x="230" y="158" font-size="8.6" fill="#8a6db0">发失败即丢,不重发</text>
+  <rect x="632" y="110" width="418" height="66" rx="10" fill="#e6f7ee" stroke="#bfe0cd"/>
+  <text x="648" y="136" font-size="9.4" fill="#12402a">先提交位点,再处理</text>
+  <text x="648" y="158" font-size="8.6" fill="#2f6f4f">处理前崩溃 → 消息丢失(位点已推进)</text>
+
+  <!-- row 2 at-least-once -->
+  <rect x="30" y="182" width="180" height="66" rx="10" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="120" y="212" font-size="11" font-weight="700" fill="#5a3410" text-anchor="middle">至少一次</text>
+  <text x="120" y="230" font-size="8.3" fill="#93762e" text-anchor="middle">不丢,可能重复</text>
+  <rect x="216" y="182" width="410" height="66" rx="10" fill="#faf4fb" stroke="#e2d2ee"/>
+  <text x="230" y="208" font-size="9.4" fill="#5a3d78">acks=all + 重试</text>
+  <text x="230" y="230" font-size="8.6" fill="#8a6db0">失败重发,直到确认(可能重复写)</text>
+  <rect x="632" y="182" width="418" height="66" rx="10" fill="#e6f7ee" stroke="#bfe0cd"/>
+  <text x="648" y="208" font-size="9.4" fill="#12402a">先处理,再提交位点</text>
+  <text x="648" y="230" font-size="8.6" fill="#2f6f4f">提交前崩溃 → 重放已处理消息(可能重复)</text>
+
+  <!-- row 3 EOS -->
+  <rect x="30" y="254" width="180" height="66" rx="10" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="120" y="284" font-size="11" font-weight="700" fill="#12402a" text-anchor="middle">精确一次 EOS</text>
+  <text x="120" y="302" font-size="8.3" fill="#2f6f4f" text-anchor="middle">不丢不重</text>
+  <rect x="216" y="254" width="410" height="66" rx="10" fill="#faf4fb" stroke="#e2d2ee"/>
+  <text x="230" y="280" font-size="9.4" fill="#5a3d78">幂等生产者 + 事务</text>
+  <text x="230" y="302" font-size="8.6" fill="#8a6db0">PID+seq 去重 · 跨分区原子写 commit/abort</text>
+  <rect x="632" y="254" width="418" height="66" rx="10" fill="#e6f7ee" stroke="#bfe0cd"/>
+  <text x="648" y="280" font-size="9.4" fill="#12402a">read_committed + 事务性消费-处理-生产</text>
+  <text x="648" y="302" font-size="8.6" fill="#2f6f4f">只读已提交 · 读位点与输出在同一事务原子完成</text>
+
+  <!-- idempotent producer box -->
+  <rect x="30" y="342" width="500" height="140" rx="13" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="46" y="366" font-size="11.5" font-weight="700" fill="#3d2a5a">幂等生产者（保单分区不重不乱）</text>
+  <text x="46" y="384" font-size="8.4" fill="#8a6db0">enable.idempotence 默认 true(ProducerConfig.java:543)</text>
+  <rect x="46" y="394" width="468" height="26" rx="7" fill="#faf4fb" stroke="#e2d2ee"/>
+  <text x="60" y="411" font-size="8.8" fill="#5a3d78">每消息带 PID + 每分区递增序列号</text>
+  <rect x="46" y="424" width="468" height="26" rx="7" fill="#faf4fb" stroke="#e2d2ee"/>
+  <text x="60" y="441" font-size="8.8" fill="#5a3d78">Broker 校验序列连续(nextSeq==lastSeq+1) → 重复去重 / 乱序抛 OutOfOrderSequence</text>
+  <rect x="46" y="454" width="468" height="22" rx="7" fill="#fbeaea" stroke="#e7c3c3"/>
+  <text x="60" y="469" font-size="8.6" fill="#7a2a2a">前提:max.in.flight ≤ 5 且 acks=all(否则重试可能乱序)</text>
+
+  <!-- EOS end-to-end box -->
+  <rect x="550" y="342" width="500" height="140" rx="13" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="566" y="366" font-size="11.5" font-weight="700" fill="#12402a">端到端 EOS（叠加事务 + read_committed）</text>
+  <text x="566" y="384" font-size="8.4" fill="#2f6f4f">幂等只保单分区不重不乱;端到端还需事务</text>
+  <rect x="566" y="394" width="468" height="26" rx="7" fill="#e6f7ee" stroke="#bfe0cd"/>
+  <text x="580" y="411" font-size="8.8" fill="#12402a">事务:跨分区原子写 + 消费-处理-生产原子闭环</text>
+  <rect x="566" y="424" width="468" height="26" rx="7" fill="#e6f7ee" stroke="#bfe0cd"/>
+  <text x="580" y="441" font-size="8.8" fill="#12402a">消费端 read_committed:只读已 commit,跳过 aborted</text>
+  <rect x="566" y="454" width="468" height="22" rx="7" fill="#e6f7ee" stroke="#bfe0cd"/>
+  <text x="580" y="469" font-size="8.6" fill="#2f6f4f">= Kafka Streams / Flink 精确一次流处理的底座</text>
+
+  <!-- arrow idempotent -> EOS -->
+  <path d="M530,412 L550,412" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+</svg>

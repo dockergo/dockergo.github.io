@@ -1,0 +1,105 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="558" viewBox="0 0 1000 558" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1000" height="558" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">vDSO 快速路径：内核把「代码页 + 时间数据页」映射进每个进程，取时全程在用户态完成、免陷入内核</text>
+
+  <!-- 传统 syscall 路径 -->
+  <rect x="28" y="56" width="600" height="150" rx="13" fill="#fbfbfd" stroke="#ececf1"/>
+  <text x="44" y="77" font-size="11" font-weight="600" fill="#7a2a2a">对照 · 传统 syscall 路径 —— 每次取时都陷入内核</text>
+
+  <rect x="44" y="98" width="120" height="52" rx="11" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="104" y="120" font-size="10.5" fill="#3d2a5a" text-anchor="middle">应用</text>
+  <text x="104" y="137" font-size="9.5" fill="#3d2a5a" text-anchor="middle">clock_gettime()</text>
+
+  <rect x="193" y="98" width="120" height="52" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="253" y="120" font-size="10.5" fill="#1b2a4a" text-anchor="middle">SYSCALL</text>
+  <text x="253" y="137" font-size="9.5" fill="#5b7db1" text-anchor="middle">陷入 ring0</text>
+
+  <rect x="342" y="98" width="120" height="52" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="402" y="120" font-size="10.5" fill="#1b2a4a" text-anchor="middle">do_syscall_64</text>
+  <text x="402" y="137" font-size="9.5" fill="#5b7db1" text-anchor="middle">读 timekeeper</text>
+
+  <rect x="491" y="98" width="120" height="52" rx="11" fill="#f3f7fc" stroke="#cfe0f2" filter="url(#soft)"/>
+  <text x="551" y="120" font-size="10.5" fill="#274a78" text-anchor="middle">SYSRET</text>
+  <text x="551" y="137" font-size="9.5" fill="#5b7db1" text-anchor="middle">返回 ring3</text>
+
+  <line x1="164" y1="124" x2="191" y2="124" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <line x1="313" y1="124" x2="340" y2="124" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <line x1="462" y1="124" x2="489" y2="124" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <text x="328" y="176" font-size="10" fill="#7a2a2a" text-anchor="middle">代价：2× 特权级切换 + 流水线 / TLB 扰动 → 每次取时约百 ns 级</text>
+
+  <!-- vDSO 快速路径 -->
+  <rect x="28" y="218" width="600" height="150" rx="13" fill="#f5faf6" stroke="#e2ece5"/>
+  <text x="44" y="239" font-size="11" font-weight="600" fill="#12402a">vDSO 快速路径 —— 内核映射代码页与数据页，用户态直接算出</text>
+
+  <rect x="44" y="260" width="160" height="56" rx="11" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="124" y="282" font-size="10.5" fill="#3d2a5a" text-anchor="middle">应用 clock_gettime()</text>
+  <text x="124" y="300" font-size="9.5" fill="#3d2a5a" text-anchor="middle">glibc 跳 vDSO 桩</text>
+
+  <rect x="232" y="260" width="176" height="56" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="320" y="282" font-size="10.5" fill="#1b2a4a" text-anchor="middle">__vdso_clock_gettime</text>
+  <text x="320" y="300" font-size="9.5" fill="#5b7db1" text-anchor="middle">vclock_gettime.c:36</text>
+
+  <rect x="436" y="260" width="160" height="56" rx="11" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="516" y="282" font-size="10.5" fill="#5a3410" text-anchor="middle">读 [vvar] + rdtsc</text>
+  <text x="516" y="300" font-size="9.5" fill="#93762e" text-anchor="middle">算出 ns 直接返回</text>
+
+  <line x1="204" y1="288" x2="230" y2="288" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <line x1="408" y1="288" x2="434" y2="288" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <text x="320" y="340" font-size="10" fill="#12402a" text-anchor="middle">全程 ring3 用户态：零 SYSCALL、零上下文切换</text>
+
+  <!-- do_hres 无锁读循环 -->
+  <rect x="28" y="380" width="600" height="160" rx="13" fill="#fbfbfd" stroke="#ececf1"/>
+  <text x="44" y="401" font-size="11" font-weight="600" fill="#1d1d1f">do_hres 用户态无锁读循环（lib/vdso/gettimeofday.c:167）</text>
+
+  <rect x="44" y="420" width="160" height="50" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="124" y="441" font-size="10" fill="#1b2a4a" text-anchor="middle">seq = vdso_read_begin</text>
+  <text x="124" y="457" font-size="9" fill="#5b7db1" text-anchor="middle">gettimeofday.c:172</text>
+
+  <rect x="232" y="420" width="170" height="50" rx="11" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="317" y="441" font-size="10" fill="#5a3410" text-anchor="middle">读 mult/shift/基准 + rdtsc</text>
+  <text x="317" y="457" font-size="9" fill="#93762e" text-anchor="middle">__arch_get_hw_counter :118</text>
+
+  <rect x="430" y="420" width="166" height="50" rx="11" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="513" y="441" font-size="10" fill="#12402a" text-anchor="middle">算 ns；vdso_read_retry</text>
+  <text x="513" y="457" font-size="9" fill="#2f6f4f" text-anchor="middle">:183 序号变了→重读</text>
+
+  <line x1="204" y1="445" x2="230" y2="445" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <line x1="402" y1="445" x2="428" y2="445" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <path d="M513,470 L513,490 L124,490 L124,472" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="318" y="486" font-size="9" fill="#a1a1a6" text-anchor="middle">读到一半被内核更新 → 序号变化 → 回到起点重读</text>
+  <text x="44" y="520" font-size="9.5" fill="#6e6e73">写侧：内核每 tick 在 seqlock 保护下更新 [vvar]；读侧两次序号一致才采信，故无需加锁、也无需陷入内核。</text>
+
+  <!-- 右侧注释 -->
+  <rect x="648" y="56" width="324" height="484" rx="12" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="810" y="80" font-size="11.5" font-weight="600" fill="#1d1d1f" text-anchor="middle">免陷入的三要素与边界</text>
+
+  <text x="666" y="108" font-size="10.5" fill="#3a3a3c">① 代码页 [vdso]：内核编译出的 .so</text>
+  <text x="666" y="125" font-size="10" fill="#6e6e73">　映射为只读可执行（vma.c 建 VMA）</text>
+  <text x="666" y="148" font-size="10.5" fill="#3a3a3c">② 数据页 [vvar]：时钟参数 + 序号</text>
+  <text x="666" y="165" font-size="10" fill="#6e6e73">　用户态只读、内核每 tick 才写</text>
+  <text x="666" y="188" font-size="10.5" fill="#3a3a3c">③ 硬件计数器：rdtsc 指令</text>
+  <text x="666" y="205" font-size="10" fill="#6e6e73">　ring3 可直接读，无需内核介入</text>
+
+  <line x1="666" y1="222" x2="954" y2="222" stroke="#ececf1"/>
+  <text x="666" y="246" font-size="10.5" fill="#3a3a3c">走快路径：CLOCK_MONOTONIC /</text>
+  <text x="666" y="263" font-size="10.5" fill="#3a3a3c">REALTIME 且 clocksource = TSC</text>
+  <text x="666" y="288" font-size="10.5" fill="#7a2a2a">回退：HPET 等不可矢量化时，</text>
+  <text x="666" y="305" font-size="10.5" fill="#7a2a2a">__cvdso 内部落回真 syscall（fallback）</text>
+
+  <line x1="666" y1="322" x2="954" y2="322" stroke="#ececf1"/>
+  <text x="666" y="346" font-size="10.5" fill="#3a3a3c">__vdso_clock_gettime :36 与</text>
+  <text x="666" y="363" font-size="10.5" fill="#3a3a3c">__vdso_gettimeofday :18 皆为弱别名，</text>
+  <text x="666" y="380" font-size="10" fill="#6e6e73">ldd 中可见 linux-vdso.so.1</text>
+
+  <line x1="666" y1="397" x2="954" y2="397" stroke="#ececf1"/>
+  <rect x="666" y="412" width="288" height="110" rx="10" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="810" y="434" font-size="10.5" font-weight="600" fill="#12402a" text-anchor="middle">收益</text>
+  <text x="682" y="456" font-size="10.5" fill="#12402a">高频取时（日志时间戳、追踪、</text>
+  <text x="682" y="473" font-size="10.5" fill="#12402a">性能计数）从百 ns 降到约 20-30 ns。</text>
+  <text x="682" y="496" font-size="10" fill="#2f6f4f">本质：把「算法 + 参数 + 计数器」</text>
+  <text x="682" y="513" font-size="10" fill="#2f6f4f">三者都搬到用户态，绕开特权级切换。</text>
+</svg>

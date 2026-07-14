@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="500" viewBox="0 0 1000 500"
+     font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1000" height="500" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">quic-go 丢包检测与恢复 · 单调包号 + 两种判丢阈值 + PTO 兜底（RFC 9002）</text>
+  <text x="30" y="50" font-size="10" fill="#86868b">核心：sentPacketHandler（sent_packet_handler.go:67）登记已发包、收 ACK 后判定丢失并触发重传</text>
+
+  <!-- 单调包号 -->
+  <rect x="30" y="70" width="940" height="86" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="48" y="92" font-size="11.5" font-weight="600" fill="#1b2a4a">包号连接内单调递增 —— 重传用新包号（QUIC 区别于 TCP 的关键）</text>
+  <text x="48" y="112" font-size="8.5" fill="#5b7db1">TCP 重传用相同序号 → 重传歧义；QUIC 每次发送（含重传）都用全新、更大的包号 → RTT 采样无歧义</text>
+  <rect x="48" y="122" width="130" height="26" rx="6" fill="#ffffff" stroke="#bcd0ec"/><text x="113" y="139" font-size="8.5" fill="#1b2a4a" text-anchor="middle">pkt #10 (含帧 X)</text>
+  <text x="188" y="139" font-size="9" fill="#7a2a2a">丢失 →</text>
+  <rect x="240" y="122" width="200" height="26" rx="6" fill="#eafaf1" stroke="#bce6cd"/><text x="340" y="139" font-size="8.5" fill="#0f5132" text-anchor="middle">pkt #15 重新装载帧 X（新包号）</text>
+  <text x="470" y="139" font-size="8.5" fill="#5b7db1">「帧」是重传单位，「包」用后即弃</text>
+
+  <!-- 两种判丢 -->
+  <rect x="30" y="172" width="460" height="150" rx="14" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="48" y="194" font-size="11.5" font-weight="600" fill="#5a3410">收到 ACK 后判丢（两条阈值，任一命中即丢）</text>
+  <rect x="48" y="208" width="404" height="44" rx="9" fill="#ffffff" stroke="#e8cf9a"/><text x="250" y="228" font-size="9" font-weight="600" fill="#5a3410" text-anchor="middle">包序阈值 packetThreshold = 3</text><text x="250" y="244" font-size="8" fill="#93762e" text-anchor="middle">被确认包之后、落后达 3 个包号的未确认包判丢</text>
+  <rect x="48" y="258" width="404" height="44" rx="9" fill="#ffffff" stroke="#e8cf9a"/><text x="250" y="278" font-size="9" font-weight="600" fill="#5a3410" text-anchor="middle">时间阈值 timeThreshold = 9/8</text><text x="250" y="294" font-size="8" fill="#93762e" text-anchor="middle">发送时间早于 (最新RTT × 9/8) 的未确认包判丢</text>
+
+  <!-- PTO -->
+  <rect x="510" y="172" width="460" height="150" rx="14" fill="#fbeaea" stroke="#e7c3c3" filter="url(#soft)"/>
+  <text x="528" y="194" font-size="11.5" font-weight="600" fill="#7a2a2a">没有 ACK 时的兜底：PTO（探测超时）</text>
+  <text x="528" y="214" font-size="8.5" fill="#7a2a2a">OnLossDetectionTimeout(:867) 到期 → 发探测包催对端回 ACK</text>
+  <rect x="528" y="224" width="424" height="30" rx="7" fill="#ffffff" stroke="#e7c3c3"/><text x="740" y="243" font-size="8.5" fill="#7a2a2a" text-anchor="middle">PTO 时长 = SRTT + 4×RTTVar + max_ack_delay，指数退避</text>
+  <text x="528" y="274" font-size="8.5" fill="#7a2a2a">ptoCount 每超时一次翻倍，上限 maxPTODuration = 60s</text>
+  <text x="528" y="294" font-size="8.5" fill="#7a2a2a">收到任意 ACK 即 ptoCount 归零；探测包若也丢再退避</text>
+  <text x="528" y="312" font-size="8.5" fill="#a05555">GetLossDetectionTimeout(:947) 算出下次告警时刻挂到 run() 的 timer</text>
+
+  <!-- ACK 生成 + 记账 -->
+  <rect x="30" y="338" width="940" height="146" rx="14" fill="#eafaf1" stroke="#bce6cd" filter="url(#soft)"/>
+  <text x="48" y="360" font-size="11.5" font-weight="600" fill="#0f5132">收发记账（sentPacketHandler + receivedPacketTracker）</text>
+  <rect x="48" y="374" width="290" height="44" rx="9" fill="#ffffff" stroke="#bce6cd"/><text x="193" y="394" font-size="9" font-weight="600" fill="#0f5132" text-anchor="middle">SentPacket(:252)</text><text x="193" y="410" font-size="8" fill="#3f8f66" text-anchor="middle">登记包号→所含帧，进 sent_packet_history</text>
+  <rect x="352" y="374" width="290" height="44" rx="9" fill="#ffffff" stroke="#bce6cd"/><text x="497" y="394" font-size="9" font-weight="600" fill="#0f5132" text-anchor="middle">ReceivedAck(:378)</text><text x="497" y="410" font-size="8" fill="#3f8f66" text-anchor="middle">移除已确认包，更新 RTT，喂拥塞控制</text>
+  <rect x="656" y="374" width="296" height="44" rx="9" fill="#ffffff" stroke="#bce6cd"/><text x="804" y="394" font-size="9" font-weight="600" fill="#0f5132" text-anchor="middle">received_packet_tracker</text><text x="804" y="410" font-size="8" fill="#3f8f66" text-anchor="middle">记录收到的包号 → 生成 ACK 帧</text>
+  <text x="48" y="442" font-size="8.5" fill="#3f8f66">判丢的包，其携带的「仍需可靠送达」的帧被放回重传队列（retransmission_queue.go），下次组包重发</text>
+  <text x="48" y="462" font-size="8.5" fill="#3f8f66">纯 ACK 帧、PADDING 等不可靠帧不进重传；SendMode(:981) 决定当前可发何种包（正常/PTO 探测/仅 ACK）</text>
+  <text x="48" y="480" font-size="8.5" fill="#3f8f66">每个加密级有独立的包号空间与丢包检测状态</text>
+
+  <path d="M178,135 L240,135" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+</svg>

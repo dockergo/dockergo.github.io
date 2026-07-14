@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="510" viewBox="0 0 1080 510" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="510" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">StarRocks 向量化 Chunk · 算子间流转的列式批</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">算子间流转的不是行而是列式批 Chunk:一次函数调用处理 4096 行,分摊解释开销、用满 CPU SIMD 与 cache</text>
+
+  <!-- Chunk structure card -->
+  <rect x="30" y="66" width="600" height="330" rx="13" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="46" y="90" font-size="12" font-weight="700" fill="#5a3410">Chunk 结构 · be/src/column/chunk.h:66</text>
+  <text x="46" y="109" font-size="9.3" fill="#93762e">持 Columns _columns + SchemaPtr;num_rows() 由首列 size 得来</text>
+
+  <!-- Schema -->
+  <rect x="46" y="122" width="568" height="34" rx="8" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="330" y="144" font-size="10" font-weight="600" text-anchor="middle" fill="#5a3410">SchemaPtr — 列名 / 类型 / 顺序(所有列共享)</text>
+
+  <!-- columns grid header -->
+  <text x="46" y="177" font-size="9.5" font-weight="600" fill="#5a3410">Columns _columns(每列一段连续内存,行按列纵向存)</text>
+  <g font-size="8.5" text-anchor="middle">
+    <!-- column 1 -->
+    <rect x="46" y="186" width="132" height="200" rx="8" fill="#ffffff" stroke="#e8cf9a"/>
+    <text x="112" y="203" font-weight="600" fill="#5a3410">col A</text><text x="112" y="217" font-size="7.8" fill="#93762e">Int32Column</text>
+    <line x1="52" y1="224" x2="172" y2="224" stroke="#efdcb4"/>
+    <text x="112" y="242" fill="#5a3410">row0</text><text x="112" y="262" fill="#5a3410">row1</text><text x="112" y="282" fill="#5a3410">row2</text><text x="112" y="302" fill="#5a3410">⋮</text><text x="112" y="322" fill="#5a3410">row4094</text><text x="112" y="342" fill="#5a3410">row4095</text>
+    <text x="112" y="372" font-size="7.6" fill="#93762e">连续内存 · SIMD 友好</text>
+    <!-- column 2 -->
+    <rect x="192" y="186" width="132" height="200" rx="8" fill="#ffffff" stroke="#e8cf9a"/>
+    <text x="258" y="203" font-weight="600" fill="#5a3410">col B</text><text x="258" y="217" font-size="7.8" fill="#93762e">NullableColumn</text>
+    <line x1="198" y1="224" x2="318" y2="224" stroke="#efdcb4"/>
+    <text x="258" y="242" fill="#5a3410">data + null 标记</text><text x="258" y="262" fill="#5a3410">row1</text><text x="258" y="282" fill="#5a3410">NULL</text><text x="258" y="302" fill="#5a3410">⋮</text><text x="258" y="322" fill="#5a3410">row4094</text><text x="258" y="342" fill="#5a3410">row4095</text>
+    <text x="258" y="372" font-size="7.6" fill="#93762e">值列 + null bitmap</text>
+    <!-- column 3 -->
+    <rect x="338" y="186" width="132" height="200" rx="8" fill="#ffffff" stroke="#e8cf9a"/>
+    <text x="404" y="203" font-weight="600" fill="#5a3410">col C</text><text x="404" y="217" font-size="7.8" fill="#93762e">BinaryColumn</text>
+    <line x1="344" y1="224" x2="464" y2="224" stroke="#efdcb4"/>
+    <text x="404" y="242" fill="#5a3410">offset + bytes</text><text x="404" y="262" fill="#5a3410">row1</text><text x="404" y="282" fill="#5a3410">row2</text><text x="404" y="302" fill="#5a3410">⋮</text><text x="404" y="322" fill="#5a3410">row4094</text><text x="404" y="342" fill="#5a3410">row4095</text>
+    <text x="404" y="372" font-size="7.6" fill="#93762e">变长串:偏移+字节区</text>
+    <!-- column N -->
+    <rect x="484" y="186" width="130" height="200" rx="8" fill="#ffffff" stroke="#e8cf9a"/>
+    <text x="549" y="203" font-weight="600" fill="#5a3410">col N …</text><text x="549" y="217" font-size="7.8" fill="#93762e">Double/Date/DecimalV3</text>
+    <line x1="490" y1="224" x2="608" y2="224" stroke="#efdcb4"/>
+    <text x="549" y="242" fill="#5a3410">row0</text><text x="549" y="262" fill="#5a3410">row1</text><text x="549" y="282" fill="#5a3410">row2</text><text x="549" y="302" fill="#5a3410">⋮</text><text x="549" y="322" fill="#5a3410">row4094</text><text x="549" y="342" fill="#5a3410">row4095</text>
+    <text x="549" y="372" font-size="7.6" fill="#93762e">默认 4096 行(首列定行数)</text>
+  </g>
+
+  <!-- strong-typed columns card -->
+  <rect x="654" y="66" width="396" height="150" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="670" y="88" font-size="11" font-weight="700" fill="#1b2a4a">强类型列别名 · column/vectorized_fwd.h:74</text>
+  <g font-size="9.3" fill="#33507e">
+    <text x="670" y="110">Int8Column / Int16 / Int32 / Int64 / Int128Column</text>
+    <text x="670" y="130">DoubleColumn · DateColumn · DecimalV3Column</text>
+    <text x="670" y="150">NullableColumn — 值列 + null 标记包装</text>
+    <text x="670" y="170">BinaryColumnBase — 变长字符串 / 二进制</text>
+    <text x="670" y="196" fill="#5b7db1" font-size="8.8">强类型 → 编译期特化,消除运行期类型分派开销</text>
+  </g>
+
+  <!-- vector_chunk_size card -->
+  <rect x="654" y="230" width="396" height="80" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="670" y="252" font-size="11" font-weight="700" fill="#12402a">默认批大小 vector_chunk_size = 4096 行</text>
+  <text x="670" y="272" font-size="9.3" fill="#2f6f4f">be/src/common/config.h:1058</text>
+  <text x="670" y="292" font-size="9.3" fill="#2f6f4f">大批摊薄开销,但增内存与延迟(可调)</text>
+
+  <!-- ChunkPtr flow card -->
+  <rect x="654" y="324" width="396" height="72" rx="12" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="670" y="346" font-size="11" font-weight="700" fill="#3d2a5a">ChunkPtr(shared_ptr)在算子间传</text>
+  <text x="670" y="366" font-size="9.3" fill="#5a3d78">共享所有权:本地广播交换零拷贝共享同一 Chunk</text>
+  <text x="670" y="384" font-size="9.3" fill="#5a3d78">推拉模型里算子对传的就是 ChunkPtr</text>
+
+  <!-- bottom: operator-to-operator passing -->
+  <g text-anchor="middle">
+    <rect x="30" y="424" width="200" height="60" rx="11" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/><text x="130" y="450" font-size="10.5" font-weight="600" fill="#1d1d1f">上游 Operator</text><text x="130" y="468" font-size="8.5" fill="#6e6e73">pull_chunk() 产出</text>
+    <rect x="440" y="424" width="200" height="60" rx="11" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/><text x="540" y="450" font-size="10.5" font-weight="600" fill="#1d1d1f">下游 Operator</text><text x="540" y="468" font-size="8.5" fill="#6e6e73">push_chunk() 接收</text>
+    <rect x="850" y="424" width="200" height="60" rx="11" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/><text x="950" y="450" font-size="10.5" font-weight="600" fill="#1d1d1f">向量化收益</text><text x="950" y="468" font-size="8.5" fill="#6e6e73">一次调用处理 4096 行</text>
+  </g>
+  <g stroke="#c7c7cc" stroke-width="1.5" fill="none">
+    <line x1="230" y1="454" x2="440" y2="454" marker-end="url(#ar)"/>
+    <line x1="640" y1="454" x2="850" y2="454" marker-end="url(#ar)"/>
+  </g>
+  <rect x="300" y="446" width="70" height="16" rx="4" fill="#fff7e6" stroke="#e8cf9a"/><text x="335" y="458" font-size="8.5" text-anchor="middle" fill="#5a3410">ChunkPtr</text>
+  <text x="745" y="447" font-size="8.5" fill="#a1a1a6" text-anchor="middle">摊薄解释开销</text>
+</svg>

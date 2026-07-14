@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="540" viewBox="0 0 1060 540" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs><filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+  <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker></defs>
+  <rect width="1060" height="540" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">动态资源分配：按负载增减 executor（须配 external shuffle service）</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">ExecutorAllocationManager(:102) schedule()(:341) · spark.dynamicAllocation.enabled 默认 false</text>
+  <g text-anchor="middle">
+    <rect x="40" y="80" width="300" height="130" rx="13" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+    <text x="190" y="104" font-size="11" font-weight="700" fill="#12402a">有积压 task → 扩</text>
+    <text x="190" y="126" font-size="9" fill="#2f6f4f">pending task 多、现有 executor 不够</text>
+    <text x="190" y="146" font-size="9" fill="#2f6f4f">→ addExecutors（:506）申请更多</text>
+    <text x="190" y="168" font-size="8.5" fill="#4c8567">指数式增长逼近需求</text>
+    <text x="190" y="188" font-size="8" fill="#8aa6cf">maxNumExecutorsNeeded 估算</text>
+    <rect x="380" y="80" width="300" height="130" rx="13" fill="#fbeef0" stroke="#f0cdd4" filter="url(#soft)"/>
+    <text x="530" y="104" font-size="11" font-weight="700" fill="#7a2230">executor 空闲超时 → 缩</text>
+    <text x="530" y="126" font-size="9" fill="#a44">executor 空闲超 idleTimeout</text>
+    <text x="530" y="146" font-size="9" fill="#a44">→ 移除，释放资源</text>
+    <text x="530" y="168" font-size="8.5" fill="#7a2230">波谷时省资源</text>
+    <text x="530" y="188" font-size="8" fill="#a44">给其他 app/租户用</text>
+    <rect x="720" y="80" width="300" height="130" rx="13" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+    <text x="870" y="104" font-size="11" font-weight="700" fill="#5a3410">前提：external shuffle service</text>
+    <text x="870" y="126" font-size="9" fill="#93762e">shuffle 数据存独立进程</text>
+    <text x="870" y="146" font-size="9" fill="#93762e">executor 移除后数据仍在</text>
+    <text x="870" y="168" font-size="8.5" fill="#b08843">否则移除 → FetchFailed 重算</text>
+    <text x="870" y="188" font-size="8" fill="#b08843">动态分配的硬依赖</text>
+  </g>
+  <rect x="40" y="234" width="980" height="90" rx="13" fill="#f3f7fc" stroke="#cfe0f2"/>
+  <text x="60" y="258" font-size="11" font-weight="700" fill="#274a78">机制</text>
+  <text x="60" y="280" font-size="9.5" fill="#5b7db1">· ExecutorAllocationManager.schedule() 周期（默认 100ms）检查负载：updateAndSyncNumExecutorsTarget 算目标数</text>
+  <text x="60" y="298" font-size="9.5" fill="#5b7db1">· 有 pending/backlog task → 扩；executor 空闲超时 → 缩；在 min/max executor 之间伸缩</text>
+  <text x="60" y="316" font-size="9" fill="#8aa6cf">· 默认关（spark.dynamicAllocation.enabled=false）——共享集群/波动负载才开</text>
+  <rect x="40" y="336" width="980" height="90" rx="13" fill="#fbeef0" stroke="#f0cdd4"/>
+  <text x="60" y="360" font-size="11" font-weight="700" fill="#7a2230">为什么必须配 ESS</text>
+  <text x="60" y="382" font-size="9.5" fill="#a44">· 默认 shuffle 数据存 executor 本地——executor 被回收，其 shuffle 输出也没了</text>
+  <text x="60" y="400" font-size="9.5" fill="#a44">· 下游 reduce 拉不到 → FetchFailed → 重跑 map stage（浪费）</text>
+  <text x="60" y="418" font-size="9" fill="#7a2230">· ESS 把 shuffle 数据托管到独立进程，executor 生命周期与 shuffle 数据解耦 → 可安全回收</text>
+  <rect x="40" y="436" width="980" height="76" rx="12" fill="#f7f7f9" stroke="#e6e6ea"/>
+  <text x="60" y="460" font-size="11" font-weight="700" fill="#1d1d1f">一句话</text>
+  <text x="60" y="482" font-size="10" fill="#4b4b50">动态资源分配按负载伸缩 executor：有积压 task 就扩、空闲超时就缩，波动负载/共享集群下省资源。</text>
+  <text x="60" y="500" font-size="10" fill="#4b4b50">默认关；开启必须配 external shuffle service，否则回收 executor 会丢 shuffle 数据、触发 FetchFailed 重算。</text>
+</svg>

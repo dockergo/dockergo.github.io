@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="450" viewBox="0 0 1000 450" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1000" height="450" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">Pub/Sub 与键空间通知：fire-and-forget 广播 + 数据变更事件（pubsub.c/notify.c）</text>
+  <text x="30" y="49" font-size="10.5" fill="#a1a1a6">发布即转发给当前订阅者，不持久化；要可靠消息用 Stream</text>
+
+  <!-- pubsub -->
+  <rect x="30" y="72" width="600" height="160" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="50" y="96" font-size="11" font-weight="700" fill="#1b2a4a">Pub/Sub：发布订阅</text>
+  <g text-anchor="middle" font-size="9">
+    <rect x="50" y="110" width="120" height="44" rx="7" fill="#fff" stroke="#bcd0ec"/><text x="110" y="128" fill="#1b2a4a">PUBLISH news hi</text><text x="110" y="143" fill="#5b7db1" font-size="8">发布到频道</text>
+    <rect x="210" y="110" width="130" height="44" rx="7" fill="#eef3fb" stroke="#bcd0ec"/><text x="275" y="128" fill="#1b2a4a">查 pubsub_channels</text><text x="275" y="143" fill="#5b7db1" font-size="8">找订阅该频道的客户端</text>
+    <rect x="380" y="94" width="110" height="34" rx="6" fill="#fff" stroke="#bcd0ec"/><text x="435" y="115" fill="#1b2a4a">订阅者 1</text>
+    <rect x="380" y="136" width="110" height="34" rx="6" fill="#fff" stroke="#bcd0ec"/><text x="435" y="157" fill="#1b2a4a">订阅者 2</text>
+    <rect x="510" y="110" width="100" height="44" rx="7" fill="#fdeef2" stroke="#f6c9d6"/><text x="560" y="128" fill="#c02a56">无订阅者</text><text x="560" y="143" fill="#c02a56" font-size="8">消息丢弃</text>
+  </g>
+  <line x1="170" y1="132" x2="208" y2="132" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="340" y1="126" x2="378" y2="112" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="340" y1="138" x2="378" y2="152" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <text x="330" y="186" font-size="9.5" fill="#5b7db1">PSUBSCRIBE news.* 支持模式匹配</text>
+  <text x="330" y="206" font-size="9.5" fill="#c02a56">fire-and-forget：不持久化、不确认，订阅者断线期间消息永久丢失</text>
+  <text x="330" y="224" font-size="8.5" fill="#8ba7cc">→ 要可靠消息/消费确认，用 Stream（见 Stream 主线）</text>
+
+  <!-- sharded pubsub -->
+  <rect x="650" y="72" width="310" height="160" rx="12" fill="#f6f0fb" stroke="#dcc6ee" filter="url(#soft)"/>
+  <text x="670" y="96" font-size="11" font-weight="700" fill="#5a2a82">分片 Pub/Sub（7.0+ cluster）</text>
+  <text x="670" y="118" font-size="9.5" fill="#8a5cae">SSUBSCRIBE / SPUBLISH</text>
+  <text x="670" y="138" font-size="9.5" fill="#8a5cae">按 key 的槽路由消息</text>
+  <text x="670" y="158" font-size="9.5" fill="#8a5cae">只在持有该槽的分片内传播</text>
+  <text x="670" y="180" font-size="9" fill="#a884c8">解决 cluster 下 PUBLISH</text>
+  <text x="670" y="196" font-size="9" fill="#a884c8">全集群广播的开销</text>
+  <text x="670" y="218" font-size="8.5" fill="#b89dd0">分片模式不支持 pattern</text>
+
+  <!-- keyspace notifications -->
+  <rect x="30" y="248" width="930" height="140" rx="12" fill="#fdf3e5" stroke="#f0d9b5" filter="url(#soft)"/>
+  <text x="50" y="272" font-size="11" font-weight="700" fill="#7a5a1e">键空间通知（notify.c:276）：数据变更 → 自动发 Pub/Sub 消息</text>
+  <g text-anchor="middle" font-size="9">
+    <rect x="50" y="288" width="150" height="44" rx="7" fill="#fff" stroke="#f0d9b5"/><text x="125" y="306" fill="#7a5a1e">DEL user:1</text><text x="125" y="321" fill="#b08535" font-size="8">数据变更发生</text>
+    <rect x="240" y="284" width="330" height="24" rx="6" fill="#eef3fb" stroke="#bcd0ec"/><text x="405" y="300" fill="#1b2a4a" font-size="8.5">__keyspace@0__:user:1 → 载荷 "del"（键维度）</text>
+    <rect x="240" y="312" width="330" height="24" rx="6" fill="#eafaf1" stroke="#b8e6cd"/><text x="405" y="328" fill="#1c6b45" font-size="8.5">__keyevent@0__:del → 载荷 "user:1"（事件维度）</text>
+    <rect x="610" y="288" width="330" height="44" rx="7" fill="#f6f0fb" stroke="#dcc6ee"/><text x="775" y="306" fill="#5a2a82">订阅者收到通知</text><text x="775" y="321" fill="#8a5cae" font-size="8">用途：缓存失效 / 过期回调 / 变更监听</text>
+  </g>
+  <line x1="200" y1="304" x2="238" y2="298" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="200" y1="316" x2="238" y2="322" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="570" y1="310" x2="608" y2="310" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <text x="500" y="356" font-size="9" fill="#b08535" text-anchor="middle">由 notify-keyspace-events 配置开启（标志组合 K 键空间 / E 键事件 / g 通用 / $ 字符串 / l 列表 / x 过期 …）</text>
+  <text x="500" y="376" font-size="8.5" fill="#c79a4e" text-anchor="middle">有性能开销，按需只开关心的事件类型；监听过期事件常用于"延迟任务"模式</text>
+
+  <rect x="30" y="404" width="930" height="34" rx="8" fill="#f7f7f9" stroke="#ececef"/>
+  <text x="495" y="425" font-size="10" fill="#4a4a4f" text-anchor="middle">要点：Pub/Sub 是即时广播（无历史、无确认）；键空间通知把"数据变更"变成可订阅的事件流，二者都不持久化</text>
+</svg>

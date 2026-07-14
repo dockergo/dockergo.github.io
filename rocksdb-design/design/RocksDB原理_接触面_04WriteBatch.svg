@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="560" viewBox="0 0 1080 560" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="560" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">RocksDB WriteBatch · 多写攒成原子单元</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">批内所有写共享一个 seq 基准、一次性追加同一条 WAL 记录、一次性插 MemTable → 原子(全有或全无)</text>
+
+  <!-- batch build -->
+  <rect x="30" y="70" width="500" height="220" rx="13" fill="#f4eefb" stroke="#d9c7ec"/>
+  <text x="46" y="92" font-size="11.5" font-weight="700" fill="#3d2a5a">构建:紧凑二进制记录序列</text>
+  <text x="46" y="112" font-size="9" fill="#5a3d78">WriteBatch b; b.Put(cf1,"a","1"); b.Delete(cf1,"b"); b.Merge(cf2,"c","+1");</text>
+  <g font-size="8.5" text-anchor="middle">
+    <rect x="46" y="124" width="470" height="24" rx="6" fill="#faf4fb" stroke="#e2d2ee"/><text x="281" y="140" fill="#5a3d78">[header: seq 占位 | count=3]</text>
+    <rect x="46" y="154" width="470" height="24" rx="6" fill="#fff" stroke="#e2d2ee"/><text x="281" y="170" fill="#3d2a5a">rec1: kTypeColumnFamilyValue | cf=1 | key="a" | val="1"</text>
+    <rect x="46" y="184" width="470" height="24" rx="6" fill="#fff" stroke="#e2d2ee"/><text x="281" y="200" fill="#3d2a5a">rec2: kTypeColumnFamilyDeletion | cf=1 | key="b"</text>
+    <rect x="46" y="214" width="470" height="24" rx="6" fill="#fff" stroke="#e2d2ee"/><text x="281" y="230" fill="#3d2a5a">rec3: kTypeColumnFamilyMerge | cf=2 | key="c" | val="+1"</text>
+  </g>
+  <text x="46" y="258" font-size="8.5" fill="#7a5a95">每条:类型 + CF id + key (+ value);可跨多个 Column Family</text>
+  <text x="46" y="276" font-size="8.5" fill="#7a5a95">单条 Put/Delete/Merge = 建单元素 WriteBatch 再 Write 的语法糖</text>
+
+  <!-- commit atomic -->
+  <rect x="550" y="70" width="500" height="220" rx="13" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="566" y="92" font-size="11.5" font-weight="700" fill="#1b2a4a">提交:DB::Write(batch) → 原子</text>
+  <g font-size="8.8" text-anchor="middle">
+    <rect x="566" y="106" width="468" height="40" rx="8" fill="#f3f7fc" stroke="#cfe0f2"/><text x="800" y="124" font-weight="600" fill="#274a78">① 分配连续 seq 段</text><text x="800" y="140" fill="#5b7db1">整批拿一个基准 seq,批内每条 seq 基准+i</text>
+    <rect x="566" y="152" width="468" height="40" rx="8" fill="#fdf6ea" stroke="#efdcb4"/><text x="800" y="170" font-weight="600" fill="#5a3410">② 一次性写 WAL</text><text x="800" y="186" fill="#93762e">整批序列化成一条 WAL 记录追加(可 fsync)</text>
+    <rect x="566" y="198" width="468" height="40" rx="8" fill="#f5faf6" stroke="#cfe6d5"/><text x="800" y="216" font-weight="600" fill="#2c5a3a">③ 一次性插 MemTable</text><text x="800" y="232" fill="#2f6f4f">批内每条按各自 CF + seq 插入对应 MemTable</text>
+  </g>
+  <rect x="566" y="246" width="468" height="34" rx="8" fill="#eafaf1" stroke="#bfe0cd"/><text x="800" y="266" text-anchor="middle" font-size="9" font-weight="600" fill="#12402a">崩溃恢复:整条 WAL 记录要么完整重放、要么整条丢弃 → 原子</text>
+
+  <line x1="530" y1="180" x2="550" y2="150" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+  <text x="540" y="145" font-size="7.5" fill="#a1a1a6">Write</text>
+
+  <!-- atomicity guarantee + layering -->
+  <rect x="30" y="306" width="500" height="110" rx="13" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="46" y="328" font-size="11" font-weight="700" fill="#2c5a3a">原子性从哪来</text>
+  <text x="46" y="350" font-size="9" fill="#2f6f4f">· 共享 seq 基准:读快照要么在批的 seq 之前(全不见)、要么之后(全见)</text>
+  <text x="46" y="368" font-size="9" fill="#2f6f4f">· 单条 WAL 记录:恢复以记录为单位重放,不会只放一半</text>
+  <text x="46" y="386" font-size="9" fill="#2f6f4f">· 跨 CF 也原子:多个 Column Family 共享同一 WAL(见 CF 篇)</text>
+  <text x="46" y="406" font-size="8.5" fill="#a1a1a6">这是 RocksDB 提供的唯一"多写原子"原语,事务层也建在它上</text>
+
+  <!-- built on top -->
+  <rect x="550" y="306" width="500" height="110" rx="13" fill="#faf4fb" stroke="#e2d2ee"/>
+  <text x="566" y="328" font-size="11" font-weight="700" fill="#5a3d78">谁建在 WriteBatch 之上</text>
+  <text x="566" y="350" font-size="9" fill="#7a5a95">· 事务(悲观/乐观):事务内的写先缓存进一个 WriteBatch,Commit 时整批提交</text>
+  <text x="566" y="368" font-size="9" fill="#7a5a95">· 2PC:Prepare 把 batch 写 WAL(带 prepare 标记),Commit 再落 MemTable</text>
+  <text x="566" y="386" font-size="9" fill="#7a5a95">· WriteBatchWithIndex:带索引的 batch,支持"读己之写"</text>
+  <text x="566" y="406" font-size="8.5" fill="#b1483a">见【事务与快照】主线</text>
+
+  <!-- notes -->
+  <rect x="30" y="432" width="1020" height="110" rx="13" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="46" y="454" font-size="11" font-weight="700" fill="#1d1d1f">要点</text>
+  <text x="46" y="476" font-size="9" fill="#6e6e73">· WriteBatch 不是"事务":它只保证一次 Write 的原子性,不提供隔离/加锁/冲突检测——那些在事务层</text>
+  <text x="46" y="494" font-size="9" fill="#6e6e73">· 大 batch 更高效:一次 WAL fsync、一次 WriteThread 入组,摊薄固定开销;但太大占内存、拖长写延迟尾部</text>
+  <text x="46" y="512" font-size="9" fill="#6e6e73">· disableWAL 的 batch 崩溃会丢:只有写了 WAL(且 sync)才有崩溃原子性保证</text>
+  <text x="46" y="530" font-size="8.5" fill="#a1a1a6">· 归属:WriteBatch 是接触面原语;分组/WAL/MemTable 落地在【写入路径】,恢复在【WAL 与恢复】</text>
+</svg>

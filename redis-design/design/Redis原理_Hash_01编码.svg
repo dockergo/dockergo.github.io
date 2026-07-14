@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="420" viewBox="0 0 1000 420" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1000" height="420" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">Hash 两种编码：listpack（小）↔ hashtable（大）（t_hash.c:620-631）</text>
+  <text x="30" y="49" font-size="10.5" fill="#a1a1a6">阈值：entries&gt;512 或 value&gt;64B（config.c:3371,3377）→ 转 hashtable，单向</text>
+
+  <!-- listpack -->
+  <rect x="30" y="72" width="440" height="200" rx="12" fill="#fdf3e5" stroke="#f0d9b5" filter="url(#soft)"/>
+  <text x="50" y="96" font-size="12" font-weight="700" fill="#7a5a1e">listpack（小规模）</text>
+  <text x="50" y="116" font-size="9.5" fill="#b08535">field/value 交替存一段连续内存</text>
+  <g font-family="'SF Mono',monospace" font-size="9" text-anchor="middle">
+    <rect x="50" y="128" width="80" height="30" rx="5" fill="#fff" stroke="#f0d9b5"/><text x="90" y="147" fill="#7a5a1e">"name"</text>
+    <rect x="134" y="128" width="80" height="30" rx="5" fill="#eafaf1" stroke="#b8e6cd"/><text x="174" y="147" fill="#1c6b45">"alice"</text>
+    <rect x="218" y="128" width="80" height="30" rx="5" fill="#fff" stroke="#f0d9b5"/><text x="258" y="147" fill="#7a5a1e">"age"</text>
+    <rect x="302" y="128" width="80" height="30" rx="5" fill="#eafaf1" stroke="#b8e6cd"/><text x="342" y="147" fill="#1c6b45">"30"</text>
+  </g>
+  <text x="50" y="184" font-size="9.5" fill="#b08535">· 省内存：无指针、无 dictEntry 开销</text>
+  <text x="50" y="204" font-size="9.5" fill="#b08535">· 查找 O(n)：需遍历（元素少时无所谓）</text>
+  <text x="50" y="224" font-size="9.5" fill="#b08535">· 适合字段少、值短的小对象</text>
+  <text x="50" y="250" font-size="9" fill="#c79a4e">默认阈值内（≤512 字段且各 ≤64 字节）</text>
+
+  <!-- arrow -->
+  <line x1="470" y1="172" x2="528" y2="172" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+  <text x="499" y="164" font-size="8.5" fill="#a1a1a6" text-anchor="middle">超阈值</text>
+  <text x="499" y="188" font-size="8" fill="#c02a56" text-anchor="middle">单向</text>
+
+  <!-- hashtable -->
+  <rect x="530" y="72" width="440" height="200" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="550" y="96" font-size="12" font-weight="700" fill="#1b2a4a">hashtable（大规模）</text>
+  <text x="550" y="116" font-size="9.5" fill="#5b7db1">底层 dict：field → value，O(1) 查找</text>
+  <g font-size="9" text-anchor="middle">
+    <rect x="550" y="128" width="180" height="26" rx="5" fill="#fff" stroke="#bcd0ec"/><text x="640" y="145" fill="#1b2a4a">"name" → "alice"</text>
+    <rect x="550" y="158" width="180" height="26" rx="5" fill="#fff" stroke="#bcd0ec"/><text x="640" y="175" fill="#1b2a4a">"age" → "30"</text>
+    <rect x="550" y="188" width="180" height="26" rx="5" fill="#fff" stroke="#bcd0ec"/><text x="640" y="205" fill="#1b2a4a">…数百字段</text>
+    <rect x="746" y="128" width="200" height="86" rx="6" fill="#f7f7f9" stroke="#ececef"/><text x="846" y="165" fill="#86868b">dict 桶数组</text><text x="846" y="183" fill="#a1a1a6" font-size="8">渐进 rehash（见对象编码）</text>
+  </g>
+  <text x="550" y="240" font-size="9.5" fill="#5b7db1">· O(1) 增删查改，字段多时性能稳定</text>
+  <text x="550" y="258" font-size="9" fill="#8ba7cc">· 代价：每字段一个 dictEntry + 指针开销</text>
+
+  <!-- object storage pattern -->
+  <rect x="30" y="288" width="940" height="118" rx="10" fill="#f7f7f9" stroke="#ececef"/>
+  <text x="50" y="312" font-size="11" font-weight="600" fill="#1d1d1f">对象存储模式：一个 Hash 存一个对象的多属性</text>
+  <text x="50" y="334" font-size="10" fill="#4a4a4f">HSET user:1 name alice age 30 email a@x.com → 一个 key 装整个用户对象</text>
+  <text x="50" y="356" font-size="10" fill="#1c6b45">优于"每属性一个 String key"：省内存（小 Hash 用 listpack）、支持部分字段读写（HGET/HMGET）、对象语义清晰</text>
+  <text x="50" y="378" font-size="10" fill="#4a4a4f">字段级计数 HINCRBY user:1 age 1；大 Hash 用 HSCAN 增量遍历，避免 HGETALL 一次拉全阻塞</text>
+  <text x="50" y="398" font-size="9" fill="#86868b">工程：大量小对象时调大 hash-max-listpack-entries 可显著省内存</text>
+</svg>

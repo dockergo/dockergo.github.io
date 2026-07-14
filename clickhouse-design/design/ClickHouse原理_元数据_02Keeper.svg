@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="560" viewBox="0 0 1060 560" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1060" height="560" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">clickhouse-keeper：NuRaft 实现的 Raft 协调器，替代 ZooKeeper</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">KeeperServer (h:22) 包装 nuraft::raft_server (:40) · StateMachine (:39) 应用日志到 KeeperStorage (:236)</text>
+
+  <!-- layered architecture -->
+  <g text-anchor="middle">
+    <rect x="330" y="76" width="400" height="52" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/><text x="530" y="98" font-size="11" font-weight="600" fill="#1b2a4a">ZooKeeper 兼容 API（客户端无感）</text><text x="530" y="116" font-size="8.5" fill="#5b7db1">上层 ReplicatedMergeTree/DDLWorker 照常用 ZK 协议</text>
+    <rect x="330" y="144" width="400" height="52" rx="11" fill="#f3f7fc" stroke="#cfe0f2" filter="url(#soft)"/><text x="530" y="164" font-size="11" font-weight="600" fill="#274a78">KeeperDispatcher（请求路由，:28）</text><text x="530" y="182" font-size="8.5" fill="#5b7db1">读走本地、写走 Raft</text>
+    <rect x="330" y="212" width="400" height="52" rx="11" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/><text x="530" y="232" font-size="11" font-weight="600" fill="#12402a">KeeperServer + NuRaft raft_server（:22,:40）</text><text x="530" y="250" font-size="8.5" fill="#2f6f4f">C++ 原生 Raft · 无需 JVM</text>
+    <rect x="330" y="280" width="400" height="52" rx="11" fill="#f6f2fb" stroke="#d9c9ec" filter="url(#soft)"/><text x="530" y="300" font-size="11" font-weight="600" fill="#3d2a5a">KeeperStateMachine（:39, nuraft::state_machine）</text><text x="530" y="318" font-size="8.5" fill="#7a5da5">应用已提交日志</text>
+    <rect x="330" y="348" width="400" height="52" rx="11" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/><text x="530" y="368" font-size="11" font-weight="600" fill="#5a3410">KeeperStorage（:236, 内存 znode 树）</text><text x="530" y="386" font-size="8.5" fill="#93762e">最终状态：znode 键值树 + 快照</text>
+  </g>
+  <g stroke="#c7c7cc" stroke-width="1.4" fill="none">
+    <line x1="530" y1="128" x2="530" y2="144" marker-end="url(#ar)"/>
+    <line x1="530" y1="196" x2="530" y2="212" marker-end="url(#ar)"/>
+    <line x1="530" y1="264" x2="530" y2="280" marker-end="url(#ar)"/>
+    <line x1="530" y1="332" x2="530" y2="348" marker-end="url(#ar)"/>
+  </g>
+
+  <!-- why keeper over ZK -->
+  <rect x="40" y="88" width="270" height="312" rx="13" fill="#f2fbf6" stroke="#cdeadb"/>
+  <text x="175" y="112" font-size="11" font-weight="700" fill="#12402a" text-anchor="middle">相比 ZooKeeper 的优势</text>
+  <text x="55" y="136" font-size="9" fill="#2f6f4f">· C++ 原生，无独立 JVM</text>
+  <text x="55" y="156" font-size="9" fill="#2f6f4f">· 内存/延迟更优</text>
+  <text x="55" y="176" font-size="9" fill="#2f6f4f">· 可内嵌 clickhouse-server</text>
+  <text x="55" y="196" font-size="9" fill="#2f6f4f">　或独立部署</text>
+  <text x="55" y="216" font-size="9" fill="#2f6f4f">· 兼容 ZK 协议</text>
+  <text x="55" y="236" font-size="9" fill="#2f6f4f">　（迁移无感）</text>
+  <text x="55" y="264" font-size="9" fill="#4c8567">· 压缩快照、更省资源</text>
+  <text x="55" y="290" font-size="8.5" fill="#8aa6cf">生产建议：独立部署</text>
+  <text x="55" y="308" font-size="8.5" fill="#8aa6cf">3 或 5 节点</text>
+
+  <!-- not a storage node -->
+  <rect x="750" y="88" width="270" height="312" rx="13" fill="#fbeef0" stroke="#f0cdd4"/>
+  <text x="885" y="112" font-size="11" font-weight="700" fill="#7a2230" text-anchor="middle">关键认知</text>
+  <text x="765" y="140" font-size="9.5" font-weight="600" fill="#7a2230">只存协调元数据</text>
+  <text x="765" y="160" font-size="8.5" fill="#a44">· znode：/log /replicas</text>
+  <text x="765" y="178" font-size="8.5" fill="#a44">　/blocks /task_queue …</text>
+  <text x="765" y="204" font-size="9.5" font-weight="600" fill="#7a2230">不存表数据！</text>
+  <text x="765" y="224" font-size="8.5" fill="#a44">· 表数据在 clickhouse-server</text>
+  <text x="765" y="242" font-size="8.5" fill="#a44">　的本地盘/对象存储</text>
+  <text x="765" y="268" font-size="9" fill="#7a2230">· Keeper = 集群神经中枢</text>
+  <text x="765" y="288" font-size="8.5" fill="#a44">挂了 → 副本转只读</text>
+  <text x="765" y="306" font-size="8.5" fill="#a44">无法写入/merge/DDL</text>
+  <text x="765" y="332" font-size="8" fill="#7a2230">节点数固定 3/5（Raft）</text>
+  <text x="765" y="350" font-size="8" fill="#a44">不随数据量扩</text>
+
+  <rect x="40" y="428" width="980" height="112" rx="12" fill="#f7f7f9" stroke="#e6e6ea"/>
+  <text x="60" y="452" font-size="11" font-weight="700" fill="#1d1d1f">一句话</text>
+  <text x="60" y="474" font-size="10" fill="#4b4b50">clickhouse-keeper 是 C++ 原生的 Raft 协调器（NuRaft 实现），提供 ZooKeeper 兼容 API：Dispatcher 路由请求、</text>
+  <text x="60" y="492" font-size="10" fill="#4b4b50">Raft 复制写操作、StateMachine 应用到内存 znode 树（KeeperStorage）。它只存协调元数据、不存表数据。</text>
+  <text x="60" y="514" font-size="10" fill="#4b4b50" font-weight="600">它是集群神经中枢——挂了副本转只读；节点数固定 3/5（Raft 多数派），不随数据量扩，生产应独立部署。</text>
+</svg>

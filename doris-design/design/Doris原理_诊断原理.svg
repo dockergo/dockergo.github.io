@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="620" viewBox="0 0 1080 620" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect x="0" y="0" width="1080" height="620" fill="#fbfbfd"/>
+  <text x="40" y="38" font-size="16" font-weight="600" fill="#1d1d1f">诊断原理 · 慢 SQL 反查源码的可观测闭环</text>
+  <text x="40" y="58" font-size="11.5" fill="#86868b">query_id → Profile 五段 → Operator Counter → 源码模块 → 与 Metrics 交叉,逐层收敛到根因</text>
+
+  <!-- 四段主链 -->
+  <g text-anchor="middle">
+    <rect x="30" y="80" width="245" height="120" rx="14" fill="#f6f8fc" stroke="#e6ecf4" filter="url(#soft)"/>
+    <text x="152" y="104" font-size="12.5" font-weight="600" fill="#1d5fb8">① 定位慢查询</text>
+    <g font-size="10" fill="#4a4e57" text-anchor="start">
+      <text x="46" y="126">· FE Web UI / audit log → query_id</text>
+      <text x="46" y="145">· set enable_profile=true</text>
+      <text x="46" y="164">· show query profile "/&lt;id&gt;"</text>
+      <text x="46" y="185" fill="#86868b" font-size="9">高并发下按需开,避免全局开销</text>
+    </g>
+    <rect x="295" y="80" width="245" height="120" rx="14" fill="#fbf7ef" stroke="#efe4cf" filter="url(#soft)"/>
+    <text x="417" y="104" font-size="12.5" font-weight="600" fill="#8a5a12">② Query Profile 五段</text>
+    <g font-size="10" fill="#4a4e57" text-anchor="start">
+      <text x="311" y="126">· Summary 总耗时 / 扫描量</text>
+      <text x="311" y="145">· Execution 各 Fragment 耗时</text>
+      <text x="311" y="164">· MergedProfile min/avg/max 找倾斜</text>
+      <text x="311" y="185" fill="#86868b" font-size="9">定位最慢 Fragment/算子/实例</text>
+    </g>
+    <rect x="560" y="80" width="245" height="120" rx="14" fill="#f5faf6" stroke="#e2ece5" filter="url(#soft)"/>
+    <text x="682" y="104" font-size="12.5" font-weight="600" fill="#2c5a3a">③ Operator Counter</text>
+    <g font-size="10" fill="#4a4e57" text-anchor="start">
+      <text x="576" y="126">· ScanRows/Bytes → 存储层读量</text>
+      <text x="576" y="145">· ExecTime → 算子自身耗时</text>
+      <text x="576" y="164">· WaitForDependency → 阻塞</text>
+      <text x="576" y="185" fill="#86868b" font-size="9">MemoryUsage → 是否 spill</text>
+    </g>
+    <rect x="825" y="80" width="225" height="120" rx="14" fill="#f3f0fb" stroke="#ddd4f2" filter="url(#soft)"/>
+    <text x="937" y="104" font-size="12.5" font-weight="600" fill="#5b3fd6">④ 源码模块</text>
+    <g font-size="9.5" fill="#4a4e57" text-anchor="start">
+      <text x="841" y="126">· ScanRows 大 → SegmentIterator</text>
+      <text x="841" y="144">· ExecTime 高 → OperatorX</text>
+      <text x="841" y="162">· WaitForDep → Scanner/RF</text>
+      <text x="841" y="180">· spill → PartitionedAggSink</text>
+    </g>
+  </g>
+  <g stroke="#c7c7cc" stroke-width="1.6" fill="none">
+    <line x1="275" y1="140" x2="294" y2="140" marker-end="url(#ar)"/><text x="285" y="132" font-size="8.5" fill="#a1a1a6" text-anchor="middle">query_id</text>
+    <line x1="540" y1="140" x2="559" y2="140" marker-end="url(#ar)"/><text x="550" y="132" font-size="8.5" fill="#a1a1a6" text-anchor="middle">最慢算子</text>
+    <line x1="805" y1="140" x2="824" y2="140" marker-end="url(#ar)"/><text x="815" y="132" font-size="8.5" fill="#a1a1a6" text-anchor="middle">counter</text>
+  </g>
+
+  <!-- 中层:典型 counter→根因映射(专业扩展) -->
+  <rect x="30" y="216" width="1020" height="164" rx="16" fill="#ffffff" stroke="#ececef" filter="url(#soft)"/>
+  <text x="48" y="240" font-size="13" font-weight="600" fill="#1d1d1f">Counter → 根因判读(实战映射)</text>
+  <g font-size="10.5">
+    <rect x="48" y="252" width="322" height="54" rx="10" fill="#fdf1e7" stroke="#f2d9c2"/><text x="62" y="272" font-weight="600" fill="#8a3a12">扫描重 · ScanRows ≫ RowsProduced</text><text x="62" y="290" font-size="9.5" fill="#a86a3a">谓词没下推 / ZoneMap 未命中 → 建索引·分区·去函数包裹列</text>
+    <rect x="380" y="252" width="322" height="54" rx="10" fill="#eef2fb" stroke="#c9d6ef"/><text x="394" y="272" font-weight="600" fill="#2f4a7c">倾斜 · min/avg/max 差距大</text><text x="394" y="290" font-size="9.5" fill="#5a6a8c">某 instance InputRows 远超 avg → shuffle key 加盐 / colocate</text>
+    <rect x="712" y="252" width="322" height="54" rx="10" fill="#f9f0fb" stroke="#e6d0ee"/><text x="726" y="272" font-weight="600" fill="#7a3fb0">内存 · MemoryUsageHashTable 高</text><text x="726" y="290" font-size="9.5" fill="#a06fc0">触发 spill / 被 cancel → 提并行·预聚合 MV·调 WG 配额</text>
+    <rect x="48" y="314" width="322" height="54" rx="10" fill="#fdf6ea" stroke="#efdcb4"/><text x="62" y="334" font-weight="600" fill="#8a5a12">阻塞 · WaitForDependency 高</text><text x="62" y="352" font-size="9.5" fill="#a98b52">等上游/RF/资源 → 顺依赖链上溯找真正慢源</text>
+    <rect x="380" y="314" width="322" height="54" rx="10" fill="#f5faf6" stroke="#cfe6d5"/><text x="394" y="334" font-weight="600" fill="#2c5a3a">交换 · Exchange BytesReceived 大</text><text x="394" y="352" font-size="9.5" fill="#4e7a5c">网络重 / Decompress 慢 → bucket shuffle·减 shuffle 量</text>
+    <rect x="712" y="314" width="322" height="54" rx="10" fill="#f4f5f7" stroke="#e6e7ea"/><text x="726" y="334" font-weight="600" fill="#4a4e57">规划 · Planner 阶段耗时高</text><text x="726" y="352" font-size="9.5" fill="#86868b">CBO join reorder 爆炸 → 统计信息准 · 控 join 数 · hint</text>
+  </g>
+
+  <!-- 底:与 Metrics 交叉 -->
+  <rect x="30" y="396" width="1020" height="88" rx="16" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="48" y="420" font-size="13" font-weight="600" fill="#8a5a12">⑤ 与 FE/BE Metrics 交叉:单点慢 vs 集群性</text>
+  <g font-size="10.5" fill="#a98b52">
+    <text x="48" y="442">· Profile 定位到"哪个算子慢";Metrics 定位到"哪种资源紧"——两者一起看才能分清单查询问题还是集群负载问题。</text>
+    <text x="48" y="462">· BE:doris_be_* compaction 积压 / 内存水位 / IO 速率;FE:连接数 / query 并发 / 失败率。</text>
+    <text x="48" y="478" font-size="9.5">例:某查询 ScanBytes 正常但耗时高,且 BE IO 打满 → 是邻居查询/compaction 抢 IO 的集群性问题,非本查询计划问题。</text>
+  </g>
+  <line x1="417" y1="200" x2="417" y2="395" stroke="#c7c7cc" stroke-width="1.4" stroke-dasharray="4 4" marker-end="url(#ar)"/>
+  <text x="437" y="300" font-size="9" fill="#a1a1a6">交叉验证</text>
+
+  <text x="40" y="516" font-size="10.5" fill="#86868b">闭环:开 profile → 看五段找最慢算子 → 读该算子 counter 判类型 → 映射到源码模块/资源 → 与 metrics 交叉确认 → 施策 → 复看 profile 验证。</text>
+  <text x="40" y="538" font-size="10.5" fill="#86868b">counter 单位由 TUnit 决定;WaitForDependency/ExecTime/MemoryUsage/RowsProduced 是四类最常用的判读入口。</text>
+</svg>

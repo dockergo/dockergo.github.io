@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="512" viewBox="0 0 1080 512" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="512" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">StarRocks 主键模型 · 持久化主键索引 + 删除向量</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">主键索引把"这行现在在哪"直接定位,去重从读期挪到写期;删除只打标不重写 Segment</text>
+
+  <!-- PrimaryIndex (blue = 逻辑映射) -->
+  <rect x="30" y="72" width="500" height="152" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="46" y="94" font-size="12" font-weight="700" fill="#1b2a4a">PrimaryIndex · primary_index.h:38</text>
+  <text x="46" y="112" font-size="8.5" fill="#5b7db1">编码后主键 → 64 位值:key 当前活在哪个 rowset segment 的第几行</text>
+  <rect x="46" y="122" width="220" height="36" rx="8" fill="#fff" stroke="#bcd0ec"/><text x="156" y="139" font-size="9" font-weight="600" text-anchor="middle" fill="#1b2a4a">编码主键 (PrimaryKey)</text><text x="156" y="152" font-size="8" text-anchor="middle" fill="#5b7db1">保序编码 PrimaryKeyEncoder</text>
+  <line x1="266" y1="140" x2="298" y2="140" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+  <rect x="300" y="122" width="214" height="36" rx="8" fill="#e7eff9" stroke="#bcd0ec"/><text x="407" y="139" font-size="9.5" font-weight="600" text-anchor="middle" fill="#1b2a4a">(rssid &lt;&lt; 32 | rowid)</text><text x="407" y="152" font-size="8" text-anchor="middle" fill="#5b7db1">rowset segment id | 行号</text>
+  <text x="46" y="180" font-size="8.5" font-weight="600" fill="#1b2a4a">写入:upsert(rssid, rowid_start, pks, DeletesMap*)</text>
+  <text x="46" y="197" font-size="8.3" fill="#5b7db1">插入新位置,把被覆盖的旧行位置吐进 DeletesMap</text>
+  <text x="46" y="214" font-size="8.3" fill="#5b7db1">编码:整型大端+符号位翻转,变长串 0x00 转义,借鉴 Kudu(storage_primitive/)</text>
+
+  <!-- PersistentIndex LSM (container) -->
+  <rect x="550" y="72" width="500" height="152" rx="13" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="566" y="94" font-size="12" font-weight="700" fill="#12402a">PersistentIndex(类 LSM 两级)· persistent_index.h:674</text>
+  <text x="566" y="112" font-size="8.5" fill="#2f6f4f">apply 流程:prepare → upsert → erase → commit → on_commited(:661)</text>
+  <rect x="566" y="122" width="225" height="86" rx="9" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="678" y="143" font-size="10" font-weight="700" text-anchor="middle" fill="#12402a">L0 · 内存</text>
+  <text x="678" y="161" font-size="8.5" text-anchor="middle" fill="#2f6f4f">MutableIndex</text>
+  <text x="678" y="179" font-size="8.3" text-anchor="middle" fill="#2f6f4f">最新写入,可变哈希</text>
+  <text x="678" y="197" font-size="8.3" text-anchor="middle" fill="#2f6f4f">enable_persistent_index 落盘</text>
+  <rect x="809" y="122" width="225" height="86" rx="9" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="921" y="143" font-size="10" font-weight="700" text-anchor="middle" fill="#5a3410">L1 · 落盘</text>
+  <text x="921" y="161" font-size="8.5" text-anchor="middle" fill="#93762e">ImmutableIndex</text>
+  <text x="921" y="179" font-size="8.3" text-anchor="middle" fill="#93762e">已固化,只读</text>
+  <text x="921" y="197" font-size="8.3" text-anchor="middle" fill="#93762e">flush 后由 L0 下沉</text>
+  <line x1="791" y1="165" x2="809" y2="165" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+
+  <line x1="530" y1="148" x2="550" y2="148" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+
+  <!-- DelVector (red = 失效标记) -->
+  <rect x="30" y="244" width="500" height="238" rx="13" fill="#fbeaea" stroke="#e7c3c3" filter="url(#soft)"/>
+  <text x="46" y="266" font-size="12" font-weight="700" fill="#4a1414">删除向量 DelVector · del_vector.h:30</text>
+  <text x="46" y="284" font-size="8.5" fill="#7a2a2a">每个 Segment 一个 Roaring 位图,标记哪些 rowid 已失效,带 EditVersion</text>
+  <text x="46" y="306" font-size="8.6" font-weight="600" fill="#4a1414">Segment 行 · 阴影格 = 已失效(被覆盖/删除)</text>
+  <g>
+    <rect x="46" y="316" width="30" height="30" rx="5" fill="#fff" stroke="#e7c3c3"/><rect x="80" y="316" width="30" height="30" rx="5" fill="#f0d0d0" stroke="#e7c3c3"/><rect x="114" y="316" width="30" height="30" rx="5" fill="#fff" stroke="#e7c3c3"/><rect x="148" y="316" width="30" height="30" rx="5" fill="#fff" stroke="#e7c3c3"/><rect x="182" y="316" width="30" height="30" rx="5" fill="#f0d0d0" stroke="#e7c3c3"/><rect x="216" y="316" width="30" height="30" rx="5" fill="#fff" stroke="#e7c3c3"/><rect x="250" y="316" width="30" height="30" rx="5" fill="#f0d0d0" stroke="#e7c3c3"/><rect x="284" y="316" width="30" height="30" rx="5" fill="#fff" stroke="#e7c3c3"/>
+    <text x="61" y="335" font-size="9" text-anchor="middle" fill="#7a2a2a">0</text><text x="95" y="335" font-size="9" text-anchor="middle" fill="#7a2a2a">1</text><text x="129" y="335" font-size="9" text-anchor="middle" fill="#7a2a2a">2</text><text x="163" y="335" font-size="9" text-anchor="middle" fill="#7a2a2a">3</text><text x="197" y="335" font-size="9" text-anchor="middle" fill="#7a2a2a">4</text><text x="231" y="335" font-size="9" text-anchor="middle" fill="#7a2a2a">5</text><text x="265" y="335" font-size="9" text-anchor="middle" fill="#7a2a2a">6</text><text x="299" y="335" font-size="9" text-anchor="middle" fill="#7a2a2a">7</text>
+  </g>
+  <rect x="330" y="316" width="184" height="30" rx="7" fill="#fff" stroke="#e7c3c3"/><text x="422" y="335" font-size="8.8" text-anchor="middle" fill="#7a2a2a">读时活行 = Segment 行 − 位图</text>
+  <text x="46" y="378" font-size="8.6" fill="#7a2a2a">· 被覆盖/删除的旧行不重写 Segment,只在位图打标</text>
+  <text x="46" y="398" font-size="8.6" fill="#7a2a2a">· 旧行惰性由 Compaction 回收(与"追加不覆盖"一致)</text>
+  <rect x="46" y="414" width="468" height="52" rx="8" fill="#fff" stroke="#e7c3c3"/>
+  <text x="60" y="434" font-size="8.8" font-weight="600" fill="#4a1414">EditVersion 化:每个版本对应一份删除位图快照</text>
+  <text x="60" y="454" font-size="8.6" fill="#7a2a2a">读某版本时叠加该版本可见的失效标记,保证 MVCC 快照隔离</text>
+
+  <!-- DeltaColumnGroup (purple = 列模式增量) -->
+  <rect x="550" y="244" width="500" height="238" rx="13" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="566" y="266" font-size="12" font-weight="700" fill="#3d2a5a">列模式 partial update · Delta Column Group</text>
+  <text x="566" y="284" font-size="8.5" fill="#7a5a95">delta_column_group.h:35 · partial update 有行模式与列模式两条路</text>
+  <rect x="566" y="298" width="225" height="120" rx="9" fill="#faf4fb" stroke="#d9c7ec"/>
+  <text x="678" y="318" font-size="9.5" font-weight="700" text-anchor="middle" fill="#3d2a5a">行模式</text>
+  <text x="678" y="338" font-size="8.4" text-anchor="middle" fill="#7a5a95">读旧行 → 合并新值</text>
+  <text x="678" y="356" font-size="8.4" text-anchor="middle" fill="#7a5a95">→ 整行重写为新行</text>
+  <text x="678" y="380" font-size="8.4" text-anchor="middle" fill="#7a5a95">改动列少时开销大</text>
+  <text x="678" y="400" font-size="8.4" text-anchor="middle" fill="#a1a1a6">写放大 = 全行宽度</text>
+  <rect x="809" y="298" width="225" height="120" rx="9" fill="#f0e6f8" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="921" y="318" font-size="9.5" font-weight="700" text-anchor="middle" fill="#3d2a5a">列模式(DeltaColumnGroup)</text>
+  <text x="921" y="338" font-size="8.4" text-anchor="middle" fill="#7a5a95">只写被更新的列成单独文件</text>
+  <text x="921" y="356" font-size="8.4" text-anchor="middle" fill="#7a5a95">避免整行重写</text>
+  <text x="921" y="380" font-size="8.4" text-anchor="middle" fill="#7a5a95">读时按 rowid 拼接主文件</text>
+  <text x="921" y="400" font-size="8.4" text-anchor="middle" fill="#a1a1a6">写放大 = 改动列宽度</text>
+  <rect x="566" y="430" width="468" height="36" rx="8" fill="#fff" stroke="#d9c7ec"/>
+  <text x="800" y="453" font-size="8.6" text-anchor="middle" fill="#7a5a95">提交入口 _apply_column_partial_update_commit() · tablet_updates.h:440</text>
+</svg>

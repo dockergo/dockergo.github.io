@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="580" viewBox="0 0 1060 580" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1060" height="580" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">复制模型：Keeper 作为复制日志仲裁，对等副本异步重放</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">StorageReplicatedMergeTree (StorageReplicatedMergeTree.h:98) · 基于 Keeper /log 的复制，非主从字节同步</text>
+
+  <!-- keeper center -->
+  <rect x="390" y="80" width="280" height="90" rx="14" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="530" y="104" font-size="12" font-weight="700" fill="#12402a" text-anchor="middle">Keeper /log（复制日志）</text>
+  <text x="530" y="124" font-size="8.5" fill="#2f6f4f" text-anchor="middle">所有变更 entry 的顺序流</text>
+  <text x="530" y="140" font-size="8.5" fill="#2f6f4f" text-anchor="middle">GET_PART / MERGE / MUTATE</text>
+  <text x="530" y="158" font-size="8" fill="#4c8567" text-anchor="middle">全局唯一顺序 · 仲裁者</text>
+
+  <!-- three replicas -->
+  <g text-anchor="middle">
+    <rect x="60" y="240" width="260" height="140" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+    <text x="190" y="264" font-size="11" font-weight="700" fill="#1b2a4a">Replica 1（对等）</text>
+    <text x="190" y="284" font-size="8.5" fill="#5b7db1">本地复制队列</text>
+    <rect x="80" y="296" width="220" height="30" rx="6" fill="#fff" stroke="#bcd0ec"/><text x="190" y="315" font-size="8" fill="#1b2a4a">log_pointer=105 · 拉 log 重放</text>
+    <text x="190" y="344" font-size="8" fill="#8aa6cf">INSERT → 写新 Part → 发 GET_PART entry</text>
+    <text x="190" y="362" font-size="8" fill="#8aa6cf">持有分片全量数据</text>
+
+    <rect x="400" y="240" width="260" height="140" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+    <text x="530" y="264" font-size="11" font-weight="700" fill="#1b2a4a">Replica 2（对等）</text>
+    <text x="530" y="284" font-size="8.5" fill="#5b7db1">本地复制队列</text>
+    <rect x="420" y="296" width="220" height="30" rx="6" fill="#fff" stroke="#bcd0ec"/><text x="530" y="315" font-size="8" fill="#1b2a4a">log_pointer=105 · 已追平</text>
+    <text x="530" y="344" font-size="8" fill="#8aa6cf">看到 GET_PART → 从 R1 拉 Part</text>
+    <text x="530" y="362" font-size="8" fill="#8aa6cf">multi-master · 无唯一主</text>
+
+    <rect x="740" y="240" width="260" height="140" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+    <text x="870" y="264" font-size="11" font-weight="700" fill="#1b2a4a">Replica 3（对等）</text>
+    <text x="870" y="284" font-size="8.5" fill="#5b7db1">本地复制队列</text>
+    <rect x="760" y="296" width="220" height="30" rx="6" fill="#fff5f6" stroke="#f0cdd4"/><text x="870" y="315" font-size="8" fill="#7a2230">log_pointer=103 · 落后 2</text>
+    <text x="870" y="344" font-size="8" fill="#a44">落后量 = /log 最大序号 − log_pointer</text>
+    <text x="870" y="362" font-size="8" fill="#8aa6cf">最终会追平（最终一致）</text>
+  </g>
+
+  <g stroke="#9ccbb0" stroke-width="1.4" fill="none">
+    <path d="M420,140 L190,240" marker-end="url(#ar)"/>
+    <path d="M530,170 L530,240" marker-end="url(#ar)"/>
+    <path d="M640,140 L870,240" marker-end="url(#ar)"/>
+  </g>
+  <text x="290" y="200" font-size="8" fill="#4c8567">拉 log 重放</text>
+  <text x="760" y="200" font-size="8" fill="#4c8567">拉 log 重放</text>
+  <!-- fetch between replicas -->
+  <path d="M320,330 L400,330" stroke="#bcd0ec" stroke-width="1.4" fill="none" marker-end="url(#ar)"/>
+  <text x="360" y="322" font-size="7.5" fill="#5b7db1">Part fetch</text>
+
+  <rect x="40" y="400" width="980" height="76" rx="13" fill="#fdf9f0" stroke="#efe3cd"/>
+  <text x="60" y="424" font-size="11" font-weight="700" fill="#7a5a1e">核心设计：决策一次，各副本重放</text>
+  <text x="60" y="446" font-size="9.5" fill="#93762e">· merge/mutation 的"决策"只做一次（写进 /log），各副本"重放"同样的操作 → 所有副本最终得到字节一致的 Part</text>
+  <text x="60" y="464" font-size="9.5" fill="#93762e">· 副本对等（multi-master），任一副本可读可写；一致性是最终一致——某时刻进度可不同，最终收敛</text>
+
+  <rect x="40" y="490" width="980" height="76" rx="12" fill="#f7f7f9" stroke="#e6e6ea"/>
+  <text x="60" y="514" font-size="11" font-weight="700" fill="#1d1d1f">一句话</text>
+  <text x="60" y="536" font-size="10" fill="#4b4b50">ReplicatedMergeTree 不是主从字节同步，而是基于 Keeper /log 的复制日志：变更写成 entry，对等副本各自拉取重放</text>
+  <text x="60" y="553" font-size="10" fill="#4b4b50">（GET_PART 触发 Part fetch）。决策一次、各副本重放，保证最终字节一致——这是最终一致模型，非主从、非 2PC。</text>
+</svg>

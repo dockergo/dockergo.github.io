@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="440" viewBox="0 0 1020 440"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+    <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#c0392b"/>
+    </marker>
+  </defs>
+  <rect width="1020" height="440" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">反向图结构 · 每个 grad_fn 是一个 Node，边指向输入（torch/csrc/autograd）</text>
+
+  <!-- 图 -->
+  <rect x="30" y="56" width="620" height="300" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="48" y="80" font-size="12.5" font-weight="600" fill="#1d1d1f">前向 z=relu(x@W); loss=z.sum() 建出的反向图</text>
+
+  <rect x="260" y="96" width="150" height="42" rx="9" fill="#fbeaea" stroke="#f0cccc"/><text x="335" y="121" font-size="9" fill="#7d1f1f" text-anchor="middle">SumBackward（loss）</text>
+  <rect x="260" y="168" width="150" height="42" rx="9" fill="#eef3fb" stroke="#bcd0ec"/><text x="335" y="193" font-size="9" fill="#1b2a4a" text-anchor="middle">ReluBackward</text>
+  <rect x="260" y="240" width="150" height="42" rx="9" fill="#eef3fb" stroke="#bcd0ec"/><text x="335" y="265" font-size="9" fill="#1b2a4a" text-anchor="middle">MmBackward</text>
+  <rect x="150" y="310" width="150" height="42" rx="9" fill="#eafaf1" stroke="#bce6cd"/><text x="225" y="330" font-size="8.5" fill="#0f5132" text-anchor="middle">AccumulateGrad</text><text x="225" y="344" font-size="8" fill="#3f8f66" text-anchor="middle">→ W.grad</text>
+  <rect x="370" y="310" width="150" height="42" rx="9" fill="#f6f6f8" stroke="#e2e2e7"/><text x="445" y="330" font-size="8.5" fill="#6a6a70" text-anchor="middle">x（不需梯度）</text><text x="445" y="344" font-size="8" fill="#8a8a90" text-anchor="middle">无 AccumulateGrad</text>
+
+  <line x1="335" y1="138" x2="335" y2="168" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="335" y1="210" x2="335" y2="240" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="300" y1="282" x2="225" y2="310" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="370" y1="282" x2="445" y2="310" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <text x="430" y="160" font-size="8.5" fill="#86868b">next_edges 指向输入的 grad_fn</text>
+
+  <text x="48" y="384" font-size="9.5" fill="#494950">Node = 一个反向算子；Edge（next_edges）指向"我的输入是谁生的"；叶子（参数）挂 AccumulateGrad 把梯度写进 .grad</text>
+
+  <!-- 说明 -->
+  <rect x="670" y="56" width="320" height="300" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="688" y="80" font-size="12" font-weight="600" fill="#1b2a4a">图怎么建起来的</text>
+  <text x="688" y="104" font-size="9.5" fill="#5b7db1">前向经 Dispatcher 的 Autograd 层时：</text>
+  <text x="688" y="126" font-size="9.5" fill="#5b7db1">· 为该算子创建一个 Node（grad_fn）</text>
+  <text x="688" y="146" font-size="9.5" fill="#5b7db1">· 记住输入张量的 grad_fn 作 next_edges</text>
+  <text x="688" y="166" font-size="9.5" fill="#5b7db1">· 输出张量的 grad_fn 指向这个 Node</text>
+  <text x="688" y="188" font-size="9.5" fill="#5b7db1">· 存反向要用的中间量（saved tensors）</text>
+  <rect x="688" y="204" width="284" height="66" rx="9" fill="#ffffff" stroke="#bcd0ec"/><text x="830" y="226" font-size="9" fill="#1b2a4a" text-anchor="middle">图边算边连（define-by-run）</text><text x="830" y="246" font-size="8.5" fill="#5b7db1" text-anchor="middle">控制流不同 → 每次图可不同</text><text x="830" y="262" font-size="8.5" fill="#5b7db1" text-anchor="middle">图默认反向后释放</text>
+  <text x="688" y="292" font-size="9" fill="#8fa9cf">saved tensors 是显存占用大头</text>
+  <text x="688" y="312" font-size="9" fill="#8fa9cf">（checkpoint 用重算换显存）</text>
+  <text x="688" y="336" font-size="9" fill="#8fa9cf">原地改被 saved 的张量 → 报错</text>
+</svg>

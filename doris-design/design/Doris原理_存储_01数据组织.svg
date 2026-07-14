@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="880" viewBox="0 0 1040 880" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1040" height="880" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">数据组织：Catalog → Table → Partition → Index → Tablet → Replica → Rowset → Segment → Page</text>
+
+  <!-- FE band -->
+  <rect x="24" y="48" width="992" height="372" rx="16" fill="#f3f7fc" stroke="#e3ecf7"/>
+  <text x="42" y="70" font-size="12.5" font-weight="600" fill="#274a78">FE 元数据层（逻辑组织 · 全集群一致）</text>
+  <!-- BE band -->
+  <rect x="24" y="432" width="992" height="392" rx="16" fill="#fdf9f0" stroke="#efe3cd"/>
+  <text x="42" y="454" font-size="12.5" font-weight="600" fill="#7a5a1e">BE 物理存储层（磁盘上的不可变文件）</text>
+
+  <g text-anchor="middle">
+    <!-- FE nodes -->
+    <rect x="410" y="80" width="220" height="48" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/><text x="520" y="100" font-size="12.5" font-weight="600" fill="#1b2a4a">Catalog / Database</text><text x="520" y="118" font-size="9.5" fill="#5b7db1">命名空间与元数据容器</text>
+    <rect x="345" y="144" width="350" height="54" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/><text x="520" y="166" font-size="12.5" font-weight="600" fill="#1b2a4a">Table / OlapTable</text><text x="520" y="184" font-size="9.5" fill="#5b7db1">Schema · Key Model · 分区/分桶/副本 · Rollup-MV 策略</text>
+    <rect x="365" y="214" width="310" height="54" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/><text x="520" y="236" font-size="12.5" font-weight="600" fill="#1b2a4a">Partition 分区</text><text x="520" y="254" font-size="9.5" fill="#5b7db1">visible_version 可见性边界 · TTL · 冷热分层单元</text>
+    <rect x="290" y="284" width="215" height="54" rx="11" fill="#e9f1fb" stroke="#c4d8f0" filter="url(#soft)"/><text x="397" y="306" font-size="12" font-weight="600" fill="#1b2a4a">Base MaterializedIndex</text><text x="397" y="324" font-size="9.5" fill="#5b7db1">主表物化数据视图</text>
+    <rect x="535" y="284" width="235" height="54" rx="11" fill="#e9f1fb" stroke="#c4d8f0" filter="url(#soft)"/><text x="652" y="306" font-size="12" font-weight="600" fill="#1b2a4a">Rollup / 同步 MV Index</text><text x="652" y="324" font-size="9.5" fill="#5b7db1">预聚合 · 裁列 · 改排序键</text>
+    <rect x="345" y="352" width="350" height="56" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/><text x="520" y="374" font-size="12.5" font-weight="600" fill="#1b2a4a">Tablet / Bucket</text><text x="520" y="392" font-size="9.5" fill="#5b7db1">= Partition × Index × Bucket 的分片 · 调度/副本/Compaction 核心单位</text>
+
+    <!-- Replica row (FE 记位置/版本 · BE 持物理数据) -->
+    <rect x="150" y="464" width="240" height="56" rx="11" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/><text x="270" y="486" font-size="12" font-weight="600" fill="#5a3410">Replica @ BE-1</text><text x="270" y="504" font-size="9.5" fill="#93762e">物理副本 · 持 Rowset · MoW 持 Delete Bitmap</text>
+    <rect x="410" y="464" width="200" height="56" rx="11" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/><text x="510" y="486" font-size="12" font-weight="600" fill="#5a3410">Replica @ BE-2</text><text x="510" y="504" font-size="9.5" fill="#93762e">多副本 · 版本对齐</text>
+    <rect x="630" y="464" width="200" height="56" rx="11" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/><text x="730" y="486" font-size="12" font-weight="600" fill="#5a3410">Replica @ BE-3</text><text x="730" y="504" font-size="9.5" fill="#93762e">就近读任一健康副本</text>
+
+    <rect x="345" y="548" width="350" height="54" rx="11" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/><text x="520" y="570" font-size="12.5" font-weight="600" fill="#5a3410">Rowset [start-end]</text><text x="520" y="588" font-size="9.5" fill="#93762e">不可变版本化文件组 · 事务 / Compaction 产物</text>
+    <rect x="365" y="620" width="310" height="54" rx="11" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/><text x="520" y="642" font-size="12.5" font-weight="600" fill="#5a3410">Segment .dat</text><text x="520" y="660" font-size="9.5" fill="#93762e">列式不可变文件 · 通常 1 次 flush 产 1 个</text>
+
+    <rect x="60" y="700" width="270" height="66" rx="11" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/><text x="195" y="724" font-size="12" font-weight="600" fill="#5a3410">Column Data Pages</text><text x="195" y="742" font-size="9.5" fill="#93762e">编码 / 压缩</text><text x="195" y="758" font-size="9.5" fill="#93762e">读取/裁剪粒度 · 默认约 64KB</text>
+    <rect x="360" y="700" width="290" height="66" rx="11" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/><text x="505" y="724" font-size="12" font-weight="600" fill="#5a3410">Segment 内部索引</text><text x="505" y="742" font-size="9.5" fill="#93762e">Ordinal(每列必备) · ShortKey</text><text x="505" y="758" font-size="9.5" fill="#93762e">ZoneMap · Bloom · PK(MoW)</text>
+    <rect x="680" y="700" width="290" height="66" rx="11" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/><text x="825" y="724" font-size="12" font-weight="600" fill="#5a3410">Segment Footer</text><text x="825" y="742" font-size="9.5" fill="#93762e">行数 · 列元数据</text><text x="825" y="758" font-size="9.5" fill="#93762e">索引位置 · 编码压缩信息</text>
+
+    <!-- 内存 Block -->
+    <rect x="720" y="546" width="270" height="60" rx="11" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/><text x="855" y="568" font-size="12" font-weight="600" fill="#12402a">Block（内存）</text><text x="855" y="586" font-size="9.5" fill="#2f6f4f">列式批次 · 向量化单位 · 不对应磁盘 · 行数可变</text>
+  </g>
+
+  <!-- arrows -->
+  <g stroke="#c7c7cc" stroke-width="1.5" fill="none">
+    <line x1="520" y1="128" x2="520" y2="144" marker-end="url(#ar)"/>
+    <line x1="520" y1="198" x2="520" y2="214" marker-end="url(#ar)"/>
+    <path d="M520,268 L520,278 L397,278 L397,284" marker-end="url(#ar)"/>
+    <path d="M520,268 L520,278 L652,278 L652,284" marker-end="url(#ar)"/>
+    <path d="M397,338 L397,346 L520,346 L520,352" marker-end="url(#ar)"/>
+    <path d="M652,338 L652,346 L520,346" marker-end="url(#ar)"/>
+    <path d="M520,408 L520,440 L270,440 L270,464" marker-end="url(#ar)"/>
+    <path d="M520,408 L520,440 L510,440 L510,464" marker-end="url(#ar)"/>
+    <path d="M520,408 L520,440 L730,440 L730,464" marker-end="url(#ar)"/>
+    <path d="M270,520 L270,534 L520,534 L520,548" marker-end="url(#ar)"/>
+    <line x1="520" y1="602" x2="520" y2="620" marker-end="url(#ar)"/>
+    <path d="M420,674 L420,686 L195,686 L195,700" marker-end="url(#ar)"/>
+    <path d="M520,674 L520,686 L505,686 L505,700" marker-end="url(#ar)"/>
+    <path d="M620,674 L620,686 L825,686 L825,700" marker-end="url(#ar)"/>
+  </g>
+  <path d="M675,632 L820,632 L855,606" stroke="#c7c7cc" stroke-width="1.4" fill="none" stroke-dasharray="4 3" marker-end="url(#ar)"/>
+  <text x="800" y="628" font-size="9.5" fill="#a1a1a6" text-anchor="middle">查询时读取解码生成</text>
+  <text x="710" y="446" font-size="9.5" fill="#a1a1a6">Tablet 多副本分布不同 BE</text>
+</svg>

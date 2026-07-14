@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="740" viewBox="0 0 1080 740" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="740" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">双维模型：能力域（管什么）× 执行时机（何时做）</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">数据类型命令族纵向面向用户；支撑能力域横切面向引擎内部；后台是正交的"执行时机"维度——bio 线程 / fork 子进程 / serverCron 承接各域异步部分</text>
+
+  <!-- axis labels -->
+  <text x="45" y="92" font-size="11" font-weight="700" fill="#1d1d1f">纵轴：能力域</text>
+  <text x="540" y="704" font-size="11" font-weight="700" fill="#1d1d1f" text-anchor="middle">横轴：执行时机　前台单线程（一条命令在主线程内完成）　←→　后台异步（bio / fork 子进程 / serverCron）</text>
+
+  <!-- foreground column band -->
+  <rect x="150" y="104" width="520" height="560" rx="16" fill="#f3f7fc" stroke="#e3ecf7"/>
+  <text x="410" y="126" font-size="12" font-weight="600" fill="#274a78" text-anchor="middle">前台单线程（主线程串行执行，天然原子）</text>
+  <!-- background column band -->
+  <rect x="690" y="104" width="360" height="560" rx="16" fill="#fdf9f0" stroke="#efe3cd"/>
+  <text x="870" y="126" font-size="12" font-weight="600" fill="#7a5a1e" text-anchor="middle">后台异步（不阻塞命令执行）</text>
+
+  <!-- interface mainlines (top, foreground) -->
+  <text x="58" y="162" font-size="10.5" font-weight="700" fill="#1b2a4a">接触面主线</text>
+  <text x="58" y="176" font-size="8" fill="#5b7db1">数据类型命令族</text>
+  <g text-anchor="middle">
+    <rect x="160" y="146" width="96" height="44" rx="9" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/><text x="208" y="165" font-size="10.5" font-weight="600" fill="#1b2a4a">String</text><text x="208" y="180" font-size="8" fill="#5b7db1">int/embstr/raw</text>
+    <rect x="264" y="146" width="82" height="44" rx="9" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/><text x="305" y="165" font-size="10.5" font-weight="600" fill="#1b2a4a">Hash</text><text x="305" y="180" font-size="8" fill="#5b7db1">字段映射</text>
+    <rect x="354" y="146" width="82" height="44" rx="9" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/><text x="395" y="165" font-size="10.5" font-weight="600" fill="#1b2a4a">List</text><text x="395" y="180" font-size="8" fill="#5b7db1">quicklist</text>
+    <rect x="444" y="146" width="118" height="44" rx="9" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/><text x="503" y="165" font-size="10.5" font-weight="600" fill="#1b2a4a">Set / ZSet</text><text x="503" y="180" font-size="8" fill="#5b7db1">intset·skiplist</text>
+    <rect x="570" y="146" width="88" height="44" rx="9" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/><text x="614" y="165" font-size="10.5" font-weight="600" fill="#1b2a4a">Stream</text><text x="614" y="180" font-size="8" fill="#5b7db1">rax + 消费组</text>
+  </g>
+
+  <!-- support capability domains (rows) -->
+  <text x="58" y="228" font-size="10.5" font-weight="700" fill="#1d1d1f">支撑能力域</text>
+
+  <!-- Row 1: 对象与编码 (foreground, spans data) -->
+  <rect x="160" y="210" width="500" height="40" rx="9" fill="#fdf3e5" stroke="#f0d9b5" filter="url(#soft)"/>
+  <text x="410" y="228" font-size="10.5" font-weight="600" fill="#7a5a1e" text-anchor="middle">对象系统与底层编码　redisObject · dict 渐进 rehash · listpack/skiplist/quicklist/intset/sds</text>
+  <text x="410" y="242" font-size="8" fill="#b08535" text-anchor="middle">小规模紧凑编码 ↔ 大规模标准结构，按阈值单向升级</text>
+
+  <!-- Row 2: 事件网络与执行 (foreground) -->
+  <rect x="160" y="258" width="500" height="40" rx="9" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="410" y="276" font-size="10.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">事件驱动网络与执行模型　ae Reactor · 单线程 call() · RESP 协议</text>
+  <text x="410" y="290" font-size="8" fill="#5b7db1" text-anchor="middle">IO 线程只并行读写/解析，命令执行仍串行</text>
+
+  <!-- Row 3: 内存过期淘汰 (spans both — foreground lazy + background active) -->
+  <rect x="160" y="306" width="500" height="40" rx="9" fill="#eafaf1" stroke="#b8e6cd" filter="url(#soft)"/>
+  <text x="410" y="330" font-size="10.5" font-weight="600" fill="#1c6b45" text-anchor="middle">内存管理 · 过期与淘汰（惰性 · 命令路径上触发）</text>
+  <rect x="700" y="306" width="340" height="40" rx="9" fill="#eafaf1" stroke="#b8e6cd" filter="url(#soft)"/>
+  <text x="870" y="330" font-size="10.5" font-weight="600" fill="#1c6b45" text-anchor="middle">定期过期 activeExpireCycle · 淘汰 LRU/LFU</text>
+
+  <!-- Row 4: 事务/脚本/pubsub (foreground) -->
+  <rect x="160" y="354" width="500" height="40" rx="9" fill="#f6f0fb" stroke="#dcc6ee" filter="url(#soft)"/>
+  <text x="410" y="372" font-size="10.5" font-weight="600" fill="#5a2a82" text-anchor="middle">事务 · 脚本 · 发布订阅　MULTI/WATCH · Lua/Functions · Pub/Sub</text>
+  <text x="410" y="386" font-size="8" fill="#8a5cae" text-anchor="middle">都依赖"单线程不被打断"这一共同前提</text>
+
+  <!-- background-only rows -->
+  <!-- RDB -->
+  <rect x="700" y="354" width="340" height="40" rx="9" fill="#fdf3e5" stroke="#f0d9b5" filter="url(#soft)"/>
+  <text x="870" y="372" font-size="10.5" font-weight="600" fill="#7a5a1e" text-anchor="middle">持久化 · RDB 快照</text>
+  <text x="870" y="386" font-size="8" fill="#b08535" text-anchor="middle">BGSAVE：fork 子进程 + COW</text>
+  <!-- AOF -->
+  <rect x="700" y="402" width="340" height="40" rx="9" fill="#fdf3e5" stroke="#f0d9b5" filter="url(#soft)"/>
+  <text x="870" y="420" font-size="10.5" font-weight="600" fill="#7a5a1e" text-anchor="middle">持久化 · AOF 日志</text>
+  <text x="870" y="434" font-size="8" fill="#b08535" text-anchor="middle">everysec fsync 交给 bio 线程 · 重写 fork</text>
+  <!-- 复制 -->
+  <rect x="700" y="450" width="340" height="40" rx="9" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="870" y="468" font-size="10.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">复制</text>
+  <text x="870" y="482" font-size="8" fill="#5b7db1" text-anchor="middle">PSYNC 全量/部分 · 复制积压缓冲 · 命令流异步下发</text>
+  <!-- 集群与HA -->
+  <rect x="700" y="498" width="340" height="40" rx="9" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="870" y="516" font-size="10.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">集群与高可用</text>
+  <text x="870" y="530" font-size="8" fill="#5b7db1" text-anchor="middle">16384 槽 · Gossip 总线 · 故障转移 · Sentinel</text>
+
+  <!-- foreground command path arrow (spanning the foreground rows) -->
+  <text x="120" y="200" font-size="9" fill="#8a8a90" text-anchor="middle" transform="rotate(-90 120 400)">一条命令：解析 → 查表 → 执行 → 传播</text>
+  <line x1="140" y1="146" x2="140" y2="620" stroke="#c7c7cc" stroke-width="1.4" stroke-dasharray="4 4" marker-end="url(#ar)"/>
+
+  <!-- propagation bridge: foreground write → background AOF/replication -->
+  <path d="M660 374 C 680 374 680 422 698 422" fill="none" stroke="#f0a63a" stroke-width="1.6" marker-end="url(#ar)"/>
+  <path d="M660 374 C 680 374 680 468 698 468" fill="none" stroke="#4f9dff" stroke-width="1.6" marker-end="url(#ar)"/>
+  <text x="672" y="352" font-size="8" fill="#a1a1a6">命令传播 propagate</text>
+
+  <!-- bottom takeaway -->
+  <rect x="150" y="632" width="900" height="30" rx="8" fill="#f7f7f9" stroke="#ececef"/>
+  <text x="600" y="651" font-size="10" fill="#4a4a4f" text-anchor="middle">读法：纵向选一种数据类型命令族，横向看它在"前台单线程执行"完成后，如何被 propagate 分发到"后台" AOF 日志与复制流；内存不足时后台按 LRU/LFU 淘汰</text>
+</svg>

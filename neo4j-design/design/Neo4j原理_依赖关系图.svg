@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="540" viewBox="0 0 1080 540"
+     font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1080" height="540" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Neo4j 能力域依赖关系图</text>
+  <text x="30" y="50" font-size="11.5" fill="#a1a1a6">实线 = 数据流 / 调用;虚线 = 状态约束。贯穿层 record id 横切存储 · 遍历 · 索引</text>
+
+  <!-- legend -->
+  <line x1="770" y1="34" x2="808" y2="34" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <text x="814" y="38" font-size="10" fill="#6e6e73">数据流 / 调用</text>
+  <line x1="910" y1="34" x2="948" y2="34" stroke="#c7c7cc" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#ar)"/>
+  <text x="954" y="38" font-size="10" fill="#6e6e73">状态约束</text>
+
+  <!-- Cypher -->
+  <rect x="440" y="72" width="200" height="50" rx="12" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="540" y="94" font-size="12" font-weight="600" fill="#3d2a5a" text-anchor="middle">接触面 · Cypher</text>
+  <text x="540" y="110" font-size="9.5" fill="#8b7aa8" text-anchor="middle">声明式图模式 MATCH / CREATE</text>
+
+  <!-- 索引与遍历 (left input) -->
+  <rect x="90" y="158" width="210" height="60" rx="12" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="195" y="182" font-size="12" font-weight="600" fill="#5a3410" text-anchor="middle">索引与遍历</text>
+  <text x="195" y="199" font-size="9.5" fill="#93762e" text-anchor="middle">按 label+property 找起点</text>
+  <text x="195" y="212" font-size="9" fill="#93762e" text-anchor="middle">NodeIndexSeek / label 扫</text>
+
+  <!-- 查询规划与执行 (center) -->
+  <rect x="440" y="158" width="200" height="60" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="540" y="182" font-size="12" font-weight="600" fill="#1b2a4a" text-anchor="middle">查询规划与执行</text>
+  <text x="540" y="199" font-size="9.5" fill="#5b7db1" text-anchor="middle">成本规划器 + 运行时算子</text>
+  <text x="540" y="212" font-size="9" fill="#5b7db1" text-anchor="middle">Kernel API 游标读图</text>
+
+  <!-- 记录存储核心 (center, big) -->
+  <rect x="370" y="256" width="300" height="74" rx="14" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="520" y="282" font-size="13" font-weight="700" fill="#5a3410" text-anchor="middle">记录存储(核心)</text>
+  <text x="520" y="301" font-size="10" fill="#93762e" text-anchor="middle">定长记录 + 免索引邻接(节点直连关系链)</text>
+  <text x="520" y="317" font-size="9.5" fill="#93762e" text-anchor="middle">遍历 = 顺 record id 指针追逐,零索引</text>
+
+  <!-- 页缓存 (right) -->
+  <rect x="742" y="256" width="220" height="74" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="852" y="282" font-size="12" font-weight="600" fill="#12402a" text-anchor="middle">页缓存</text>
+  <text x="852" y="300" font-size="9.5" fill="#2f6f4f" text-anchor="middle">MuninnPageCache</text>
+  <text x="852" y="315" font-size="9" fill="#2f6f4f" text-anchor="middle">store 文件分页进堆外内存</text>
+
+  <!-- 事务与恢复 (below storage, center-left) -->
+  <rect x="370" y="360" width="188" height="60" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="464" y="384" font-size="12" font-weight="600" fill="#1b2a4a" text-anchor="middle">事务与恢复</text>
+  <text x="464" y="401" font-size="9.5" fill="#5b7db1" text-anchor="middle">TxState → Command → WAL</text>
+  <text x="464" y="414" font-size="9" fill="#5b7db1" text-anchor="middle">崩溃后重放恢复</text>
+
+  <!-- 锁与并发 (right of 事务) -->
+  <rect x="580" y="360" width="200" height="60" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="680" y="384" font-size="12" font-weight="600" fill="#1b2a4a" text-anchor="middle">锁与并发</text>
+  <text x="680" y="401" font-size="9.5" fill="#5b7db1" text-anchor="middle">Forseti · 节点/关系锁</text>
+  <text x="680" y="414" font-size="9" fill="#5b7db1" text-anchor="middle">dreadlocks 死锁检测(非 MVCC)</text>
+
+  <!-- ==== connectors ==== -->
+  <!-- Cypher -> 查询规划执行 -->
+  <path d="M540,122 L540,158" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <!-- 索引 -> 查询规划执行 (找起点) -->
+  <path d="M300,188 L440,188" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="310" y="181" font-size="9" fill="#a1a1a6">找起点</text>
+  <!-- 查询规划执行 -> 记录存储 (游标遍历) -->
+  <path d="M540,218 L540,256" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="548" y="242" font-size="9" fill="#a1a1a6">游标遍历</text>
+  <!-- 页缓存 -> 记录存储 (分页供记录) -->
+  <path d="M742,293 L670,293" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="676" y="286" font-size="9" fill="#a1a1a6">分页供记录</text>
+  <!-- 事务 -> 记录存储 (写记录) -->
+  <path d="M464,360 L464,330" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="470" y="348" font-size="9" fill="#a1a1a6">写记录 / 变更</text>
+  <!-- 锁 -.-> 事务 (状态约束) -->
+  <path d="M580,390 L558,390" stroke="#c7c7cc" stroke-width="1.5" fill="none" stroke-dasharray="5 4" marker-end="url(#ar)"/>
+
+  <!-- ==== 贯穿层 record id band ==== -->
+  <rect x="90" y="452" width="872" height="60" rx="12" fill="#fdf6ea" stroke="#efdcb4" stroke-dasharray="6 4" filter="url(#soft)"/>
+  <text x="110" y="476" font-size="11.5" font-weight="600" fill="#5a3410">贯穿层 · record id = 文件偏移寻址键(pageIdForRecord / offsetForId)</text>
+  <text x="110" y="496" font-size="10" fill="#93762e">横切 记录存储 · 遍历 · 索引 —— 节点/关系/属性靠 id 相互指向,遍历就是顺着 id 指针走(O(1) 定位,无需 id→位置索引)</text>
+  <!-- dotted ties up to storage / index -->
+  <path d="M195,452 L195,218" stroke="#efdcb4" stroke-width="1.2" fill="none" stroke-dasharray="3 4"/>
+  <path d="M520,452 L520,330" stroke="#efdcb4" stroke-width="1.2" fill="none" stroke-dasharray="3 4"/>
+</svg>

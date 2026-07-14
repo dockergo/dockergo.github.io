@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="510" viewBox="0 0 1000 510" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1000" height="510" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">到期驱动：时钟中断 → update_process_times → 记账 / 扫定时器 / 调度节拍（与进程调度衔接）</text>
+
+  <!-- clock interrupt -->
+  <rect x="400" y="56" width="200" height="50" rx="12" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="500" y="78" font-size="11.5" font-weight="600" fill="#5a3410" text-anchor="middle">时钟中断</text>
+  <text x="500" y="96" font-size="9.5" fill="#93762e" text-anchor="middle">clock_event 到点触发</text>
+
+  <!-- periodic path -->
+  <rect x="120" y="136" width="340" height="78" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="290" y="158" font-size="11" font-weight="600" fill="#1b2a4a" text-anchor="middle">周期模式 · tick_handle_periodic</text>
+  <text x="138" y="180" font-size="9.5" fill="#5b7db1">tick-common.c:108</text>
+  <text x="138" y="202" font-size="10" fill="#5b7db1">→ tick_periodic：do_timer(1) 推进 jiffies</text>
+
+  <!-- highres path -->
+  <rect x="540" y="136" width="340" height="78" rx="12" fill="#f4eefb" stroke="#dcc9ef" filter="url(#soft)"/>
+  <text x="710" y="158" font-size="11" font-weight="600" fill="#4a2c6b" text-anchor="middle">高精度模式 · hrtimer_interrupt</text>
+  <text x="558" y="180" font-size="9.5" fill="#8a6db0">hrtimer.c:2083</text>
+  <text x="558" y="202" font-size="10" fill="#8a6db0">tick 本身成 hrtimer：sched_timer→tick_sched_handle</text>
+
+  <!-- hub -->
+  <rect x="350" y="244" width="300" height="54" rx="12" fill="#e3ecfa" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="500" y="267" font-size="12" font-weight="600" fill="#1b2a4a" text-anchor="middle">update_process_times</text>
+  <text x="500" y="285" font-size="9.5" fill="#5b7db1" text-anchor="middle">timer.c:2468 · 每次节拍的中枢，扇出四路</text>
+
+  <!-- fan-out boxes -->
+  <rect x="40" y="326" width="215" height="104" rx="12" fill="#fbfbfd" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="147" y="348" font-size="10.5" font-weight="600" fill="#1d1d1f" text-anchor="middle">时间记账 / do_timer</text>
+  <text x="56" y="372" font-size="9.5" fill="#6e6e73">· 推进全局 jiffies</text>
+  <text x="56" y="392" font-size="9.5" fill="#6e6e73">· 仅 tick_do_timer_cpu（:88）</text>
+  <text x="56" y="412" font-size="9.5" fill="#6e6e73">· 用户/内核态 CPU 计时</text>
+
+  <rect x="273" y="326" width="225" height="104" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="385" y="348" font-size="10.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">run_local_timers</text>
+  <text x="289" y="372" font-size="9.5" fill="#5b7db1">timer.c:2416</text>
+  <text x="289" y="392" font-size="9.5" fill="#5b7db1">· hrtimer_run_queues() 跑 hrtimer</text>
+  <text x="289" y="412" font-size="9.5" fill="#5b7db1">· 到期则 raise TIMER_SOFTIRQ(:2458)</text>
+
+  <rect x="516" y="326" width="215" height="104" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="623" y="348" font-size="10.5" font-weight="600" fill="#12402a" text-anchor="middle">sched_tick() → 调度</text>
+  <text x="532" y="372" font-size="9.5" fill="#2f6f4f">· 推进时间片</text>
+  <text x="532" y="392" font-size="9.5" fill="#2f6f4f">· 置 need_resched 抢占标记</text>
+  <text x="532" y="412" font-size="9.5" fill="#2f6f4f">→ 衔接进程调度主线</text>
+
+  <rect x="749" y="326" width="211" height="104" rx="12" fill="#fbfbfd" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="854" y="348" font-size="10.5" font-weight="600" fill="#1d1d1f" text-anchor="middle">run_posix_cpu_timers</text>
+  <text x="765" y="372" font-size="9.5" fill="#6e6e73">· POSIX 进程/线程 CPU 定时器</text>
+  <text x="765" y="392" font-size="9.5" fill="#6e6e73">· CONFIG_POSIX_TIMERS</text>
+
+  <!-- softirq layer -->
+  <rect x="273" y="450" width="222" height="48" rx="11" fill="#fff7e6" stroke="#e8cf9a"/>
+  <text x="384" y="470" font-size="10" font-weight="600" fill="#5a3410" text-anchor="middle">TIMER_SOFTIRQ</text>
+  <text x="384" y="487" font-size="9" fill="#93762e" text-anchor="middle">低精度 timer wheel 到期回调（__run_timers）</text>
+
+  <rect x="513" y="450" width="222" height="48" rx="11" fill="#fff7e6" stroke="#e8cf9a"/>
+  <text x="624" y="470" font-size="10" font-weight="600" fill="#5a3410" text-anchor="middle">HRTIMER_SOFTIRQ</text>
+  <text x="624" y="487" font-size="9" fill="#93762e" text-anchor="middle">标 soft 的 hrtimer 回调（不压硬中断）</text>
+
+  <!-- arrows -->
+  <g stroke="#c7c7cc" stroke-width="1.6" fill="none">
+    <path d="M500,106 L500,120 L290,120 L290,136" marker-end="url(#ar)"/>
+    <path d="M500,106 L500,120 L710,120 L710,136" marker-end="url(#ar)"/>
+    <path d="M290,214 L290,230 L500,230 L500,244" marker-end="url(#ar)"/>
+    <path d="M710,214 L710,230 L500,230 L500,244" marker-end="url(#ar)"/>
+    <path d="M500,298 L500,312 L147,312 L147,326" marker-end="url(#ar)"/>
+    <path d="M500,298 L500,312 L385,312 L385,326" marker-end="url(#ar)"/>
+    <path d="M500,298 L500,312 L623,312 L623,326" marker-end="url(#ar)"/>
+    <path d="M500,298 L500,312 L854,312 L854,326" marker-end="url(#ar)"/>
+    <path d="M385,430 L385,450" marker-end="url(#ar)"/>
+  </g>
+  <text x="396" y="444" font-size="9" fill="#a1a1a6">延后到软中断执行</text>
+</svg>

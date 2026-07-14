@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="330" viewBox="0 0 1000 330" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs><filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter><marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker></defs>
+  <rect width="1000" height="330" fill="#fbfbfd"/>
+  <text x="40" y="30" font-size="14" font-weight="600" fill="#1d1d1f">多表事务与 Label：多表同时可见/同时回滚；Label 幂等防重复导入</text>
+  <rect x="40" y="66" width="150" height="46" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/><text x="115" y="94" font-size="12.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">Begin（Label）</text>
+  <g text-anchor="middle" font-size="11" fill="#12402a">
+    <rect x="250" y="52" width="150" height="34" rx="9" fill="#eafaf1" stroke="#bfe0cd"/><text x="325" y="74">写 表 t1</text>
+    <rect x="250" y="94" width="150" height="34" rx="9" fill="#eafaf1" stroke="#bfe0cd"/><text x="325" y="116">写 表 t2</text>
+    <rect x="250" y="136" width="150" height="34" rx="9" fill="#eafaf1" stroke="#bfe0cd"/><text x="325" y="158">写 表 t3</text>
+  </g>
+  <rect x="460" y="80" width="160" height="60" rx="12" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/><text x="540" y="106" font-size="12.5" font-weight="600" fill="#5a3410" text-anchor="middle">Commit（一个事务）</text><text x="540" y="126" font-size="10" fill="#93762e" text-anchor="middle">全成才提交</text>
+  <rect x="680" y="52" width="280" height="40" rx="11" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/><text x="820" y="77" font-size="12" font-weight="600" fill="#12402a" text-anchor="middle">Publish → 三表同时可见</text>
+  <rect x="680" y="128" width="280" height="40" rx="11" fill="#fbeaea" stroke="#e7c3c3" filter="url(#soft)"/><text x="820" y="153" font-size="12" font-weight="600" fill="#4a1414" text-anchor="middle">任一失败 → 三表同时回滚</text>
+  <g stroke="#c7c7cc" stroke-width="1.5" fill="none">
+    <path d="M190,89 L250,69" marker-end="url(#ar)"/><path d="M190,89 L250,111" marker-end="url(#ar)"/><path d="M190,95 L250,153" marker-end="url(#ar)"/>
+    <line x1="400" y1="110" x2="460" y2="110" marker-end="url(#ar)"/>
+    <path d="M620,100 L650,100 L650,72 L680,72" marker-end="url(#ar)"/>
+    <path d="M620,120 L650,120 L650,148 L680,148" marker-end="url(#ar)"/>
+  </g>
+  <rect x="40" y="228" width="920" height="66" rx="12" fill="#fafafb" stroke="#ececf1"/>
+  <text x="500" y="254" font-size="11.5" fill="#6e6e73" text-anchor="middle">Label 幂等：提交后进"已用集合"，重复提交被拒 → 精确一次；按保留期清理（过短误判重复、过长占元数据）。</text>
+  <text x="500" y="276" font-size="11.5" fill="#6e6e73" text-anchor="middle">2PC Stream Load：预提交与最终提交分离，由外部编排统一 commit，实现与外部系统原子对齐。</text>
+</svg>

@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="500" viewBox="0 0 1060 500" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1060" height="500" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">块 IO 两个核心对象：bio 描述「一次传输」，request 是「可排序/派发」的单位，一个 request 串起多个相邻 bio</text>
+
+  <!-- 左：struct bio -->
+  <rect x="28" y="56" width="300" height="266" rx="13" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="44" y="80" font-size="11.5" font-weight="600" fill="#5a3410">struct bio（blk_types.h:210）</text>
+  <text x="44" y="96" font-size="9" fill="#93762e">一次块传输的描述（原料）</text>
+  <text x="44" y="122" font-size="9.5" fill="#7a5518">bi_bdev · 目标块设备（:212）</text>
+  <text x="44" y="145" font-size="9.5" fill="#7a5518">bi_opf · 操作 REQ_OP 读/写/flush（:213）</text>
+  <text x="44" y="168" font-size="9.5" fill="#7a5518">bi_iter · 传输进度游标 bvec_iter（:237）</text>
+  <text x="44" y="191" font-size="9.5" fill="#7a5518">bi_io_vec · → 内存段数组 bio_vec[]（:236）</text>
+  <text x="44" y="214" font-size="9.5" fill="#7a5518">bi_vcnt · bio_vec 段数（:270）</text>
+  <text x="44" y="237" font-size="9.5" fill="#7a5518">bi_end_io · 完成回调（:245）</text>
+  <text x="44" y="260" font-size="9.5" fill="#7a5518">bi_status · 完成状态（:220）</text>
+  <text x="44" y="283" font-size="9.5" fill="#7a5518">bi_next · 同 request 下一 bio（:211）</text>
+  <text x="44" y="308" font-size="8.5" fill="#a1a1a6">bio = 设备 + 操作 + 内存段 + 回调</text>
+
+  <!-- 中：bio_vec 与 bvec_iter -->
+  <text x="352" y="80" font-size="11" font-weight="600" fill="#5a3410">内存散布：page + 长度 + 页内偏移</text>
+  <rect x="352" y="92" width="268" height="150" rx="13" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="368" y="114" font-size="10.5" font-weight="600" fill="#1d1d1f">bio_vec[]（bvec.h:28）</text>
+  <rect x="368" y="122" width="236" height="30" rx="8" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="486" y="141" font-size="9" fill="#5a3410" text-anchor="middle">bv_page · bv_len · bv_offset</text>
+  <rect x="368" y="158" width="236" height="30" rx="8" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="486" y="177" font-size="9" fill="#5a3410" text-anchor="middle">bv_page · bv_len · bv_offset</text>
+  <rect x="368" y="194" width="236" height="30" rx="8" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="486" y="213" font-size="9" fill="#5a3410" text-anchor="middle">bv_page · bv_len · bv_offset</text>
+  <text x="368" y="237" font-size="8.5" fill="#a1a1a6">每项 = 一段连续物理内存（分散聚集 IO）</text>
+
+  <rect x="352" y="256" width="268" height="118" rx="13" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="368" y="278" font-size="10.5" font-weight="600" fill="#1d1d1f">bvec_iter（bvec.h:77）· 传输进度</text>
+  <text x="368" y="302" font-size="9.5" fill="#6e6e73">bi_sector · 当前设备扇区（:82）</text>
+  <text x="368" y="325" font-size="9.5" fill="#6e6e73">bi_size · 剩余字节数（:87）</text>
+  <text x="368" y="348" font-size="9.5" fill="#6e6e73">bi_idx · 当前 bio_vec 下标（:93）</text>
+  <text x="368" y="368" font-size="8.5" fill="#a1a1a6">切分/推进只改 iter，不复制内存段</text>
+
+  <!-- 右：struct request -->
+  <rect x="644" y="56" width="388" height="318" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="660" y="80" font-size="11.5" font-weight="600" fill="#1b2a4a">struct request（blk-mq.h:105）</text>
+  <text x="660" y="96" font-size="9" fill="#5b7db1">IO 调度器排序、blk-mq 派发给驱动的单位</text>
+  <text x="660" y="122" font-size="9.5" fill="#33507d">q / mq_ctx / mq_hctx · 所属请求队列（:106-108）</text>
+  <text x="660" y="147" font-size="9.5" fill="#33507d">cmd_flags · 操作与通用标志（:110）</text>
+  <text x="660" y="172" font-size="9.5" fill="#33507d">__sector / __data_len · 起始扇区与总长（:120/:119）</text>
+  <text x="660" y="197" font-size="9.5" fill="#33507d">bio → biotail · 所含 bio 链头 / 尾（:122/:123）</text>
+  <text x="660" y="222" font-size="9.5" fill="#33507d">nr_phys_segments · 合并后物理段数（:154）</text>
+  <text x="660" y="247" font-size="9.5" fill="#33507d">rb_node · 调度器排序红黑树节点（:194）</text>
+  <text x="660" y="272" font-size="9.5" fill="#33507d">fifo_time · deadline FIFO 到期时刻（:212）</text>
+  <text x="660" y="297" font-size="9.5" fill="#33507d">deadline · 请求截止（:173）</text>
+  <text x="660" y="322" font-size="9.5" fill="#33507d">end_io · 请求完成回调（:217）</text>
+  <text x="660" y="346" font-size="8.5" fill="#8aa0c4">rb_node / fifo_time 供 IO 调度器排序与防饿死</text>
+  <text x="660" y="362" font-size="8.5" fill="#8aa0c4">→ 详见「IO 调度器 · mq-deadline」</text>
+
+  <!-- 底部：关系带 -->
+  <rect x="28" y="392" width="1004" height="92" rx="13" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="46" y="414" font-size="11" font-weight="600" fill="#12402a">bio → request 的关系</text>
+  <text x="46" y="436" font-size="9.5" fill="#2f6f4f">· 合并：相邻扇区的 bio 经 blk_mq_attempt_bio_merge 并入已有相邻 request（省一次 IO）；一个 request 用 bio→bi_next 把多个 bio 串成链，bio/biotail 记链头尾。</text>
+  <text x="46" y="458" font-size="9.5" fill="#2f6f4f">· request = 可被 IO 调度器排序、经 blk-mq 硬队列派发给驱动 -&gt;queue_rq 的单位；bio 只是「一次传输」的原料。</text>
+  <text x="46" y="476" font-size="9" fill="#5c8a6f">未合并的 bio → blk_mq_get_new_requests 新建 request 并 blk_mq_bio_to_request 填充（blk-mq.c:3202）→ 详见「IO 提交到完成全路径」。</text>
+
+  <!-- 连线 -->
+  <g stroke="#c7c7cc" stroke-width="1.6" fill="none">
+    <path d="M328,188 L352,175" marker-end="url(#ar)"/>
+    <path d="M644,197 L620,197" marker-end="url(#ar)"/>
+  </g>
+  <text x="330" y="206" font-size="8.5" fill="#a1a1a6">bi_io_vec</text>
+  <text x="536" y="192" font-size="8.5" fill="#a1a1a6">引用 bio 链</text>
+</svg>

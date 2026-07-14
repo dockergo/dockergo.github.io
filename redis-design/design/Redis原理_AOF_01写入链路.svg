@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="460" viewBox="0 0 1000 460" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1000" height="460" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">AOF 写入链路：执行后追加 aof_buf → write → fsync（aof.c:1409,1147）</text>
+  <text x="30" y="49" font-size="10.5" fill="#a1a1a6">复用 call() 的命令传播；只记写命令，且是执行成功后才记</text>
+
+  <!-- pipeline -->
+  <g text-anchor="middle" font-size="9.5">
+    <rect x="40" y="80" width="150" height="56" rx="9" fill="#eafaf1" stroke="#b8e6cd" filter="url(#soft)"/>
+    <text x="115" y="102" font-weight="600" fill="#1c6b45">写命令执行完</text>
+    <text x="115" y="119" fill="#3a9b6e" font-size="8.5">call() propagation 阶段</text>
+    <text x="115" y="131" fill="#5cb88a" font-size="8">仅 dirty&gt;0 的写命令</text>
+
+    <rect x="230" y="80" width="150" height="56" rx="9" fill="#fdf3e5" stroke="#f0d9b5" filter="url(#soft)"/>
+    <text x="305" y="102" font-weight="600" fill="#7a5a1e">追加 aof_buf</text>
+    <text x="305" y="119" fill="#b08535" font-size="8.5">feedAppendOnlyFile</text>
+    <text x="305" y="131" fill="#c79a4e" font-size="8">跨 DB 先插 SELECT</text>
+
+    <rect x="420" y="80" width="150" height="56" rx="9" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+    <text x="495" y="102" font-weight="600" fill="#1b2a4a">write() 到 fd</text>
+    <text x="495" y="119" fill="#5b7db1" font-size="8.5">flushAppendOnlyFile</text>
+    <text x="495" y="131" fill="#8ba7cc" font-size="8">进 OS 页缓存</text>
+
+    <rect x="610" y="80" width="150" height="56" rx="9" fill="#f6f0fb" stroke="#dcc6ee" filter="url(#soft)"/>
+    <text x="685" y="102" font-weight="600" fill="#5a2a82">fsync</text>
+    <text x="685" y="119" fill="#8a5cae" font-size="8.5">按 appendfsync 策略</text>
+    <text x="685" y="131" fill="#a884c8" font-size="8">页缓存 → 磁盘</text>
+
+    <rect x="800" y="80" width="160" height="56" rx="9" fill="#eafaf1" stroke="#b8e6cd" filter="url(#soft)"/>
+    <text x="880" y="102" font-weight="600" fill="#1c6b45">持久化完成</text>
+    <text x="880" y="119" fill="#3a9b6e" font-size="8.5">重启可重放恢复</text>
+  </g>
+  <line x1="190" y1="108" x2="228" y2="108" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="380" y1="108" x2="418" y2="108" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="570" y1="108" x2="608" y2="108" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="760" y1="108" x2="798" y2="108" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+
+  <!-- fsync strategies -->
+  <text x="40" y="184" font-size="11" font-weight="700" fill="#1d1d1f">三种 fsync 策略（appendfsync，默认 everysec）</text>
+  <g font-size="10">
+    <rect x="40" y="198" width="300" height="90" rx="9" fill="#fdeef2" stroke="#f6c9d6" filter="url(#soft)"/>
+    <text x="60" y="220" font-weight="600" fill="#c02a56">always</text>
+    <text x="60" y="240" fill="#88304a" font-size="9.5">每条写命令后 fsync</text>
+    <text x="60" y="258" fill="#88304a" font-size="9.5">丢失：几乎不丢</text>
+    <text x="60" y="276" fill="#c02a56" font-size="9.5">性能：最慢（每命令一次磁盘同步）</text>
+
+    <rect x="350" y="198" width="300" height="90" rx="9" fill="#eafaf1" stroke="#b8e6cd" filter="url(#soft)"/>
+    <text x="370" y="220" font-weight="600" fill="#1c6b45">everysec（默认）</text>
+    <text x="370" y="240" fill="#2f7a56" font-size="9.5">每秒一次，交 bio 后台线程</text>
+    <text x="370" y="258" fill="#2f7a56" font-size="9.5">丢失：最多 ~1~2 秒</text>
+    <text x="370" y="276" fill="#1c6b45" font-size="9.5">性能：均衡（推荐）</text>
+
+    <rect x="660" y="198" width="300" height="90" rx="9" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+    <text x="680" y="220" font-weight="600" fill="#1b2a4a">no</text>
+    <text x="680" y="240" fill="#5b7db1" font-size="9.5">交 OS 决定何时刷</text>
+    <text x="680" y="258" fill="#5b7db1" font-size="9.5">丢失：取决于 OS（可能 30s）</text>
+    <text x="680" y="276" fill="#1b2a4a" font-size="9.5">性能：最快</text>
+  </g>
+
+  <rect x="40" y="308" width="920" height="130" rx="10" fill="#f7f7f9" stroke="#ececef"/>
+  <text x="60" y="332" font-size="11" font-weight="600" fill="#1d1d1f">write 与 fsync 的区别（理解丢失窗口的关键）</text>
+  <text x="60" y="356" font-size="10" fill="#4a4a4f">· <tspan font-weight="600">write()</tspan>：数据进入 OS 页缓存，程序崩溃不丢（OS 还在），但机器断电会丢</text>
+  <text x="60" y="378" font-size="10" fill="#4a4a4f">· <tspan font-weight="600">fsync()</tspan>：强制 OS 把页缓存刷到物理磁盘，断电也不丢 —— 但慢（等磁盘）</text>
+  <text x="60" y="400" font-size="10" fill="#4a4a4f">· AOF 每次命令都 write（几乎无成本），fsync 的频率由 appendfsync 决定 —— 这就是丢失窗口的来源</text>
+  <text x="60" y="422" font-size="9.5" fill="#86868b">everysec 的"1 秒"= 两次 fsync 之间已 write 但未落盘的命令，断电才会丢这部分</text>
+</svg>

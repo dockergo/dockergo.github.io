@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="556" viewBox="0 0 1080 556"
+     font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1080" height="556" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Neo4j 免索引邻接:节点直连关系链表</text>
+  <text x="30" y="50" font-size="11.5" fill="#a1a1a6">遍历 = 指针追逐,顺关系链走到 NULL,全程零索引 —— 原生图库的立身之本</text>
+
+  <!-- Node record -->
+  <rect x="40" y="82" width="150" height="96" rx="12" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="115" y="106" font-size="12" font-weight="700" fill="#5a3410" text-anchor="middle">NodeRecord</text>
+  <rect x="56" y="120" width="118" height="42" rx="8" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="115" y="139" font-size="10.5" font-weight="600" fill="#12402a" text-anchor="middle">nextRel</text>
+  <text x="115" y="154" font-size="8.5" fill="#2f6f4f" text-anchor="middle">第一条关系 id</text>
+
+  <!-- Rel R1 -->
+  <rect x="266" y="70" width="188" height="120" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="360" y="92" font-size="11.5" font-weight="700" fill="#1b2a4a" text-anchor="middle">Relationship R1</text>
+  <text x="360" y="107" font-size="8.5" fill="#5b7db1" text-anchor="middle">链头 firstInFirstChain</text>
+  <rect x="280" y="116" width="76" height="30" rx="6" fill="#fbeaea" stroke="#e7c3c3"/>
+  <text x="318" y="130" font-size="8.5" fill="#4a1414" text-anchor="middle">firstPrev 槽</text>
+  <text x="318" y="141" font-size="8" fill="#7a2a2a" text-anchor="middle">= 度数/count</text>
+  <rect x="364" y="116" width="76" height="30" rx="6" fill="#ffffff" stroke="#bcd0ec"/>
+  <text x="402" y="135" font-size="9" fill="#1b2a4a" text-anchor="middle">firstNext &#8594;</text>
+  <text x="360" y="164" font-size="8.5" fill="#5b7db1" text-anchor="middle">secondPrev / secondNext</text>
+  <text x="360" y="178" font-size="8" fill="#a1a1a6" text-anchor="middle">(第二端点的链)</text>
+
+  <!-- Rel R2 -->
+  <rect x="530" y="70" width="188" height="120" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="624" y="92" font-size="11.5" font-weight="700" fill="#1b2a4a" text-anchor="middle">Relationship R2</text>
+  <rect x="544" y="116" width="76" height="30" rx="6" fill="#ffffff" stroke="#bcd0ec"/>
+  <text x="582" y="135" font-size="9" fill="#1b2a4a" text-anchor="middle">&#8592; firstPrev</text>
+  <rect x="628" y="116" width="76" height="30" rx="6" fill="#ffffff" stroke="#bcd0ec"/>
+  <text x="666" y="135" font-size="9" fill="#1b2a4a" text-anchor="middle">firstNext &#8594;</text>
+  <text x="624" y="164" font-size="8.5" fill="#5b7db1" text-anchor="middle">first 端与 R1 同属一节点的链</text>
+  <text x="624" y="178" font-size="8" fill="#a1a1a6" text-anchor="middle">每端一条双向链表</text>
+
+  <!-- Rel Rn -->
+  <rect x="794" y="70" width="150" height="120" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="869" y="92" font-size="11.5" font-weight="700" fill="#1b2a4a" text-anchor="middle">Relationship Rn</text>
+  <rect x="810" y="116" width="118" height="30" rx="6" fill="#ffffff" stroke="#bcd0ec"/>
+  <text x="869" y="135" font-size="9" fill="#1b2a4a" text-anchor="middle">firstNext = NULL</text>
+  <text x="869" y="164" font-size="8.5" fill="#5b7db1" text-anchor="middle">链尾</text>
+
+  <!-- NULL terminator -->
+  <rect x="984" y="112" width="72" height="38" rx="10" fill="#fbeaea" stroke="#e7c3c3" filter="url(#soft)"/>
+  <text x="1020" y="136" font-size="12" font-weight="700" fill="#4a1414" text-anchor="middle">NULL</text>
+
+  <!-- pointer connectors -->
+  <path d="M190,141 L266,141" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="200" y="134" font-size="8.5" fill="#a1a1a6">getNextRel()</text>
+  <path d="M454,131 L530,131" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M718,131 L794,131" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)" stroke-dasharray="4 3"/>
+  <text x="736" y="124" font-size="8.5" fill="#a1a1a6">…顺链…</text>
+  <path d="M944,131 L984,131" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <!-- traversal cursor band -->
+  <rect x="40" y="212" width="620" height="128" rx="14" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="60" y="238" font-size="12.5" font-weight="700" fill="#12402a">遍历 = 指针追逐(RecordRelationshipTraversalCursor)</text>
+  <text x="60" y="260" font-size="10" fill="#2f6f4f">1 从 nodeCursor.getNextRel() 拿到第一条关系 id 起步(:74)</text>
+  <text x="60" y="279" font-size="10" fill="#2f6f4f">2 next() 读当前关系记录,computeNext() 顺着链走(:147)</text>
+  <text x="60" y="298" font-size="10" fill="#2f6f4f">3 直到 firstNext / secondNext = NULL 结束 —— "Iterate until we reach the end"</text>
+  <rect x="60" y="308" width="580" height="22" rx="7" fill="#ffffff" stroke="#bfe0cd"/>
+  <text x="70" y="323" font-size="9.5" font-weight="600" fill="#12402a">全程零索引查找:不查任何关系索引,只顺记录里的 id 指针走</text>
+
+  <!-- dense node exception -->
+  <rect x="680" y="212" width="360" height="128" rx="14" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="700" y="238" font-size="12.5" font-weight="700" fill="#5a3410">稠密节点(dense)例外</text>
+  <text x="700" y="260" font-size="10" fill="#93762e">关系太多时,不再单条超长链,而是</text>
+  <text x="700" y="279" font-size="10" fill="#93762e">切换成按类型 / 方向分组的 group 间接层(:181)</text>
+  <rect x="700" y="292" width="100" height="34" rx="8" fill="#ffffff" stroke="#e8cf9a"/>
+  <text x="750" y="313" font-size="9.5" fill="#5a3410" text-anchor="middle">Group:KNOWS</text>
+  <rect x="812" y="292" width="100" height="34" rx="8" fill="#ffffff" stroke="#e8cf9a"/>
+  <text x="862" y="313" font-size="9.5" fill="#5a3410" text-anchor="middle">Group:LIKES</text>
+  <text x="924" y="313" font-size="9" fill="#93762e">…</text>
+
+  <!-- cost principle band -->
+  <rect x="40" y="360" width="1000" height="86" rx="14" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="60" y="388" font-size="13" font-weight="700" fill="#3d2a5a">代价原理:与图局部大小成正比,与图总规模无关</text>
+  <text x="60" y="412" font-size="10.5" fill="#8b7aa8">遍历某节点的关系,只走它自己那条链(局部),不扫全图 —— 这是图遍历比关系库 JOIN 快几个数量级的根源。</text>
+  <text x="60" y="432" font-size="10" fill="#a1a1a6">对比:关系库用 JOIN 表达图关系,代价随表规模增长;免索引邻接把"关系直连"编码进记录指针,遍历只碰到相关记录。</text>
+
+  <!-- footnote -->
+  <text x="40" y="474" font-size="9.5" fill="#a1a1a6">NodeRecord.java:34(nextRel) · RelationshipRecord.java:39(四链指针)/:43(链头 prev 存 count)/:188(getNextRel) · RecordRelationshipTraversalCursor.java:74/:147</text>
+</svg>

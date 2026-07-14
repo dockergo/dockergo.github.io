@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="520" viewBox="0 0 1080 520" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="520" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Milvus 一致性级别与 guaranteeTs · 新鲜度 vs 性能的旋钮</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">读的一致性由 guaranteeTimestamp 决定(parseGuaranteeTsFromConsistency,proxy/util.go)—— 一致性级别就是选不同的 guaranteeTs</text>
+
+  <!-- freshness/performance axis -->
+  <text x="46" y="82" font-size="8.5" fill="#7a2a2a" font-weight="600">← 更新鲜 / 更慢</text>
+  <text x="1034" y="82" font-size="8.5" text-anchor="end" fill="#2f6f4f" font-weight="600">更快 / 可能更旧 →</text>
+  <line x1="150" y1="78" x2="930" y2="78" stroke="#d2d2d7" stroke-width="1"/>
+
+  <!-- Strong (red, strongest slowest) -->
+  <rect x="30" y="94" width="248" height="200" rx="14" fill="#fbeaea" stroke="#e7c3c3" filter="url(#soft)"/>
+  <text x="154" y="120" font-size="12" font-weight="700" text-anchor="middle" fill="#4a1414">Strong</text>
+  <rect x="46" y="132" width="216" height="34" rx="7" fill="#fdeaea" stroke="#e7c3c3"/>
+  <text x="154" y="153" font-size="9" text-anchor="middle" fill="#4a1414" font-weight="600">guaranteeTs = tMax</text>
+  <g font-size="8.5" text-anchor="middle" fill="#7a2a2a">
+    <text x="154" y="188">tMax = 最新分配 ts</text>
+    <text x="154" y="208">读等所有已提交数据</text>
+    <text x="154" y="228" fill="#4a1414" font-weight="600">最强 · 最慢</text>
+    <text x="154" y="250">预设 guaranteeTs&gt;0 被拒</text>
+    <text x="154" y="268" font-size="7.5">task_query.go · 要求新鲜 ts</text>
+  </g>
+  <text x="154" y="286" font-size="7.5" text-anchor="middle" fill="#7a2a2a">场景:实时性要求高</text>
+
+  <!-- Bounded (blue, tolerant) -->
+  <rect x="288" y="94" width="248" height="200" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="412" y="120" font-size="12" font-weight="700" text-anchor="middle" fill="#1b2a4a">Bounded</text>
+  <rect x="304" y="132" width="216" height="34" rx="7" fill="#e7f0fb" stroke="#b9d2ef"/>
+  <text x="412" y="153" font-size="9" text-anchor="middle" fill="#1b2a4a" font-weight="600">tMax − GracefulTime</text>
+  <g font-size="8.5" text-anchor="middle" fill="#5b7db1">
+    <text x="412" y="188">GracefulTime 默认 5000ms</text>
+    <text x="412" y="208">容忍固定延迟</text>
+    <text x="412" y="228" fill="#1b2a4a" font-weight="600">性能好</text>
+    <text x="412" y="250">调小更新鲜 · 调大更省等待</text>
+    <text x="412" y="268" font-size="7.5">读稍旧的一致快照</text>
+  </g>
+  <text x="412" y="286" font-size="7.5" text-anchor="middle" fill="#5b7db1">场景:仪表盘 / 推荐</text>
+
+  <!-- Eventually (green, fastest) -->
+  <rect x="546" y="94" width="248" height="200" rx="14" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="670" y="120" font-size="12" font-weight="700" text-anchor="middle" fill="#12402a">Eventually</text>
+  <rect x="562" y="132" width="216" height="34" rx="7" fill="#e6f7ee" stroke="#bfe0cd"/>
+  <text x="670" y="153" font-size="9" text-anchor="middle" fill="#12402a" font-weight="600">guaranteeTs = 1</text>
+  <g font-size="8.5" text-anchor="middle" fill="#2f6f4f">
+    <text x="670" y="188">不等(几乎为 0 的门槛)</text>
+    <text x="670" y="208">tSafe 必然已超过 1</text>
+    <text x="670" y="228" fill="#12402a" font-weight="600">最快</text>
+    <text x="670" y="250">可能读旧(读不到刚写的)</text>
+    <text x="670" y="268" font-size="7.5">低延迟 · 高吞吐</text>
+  </g>
+  <text x="670" y="286" font-size="7.5" text-anchor="middle" fill="#2f6f4f">场景:容忍最终一致</text>
+
+  <!-- Session (purple, read-your-writes) -->
+  <rect x="804" y="94" width="246" height="200" rx="14" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="927" y="120" font-size="12" font-weight="700" text-anchor="middle" fill="#3d2a5a">Session</text>
+  <rect x="820" y="132" width="214" height="34" rx="7" fill="#faf4fb" stroke="#e2d2ee"/>
+  <text x="927" y="153" font-size="9" text-anchor="middle" fill="#3d2a5a" font-weight="600">客户端上次写的 ts</text>
+  <g font-size="8.5" text-anchor="middle" fill="#5a3d78">
+    <text x="927" y="188">读自己的写</text>
+    <text x="927" y="208" fill="#3d2a5a" font-weight="600">read-your-writes</text>
+    <text x="927" y="228">保证看到本会话已写数据</text>
+    <text x="927" y="250">介于新鲜与性能之间</text>
+    <text x="927" y="268" font-size="7.5">写后立即读用 Session/Strong</text>
+  </g>
+  <text x="927" y="286" font-size="7.5" text-anchor="middle" fill="#5a3d78">场景:写后读己写</text>
+
+  <!-- iterator MVCC pin -->
+  <rect x="30" y="312" width="1020" height="52" rx="12" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="46" y="334" font-size="10" font-weight="700" fill="#12402a">iterator 分页快照</text>
+  <text x="46" y="352" font-size="8.8" fill="#2f6f4f">iterator 钉 MvccTimestamp = guaranteeTs(task_query.go)—— 保跨页快照稳定:翻页期间数据变化不影响已定的快照时刻</text>
+
+  <!-- insight -->
+  <rect x="30" y="380" width="1020" height="120" rx="12" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="46" y="404" font-size="10.5" font-weight="700" fill="#1d1d1f">权衡:新鲜度 vs 性能</text>
+  <text x="46" y="424" font-size="8.8" fill="#6e6e73">Strong 每次等最新 ts(等 tSafe 追最新,慢);Bounded/Eventually 容忍延迟换低延迟高吞吐 —— 是明确的旋钮,非“越强越好”</text>
+  <text x="46" y="442" font-size="8.8" fill="#6e6e73">误区:Milvus 总是读最新 —— 默认可能 Bounded/Eventually(读稍旧换性能),要最新须显式用 Strong</text>
+  <text x="46" y="460" font-size="8.8" fill="#6e6e73">误区:一致性级别不影响性能 —— Strong 慢、Eventually 快,是明确权衡 · 写后立即读用 Session 或 Strong,Eventually 可能读不到刚写的</text>
+  <text x="46" y="478" font-size="8.8" fill="#6e6e73">机制:级别只是选不同 guaranteeTs → 交给 QueryNode 的 waitTSafe 等 tSafe 追上该 ts(见 tSafe 图)</text>
+  <text x="46" y="496" font-size="8.8" fill="#6e6e73">MaxTimestampLag:tSafe 滞后上限,网络 / 消费慢时防查询无限等</text>
+</svg>

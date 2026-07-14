@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="420" viewBox="0 0 1000 420" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1000" height="420" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">List 阻塞消费：BLPOP 生产者-消费者（t_list.c:1371, blocked.c）</text>
+  <text x="30" y="49" font-size="10.5" fill="#a1a1a6">空 List 上阻塞、生产者推入时精准唤醒 —— 零延迟、零空轮询</text>
+
+  <!-- consumer blocks -->
+  <text x="40" y="84" font-size="11" font-weight="700" fill="#5a2a82">① 消费者在空 List 上阻塞</text>
+  <g text-anchor="middle" font-size="9">
+    <rect x="50" y="96" width="150" height="48" rx="8" fill="#eef3fb" stroke="#bcd0ec"/><text x="125" y="116" fill="#1b2a4a">消费者 BLPOP q 0</text><text x="125" y="132" fill="#5b7db1" font-size="8">q 为空，超时 0=永久</text>
+    <rect x="240" y="96" width="170" height="48" rx="8" fill="#f6f0fb" stroke="#dcc6ee"/><text x="325" y="116" fill="#5a2a82">blockClient</text><text x="325" y="132" fill="#8a5cae" font-size="8">置 CLIENT_BLOCKED,从事件循环摘下</text>
+    <rect x="450" y="96" width="200" height="48" rx="8" fill="#fdf3e5" stroke="#f0d9b5"/><text x="550" y="112" fill="#7a5a1e">登记 db-&gt;blocking_keys</text><text x="550" y="128" fill="#b08535" font-size="8">"该客户端在等 key q"</text>
+    <rect x="690" y="96" width="260" height="48" rx="8" fill="#eafaf1" stroke="#b8e6cd"/><text x="820" y="112" fill="#1c6b45">主线程继续服务其他客户端</text><text x="820" y="128" fill="#3a9b6e" font-size="8">不 sleep、不忙等、不阻塞 server</text>
+  </g>
+  <line x1="200" y1="120" x2="238" y2="120" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="410" y1="120" x2="448" y2="120" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="650" y1="120" x2="688" y2="120" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+
+  <!-- producer wakes -->
+  <text x="40" y="180" font-size="11" font-weight="700" fill="#1c6b45">② 生产者推入 → 精准唤醒消费者</text>
+  <g text-anchor="middle" font-size="9">
+    <rect x="50" y="192" width="150" height="48" rx="8" fill="#eafaf1" stroke="#b8e6cd"/><text x="125" y="212" fill="#1c6b45">生产者 LPUSH q job</text><text x="125" y="228" fill="#3a9b6e" font-size="8">q 变非空</text>
+    <rect x="240" y="192" width="180" height="48" rx="8" fill="#fdf3e5" stroke="#f0d9b5"/><text x="330" y="208" fill="#7a5a1e">signalKeyAsReady</text><text x="330" y="224" fill="#b08535" font-size="8">q 加入 server.ready_keys</text>
+    <rect x="460" y="192" width="230" height="48" rx="8" fill="#f6f0fb" stroke="#dcc6ee"/><text x="575" y="208" fill="#5a2a82">handleClientsBlockedOnKeys</text><text x="575" y="224" fill="#8a5cae" font-size="8">命令执行后处理就绪队列 (server.c:4798)</text>
+    <rect x="730" y="192" width="220" height="48" rx="8" fill="#eafaf1" stroke="#b8e6cd"/><text x="840" y="208" fill="#1c6b45">唤醒消费者,返回 [q, job]</text><text x="840" y="224" fill="#3a9b6e" font-size="8">FIFO 公平:先阻塞的先得</text>
+  </g>
+  <line x1="200" y1="216" x2="238" y2="216" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="420" y1="216" x2="458" y2="216" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="690" y1="216" x2="728" y2="216" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+
+  <!-- comparison -->
+  <rect x="40" y="264" width="450" height="130" rx="10" fill="#fdeef2" stroke="#f6c9d6"/>
+  <text x="60" y="288" font-size="11" font-weight="600" fill="#c02a56">轮询方式（LPOP + sleep）</text>
+  <text x="60" y="310" font-size="9.5" fill="#88304a">while(true) { v = LPOP q; if(!v) sleep(100ms); }</text>
+  <text x="60" y="330" font-size="9.5" fill="#88304a">· 延迟：最坏一个 sleep 周期才拿到</text>
+  <text x="60" y="350" font-size="9.5" fill="#88304a">· 开销：空转期间反复发 LPOP，浪费 CPU/网络</text>
+  <text x="60" y="372" font-size="9" fill="#c8607f">队列空闲时尤其浪费</text>
+
+  <rect x="510" y="264" width="450" height="130" rx="10" fill="#eafaf1" stroke="#b8e6cd"/>
+  <text x="530" y="288" font-size="11" font-weight="600" fill="#1c6b45">阻塞方式（BLPOP）</text>
+  <text x="530" y="310" font-size="9.5" fill="#2f7a56">BLPOP q 0（阻塞直到有元素）</text>
+  <text x="530" y="330" font-size="9.5" fill="#2f7a56">· 延迟：生产者推入的瞬间被唤醒（零延迟）</text>
+  <text x="530" y="350" font-size="9.5" fill="#2f7a56">· 开销：阻塞期间不发任何命令（零空轮询）</text>
+  <text x="530" y="372" font-size="9" fill="#5cb88a">阻塞的是客户端不是线程 → server 照常服务他人</text>
+</svg>

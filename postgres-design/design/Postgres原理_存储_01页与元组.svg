@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="440" viewBox="0 0 1020 440"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1020" height="440" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">页与元组 · 8KB page 内的行存布局（storage/page、access/heap）</text>
+
+  <!-- page 布局 -->
+  <rect x="30" y="56" width="470" height="360" rx="14" fill="#fff7e6" stroke="#f0dcae" filter="url(#soft)"/>
+  <text x="48" y="80" font-size="12.5" font-weight="600" fill="#7a4d00">一个 heap page（默认 8KB = BLCKSZ）</text>
+  <rect x="48" y="96" width="434" height="40" rx="8" fill="#ffffff" stroke="#f0dcae"/><text x="265" y="120" font-size="10" font-weight="600" fill="#7a4d00" text-anchor="middle">PageHeader（页头：LSN、空闲指针等）</text>
+  <rect x="48" y="142" width="434" height="44" rx="8" fill="#eef3fb" stroke="#bcd0ec"/><text x="265" y="162" font-size="9.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">行指针数组 line pointers (ItemId)</text><text x="265" y="178" font-size="8.5" fill="#5b7db1" text-anchor="middle">从页头向下增长，指向 tuple（间接层，支撑 HOT/整理）</text>
+  <rect x="48" y="192" width="434" height="30" rx="8" fill="#f6f6f8" stroke="#e2e2e7"/><text x="265" y="211" font-size="9" fill="#6a6a70" text-anchor="middle">↕ 空闲空间（free space）</text>
+  <rect x="48" y="228" width="434" height="120" rx="8" fill="#eafaf1" stroke="#bce6cd"/><text x="265" y="250" font-size="9.5" font-weight="600" fill="#0f5132" text-anchor="middle">tuples（从页尾向上增长）</text>
+  <rect x="60" y="262" width="410" height="34" rx="6" fill="#ffffff" stroke="#bce6cd"/><text x="265" y="283" font-size="8.5" fill="#0f5132" text-anchor="middle">tuple: [t_xmin | t_xmax | ctid | infomask | 列数据…]</text>
+  <rect x="60" y="302" width="410" height="34" rx="6" fill="#ffffff" stroke="#bce6cd"/><text x="265" y="323" font-size="8.5" fill="#0f5132" text-anchor="middle">下一个 tuple…</text>
+  <rect x="48" y="354" width="434" height="30" rx="8" fill="#ffffff" stroke="#f0dcae"/><text x="265" y="373" font-size="9" fill="#9a7328" text-anchor="middle">special space（索引页用；heap 页一般空）</text>
+  <text x="48" y="404" font-size="9" fill="#9a7328">行指针与 tuple 相向增长，中间是空闲区——VACUUM 整理时压缩</text>
+
+  <!-- tuple header -->
+  <rect x="520" y="56" width="470" height="360" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="538" y="80" font-size="12.5" font-weight="600" fill="#1d1d1f">HeapTupleHeader 关键字段（htup_details.h:124）</text>
+  <rect x="538" y="96" width="434" height="52" rx="9" fill="#fbeaea" stroke="#f0cccc"/><text x="554" y="116" font-size="10" font-weight="600" fill="#7d1f1f">t_xmin</text><text x="620" y="116" font-size="9" fill="#b06a6a">插入该行的事务 id</text><text x="554" y="136" font-size="8.5" fill="#b06a6a">决定"从何时起可见"</text>
+  <rect x="538" y="156" width="434" height="52" rx="9" fill="#fbeaea" stroke="#f0cccc"/><text x="554" y="176" font-size="10" font-weight="600" fill="#7d1f1f">t_xmax</text><text x="620" y="176" font-size="9" fill="#b06a6a">删除/更新该行的事务 id（0=仍有效）</text><text x="554" y="196" font-size="8.5" fill="#b06a6a">决定"到何时失效"</text>
+  <rect x="538" y="216" width="434" height="52" rx="9" fill="#eef3fb" stroke="#bcd0ec"/><text x="554" y="236" font-size="10" font-weight="600" fill="#1b2a4a">t_ctid</text><text x="620" y="236" font-size="9" fill="#5b7db1">指向本行最新版本（HOT 链/更新链）</text><text x="554" y="256" font-size="8.5" fill="#5b7db1">(block, offset)</text>
+  <rect x="538" y="276" width="434" height="52" rx="9" fill="#eafaf1" stroke="#bce6cd"/><text x="554" y="296" font-size="10" font-weight="600" fill="#0f5132">infomask（hint bits）</text><text x="554" y="316" font-size="8.5" fill="#3f8f66">HEAP_XMIN_COMMITTED 等，缓存事务提交状态省查 clog</text>
+  <rect x="538" y="336" width="434" height="60" rx="9" fill="#f6f6f8" stroke="#e2e2e7"/><text x="754" y="358" font-size="9.5" font-weight="600" fill="#494950" text-anchor="middle">列数据（含 NULL 位图）</text><text x="754" y="378" font-size="8.5" fill="#6a6a70" text-anchor="middle">超长值走 TOAST（见下图）</text>
+</svg>

@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="560" viewBox="0 0 1060 560" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1060" height="560" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">集群拓扑与分片路由：Shard 拆数据 × Replica 存冗余</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">StorageDistributed (h:45) 路由/汇聚视图，本身不存数据 · 拓扑在 &lt;remote_servers&gt; 定义</text>
+
+  <!-- distributed view -->
+  <rect x="360" y="76" width="340" height="54" rx="12" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+  <text x="530" y="98" font-size="11" font-weight="700" fill="#5a3410" text-anchor="middle">Distributed 表（逻辑全表）</text>
+  <text x="530" y="118" font-size="8.5" fill="#93762e" text-anchor="middle">不存数据 · 按 sharding key 路由 / 散射汇聚</text>
+
+  <!-- shards x replicas grid -->
+  <g text-anchor="middle">
+    <rect x="60" y="170" width="440" height="200" rx="14" fill="#f3f7fc" stroke="#cfe0f2"/>
+    <text x="280" y="194" font-size="11.5" font-weight="700" fill="#274a78">Shard 1（数据分片 A）</text>
+    <rect x="84" y="210" width="190" height="140" rx="11" fill="#eef3fb" stroke="#bcd0ec"/><text x="179" y="234" font-size="9.5" font-weight="600" fill="#1b2a4a">Replica 1</text><text x="179" y="254" font-size="8" fill="#5b7db1">clickhouse-server</text><rect x="100" y="266" width="158" height="34" rx="6" fill="#fff" stroke="#bcd0ec"/><text x="179" y="287" font-size="8" fill="#1b2a4a">分片 A 全量</text><text x="179" y="326" font-size="7.5" fill="#8aa6cf">对等 · 可独立服务</text>
+    <rect x="286" y="210" width="190" height="140" rx="11" fill="#eef3fb" stroke="#bcd0ec"/><text x="381" y="234" font-size="9.5" font-weight="600" fill="#1b2a4a">Replica 2</text><text x="381" y="254" font-size="8" fill="#5b7db1">clickhouse-server</text><rect x="302" y="266" width="158" height="34" rx="6" fill="#fff" stroke="#bcd0ec"/><text x="381" y="287" font-size="8" fill="#1b2a4a">分片 A 副本（同数据）</text><text x="381" y="326" font-size="7.5" fill="#8aa6cf">高可用冗余</text>
+
+    <rect x="560" y="170" width="440" height="200" rx="14" fill="#f3f7fc" stroke="#cfe0f2"/>
+    <text x="780" y="194" font-size="11.5" font-weight="700" fill="#274a78">Shard 2（数据分片 B）</text>
+    <rect x="584" y="210" width="190" height="140" rx="11" fill="#eef3fb" stroke="#bcd0ec"/><text x="679" y="234" font-size="9.5" font-weight="600" fill="#1b2a4a">Replica 1</text><text x="679" y="254" font-size="8" fill="#5b7db1">clickhouse-server</text><rect x="600" y="266" width="158" height="34" rx="6" fill="#fff" stroke="#bcd0ec"/><text x="679" y="287" font-size="8" fill="#1b2a4a">分片 B 全量</text><text x="679" y="326" font-size="7.5" fill="#8aa6cf">与分片 A 数据不同</text>
+    <rect x="786" y="210" width="190" height="140" rx="11" fill="#eef3fb" stroke="#bcd0ec"/><text x="881" y="234" font-size="9.5" font-weight="600" fill="#1b2a4a">Replica 2</text><text x="881" y="254" font-size="8" fill="#5b7db1">clickhouse-server</text><rect x="802" y="266" width="158" height="34" rx="6" fill="#fff" stroke="#bcd0ec"/><text x="881" y="287" font-size="8" fill="#1b2a4a">分片 B 副本</text><text x="881" y="326" font-size="7.5" fill="#8aa6cf">故障转移</text>
+  </g>
+  <g stroke="#c7c7cc" stroke-width="1.4" fill="none">
+    <path d="M470,130 L280,170" marker-end="url(#ar)"/>
+    <path d="M590,130 L780,170" marker-end="url(#ar)"/>
+  </g>
+  <text x="350" y="155" font-size="8" fill="#8a8a8f">散射到 shard</text>
+  <text x="710" y="155" font-size="8" fill="#8a8a8f">散射到 shard</text>
+
+  <!-- two dims -->
+  <rect x="40" y="386" width="480" height="80" rx="13" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="60" y="410" font-size="11" font-weight="700" fill="#12402a">横向：Shard（拆数据）</text>
+  <text x="60" y="432" font-size="9.5" fill="#2f6f4f">· 不同 shard 存不同数据 → 扩容量/吞吐</text>
+  <text x="60" y="450" font-size="9" fill="#4c8567">· 加 shard 不自动 rebalance 已有数据（需手动）</text>
+
+  <rect x="540" y="386" width="480" height="80" rx="13" fill="#f6f2fb" stroke="#d9c9ec"/>
+  <text x="560" y="410" font-size="11" font-weight="700" fill="#3d2a5a">纵向：Replica（存冗余）</text>
+  <text x="560" y="432" font-size="9.5" fill="#7a5da5">· 同 shard 多副本存同数据 → 高可用/读扩展</text>
+  <text x="560" y="450" font-size="9" fill="#9a7cc4">· 加 replica 自动从其他副本 fetch 全量</text>
+
+  <rect x="40" y="482" width="980" height="60" rx="12" fill="#f7f7f9" stroke="#e6e6ea"/>
+  <text x="60" y="506" font-size="11" font-weight="700" fill="#1d1d1f">一句话</text>
+  <text x="60" y="528" font-size="10" fill="#4b4b50">集群 = Shard × Replica 两个正交维度：Shard 拆数据扩容量、Replica 存冗余保高可用；Distributed 表把它们拼成逻辑全表做路由/汇聚。加 shard 不自动迁移旧数据，加 replica 会自动全量 fetch。</text>
+</svg>

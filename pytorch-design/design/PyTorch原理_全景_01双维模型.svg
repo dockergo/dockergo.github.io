@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="650" viewBox="0 0 1020 650"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1020" height="650" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">PyTorch 双维模型 · 能力域（表示 / 计算 / 扩展）× 执行时机（前台调用栈 / 后台异步）</text>
+
+  <!-- 接口 -->
+  <rect x="30" y="52" width="960" height="46" rx="12" fill="#f4eefb" stroke="#d9c9ef" filter="url(#soft)"/>
+  <text x="50" y="72" font-size="12.5" font-weight="600" fill="#3c1361">接口主线（用户如何编程 · Python API）</text>
+  <text x="50" y="90" font-size="11.5" fill="#7a5aa8">张量编程（tensor + 算子）　·　自动微分（requires_grad → backward）　·　建模与训练（nn.Module / optimizer / DataLoader）</text>
+
+  <!-- 前台 -->
+  <text x="30" y="128" font-size="12" font-weight="600" fill="#86868b">前台 · 调用栈内同步（forward / backward 在 Python→C++ 栈里逐算子执行）</text>
+  <line x1="30" y1="136" x2="990" y2="136" stroke="#e2e2e7" stroke-width="1"/>
+
+  <!-- 表示 -->
+  <rect x="30" y="150" width="300" height="310" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="50" y="176" font-size="13" font-weight="600" fill="#1d1d1f">表示 · 张量怎么存与算</text>
+  <rect x="50" y="192" width="260" height="60" rx="11" fill="#fff7e6" stroke="#f0dcae"/>
+  <text x="66" y="214" font-size="12" font-weight="600" fill="#7a4d00">① 张量与存储</text>
+  <text x="66" y="234" font-size="10.5" fill="#9a7328">TensorImpl · Storage · stride</text>
+  <text x="66" y="248" font-size="10.5" fill="#9a7328">view 共享底层内存 · dtype/device</text>
+  <rect x="50" y="260" width="260" height="60" rx="11" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="66" y="282" font-size="12" font-weight="600" fill="#1b2a4a">② Dispatcher 分发</text>
+  <text x="66" y="302" font-size="10.5" fill="#5b7db1">按 device/layout/autograd</text>
+  <text x="66" y="316" font-size="10.5" fill="#5b7db1">分层选 kernel（灵魂）</text>
+  <rect x="50" y="328" width="260" height="58" rx="11" fill="#eafaf1" stroke="#bce6cd"/>
+  <text x="66" y="350" font-size="12" font-weight="600" fill="#0f5132">③ ATen 算子库</text>
+  <text x="66" y="370" font-size="10.5" fill="#3f8f66">~2000 算子 schema · structured kernel</text>
+  <rect x="50" y="394" width="260" height="58" rx="11" fill="#fbeaea" stroke="#f0cccc"/>
+  <text x="66" y="416" font-size="12" font-weight="600" fill="#7d1f1f">④ 设备后端与内存</text>
+  <text x="66" y="436" font-size="10.5" fill="#b06a6a">CPU/CUDA kernel · CachingAllocator</text>
+
+  <!-- 计算 -->
+  <rect x="360" y="150" width="300" height="310" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="380" y="176" font-size="13" font-weight="600" fill="#1d1d1f">计算 · 求梯度与加速</text>
+  <rect x="380" y="192" width="260" height="120" rx="11" fill="#f4eefb" stroke="#d9c9ef"/>
+  <text x="396" y="214" font-size="12" font-weight="600" fill="#3c1361">⑤ 自动微分引擎</text>
+  <text x="396" y="234" font-size="10.5" fill="#7a5aa8">forward 时动态建反向图</text>
+  <text x="396" y="250" font-size="10.5" fill="#7a5aa8">Node/Edge · grad_fn</text>
+  <text x="396" y="266" font-size="10.5" fill="#7a5aa8">backward 反向拓扑遍历</text>
+  <text x="396" y="282" font-size="10.5" fill="#7a5aa8">链式法则累积梯度</text>
+  <text x="396" y="300" font-size="9.5" fill="#a58fc9">灵魂：define-by-run 动态图</text>
+  <rect x="380" y="320" width="260" height="132" rx="11" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="396" y="342" font-size="12" font-weight="600" fill="#1b2a4a">⑥ 编译栈 torch.compile</text>
+  <text x="396" y="362" font-size="10.5" fill="#5b7db1">Dynamo 抓字节码成图</text>
+  <text x="396" y="378" font-size="10.5" fill="#5b7db1">AOTAutograd 联合前后向</text>
+  <text x="396" y="394" font-size="10.5" fill="#5b7db1">Inductor 生成融合 kernel</text>
+  <text x="396" y="414" font-size="10.5" fill="#5b7db1">从 eager 逐算子 → 编译加速</text>
+  <text x="396" y="436" font-size="9.5" fill="#8fa9cf">可选：不 compile 也能全程 eager</text>
+
+  <!-- 扩展 -->
+  <rect x="690" y="150" width="300" height="310" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="710" y="176" font-size="13" font-weight="600" fill="#1d1d1f">扩展 · 喂数据与多卡</text>
+  <rect x="710" y="192" width="260" height="120" rx="11" fill="#eafaf1" stroke="#bce6cd"/>
+  <text x="726" y="214" font-size="12" font-weight="600" fill="#0f5132">⑦ 分布式训练</text>
+  <text x="726" y="234" font-size="10.5" fill="#3f8f66">ProcessGroup · collective(allreduce)</text>
+  <text x="726" y="250" font-size="10.5" fill="#3f8f66">DDP 数据并行 · 梯度同步</text>
+  <text x="726" y="266" font-size="10.5" fill="#3f8f66">FSDP 分片省显存</text>
+  <text x="726" y="286" font-size="10.5" fill="#3f8f66">通信与计算 overlap</text>
+  <rect x="710" y="320" width="260" height="132" rx="11" fill="#fff7e6" stroke="#f0dcae"/>
+  <text x="726" y="342" font-size="12" font-weight="600" fill="#7a4d00">⑧ 数据加载</text>
+  <text x="726" y="362" font-size="10.5" fill="#9a7328">Dataset · Sampler · collate</text>
+  <text x="726" y="378" font-size="10.5" fill="#9a7328">DataLoader 多 worker 进程</text>
+  <text x="726" y="394" font-size="10.5" fill="#9a7328">预取喂满 GPU · pin_memory</text>
+  <text x="726" y="414" font-size="10.5" fill="#9a7328">避免数据饥饿</text>
+
+  <!-- 后台 -->
+  <text x="30" y="492" font-size="12" font-weight="600" fill="#86868b">后台 · 异步（不在主调用栈同步完成）</text>
+  <line x1="30" y1="500" x2="990" y2="500" stroke="#e2e2e7" stroke-width="1"/>
+  <rect x="30" y="514" width="960" height="116" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="50" y="538" font-size="13" font-weight="600" fill="#1d1d1f">横切异步（分散在各能力域，非独立域）</text>
+  <rect x="50" y="550" width="300" height="66" rx="11" fill="#fff7e6" stroke="#f0dcae"/>
+  <text x="66" y="572" font-size="11.5" font-weight="600" fill="#7a4d00">DataLoader worker 预取</text>
+  <text x="66" y="592" font-size="10.5" fill="#9a7328">独立进程后台准备下一批</text>
+  <text x="66" y="608" font-size="10.5" fill="#9a7328">与训练主循环并行</text>
+  <rect x="366" y="550" width="300" height="66" rx="11" fill="#fbeaea" stroke="#f0cccc"/>
+  <text x="382" y="572" font-size="11.5" font-weight="600" fill="#7d1f1f">CUDA stream 异步</text>
+  <text x="382" y="592" font-size="10.5" fill="#b06a6a">kernel launch 立即返回</text>
+  <text x="382" y="608" font-size="10.5" fill="#b06a6a">GPU 异步执行，CPU 不等</text>
+  <rect x="682" y="550" width="288" height="66" rx="11" fill="#eafaf1" stroke="#bce6cd"/>
+  <text x="698" y="572" font-size="11.5" font-weight="600" fill="#0f5132">分布式通信 overlap</text>
+  <text x="698" y="592" font-size="10.5" fill="#3f8f66">反向算梯度的同时 allreduce</text>
+  <text x="698" y="608" font-size="10.5" fill="#3f8f66">通信藏在计算背后</text>
+
+  <line x1="510" y1="98" x2="510" y2="136" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+</svg>

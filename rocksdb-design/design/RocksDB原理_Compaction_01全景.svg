@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="560" viewBox="0 0 1080 560" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="560" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">RocksDB Compaction 全景 · 逐层归并下沉（后台还债）</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">Flush 往 L0 堆文件 → Compaction 后台归并下沉:合并多版本、丢旧值与墓碑、整理成层内非重叠有序</text>
+
+  <!-- LSM before/after -->
+  <rect x="30" y="70" width="500" height="240" rx="13" fill="#fff7e6" stroke="#e8cf9a"/>
+  <text x="46" y="92" font-size="11" font-weight="700" fill="#5a3410">合并前:L0 堆积、多版本冗余</text>
+  <g font-size="8" text-anchor="middle">
+    <rect x="46" y="104" width="470" height="30" rx="6" fill="#fef2e0" stroke="#e8cf9a"/><text x="281" y="123" fill="#5a3410">L0: [a1,c1] [a2,b1] [c2,d1] [b2,e1]  ← 4 个可重叠文件(读要查每个)</text>
+    <rect x="46" y="140" width="470" height="26" rx="6" fill="#fdf6ea" stroke="#efdcb4"/><text x="281" y="157" fill="#93762e">L1: [a0..m0]  [n0..z0]</text>
+    <rect x="46" y="172" width="470" height="26" rx="6" fill="#fdf6ea" stroke="#efdcb4"/><text x="281" y="189" fill="#93762e">L2: 更多更老数据</text>
+  </g>
+  <text x="46" y="222" font-size="8.8" fill="#b1483a">问题:a 有 a1/a2 两版本、b 有 b1/b2;读要跨 4 个 L0 + L1 查</text>
+  <text x="46" y="244" font-size="8.8" fill="#93762e">CompactionPicker:L0 文件数≥trigger → 触发 L0→L1</text>
+  <rect x="46" y="256" width="470" height="44" rx="8" fill="#fff" stroke="#e8cf9a"/><text x="60" y="276" font-size="8.5" fill="#5a3410">选中:所有 L0 文件 + 与之 key 重叠的 L1 文件</text><text x="60" y="292" font-size="8.5" fill="#93762e">(L0 重叠,不能只挑一个)</text>
+
+  <!-- after -->
+  <rect x="550" y="70" width="500" height="240" rx="13" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="566" y="92" font-size="11" font-weight="700" fill="#12402a">合并后:归并、去冗、有序下沉</text>
+  <g font-size="8" text-anchor="middle">
+    <rect x="566" y="104" width="470" height="26" rx="6" fill="#eafaf1" stroke="#bfe0cd"/><text x="801" y="121" fill="#12402a">L0: (空,已并入 L1)</text>
+    <rect x="566" y="136" width="470" height="30" rx="6" fill="#f5faf6" stroke="#cfe6d5"/><text x="801" y="155" fill="#2c5a3a">L1: [a..e] [f..m] [n..z]  ← 非重叠、有序,每 key 一个可见版本</text>
+    <rect x="566" y="172" width="470" height="26" rx="6" fill="#f5faf6" stroke="#cfe6d5"/><text x="801" y="189" fill="#2c5a3a">L2: …</text>
+  </g>
+  <text x="566" y="222" font-size="8.8" fill="#2f6f4f">CompactionJob:MergingIterator 归并输入,输出到 L1</text>
+  <text x="566" y="244" font-size="8.8" fill="#2f6f4f">· a2 覆盖 a1 → 只留 a2　· 过期墓碑丢弃(低于最老快照)</text>
+  <rect x="566" y="256" width="470" height="44" rx="8" fill="#fff" stroke="#cfe6d5"/><text x="580" y="276" font-size="8.5" fill="#2c5a3a">产出经 VersionEdit 原子换进新 Version</text><text x="580" y="292" font-size="8.5" fill="#93762e">旧输入文件延后删除(等无人引用)</text>
+
+  <line x1="530" y1="190" x2="550" y2="190" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <text x="540" y="182" font-size="7.5" fill="#a1a1a6">Compact</text>
+
+  <!-- pipeline -->
+  <rect x="30" y="326" width="1020" height="100" rx="13" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="46" y="348" font-size="11" font-weight="700" fill="#1b2a4a">Compaction 流水</text>
+  <g font-size="8.8" text-anchor="middle">
+    <rect x="46" y="360" width="230" height="50" rx="8" fill="#f3f7fc" stroke="#cfe0f2"/><text x="161" y="380" font-weight="600" fill="#274a78">① CompactionPicker</text><text x="161" y="396" fill="#5b7db1">按分数挑层与文件</text>
+    <rect x="296" y="360" width="230" height="50" rx="8" fill="#f3f7fc" stroke="#cfe0f2"/><text x="411" y="380" font-weight="600" fill="#274a78">② CompactionJob::Run</text><text x="411" y="396" fill="#5b7db1">MergingIterator 归并+去冗+写出</text>
+    <rect x="546" y="360" width="230" height="50" rx="8" fill="#f5faf6" stroke="#cfe6d5"/><text x="661" y="380" font-weight="600" fill="#2c5a3a">③ 新 SST 写到下层</text><text x="661" y="396" fill="#2f6f4f">TableBuilder → BlockBasedTable</text>
+    <rect x="796" y="360" width="238" height="50" rx="8" fill="#fdf6ea" stroke="#efdcb4"/><text x="915" y="380" font-weight="600" fill="#5a3410">④ VersionEdit 换版本</text><text x="915" y="396" fill="#93762e">原子安装,旧文件延后删</text>
+  </g>
+  <line x1="276" y1="385" x2="296" y2="385" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="526" y1="385" x2="546" y2="385" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="776" y1="385" x2="796" y2="385" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+
+  <!-- notes -->
+  <rect x="30" y="442" width="1020" height="100" rx="13" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="46" y="464" font-size="11" font-weight="700" fill="#1d1d1f">要点</text>
+  <text x="46" y="486" font-size="9" fill="#6e6e73">· Compaction 是 LSM 的心脏:它把"写时的懒"(只堆不整理)在后台补齐,维持读性能与空间回收</text>
+  <text x="46" y="504" font-size="9" fill="#6e6e73">· 后台多线程(max_background_jobs)并发做多个 Compaction/Flush;写太快追不上会触发写停顿(见写入路径)</text>
+  <text x="46" y="522" font-size="9" fill="#b1483a">· 归属:由 Flush 产物触发;变更经【版本】原子提交;文件读写走【SST 存储格式】;墓碑可见性依赖【事务与快照】seq</text>
+</svg>

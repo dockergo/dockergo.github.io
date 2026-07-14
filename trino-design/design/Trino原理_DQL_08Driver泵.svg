@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="640" viewBox="0 0 1100 640" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1100" height="640" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Trino Driver 泵 · 算子间推拉 Page（列式批）</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">Operator 是协作式状态机(从不阻塞线程);Driver 单线程 front-to-back 一次搬一个 Page</text>
+
+  <!-- Operator contract -->
+  <rect x="30" y="70" width="330" height="270" rx="13" fill="#f3f7fc" stroke="#cfe0f2"/>
+  <text x="46" y="92" font-size="11" font-weight="700" fill="#274a78">Operator 契约（协作式状态机）</text>
+  <g font-size="8.8">
+    <rect x="46" y="104" width="300" height="30" rx="7" fill="#fff" stroke="#cfe0f2"/><text x="60" y="123" fill="#274a78"><tspan font-weight="600">isBlocked()</tspan> → future（未就绪时返回,不占线程）</text>
+    <rect x="46" y="140" width="300" height="30" rx="7" fill="#fff" stroke="#cfe0f2"/><text x="60" y="159" fill="#274a78"><tspan font-weight="600">needsInput()</tspan> / <tspan font-weight="600">addInput(Page)</tspan> 收输入</text>
+    <rect x="46" y="176" width="300" height="30" rx="7" fill="#fff" stroke="#cfe0f2"/><text x="60" y="195" fill="#274a78"><tspan font-weight="600">getOutput()</tspan> → Page（无则 null）</text>
+    <rect x="46" y="212" width="300" height="30" rx="7" fill="#fff" stroke="#cfe0f2"/><text x="60" y="231" fill="#274a78"><tspan font-weight="600">finish()</tspan> / <tspan font-weight="600">isFinished()</tspan> 收尾</text>
+    <rect x="46" y="248" width="300" height="30" rx="7" fill="#eafaf1" stroke="#bfe0cd"/><text x="60" y="267" fill="#12402a"><tspan font-weight="600">startMemoryRevoke / finishMemoryRevoke</tspan> 溢写钩子</text>
+  </g>
+  <rect x="46" y="286" width="300" height="44" rx="8" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="60" y="305" font-size="8.5" fill="#6e6e73">483 中 Join/TopN/ScanFilterProject 多为 WorkProcessor 算子,</text>
+  <text x="60" y="321" font-size="8.5" fill="#6e6e73">经 WorkProcessorOperatorAdapter 桥接回经典 Operator 契约</text>
+
+  <!-- Driver pump -->
+  <rect x="380" y="70" width="690" height="270" rx="13" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="396" y="92" font-size="11" font-weight="700" fill="#1b2a4a">Driver.processInternal 泵循环（单线程,持独占锁）</text>
+  <text x="396" y="110" font-size="8.8" fill="#5b7db1">先 processNewSources() 把新到 split 喂给源算子,再遍历相邻算子对</text>
+
+  <g font-size="8.5" text-anchor="middle">
+    <rect x="410" y="126" width="120" height="150" rx="9" fill="#fff7e6" stroke="#e8cf9a"/><text x="470" y="146" font-weight="600" fill="#5a3410">Scan</text><text x="470" y="162" fill="#93762e">源算子</text><text x="470" y="180" fill="#93762e">getOutput()</text><text x="470" y="196" fill="#93762e">→ Page</text>
+    <rect x="560" y="126" width="120" height="150" rx="9" fill="#fff" stroke="#bcd0ec"/><text x="620" y="146" font-weight="600" fill="#1b2a4a">Filter</text><text x="620" y="168" fill="#5b7db1">needsInput()?</text><text x="620" y="184" fill="#5b7db1">addInput(page)</text><text x="620" y="204" fill="#5b7db1">getOutput()</text>
+    <rect x="710" y="126" width="120" height="150" rx="9" fill="#fff" stroke="#bcd0ec"/><text x="770" y="146" font-weight="600" fill="#1b2a4a">Project</text><text x="770" y="168" fill="#5b7db1">addInput(page)</text><text x="770" y="188" fill="#5b7db1">getOutput()</text>
+    <rect x="860" y="126" width="120" height="150" rx="9" fill="#eef3fb" stroke="#bcd0ec"/><text x="920" y="146" font-weight="600" fill="#1b2a4a">Agg / Sink</text><text x="920" y="168" fill="#5b7db1">addInput(page)</text><text x="920" y="192" fill="#5b7db1">满/收尾时</text><text x="920" y="208" fill="#5b7db1">flush 输出</text>
+  </g>
+  <line x1="530" y1="180" x2="560" y2="180" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/><text x="545" y="172" text-anchor="middle" font-size="7.5" fill="#93762e">Page</text>
+  <line x1="680" y1="180" x2="710" y2="180" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/><text x="695" y="172" text-anchor="middle" font-size="7.5" fill="#5b7db1">Page</text>
+  <line x1="830" y1="180" x2="860" y2="180" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/><text x="845" y="172" text-anchor="middle" font-size="7.5" fill="#5b7db1">Page</text>
+
+  <rect x="410" y="286" width="570" height="44" rx="8" fill="#fff" stroke="#bcd0ec"/>
+  <text x="424" y="305" font-size="8.5" fill="#1b2a4a">对每对相邻算子：若 current 未完成 且 next.needsInput() → page=current.getOutput();非空则 next.addInput(page)</text>
+  <text x="424" y="321" font-size="8.5" fill="#5b7db1">current 完成 → next.finish();都阻塞时收集各算子 isBlocked() future,首个就绪再继续。null 只表示"这轮没数据"</text>
+
+  <!-- Page/Block model -->
+  <rect x="30" y="352" width="1040" height="140" rx="13" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="46" y="374" font-size="11" font-weight="700" fill="#2c5a3a">Page = 列式批：N 个 Block(列) × M 行(positions)</text>
+  <g font-size="8.5" text-anchor="middle">
+    <rect x="46" y="386" width="90" height="90" rx="8" fill="#fff" stroke="#cfe6d5"/><text x="91" y="404" font-weight="600" fill="#2c5a3a">Block 0</text><text x="91" y="420" fill="#2f6f4f">列 name</text><text x="91" y="440" fill="#2f6f4f">M 行</text>
+    <rect x="146" y="386" width="90" height="90" rx="8" fill="#fff" stroke="#cfe6d5"/><text x="191" y="404" font-weight="600" fill="#2c5a3a">Block 1</text><text x="191" y="420" fill="#2f6f4f">列 price</text>
+    <rect x="246" y="386" width="90" height="90" rx="8" fill="#fff" stroke="#cfe6d5"/><text x="291" y="404" font-weight="600" fill="#2c5a3a">Block 2 …</text>
+  </g>
+  <rect x="360" y="386" width="330" height="90" rx="9" fill="#fff" stroke="#cfe6d5"/>
+  <text x="374" y="406" font-size="9" font-weight="700" fill="#2c5a3a">Block 是 sealed interface</text>
+  <text x="374" y="424" font-size="8.5" fill="#2f6f4f">只允许 ValueBlock / DictionaryBlock / RunLengthEncodedBlock</text>
+  <text x="374" y="440" font-size="8.5" fill="#2f6f4f">编码包装经 getUnderlyingValueBlock() 解引用</text>
+  <text x="374" y="460" font-size="8.5" fill="#2f6f4f">列式 → 向量化执行、字典/RLE 免解压直算</text>
+  <rect x="710" y="386" width="336" height="90" rx="9" fill="#fbfbfd" stroke="#ececf1"/>
+  <text x="724" y="406" font-size="9" font-weight="700" fill="#b1483a">Page 大小按字节界定(误区)</text>
+  <text x="724" y="424" font-size="8.5" fill="#4b4b50">默认上限 ≈ 1MB(DEFAULT_MAX_PAGE_SIZE_IN_BYTES)</text>
+  <text x="724" y="440" font-size="8.5" fill="#4b4b50">投影批上限 8192 positions(MAX_BATCH_SIZE)</text>
+  <text x="724" y="460" font-size="8.5" fill="#4b4b50">说"约 1MB 列式批/几千行",别写"每页 1024 行"</text>
+
+  <!-- executor -->
+  <rect x="30" y="504" width="1040" height="118" rx="13" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="46" y="526" font-size="11" font-weight="700" fill="#1d1d1f">执行器与时间片：TaskExecutor 以 1 秒 SPLIT_RUN_QUANTA 调度 Driver</text>
+  <g font-size="8.8">
+    <rect x="46" y="538" width="500" height="70" rx="9" fill="#eafaf1" stroke="#bfe0cd"/><text x="60" y="558" font-weight="600" fill="#12402a">ThreadPerDriverTaskExecutor（483 默认）</text><text x="60" y="576" fill="#2f6f4f">一 driver 一线程;SplitProcessor 每 1s 配额让出并发 span 事件</text><text x="60" y="594" fill="#2f6f4f">experimental.thread-per-driver-scheduler-enabled = true</text>
+    <rect x="560" y="538" width="486" height="70" rx="9" fill="#eef3fb" stroke="#bcd0ec"/><text x="574" y="558" font-weight="600" fill="#1b2a4a">TimeSharingTaskExecutor（可切回）</text><text x="574" y="576" fill="#5b7db1">经典多级反馈队列,时间片轮转;PrioritizedSplitRunner 按已调度纳秒排优先级</text><text x="574" y="594" fill="#5b7db1">两者都用 1s 配额,最终都调 Driver.processForDuration</text>
+  </g>
+</svg>

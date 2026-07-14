@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="520" viewBox="0 0 960 520" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="960" height="520" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">Green Tea 扫描器 · span 批处理 + marks/scans 双位集</text>
+  <text x="30" y="48" font-size="11" fill="#6e6e73">go1.26 默认开启 Green Tea（mgcmark_greenteagc.go）——本版 GC 最大实现变化：工作单元从"单对象"变为"span"</text>
+
+  <!-- ==== classic scanObject (left, neutral) ==== -->
+  <rect x="30" y="72" width="440" height="332" rx="13" fill="#f6f6f7" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="46" y="96" font-size="12.5" font-weight="600" fill="#1d1d1f">经典 · scanObject（实验关闭时）</text>
+  <text x="46" y="113" font-size="9.5" fill="#6e6e73">mgcmark_nogreenteagc.go:143 · 逐个灰对象扫描</text>
+
+  <!-- LIFO workbuf -->
+  <rect x="46" y="128" width="408" height="52" rx="9" fill="#ffffff" stroke="#e2e2e7"/>
+  <text x="56" y="148" font-size="10.5" font-weight="600" fill="#1d1d1f">workbuf · LIFO 工作队列</text>
+  <text x="56" y="165" font-size="9.5" fill="#6e6e73">工作单元 = 单个对象 · 后进先出</text>
+
+  <!-- random access memory illustration -->
+  <text x="46" y="204" font-size="10" font-weight="600" fill="#3a3a3c">随机访问内存 · 缓存局部性差</text>
+  <rect x="46" y="216" width="34" height="34" rx="5" fill="#ffffff" stroke="#c7c7cc"/>
+  <rect x="112" y="216" width="34" height="34" rx="5" fill="#48484a" stroke="#1d1d1f"/>
+  <rect x="178" y="216" width="34" height="34" rx="5" fill="#ffffff" stroke="#c7c7cc"/>
+  <rect x="244" y="216" width="34" height="34" rx="5" fill="#48484a" stroke="#1d1d1f"/>
+  <rect x="310" y="216" width="34" height="34" rx="5" fill="#ffffff" stroke="#c7c7cc"/>
+  <rect x="376" y="216" width="34" height="34" rx="5" fill="#48484a" stroke="#1d1d1f"/>
+  <!-- jumping pointer arrows -->
+  <path d="M 129 214 Q 178 188 227 214" fill="none" stroke="#b15b5b" stroke-width="1.4" marker-end="url(#ar)"/>
+  <path d="M 261 214 Q 326 184 391 214" fill="none" stroke="#b15b5b" stroke-width="1.4" marker-end="url(#ar)"/>
+  <path d="M 63 252 Q 96 278 127 254" fill="none" stroke="#b15b5b" stroke-width="1.4" marker-end="url(#ar)"/>
+  <text x="228" y="272" font-size="9.5" fill="#b15b5b" text-anchor="middle">指针到处跳 → cache miss 频繁</text>
+
+  <rect x="46" y="290" width="408" height="98" rx="9" fill="#fbeeee" stroke="#f0c4c4"/>
+  <text x="56" y="310" font-size="10.5" font-weight="600" fill="#7a1f1f">代价</text>
+  <text x="56" y="330" font-size="9.5" fill="#b15b5b">· 每个灰对象独立出队，随对象引用随机跳内存</text>
+  <text x="56" y="348" font-size="9.5" fill="#b15b5b">· 相邻对象扫描时刻分散，缓存命中率低</text>
+  <text x="56" y="366" font-size="9.5" fill="#b15b5b">· 大堆上标记 CPU 开销显著偏高</text>
+  <text x="56" y="382" font-size="9.5" fill="#8e8e93">GODEBUG=greenteagc=0 可退回此路径</text>
+
+  <!-- ==== Green Tea (right, green) ==== -->
+  <rect x="490" y="72" width="440" height="332" rx="13" fill="#eef7f0" stroke="#bfe0c8" filter="url(#soft)"/>
+  <text x="506" y="96" font-size="12.5" font-weight="600" fill="#1d4a2b">Green Tea · scanSpan（1.26 默认）</text>
+  <text x="506" y="113" font-size="9.5" fill="#4a8c60">mgcmark_greenteagc.go:844 · 延迟扫描以按 span 聚集</text>
+
+  <!-- FIFO span queue -->
+  <rect x="506" y="128" width="408" height="52" rx="9" fill="#ffffff" stroke="#bfe0c8"/>
+  <text x="516" y="148" font-size="10.5" font-weight="600" fill="#1d4a2b">span 工作队列 · FIFO</text>
+  <text x="516" y="165" font-size="9.5" fill="#4a8c60">工作单元 = 整个 span · 先进先出</text>
+
+  <!-- span with marks/scans bitsets -->
+  <text x="506" y="204" font-size="10" font-weight="600" fill="#1d4a2b">同 span 相邻对象 · SIMD 批量扫</text>
+  <rect x="506" y="214" width="330" height="38" rx="6" fill="#dcefe0" stroke="#a9d3b6"/>
+  <rect x="514" y="220" width="30" height="26" rx="3" fill="#48484a"/>
+  <rect x="548" y="220" width="30" height="26" rx="3" fill="#48484a"/>
+  <rect x="582" y="220" width="30" height="26" rx="3" fill="#48484a"/>
+  <rect x="616" y="220" width="30" height="26" rx="3" fill="#48484a"/>
+  <rect x="650" y="220" width="30" height="26" rx="3" fill="#48484a"/>
+  <rect x="684" y="220" width="30" height="26" rx="3" fill="#48484a"/>
+  <rect x="718" y="220" width="30" height="26" rx="3" fill="#48484a"/>
+  <rect x="752" y="220" width="30" height="26" rx="3" fill="#48484a"/>
+  <rect x="796" y="220" width="30" height="26" rx="3" fill="#48484a"/>
+  <text x="844" y="238" font-size="9.5" fill="#4a8c60">1 span</text>
+  <path d="M 520 262 L 810 262" fill="none" stroke="#4a8c60" stroke-width="1.4" marker-end="url(#ar)" marker-start="url(#ar)"/>
+  <text x="665" y="278" font-size="9.5" fill="#4a8c60" text-anchor="middle">连续内存一次性成批扫 · 缓存局部性好</text>
+
+  <!-- marks/scans bitsets -->
+  <rect x="506" y="290" width="200" height="98" rx="9" fill="#ffffff" stroke="#bfe0c8"/>
+  <text x="516" y="310" font-size="10.5" font-weight="600" fill="#1d4a2b">marks 位集</text>
+  <text x="516" y="328" font-size="9.5" fill="#4a8c60">记录 span 内哪些</text>
+  <text x="516" y="343" font-size="9.5" fill="#4a8c60">对象已标记（灰/黑）</text>
+  <g font-family="'SF Mono','Menlo',monospace" font-size="11" fill="#1d4a2b">
+    <text x="516" y="372">1 0 1 1 0 1 0 1</text>
+  </g>
+
+  <rect x="714" y="290" width="200" height="98" rx="9" fill="#ffffff" stroke="#bfe0c8"/>
+  <text x="724" y="310" font-size="10.5" font-weight="600" fill="#1d4a2b">scans 位集</text>
+  <text x="724" y="328" font-size="9.5" fill="#4a8c60">记录哪些对象</text>
+  <text x="724" y="343" font-size="9.5" fill="#4a8c60">引用已扫描完</text>
+  <g font-family="'SF Mono','Menlo',monospace" font-size="11" fill="#1d4a2b">
+    <text x="724" y="372">1 0 1 0 0 1 0 1</text>
+  </g>
+
+  <!-- ==== benefit strip (amber) ==== -->
+  <rect x="30" y="420" width="900" height="80" rx="13" fill="#fdf6ec" stroke="#f0dcaf" filter="url(#soft)"/>
+  <text x="46" y="444" font-size="12" font-weight="600" fill="#6b4e16">收益：同 span 对象在内存上相邻，批量 SIMD 扫描的缓存局部性远好于随机跳指针</text>
+  <text x="46" y="466" font-size="10" fill="#a9822f">累积一批灰对象再统一扫（internal/runtime/gc/scan/ 的 SIMD 路径）→ 在大堆上显著降低标记 CPU 占用。</text>
+  <text x="46" y="486" font-size="10" fill="#a9822f">关键差异：工作单元 span 而非单对象 · marks/scans 双位集 · FIFO 队列（经典为 LIFO workbuf）· SIMD 批扫相邻对象。</text>
+</svg>

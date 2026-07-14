@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="512" viewBox="0 0 1080 512"
+     font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1080" height="512" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Neo4j 锁粒度与锁序</text>
+  <text x="30" y="52" font-size="11.5" fill="#a1a1a6">ResourceType 按实体 id 分粒度加锁;定义固定锁序防死锁环(prevention);锁基非 MVCC:写加写锁串行化、读不加读锁看当前已提交</text>
+
+  <!-- 左:ResourceType 粒度 -->
+  <text x="40" y="86" font-size="12" font-weight="600" fill="#1d1d1f">ResourceType 粒度 · 键为实体 id · ResourceType.java:80</text>
+
+  <rect x="40" y="100" width="150" height="52" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="115" y="123" font-size="11" font-weight="600" fill="#1b2a4a" text-anchor="middle">NODE</text>
+  <text x="115" y="141" font-size="9" fill="#5b7db1" text-anchor="middle">节点级</text>
+
+  <rect x="200" y="100" width="150" height="52" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="275" y="123" font-size="11" font-weight="600" fill="#1b2a4a" text-anchor="middle">RELATIONSHIP</text>
+  <text x="275" y="141" font-size="9" fill="#5b7db1" text-anchor="middle">关系级</text>
+
+  <rect x="360" y="100" width="150" height="52" rx="11" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="435" y="123" font-size="11" font-weight="600" fill="#3d2a5a" text-anchor="middle">LABEL</text>
+  <text x="435" y="141" font-size="9" fill="#6b5590" text-anchor="middle">标签级</text>
+
+  <rect x="40" y="162" width="150" height="52" rx="11" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="115" y="185" font-size="11" font-weight="600" fill="#3d2a5a" text-anchor="middle">RELATIONSHIP_TYPE</text>
+  <text x="115" y="203" font-size="9" fill="#6b5590" text-anchor="middle">关系类型</text>
+
+  <rect x="200" y="162" width="150" height="52" rx="11" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="275" y="185" font-size="11" font-weight="600" fill="#5a3410" text-anchor="middle">SCHEMA_NAME</text>
+  <text x="275" y="203" font-size="9" fill="#93762e" text-anchor="middle">模式名</text>
+
+  <rect x="360" y="162" width="150" height="52" rx="11" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="435" y="185" font-size="11" font-weight="600" fill="#5a3410" text-anchor="middle">DEGREES · PAGE</text>
+  <text x="435" y="203" font-size="9" fill="#93762e" text-anchor="middle">度数 · 页 等</text>
+
+  <!-- 右:固定锁序 -->
+  <text x="560" y="86" font-size="12" font-weight="600" fill="#1d1d1f">固定锁序 · 所有事务同序加锁 · ResourceType.java:28</text>
+
+  <rect x="560" y="100" width="190" height="46" rx="11" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="655" y="128" font-size="10.5" font-weight="600" fill="#3d2a5a" text-anchor="middle">LABEL / REL_TYPE</text>
+
+  <rect x="560" y="158" width="190" height="46" rx="11" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="655" y="186" font-size="10.5" font-weight="600" fill="#5a3410" text-anchor="middle">SCHEMA_NAME</text>
+
+  <rect x="560" y="216" width="190" height="46" rx="11" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="655" y="238" font-size="10" font-weight="600" fill="#12402a" text-anchor="middle">NODE_RELATIONSHIP_</text>
+  <text x="655" y="253" font-size="10" font-weight="600" fill="#12402a" text-anchor="middle">GROUP_DELETE</text>
+
+  <rect x="560" y="274" width="190" height="46" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="655" y="302" font-size="10.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">NODE &#8594; &#8230;</text>
+
+  <path d="M655,146 L655,158" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M655,204 L655,216" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M655,262 L655,274" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <rect x="780" y="100" width="260" height="220" rx="13" fill="#fbeaea" stroke="#e7c3c3" filter="url(#soft)"/>
+  <text x="796" y="128" font-size="11.5" font-weight="600" fill="#4a1414">为什么防死锁</text>
+  <text x="796" y="152" font-size="10" fill="#7a2a2a">若无序:A 先锁 X 再锁 Y、</text>
+  <text x="796" y="170" font-size="10" fill="#7a2a2a">B 先锁 Y 再锁 X &#8594; 成环死锁</text>
+  <text x="796" y="196" font-size="10" fill="#7a2a2a">同一顺序加锁从根本上</text>
+  <text x="796" y="214" font-size="10" fill="#7a2a2a">避免锁环</text>
+  <text x="796" y="244" font-size="10.5" font-weight="600" fill="#4a1414">双保险:</text>
+  <text x="796" y="266" font-size="10" fill="#7a2a2a">锁序 prevention 预防 +</text>
+  <text x="796" y="284" font-size="10" fill="#7a2a2a">dreadlocks detection 检测</text>
+  <text x="796" y="308" font-size="9" fill="#a1a1a6">死锁概率大幅降低</text>
+
+  <!-- 底:锁基非 MVCC -->
+  <rect x="40" y="344" width="1000" height="96" rx="13" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="56" y="372" font-size="12" font-weight="600" fill="#1d1d1f">并发模型:锁基,非 MVCC · Command.java:74</text>
+  <text x="56" y="398" font-size="10.5" fill="#3f3f43">· 写加写锁:多写串行化,不取读锁(MVCC 尚未实现,DENSE_VALIDATION / block mvcc 仅 block format 用)</text>
+  <text x="56" y="422" font-size="10.5" fill="#3f3f43">· 读不加读锁:读已提交语义靠 store 的当前状态;高冲突写会互等,应用层捕获死锁重试</text>
+
+  <text x="40" y="466" font-size="9.5" fill="#a1a1a6">粒度锁 + 固定锁序是并发正确与性能的关键;锁的实体 id 对应记录存储的 record id。</text>
+</svg>

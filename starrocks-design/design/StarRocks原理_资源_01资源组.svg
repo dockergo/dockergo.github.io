@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="500" viewBox="0 0 1080 500" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="500" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">StarRocks 资源组模型 · FE 定义 ResourceGroup → BE 执行 WorkGroup</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">定义落元数据、约束在执行期生效——多租户隔离:每组独立 CPU/内存/并发配额</text>
+
+  <!-- FE side -->
+  <rect x="30" y="74" width="420" height="330" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="50" y="100" font-size="12" font-weight="700" fill="#1b2a4a">FE 侧 · 定义(用户可声明)</text>
+
+  <rect x="50" y="114" width="380" height="70" rx="10" fill="#f3f7fc" stroke="#cfe0f2"/>
+  <text x="66" y="136" font-size="10" font-weight="600" fill="#274a78">ResourceGroup</text>
+  <text x="66" y="153" font-size="8" fill="#5b7db1">catalog/ResourceGroup.java</text>
+  <text x="66" y="170" font-size="8.5" fill="#5b7db1">CREATE RESOURCE GROUP(用户可定义对象)</text>
+
+  <rect x="50" y="196" width="380" height="56" rx="10" fill="#f3f7fc" stroke="#cfe0f2"/>
+  <text x="66" y="218" font-size="10" font-weight="600" fill="#274a78">ResourceGroupMgr</text>
+  <text x="66" y="236" font-size="8" fill="#5b7db1">管理资源组生命周期</text>
+
+  <rect x="50" y="264" width="380" height="56" rx="10" fill="#f4eefb" stroke="#d9c7ec"/>
+  <text x="66" y="286" font-size="10" font-weight="600" fill="#5a3d78">EditLog 持久化</text>
+  <text x="66" y="304" font-size="8" fill="#8d6bb0">persist/ResourceGroupOpEntry.java · 定义落元数据</text>
+
+  <text x="50" y="344" font-size="8.7" fill="#5b7db1">在线业务一组、ETL 一组、临时分析一组——</text>
+  <text x="50" y="362" font-size="8.7" fill="#5b7db1">声明式配置"哪些查询共享哪份配额"。</text>
+  <text x="50" y="388" font-size="8" fill="#86868b">归属提醒:资源组定义的落点在【元数据】。</text>
+
+  <!-- arrow FE->BE -->
+  <line x1="450" y1="239" x2="548" y2="239" stroke="#c7c7cc" stroke-width="1.6" marker-end="url(#ar)"/>
+  <text x="499" y="230" font-size="8.5" text-anchor="middle" fill="#86868b">下发生效</text>
+  <text x="499" y="254" font-size="7.5" text-anchor="middle" fill="#a1a1a6">FE 定义 · BE 执行</text>
+
+  <!-- BE side -->
+  <rect x="550" y="74" width="500" height="330" rx="13" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="570" y="100" font-size="12" font-weight="700" fill="#5a3410">BE 侧 · 执行(配额约束期生效)</text>
+  <text x="570" y="116" font-size="8" fill="#93762e">WorkGroup(work_group.h:145)· 构造参数即配额</text>
+
+  <g>
+    <rect x="570" y="128" width="460" height="46" rx="9" fill="#fef2e0" stroke="#e8cf9a"/>
+    <text x="586" y="147" font-size="9.5" font-weight="600" fill="#5a3410">cpu_weight (:169)</text>
+    <text x="586" y="164" font-size="8" fill="#93762e">CPU 时间片权重(相对份额,非绝对核数)</text>
+
+    <rect x="570" y="182" width="460" height="46" rx="9" fill="#fef2e0" stroke="#e8cf9a"/>
+    <text x="586" y="201" font-size="9.5" font-weight="600" fill="#5a3410">memory_limit / mem_limit_bytes (:171)</text>
+    <text x="586" y="218" font-size="8" fill="#93762e">内存上限</text>
+
+    <rect x="570" y="236" width="460" height="46" rx="9" fill="#fef2e0" stroke="#e8cf9a"/>
+    <text x="586" y="255" font-size="9.5" font-weight="600" fill="#5a3410">concurrency / _concurrency_limit (:283)</text>
+    <text x="586" y="272" font-size="8" fill="#93762e">并发查询数上限</text>
+
+    <rect x="570" y="290" width="225" height="46" rx="9" fill="#fbeaea" stroke="#e6b8b8"/>
+    <text x="586" y="309" font-size="9" font-weight="600" fill="#8a2a2a">spill_mem_limit_threshold</text>
+    <text x="586" y="326" font-size="8" fill="#a5453a">超此内存阈值触发溢写</text>
+
+    <rect x="805" y="290" width="225" height="46" rx="9" fill="#fdf6ea" stroke="#efdcb4"/>
+    <text x="821" y="309" font-size="9" font-weight="600" fill="#5a3410">WorkGroupType type</text>
+    <text x="821" y="326" font-size="8" fill="#93762e">组类型(普通/短查询等)</text>
+  </g>
+  <text x="570" y="360" font-size="8.7" fill="#93762e">四维配额:CPU(加权)· 内存(上限+溢写)· 并发(上限)· 大查询(熔断)。</text>
+  <text x="570" y="378" font-size="8" fill="#93762e">归属提醒:Driver 实际调度在【执行引擎】,WorkGroup 仅提供份额约束。</text>
+
+  <!-- bottom summary -->
+  <rect x="30" y="424" width="1020" height="58" rx="13" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="46" y="448" font-size="10" font-weight="700" fill="#1d1d1f">一句话</text>
+  <text x="46" y="468" font-size="8.7" fill="#6e6e73">FE 定义 ResourceGroup(经 EditLog 持久化)、BE 对应 WorkGroup 执行;配额即构造参数,让 ETL 大查询与在线小查询混跑而互不拖垮。</text>
+</svg>

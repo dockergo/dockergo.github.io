@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="540" viewBox="0 0 920 540" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="920" height="540" fill="#fbfbfd"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="#1d1d1f">提交与应用：matchIndex 中位数定 commitIndex → FSM.Apply</text>
+
+  <!-- matchIndexes -->
+  <rect x="30" y="60" width="430" height="230" rx="13" fill="#f5faf6" stroke="#c9e6cf" filter="url(#soft)"/>
+  <text x="46" y="84" font-size="12.5" font-weight="600" fill="#1f5130">commitment.recalculate（commitment.go:88）</text>
+  <text x="46" y="104" font-size="10.5" fill="#4f9d69">5 节点集群，各 server 的 matchIndex：</text>
+  <g font-size="11">
+    <rect x="46" y="116" width="180" height="26" rx="6" fill="#ffffff" stroke="#c9e6cf"/><text x="56" y="134" fill="#1f5130">S1 (Leader) = 12</text>
+    <rect x="46" y="148" width="180" height="26" rx="6" fill="#ffffff" stroke="#c9e6cf"/><text x="56" y="166" fill="#1f5130">S2 = 12</text>
+    <rect x="46" y="180" width="180" height="26" rx="6" fill="#ffffff" stroke="#c9e6cf"/><text x="56" y="198" fill="#1f5130">S3 = 11</text>
+    <rect x="46" y="212" width="180" height="26" rx="6" fill="#ffffff" stroke="#c9e6cf"/><text x="56" y="230" fill="#86868b">S4 = 9</text>
+    <rect x="46" y="244" width="180" height="26" rx="6" fill="#ffffff" stroke="#c9e6cf"/><text x="56" y="262" fill="#86868b">S5 = 7</text>
+  </g>
+  <g font-size="10.5" fill="#4f9d69">
+    <text x="246" y="134">排序 → [12,12,11,9,7]</text>
+    <text x="246" y="160">取中位数：</text>
+    <text x="246" y="182" font-weight="600" fill="#1f5130">matched[(5-1)/2]</text>
+    <text x="246" y="204" font-weight="600" fill="#1f5130">= matched[2] = 11</text>
+    <text x="246" y="230">→ index 11 已被 3 个</text>
+    <text x="246" y="248">节点（多数派）复制</text>
+    <text x="246" y="266" font-weight="600" fill="#8a6d1f">commitIndex = 11</text>
+  </g>
+
+  <!-- 约束 -->
+  <rect x="480" y="60" width="410" height="230" rx="13" fill="#fbf7ef" stroke="#efe2c8" filter="url(#soft)"/>
+  <text x="496" y="84" font-size="12.5" font-weight="600" fill="#8a6d1f">两条提交约束</text>
+  <text x="496" y="110" font-size="11" fill="#a1885a">① <tspan font-weight="600">quorumMatchIndex &gt; commitIndex</tspan></text>
+  <text x="512" y="128" font-size="10.5" fill="#a1885a">commit 只前进不后退</text>
+  <text x="496" y="154" font-size="11" fill="#a1885a">② <tspan font-weight="600">quorumMatchIndex ≥ startIndex</tspan></text>
+  <text x="512" y="172" font-size="10.5" fill="#a1885a">startIndex = Leader 本任期首条日志的 index</text>
+  <rect x="496" y="186" width="378" height="88" rx="9" fill="#ffffff" stroke="#efe2c8"/>
+  <text x="508" y="207" font-size="10.5" font-weight="600" fill="#8a2b1f">为什么不能直接提交旧任期日志</text>
+  <text x="508" y="226" font-size="10" fill="#a1885a">Raft 规定：Leader 只能通过“提交本任期的新日志”</text>
+  <text x="508" y="243" font-size="10" fill="#a1885a">间接提交此前任期的日志（防 figure-8 问题）。</text>
+  <text x="508" y="262" font-size="10" fill="#a1885a">新 Leader 上任先追加一条 no-op 推进本任期 commit。</text>
+
+  <!-- apply 流水线 -->
+  <rect x="30" y="310" width="860" height="150" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="46" y="334" font-size="12.5" font-weight="600" fill="#1b2a4a">commitIndex 推进 → 应用到 FSM</text>
+  <g font-size="10.5" fill="#2b3a5a">
+    <rect x="46" y="348" width="190" height="60" rx="8" fill="#ffffff" stroke="#cfe0f2"/>
+    <text x="141" y="374" text-anchor="middle">commitCh 通知</text>
+    <text x="141" y="392" text-anchor="middle" fill="#5b7db1">commitIndex 增加</text>
+
+    <rect x="266" y="348" width="190" height="60" rx="8" fill="#ffffff" stroke="#cfe0f2"/>
+    <text x="361" y="374" text-anchor="middle">processLogs（:1296）</text>
+    <text x="361" y="392" text-anchor="middle" fill="#5b7db1">取 [lastApplied+1, commit]</text>
+
+    <rect x="486" y="348" width="190" height="60" rx="8" fill="#ffffff" stroke="#cfe0f2"/>
+    <text x="581" y="374" text-anchor="middle">fsmMutateCh</text>
+    <text x="581" y="392" text-anchor="middle" fill="#5b7db1">送交 runFSM 线程</text>
+
+    <rect x="706" y="348" width="160" height="60" rx="8" fill="#f5faf6" stroke="#c9e6cf"/>
+    <text x="786" y="374" text-anchor="middle" fill="#1f5130">FSM.Apply</text>
+    <text x="786" y="392" text-anchor="middle" fill="#4f9d69">宿主业务生效</text>
+  </g>
+  <path d="M236,378 L264,378" stroke="#c7c7cc" stroke-width="1.4" fill="none" marker-end="url(#ar)"/>
+  <path d="M456,378 L484,378" stroke="#c7c7cc" stroke-width="1.4" fill="none" marker-end="url(#ar)"/>
+  <path d="M676,378 L704,378" stroke="#c7c7cc" stroke-width="1.4" fill="none" marker-end="url(#ar)"/>
+  <text x="46" y="440" font-size="10.5" fill="#86868b">Follower 也 apply：收 AppendEntries 更新 commitIndex 后同样 processLogs → FSM.Apply，各节点状态机确定性一致。</text>
+</svg>

@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="450" viewBox="0 0 980 450" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="980" height="450" fill="#fbfbfd"/>
+  <text x="40" y="30" font-size="14" font-weight="600" fill="#1d1d1f">MPP 执行拓扑：每层 Fragment 多实例分布到各 BE，层间经 Exchange 重分布（数据自下而上汇聚）</text>
+
+  <!-- layer labels -->
+  <g font-size="11" fill="#86868b" text-anchor="start">
+    <text x="36" y="96">协调</text><text x="36" y="150">F2 ×1</text><text x="36" y="250">F1 ×2</text><text x="36" y="360">F0 ×3</text>
+  </g>
+
+  <!-- Coordinator -->
+  <rect x="390" y="52" width="200" height="42" rx="12" fill="#e8eefb" stroke="#b6cdf0" filter="url(#soft)"/><text x="490" y="78" font-size="13" font-weight="600" fill="#274a78" text-anchor="middle">Coordinator</text>
+
+  <!-- F2 (1 instance) -->
+  <rect x="380" y="128" width="220" height="52" rx="12" fill="#f5faf6" stroke="#e2ece5" filter="url(#soft)"/><text x="490" y="150" font-size="12" font-weight="600" fill="#2c5a3a" text-anchor="middle">BE-a · F2 实例</text><text x="490" y="168" font-size="10" fill="#86868b" text-anchor="middle">Sort + ResultSink（顶层）</text>
+
+  <!-- F1 (2 instances) -->
+  <rect x="230" y="230" width="220" height="56" rx="12" fill="#f5faf6" stroke="#e2ece5" filter="url(#soft)"/><text x="340" y="252" font-size="12" font-weight="600" fill="#2c5a3a" text-anchor="middle">BE-a · F1 实例</text><text x="340" y="270" font-size="10" fill="#86868b" text-anchor="middle">HashJoin + Aggregate</text>
+  <rect x="530" y="230" width="220" height="56" rx="12" fill="#f5faf6" stroke="#e2ece5" filter="url(#soft)"/><text x="640" y="252" font-size="12" font-weight="600" fill="#2c5a3a" text-anchor="middle">BE-b · F1 实例</text><text x="640" y="270" font-size="10" fill="#86868b" text-anchor="middle">HashJoin + Aggregate</text>
+
+  <!-- F0 (3 instances) -->
+  <rect x="90" y="340" width="220" height="56" rx="12" fill="#f5faf6" stroke="#e2ece5" filter="url(#soft)"/><text x="200" y="362" font-size="12" font-weight="600" fill="#2c5a3a" text-anchor="middle">BE-a · F0 实例</text><text x="200" y="380" font-size="10" fill="#86868b" text-anchor="middle">OlapScan（本地 Tablet）</text>
+  <rect x="380" y="340" width="220" height="56" rx="12" fill="#f5faf6" stroke="#e2ece5" filter="url(#soft)"/><text x="490" y="362" font-size="12" font-weight="600" fill="#2c5a3a" text-anchor="middle">BE-b · F0 实例</text><text x="490" y="380" font-size="10" fill="#86868b" text-anchor="middle">OlapScan（本地 Tablet）</text>
+  <rect x="670" y="340" width="220" height="56" rx="12" fill="#f5faf6" stroke="#e2ece5" filter="url(#soft)"/><text x="780" y="362" font-size="12" font-weight="600" fill="#2c5a3a" text-anchor="middle">BE-c · F0 实例</text><text x="780" y="380" font-size="10" fill="#86868b" text-anchor="middle">OlapScan（本地 Tablet）</text>
+
+  <!-- dispatch / result -->
+  <line x1="490" y1="94" x2="490" y2="128" stroke="#c7c7cc" stroke-width="1.6" marker-start="url(#ar)" marker-end="url(#ar)"/><text x="502" y="114" font-size="9.5" fill="#a1a1a6">下发↓/结果↑</text>
+
+  <!-- F1 -> F2 (Gather) -->
+  <g stroke="#c7c7cc" stroke-width="1.5" fill="none">
+    <path d="M340,230 L340,206 L490,206 L490,180" marker-end="url(#ar)"/>
+    <path d="M640,230 L640,206 L490,206 L490,180" marker-end="url(#ar)"/>
+  </g>
+  <text x="410" y="200" font-size="9.5" fill="#a1a1a6" text-anchor="middle">Exchange · Gather</text>
+
+  <!-- F0 -> F1 (Hash Shuffle, cross) -->
+  <g stroke="#c7c7cc" stroke-width="1.4" fill="none" stroke-dasharray="4 3">
+    <path d="M200,340 L200,314 L340,314 L340,286" marker-end="url(#ar)"/>
+    <path d="M490,340 L490,314 L340,314" marker-end="url(#ar)"/>
+    <path d="M490,340 L490,314 L640,314 L640,286" marker-end="url(#ar)"/>
+    <path d="M780,340 L780,314 L640,314" marker-end="url(#ar)"/>
+  </g>
+  <text x="490" y="308" font-size="9.5" fill="#a1a1a6" text-anchor="middle">Exchange · Hash Shuffle（按 key 重分布）</text>
+</svg>

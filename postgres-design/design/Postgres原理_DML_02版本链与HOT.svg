@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="450" viewBox="0 0 1020 450"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1020" height="450" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">UPDATE 的版本链与 HOT 优化（heapam.c:3201 / 3976）</text>
+
+  <!-- 普通 update -->
+  <rect x="30" y="56" width="470" height="200" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="48" y="80" font-size="12.5" font-weight="600" fill="#1d1d1f">普通 UPDATE：旧版本失效 + 新版本 + 新索引项</text>
+  <rect x="48" y="96" width="200" height="70" rx="10" fill="#fbeaea" stroke="#f0cccc"/>
+  <text x="148" y="118" font-size="9.5" font-weight="600" fill="#7d1f1f" text-anchor="middle">旧 tuple v1</text>
+  <text x="148" y="138" font-size="8.5" fill="#b06a6a" text-anchor="middle">t_xmax = 本事务</text>
+  <text x="148" y="154" font-size="8.5" fill="#b06a6a" text-anchor="middle">对新快照不可见</text>
+  <rect x="288" y="96" width="200" height="70" rx="10" fill="#eafaf1" stroke="#bce6cd"/>
+  <text x="388" y="118" font-size="9.5" font-weight="600" fill="#0f5132" text-anchor="middle">新 tuple v2</text>
+  <text x="388" y="138" font-size="8.5" fill="#3f8f66" text-anchor="middle">t_xmin = 本事务</text>
+  <text x="388" y="154" font-size="8.5" fill="#3f8f66" text-anchor="middle">ctid 从 v1 指向 v2</text>
+  <line x1="248" y1="131" x2="288" y2="131" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <rect x="48" y="178" width="440" height="66" rx="10" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="268" y="200" font-size="9.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">每个索引都要加指向 v2 的新项</text>
+  <text x="268" y="220" font-size="8.5" fill="#5b7db1" text-anchor="middle">即使只改了非索引列，也得为所有索引维护——写放大</text>
+  <text x="268" y="236" font-size="8.5" fill="#5b7db1" text-anchor="middle">旧索引项等 VACUUM 清</text>
+
+  <!-- HOT update -->
+  <rect x="520" y="56" width="470" height="200" rx="14" fill="#eafaf1" stroke="#bce6cd" filter="url(#soft)"/>
+  <text x="538" y="80" font-size="12.5" font-weight="600" fill="#0f5132">HOT UPDATE：改的列无索引 → 省索引维护</text>
+  <text x="538" y="102" font-size="9" fill="#3f8f66">Heap-Only Tuple：新版本只在堆页内，索引不动</text>
+  <rect x="538" y="114" width="200" height="60" rx="10" fill="#ffffff" stroke="#bce6cd"/>
+  <text x="638" y="136" font-size="9.5" font-weight="600" fill="#0f5132" text-anchor="middle">同一 heap page 内</text>
+  <text x="638" y="156" font-size="8.5" fill="#3f8f66" text-anchor="middle">v1 → v2 链（HOT chain）</text>
+  <rect x="758" y="114" width="214" height="60" rx="10" fill="#ffffff" stroke="#bce6cd"/>
+  <text x="865" y="136" font-size="9.5" font-weight="600" fill="#0f5132" text-anchor="middle">索引仍指向 v1</text>
+  <text x="865" y="156" font-size="8.5" fill="#3f8f66" text-anchor="middle">经 v1 顺链找到 v2</text>
+  <line x1="738" y1="144" x2="758" y2="144" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <text x="538" y="196" font-size="9.5" fill="#3f8f66">条件：更新的列都不在任何索引里（heapam.c:3976 检查）。</text>
+  <text x="538" y="216" font-size="9.5" fill="#3f8f66">收益：不产生新索引项、减少写放大与索引膨胀。</text>
+  <text x="538" y="236" font-size="9" fill="#5aa06f">页内清理（HOT pruning）可就地回收死版本，缓解膨胀。</text>
+
+  <!-- 意义 -->
+  <rect x="30" y="276" width="960" height="158" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="48" y="300" font-size="12.5" font-weight="600" fill="#1d1d1f">为什么这样设计 · 工程含义</text>
+  <text x="48" y="324" font-size="10.5" fill="#494950">• <tspan font-weight="600">读写不互相阻塞</tspan>：旧版本还在，老快照照读，无需锁等——MVCC 的核心红利。</text>
+  <text x="48" y="346" font-size="10.5" fill="#494950">• <tspan font-weight="600">UPDATE 是"删+插"</tspan>：频繁更新的表会累积死元组、索引膨胀；给非索引列做更新更容易触发 HOT。</text>
+  <text x="48" y="368" font-size="10.5" fill="#494950">• <tspan font-weight="600">fillfactor</tspan>：留页内空闲空间提高 HOT 命中率（新版本能放同页）。</text>
+  <text x="48" y="390" font-size="10.5" fill="#494950">• <tspan font-weight="600">VACUUM 不可少</tspan>：回收死元组与旧索引项，否则表/索引持续膨胀、性能下降。</text>
+  <text x="48" y="414" font-size="9.5" fill="#86868b">对照 DuckDB：DuckDB 用 UndoBuffer 存旧值就地改；PostgreSQL 是整行造新版本 + VACUUM 回收。</text>
+</svg>

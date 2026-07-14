@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="500" viewBox="0 0 1080 500" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs><filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+  <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker></defs>
+  <rect width="1080" height="500" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">learner：非投票成员，先追平数据再 promote 为投票</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">member.go NewMemberAsLearner(:64) · cluster.go VotingMembers 跳过 learner(:140) · MemberPromote(:498, IsLearner=false:508)</text>
+  <!-- bad: direct add voter -->
+  <rect x="40" y="76" width="490" height="130" rx="12" fill="#fbeef0" stroke="#f0cdd4"/>
+  <text x="60" y="100" font-size="11" font-weight="700" fill="#7a2230">❌ 直接加投票成员的风险</text>
+  <text x="60" y="124" font-size="9.5" fill="#a44">· 新成员数据空白，却立刻计入 quorum（N 变大）</text>
+  <text x="60" y="144" font-size="9.5" fill="#a44">· 3→4：quorum 从 2 变 3，新成员还在拉数据</text>
+  <text x="60" y="164" font-size="9.5" fill="#a44">· 若此时另一节点故障 → 只剩 2 个有数据的可用</text>
+  <text x="60" y="184" font-size="9" fill="#7a2230">→ 达不到新 quorum=3，集群阻塞（可用性受损）</text>
+  <!-- good: learner flow -->
+  <rect x="550" y="76" width="490" height="130" rx="12" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="570" y="100" font-size="11" font-weight="700" fill="#12402a">✓ learner 流程</text>
+  <text x="570" y="124" font-size="9.5" fill="#2f6f4f">· 以 learner 加入：IsLearner=true</text>
+  <text x="570" y="144" font-size="9.5" fill="#2f6f4f">· 接收日志/快照追平数据，但不投票、不计 quorum</text>
+  <text x="570" y="164" font-size="9.5" fill="#2f6f4f">· 现有 quorum 不变（仍 = 投票成员的 N/2+1）</text>
+  <text x="570" y="184" font-size="9" fill="#4c8567">→ 追平期间完全不影响集群可用性</text>
+  <!-- lifecycle -->
+  <g text-anchor="middle">
+    <rect x="60" y="228" width="220" height="80" rx="11" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/><text x="170" y="252" font-size="10" font-weight="700" fill="#5a3410">① MemberAddAsLearner</text><text x="170" y="272" font-size="8.5" fill="#93762e">加入为 learner</text><text x="170" y="288" font-size="8" fill="#b08843">不计 quorum</text>
+    <rect x="330" y="228" width="220" height="80" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/><text x="440" y="252" font-size="10" font-weight="700" fill="#1b2a4a">② 追平数据</text><text x="440" y="272" font-size="8.5" fill="#5b7db1">收快照 + 日志</text><text x="440" y="288" font-size="8" fill="#8aa6cf">直到 Match 接近 leader</text>
+    <rect x="600" y="228" width="220" height="80" rx="11" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/><text x="710" y="252" font-size="10" font-weight="700" fill="#12402a">③ 确认健康</text><text x="710" y="272" font-size="8.5" fill="#2f6f4f">数据已追上</text><text x="710" y="288" font-size="8" fill="#4c8567">endpoint status 检查</text>
+    <rect x="870" y="228" width="170" height="80" rx="11" fill="#f6f2fb" stroke="#d9c9ec" filter="url(#soft)"/><text x="955" y="252" font-size="10" font-weight="700" fill="#3d2a5a">④ MemberPromote</text><text x="955" y="272" font-size="8.5" fill="#7a5da5">转投票成员</text><text x="955" y="288" font-size="8" fill="#9a7cc4">IsLearner=false</text>
+  </g>
+  <g stroke="#c7c7cc" stroke-width="1.4" fill="none">
+    <line x1="280" y1="268" x2="330" y2="268" marker-end="url(#ar)"/>
+    <line x1="550" y1="268" x2="600" y2="268" marker-end="url(#ar)"/>
+    <line x1="820" y1="268" x2="870" y2="268" marker-end="url(#ar)"/>
+  </g>
+  <rect x="40" y="328" width="1000" height="90" rx="12" fill="#f3f7fc" stroke="#cfe0f2"/>
+  <text x="60" y="352" font-size="11" font-weight="700" fill="#274a78">用途</text>
+  <text x="60" y="374" font-size="9.5" fill="#5b7db1">· 安全扩容：新副本先 learner 追平，健康后才纳入投票 · 替换故障节点：加 learner 顶上再移除坏的</text>
+  <text x="60" y="394" font-size="9.5" fill="#5b7db1">· 跨地域加副本：高延迟成员先追平，避免拉低 quorum 的写延迟</text>
+  <text x="60" y="412" font-size="9" fill="#8aa6cf">核心价值：全程不影响现有 quorum 的可用性——"默默追上，健康再上岗"</text>
+  <rect x="40" y="432" width="1000" height="52" rx="10" fill="#f7f7f9" stroke="#e6e6ea"/>
+  <text x="60" y="456" font-size="11" font-weight="700" fill="#1d1d1f">一句话</text>
+  <text x="60" y="476" font-size="10" fill="#4b4b50">learner 是非投票成员：先接收日志/快照追平数据、不计 quorum，健康后 MemberPromote 转投票——让扩容/换节点/加副本全程不影响现有可用性。</text>
+</svg>

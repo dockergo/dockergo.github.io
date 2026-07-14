@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="520" viewBox="0 0 1080 520"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1080" height="520" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Milvus 节点拓扑 · MixCoord 内嵌四协调器</text>
+  <text x="30" y="50" font-size="11" fill="#a1a1a6">mix_coord.go:51 · NewMixCoordServer 一起构造;启动序 RootCoord 先,其余并行;gRPC 复用 RootCoord 端点</text>
+
+  <!-- MixCoord container -->
+  <rect x="40" y="76" width="640" height="240" rx="15" fill="#f3f7fc" stroke="#cfe0f2" filter="url(#soft)"/>
+  <text x="60" y="102" font-size="13" font-weight="600" fill="#274a78">MixCoord(internal/coordinator/mix_coord.go:51)</text>
+  <text x="60" y="120" font-size="9" fill="#5b7db1">四个协调器为进程内 server,一起构造 · 复用 RootCoord gRPC 端点(service.go:97)</text>
+
+  <!-- RootCoord (启动序先) -->
+  <rect x="60" y="136" width="290" height="76" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="205" y="160" font-size="12" font-weight="600" fill="#1b2a4a" text-anchor="middle">RootCoord(先启动,其余依赖它)</text>
+  <text x="205" y="182" font-size="9.5" fill="#274a78" text-anchor="middle">DDL / collection 元数据 · RBAC 权限</text>
+  <text x="205" y="200" font-size="9.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">TSO 全局时间戳(单点发)</text>
+
+  <!-- DataCoord -->
+  <rect x="60" y="224" width="140" height="80" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="130" y="248" font-size="11" font-weight="600" fill="#1b2a4a" text-anchor="middle">DataCoord</text>
+  <text x="130" y="270" font-size="9" fill="#274a78" text-anchor="middle">段管理</text>
+  <text x="130" y="286" font-size="9" fill="#274a78" text-anchor="middle">compaction / flush</text>
+
+  <!-- QueryCoord -->
+  <rect x="210" y="224" width="140" height="80" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="280" y="248" font-size="11" font-weight="600" fill="#1b2a4a" text-anchor="middle">QueryCoord</text>
+  <text x="280" y="270" font-size="9" fill="#274a78" text-anchor="middle">副本管理</text>
+  <text x="280" y="286" font-size="9" fill="#274a78" text-anchor="middle">负载均衡 / target</text>
+
+  <!-- StreamingCoord -->
+  <rect x="360" y="224" width="300" height="80" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="510" y="248" font-size="11" font-weight="600" fill="#1b2a4a" text-anchor="middle">StreamingCoord</text>
+  <text x="510" y="270" font-size="9" fill="#274a78" text-anchor="middle">streaming WAL 协调</text>
+  <text x="510" y="286" font-size="9" fill="#274a78" text-anchor="middle">日志分片调度</text>
+
+  <!-- 启动序标注 -->
+  <path d="M205,212 L205,220" stroke="#c7c7cc" stroke-width="1.3" fill="none"/>
+  <path d="M205,220 L130,220 L130,224" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M205,220 L280,220 L280,224" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M205,220 L510,220 L510,224" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="392" y="216" font-size="8.5" fill="#a1a1a6">DataCoord/QueryCoord 并行起(:172)</text>
+
+  <!-- 角色枚举 note -->
+  <rect x="700" y="76" width="340" height="240" rx="15" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="720" y="102" font-size="12" font-weight="600" fill="#1d1d1f">角色枚举(type.go:33)</text>
+  <text x="720" y="126" font-size="9.5" fill="#3f3f45">RootCoord · QueryCoord · DataCoord</text>
+  <text x="720" y="146" font-size="9.5" fill="#3f3f45">DataNode · QueryNode · IndexNode</text>
+  <text x="720" y="166" font-size="9.5" fill="#3f3f45">Proxy · StreamingCoord · StreamingNode</text>
+  <text x="720" y="186" font-size="9.5" font-weight="600" fill="#1b2a4a">+ MixCoordRole(合并进程角色)</text>
+  <line x1="720" y1="200" x2="1020" y2="200" stroke="#ececf1" stroke-width="1"/>
+  <text x="720" y="222" font-size="10" font-weight="600" fill="#1d1d1f">合并的意义</text>
+  <text x="720" y="244" font-size="9.5" fill="#6e6e73">三协调器 + streaming coord 合成一个</text>
+  <text x="720" y="262" font-size="9.5" fill="#6e6e73">MixCoord 进程,简化部署</text>
+  <text x="720" y="284" font-size="9" fill="#a1a1a6">小集群省资源;超大规模可拆开独立扩</text>
+  <text x="720" y="302" font-size="9" fill="#a1a1a6">误区:协调器不是三个独立进程</text>
+
+  <!-- worker nodes row -->
+  <text x="30" y="352" font-size="12" font-weight="600" fill="#1d1d1f">MixCoord 统管的工作节点</text>
+  <rect x="40" y="366" width="230" height="120" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="155" y="392" font-size="12" font-weight="600" fill="#1b2a4a" text-anchor="middle">Proxy</text>
+  <text x="155" y="414" font-size="9.5" fill="#274a78" text-anchor="middle">接入层:收请求/路由/聚合</text>
+  <text x="155" y="434" font-size="9.5" fill="#274a78" text-anchor="middle">无状态,可多副本负载均衡</text>
+  <text x="155" y="466" font-size="9" fill="#5b7db1" text-anchor="middle">internal/proxy/</text>
+
+  <rect x="290" y="366" width="230" height="120" rx="13" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="405" y="392" font-size="12" font-weight="600" fill="#12402a" text-anchor="middle">QueryNode(读/计算)</text>
+  <text x="405" y="414" font-size="9.5" fill="#2f6f4f" text-anchor="middle">加载 sealed 段 + 索引</text>
+  <text x="405" y="434" font-size="9.5" fill="#2f6f4f" text-anchor="middle">cgo 调 C++ segcore 检索</text>
+  <text x="405" y="466" font-size="9" fill="#2f6f4f" text-anchor="middle">querynodev2/server.go:90</text>
+
+  <rect x="540" y="366" width="230" height="120" rx="13" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="655" y="392" font-size="12" font-weight="600" fill="#5a3410" text-anchor="middle">DataNode(写路径)</text>
+  <text x="655" y="414" font-size="9.5" fill="#93762e" text-anchor="middle">写 buffer 落 binlog</text>
+  <text x="655" y="434" font-size="9.5" fill="#93762e" text-anchor="middle">IndexNode 已并入(建索引)</text>
+  <text x="655" y="466" font-size="9" fill="#93762e" text-anchor="middle">datanode/data_node.go:67</text>
+
+  <rect x="790" y="366" width="250" height="120" rx="13" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+  <text x="915" y="392" font-size="12" font-weight="600" fill="#5a3410" text-anchor="middle">对象存储</text>
+  <text x="915" y="414" font-size="9.5" fill="#93762e" text-anchor="middle">minio(默认)/remote/local</text>
+  <text x="915" y="434" font-size="9.5" fill="#93762e" text-anchor="middle">所有段数据的持久层</text>
+  <text x="915" y="466" font-size="9" fill="#93762e" text-anchor="middle">计算节点共享 · factory.go:54</text>
+</svg>

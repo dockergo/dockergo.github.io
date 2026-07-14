@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="540" viewBox="0 0 960 540" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+    <marker id="arR" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#d05a5a"/>
+    </marker>
+  </defs>
+  <rect width="960" height="540" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">清扫与 STW · 并发清扫 + 两段极短停世界</text>
+  <text x="30" y="48" font-size="11" fill="#6e6e73">Go 追求的是"极短 STW"而非"零 STW"——大部分标记/清扫都与用户程序并发进行</text>
+
+  <!-- ==== timeline of one cycle ==== -->
+  <text x="30" y="78" font-size="11.5" font-weight="600" fill="#1d1d1f">一轮 GC 时间线（STW 段仅几十~几百微秒）</text>
+  <!-- lane -->
+  <rect x="30" y="90" width="900" height="48" rx="9" fill="#ffffff" stroke="#e2e2e7"/>
+  <!-- STW1 sweep termination -->
+  <rect x="32" y="92" width="36" height="44" rx="6" fill="#fbeeee" stroke="#f0c4c4"/>
+  <!-- mark concurrent -->
+  <rect x="70" y="92" width="360" height="44" fill="#eef7f0"/>
+  <text x="250" y="119" font-size="10.5" fill="#1d4a2b" text-anchor="middle">并发标记（_GCmark · 写屏障开）</text>
+  <!-- STW2 mark termination -->
+  <rect x="432" y="92" width="36" height="44" rx="0" fill="#fbeeee" stroke="#f0c4c4"/>
+  <!-- sweep concurrent -->
+  <rect x="470" y="92" width="458" height="44" fill="#fdf6ec"/>
+  <text x="699" y="119" font-size="10.5" fill="#6b4e16" text-anchor="middle">并发清扫（_GCoff · 写屏障关）</text>
+  <!-- STW labels -->
+  <line x1="50" y1="138" x2="50" y2="158" stroke="#d05a5a" stroke-width="1.2"/>
+  <text x="50" y="172" font-size="9" fill="#b15b5b" text-anchor="middle">STW 清扫终止</text>
+  <line x1="450" y1="138" x2="450" y2="158" stroke="#d05a5a" stroke-width="1.2"/>
+  <text x="450" y="172" font-size="9" fill="#b15b5b" text-anchor="middle">STW 标记终止</text>
+
+  <!-- ==== concurrent sweep (amber, left) ==== -->
+  <rect x="30" y="192" width="470" height="308" rx="13" fill="#fdf6ec" stroke="#f0dcaf" filter="url(#soft)"/>
+  <text x="46" y="216" font-size="12.5" font-weight="600" fill="#6b4e16">并发清扫 · gcSweep（mgc.go:2065）</text>
+  <text x="46" y="233" font-size="9.5" fill="#a9822f">逐 span 对比 mark bits，回收白（未标记）对象槽位</text>
+
+  <!-- span mark bits illustration -->
+  <text x="46" y="262" font-size="10" font-weight="600" fill="#6b4e16">span 内逐槽检查 mark bits</text>
+  <rect x="46" y="272" width="408" height="42" rx="7" fill="#ffffff" stroke="#f0dcaf"/>
+  <rect x="54" y="280" width="30" height="26" rx="3" fill="#48484a"/>
+  <rect x="88" y="280" width="30" height="26" rx="3" fill="#ffffff" stroke="#c7c7cc"/>
+  <rect x="122" y="280" width="30" height="26" rx="3" fill="#48484a"/>
+  <rect x="156" y="280" width="30" height="26" rx="3" fill="#ffffff" stroke="#c7c7cc"/>
+  <rect x="190" y="280" width="30" height="26" rx="3" fill="#48484a"/>
+  <rect x="224" y="280" width="30" height="26" rx="3" fill="#ffffff" stroke="#c7c7cc"/>
+  <rect x="258" y="280" width="30" height="26" rx="3" fill="#48484a"/>
+  <text x="316" y="290" font-size="9" fill="#48484a">■ 黑=保留</text>
+  <text x="316" y="304" font-size="9" fill="#8e8e93">□ 白=回收</text>
+
+  <rect x="46" y="326" width="196" height="72" rx="9" fill="#ffffff" stroke="#f0dcaf"/>
+  <text x="56" y="346" font-size="10.5" font-weight="600" fill="#6b4e16">惰性 + 按需</text>
+  <text x="56" y="364" font-size="9.5" fill="#a9822f">后台并发清扫，也可能</text>
+  <text x="56" y="379" font-size="9.5" fill="#a9822f">在分配时"按需清扫"</text>
+  <text x="56" y="392" font-size="9.5" fill="#a9822f">要用到的那个 span。</text>
+
+  <rect x="258" y="326" width="196" height="72" rx="9" fill="#ffffff" stroke="#f0dcaf"/>
+  <text x="268" y="346" font-size="10.5" font-weight="600" fill="#6b4e16">mcentral 换角色</text>
+  <text x="268" y="364" font-size="9.5" fill="#a9822f">两组 span 集</text>
+  <text x="268" y="379" font-size="9.5" fill="#a9822f">(partial/full × swept/unswept)</text>
+  <text x="268" y="392" font-size="9.5" fill="#a9822f">按 sweepgen 每轮换角色。</text>
+
+  <rect x="46" y="410" width="408" height="72" rx="9" fill="#f6e6c8" stroke="#e2c88f"/>
+  <text x="56" y="430" font-size="10.5" font-weight="600" fill="#6b4e16">空 span 归还 mheap</text>
+  <text x="56" y="449" font-size="9.5" fill="#a9822f">整块空的 span 交还堆，供后续大对象或其它 size class 复用；</text>
+  <text x="56" y="466" font-size="9.5" fill="#a9822f">清扫全程与用户 goroutine 并发，不停世界。</text>
+
+  <!-- ==== STW mechanism (red, right) ==== -->
+  <rect x="520" y="192" width="410" height="308" rx="13" fill="#fbeeee" stroke="#f0c4c4" filter="url(#soft)"/>
+  <text x="536" y="216" font-size="12.5" font-weight="600" fill="#7a1f1f">STW 停世界 · stopTheWorld（proc.go:1545）</text>
+  <text x="536" y="233" font-size="9.5" fill="#b15b5b">仅清扫终止、标记终止两处，各停几十~几百微秒</text>
+
+  <!-- forEachP rendezvous -->
+  <text x="536" y="262" font-size="10" font-weight="600" fill="#7a1f1f">stopTheWorldWithSema · 抢占所有 P 到安全点</text>
+  <rect x="536" y="274" width="80" height="44" rx="8" fill="#ffffff" stroke="#f0c4c4"/>
+  <text x="576" y="300" font-size="10.5" font-weight="600" fill="#7a1f1f" text-anchor="middle">P0</text>
+  <rect x="628" y="274" width="80" height="44" rx="8" fill="#ffffff" stroke="#f0c4c4"/>
+  <text x="668" y="300" font-size="10.5" font-weight="600" fill="#7a1f1f" text-anchor="middle">P1</text>
+  <rect x="720" y="274" width="80" height="44" rx="8" fill="#ffffff" stroke="#f0c4c4"/>
+  <text x="760" y="300" font-size="10.5" font-weight="600" fill="#7a1f1f" text-anchor="middle">P2</text>
+  <!-- rendezvous point -->
+  <rect x="838" y="270" width="76" height="52" rx="9" fill="#f7dada" stroke="#e6a5a5"/>
+  <text x="876" y="291" font-size="10" font-weight="600" fill="#7a1f1f" text-anchor="middle">安全点</text>
+  <text x="876" y="308" font-size="9" fill="#b15b5b" text-anchor="middle">forEachP 会合</text>
+  <line x1="616" y1="296" x2="836" y2="296" stroke="#d05a5a" stroke-width="1.4" marker-end="url(#arR)"/>
+  <line x1="708" y1="296" x2="836" y2="296" stroke="#d05a5a" stroke-width="1.4"/>
+  <line x1="800" y1="296" x2="836" y2="296" stroke="#d05a5a" stroke-width="1.4"/>
+
+  <rect x="536" y="332" width="378" height="60" rx="9" fill="#ffffff" stroke="#f0c4c4"/>
+  <text x="546" y="352" font-size="10.5" font-weight="600" fill="#7a1f1f">会合与恢复</text>
+  <text x="546" y="370" font-size="9.5" fill="#b15b5b">所有 P 停到安全点后，STW 段内的收尾工作串行执行；</text>
+  <text x="546" y="386" font-size="9.5" fill="#b15b5b">startTheWorldWithSema 恢复所有 P 继续运行。</text>
+
+  <rect x="536" y="404" width="378" height="78" rx="9" fill="#f7dada" stroke="#e6a5a5"/>
+  <text x="546" y="424" font-size="10.5" font-weight="600" fill="#7a1f1f">为何要极短 STW 而非零 STW</text>
+  <text x="546" y="443" font-size="9.5" fill="#b15b5b">标记开始/终止的一致性收尾（如确认无灰、翻相位）</text>
+  <text x="546" y="459" font-size="9.5" fill="#b15b5b">必须在无并发写入下完成 → 塞进极短 STW；</text>
+  <text x="546" y="475" font-size="9.5" fill="#b15b5b">其余大头标记/清扫都并发，避免把整轮塞进 STW。</text>
+</svg>

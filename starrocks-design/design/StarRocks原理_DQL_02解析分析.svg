@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="500" viewBox="0 0 1080 500" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="500" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">StarRocks 解析与分析 · Parser 建 AST → Analyzer 语义分析</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">SqlParser 按方言分支用 ANTLR 建语法树、AstBuilder 造 AST;Analyzer 委托 AnalyzerVisitor 做语义补全,变成可规划形态</text>
+
+  <!-- input -->
+  <rect x="30" y="74" width="150" height="60" rx="12" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="105" y="100" font-size="11" font-weight="700" text-anchor="middle" fill="#1d1d1f">SQL 文本</text>
+  <text x="105" y="118" font-size="8.5" text-anchor="middle" fill="#6e6e73">SELECT …</text>
+  <line x1="180" y1="104" x2="212" y2="104" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- Parser container -->
+  <rect x="212" y="70" width="600" height="200" rx="14" fill="#f3f7fc" stroke="#cfe0f2"/>
+  <text x="228" y="92" font-size="11" font-weight="700" fill="#274a78">SqlParser.parse(sql, sessionVariable) · 词法/语法解析</text>
+  <text x="796" y="92" font-size="8" text-anchor="end" fill="#a1a1a6">sql/parser/SqlParser.java:80</text>
+
+  <!-- dialect branch diamond -->
+  <g text-anchor="middle">
+    <path d="M340,108 L430,140 L340,172 L250,140 z" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+    <text x="340" y="136" font-size="10" font-weight="700" fill="#5a3d78">方言分支</text>
+    <text x="340" y="152" font-size="8.5" fill="#8a6db3">sql_dialect</text>
+  </g>
+  <text x="452" y="118" font-size="8.5" fill="#a1a1a6">starrocks</text>
+  <line x1="430" y1="140" x2="470" y2="140" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <text x="298" y="210" font-size="8.5" text-anchor="middle" fill="#a1a1a6">trino 方言(迁移)</text>
+  <path d="M320,172 L320,228 L470,228" stroke="#c7c7cc" stroke-width="1.3" fill="none" marker-end="url(#ar)"/>
+
+  <!-- starrocks dialect steps -->
+  <g text-anchor="middle">
+    <rect x="470" y="106" width="326" height="42" rx="10" fill="#f3f7fc" stroke="#cfe0f2" filter="url(#soft)"/><text x="633" y="124" font-size="10" font-weight="700" fill="#274a78">ANTLR StarRocksParser::sqlStatements</text><text x="633" y="139" font-size="8.5" fill="#5b7db1">建语法树 · parseWithStarRocksDialect:168</text>
+    <rect x="470" y="156" width="326" height="42" rx="10" fill="#f3f7fc" stroke="#cfe0f2" filter="url(#soft)"/><text x="633" y="174" font-size="10" font-weight="700" fill="#274a78">HintCollector 收 hint</text><text x="633" y="189" font-size="8.5" fill="#5b7db1">采集查询提示 · :178</text>
+    <rect x="470" y="212" width="326" height="42" rx="10" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/><text x="633" y="230" font-size="10" font-weight="700" fill="#5a3d78">AstBuilder.visitSingleStatement</text><text x="633" y="245" font-size="8.5" fill="#8a6db3">构建 StatementBase(AST) · :184</text>
+  </g>
+  <line x1="633" y1="148" x2="633" y2="156" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <line x1="633" y1="198" x2="633" y2="212" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- AST out -->
+  <rect x="844" y="140" width="206" height="60" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="947" y="166" font-size="11" font-weight="700" text-anchor="middle" fill="#1b2a4a">StatementBase (AST)</text>
+  <text x="947" y="184" font-size="8.5" text-anchor="middle" fill="#5b7db1">语法完整,语义未补全</text>
+  <line x1="796" y1="233" x2="820" y2="233" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <path d="M947,200 L947,233 L820,233" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <!-- Analyzer container -->
+  <rect x="30" y="300" width="1020" height="150" rx="14" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="46" y="322" font-size="11" font-weight="700" fill="#1b2a4a">Analyzer.analyze() 委托 AnalyzerVisitor · 语义分析(把 AST 变成语义完整、可规划的形态)</text>
+  <text x="1034" y="322" font-size="8" text-anchor="end" fill="#a1a1a6">sql/analyzer/Analyzer.java:199 · Visitor :203</text>
+  <g text-anchor="middle">
+    <rect x="46" y="338" width="238" height="96" rx="11" fill="#f3f7fc" stroke="#cfe0f2" filter="url(#soft)"/><text x="165" y="372" font-size="10.5" font-weight="700" fill="#274a78">解析库表列</text><text x="165" y="392" font-size="8.5" fill="#5b7db1">名字解析绑定</text><text x="165" y="408" font-size="8.5" fill="#5b7db1">到 catalog/db/table</text>
+    <rect x="298" y="338" width="238" height="96" rx="11" fill="#f3f7fc" stroke="#cfe0f2" filter="url(#soft)"/><text x="417" y="372" font-size="10.5" font-weight="700" fill="#274a78">类型检查</text><text x="417" y="392" font-size="8.5" fill="#5b7db1">表达式类型推导</text><text x="417" y="408" font-size="8.5" fill="#5b7db1">隐式转换校验</text>
+    <rect x="550" y="338" width="238" height="96" rx="11" fill="#f3f7fc" stroke="#cfe0f2" filter="url(#soft)"/><text x="669" y="372" font-size="10.5" font-weight="700" fill="#274a78">展开 *</text><text x="669" y="392" font-size="8.5" fill="#5b7db1">SELECT * 展成列清单</text><text x="669" y="408" font-size="8.5" fill="#5b7db1">按 schema 补全</text>
+    <rect x="802" y="338" width="232" height="96" rx="11" fill="#f3f7fc" stroke="#cfe0f2" filter="url(#soft)"/><text x="918" y="372" font-size="10.5" font-weight="700" fill="#274a78">绑定函数</text><text x="918" y="392" font-size="8.5" fill="#5b7db1">解析函数签名</text><text x="918" y="408" font-size="8.5" fill="#5b7db1">聚合/标量绑定</text>
+  </g>
+  <path d="M947,200 L947,278 L540,278 L540,300" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="560" y="294" font-size="8.5" fill="#a1a1a6">AST 交 Analyzer 语义补全</text>
+</svg>

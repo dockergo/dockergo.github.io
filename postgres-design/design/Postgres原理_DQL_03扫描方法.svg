@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="450" viewBox="0 0 1020 450"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1020" height="450" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">扫描方法选择 · 优化器按选择率与代价挑（executor/node*scan.c）</text>
+
+  <rect x="410" y="52" width="200" height="44" rx="11" fill="#fff7e6" stroke="#f0dcae"/>
+  <text x="510" y="72" font-size="11" font-weight="600" fill="#7a4d00" text-anchor="middle">怎么读一张表</text>
+  <text x="510" y="88" font-size="9" fill="#9a7328" text-anchor="middle">看过滤选择率 + 代价</text>
+
+  <rect x="40" y="140" width="215" height="120" rx="12" fill="#fff7e6" stroke="#f0dcae"/>
+  <text x="147" y="164" font-size="10.5" font-weight="600" fill="#7a4d00" text-anchor="middle">Seq Scan（全表）</text>
+  <text x="147" y="186" font-size="9" fill="#9a7328" text-anchor="middle">选择率高 / 表小 / 无合适索引</text>
+  <text x="147" y="206" font-size="9" fill="#9a7328" text-anchor="middle">顺序读所有 page</text>
+  <text x="147" y="226" font-size="9" fill="#9a7328" text-anchor="middle">顺序 IO 友好</text>
+  <text x="147" y="246" font-size="8.5" fill="#b8912e" text-anchor="middle">nodeSeqscan</text>
+
+  <rect x="270" y="140" width="215" height="120" rx="12" fill="#eafaf1" stroke="#bce6cd"/>
+  <text x="377" y="164" font-size="10.5" font-weight="600" fill="#0f5132" text-anchor="middle">Index Scan</text>
+  <text x="377" y="186" font-size="9" fill="#3f8f66" text-anchor="middle">选择率低、命中少量行</text>
+  <text x="377" y="206" font-size="9" fill="#3f8f66" text-anchor="middle">走索引定位 → 回堆表取行</text>
+  <text x="377" y="226" font-size="9" fill="#3f8f66" text-anchor="middle">随机 IO（回表）</text>
+  <text x="377" y="246" font-size="8.5" fill="#5aa06f" text-anchor="middle">nodeIndexscan</text>
+
+  <rect x="500" y="140" width="215" height="120" rx="12" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="607" y="164" font-size="10.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">Index-Only Scan</text>
+  <text x="607" y="186" font-size="9" fill="#5b7db1" text-anchor="middle">查询列全在索引里</text>
+  <text x="607" y="206" font-size="9" fill="#5b7db1" text-anchor="middle">免回表（查 VM 确认可见）</text>
+  <text x="607" y="226" font-size="9" fill="#5b7db1" text-anchor="middle">最快，覆盖索引</text>
+  <text x="607" y="246" font-size="8.5" fill="#8fa9cf" text-anchor="middle">nodeIndexonlyscan</text>
+
+  <rect x="730" y="140" width="240" height="120" rx="12" fill="#f4eefb" stroke="#d9c9ef"/>
+  <text x="850" y="164" font-size="10.5" font-weight="600" fill="#3c1361" text-anchor="middle">Bitmap Heap Scan</text>
+  <text x="850" y="186" font-size="9" fill="#7a5aa8" text-anchor="middle">中等选择率 / 多索引组合</text>
+  <text x="850" y="206" font-size="9" fill="#7a5aa8" text-anchor="middle">先建位图收集 TID</text>
+  <text x="850" y="226" font-size="9" fill="#7a5aa8" text-anchor="middle">按 page 有序回表（少随机 IO）</text>
+  <text x="850" y="246" font-size="8.5" fill="#a58fc9" text-anchor="middle">nodeBitmapHeapscan</text>
+
+  <line x1="470" y1="96" x2="147" y2="140" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="490" y1="96" x2="377" y2="140" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="530" y1="96" x2="607" y2="140" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="560" y1="96" x2="850" y2="140" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+
+  <rect x="40" y="284" width="930" height="70" rx="12" fill="#f6f6f8" stroke="#e2e2e7"/>
+  <text x="505" y="308" font-size="11" font-weight="600" fill="#1d1d1f" text-anchor="middle">选择率是关键：命中行占比越低越倾向索引；越高越倾向全表顺序读</text>
+  <text x="505" y="330" font-size="9.5" fill="#6a6a70" text-anchor="middle">回表的随机 IO 代价 vs 顺序扫的总量代价，由优化器基于统计与 random_page_cost/seq_page_cost 权衡</text>
+  <text x="505" y="346" font-size="8.5" fill="#86868b" text-anchor="middle">index-only 需 Visibility Map 确认页全可见才免回表</text>
+
+  <rect x="40" y="368" width="930" height="66" rx="12" fill="#eafaf1" stroke="#bce6cd"/>
+  <text x="56" y="392" font-size="10.5" font-weight="600" fill="#0f5132">本例 users.city='NYC'</text>
+  <text x="56" y="414" font-size="9.5" fill="#3f8f66">若 city 有索引且 NYC 占比小 → Index Scan；若无索引或 NYC 占多数 → Seq Scan。用 EXPLAIN 验证实际选择。</text>
+</svg>

@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="580" viewBox="0 0 1060 580" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1060" height="580" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">RDD：底层不可变分布式数据集（不过优化器，直落 DAG）</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">RDD.scala · 转换惰性累积血缘、action 触发 sc.runJob(:1073) → DAGScheduler</text>
+
+  <!-- transformation chain (lazy) -->
+  <rect x="40" y="76" width="600" height="130" rx="13" fill="#fff7e6" stroke="#e8cf9a"/>
+  <text x="340" y="100" font-size="11" font-weight="700" fill="#5a3410" text-anchor="middle">转换（transformation）惰性：只累积血缘，不执行</text>
+  <g text-anchor="middle" font-size="8.5">
+    <rect x="60" y="114" width="100" height="36" rx="7" fill="#fff" stroke="#e8cf9a"/><text x="110" y="136" fill="#5a3410">textFile</text>
+    <rect x="180" y="114" width="90" height="36" rx="7" fill="#fff" stroke="#e8cf9a"/><text x="225" y="136" fill="#5a3410">map</text>
+    <rect x="290" y="114" width="90" height="36" rx="7" fill="#fff" stroke="#e8cf9a"/><text x="335" y="136" fill="#5a3410">filter</text>
+    <rect x="400" y="114" width="100" height="36" rx="7" fill="#fff" stroke="#e8cf9a"/><text x="450" y="136" fill="#5a3410">flatMap</text>
+    <rect x="520" y="114" width="100" height="36" rx="7" fill="#fff" stroke="#e8cf9a"/><text x="570" y="136" fill="#5a3410">…</text>
+  </g>
+  <g stroke="#d8b48a" stroke-width="1.2" fill="none">
+    <line x1="160" y1="132" x2="180" y2="132" marker-end="url(#ar)"/>
+    <line x1="270" y1="132" x2="290" y2="132" marker-end="url(#ar)"/>
+    <line x1="380" y1="132" x2="400" y2="132" marker-end="url(#ar)"/>
+    <line x1="500" y1="132" x2="520" y2="132" marker-end="url(#ar)"/>
+  </g>
+  <text x="340" y="172" font-size="8.5" fill="#93762e" text-anchor="middle">每次转换产生新 RDD（不可变），只记录"从父怎么算"——这就是血缘</text>
+  <text x="340" y="192" font-size="8" fill="#b08843" text-anchor="middle">此刻还没有任何计算发生</text>
+
+  <!-- action triggers -->
+  <rect x="680" y="76" width="340" height="130" rx="13" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="850" y="100" font-size="11" font-weight="700" fill="#12402a" text-anchor="middle">action 触发执行</text>
+  <g text-anchor="middle" font-size="8.5">
+    <rect x="700" y="114" width="140" height="32" rx="7" fill="#fff" stroke="#bfe0cd"/><text x="770" y="134" fill="#12402a">collect / count / save</text>
+  </g>
+  <text x="850" y="166" font-size="9" fill="#2f6f4f">RDD.collect()（RDD.scala:1072）</text>
+  <text x="850" y="184" font-size="9" fill="#2f6f4f" text-anchor="middle">→ sc.runJob（:1073）→ DAGScheduler</text>
+  <g stroke="#9ccbb0" stroke-width="1.3" fill="none"><line x1="640" y1="140" x2="680" y2="140" marker-end="url(#ar)"/></g>
+
+  <!-- bypasses Catalyst -->
+  <rect x="40" y="230" width="480" height="120" rx="13" fill="#fbeef0" stroke="#f0cdd4"/>
+  <text x="280" y="254" font-size="11" font-weight="700" fill="#7a2230" text-anchor="middle">关键：RDD 不过 Catalyst 优化器</text>
+  <text x="60" y="278" font-size="9.5" fill="#a44">· RDD 里是任意对象（无 schema）→ 优化器无从下手</text>
+  <text x="60" y="298" font-size="9.5" fill="#a44">· 转换直接构成 DAG，无逻辑/物理优化</text>
+  <text x="60" y="318" font-size="9.5" fill="#7a2230">· 性能全靠用户自己写好（分区/缓存/避免宽依赖）</text>
+  <text x="60" y="338" font-size="8.5" fill="#a44">· 对比：DataFrame 有 schema → 过 Catalyst 自动优化</text>
+
+  <!-- 5 properties recap -->
+  <rect x="540" y="230" width="480" height="120" rx="13" fill="#f4eefb" stroke="#d9c7ec"/>
+  <text x="780" y="254" font-size="11" font-weight="700" fill="#3d2a5a" text-anchor="middle">RDD 五要素（详见执行模型）</text>
+  <text x="560" y="278" font-size="9" fill="#7a5da5">① 分区集 ② 计算函数 ③ 依赖(血缘) ④ 分区器 ⑤ 优先位置</text>
+  <text x="560" y="300" font-size="9" fill="#7a5da5">· 不可变：转换产生新 RDD，父不变</text>
+  <text x="560" y="320" font-size="9" fill="#7a5da5">· ③ 依赖链 = lineage = 容错的根</text>
+  <text x="560" y="338" font-size="8.5" fill="#9a7cc4">（五要素与窄/宽依赖细节见「执行模型」主线）</text>
+
+  <rect x="40" y="368" width="980" height="96" rx="13" fill="#fdf9f0" stroke="#efe3cd"/>
+  <text x="60" y="392" font-size="11" font-weight="700" fill="#7a5a1e">何时用 RDD</text>
+  <text x="60" y="414" font-size="9.5" fill="#93762e">· 非结构化数据（无固定 schema，如原始文本/二进制）</text>
+  <text x="60" y="432" font-size="9.5" fill="#93762e">· 需要底层精细控制（自定义分区器、自定义聚合、非关系型算法）</text>
+  <text x="60" y="450" font-size="9.5" fill="#b08843">· 否则：结构化数据一律用 DataFrame/SQL——过 Catalyst+Tungsten 通常快几倍</text>
+
+  <rect x="40" y="476" width="980" height="76" rx="12" fill="#f7f7f9" stroke="#e6e6ea"/>
+  <text x="60" y="500" font-size="11" font-weight="700" fill="#1d1d1f">一句话</text>
+  <text x="60" y="522" font-size="10" fill="#4b4b50">RDD 是最底层的不可变分布式数据集：转换惰性累积血缘、action 触发 sc.runJob 落 DAG。它不过 Catalyst（无 schema 可优化），</text>
+  <text x="60" y="540" font-size="10" fill="#4b4b50">给最大控制力但要自管性能——非结构化/需底层控制才用，结构化数据用 DataFrame/SQL。</text>
+</svg>

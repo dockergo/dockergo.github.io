@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="520" viewBox="0 0 1080 520" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs><filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+  <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker></defs>
+  <rect width="1080" height="520" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Lease 全景：TTL + keepalive + 过期自动删 key</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">lessor.go: Grant(:281)/Renew(:396)/Revoke(:326) · 一 lease 绑多 key · 服务发现/会话/锁的基础</text>
+  <g text-anchor="middle">
+    <rect x="40" y="80" width="200" height="66" rx="11" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/><text x="140" y="104" font-size="10" font-weight="700" fill="#12402a">① Grant(ttl)</text><text x="140" y="124" font-size="8" fill="#2f6f4f">建租约，拿 leaseID</text><text x="140" y="138" font-size="8" fill="#4c8567">走 Raft（建数据）</text>
+    <rect x="270" y="80" width="200" height="66" rx="11" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/><text x="370" y="104" font-size="10" font-weight="700" fill="#5a3410">② Put key 绑 lease</text><text x="370" y="124" font-size="8" fill="#93762e">key 挂到 leaseID</text><text x="370" y="138" font-size="8" fill="#b08843">一 lease 可绑多 key</text>
+    <rect x="500" y="80" width="200" height="66" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/><text x="600" y="104" font-size="10" font-weight="700" fill="#1b2a4a">③ keepalive 续租</text><text x="600" y="124" font-size="8" fill="#5b7db1">周期心跳重置 TTL</text><text x="600" y="138" font-size="8" fill="#8aa6cf">只改 leader 内存</text>
+    <rect x="730" y="80" width="310" height="66" rx="11" fill="#fbeef0" stroke="#f0cdd4" filter="url(#soft)"/><text x="885" y="104" font-size="10" font-weight="700" fill="#7a2230">④ 停续 → 过期 → Revoke</text><text x="885" y="124" font-size="8" fill="#a44">leader 检出过期，经 Raft 撤销</text><text x="885" y="138" font-size="8" fill="#7a2230">名下所有 key 自动删除</text>
+  </g>
+  <g stroke="#c7c7cc" stroke-width="1.4" fill="none">
+    <line x1="240" y1="113" x2="270" y2="113" marker-end="url(#ar)"/>
+    <line x1="470" y1="113" x2="500" y2="113" marker-end="url(#ar)"/>
+    <line x1="700" y1="113" x2="730" y2="113" marker-end="url(#ar)"/>
+  </g>
+  <path d="M600,146 Q600,175 380,175 Q140,175 140,146" stroke="#5b7db1" stroke-width="1.3" fill="none" stroke-dasharray="4 3" marker-end="url(#ar)"/>
+  <text x="370" y="192" font-size="8" fill="#5b7db1" text-anchor="middle">持续续租 → 保持存活（回到③循环）</text>
+  <rect x="40" y="212" width="490" height="150" rx="12" fill="#f3f7fc" stroke="#cfe0f2"/>
+  <text x="60" y="236" font-size="11" font-weight="700" fill="#274a78">"活着才存在"语义</text>
+  <text x="60" y="258" font-size="9.5" fill="#5b7db1">· 服务发现：节点启动注册 key + 挂 lease，持续续租</text>
+  <text x="60" y="278" font-size="9.5" fill="#5b7db1">· 节点宕机 → 进程没了 → 停止续租 → lease 过期</text>
+  <text x="60" y="298" font-size="9.5" fill="#5b7db1">· → 注册 key 自动删除 → 其他节点 watch 到"下线"</text>
+  <text x="60" y="320" font-size="9" fill="#8aa6cf">· 无需任何"心跳检测 + 手动清理"逻辑，etcd 内建</text>
+  <text x="60" y="340" font-size="9" fill="#8aa6cf">· 分布式锁：锁 key 挂 lease，持锁者挂 → 锁自动释放</text>
+  <rect x="550" y="212" width="490" height="150" rx="12" fill="#fdf9f0" stroke="#efe3cd"/>
+  <text x="570" y="236" font-size="11" font-weight="700" fill="#7a5a1e">走不走 Raft？（关键设计）</text>
+  <text x="570" y="258" font-size="9.5" fill="#93762e">· Grant / Revoke：改数据（建/删 lease+key）→ 走 Raft（多数派一致）</text>
+  <text x="570" y="278" font-size="9.5" fill="#93762e">· Renew（续租）：只推后到期时间、不改数据 → 只改 leader 内存，不走 Raft</text>
+  <text x="570" y="300" font-size="9" fill="#b08843">· 为什么：keepalive 高频，若每次走 Raft 会压垮共识</text>
+  <text x="570" y="320" font-size="9" fill="#b08843">· 续租不需一致性——只要 leader 知道"还活着"即可</text>
+  <text x="570" y="340" font-size="8.5" fill="#a98a4a">这是 Lease 高频续租却不拖累性能的关键</text>
+  <rect x="40" y="376" width="1000" height="66" rx="12" fill="#f7f7f9" stroke="#e6e6ea"/>
+  <text x="60" y="400" font-size="11" font-weight="700" fill="#1d1d1f">一句话</text>
+  <text x="60" y="422" font-size="10" fill="#4b4b50">Lease 给 key 挂 TTL：Grant 建租约（走 Raft）、Put 绑 key、客户端 keepalive 续租（只改 leader 内存）、停续则 leader 经 Raft 撤销并删光名下 key——</text>
+  <text x="60" y="438" font-size="10" fill="#4b4b50">"活着才续租、死了自动清理"，是服务发现/会话/锁的基础。</text>
+</svg>

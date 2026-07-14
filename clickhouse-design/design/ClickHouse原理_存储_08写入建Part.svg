@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="720" viewBox="0 0 1060 720" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1060" height="720" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">写入建 Part：Block → 分区切分 → 主键排序 → 流式写列 → 原子可见（无 MemTable/WAL）</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">MergeTreeDataWriter::writeTempPartImpl (MergeTreeDataWriter.cpp:534) → MergedBlockOutputStream → finalizePartAsync(:823)</text>
+
+  <!-- vertical steps -->
+  <g text-anchor="middle">
+    <rect x="380" y="72" width="300" height="58" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+    <text x="530" y="96" font-size="12" font-weight="600" fill="#1b2a4a">INSERT → 内存 Block</text>
+    <text x="530" y="114" font-size="9" fill="#5b7db1">一批行的列式表示（可能乱序、跨分区）</text>
+
+    <rect x="360" y="158" width="340" height="66" rx="12" fill="#f3f7fc" stroke="#cfe0f2" filter="url(#soft)"/>
+    <text x="530" y="180" font-size="11.5" font-weight="700" fill="#274a78">① 按 PARTITION BY 切块</text>
+    <text x="530" y="198" font-size="9" fill="#5b7db1">splitBlockIntoParts：一个 Block 拆成</text>
+    <text x="530" y="213" font-size="9" fill="#5b7db1">每个分区一个子 Block（各自建 Part）</text>
+
+    <rect x="360" y="252" width="340" height="66" rx="12" fill="#f3f7fc" stroke="#cfe0f2" filter="url(#soft)"/>
+    <text x="530" y="274" font-size="11.5" font-weight="700" fill="#274a78">② 按 ORDER BY 稳定排序</text>
+    <text x="530" y="292" font-size="9" fill="#5b7db1">stableGetPermutation (MergeTreeDataWriter.cpp:631)</text>
+    <text x="530" y="307" font-size="9" fill="#5b7db1">得到行序号排列 perm（不物理搬列）</text>
+
+    <rect x="360" y="346" width="340" height="80" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+    <text x="530" y="368" font-size="11.5" font-weight="700" fill="#12402a">③ MergedBlockOutputStream 流式写</text>
+    <text x="530" y="386" font-size="9" fill="#2f6f4f">writeWithPermutation(block, perm) (:800)</text>
+    <text x="530" y="401" font-size="9" fill="#2f6f4f">按 perm 顺序写各列 .bin，同时建</text>
+    <text x="530" y="415" font-size="9" fill="#2f6f4f">primary.idx / marks / 跳数索引 / checksums</text>
+
+    <rect x="360" y="454" width="340" height="66" rx="12" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+    <text x="530" y="476" font-size="11.5" font-weight="700" fill="#5a3410">④ finalizePartAsync → 原子 rename</text>
+    <text x="530" y="494" font-size="9" fill="#93762e">先写 tmp_insert_… 临时目录</text>
+    <text x="530" y="509" font-size="9" fill="#93762e">落定后 rename 为正式 Part → 此刻起可见</text>
+  </g>
+  <g stroke="#c7c7cc" stroke-width="1.5" fill="none">
+    <line x1="530" y1="130" x2="530" y2="158" marker-end="url(#ar)"/>
+    <line x1="530" y1="224" x2="530" y2="252" marker-end="url(#ar)"/>
+    <line x1="530" y1="318" x2="530" y2="346" marker-end="url(#ar)"/>
+    <line x1="530" y1="426" x2="530" y2="454" marker-end="url(#ar)"/>
+  </g>
+
+  <!-- left: no-lsm callout -->
+  <rect x="30" y="158" width="300" height="180" rx="13" fill="#fbeef0" stroke="#f0cdd4"/>
+  <text x="180" y="182" font-size="11.5" font-weight="700" fill="#7a2230" text-anchor="middle">对比 Doris：没有这一层</text>
+  <text x="50" y="206" font-size="9.5" fill="#a44">✗ 无 MemTable（内存攒批区）</text>
+  <text x="50" y="226" font-size="9.5" fill="#a44">✗ 无 WAL（预写日志）</text>
+  <text x="50" y="246" font-size="9.5" fill="#a44">✗ 无 flush 触发逻辑</text>
+  <text x="50" y="272" font-size="9" fill="#7a2230">Doris：写 MemTable → 满/超时</text>
+  <text x="50" y="288" font-size="9" fill="#7a2230">→ flush 成 Segment（近 LSM）</text>
+  <text x="50" y="312" font-size="9" fill="#7a2230">CH：一次 INSERT = 一个 Part</text>
+  <text x="50" y="328" font-size="9" fill="#7a2230">直接落盘，无中间态</text>
+
+  <!-- right: dedup -->
+  <rect x="730" y="158" width="300" height="180" rx="13" fill="#f6f2fb" stroke="#d9c9ec"/>
+  <text x="880" y="182" font-size="11.5" font-weight="700" fill="#3d2a5a" text-anchor="middle">插入幂等去重</text>
+  <text x="750" y="206" font-size="9.5" fill="#3d2a5a">非复制表：</text>
+  <text x="750" y="224" font-size="9" fill="#7a5da5">MergeTreeDeduplicationLog</text>
+  <text x="750" y="240" font-size="9" fill="#7a5da5">按插入块 hash 去重</text>
+  <text x="750" y="258" font-size="9" fill="#7a5da5">窗口默认 0（关闭）</text>
+  <text x="750" y="274" font-size="8.5" fill="#9a7cc4">MergeTreeSettings.cpp:423</text>
+  <text x="750" y="298" font-size="9.5" fill="#3d2a5a">复制表：</text>
+  <text x="750" y="316" font-size="9" fill="#7a5da5">block hash 写 Keeper /blocks</text>
+  <text x="750" y="332" font-size="8.5" fill="#9a7cc4">重试同批不重复插（见复制主线）</text>
+
+  <!-- small parts warning -->
+  <rect x="30" y="454" width="300" height="150" rx="13" fill="#fff7e6" stroke="#e8cf9a"/>
+  <text x="180" y="478" font-size="11" font-weight="700" fill="#5a3410" text-anchor="middle">小 Part 之痛</text>
+  <text x="50" y="502" font-size="9" fill="#93762e">每次 INSERT ≥ 产 1 个 Part</text>
+  <text x="50" y="520" font-size="9" fill="#93762e">高频小批量 → Part 爆炸</text>
+  <text x="50" y="538" font-size="9" fill="#93762e">→ 查询归并路数多、变慢</text>
+  <text x="50" y="556" font-size="9" fill="#93762e">→ merge 压力大</text>
+  <text x="50" y="580" font-size="9" fill="#b08843">解法：攒批（万行/批）</text>
+  <text x="50" y="596" font-size="9" fill="#b08843">或 async insert（服务端攒批）</text>
+
+  <!-- async insert -->
+  <rect x="730" y="454" width="300" height="150" rx="13" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="880" y="478" font-size="11" font-weight="700" fill="#12402a" text-anchor="middle">async insert（缓解手段）</text>
+  <text x="750" y="502" font-size="9" fill="#2f6f4f">async_insert=1：小 INSERT 先</text>
+  <text x="750" y="520" font-size="9" fill="#2f6f4f">进服务端缓冲，攒够/超时再</text>
+  <text x="750" y="538" font-size="9" fill="#2f6f4f">合并落成一个较大 Part</text>
+  <text x="750" y="562" font-size="9" fill="#4c8567">把"客户端攒批"下放到服务端</text>
+  <text x="750" y="580" font-size="8.5" fill="#4c8567">见「DML 数据写入」主线详解</text>
+
+  <rect x="30" y="628" width="1000" height="76" rx="12" fill="#f7f7f9" stroke="#e6e6ea"/>
+  <text x="50" y="652" font-size="11" font-weight="700" fill="#1d1d1f">一句话</text>
+  <text x="50" y="674" font-size="10" fill="#4b4b50">写入 = 把一个 Block 分区切分、按主键排序、流式写成一个不可变 Part 目录，再原子 rename 变可见——没有 MemTable/WAL。</text>
+  <text x="50" y="691" font-size="10" fill="#4b4b50">代价是"一次 INSERT 一个 Part"，所以必须攒批或用 async insert，否则小 Part 会同时拖慢查询与 merge。</text>
+</svg>

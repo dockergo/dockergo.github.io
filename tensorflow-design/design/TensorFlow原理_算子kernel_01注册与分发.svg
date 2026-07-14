@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="490" viewBox="0 0 1000 490"
+     font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1000" height="490" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">算子与 kernel · 一个 op 两次注册：schema 与设备实现</text>
+
+  <!-- 两类注册 -->
+  <rect x="30" y="52" width="455" height="180" rx="14" fill="#f4eefb" stroke="#d9c9ef" filter="url(#soft)"/>
+  <text x="52" y="76" font-size="12" font-weight="600" fill="#3c1361">① REGISTER_OP —— 注册 OpDef（schema）</text>
+  <rect x="52" y="90" width="411" height="126" rx="9" fill="#ffffff" stroke="#d9c9ef"/>
+  <text x="66" y="112" font-size="9.5" fill="#3c1361">· 定义 op 名、输入/输出、属性、类型约束</text>
+  <text x="66" y="134" font-size="9.5" fill="#3c1361">· 附带形状推导函数（shape inference）</text>
+  <text x="66" y="156" font-size="9.5" fill="#3c1361">· 与设备/实现无关，只是"接口契约"</text>
+  <text x="66" y="180" font-size="9" fill="#7a4fb0" font-family="monospace">REGISTER_OP("MatMul")...  op.h:318</text>
+  <text x="66" y="200" font-size="9" fill="#7a4fb0">静态初始化时注册进 OpRegistry</text>
+
+  <rect x="515" y="52" width="455" height="180" rx="14" fill="#eafaf1" stroke="#bce6cd" filter="url(#soft)"/>
+  <text x="537" y="76" font-size="12" font-weight="600" fill="#0f5132">② REGISTER_KERNEL_BUILDER —— 注册设备 kernel</text>
+  <rect x="537" y="90" width="411" height="126" rx="9" fill="#ffffff" stroke="#bce6cd"/>
+  <text x="551" y="112" font-size="9.5" fill="#0f5132">· 一个 op 可有多个 kernel（CPU/GPU/类型）</text>
+  <text x="551" y="134" font-size="9.5" fill="#0f5132">· 每个 kernel 是 OpKernel 子类，重写 Compute()</text>
+  <text x="551" y="156" font-size="9.5" fill="#0f5132">· 耗时 op 用 AsyncOpKernel::ComputeAsync()</text>
+  <text x="551" y="180" font-size="9" fill="#5b9e78" font-family="monospace">REGISTER_KERNEL_BUILDER(...)  op_kernel.h:1500</text>
+  <text x="551" y="200" font-size="9" fill="#5b9e78">注册进 GlobalKernelRegistry（op_kernel.cc:1334）</text>
+
+  <!-- 分发 -->
+  <rect x="30" y="252" width="940" height="150" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="52" y="276" font-size="12.5" font-weight="600" fill="#1b2a4a">分发：按「op 名 + 设备（+ 类型约束）」查注册表选唯一 kernel</text>
+  <rect x="52" y="292" width="200" height="90" rx="10" fill="#ffffff" stroke="#bcd0ec"/><text x="152" y="318" font-size="9.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">节点 MatMul</text><text x="152" y="338" font-size="8.5" fill="#5b7db1" text-anchor="middle">已被 Placer 定到 GPU:0</text><text x="152" y="356" font-size="8.5" fill="#5b7db1" text-anchor="middle">输入 dtype=float32</text>
+  <rect x="288" y="292" width="200" height="90" rx="10" fill="#ffffff" stroke="#bcd0ec"/><text x="388" y="326" font-size="9.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">查 GlobalKernelRegistry</text><text x="388" y="346" font-size="8.5" fill="#5b7db1" text-anchor="middle">key = op名+设备+约束</text>
+  <rect x="524" y="292" width="200" height="90" rx="10" fill="#eafaf1" stroke="#bce6cd"/><text x="624" y="326" font-size="9.5" font-weight="600" fill="#0f5132" text-anchor="middle">MatMulOp&lt;GPU,float&gt;</text><text x="624" y="346" font-size="8.5" fill="#2f6f4f" text-anchor="middle">选中的 OpKernel</text>
+  <rect x="760" y="292" width="200" height="90" rx="10" fill="#fff7e6" stroke="#e8cf9a"/><text x="860" y="326" font-size="9.5" font-weight="600" fill="#5a3410" text-anchor="middle">Compute(context)</text><text x="860" y="346" font-size="8.5" fill="#93762e" text-anchor="middle">调 cuBLAS 真正算</text>
+  <line x1="252" y1="337" x2="288" y2="337" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <line x1="488" y1="337" x2="524" y2="337" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <line x1="724" y1="337" x2="760" y2="337" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- 对照 -->
+  <rect x="30" y="422" width="940" height="52" rx="12" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="52" y="444" font-size="10.5" fill="#494950">与 PyTorch 对照：TF 是<tspan font-weight="600" fill="#1b2a4a">「op名+设备」单层查表</tspan>选 kernel；PyTorch 是 Dispatcher 按 DispatchKeySet <tspan font-weight="600" fill="#3c1361">分层</tspan>分发（autograd/autocast/后端逐层）。</text>
+  <text x="52" y="464" font-size="10" fill="#7a2a2a">TF 的"分发切面"（自动微分/精度）多在图变换与 Python 层做，而非算子分发层。</text>
+</svg>

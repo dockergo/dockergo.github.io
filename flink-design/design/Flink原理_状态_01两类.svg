@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="520" viewBox="0 0 1080 520"
+     font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1080" height="520" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Flink 状态 · 两类状态：keyed state vs operator state</text>
+  <text x="30" y="50" font-size="11" fill="#a1a1a6">State 基接口只有 clear();类型化 State API 按分区方式分两类,均由 StateDescriptor 声明</text>
+
+  <!-- 左：keyed state -->
+  <rect x="40" y="72" width="495" height="292" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="62" y="99" font-size="13" font-weight="700" fill="#1b2a4a">keyed state</text>
+  <text x="62" y="120" font-size="10.5" fill="#5b7db1">按 key 分区 · 每 key 一份(最常用) · 处理某 key 记录时自动切到该 key 状态</text>
+
+  <rect x="62" y="134" width="451" height="66" rx="11" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="80" y="160" font-size="12" font-weight="600" fill="#1b2a4a">ValueState&lt;T&gt;</text>
+  <text x="80" y="182" font-size="10.5" fill="#5b7db1">value() / update(v) — 单值状态</text>
+
+  <rect x="62" y="208" width="451" height="66" rx="11" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="80" y="234" font-size="12" font-weight="600" fill="#1b2a4a">ListState&lt;T&gt;</text>
+  <text x="80" y="256" font-size="10.5" fill="#5b7db1">add() / get() — 列表状态</text>
+
+  <rect x="62" y="282" width="451" height="66" rx="11" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="80" y="308" font-size="12" font-weight="600" fill="#1b2a4a">MapState&lt;UK,UV&gt;</text>
+  <text x="80" y="330" font-size="10.5" fill="#5b7db1">get / put / entries — 映射状态</text>
+
+  <!-- 右：operator state -->
+  <rect x="545" y="72" width="495" height="292" rx="14" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="567" y="99" font-size="13" font-weight="700" fill="#3d2a5a">operator state</text>
+  <text x="567" y="120" font-size="10.5" fill="#7a5c9e">按算子并行实例 · 常用于 source 记录读取偏移量等</text>
+
+  <rect x="567" y="134" width="451" height="66" rx="11" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="585" y="160" font-size="12" font-weight="600" fill="#3d2a5a">getListState()</text>
+  <text x="585" y="182" font-size="10.5" fill="#7a5c9e">SPLIT_DISTRIBUTE — 均分重分布</text>
+
+  <rect x="567" y="208" width="451" height="66" rx="11" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="585" y="234" font-size="12" font-weight="600" fill="#3d2a5a">getUnionListState()</text>
+  <text x="585" y="256" font-size="10.5" fill="#7a5c9e">UNION — 每实例恢复全量</text>
+
+  <rect x="567" y="282" width="451" height="66" rx="11" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="585" y="308" font-size="12" font-weight="600" fill="#3d2a5a">getBroadcastState()</text>
+  <text x="585" y="330" font-size="10.5" fill="#7a5c9e">BROADCAST — 广播状态</text>
+
+  <!-- 连线：StateDescriptor 声明两类 -->
+  <path d="M 287,392 L 287,366" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M 793,392 L 793,366" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="297" y="383" font-size="9.5" fill="#a1a1a6">声明</text>
+  <text x="803" y="383" font-size="9.5" fill="#a1a1a6">声明</text>
+
+  <!-- 底：StateDescriptor -->
+  <rect x="40" y="392" width="1000" height="80" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="62" y="421" font-size="12" font-weight="600" fill="#12402a">StateDescriptor — 声明状态类型 &amp; 序列化器</text>
+  <text x="62" y="446" font-size="10.5" fill="#2f6f4f">enum Type { VALUE, LIST, REDUCING, AGGREGATING, MAP … }  ·  接口在 flink-core-api,描述符在 flink-core(别混)</text>
+</svg>

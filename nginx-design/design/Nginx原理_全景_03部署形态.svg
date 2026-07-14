@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="470" viewBox="0 0 1020 470"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1020" height="470" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">部署形态 · nginx 站在客户端与后端之间的多种角色</text>
+
+  <!-- 客户端 -->
+  <rect x="30" y="70" width="140" height="330" rx="14" fill="#f4eefb" stroke="#d9c9ef" filter="url(#soft)"/>
+  <text x="100" y="230" font-size="12" font-weight="600" fill="#3c1361" text-anchor="middle">客户端</text>
+  <text x="100" y="252" font-size="9.5" fill="#7a5aa8" text-anchor="middle">浏览器 / App</text>
+  <text x="100" y="268" font-size="9.5" fill="#7a5aa8" text-anchor="middle">海量并发连接</text>
+
+  <!-- nginx -->
+  <rect x="230" y="70" width="300" height="330" rx="14" fill="#eafaf1" stroke="#bce6cd" filter="url(#soft)"/>
+  <text x="380" y="96" font-size="12.5" font-weight="600" fill="#0f5132" text-anchor="middle">nginx（长驻守护 · 监听 80/443）</text>
+  <rect x="250" y="112" width="260" height="52" rx="10" fill="#ffffff" stroke="#bce6cd"/><text x="380" y="134" font-size="10.5" font-weight="600" fill="#0f5132" text-anchor="middle">① 静态资源服务器</text><text x="380" y="152" font-size="9" fill="#3f8f66" text-anchor="middle">直接从磁盘读文件返回（sendfile）</text>
+  <rect x="250" y="172" width="260" height="52" rx="10" fill="#ffffff" stroke="#bce6cd"/><text x="380" y="194" font-size="10.5" font-weight="600" fill="#0f5132" text-anchor="middle">② 反向代理</text><text x="380" y="212" font-size="9" fill="#3f8f66" text-anchor="middle">proxy_pass 转后端，隐藏内部拓扑</text>
+  <rect x="250" y="232" width="260" height="52" rx="10" fill="#ffffff" stroke="#bce6cd"/><text x="380" y="254" font-size="10.5" font-weight="600" fill="#0f5132" text-anchor="middle">③ 负载均衡器</text><text x="380" y="272" font-size="9" fill="#3f8f66" text-anchor="middle">upstream 多后端分流 + 健康检查</text>
+  <rect x="250" y="292" width="260" height="52" rx="10" fill="#ffffff" stroke="#bce6cd"/><text x="380" y="314" font-size="10.5" font-weight="600" fill="#0f5132" text-anchor="middle">④ TLS 终止 + 缓存 + 网关</text><text x="380" y="332" font-size="9" fill="#3f8f66" text-anchor="middle">解密 / 缓存命中直返 / 限流鉴权</text>
+  <text x="380" y="368" font-size="9" fill="#3f8f66" text-anchor="middle">同一进程同时扮演多角色，由 location 配置区分</text>
+  <text x="380" y="386" font-size="9" fill="#5aa06f" text-anchor="middle">前端连接与后端连接彻底解耦</text>
+
+  <!-- 后端 -->
+  <rect x="590" y="70" width="400" height="330" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="790" y="96" font-size="12.5" font-weight="600" fill="#1d1d1f" text-anchor="middle">后端 / 数据源</text>
+  <rect x="610" y="116" width="175" height="60" rx="10" fill="#fff7e6" stroke="#f0dcae"/><text x="697" y="140" font-size="9.5" fill="#7a4d00" text-anchor="middle">磁盘静态文件</text><text x="697" y="158" font-size="8.5" fill="#9a7328" text-anchor="middle">html/img/js</text>
+  <rect x="800" y="116" width="170" height="60" rx="10" fill="#eef3fb" stroke="#bcd0ec"/><text x="885" y="140" font-size="9.5" fill="#1b2a4a" text-anchor="middle">应用服务器组</text><text x="885" y="158" font-size="8.5" fill="#5b7db1" text-anchor="middle">HTTP/FastCGI/gRPC</text>
+  <rect x="610" y="188" width="360" height="60" rx="10" fill="#eef3fb" stroke="#bcd0ec"/><text x="790" y="212" font-size="9.5" fill="#1b2a4a" text-anchor="middle">upstream 池：server a; server b; server c;</text><text x="790" y="230" font-size="8.5" fill="#5b7db1" text-anchor="middle">nginx 在多个 peer 间按策略分流</text>
+  <rect x="610" y="260" width="360" height="52" rx="10" fill="#eafaf1" stroke="#bce6cd"/><text x="790" y="290" font-size="9.5" fill="#0f5132" text-anchor="middle">keepalive 长连接池复用到后端，省握手</text>
+  <rect x="610" y="324" width="360" height="60" rx="10" fill="#f6f6f8" stroke="#e2e2e7"/><text x="790" y="348" font-size="9.5" fill="#494950" text-anchor="middle">nginx 也可作 stream(TCP/UDP) 与 mail 代理</text><text x="790" y="366" font-size="8.5" fill="#6a6a70" text-anchor="middle">同一事件模型，不同协议模块</text>
+
+  <line x1="170" y1="235" x2="230" y2="235" stroke="#c7c7cc" stroke-width="1.6" marker-end="url(#ar)"/>
+  <text x="176" y="228" font-size="8.5" fill="#86868b">HTTP(S)</text>
+  <line x1="530" y1="235" x2="590" y2="235" stroke="#c7c7cc" stroke-width="1.6" marker-end="url(#ar)"/>
+  <text x="536" y="228" font-size="8.5" fill="#86868b">反代</text>
+
+  <text x="30" y="440" font-size="10.5" fill="#86868b">关键：nginx 是<tspan font-weight="600" fill="#0f5132">长驻、事件驱动</tspan>的中间层——前端扛海量慢连接，后端用少量快连接，二者解耦是其高并发的根基。</text>
+</svg>

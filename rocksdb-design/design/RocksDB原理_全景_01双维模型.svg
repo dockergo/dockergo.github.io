@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="740" viewBox="0 0 1080 740" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="740" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">RocksDB 双维模型：能力域（管什么）× 执行时机（何时做）</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">接触面是 KV API;支撑能力域横切引擎内部;写永不原地更新,后台线程默默整理——LSM 的核心张力</text>
+
+  <!-- 接触面 layer -->
+  <rect x="30" y="70" width="1020" height="64" rx="12" fill="#f4eefb" stroke="#d9c7ec"/>
+  <text x="46" y="92" font-size="11.5" font-weight="700" fill="#3d2a5a">接触面主线（宿主进程调 KV API）</text>
+  <g font-size="9.5" text-anchor="middle">
+    <rect x="46" y="100" width="240" height="26" rx="7" fill="#f4eefb" stroke="#d9c7ec"/><text x="166" y="117" font-weight="600" fill="#3d2a5a">写 Put/Delete/Merge/WriteBatch</text>
+    <rect x="298" y="100" width="220" height="26" rx="7" fill="#faf4fb" stroke="#e2d2ee"/><text x="408" y="117" fill="#5a3d78">读 Get/MultiGet/Iterator</text>
+    <rect x="530" y="100" width="230" height="26" rx="7" fill="#faf4fb" stroke="#e2d2ee"/><text x="645" y="117" fill="#5a3d78">组织 ColumnFamily/Snapshot/Options</text>
+    <text x="800" y="117" font-size="9" fill="#a1a1a6">← 无 SQL / 无网络,嵌入库</text>
+  </g>
+
+  <!-- 写侧 -->
+  <rect x="30" y="152" width="1020" height="112" rx="12" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="46" y="174" font-size="11.5" font-weight="700" fill="#1b2a4a">写侧能力域 · 前台调用期</text>
+  <rect x="46" y="186" width="490" height="66" rx="10" fill="#f3f7fc" stroke="#cfe0f2" filter="url(#soft)"/>
+  <text x="66" y="208" font-size="11" font-weight="600" fill="#274a78">写入路径</text>
+  <text x="66" y="228" font-size="9" fill="#5b7db1">WriteThread 分组 → WAL 顺序追加 → MemTable(跳表)插入</text>
+  <text x="66" y="244" font-size="9" fill="#5b7db1">满转 immutable,零原地更新</text>
+  <rect x="560" y="186" width="474" height="66" rx="10" fill="#f3f7fc" stroke="#cfe0f2" filter="url(#soft)"/>
+  <text x="580" y="208" font-size="11" font-weight="600" fill="#274a78">Flush（后台）</text>
+  <text x="580" y="228" font-size="9" fill="#5b7db1">immutable MemTable → 写成不可变 L0 SST 文件</text>
+  <text x="580" y="244" font-size="9" fill="#5b7db1">FlushJob + 后台线程</text>
+
+  <!-- 读侧 -->
+  <rect x="30" y="272" width="1020" height="112" rx="12" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="46" y="294" font-size="11.5" font-weight="700" fill="#12402a">读侧能力域 · 前台调用期</text>
+  <rect x="46" y="306" width="320" height="66" rx="10" fill="#f5faf6" stroke="#cfe6d5" filter="url(#soft)"/>
+  <text x="66" y="328" font-size="11" font-weight="600" fill="#2c5a3a">读取路径</text>
+  <text x="66" y="348" font-size="9" fill="#2f6f4f">MemTable → 逐层 SST 归并</text>
+  <text x="66" y="364" font-size="9" fill="#2f6f4f">布隆短路 + 按 seq 取版本</text>
+  <rect x="378" y="306" width="320" height="66" rx="10" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+  <text x="398" y="328" font-size="11" font-weight="600" fill="#5a3410">SST 存储格式</text>
+  <text x="398" y="348" font-size="9" fill="#93762e">BlockBasedTable:data/index/filter</text>
+  <text x="398" y="364" font-size="9" fill="#93762e">块/前缀压缩 + footer</text>
+  <rect x="710" y="306" width="324" height="66" rx="10" fill="#f5faf6" stroke="#cfe6d5" filter="url(#soft)"/>
+  <text x="730" y="328" font-size="11" font-weight="600" fill="#2c5a3a">缓存</text>
+  <text x="730" y="348" font-size="9" fill="#2f6f4f">block cache(LRU/HyperClock)</text>
+  <text x="730" y="364" font-size="9" fill="#2f6f4f">table cache 缓存打开的 SST</text>
+
+  <!-- 整理 -->
+  <rect x="30" y="392" width="1020" height="80" rx="12" fill="#fff7e6" stroke="#e8cf9a"/>
+  <text x="46" y="414" font-size="11.5" font-weight="700" fill="#5a3410">整理能力域 · 后台守护线程（异步偿还写放大）</text>
+  <rect x="46" y="424" width="988" height="40" rx="9" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="66" y="444" font-size="10.5" font-weight="600" fill="#5a3410">Compaction</text>
+  <text x="150" y="444" font-size="9" fill="#93762e">Leveled(默认,层间非重叠) / Universal(时间序) / FIFO(TTL);后台逐层归并,回收旧版本与墓碑</text>
+  <text x="150" y="458" font-size="9" fill="#93762e">写放大 × 读放大 × 空间放大 的三角权衡就在这里调</text>
+
+  <!-- 状态一致性 -->
+  <rect x="30" y="480" width="1020" height="112" rx="12" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="46" y="502" font-size="11.5" font-weight="700" fill="#12402a">状态与一致性能力域</text>
+  <rect x="46" y="514" width="320" height="66" rx="10" fill="#f5faf6" stroke="#cfe6d5" filter="url(#soft)"/>
+  <text x="66" y="536" font-size="11" font-weight="600" fill="#2c5a3a">版本与 MANIFEST</text>
+  <text x="66" y="556" font-size="9" fill="#2f6f4f">VersionSet/VersionEdit/LogAndApply</text>
+  <text x="66" y="572" font-size="9" fill="#2f6f4f">记录活跃 SST 集合,原子换版本</text>
+  <rect x="378" y="514" width="320" height="66" rx="10" fill="#f5faf6" stroke="#cfe6d5" filter="url(#soft)"/>
+  <text x="398" y="536" font-size="11" font-weight="600" fill="#2c5a3a">事务与快照（MVCC）</text>
+  <text x="398" y="556" font-size="9" fill="#2f6f4f">SequenceNumber + 内部键多版本</text>
+  <text x="398" y="572" font-size="9" fill="#2f6f4f">悲观/乐观事务 + 2PC + Snapshot</text>
+  <rect x="710" y="514" width="324" height="66" rx="10" fill="#f5faf6" stroke="#cfe6d5" filter="url(#soft)"/>
+  <text x="730" y="536" font-size="11" font-weight="600" fill="#2c5a3a">WAL 与崩溃恢复</text>
+  <text x="730" y="556" font-size="9" fill="#2f6f4f">log::Writer 顺序日志 + 块对齐</text>
+  <text x="730" y="572" font-size="9" fill="#2f6f4f">开库:MANIFEST 恢复 → 重放 WAL</text>
+
+  <!-- 组织 + 贯穿 -->
+  <rect x="30" y="600" width="500" height="60" rx="12" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="46" y="622" font-size="11" font-weight="700" fill="#1d1d1f">组织能力域 · Column Family</text>
+  <text x="46" y="642" font-size="9" fill="#6e6e73">共享一份 WAL,各自独立 MemTable/SST/Version——多键空间原子跨 CF 写</text>
+  <rect x="546" y="600" width="504" height="60" rx="12" fill="#faf4fb" stroke="#e2d2ee"/>
+  <text x="562" y="622" font-size="11" font-weight="700" fill="#5a3d78">贯穿 · SequenceNumber 与内部键</text>
+  <text x="562" y="642" font-size="9" fill="#7a5a95">每写一个全局递增 seq;内部键=用户键+seq+类型,是多版本/快照/归并的共同基础</text>
+
+  <!-- 执行时机 axis -->
+  <rect x="30" y="668" width="1020" height="60" rx="12" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="46" y="690" font-size="11" font-weight="700" fill="#1d1d1f">横轴 · 执行时机：前台调用期（Put/Get 同步路径） ┃ 后台守护（Flush / Compaction / WAL 清理）</text>
+  <text x="46" y="710" font-size="9" fill="#6e6e73">前台只管往内存+WAL 追加、或跨层归并读取;后台线程异步把 immutable 落盘、把多层 SST 合并整理、清理过期 WAL——写快的代价由后台偿还。</text>
+</svg>

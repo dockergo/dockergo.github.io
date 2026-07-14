@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="540" viewBox="0 0 900 540" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="900" height="540" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">mspan 结构 · 一段连续页 + 定长槽 + 分配位图</text>
+
+  <!-- left: mspan fields (amber storage) -->
+  <rect x="40" y="60" width="360" height="360" rx="13" fill="#fdf6ec" stroke="#f0dcaf" filter="url(#soft)"/>
+  <text x="56" y="84" font-size="12.5" font-weight="600" fill="#6b4e16">mspan · 分配的基本管理单元</text>
+  <text x="56" y="102" font-size="9.5" fill="#c6a45f">mheap.go:422</text>
+
+  <rect x="56" y="114" width="328" height="46" rx="8" fill="#ffffff" stroke="#e6cd94"/>
+  <text x="66" y="133" font-size="11" font-weight="600" fill="#6b4e16">startAddr · npages</text>
+  <text x="66" y="150" font-size="9.5" fill="#a9822f">span 起始地址 + 占用页数（连续虚存）</text>
+
+  <rect x="56" y="168" width="328" height="46" rx="8" fill="#ffffff" stroke="#e6cd94"/>
+  <text x="66" y="187" font-size="11" font-weight="600" fill="#6b4e16">nelems · elemsize</text>
+  <text x="66" y="204" font-size="9.5" fill="#a9822f">槽总数 = 页字节 ÷ 槽大小；每槽 elemsize</text>
+
+  <rect x="56" y="222" width="328" height="46" rx="8" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="66" y="241" font-size="11" font-weight="600" fill="#1b2a4a">freeindex</text>
+  <text x="66" y="258" font-size="9.5" fill="#5b7db1">扫描游标：从此处向后找下一个空槽</text>
+
+  <rect x="56" y="276" width="328" height="46" rx="8" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="66" y="295" font-size="11" font-weight="600" fill="#1b2a4a">allocCache</text>
+  <text x="66" y="312" font-size="9.5" fill="#5b7db1">allocBits 补码缓存，ctz 找空槽（位运算极快）</text>
+
+  <rect x="56" y="330" width="160" height="46" rx="8" fill="#eef7f0" stroke="#bfe0c8"/>
+  <text x="66" y="349" font-size="11" font-weight="600" fill="#1d4a2b">allocBits</text>
+  <text x="66" y="366" font-size="9.5" fill="#4a8c60">槽占用位图</text>
+
+  <rect x="224" y="330" width="160" height="46" rx="8" fill="#eef7f0" stroke="#bfe0c8"/>
+  <text x="234" y="349" font-size="11" font-weight="600" fill="#1d4a2b">gcmarkBits</text>
+  <text x="234" y="366" font-size="9.5" fill="#4a8c60">GC 标记位图（共用）</text>
+
+  <text x="56" y="400" font-size="9.5" fill="#c6a45f">清扫时 gcmarkBits 换成 allocBits：存活即已分配</text>
+
+  <!-- arrow to memory layout -->
+  <line x1="400" y1="150" x2="452" y2="150" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <text x="426" y="142" font-size="9" fill="#8e8e93" text-anchor="middle">映射</text>
+
+  <!-- right top: memory slots with freeindex/allocCache -->
+  <rect x="454" y="60" width="406" height="196" rx="13" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="470" y="84" font-size="12" font-weight="600" fill="#1d1d1f">span 内存布局（槽 + 位）</text>
+
+  <!-- 8 slots -->
+  <g font-size="9.5" text-anchor="middle">
+    <rect x="470" y="102" width="46" height="40" rx="6" fill="#eef7f0" stroke="#bfe0c8"/><text x="493" y="126" fill="#1d4a2b">用</text>
+    <rect x="520" y="102" width="46" height="40" rx="6" fill="#eef7f0" stroke="#bfe0c8"/><text x="543" y="126" fill="#1d4a2b">用</text>
+    <rect x="570" y="102" width="46" height="40" rx="6" fill="#eef7f0" stroke="#bfe0c8"/><text x="593" y="126" fill="#1d4a2b">用</text>
+    <rect x="620" y="102" width="46" height="40" rx="6" fill="#ffffff" stroke="#e2e2e7"/><text x="643" y="126" fill="#8e8e93">空</text>
+    <rect x="670" y="102" width="46" height="40" rx="6" fill="#eef7f0" stroke="#bfe0c8"/><text x="693" y="126" fill="#1d4a2b">用</text>
+    <rect x="720" y="102" width="46" height="40" rx="6" fill="#ffffff" stroke="#e2e2e7"/><text x="743" y="126" fill="#8e8e93">空</text>
+    <rect x="770" y="102" width="46" height="40" rx="6" fill="#ffffff" stroke="#e2e2e7"/><text x="793" y="126" fill="#8e8e93">空</text>
+  </g>
+  <!-- allocBits row -->
+  <g font-size="10" text-anchor="middle" font-weight="600">
+    <text x="493" y="162" fill="#4a8c60">1</text>
+    <text x="543" y="162" fill="#4a8c60">1</text>
+    <text x="593" y="162" fill="#4a8c60">1</text>
+    <text x="643" y="162" fill="#b8b8bf">0</text>
+    <text x="693" y="162" fill="#4a8c60">1</text>
+    <text x="743" y="162" fill="#b8b8bf">0</text>
+    <text x="793" y="162" fill="#b8b8bf">0</text>
+  </g>
+  <text x="470" y="162" font-size="9" fill="#a3a3a8">allocBits</text>
+  <!-- freeindex pointer -->
+  <line x1="643" y1="196" x2="643" y2="146" stroke="#0071e3" stroke-width="1.5" marker-end="url(#ar)"/>
+  <text x="643" y="212" font-size="10" fill="#1b2a4a" text-anchor="middle">freeindex</text>
+  <text x="470" y="234" font-size="9.5" fill="#6e6e73">allocCache 从 freeindex 起取 allocBits 补码，</text>
+  <text x="470" y="249" font-size="9.5" fill="#6e6e73">ctz(尾部零计数) 直接定位下一个 0 位（空槽）。</text>
+
+  <!-- right bottom: nextFreeIndex flow (purple rule) -->
+  <rect x="454" y="272" width="406" height="148" rx="13" fill="#f5f0fb" stroke="#ddcdf0" filter="url(#soft)"/>
+  <text x="470" y="296" font-size="12" font-weight="600" fill="#3d2a5a">取空槽流程 · nextFreeIndex</text>
+  <text x="470" y="319" font-size="10.5" fill="#7d5bb1">① allocCache 还有 1 位 → ctz 定位，立即返回</text>
+  <text x="470" y="341" font-size="10.5" fill="#7d5bb1">② 本段用尽 → 前移 freeindex，refill allocCache</text>
+  <text x="470" y="363" font-size="10.5" fill="#7d5bb1">③ 整个 span 满 → 回 mcentral/mheap 换新 span</text>
+  <text x="470" y="385" font-size="9.5" fill="#a58fce">malloc.go:969 · nextFreeIndex</text>
+  <text x="470" y="406" font-size="9.5" fill="#a58fce">位运算避免逐槽扫描，分配路径几乎无分支</text>
+
+  <!-- bottom shared-with-GC note -->
+  <rect x="40" y="440" width="820" height="76" rx="13" fill="#eef7f0" stroke="#bfe0c8" filter="url(#soft)"/>
+  <text x="56" y="464" font-size="12" font-weight="600" fill="#1d4a2b">与 GC 共用元数据</text>
+  <text x="56" y="487" font-size="10.5" fill="#4a8c60">分配用 allocBits/allocCache；GC 标记写 gcmarkBits。清扫（sweep）时把 gcmarkBits</text>
+  <text x="56" y="506" font-size="10.5" fill="#4a8c60">当作新的 allocBits——「本轮存活的即下轮已分配的」，未标记槽自然变空、可复用。</text>
+</svg>

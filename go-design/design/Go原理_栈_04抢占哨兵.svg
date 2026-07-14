@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="470" viewBox="0 0 920 470" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+    <marker id="arR" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#d99a9a"/>
+    </marker>
+  </defs>
+  <rect width="920" height="470" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">stackguard0 双重身份 · 一物两用：栈边界哨兵 与 抢占哨兵</text>
+  <text x="30" y="48" font-size="11" fill="#6e6e73">Go 精巧设计：协作式抢占复用「栈检查」这条已有路径，无需额外插桩</text>
+
+  <!-- central field: the same variable -->
+  <rect x="330" y="70" width="260" height="60" rx="12" fill="#f5f0fb" stroke="#ddcdf0" filter="url(#soft)"/>
+  <text x="460" y="94" font-size="12.5" font-weight="600" fill="#3d2a5a" text-anchor="middle">同一个字段 g.stackguard0</text>
+  <text x="460" y="115" font-size="10" fill="#7d5bb1" text-anchor="middle">序言检查读它 · 值随场景切换</text>
+
+  <!-- left: normal identity (amber - 栈边界) -->
+  <rect x="30" y="160" width="410" height="130" rx="13" fill="#fdf6ec" stroke="#f0dcaf" filter="url(#soft)"/>
+  <text x="46" y="184" font-size="12.5" font-weight="600" fill="#6b4e16">正常态 · 栈边界哨兵</text>
+  <rect x="46" y="196" width="378" height="34" rx="8" fill="#f6e6c8" stroke="#e2c88f"/>
+  <text x="235" y="218" font-size="11.5" font-weight="600" fill="#6b4e16" text-anchor="middle">stackguard0 = stack.lo + stackGuard</text>
+  <text x="46" y="250" font-size="10.5" fill="#a9822f">stackGuard 是常量（stack.go:102）</text>
+  <text x="46" y="268" font-size="10.5" fill="#a9822f">序言比较 SP 是否逼近它 → 决定是否增长栈</text>
+  <text x="46" y="284" font-size="9.5" fill="#a9822f">正常路径：SP &gt; guard，检查通过，函数正常执行</text>
+
+  <!-- right: preempt identity (red - 抢占) -->
+  <rect x="500" y="160" width="390" height="130" rx="13" fill="#fbeeee" stroke="#f0c4c4" filter="url(#soft)"/>
+  <text x="516" y="184" font-size="12.5" font-weight="600" fill="#7a1f1f">抢占态 · 抢占哨兵</text>
+  <rect x="516" y="196" width="358" height="34" rx="8" fill="#f7dada" stroke="#e6a5a5"/>
+  <text x="695" y="218" font-size="11.5" font-weight="600" fill="#7a1f1f" text-anchor="middle">stackguard0 = stackPreempt（极大值）</text>
+  <text x="516" y="250" font-size="10.5" fill="#b15b5b">GMP 调度要抢占某 G 时改写它（stack.go:133）</text>
+  <text x="516" y="268" font-size="10.5" fill="#b15b5b">于是「SP &lt; stackguard0」对任何 SP 都成立</text>
+  <text x="516" y="284" font-size="9.5" fill="#b15b5b">→ 任何函数序言检查都「失败」，被迫进 morestack</text>
+
+  <!-- arrows from center to two identities -->
+  <line x1="400" y1="130" x2="300" y2="158" stroke="#c9a24a" stroke-width="1.5" marker-end="url(#ar)"/>
+  <text x="318" y="150" font-size="9.5" fill="#a9822f">正常</text>
+  <line x1="520" y1="130" x2="640" y2="158" stroke="#d99a9a" stroke-width="1.5" marker-end="url(#arR)"/>
+  <text x="596" y="150" font-size="9.5" fill="#b15b5b">被抢占时改写</text>
+
+  <!-- converge to shared path -->
+  <line x1="235" y1="290" x2="235" y2="322" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <line x1="695" y1="290" x2="695" y2="322" stroke="#d99a9a" stroke-width="1.6" marker-end="url(#arR)"/>
+
+  <!-- shared path bar (blue) -->
+  <rect x="30" y="324" width="860" height="44" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="460" y="343" font-size="12.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">同一条路径 · 函数序言检查失败 → morestack → newstack（stack.go:1093 判定 stackguard0 == stackPreempt）</text>
+  <text x="460" y="360" font-size="10" fill="#5b7db1" text-anchor="middle">复用栈检查路径，零额外插桩 —— 这是 stackguard0 一物两用的价值所在</text>
+
+  <!-- outcomes row -->
+  <line x1="235" y1="368" x2="235" y2="392" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <rect x="30" y="394" width="410" height="60" rx="12" fill="#eef7f0" stroke="#bfe0c8" filter="url(#soft)"/>
+  <text x="46" y="417" font-size="11.5" font-weight="600" fill="#1d4a2b">newstack 判定：真栈不够 → 增长</text>
+  <text x="46" y="437" font-size="10" fill="#4a8c60">copystack 到 2× 新栈后回原函数重试（见增长/copystack 图）</text>
+
+  <line x1="695" y1="368" x2="695" y2="392" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <rect x="500" y="394" width="390" height="60" rx="12" fill="#f6f6f7" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="516" y="417" font-size="11.5" font-weight="600" fill="#1d1d1f">newstack 判定：是 stackPreempt → 让出</text>
+  <text x="516" y="437" font-size="10" fill="#6e6e73">紧密循环（无调用=无序言检查）逃过它 → 靠异步信号抢占兜底</text>
+</svg>

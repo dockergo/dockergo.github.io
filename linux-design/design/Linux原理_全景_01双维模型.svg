@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="700" viewBox="0 0 1000 700" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs><filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter></defs>
+  <rect width="1000" height="700" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">双维模型：能力域(底座/计算/保障) × 执行时机(前台同步 / 后台异步) —— 每个能力域都有前后台两半</text>
+
+  <!-- headers -->
+  <text x="175" y="66" font-size="12" font-weight="600" fill="#6e6e73" text-anchor="middle">能力域主线</text>
+  <rect x="330" y="52" width="325" height="26" rx="7" fill="#eef3fb" stroke="#bcd0ec"/><text x="492" y="70" font-size="12" font-weight="600" fill="#1b2a4a" text-anchor="middle">前台（同步：系统调用 / 中断上下文）</text>
+  <rect x="663" y="52" width="307" height="26" rx="7" fill="#f5faf6" stroke="#cfe6d5"/><text x="816" y="70" font-size="12" font-weight="600" fill="#2c5a3a" text-anchor="middle">后台（异步：内核线程 / 软中断）</text>
+
+  <!-- ===== 底座层 (琥珀) 5 行 ===== -->
+  <rect x="30" y="86" width="60" height="246" rx="9" fill="#fff7e6" stroke="#e8cf9a"/><text x="60" y="214" font-size="12" font-weight="600" fill="#5a3410" text-anchor="middle" transform="rotate(-90 60 209)">底座</text>
+  <g font-size="10.5">
+    <rect x="98" y="90" width="224" height="42" rx="8" fill="#fdf6ea" stroke="#efdcb4"/><text x="210" y="115" font-weight="600" fill="#5a3410" text-anchor="middle">虚拟内存</text>
+    <rect x="330" y="90" width="325" height="42" rx="8" fill="#fff" stroke="#efdcb4"/><text x="492" y="115" fill="#5a3410" text-anchor="middle">缺页 handle_mm_fault · __alloc_pages</text>
+    <rect x="663" y="90" width="307" height="42" rx="8" fill="#fff" stroke="#cfe6d5"/><text x="816" y="115" fill="#2f6f4f" text-anchor="middle">kswapd 回收 · 脏页回写</text>
+
+    <rect x="98" y="138" width="224" height="42" rx="8" fill="#fdf6ea" stroke="#efdcb4"/><text x="210" y="163" font-weight="600" fill="#5a3410" text-anchor="middle">VFS 与文件系统</text>
+    <rect x="330" y="138" width="325" height="42" rx="8" fill="#fff" stroke="#efdcb4"/><text x="492" y="163" fill="#5a3410" text-anchor="middle">open/read/write · namei</text>
+    <rect x="663" y="138" width="307" height="42" rx="8" fill="#fff" stroke="#cfe6d5"/><text x="816" y="163" fill="#2f6f4f" text-anchor="middle">页缓存回写 · 预读</text>
+
+    <rect x="98" y="186" width="224" height="42" rx="8" fill="#fdf6ea" stroke="#efdcb4"/><text x="210" y="211" font-weight="600" fill="#5a3410" text-anchor="middle">块层与 IO 调度</text>
+    <rect x="330" y="186" width="325" height="42" rx="8" fill="#fff" stroke="#efdcb4"/><text x="492" y="211" fill="#5a3410" text-anchor="middle">blk-mq 提交 IO</text>
+    <rect x="663" y="186" width="307" height="42" rx="8" fill="#fff" stroke="#cfe6d5"/><text x="816" y="211" fill="#2f6f4f" text-anchor="middle">IO 完成软中断 · 合并</text>
+
+    <rect x="98" y="234" width="224" height="42" rx="8" fill="#fdf6ea" stroke="#efdcb4"/><text x="210" y="259" font-weight="600" fill="#5a3410" text-anchor="middle">设备驱动模型</text>
+    <rect x="330" y="234" width="325" height="42" rx="8" fill="#fff" stroke="#efdcb4"/><text x="492" y="259" fill="#5a3410" text-anchor="middle">设备操作转驱动（字符/块/网络）</text>
+    <rect x="663" y="234" width="307" height="42" rx="8" fill="#fff" stroke="#cfe6d5"/><text x="816" y="259" fill="#2f6f4f" text-anchor="middle">探测 probe · 热插拔 uevent</text>
+
+    <rect x="98" y="282" width="224" height="42" rx="8" fill="#fdf6ea" stroke="#efdcb4"/><text x="210" y="307" font-weight="600" fill="#5a3410" text-anchor="middle">时间与定时器</text>
+    <rect x="330" y="282" width="325" height="42" rx="8" fill="#fff" stroke="#efdcb4"/><text x="492" y="307" fill="#5a3410" text-anchor="middle">读时间 · 设定 timer/hrtimer</text>
+    <rect x="663" y="282" width="307" height="42" rx="8" fill="#fff" stroke="#cfe6d5"/><text x="816" y="307" fill="#2f6f4f" text-anchor="middle">tick 驱动到期回调</text>
+  </g>
+
+  <!-- ===== 计算/通信层 (蓝) 3 行 ===== -->
+  <rect x="30" y="334" width="60" height="150" rx="9" fill="#eef3fb" stroke="#bcd0ec"/><text x="60" y="414" font-size="12" font-weight="600" fill="#1b2a4a" text-anchor="middle" transform="rotate(-90 60 409)">计算·通信</text>
+  <g font-size="10.5">
+    <rect x="98" y="338" width="224" height="42" rx="8" fill="#f3f7fc" stroke="#cfe0f2"/><text x="210" y="363" font-weight="600" fill="#274a78" text-anchor="middle">进程调度 (EEVDF)</text>
+    <rect x="330" y="338" width="325" height="42" rx="8" fill="#fff" stroke="#cfe0f2"/><text x="492" y="363" fill="#274a78" text-anchor="middle">__schedule 切换 · 唤醒抢占</text>
+    <rect x="663" y="338" width="307" height="42" rx="8" fill="#fff" stroke="#cfe6d5"/><text x="816" y="363" fill="#2f6f4f" text-anchor="middle">周期负载均衡 · 时钟节拍</text>
+
+    <rect x="98" y="386" width="224" height="42" rx="8" fill="#f3f7fc" stroke="#cfe0f2"/><text x="210" y="411" font-weight="600" fill="#274a78" text-anchor="middle">进程与任务管理</text>
+    <rect x="330" y="386" width="325" height="42" rx="8" fill="#fff" stroke="#cfe0f2"/><text x="492" y="411" fill="#274a78" text-anchor="middle">fork/exec/exit · 信号投递</text>
+    <rect x="663" y="386" width="307" height="42" rx="8" fill="#fff" stroke="#cfe6d5"/><text x="816" y="411" fill="#2f6f4f" text-anchor="middle">僵尸回收 · 延迟释放</text>
+
+    <rect x="98" y="434" width="224" height="42" rx="8" fill="#f3f7fc" stroke="#cfe0f2"/><text x="210" y="459" font-weight="600" fill="#274a78" text-anchor="middle">网络协议栈</text>
+    <rect x="330" y="434" width="325" height="42" rx="8" fill="#fff" stroke="#cfe0f2"/><text x="492" y="459" fill="#274a78" text-anchor="middle">sendmsg 发送路径</text>
+    <rect x="663" y="434" width="307" height="42" rx="8" fill="#fff" stroke="#cfe6d5"/><text x="816" y="459" fill="#2f6f4f" text-anchor="middle">NAPI 软中断收包</text>
+  </g>
+
+  <!-- ===== 保障层 (绿) 3 行 ===== -->
+  <rect x="30" y="486" width="60" height="150" rx="9" fill="#eafaf1" stroke="#bfe0cd"/><text x="60" y="566" font-size="12" font-weight="600" fill="#12402a" text-anchor="middle" transform="rotate(-90 60 561)">保障</text>
+  <g font-size="10.5">
+    <rect x="98" y="490" width="224" height="42" rx="8" fill="#f5faf6" stroke="#cfe6d5"/><text x="210" y="515" font-weight="600" fill="#12402a" text-anchor="middle">中断与软中断</text>
+    <rect x="330" y="490" width="325" height="42" rx="8" fill="#fff" stroke="#cfe6d5"/><text x="492" y="515" fill="#12402a" text-anchor="middle">硬中断上半部（尽快返回）</text>
+    <rect x="663" y="490" width="307" height="42" rx="8" fill="#fff" stroke="#cfe6d5"/><text x="816" y="515" fill="#2f6f4f" text-anchor="middle">softirq / ksoftirqd 下半部</text>
+
+    <rect x="98" y="538" width="224" height="42" rx="8" fill="#f5faf6" stroke="#cfe6d5"/><text x="210" y="563" font-weight="600" fill="#12402a" text-anchor="middle">同步原语</text>
+    <rect x="330" y="538" width="325" height="42" rx="8" fill="#fff" stroke="#cfe6d5"/><text x="492" y="563" fill="#12402a" text-anchor="middle">自旋锁 / 原子 / 内存屏障</text>
+    <rect x="663" y="538" width="307" height="42" rx="8" fill="#fff" stroke="#cfe6d5"/><text x="816" y="563" fill="#2f6f4f" text-anchor="middle">RCU 宽限期 · 延后回调</text>
+
+    <rect x="98" y="586" width="224" height="42" rx="8" fill="#f5faf6" stroke="#cfe6d5"/><text x="210" y="611" font-weight="600" fill="#12402a" text-anchor="middle">cgroup 与 namespace</text>
+    <rect x="330" y="586" width="325" height="42" rx="8" fill="#fff" stroke="#cfe6d5"/><text x="492" y="611" fill="#12402a" text-anchor="middle">记账 / 限额校验 · 隔离视图</text>
+    <rect x="663" y="586" width="307" height="42" rx="8" fill="#fff" stroke="#cfe6d5"/><text x="816" y="611" fill="#2f6f4f" text-anchor="middle">统计聚合 · 资源释放</text>
+  </g>
+
+  <text x="500" y="656" font-size="10.5" fill="#6e6e73" text-anchor="middle">接触面主线"系统调用 / proc·sys / ioctl"是进入内核的入口，不占能力域；它下发的每个动作横跨上面多条主线。</text>
+  <text x="500" y="676" font-size="10" fill="#a1a1a6" text-anchor="middle">11 能力域组件名据源码树 7.1.3 核实：EEVDF(sched/fair.c)·fork(kernel/fork.c)·hrtimer(time/)·驱动(drivers/base)·rcu(rcu/tree.c)</text>
+</svg>

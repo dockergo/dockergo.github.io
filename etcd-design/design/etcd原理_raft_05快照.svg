@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="540" viewBox="0 0 1080 540" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs><filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+  <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker></defs>
+  <rect width="1080" height="540" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">快照与日志压缩：防日志无限增长</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">server.go: DefaultSnapshotCount=10000(:78) · snapshotIfNeededAndCompactRaftLog(:1204) · snapshot(toDisk)(:2072)</text>
+  <!-- before: growing log -->
+  <text x="60" y="84" font-size="10" font-weight="700" fill="#7a2230">日志持续增长 → 内存/回放成本涨</text>
+  <g font-size="7.5" text-anchor="middle">
+    <rect x="60" y="92" width="36" height="28" rx="4" fill="#f2f2f4" stroke="#e0e0e4"/><text x="78" y="110" fill="#86868b">e1</text>
+    <rect x="98" y="92" width="36" height="28" rx="4" fill="#f2f2f4" stroke="#e0e0e4"/><text x="116" y="110" fill="#86868b">e2</text>
+    <rect x="136" y="92" width="36" height="28" rx="4" fill="#f2f2f4" stroke="#e0e0e4"/><text x="154" y="110" fill="#86868b">…</text>
+    <rect x="174" y="92" width="60" height="28" rx="4" fill="#f2f2f4" stroke="#e0e0e4"/><text x="204" y="110" fill="#86868b">e10000</text>
+  </g>
+  <text x="250" y="110" font-size="9" fill="#a44">积累 10000 条已应用条目 → 触发快照</text>
+  <!-- snapshot step -->
+  <rect x="60" y="140" width="300" height="150" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="210" y="164" font-size="10.5" font-weight="700" fill="#12402a" text-anchor="middle">做快照 snapshot(toDisk)</text>
+  <text x="80" y="188" font-size="9" fill="#2f6f4f">① boltdb 一致提交</text>
+  <text x="95" y="204" font-size="8" fill="#4c8567">s.KV().Commit()(:2094)</text>
+  <text x="80" y="224" font-size="9" fill="#2f6f4f">② 创建 Raft 快照</text>
+  <text x="95" y="240" font-size="8" fill="#4c8567">CreateSnapshot(:2098)</text>
+  <text x="80" y="260" font-size="9" fill="#2f6f4f">③ 存快照文件 SaveSnap</text>
+  <text x="95" y="276" font-size="8" fill="#4c8567">api/snap/snapshotter.go:70</text>
+  <!-- compact -->
+  <rect x="400" y="140" width="300" height="150" rx="12" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+  <text x="550" y="164" font-size="10.5" font-weight="700" fill="#5a3410" text-anchor="middle">压缩日志 compactRaftLog</text>
+  <text x="420" y="188" font-size="9" fill="#93762e">· 快照点之前的 Raft 日志可丢弃</text>
+  <text x="420" y="208" font-size="9" fill="#93762e">· 只保留快照 + 快照后的增量日志</text>
+  <text x="420" y="228" font-size="9" fill="#93762e">· 内存/WAL 占用回落</text>
+  <text x="420" y="250" font-size="8.5" fill="#b08843">server.go:1213 compactRaftLog</text>
+  <text x="420" y="270" font-size="8.5" fill="#b08843">快照 = 状态全量，日志 = 增量</text>
+  <!-- follower catch up -->
+  <rect x="740" y="140" width="300" height="150" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="890" y="164" font-size="10.5" font-weight="700" fill="#1b2a4a" text-anchor="middle">落后节点用快照追平</text>
+  <text x="760" y="188" font-size="9" fill="#5b7db1">· follower 落后太多（日志已压缩）</text>
+  <text x="760" y="208" font-size="9" fill="#5b7db1">· leader 发 MsgSnap 而非逐条日志</text>
+  <text x="760" y="228" font-size="9" fill="#5b7db1">· follower 装载快照 → 跳到快照点</text>
+  <text x="760" y="250" font-size="8.5" fill="#8aa6cf">· maxInFlightMsgSnap=16（并发快照上限）</text>
+  <text x="760" y="270" font-size="8.5" fill="#8aa6cf">新加入的 learner 也走此路追平</text>
+  <g stroke="#c7c7cc" stroke-width="1.3" fill="none">
+    <line x1="360" y1="215" x2="400" y2="215" marker-end="url(#ar)"/>
+    <line x1="700" y1="215" x2="740" y2="215" marker-end="url(#ar)"/>
+  </g>
+  <rect x="60" y="310" width="980" height="90" rx="12" fill="#f3f7fc" stroke="#cfe0f2"/>
+  <text x="80" y="334" font-size="11" font-weight="700" fill="#274a78">快照 vs WAL 的分工（见 WAL 与快照主线）</text>
+  <text x="80" y="356" font-size="9.5" fill="#5b7db1">· 快照 = 某 revision 的**状态全量**（boltdb 一致副本）；WAL = 快照之后的**增量操作日志**</text>
+  <text x="80" y="376" font-size="9.5" fill="#5b7db1">· 崩溃恢复 = 装载最近快照 + 回放其后的 WAL —— 两者合起来才是完整历史</text>
+  <text x="80" y="394" font-size="9" fill="#8aa6cf">· --snapshot-count 调大：快照更少但重启回放的 WAL 更多；调小：快照频繁但恢复快</text>
+  <rect x="60" y="414" width="980" height="70" rx="12" fill="#f7f7f9" stroke="#e6e6ea"/>
+  <text x="80" y="438" font-size="11" font-weight="700" fill="#1d1d1f">一句话</text>
+  <text x="80" y="460" font-size="10" fill="#4b4b50">每积累 10000 条已应用条目就做快照（boltdb 一致提交 + Raft 快照 + 存文件），随后压缩掉快照点前的日志；</text>
+  <text x="80" y="478" font-size="10" fill="#4b4b50">落后太多的 follower/新 learner 直接收快照追平而非重放日志。快照(全量)+WAL(增量) 共同支撑崩溃恢复。</text>
+</svg>

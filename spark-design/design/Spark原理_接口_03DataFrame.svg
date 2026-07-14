@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="580" viewBox="0 0 1060 580" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1060" height="580" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">DataFrame / Dataset：结构化 API，惰性经 QueryExecution 四阶段</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">DataFrame = Dataset[Row]（sql/classic/package.scala:35）· 转换累积逻辑计划、action 触发 QueryExecution</text>
+
+  <!-- lazy build -->
+  <rect x="40" y="76" width="300" height="120" rx="13" fill="#e9f1fb" stroke="#c4d8f0"/>
+  <text x="190" y="100" font-size="11" font-weight="700" fill="#1b2a4a" text-anchor="middle">惰性：转换累积逻辑计划</text>
+  <text x="60" y="124" font-size="9" fill="#5b7db1">df.select().filter().groupBy()…</text>
+  <text x="60" y="144" font-size="9" fill="#5b7db1">只构建 LogicalPlan</text>
+  <text x="60" y="164" font-size="9" fill="#5b7db1">queryExecution（Dataset.scala:230）</text>
+  <text x="60" y="184" font-size="8.5" fill="#8aa6cf">action 才触发下面四阶段</text>
+
+  <text x="360" y="140" font-size="18" fill="#c7c7cc" text-anchor="middle">→</text>
+
+  <!-- QueryExecution 4 phases -->
+  <rect x="390" y="76" width="630" height="120" rx="13" fill="#f3f7fc" stroke="#cfe0f2"/>
+  <text x="705" y="98" font-size="11" font-weight="700" fill="#274a78" text-anchor="middle">QueryExecution 四阶段（execution/QueryExecution.scala）</text>
+  <g text-anchor="middle" font-size="8">
+    <rect x="405" y="112" width="140" height="46" rx="8" fill="#fff" stroke="#cfe0f2"/><text x="475" y="130" font-weight="600" fill="#274a78">analyzed（:211）</text><text x="475" y="146" fill="#5b7db1">解析名称/类型</text>
+    <rect x="555" y="112" width="140" height="46" rx="8" fill="#fff" stroke="#cfe0f2"/><text x="625" y="130" font-weight="600" fill="#274a78">optimizedPlan（:329）</text><text x="625" y="146" fill="#5b7db1">Catalyst 逻辑优化</text>
+    <rect x="705" y="112" width="140" height="46" rx="8" fill="#fff" stroke="#cfe0f2"/><text x="775" y="130" font-weight="600" fill="#274a78">sparkPlan（:347）</text><text x="775" y="146" fill="#5b7db1">物理规划</text>
+    <rect x="855" y="112" width="150" height="46" rx="8" fill="#eafaf1" stroke="#bfe0cd"/><text x="930" y="130" font-weight="600" fill="#12402a">executedPlan（:372）</text><text x="930" y="146" fill="#2f6f4f">+ Tungsten codegen</text>
+  </g>
+  <g stroke="#c7c7cc" stroke-width="1.2" fill="none">
+    <line x1="545" y1="135" x2="555" y2="135" marker-end="url(#ar)"/>
+    <line x1="695" y1="135" x2="705" y2="135" marker-end="url(#ar)"/>
+    <line x1="845" y1="135" x2="855" y2="135" marker-end="url(#ar)"/>
+  </g>
+  <text x="705" y="180" font-size="8.5" fill="#8aa6cf" text-anchor="middle">toRdd（:392）= new SQLExecutionRDD → RDD[InternalRow] → 落 DAGScheduler</text>
+
+  <!-- why schema enables optimization -->
+  <rect x="40" y="220" width="480" height="130" rx="13" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="280" y="244" font-size="11" font-weight="700" fill="#12402a" text-anchor="middle">为什么结构化 API 能优化</text>
+  <text x="60" y="268" font-size="9.5" fill="#2f6f4f">· 有 schema（列 + 类型）→ 优化器能理解语义</text>
+  <text x="60" y="288" font-size="9.5" fill="#2f6f4f">· 能做谓词下推、列裁剪、常量折叠、Join 重排</text>
+  <text x="60" y="308" font-size="9.5" fill="#2f6f4f">· 能 whole-stage codegen 编译成一个函数</text>
+  <text x="60" y="330" font-size="8.5" fill="#4c8567">· 对比 RDD（任意对象、无 schema）：优化器无从下手</text>
+
+  <!-- DataFrame = Dataset[Row] -->
+  <rect x="540" y="220" width="480" height="130" rx="13" fill="#f4eefb" stroke="#d9c7ec"/>
+  <text x="780" y="244" font-size="11" font-weight="700" fill="#3d2a5a" text-anchor="middle">DataFrame = Dataset[Row]</text>
+  <text x="560" y="268" font-size="9.5" fill="#7a5da5">· DataFrame 是 Dataset[Row] 的类型别名（:35）</text>
+  <text x="560" y="288" font-size="9.5" fill="#7a5da5">· Dataset[T]：编译期类型安全（Scala/Java）</text>
+  <text x="560" y="308" font-size="9.5" fill="#7a5da5">· DataFrame：运行期类型（Python 只有它）</text>
+  <text x="560" y="330" font-size="8.5" fill="#9a7cc4">· SQL 经 parser 也变成同样的逻辑计划（同栈）</text>
+
+  <rect x="40" y="366" width="980" height="96" rx="13" fill="#fdf9f0" stroke="#efe3cd"/>
+  <text x="60" y="390" font-size="11" font-weight="700" fill="#7a5a1e">陷阱：Dataset lambda 破坏优化</text>
+  <text x="60" y="412" font-size="9.5" fill="#93762e">· Dataset[T] 上用 Scala 闭包（.map(x =&gt; …)/.filter(x =&gt; …)）对 Catalyst 是黑盒——无法下推/裁剪</text>
+  <text x="60" y="430" font-size="9.5" fill="#93762e">· 能用列表达式（df.filter($"age" &gt; 18)）就别用 lambda，保留优化能力</text>
+  <text x="60" y="448" font-size="9" fill="#b08843">· 这是"类型安全"与"可优化"之间的权衡</text>
+
+  <rect x="40" y="474" width="980" height="80" rx="12" fill="#f7f7f9" stroke="#e6e6ea"/>
+  <text x="60" y="498" font-size="11" font-weight="700" fill="#1d1d1f">一句话</text>
+  <text x="60" y="520" font-size="10" fill="#4b4b50">DataFrame（=Dataset[Row]）/SQL 是结构化 API：转换惰性累积逻辑计划，action 才触发 QueryExecution 四阶段</text>
+  <text x="60" y="538" font-size="10" fill="#4b4b50">（analyzed→optimized→sparkPlan→executedPlan）再 toRdd 落 DAG。有 schema 才能过 Catalyst+Tungsten——这是它比 RDD 快的根源。</text>
+</svg>

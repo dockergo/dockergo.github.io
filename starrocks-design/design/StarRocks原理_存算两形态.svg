@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="540" viewBox="0 0 1080 540" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs><filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter></defs>
+  <rect width="1080" height="540" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">StarRocks 两种形态 · 存算一体 vs 存算分离</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">同一套 Tablet/Rowset/Segment 抽象,两种落地——理解一切主线分叉的总纲</text>
+
+  <!-- shared-nothing -->
+  <rect x="30" y="70" width="500" height="410" rx="16" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="46" y="94" font-size="12.5" font-weight="700" fill="#12402a">存算一体（shared-nothing）· 默认</text>
+  <text x="46" y="112" font-size="8.5" fill="#2f6f4f">与 Doris 一致 · 数据与计算耦合在同一 BE</text>
+
+  <rect x="46" y="124" width="468" height="42" rx="8" fill="#eafaf1" stroke="#bfe0cd"/><text x="60" y="144" font-size="9.5" font-weight="600" fill="#12402a">FE(元数据:含 Tablet 副本位置)</text><text x="60" y="159" font-size="8" fill="#2f6f4f">BDB-JE + EditLog</text>
+
+  <g text-anchor="middle" font-size="8.5">
+    <rect x="46" y="178" width="150" height="120" rx="9" fill="#e6f7ee" stroke="#bfe0cd" filter="url(#soft)"/><text x="121" y="198" font-weight="600" fill="#12402a">BE 1</text><text x="121" y="216" fill="#2f6f4f">计算 + 存储</text><rect x="60" y="226" width="122" height="24" rx="5" fill="#fff" stroke="#bfe0cd"/><text x="121" y="242" fill="#2f6f4f">本地盘 Tablet</text><rect x="60" y="256" width="122" height="24" rx="5" fill="#fff" stroke="#bfe0cd"/><text x="121" y="272" fill="#2f6f4f">副本 A</text>
+    <rect x="205" y="178" width="150" height="120" rx="9" fill="#e6f7ee" stroke="#bfe0cd" filter="url(#soft)"/><text x="280" y="198" font-weight="600" fill="#12402a">BE 2</text><text x="280" y="216" fill="#2f6f4f">计算 + 存储</text><rect x="219" y="226" width="122" height="24" rx="5" fill="#fff" stroke="#bfe0cd"/><text x="280" y="242" fill="#2f6f4f">本地盘 Tablet</text><rect x="219" y="256" width="122" height="24" rx="5" fill="#fff" stroke="#bfe0cd"/><text x="280" y="272" fill="#2f6f4f">副本 B</text>
+    <rect x="364" y="178" width="150" height="120" rx="9" fill="#e6f7ee" stroke="#bfe0cd" filter="url(#soft)"/><text x="439" y="198" font-weight="600" fill="#12402a">BE 3</text><text x="439" y="216" fill="#2f6f4f">计算 + 存储</text><rect x="378" y="226" width="122" height="24" rx="5" fill="#fff" stroke="#bfe0cd"/><text x="439" y="242" fill="#2f6f4f">本地盘 Tablet</text><rect x="378" y="256" width="122" height="24" rx="5" fill="#fff" stroke="#bfe0cd"/><text x="439" y="272" fill="#2f6f4f">副本 C</text>
+  </g>
+  <rect x="46" y="312" width="468" height="70" rx="8" fill="#fff" stroke="#cfe6d5"/>
+  <text x="60" y="332" font-size="9" font-weight="600" fill="#12402a">特征</text>
+  <text x="60" y="350" font-size="8.3" fill="#2f6f4f">· 三副本冗余,节点挂了从健康副本克隆修复</text>
+  <text x="60" y="366" font-size="8.3" fill="#2f6f4f">· Tablet 绑 DataDir;扩容需迁移数据</text>
+  <text x="60" y="380" font-size="8.3" fill="#2f6f4f">· 存储/计算同扩,无法独立弹性</text>
+
+  <rect x="46" y="392" width="468" height="76" rx="8" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="60" y="412" font-size="9" font-weight="600" fill="#12402a">适合</text>
+  <text x="60" y="430" font-size="8.3" fill="#2f6f4f">· 稳定负载、低延迟、本地盘性能敏感</text>
+  <text x="60" y="446" font-size="8.3" fill="#2f6f4f">· 不需要频繁弹性伸缩</text>
+  <text x="60" y="462" font-size="8.3" fill="#2f6f4f">· 私有化部署、无对象存储环境</text>
+
+  <!-- shared-data -->
+  <rect x="550" y="70" width="500" height="410" rx="16" fill="#faf4fb" stroke="#e2d2ee"/>
+  <text x="566" y="94" font-size="12.5" font-weight="700" fill="#5a3d78">存算分离（shared-data / Lake）</text>
+  <text x="566" y="112" font-size="8.5" fill="#7a5a95">StarRocks 相对 Doris 最大分叉 · 存储与计算解耦</text>
+
+  <rect x="566" y="124" width="468" height="42" rx="8" fill="#f4eefb" stroke="#d9c7ec"/><text x="580" y="144" font-size="9.5" font-weight="600" fill="#5a3d78">FE + StarManager(Tablet=Shard 放置)</text><text x="580" y="159" font-size="8" fill="#7a5a95">同一套 BDB-JE,随 FE 选主</text>
+
+  <g text-anchor="middle" font-size="8.5">
+    <rect x="566" y="178" width="150" height="80" rx="9" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/><text x="641" y="200" font-weight="600" fill="#5a3d78">CN 1</text><text x="641" y="218" fill="#7a5a95">纯计算</text><text x="641" y="234" fill="#7a5a95">无状态</text><text x="641" y="250" fill="#a1a1a6">DataCache</text>
+    <rect x="725" y="178" width="150" height="80" rx="9" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/><text x="800" y="200" font-weight="600" fill="#5a3d78">CN 2</text><text x="800" y="218" fill="#7a5a95">纯计算</text><text x="800" y="234" fill="#7a5a95">无状态</text><text x="800" y="250" fill="#a1a1a6">DataCache</text>
+    <rect x="884" y="178" width="150" height="80" rx="9" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/><text x="959" y="200" font-weight="600" fill="#5a3d78">CN 3(可弹性)</text><text x="959" y="218" fill="#7a5a95">纯计算</text><text x="959" y="234" fill="#7a5a95">秒级增减</text><text x="959" y="250" fill="#a1a1a6">DataCache</text>
+  </g>
+  <rect x="566" y="272" width="468" height="44" rx="9" fill="#fef2e0" stroke="#e8cf9a"/><text x="800" y="292" text-anchor="middle" font-size="9.5" font-weight="600" fill="#5a3410">对象存储 S3 / OSS(共享数据)</text><text x="800" y="308" text-anchor="middle" font-size="8" fill="#93762e">所有 Tablet 数据在此;副本靠对象存储冗余</text>
+
+  <rect x="566" y="326" width="468" height="66" rx="8" fill="#fff" stroke="#e2d2ee"/>
+  <text x="580" y="346" font-size="9" font-weight="600" fill="#5a3d78">特征</text>
+  <text x="580" y="364" font-size="8.3" fill="#7a5a95">· CN 无状态,挂了 StarOS 重分配 Shard 即可(无需搬数据)</text>
+  <text x="580" y="380" font-size="8.3" fill="#7a5a95">· 首读远端慢,DataCache 命中后接近本地盘</text>
+
+  <rect x="566" y="402" width="468" height="66" rx="8" fill="#f4eefb" stroke="#d9c7ec"/>
+  <text x="580" y="422" font-size="9" font-weight="600" fill="#5a3d78">适合</text>
+  <text x="580" y="440" font-size="8.3" fill="#7a5a95">· 弹性伸缩(按需增减 CN)、存算独立扩容</text>
+  <text x="580" y="456" font-size="8.3" fill="#7a5a95">· 冷数据成本敏感(对象存储便宜)、云上部署</text>
+
+  <line x1="530" y1="275" x2="550" y2="275" stroke="#c7c7cc" stroke-width="1.5"/>
+</svg>

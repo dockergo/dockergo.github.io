@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="540" viewBox="0 0 1080 540" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs><filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+  <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker></defs>
+  <rect width="1080" height="540" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">三组 watcher：synced / unsynced / victim（慢消费者隔离）</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">watchable_store.go: synced(:72)/unsynced(:68)/victims(:64) · syncWatchersLoop 100ms(:224, watchResyncPeriod:44)</text>
+  <g text-anchor="middle">
+    <rect x="40" y="80" width="320" height="160" rx="13" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+    <text x="200" y="104" font-size="11" font-weight="700" fill="#12402a">synced（已同步）</text>
+    <text x="200" y="128" font-size="9" fill="#2f6f4f">已追上 currentRev</text>
+    <text x="200" y="148" font-size="9" fill="#2f6f4f">新变更来 → 直接推</text>
+    <text x="200" y="170" font-size="8.5" fill="#4c8567">正常稳态：绝大多数 watcher 在此</text>
+    <text x="200" y="192" font-size="8.5" fill="#4c8567">推送路径最短、最快</text>
+    <text x="200" y="216" font-size="8" fill="#8aa6cf">ch 阻塞 → 降级为 victim</text>
+
+    <rect x="380" y="80" width="320" height="160" rx="13" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+    <text x="540" y="104" font-size="11" font-weight="700" fill="#5a3410">unsynced（未同步）</text>
+    <text x="540" y="128" font-size="9" fill="#93762e">起始 rev &lt; currentRev</text>
+    <text x="540" y="148" font-size="9" fill="#93762e">（从历史 watch / 刚重连）</text>
+    <text x="540" y="170" font-size="8.5" fill="#b08843">后台从 boltdb 补历史事件</text>
+    <text x="540" y="192" font-size="8.5" fill="#b08843">逐步追平 → 移入 synced</text>
+    <text x="540" y="216" font-size="8" fill="#a98a4a">syncWatchersLoop 每 100ms 推进</text>
+
+    <rect x="720" y="80" width="320" height="160" rx="13" fill="#fbeef0" stroke="#f0cdd4" filter="url(#soft)"/>
+    <text x="880" y="104" font-size="11" font-weight="700" fill="#7a2230">victim（受害者）</text>
+    <text x="880" y="128" font-size="9" fill="#a44">channel 满，推不进去</text>
+    <text x="880" y="148" font-size="9" fill="#a44">（客户端消费慢）</text>
+    <text x="880" y="170" font-size="8.5" fill="#7a2230">从 synced 移出，隔离</text>
+    <text x="880" y="192" font-size="8.5" fill="#7a2230">syncVictimsLoop 重试推</text>
+    <text x="880" y="216" font-size="8" fill="#a44">成功 → 移回 synced</text>
+  </g>
+  <g stroke="#c7c7cc" stroke-width="1.4" fill="none">
+    <path d="M440,80 Q480,60 540,80" marker-end="url(#ar)"/>
+    <text x="490" y="58" font-size="8" fill="#93762e" text-anchor="middle">追平后</text>
+    <path d="M360,180 Q690,270 720,180" marker-end="url(#ar)"/>
+    <text x="540" y="262" font-size="8" fill="#a44" text-anchor="middle">ch 满 → 降级</text>
+    <path d="M720,210 Q500,300 380,210" marker-end="url(#ar)"/>
+    <text x="560" y="298" font-size="8" fill="#93762e" text-anchor="middle">重试成功 → 移回</text>
+  </g>
+  <rect x="40" y="316" width="1000" height="100" rx="12" fill="#f3f7fc" stroke="#cfe0f2"/>
+  <text x="60" y="340" font-size="11" font-weight="700" fill="#274a78">为什么要三组：慢消费者不拖垮快消费者</text>
+  <text x="60" y="362" font-size="9.5" fill="#5b7db1">· 若不隔离：一个慢客户端的满 channel 会阻塞 notify 主路径 → 所有 watcher 都卡</text>
+  <text x="60" y="382" font-size="9.5" fill="#5b7db1">· victim 把慢的踢出主路径、单独重试；synced 的快消费者继续零延迟收事件</text>
+  <text x="60" y="400" font-size="9" fill="#8aa6cf">· unsynced 让"从历史 watch"和"重连补齐"不占用实时推送路径，后台慢慢追</text>
+  <rect x="40" y="430" width="1000" height="60" rx="12" fill="#f7f7f9" stroke="#e6e6ea"/>
+  <text x="60" y="454" font-size="11" font-weight="700" fill="#1d1d1f">一句话</text>
+  <text x="60" y="476" font-size="10" fill="#4b4b50">watcher 按状态分三组：synced（追平，直接推）、unsynced（落后，后台 100ms 补历史追平）、victim（消费慢，隔离重试）——让慢消费者不阻塞快消费者，是 Watch 扛海量订阅的关键。</text>
+</svg>

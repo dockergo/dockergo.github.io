@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="560" viewBox="0 0 1060 560" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1060" height="560" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Pipeline 构建：逻辑 QueryPlan 逐 Step 展开成物理 Processors 图</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">QueryPipelineBuilder 逐 Step updatePipeline · 一个逻辑算子 → 多路并行 Processor（宽度 = max_threads）</text>
+
+  <!-- logical -->
+  <rect x="40" y="76" width="260" height="220" rx="13" fill="#f3f7fc" stroke="#cfe0f2"/>
+  <text x="170" y="98" font-size="11" font-weight="700" fill="#274a78" text-anchor="middle">逻辑 QueryPlan（1 Step = 1 算子）</text>
+  <g text-anchor="middle" font-size="9">
+    <rect x="90" y="112" width="160" height="34" rx="7" fill="#eef3fb" stroke="#bcd0ec"/><text x="170" y="133" fill="#1b2a4a">AggregatingStep</text>
+    <rect x="90" y="154" width="160" height="34" rx="7" fill="#eef3fb" stroke="#bcd0ec"/><text x="170" y="175" fill="#1b2a4a">FilterStep</text>
+    <rect x="90" y="196" width="160" height="34" rx="7" fill="#fdf6ea" stroke="#efdcb4"/><text x="170" y="217" fill="#5a3410">ReadFromMergeTree</text>
+  </g>
+  <text x="170" y="256" font-size="8.5" fill="#8aa6cf" text-anchor="middle">串行的算子链</text>
+  <text x="170" y="274" font-size="8.5" fill="#8aa6cf" text-anchor="middle">尚无并行宽度</text>
+
+  <text x="330" y="190" font-size="24" fill="#c7c7cc" text-anchor="middle">→</text>
+  <text x="330" y="212" font-size="8" fill="#a1a1a6" text-anchor="middle">updatePipeline</text>
+
+  <!-- physical -->
+  <rect x="380" y="76" width="640" height="220" rx="13" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="700" y="98" font-size="11" font-weight="700" fill="#12402a" text-anchor="middle">物理 QueryPipeline（每 Step 展开成 max_threads 路）</text>
+  <g text-anchor="middle" font-size="7.5">
+    <!-- read row -->
+    <rect x="400" y="240" width="90" height="34" rx="6" fill="#fdf6ea" stroke="#efdcb4"/><text x="445" y="260" fill="#5a3410">读 1</text>
+    <rect x="500" y="240" width="90" height="34" rx="6" fill="#fdf6ea" stroke="#efdcb4"/><text x="545" y="260" fill="#5a3410">读 2</text>
+    <rect x="600" y="240" width="90" height="34" rx="6" fill="#fdf6ea" stroke="#efdcb4"/><text x="645" y="260" fill="#5a3410">读 3</text>
+    <!-- filter row -->
+    <rect x="400" y="190" width="90" height="34" rx="6" fill="#f2fbf6" stroke="#cdeadb"/><text x="445" y="210" fill="#12402a">Filter</text>
+    <rect x="500" y="190" width="90" height="34" rx="6" fill="#f2fbf6" stroke="#cdeadb"/><text x="545" y="210" fill="#12402a">Filter</text>
+    <rect x="600" y="190" width="90" height="34" rx="6" fill="#f2fbf6" stroke="#cdeadb"/><text x="645" y="210" fill="#12402a">Filter</text>
+    <!-- partial agg row -->
+    <rect x="400" y="140" width="90" height="34" rx="6" fill="#e9f1fb" stroke="#c4d8f0"/><text x="445" y="160" fill="#1b2a4a">部分聚合</text>
+    <rect x="500" y="140" width="90" height="34" rx="6" fill="#e9f1fb" stroke="#c4d8f0"/><text x="545" y="160" fill="#1b2a4a">部分聚合</text>
+    <rect x="600" y="140" width="90" height="34" rx="6" fill="#e9f1fb" stroke="#c4d8f0"/><text x="645" y="160" fill="#1b2a4a">部分聚合</text>
+    <!-- resize/merge -->
+    <rect x="740" y="150" width="120" height="80" rx="8" fill="#eef3fb" stroke="#bcd0ec"/><text x="800" y="184" font-size="8.5" font-weight="600" fill="#1b2a4a">Resize/Merge</text><text x="800" y="200" fill="#5b7db1">合并多路</text>
+    <rect x="880" y="164" width="120" height="52" rx="8" fill="#f6f2fb" stroke="#d9c9ec"/><text x="940" y="188" font-size="8.5" font-weight="600" fill="#3d2a5a">输出</text><text x="940" y="204" fill="#7a5da5">结果</text>
+  </g>
+  <g stroke="#9ccbb0" stroke-width="1.1" fill="none">
+    <line x1="445" y1="240" x2="445" y2="224" marker-end="url(#ar)"/><line x1="545" y1="240" x2="545" y2="224" marker-end="url(#ar)"/><line x1="645" y1="240" x2="645" y2="224" marker-end="url(#ar)"/>
+    <line x1="445" y1="190" x2="445" y2="174" marker-end="url(#ar)"/><line x1="545" y1="190" x2="545" y2="174" marker-end="url(#ar)"/><line x1="645" y1="190" x2="645" y2="174" marker-end="url(#ar)"/>
+    <path d="M490,157 L740,175" marker-end="url(#ar)"/><path d="M590,157 L740,185" marker-end="url(#ar)"/><path d="M690,157 L740,195" marker-end="url(#ar)"/>
+    <line x1="860" y1="190" x2="880" y2="190" marker-end="url(#ar)"/>
+  </g>
+  <text x="700" y="288" font-size="8" fill="#4c8567" text-anchor="middle">读/过滤/部分聚合各 max_threads 路并行 → Resize 收束 → 输出</text>
+
+  <rect x="40" y="310" width="980" height="110" rx="13" fill="#fdf9f0" stroke="#efe3cd"/>
+  <text x="60" y="334" font-size="11" font-weight="700" fill="#7a5a1e">展开规则</text>
+  <text x="60" y="356" font-size="9.5" fill="#93762e">· 每个 IQueryPlanStep 的 updatePipeline 决定它展开成几路 Processor、如何连线（并行/串行/汇聚）</text>
+  <text x="60" y="374" font-size="9.5" fill="#93762e">· 并行宽度默认 = max_threads；ReadFromMergeTree 按 MarkRange 数分配读线程</text>
+  <text x="60" y="392" font-size="9.5" fill="#93762e">· 需要汇聚的算子（如全局排序、最终聚合）插 Resize/Merge 节点把多路收成一路</text>
+  <text x="60" y="412" font-size="9" fill="#b08843">· 这一步把"逻辑上做什么"翻译成"物理上多少并行、怎么连"</text>
+
+  <rect x="40" y="434" width="980" height="106" rx="12" fill="#f7f7f9" stroke="#e6e6ea"/>
+  <text x="60" y="458" font-size="11" font-weight="700" fill="#1d1d1f">一句话</text>
+  <text x="60" y="480" font-size="10" fill="#4b4b50">Pipeline 构建把逻辑 QueryPlan 逐 Step 展开成物理 Processors 图：每个逻辑算子按 max_threads 展开成多路并行 Processor，</text>
+  <text x="60" y="498" font-size="10" fill="#4b4b50">中间用 Resize/Merge 收束。这是"逻辑计划→物理执行图"的翻译层，决定了实际的并行宽度与连线拓扑。</text>
+  <text x="60" y="520" font-size="9" fill="#8a8a8f">下一步由 PipelineExecutor 驱动这张图（见调度篇）。</text>
+</svg>

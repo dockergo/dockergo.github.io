@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="450" viewBox="0 0 1020 450"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1020" height="450" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">进程模型 · postmaster 派生一切（postmaster.c / backend/postmaster/）</text>
+
+  <rect x="380" y="52" width="260" height="52" rx="12" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="510" y="74" font-size="12" font-weight="600" fill="#1b2a4a" text-anchor="middle">postmaster（守护）</text>
+  <text x="510" y="94" font-size="9" fill="#5b7db1" text-anchor="middle">监听端口 · fork 所有子进程 · 监控重启</text>
+
+  <!-- backends -->
+  <rect x="30" y="150" width="440" height="130" rx="14" fill="#f4eefb" stroke="#d9c9ef" filter="url(#soft)"/>
+  <text x="48" y="174" font-size="11.5" font-weight="600" fill="#3c1361">backend 进程（每客户端连接一个）</text>
+  <rect x="48" y="188" width="130" height="76" rx="9" fill="#ffffff" stroke="#d9c9ef"/><text x="113" y="210" font-size="9.5" fill="#3c1361" text-anchor="middle">backend #1</text><text x="113" y="228" font-size="8" fill="#7a5aa8" text-anchor="middle">私有内存 work_mem</text><text x="113" y="244" font-size="8" fill="#7a5aa8" text-anchor="middle">跑查询流水线</text>
+  <rect x="186" y="188" width="130" height="76" rx="9" fill="#ffffff" stroke="#d9c9ef"/><text x="251" y="210" font-size="9.5" fill="#3c1361" text-anchor="middle">backend #2</text>
+  <rect x="324" y="188" width="130" height="76" rx="9" fill="#ffffff" stroke="#d9c9ef"/><text x="389" y="210" font-size="9.5" fill="#3c1361" text-anchor="middle">backend #N</text>
+  <text x="48" y="278" font-size="0" fill="#7a5aa8"></text>
+
+  <!-- aux -->
+  <rect x="490" y="150" width="500" height="130" rx="14" fill="#fff7e6" stroke="#f0dcae" filter="url(#soft)"/>
+  <text x="508" y="174" font-size="11.5" font-weight="600" fill="#7a4d00">辅助进程（后台常驻）</text>
+  <rect x="508" y="188" width="150" height="34" rx="7" fill="#ffffff" stroke="#f0dcae"/><text x="583" y="209" font-size="8.5" fill="#7a4d00" text-anchor="middle">checkpointer 检查点</text>
+  <rect x="666" y="188" width="150" height="34" rx="7" fill="#ffffff" stroke="#f0dcae"/><text x="741" y="209" font-size="8.5" fill="#7a4d00" text-anchor="middle">bgwriter 刷脏页</text>
+  <rect x="824" y="188" width="150" height="34" rx="7" fill="#ffffff" stroke="#f0dcae"/><text x="899" y="209" font-size="8.5" fill="#7a4d00" text-anchor="middle">walwriter 刷 WAL</text>
+  <rect x="508" y="230" width="150" height="34" rx="7" fill="#ffffff" stroke="#f0dcae"/><text x="583" y="251" font-size="8.5" fill="#7a4d00" text-anchor="middle">autovacuum launcher/worker</text>
+  <rect x="666" y="230" width="150" height="34" rx="7" fill="#ffffff" stroke="#f0dcae"/><text x="741" y="251" font-size="8.5" fill="#7a4d00" text-anchor="middle">startup（回放恢复）</text>
+  <rect x="824" y="230" width="150" height="34" rx="7" fill="#ffffff" stroke="#f0dcae"/><text x="899" y="251" font-size="8.5" fill="#7a4d00" text-anchor="middle">walsender / archiver</text>
+
+  <line x1="470" y1="104" x2="250" y2="150" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="550" y1="104" x2="740" y2="150" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <text x="360" y="130" font-size="8.5" fill="#86868b">fork per connection（:3576）</text>
+  <text x="600" y="130" font-size="8.5" fill="#86868b">启动时 fork</text>
+
+  <!-- 说明 -->
+  <rect x="30" y="300" width="960" height="134" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="48" y="324" font-size="12.5" font-weight="600" fill="#1d1d1f">进程级模型的取舍</text>
+  <text x="48" y="348" font-size="10.5" fill="#494950">• <tspan font-weight="600">稳定/隔离</tspan>：一个 backend 崩溃不污染其他连接的地址空间；bug 影响面小。</text>
+  <text x="48" y="370" font-size="10.5" fill="#494950">• <tspan font-weight="600">连接开销大</tspan>：fork + 私有内存初始化不便宜 → 高并发用连接池（PgBouncer）复用物理连接。</text>
+  <text x="48" y="392" font-size="10.5" fill="#494950">• <tspan font-weight="600">协作靠共享内存</tspan>：进程间不共享私有内存，缓冲池/锁/快照放共享内存（见下图）。</text>
+  <text x="48" y="414" font-size="10.5" fill="#494950">• <tspan font-weight="600">对照 nginx</tspan>：nginx 是固定 worker 数事件循环；PostgreSQL 是每连接一进程——连接模型截然不同。</text>
+</svg>

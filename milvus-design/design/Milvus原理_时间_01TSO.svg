@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="520" viewBox="0 0 1080 520" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="520" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Milvus TSO · 混合逻辑时钟（HLC）· 全局单调递增</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">所有操作(写/删/读)领同一时钟的 ts,天然全序 —— 跨 vchannel/节点可比较先后,这是分布式一致性的基础</text>
+
+  <!-- ComposeTS bit layout (top, blue logical) -->
+  <rect x="30" y="92" width="1020" height="118" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="46" y="114" font-size="11.5" font-weight="700" fill="#1b2a4a">ComposeTS 位布局（tsoutil/tso.go）</text>
+  <text x="46" y="132" font-size="9" fill="#5b7db1"><tspan font-weight="600" fill="#1b2a4a">ComposeTS(physical, logical) = (physical &lt;&lt; 18) + logical</tspan></text>
+  <!-- 64-bit visual -->
+  <rect x="46" y="146" width="700" height="46" rx="8" fill="#e7f0fb" stroke="#b9d2ef"/>
+  <text x="396" y="167" font-size="9" text-anchor="middle" fill="#1b2a4a" font-weight="700">physical（高位 · Unix 毫秒时间）</text>
+  <text x="396" y="183" font-size="8" text-anchor="middle" fill="#5b7db1">墙钟毫秒 —— 决定 ts 的量级,随真实时间前进</text>
+  <rect x="750" y="146" width="284" height="46" rx="8" fill="#f3f7fc" stroke="#cfe0f2"/>
+  <text x="892" y="167" font-size="9" text-anchor="middle" fill="#274a78" font-weight="700">logical（低 18 位）</text>
+  <text x="892" y="183" font-size="8" text-anchor="middle" fill="#5b7db1">同一毫秒内的序号 · 1&lt;&lt;18 个</text>
+  <text x="746" y="205" font-size="7.5" text-anchor="end" fill="#a1a1a6">← 高位</text>
+  <text x="754" y="205" font-size="7.5" fill="#a1a1a6">低位 →</text>
+
+  <!-- RootCoord single-point issue (left) -->
+  <rect x="30" y="230" width="330" height="180" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="46" y="252" font-size="10.5" font-weight="700" fill="#1b2a4a">RootCoord 单点发 TSO</text>
+  <text x="46" y="270" font-size="8" fill="#5b7db1">root_coord.go · 全局唯一分配者</text>
+  <g font-size="8.5" text-anchor="middle">
+    <rect x="46" y="282" width="298" height="42" rx="8" fill="#e7f0fb" stroke="#b9d2ef"/><text x="195" y="300" fill="#1b2a4a" font-weight="600">Core.AllocTimestamp</text><text x="195" y="316" fill="#5b7db1" font-size="8">调 tsoAllocator.GenerateTSO(count) 批量</text>
+    <rect x="46" y="332" width="298" height="42" rx="8" fill="#f3f7fc" stroke="#cfe0f2"/><text x="195" y="350" fill="#274a78" font-weight="600">Proxy 经 RPC 领 TSO</text><text x="195" y="366" fill="#5b7db1" font-size="8">proxy/timestamp.go · 批量领取减 RPC</text>
+  </g>
+  <text x="195" y="396" font-size="8" text-anchor="middle" fill="#5b7db1">单点发保证全局单调、无需分布式协商</text>
+
+  <!-- Monotonic guarantee (middle) -->
+  <rect x="376" y="230" width="330" height="180" rx="14" fill="#f5faf6" stroke="#cfe6d5" filter="url(#soft)"/>
+  <text x="392" y="252" font-size="10.5" font-weight="700" fill="#12402a">单调保证</text>
+  <text x="392" y="270" font-size="8" fill="#2f6f4f">global_allocator.go · tso.go</text>
+  <g font-size="8.5">
+    <rect x="392" y="282" width="298" height="36" rx="7" fill="#eafaf1" stroke="#bfe0cd"/><text x="404" y="304" fill="#12402a">physical 每 <tspan font-weight="600">50ms</tspan> 前进</text>
+    <rect x="392" y="324" width="298" height="36" rx="7" fill="#eafaf1" stroke="#bfe0cd"/><text x="404" y="346" fill="#12402a">每 <tspan font-weight="600">3s</tspan> 持久化到 etcd(saved-time)</text>
+    <rect x="392" y="366" width="298" height="34" rx="7" fill="#e6f7ee" stroke="#bfe0cd"/><text x="404" y="387" fill="#2f6f4f">logical 用尽(1&lt;&lt;18) → 强制 physical 进</text>
+  </g>
+
+  <!-- Restart recovery (right) -->
+  <rect x="722" y="230" width="328" height="180" rx="14" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="738" y="252" font-size="10.5" font-weight="700" fill="#5a3410">重启恢复</text>
+  <text x="738" y="270" font-size="8" fill="#93762e">从 etcd 持久化的水位恢复</text>
+  <g font-size="8.5" text-anchor="middle">
+    <rect x="738" y="282" width="296" height="52" rx="8" fill="#fef2e0" stroke="#e8cf9a"/><text x="886" y="303" fill="#5a3410" font-weight="600">从 saved-time + guard 恢复</text><text x="886" y="321" fill="#93762e" font-size="8">跳过可能已发出的区间,不回退</text>
+    <rect x="738" y="342" width="296" height="52" rx="8" fill="#fdf6ea" stroke="#efdcb4"/><text x="886" y="363" fill="#5a3410" font-weight="600">保证重启后 ts 仍单调递增</text><text x="886" y="381" fill="#93762e" font-size="8">3s 持久化 → 最多丢一个窗口,靠 guard 补</text>
+  </g>
+
+  <!-- arrows -->
+  <line x1="396" y1="210" x2="396" y2="230" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="360" y1="320" x2="376" y2="320" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="706" y1="320" x2="722" y2="320" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+
+  <!-- insight -->
+  <rect x="30" y="426" width="1020" height="74" rx="12" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="46" y="450" font-size="10.5" font-weight="700" fill="#1d1d1f">为什么全局 TSO</text>
+  <text x="46" y="470" font-size="8.8" fill="#6e6e73">所有操作领同一时钟的 ts → 天然全序:跨 vchannel/节点的操作可比较先后 —— 写入定序、段版本、读快照都依赖它</text>
+  <text x="46" y="488" font-size="8.8" fill="#6e6e73">HLC = 物理时钟(量级)+ 逻辑序号(同毫秒内定序);单点发 + 批量领 + 定期持久化 = 高效且崩溃可恢复的全局单调时钟</text>
+</svg>

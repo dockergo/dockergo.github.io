@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="460" viewBox="0 0 1000 460" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1000" height="460" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">接收路径：硬中断只 napi_schedule，NET_RX_SOFTIRQ 软中断轮询批量收包（NAPI）</text>
+
+  <!-- 上半部：硬中断 -->
+  <rect x="28" y="60" width="944" height="96" rx="13" fill="#fbeaea" stroke="#e7c3c3"/>
+  <text x="46" y="82" font-size="11.5" font-weight="600" fill="#4a1414">上半部 · 硬中断（网卡 IRQ，越短越好）</text>
+
+  <rect x="60" y="98" width="200" height="44" rx="10" fill="#ffffff" stroke="#ececf1"/><text x="160" y="120" font-size="10.5" font-weight="600" fill="#1d1d1f" text-anchor="middle">网卡收帧 → DMA</text><text x="160" y="135" font-size="8.5" fill="#6e6e73" text-anchor="middle">数据落入内存 ring buffer</text>
+  <rect x="330" y="98" width="220" height="44" rx="10" fill="#ffffff" stroke="#ececf1"/><text x="440" y="120" font-size="10.5" font-weight="600" fill="#1d1d1f" text-anchor="middle">驱动 ISR：napi_schedule</text><text x="440" y="135" font-size="8.5" fill="#6e6e73" text-anchor="middle">挂 napi 到 softnet_data</text>
+  <rect x="620" y="98" width="320" height="44" rx="10" fill="#fff7e6" stroke="#e8cf9a"/><text x="780" y="120" font-size="10.5" font-weight="600" fill="#5a3410" text-anchor="middle">触发 NET_RX_SOFTIRQ 后立即返回</text><text x="780" y="135" font-size="8.5" fill="#93762e" text-anchor="middle">硬中断不做实际收包，避免中断风暴</text>
+  <g stroke="#c7c7cc" stroke-width="1.5" fill="none">
+    <line x1="260" y1="120" x2="330" y2="120" marker-end="url(#ar)"/>
+    <line x1="550" y1="120" x2="620" y2="120" marker-end="url(#ar)"/>
+  </g>
+
+  <!-- 下半部：软中断 -->
+  <rect x="28" y="176" width="944" height="196" rx="13" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="46" y="198" font-size="11.5" font-weight="600" fill="#12402a">下半部 · 软中断 net_rx_action (dev.c:7914，注册 dev.c:13289)：在 budget 内轮询批处理</text>
+
+  <rect x="60" y="216" width="210" height="70" rx="10" fill="#ffffff" stroke="#ececf1"/><text x="165" y="240" font-size="10.5" font-weight="600" fill="#1d1d1f" text-anchor="middle">napi_poll (dev.c:7786)</text><text x="165" y="260" font-size="9" fill="#6e6e73" text-anchor="middle">调驱动 napi->poll</text><text x="165" y="276" font-size="9" fill="#6e6e73" text-anchor="middle">批量取 skb（受 budget 限）</text>
+
+  <rect x="330" y="216" width="210" height="70" rx="10" fill="#eef3fb" stroke="#bcd0ec"/><text x="435" y="240" font-size="10.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">netif_receive_skb</text><text x="435" y="260" font-size="9" fill="#5b7db1" text-anchor="middle">(dev.c:6454)</text><text x="435" y="276" font-size="9" fill="#5b7db1" text-anchor="middle">按协议类型上送</text>
+
+  <rect x="600" y="216" width="160" height="70" rx="10" fill="#eef3fb" stroke="#bcd0ec"/><text x="680" y="240" font-size="10.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">IP 层</text><text x="680" y="260" font-size="9" fill="#5b7db1" text-anchor="middle">ip_rcv (ip_input.c:603)</text><text x="680" y="276" font-size="9" fill="#5b7db1" text-anchor="middle">→ ip_local_deliver</text>
+
+  <rect x="790" y="216" width="150" height="70" rx="10" fill="#eef3fb" stroke="#bcd0ec"/><text x="865" y="240" font-size="10.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">TCP 层</text><text x="865" y="260" font-size="9" fill="#5b7db1" text-anchor="middle">tcp_v4_rcv</text><text x="865" y="276" font-size="9" fill="#5b7db1" text-anchor="middle">(tcp_ipv4.c:2068)</text>
+
+  <g stroke="#c7c7cc" stroke-width="1.5" fill="none">
+    <line x1="270" y1="251" x2="330" y2="251" marker-end="url(#ar)"/>
+    <line x1="540" y1="251" x2="600" y2="251" marker-end="url(#ar)"/>
+    <line x1="760" y1="251" x2="790" y2="251" marker-end="url(#ar)"/>
+    <path d="M780,142 L780,176" marker-end="url(#ar)"/>
+  </g>
+
+  <!-- socket 队列 + 唤醒 -->
+  <rect x="330" y="304" width="430" height="52" rx="10" fill="#f4eefb" stroke="#d9c7ec"/><text x="545" y="326" font-size="10.5" font-weight="600" fill="#3d2a5a" text-anchor="middle">数据挂到目标 sock 接收队列 → 唤醒等待的进程</text><text x="545" y="343" font-size="8.5" fill="#7a5aa6" text-anchor="middle">recvmsg 系统调用取走（进程上下文）</text>
+  <path d="M865,286 L865,330 L760,330" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <!-- 底部注释 -->
+  <rect x="28" y="392" width="944" height="52" rx="11" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="44" y="414" font-size="10" fill="#3a3a3c">NAPI = "中断触发 + 轮询批处理"：低负载靠中断及时响应，高负载切轮询一次收多包，大幅降低每包中断开销。</text>
+  <text x="44" y="432" font-size="10" fill="#3a3a3c">软中断预算由 netdev_budget / netdev_budget_usecs 限定（dev.c:7918），防止收包独占 CPU。</text>
+</svg>

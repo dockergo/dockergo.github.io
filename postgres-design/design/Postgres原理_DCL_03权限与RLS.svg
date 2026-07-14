@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="430" viewBox="0 0 1020 430"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1020" height="430" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">对象权限（ACL）与行级安全（RLS）· aclchk.c / rls.c</text>
+
+  <!-- ACL -->
+  <rect x="30" y="56" width="470" height="220" rx="14" fill="#eafaf1" stroke="#bce6cd" filter="url(#soft)"/>
+  <text x="48" y="80" font-size="12.5" font-weight="600" fill="#0f5132">对象权限：GRANT/REVOKE → ACL 列表</text>
+  <rect x="48" y="96" width="434" height="44" rx="9" fill="#ffffff" stroke="#bce6cd"/><text x="64" y="116" font-size="9.5" fill="#0f5132">GRANT SELECT,INSERT ON orders TO app;</text><text x="64" y="132" font-size="8.5" fill="#3f8f66">在 pg_class.relacl 里加一条 aclitem</text>
+  <rect x="48" y="148" width="434" height="44" rx="9" fill="#ffffff" stroke="#bce6cd"/><text x="64" y="168" font-size="9.5" fill="#0f5132">aclitem = {grantee, 权限位, grantor, 可转授}</text><text x="64" y="184" font-size="8.5" fill="#3f8f66">ACLITEM_SET_PRIVS（aclchk.c:222）</text>
+  <rect x="48" y="200" width="434" height="44" rx="9" fill="#ffffff" stroke="#bce6cd"/><text x="64" y="220" font-size="9.5" fill="#0f5132">检查：pg_class_aclcheck → ACLCHECK_OK / NO_PRIV</text><text x="64" y="236" font-size="8.5" fill="#3f8f66">编译/执行期对涉及的对象逐个校验</text>
+  <text x="48" y="266" font-size="9" fill="#5aa06f">粒度：数据库/schema/表/列/序列/函数… 权限类型 SELECT/INSERT/UPDATE/…</text>
+
+  <!-- RLS -->
+  <rect x="520" y="56" width="470" height="220" rx="14" fill="#f4eefb" stroke="#d9c9ef" filter="url(#soft)"/>
+  <text x="538" y="80" font-size="12.5" font-weight="600" fill="#3c1361">行级安全：POLICY 谓词注入</text>
+  <rect x="538" y="96" width="434" height="44" rx="9" fill="#ffffff" stroke="#d9c9ef"/><text x="554" y="116" font-size="9.5" fill="#3c1361">ALTER TABLE orders ENABLE ROW LEVEL SECURITY;</text><text x="554" y="132" font-size="8.5" fill="#7a5aa8">CREATE POLICY p ON orders USING (owner = current_user)</text>
+  <rect x="538" y="148" width="434" height="44" rx="9" fill="#ffffff" stroke="#d9c9ef"/><text x="554" y="168" font-size="9.5" fill="#3c1361">rewrite 期把 policy 的 USING 谓词</text><text x="554" y="184" font-size="8.5" fill="#7a5aa8">作为 WHERE 注入查询树（check_enable_rls，rls.c）</text>
+  <rect x="538" y="200" width="434" height="44" rx="9" fill="#ffffff" stroke="#d9c9ef"/><text x="554" y="220" font-size="9.5" fill="#3c1361">效果：每个用户只看到/改到自己的行</text><text x="554" y="236" font-size="8.5" fill="#7a5aa8">多租户共表隔离的利器</text>
+  <text x="538" y="266" font-size="9" fill="#a58fc9">USING 控读/可见，WITH CHECK 控写入是否合规</text>
+
+  <!-- 组合 -->
+  <rect x="30" y="296" width="960" height="118" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="48" y="320" font-size="12.5" font-weight="600" fill="#1d1d1f">两者叠加：先过对象权限，再过 RLS</text>
+  <rect x="48" y="336" width="270" height="60" rx="10" fill="#eafaf1" stroke="#bce6cd"/><text x="183" y="358" font-size="9.5" font-weight="600" fill="#0f5132" text-anchor="middle">① 有表级 SELECT 权限？</text><text x="183" y="378" font-size="8.5" fill="#3f8f66" text-anchor="middle">无 → permission denied</text>
+  <rect x="334" y="336" width="270" height="60" rx="10" fill="#f4eefb" stroke="#d9c9ef"/><text x="469" y="358" font-size="9.5" font-weight="600" fill="#3c1361" text-anchor="middle">② RLS 谓词过滤行</text><text x="469" y="378" font-size="8.5" fill="#7a5aa8" text-anchor="middle">只返回策略允许的行</text>
+  <rect x="620" y="336" width="350" height="60" rx="10" fill="#f6f6f8" stroke="#e2e2e7"/><text x="795" y="358" font-size="9.5" font-weight="600" fill="#494950" text-anchor="middle">③ 超级用户 / 表 owner</text><text x="795" y="378" font-size="8.5" fill="#6a6a70" text-anchor="middle">默认绕过 RLS（可 FORCE RLS 强制）</text>
+  <line x1="318" y1="366" x2="334" y2="366" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="604" y1="366" x2="620" y2="366" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+</svg>

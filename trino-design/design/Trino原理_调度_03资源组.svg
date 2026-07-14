@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="580" viewBox="0 0 1040 580" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1040" height="580" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Trino 资源组 · 准入判定（立即跑 / 排队 / 拒绝）</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">查询入口经资源组树自底向上检查并发/队列/内存/CPU 限额,决定命运</text>
+
+  <!-- admission flow -->
+  <rect x="30" y="72" width="980" height="130" rx="13" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="46" y="94" font-size="11" font-weight="700" fill="#1b2a4a">准入路径</text>
+  <g font-size="8.8" text-anchor="middle">
+    <rect x="46" y="108" width="220" height="72" rx="9" fill="#f3f7fc" stroke="#cfe0f2"/><text x="156" y="128" font-weight="600" fill="#274a78">DispatchManager</text><text x="156" y="146" fill="#5b7db1">createQueryInternal</text><text x="156" y="162" fill="#5b7db1">构建 SelectionCriteria</text><text x="156" y="176" fill="#5b7db1">(user/source/tags/estimate)</text>
+    <rect x="290" y="108" width="220" height="72" rx="9" fill="#f5faf6" stroke="#cfe6d5"/><text x="400" y="128" font-weight="600" fill="#2c5a3a">selectGroup(criteria)</text><text x="400" y="146" fill="#2f6f4f">configurationManager.match</text><text x="400" y="162" fill="#2f6f4f">→ ResourceGroupId</text><text x="400" y="176" fill="#2f6f4f">选择器在插件里(file/db)</text>
+    <rect x="534" y="108" width="220" height="72" rx="9" fill="#eafaf1" stroke="#bfe0cd"/><text x="644" y="128" font-weight="600" fill="#12402a">InternalResourceGroup.run</text><text x="644" y="146" fill="#2f6f4f">准入判定(本组→根)</text><text x="644" y="162" fill="#2f6f4f">检查每祖先 canQueue/canRun</text>
+    <rect x="778" y="108" width="232" height="72" rx="9" fill="#faf4fb" stroke="#e2d2ee"/><text x="894" y="128" font-weight="600" fill="#5a3d78">三种命运</text><text x="894" y="146" fill="#7a5a95">立即跑 / 排队 / 拒绝</text><text x="894" y="162" fill="#7a5a95">后台 100ms 刷新推进队列</text>
+  </g>
+  <line x1="266" y1="144" x2="290" y2="144" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="510" y1="144" x2="534" y2="144" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="754" y1="144" x2="778" y2="144" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+
+  <!-- decision tree -->
+  <rect x="30" y="220" width="480" height="230" rx="13" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="46" y="242" font-size="11" font-weight="700" fill="#2c5a3a">run(query) 决策（沿祖先链）</text>
+  <g font-size="8.8" text-anchor="middle">
+    <rect x="150" y="256" width="220" height="34" rx="8" fill="#fff" stroke="#cfe6d5"/><text x="260" y="277" fill="#2c5a3a">∧ canQueueMore() 且 ∧ canRunMore()?</text>
+    <rect x="46" y="310" width="140" height="50" rx="8" fill="#ffecec" stroke="#e0a0a0"/><text x="116" y="330" fill="#b1483a" font-weight="600">都否 → 拒绝</text><text x="116" y="347" fill="#b1483a" font-size="8">QueryQueueFullException</text>
+    <rect x="200" y="310" width="140" height="50" rx="8" fill="#eafaf1" stroke="#bfe0cd"/><text x="270" y="330" fill="#12402a" font-weight="600">canRun → 立即跑</text><text x="270" y="347" fill="#2f6f4f" font-size="8">startInBackground</text>
+    <rect x="354" y="310" width="140" height="50" rx="8" fill="#fff7e6" stroke="#e8cf9a"/><text x="424" y="330" fill="#5a3410" font-weight="600">否则 → 排队</text><text x="424" y="347" fill="#93762e" font-size="8">enqueueQuery</text>
+  </g>
+  <line x1="180" y1="290" x2="116" y2="310" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="260" y1="290" x2="270" y2="310" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="340" y1="290" x2="424" y2="310" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <rect x="46" y="374" width="448" height="64" rx="8" fill="#fff" stroke="#cfe6d5"/><text x="60" y="394" font-size="8.8" font-weight="600" fill="#2c5a3a">后台推进（refreshAndStartQueries,100ms）</text><text x="60" y="412" font-size="8.5" fill="#2f6f4f">generateQuotas → internalStartNext：canRunMore 时从队列取下一个启动</text><text x="60" y="428" font-size="8.5" fill="#2f6f4f">递归选下一个 eligible 子组(按 SchedulingPolicy)</text>
+
+  <!-- limits -->
+  <rect x="530" y="220" width="480" height="230" rx="13" fill="#f3f7fc" stroke="#cfe0f2"/>
+  <text x="546" y="242" font-size="11" font-weight="700" fill="#274a78">限额（InternalResourceGroup）</text>
+  <g font-size="8.8">
+    <rect x="546" y="256" width="448" height="34" rx="7" fill="#fff" stroke="#cfe0f2"/><text x="560" y="277" fill="#274a78"><tspan font-weight="600">hardConcurrencyLimit</tspan>：并发上限(runningQueries+后代 &lt; 它)</text>
+    <rect x="546" y="296" width="448" height="34" rx="7" fill="#fff" stroke="#cfe0f2"/><text x="560" y="317" fill="#274a78"><tspan font-weight="600">maxQueuedQueries</tspan>：队列上限(queued+后代 &lt; 它)</text>
+    <rect x="546" y="336" width="448" height="34" rx="7" fill="#fff" stroke="#cfe0f2"/><text x="560" y="357" fill="#274a78"><tspan font-weight="600">softMemoryLimit</tspan>：内存超软限则停新启动(不是硬杀)</text>
+    <rect x="546" y="376" width="448" height="50" rx="7" fill="#fff" stroke="#cfe0f2"/><text x="560" y="396" fill="#274a78"><tspan font-weight="600">soft/hardCpuLimit</tspan>：软硬 CPU 限</text><text x="560" y="414" font-size="8.5" fill="#5b7db1">两者之间：hardConcurrency 线性收缩(惩罚,最少 1)</text>
+  </g>
+
+  <rect x="30" y="470" width="980" height="90" rx="13" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="46" y="492" font-size="11" font-weight="700" fill="#1d1d1f">配置与要点</text>
+  <text x="46" y="514" font-size="9" fill="#6e6e73">· 组树 + 选择器在 resource-groups.properties;配置管理器 file/db 两种(在插件 trino-resource-group-managers)</text>
+  <text x="46" y="532" font-size="9" fill="#6e6e73">· 选择器变量：${USER}/${SOURCE} 等展开成具体 ResourceGroupId;StaticSelector 按正则匹配 user/source/tags/queryType</text>
+  <text x="46" y="550" font-size="9" fill="#b1483a">· 483 无 QueryQueueManager（旧类,已移除）;准入全走 DispatchManager → InternalResourceGroupManager.run</text>
+</svg>

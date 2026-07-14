@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="420" viewBox="0 0 1000 420" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+  </defs>
+  <rect width="1000" height="420" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">三种消息方案对比：Pub/Sub vs List vs Stream</text>
+  <text x="30" y="49" font-size="10.5" fill="#a1a1a6">按持久化 / 确认 / 消费组需求选择；Stream 最接近 Kafka 语义</text>
+
+  <!-- three columns -->
+  <rect x="30" y="72" width="300" height="240" rx="12" fill="#f6f0fb" stroke="#dcc6ee" filter="url(#soft)"/>
+  <text x="180" y="96" font-size="12" font-weight="700" fill="#5a2a82" text-anchor="middle">Pub/Sub</text>
+  <text x="180" y="116" font-size="9" fill="#8a5cae" text-anchor="middle">实时广播</text>
+  <g font-size="9.5">
+    <text x="50" y="142" fill="#c02a56">✗ 持久化：阅后即焚</text>
+    <text x="50" y="164" fill="#c02a56">✗ 历史回溯：不能</text>
+    <text x="50" y="186" fill="#c02a56">✗ 消费确认：无</text>
+    <text x="50" y="208" fill="#c02a56">✗ 消费组：无（全员广播）</text>
+    <text x="50" y="230" fill="#c02a56">✗ 崩溃恢复：消息丢失</text>
+    <text x="50" y="258" fill="#8a5cae" font-size="9">✓ 延迟最低、最简单</text>
+  </g>
+  <text x="180" y="290" font-size="9" fill="#8a5cae" text-anchor="middle">适合：能容忍丢失的实时通知</text>
+
+  <rect x="350" y="72" width="300" height="240" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="500" y="96" font-size="12" font-weight="700" fill="#1b2a4a" text-anchor="middle">List（BLPOP）</text>
+  <text x="500" y="116" font-size="9" fill="#5b7db1" text-anchor="middle">简单队列</text>
+  <g font-size="9.5">
+    <text x="370" y="142" fill="#1c6b45">✓ 持久化：在 List 中</text>
+    <text x="370" y="164" fill="#c02a56">△ 历史回溯：弹出即消失</text>
+    <text x="370" y="186" fill="#c02a56">✗ 消费确认：无（弹出即消费）</text>
+    <text x="370" y="208" fill="#c02a56">△ 消费组：需自己实现</text>
+    <text x="370" y="230" fill="#c02a56">✗ 崩溃恢复：处理中消息丢</text>
+    <text x="370" y="258" fill="#5b7db1" font-size="9">✓ 简单、竞争消费</text>
+  </g>
+  <text x="500" y="290" font-size="9" fill="#5b7db1" text-anchor="middle">适合：单一消费链路的简单队列</text>
+
+  <rect x="670" y="72" width="300" height="240" rx="12" fill="#eafaf1" stroke="#b8e6cd" filter="url(#soft)"/>
+  <text x="820" y="96" font-size="12" font-weight="700" fill="#1c6b45" text-anchor="middle">Stream</text>
+  <text x="820" y="116" font-size="9" fill="#3a9b6e" text-anchor="middle">可靠消息（≈ Kafka）</text>
+  <g font-size="9.5">
+    <text x="690" y="142" fill="#1c6b45">✓ 持久化：append-only 日志</text>
+    <text x="690" y="164" fill="#1c6b45">✓ 历史回溯：XRANGE 任意读</text>
+    <text x="690" y="186" fill="#1c6b45">✓ 消费确认：XACK + PEL</text>
+    <text x="690" y="208" fill="#1c6b45">✓ 消费组：原生负载均衡</text>
+    <text x="690" y="230" fill="#1c6b45">✓ 崩溃恢复：PEL 重新认领</text>
+    <text x="690" y="258" fill="#3a9b6e" font-size="9">△ 相对复杂、需 MAXLEN 修剪</text>
+  </g>
+  <text x="820" y="290" font-size="9" fill="#3a9b6e" text-anchor="middle">适合：需持久化+确认+消费组的可靠消息</text>
+
+  <!-- decision -->
+  <rect x="30" y="328" width="940" height="80" rx="10" fill="#f7f7f9" stroke="#ececef"/>
+  <text x="50" y="352" font-size="11" font-weight="600" fill="#1d1d1f">如何选</text>
+  <text x="50" y="374" font-size="10" fill="#4a4a4f">· 只要实时广播、丢了无所谓 → <tspan font-weight="600">Pub/Sub</tspan>　· 简单任务队列、单消费链路 → <tspan font-weight="600">List + BLPOP</tspan></text>
+  <text x="50" y="394" font-size="10" fill="#1c6b45">· 要持久化 + 消费确认 + 多消费者负载均衡 + 历史回溯 → <tspan font-weight="600">Stream</tspan>（Redis 内做可靠消息的首选，语义最接近 Kafka）</text>
+</svg>

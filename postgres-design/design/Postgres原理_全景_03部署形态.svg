@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="450" viewBox="0 0 1020 450"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1020" height="450" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">部署形态 · 客户端-服务器 + 进程级并发（对照 DuckDB 嵌入式）</text>
+
+  <!-- 左: postgres C/S -->
+  <rect x="30" y="52" width="600" height="384" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="48" y="76" font-size="12.5" font-weight="600" fill="#1b2a4a">PostgreSQL · 独立服务器 + 每连接 backend</text>
+
+  <rect x="48" y="92" width="150" height="52" rx="10" fill="#f4eefb" stroke="#d9c9ef"/><text x="123" y="114" font-size="10" fill="#3c1361" text-anchor="middle">应用进程 A</text><text x="123" y="132" font-size="8.5" fill="#7a5aa8" text-anchor="middle">多连接</text>
+  <rect x="228" y="92" width="150" height="52" rx="10" fill="#f4eefb" stroke="#d9c9ef"/><text x="303" y="114" font-size="10" fill="#3c1361" text-anchor="middle">应用进程 B</text>
+  <rect x="408" y="92" width="180" height="52" rx="10" fill="#eafaf1" stroke="#bce6cd"/><text x="498" y="114" font-size="10" fill="#0f5132" text-anchor="middle">连接池（PgBouncer）</text><text x="498" y="132" font-size="8" fill="#3f8f66" text-anchor="middle">复用少量物理连接</text>
+
+  <rect x="48" y="192" width="540" height="220" rx="12" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="318" y="216" font-size="12" font-weight="600" fill="#1b2a4a" text-anchor="middle">PostgreSQL 服务器（一台/主机）</text>
+  <rect x="68" y="230" width="230" height="40" rx="8" fill="#ffffff" stroke="#bcd0ec"/><text x="183" y="255" font-size="9.5" fill="#1b2a4a" text-anchor="middle">postmaster 监听 + fork</text>
+  <rect x="310" y="230" width="258" height="40" rx="8" fill="#ffffff" stroke="#bcd0ec"/><text x="439" y="255" font-size="9.5" fill="#1b2a4a" text-anchor="middle">backend×N（每连接一个进程）</text>
+  <rect x="68" y="280" width="500" height="40" rx="8" fill="#eafaf1" stroke="#bce6cd"/><text x="318" y="305" font-size="9.5" fill="#0f5132" text-anchor="middle">共享内存（shared_buffers / 锁 / ProcArray）+ 辅助进程</text>
+  <rect x="68" y="330" width="500" height="40" rx="8" fill="#fff7e6" stroke="#f0dcae"/><text x="318" y="355" font-size="9.5" fill="#7a4d00" text-anchor="middle">磁盘：数据文件 + WAL + 系统目录（PGDATA）</text>
+  <text x="68" y="392" font-size="9" fill="#5b7db1">进程隔离稳定、崩溃局限单连接；但每连接一进程开销大 → 高并发用连接池</text>
+
+  <line x1="123" y1="144" x2="180" y2="192" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="498" y1="144" x2="440" y2="192" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <text x="196" y="176" font-size="9" fill="#c0392b">TCP · 协议往返</text>
+
+  <!-- 右: 对照 duckdb -->
+  <rect x="650" y="52" width="340" height="384" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="668" y="76" font-size="12.5" font-weight="600" fill="#86868b">对照 · DuckDB 嵌入式</text>
+  <rect x="668" y="96" width="304" height="140" rx="12" fill="#f6f6f8" stroke="#e2e2e7"/>
+  <text x="820" y="120" font-size="10.5" font-weight="600" fill="#494950" text-anchor="middle">库链接进宿主进程</text>
+  <text x="820" y="144" font-size="9.5" fill="#6a6a70" text-anchor="middle">无守护进程 · 无网络</text>
+  <text x="820" y="164" font-size="9.5" fill="#6a6a70" text-anchor="middle">单进程内查询</text>
+  <text x="820" y="184" font-size="9.5" fill="#6a6a70" text-anchor="middle">单文件 / 内存</text>
+  <text x="820" y="210" font-size="9" fill="#86868b" text-anchor="middle">分析嵌入、单机、OLAP</text>
+
+  <rect x="668" y="252" width="304" height="160" rx="12" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="820" y="276" font-size="10.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">PostgreSQL 的定位</text>
+  <text x="684" y="300" font-size="9.5" fill="#5b7db1">· 长驻服务、多客户端并发</text>
+  <text x="684" y="320" font-size="9.5" fill="#5b7db1">· OLTP 为主（也能 OLAP）</text>
+  <text x="684" y="340" font-size="9.5" fill="#5b7db1">· 完整用户/权限/认证体系</text>
+  <text x="684" y="360" font-size="9.5" fill="#5b7db1">· 强事务 ACID + 复制高可用</text>
+  <text x="684" y="380" font-size="9.5" fill="#5b7db1">· 可扩展（extension/索引/PL）</text>
+  <text x="684" y="402" font-size="8.5" fill="#8fa9cf">同为原型 A，形态与 DuckDB 相反</text>
+</svg>

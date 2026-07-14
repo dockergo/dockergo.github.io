@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="420" viewBox="0 0 1020 420"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1020" height="420" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">缓冲链与零拷贝 · ngx_buf_t / ngx_chain_t 串起数据不搬运</text>
+
+  <!-- chain -->
+  <rect x="30" y="56" width="960" height="150" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="48" y="80" font-size="12.5" font-weight="600" fill="#1d1d1f">ngx_chain_t：buf 单链表，数据以"引用"传递</text>
+  <rect x="48" y="96" width="200" height="90" rx="10" fill="#eef3fb" stroke="#bcd0ec"/><text x="148" y="118" font-size="10" font-weight="600" fill="#1b2a4a" text-anchor="middle">buf #1</text><text x="148" y="138" font-size="8.5" fill="#5b7db1" text-anchor="middle">内存缓冲（响应头）</text><text x="148" y="156" font-size="8.5" fill="#5b7db1" text-anchor="middle">pos/last 指向数据</text><text x="148" y="174" font-size="8" fill="#8fa9cf" text-anchor="middle">next →</text>
+  <rect x="278" y="96" width="200" height="90" rx="10" fill="#fff7e6" stroke="#f0dcae"/><text x="378" y="118" font-size="10" font-weight="600" fill="#7a4d00" text-anchor="middle">buf #2（file buf）</text><text x="378" y="138" font-size="8.5" fill="#9a7328" text-anchor="middle">指向文件 fd + 偏移</text><text x="378" y="156" font-size="8.5" fill="#9a7328" text-anchor="middle">不读进内存</text><text x="378" y="174" font-size="8" fill="#b8912e" text-anchor="middle">next →</text>
+  <rect x="508" y="96" width="200" height="90" rx="10" fill="#eef3fb" stroke="#bcd0ec"/><text x="608" y="118" font-size="10" font-weight="600" fill="#1b2a4a" text-anchor="middle">buf #3</text><text x="608" y="138" font-size="8.5" fill="#5b7db1" text-anchor="middle">内存缓冲（尾部）</text><text x="608" y="174" font-size="8" fill="#8fa9cf" text-anchor="middle">last_buf=1 结束</text>
+  <rect x="738" y="96" width="234" height="90" rx="10" fill="#eafaf1" stroke="#bce6cd"/><text x="855" y="122" font-size="10" font-weight="600" fill="#0f5132" text-anchor="middle">输出：分批非阻塞写</text><text x="855" y="144" font-size="8.5" fill="#3f8f66" text-anchor="middle">写不完的 buf 挂起等待写事件</text><text x="855" y="162" font-size="8.5" fill="#3f8f66" text-anchor="middle">下次写就绪续发</text>
+  <line x1="248" y1="141" x2="278" y2="141" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="478" y1="141" x2="508" y2="141" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="708" y1="141" x2="738" y2="141" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+
+  <!-- 零拷贝 -->
+  <rect x="30" y="222" width="470" height="190" rx="14" fill="#eafaf1" stroke="#bce6cd" filter="url(#soft)"/>
+  <text x="48" y="246" font-size="12.5" font-weight="600" fill="#0f5132">零拷贝：sendfile</text>
+  <text x="48" y="270" font-size="10" fill="#3f8f66">file buf 走 sendfile()：内核直接把文件</text>
+  <text x="48" y="288" font-size="10" fill="#3f8f66">数据发到 socket，不经用户态拷贝。</text>
+  <rect x="48" y="302" width="424" height="40" rx="9" fill="#ffffff" stroke="#bce6cd"/><text x="260" y="327" font-size="9.5" fill="#0f5132" text-anchor="middle">磁盘 → 内核缓冲 → 网卡（不进 nginx 内存）</text>
+  <text x="48" y="366" font-size="9.5" fill="#3f8f66">静态大文件服务的关键提速；配 tcp_nopush 合并包。</text>
+  <text x="48" y="388" font-size="9" fill="#5aa06f">filter 链传递的是 chain，不复制 body 数据本身。</text>
+
+  <!-- 与 filter 关系 -->
+  <rect x="520" y="222" width="470" height="190" rx="14" fill="#f4eefb" stroke="#d9c9ef" filter="url(#soft)"/>
+  <text x="538" y="246" font-size="12.5" font-weight="600" fill="#3c1361">buffer 与 filter 链的配合</text>
+  <text x="538" y="270" font-size="10" fill="#7a5aa8">• filter 收到 chain，加工后把（可能新的）</text>
+  <text x="538" y="288" font-size="10" fill="#7a5aa8">  chain 传给 next filter——多数只改指针/标志。</text>
+  <text x="538" y="312" font-size="10" fill="#7a5aa8">• gzip 等需重编码的 filter 才真正分配新 buf。</text>
+  <text x="538" y="336" font-size="10" fill="#7a5aa8">• buf 内存来自请求池，请求结束统一回收。</text>
+  <text x="538" y="360" font-size="10" fill="#7a5aa8">• 缓冲大小由 *_buffers / output_buffers 等指令控。</text>
+  <text x="538" y="392" font-size="9" fill="#a58fc9">"不搬数据、只传引用"是 nginx 低内存高吞吐的又一支柱。</text>
+</svg>

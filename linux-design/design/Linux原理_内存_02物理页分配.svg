@@ -1,0 +1,107 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="560" viewBox="0 0 1000 560" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1000" height="560" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">物理页分配：__alloc_pages 快/慢两路 · 伙伴系统按迁移类型分级 · per-cpu 与 slub 分层</text>
+
+  <!-- 左列 控制流 -->
+  <rect x="28" y="54" width="462" height="486" rx="13" fill="#fbfbfd" stroke="#ececf1"/>
+  <text x="46" y="76" font-size="11.5" font-weight="600" fill="#1d1d1f">分配控制流 · __alloc_pages</text>
+
+  <rect x="48" y="86" width="422" height="46" rx="11" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="60" y="106" font-size="10.5" font-weight="600" fill="#3d2a5a">请求方：内核路径 / 缺页分配</text>
+  <text x="60" y="124" font-size="9.5" fill="#6e6e73">gfp_mask：GFP_KERNEL · GFP_ATOMIC · __GFP_MOVABLE …</text>
+
+  <rect x="130" y="146" width="258" height="46" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="259" y="166" font-size="11" font-weight="600" fill="#1b2a4a" text-anchor="middle">__alloc_pages（page_alloc.c:5189）</text>
+  <text x="259" y="183" font-size="9" fill="#5b7db1" text-anchor="middle">快路命中即返回，失败才进慢路</text>
+  <path d="M259,132 L259,146" stroke="#c7c7cc" stroke-width="1.6" fill="none" marker-end="url(#ar)"/>
+
+  <!-- 快路 -->
+  <rect x="48" y="212" width="196" height="104" rx="11" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="146" y="232" font-size="10.5" font-weight="600" fill="#12402a" text-anchor="middle">快路 get_page_from_freelist</text>
+  <text x="146" y="250" font-size="9" fill="#2f6f4f" text-anchor="middle">page_alloc.c:3787</text>
+  <text x="146" y="270" font-size="9.5" fill="#2f6f4f" text-anchor="middle">以 ALLOC_WMARK_LOW 水位</text>
+  <text x="146" y="286" font-size="9.5" fill="#2f6f4f" text-anchor="middle">遍历 zonelist</text>
+  <text x="146" y="304" font-size="9.5" fill="#2f6f4f" text-anchor="middle">命中即返回页</text>
+
+  <!-- 慢路 -->
+  <rect x="264" y="212" width="204" height="260" rx="11" fill="#fbeaea" stroke="#e7c3c3" filter="url(#soft)"/>
+  <text x="366" y="232" font-size="10.5" font-weight="600" fill="#4a1414" text-anchor="middle">慢路 __alloc_pages_slowpath</text>
+  <text x="366" y="248" font-size="9" fill="#7a2a2a" text-anchor="middle">page_alloc.c:5234</text>
+
+  <rect x="280" y="262" width="172" height="42" rx="9" fill="#ffffff" stroke="#e7c3c3"/>
+  <text x="366" y="280" font-size="9.5" font-weight="600" fill="#4a1414" text-anchor="middle">① 唤醒后台回收</text>
+  <text x="366" y="295" font-size="8.5" fill="#7a2a2a" text-anchor="middle">wake_all_kswapds :4442</text>
+
+  <rect x="280" y="312" width="172" height="42" rx="9" fill="#ffffff" stroke="#e7c3c3"/>
+  <text x="366" y="330" font-size="9.5" font-weight="600" fill="#4a1414" text-anchor="middle">② 直接回收（阻塞）</text>
+  <text x="366" y="345" font-size="8.5" fill="#7a2a2a" text-anchor="middle">direct_reclaim :4409</text>
+
+  <rect x="280" y="362" width="172" height="42" rx="9" fill="#ffffff" stroke="#e7c3c3"/>
+  <text x="366" y="380" font-size="9.5" font-weight="600" fill="#4a1414" text-anchor="middle">③ 判断是否重试</text>
+  <text x="366" y="395" font-size="8.5" fill="#7a2a2a" text-anchor="middle">should_reclaim_retry :4572</text>
+
+  <rect x="280" y="412" width="172" height="46" rx="9" fill="#fbeaea" stroke="#e7c3c3"/>
+  <text x="366" y="432" font-size="9.5" font-weight="600" fill="#4a1414" text-anchor="middle">④ 仍失败 → OOM killer</text>
+  <text x="366" y="447" font-size="8.5" fill="#7a2a2a" text-anchor="middle">__alloc_pages_may_oom :4042</text>
+
+  <g stroke="#c7c7cc" stroke-width="1.5" fill="none">
+    <path d="M200,192 L146,192 L146,212" marker-end="url(#ar)"/>
+    <path d="M320,192 L366,192 L366,212" marker-end="url(#ar)"/>
+    <path d="M366,304 L366,312" marker-end="url(#ar)"/>
+    <path d="M366,354 L366,362" marker-end="url(#ar)"/>
+    <path d="M366,404 L366,412" marker-end="url(#ar)"/>
+  </g>
+  <path d="M146,316 L146,340 L280,340" stroke="#c7c7cc" stroke-width="1.4" stroke-dasharray="4 3" fill="none" marker-end="url(#ar)"/>
+  <text x="150" y="334" font-size="8.5" fill="#a1a1a6">快路失败</text>
+
+  <!-- 右列 内存组织 -->
+  <rect x="510" y="54" width="462" height="486" rx="13" fill="#fbfbfd" stroke="#ececf1"/>
+  <text x="528" y="76" font-size="11.5" font-weight="600" fill="#1d1d1f">内存组织三层</text>
+
+  <rect x="528" y="86" width="426" height="50" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="544" y="106" font-size="10.5" font-weight="600" fill="#1b2a4a">① per-cpu pageset（rmqueue_pcplist）</text>
+  <text x="544" y="124" font-size="9.5" fill="#5b7db1">单页分配的免锁热缓存，空了回落伙伴系统</text>
+
+  <!-- 伙伴系统 -->
+  <rect x="528" y="148" width="426" height="216" rx="11" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="544" y="169" font-size="10.5" font-weight="600" fill="#5a3410">② 伙伴系统 free_area[NR_PAGE_ORDERS]（mmzone.h:1087）</text>
+  <text x="640" y="188" font-size="8.5" fill="#93762e">UNMOVABLE</text>
+  <text x="740" y="188" font-size="8.5" fill="#93762e">MOVABLE</text>
+  <text x="838" y="188" font-size="8.5" fill="#93762e">RECLAIMABLE</text>
+
+  <g>
+    <text x="546" y="209" font-size="9" fill="#5a3410">order 0（1 页）</text>
+    <rect x="636" y="196" width="98" height="18" rx="4" fill="#fff7e6" stroke="#e8cf9a"/><rect x="736" y="196" width="98" height="18" rx="4" fill="#eafaf1" stroke="#bfe0cd"/><rect x="836" y="196" width="112" height="18" rx="4" fill="#eef3fb" stroke="#bcd0ec"/>
+    <text x="546" y="233" font-size="9" fill="#5a3410">order 1（2 页）</text>
+    <rect x="636" y="220" width="98" height="18" rx="4" fill="#fff7e6" stroke="#e8cf9a"/><rect x="736" y="220" width="98" height="18" rx="4" fill="#eafaf1" stroke="#bfe0cd"/><rect x="836" y="220" width="112" height="18" rx="4" fill="#eef3fb" stroke="#bcd0ec"/>
+    <text x="546" y="257" font-size="9" fill="#5a3410">order 2（4 页）</text>
+    <rect x="636" y="244" width="98" height="18" rx="4" fill="#fff7e6" stroke="#e8cf9a"/><rect x="736" y="244" width="98" height="18" rx="4" fill="#eafaf1" stroke="#bfe0cd"/><rect x="836" y="244" width="112" height="18" rx="4" fill="#eef3fb" stroke="#bcd0ec"/>
+    <text x="546" y="281" font-size="9" fill="#5a3410">order 3（8 页）</text>
+    <rect x="636" y="268" width="98" height="18" rx="4" fill="#fff7e6" stroke="#e8cf9a"/><rect x="736" y="268" width="98" height="18" rx="4" fill="#eafaf1" stroke="#bfe0cd"/><rect x="836" y="268" width="112" height="18" rx="4" fill="#eef3fb" stroke="#bcd0ec"/>
+  </g>
+  <text x="546" y="303" font-size="9" fill="#93762e">… 直到 MAX_PAGE_ORDER，每级按 2 的幂链表</text>
+  <text x="546" y="322" font-size="9" fill="#93762e">缺大块 → 高 order 分裂；释放时同 order 伙伴合并回上级</text>
+  <text x="546" y="341" font-size="9" fill="#93762e">按迁移类型分桶抗碎片（enum migratetype mmzone.h:118）</text>
+  <text x="546" y="357" font-size="9" fill="#93762e">水位 WMARK_MIN &lt; LOW &lt; HIGH（mmzone.h:796）</text>
+
+  <!-- slub -->
+  <rect x="528" y="376" width="426" height="84" rx="11" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="544" y="397" font-size="10.5" font-weight="600" fill="#12402a">③ slub 小对象（kmem_cache_alloc slub.c:4904）</text>
+  <text x="544" y="416" font-size="9.5" fill="#2f6f4f">slab_alloc_node :4870 → per-cpu 缓存(sheaves)取对象</text>
+  <text x="544" y="433" font-size="9.5" fill="#2f6f4f">空了 → ___slab_alloc :4406 向伙伴系统要 slab 页</text>
+  <text x="544" y="450" font-size="9.5" fill="#2f6f4f">把"页"切成 task_struct/inode/dentry 等对象</text>
+
+  <!-- 跨列连线 -->
+  <g stroke="#c7c7cc" stroke-width="1.5" fill="none">
+    <path d="M244,264 L272,264 L272,196 L488,196 L488,111 L528,111" marker-end="url(#ar)"/>
+    <path d="M741,136 L741,148" marker-end="url(#ar)"/>
+    <path d="M741,364 L741,376" marker-end="url(#ar)"/>
+  </g>
+  <text x="300" y="190" font-size="8.5" fill="#a1a1a6">快路取页</text>
+  <text x="748" y="146" font-size="8.5" fill="#a1a1a6">空回落</text>
+  <text x="748" y="374" font-size="8.5" fill="#a1a1a6">要 slab 页</text>
+</svg>

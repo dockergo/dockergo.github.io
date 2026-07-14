@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="560" viewBox="0 0 1060 560" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1060" height="560" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">TreeNode / Rule / RuleExecutor：贯穿四阶段的统一框架</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">一套树变换机制服务分析/优化/规划——加一条优化 = 写一个 Rule 加进 batch</text>
+
+  <g text-anchor="middle">
+    <rect x="40" y="76" width="300" height="150" rx="13" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+    <text x="190" y="100" font-size="11" font-weight="700" fill="#3d2a5a">TreeNode（trees/TreeNode.scala:70）</text>
+    <text x="190" y="122" font-size="9" fill="#7a5da5">所有计划 + 表达式的基类</text>
+    <rect x="60" y="134" width="260" height="26" rx="6" fill="#fff" stroke="#d9c7ec"/><text x="190" y="152" font-size="8" fill="#3d2a5a">transform（:438）模式匹配递归改写</text>
+    <rect x="60" y="166" width="125" height="26" rx="6" fill="#fff" stroke="#d9c7ec"/><text x="122" y="184" font-size="8" fill="#3d2a5a">transformDown(:470)</text>
+    <rect x="195" y="166" width="125" height="26" rx="6" fill="#fff" stroke="#d9c7ec"/><text x="257" y="184" font-size="8" fill="#3d2a5a">transformUp(:521)</text>
+    <text x="190" y="212" font-size="8" fill="#9a7cc4">逻辑计划/物理计划/表达式全是 TreeNode</text>
+
+    <rect x="380" y="76" width="300" height="150" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+    <text x="530" y="100" font-size="11" font-weight="700" fill="#1b2a4a">Rule（rules/Rule.scala:24）</text>
+    <text x="530" y="122" font-size="9" fill="#5b7db1">一个 plan → plan 的变换</text>
+    <rect x="400" y="134" width="260" height="26" rx="6" fill="#fff" stroke="#bcd0ec"/><text x="530" y="152" font-size="8" fill="#1b2a4a">def apply(plan): plan（:35）</text>
+    <text x="530" y="176" font-size="8.5" fill="#5b7db1">分析规则、优化规则都是 Rule</text>
+    <text x="530" y="194" font-size="8" fill="#8aa6cf">如 ResolveRelations / ColumnPruning</text>
+    <text x="530" y="212" font-size="8" fill="#8aa6cf">用 TreeNode.transform 实现改写</text>
+
+    <rect x="720" y="76" width="300" height="150" rx="13" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+    <text x="870" y="100" font-size="11" font-weight="700" fill="#12402a">RuleExecutor（:125）</text>
+    <text x="870" y="122" font-size="9" fill="#2f6f4f">把 Rule 组织成 Batch 执行</text>
+    <rect x="740" y="134" width="125" height="26" rx="6" fill="#fff" stroke="#bfe0cd"/><text x="802" y="152" font-size="8" fill="#12402a">Once(:150) 跑一次</text>
+    <rect x="875" y="134" width="125" height="26" rx="6" fill="#fff" stroke="#bfe0cd"/><text x="937" y="152" font-size="8" fill="#12402a">FixedPoint(:156)</text>
+    <text x="870" y="176" font-size="8.5" fill="#2f6f4f">FixedPoint = 跑到计划不再变</text>
+    <text x="870" y="194" font-size="8" fill="#4c8567">Batch(:162) · execute(:215)</text>
+    <text x="870" y="212" font-size="8" fill="#4c8567">Analyzer/Optimizer 都继承它</text>
+  </g>
+  <g stroke="#c7c7cc" stroke-width="1.3" fill="none">
+    <line x1="340" y1="151" x2="380" y2="151" marker-end="url(#ar)"/>
+    <line x1="680" y1="151" x2="720" y2="151" marker-end="url(#ar)"/>
+  </g>
+  <text x="360" y="143" font-size="7.5" fill="#a1a1a6">用</text>
+  <text x="700" y="143" font-size="7.5" fill="#a1a1a6">编排</text>
+
+  <!-- extensibility -->
+  <rect x="40" y="246" width="980" height="110" rx="13" fill="#fdf9f0" stroke="#efe3cd"/>
+  <text x="60" y="270" font-size="11.5" font-weight="700" fill="#7a5a1e">为什么这套框架优雅</text>
+  <text x="60" y="292" font-size="9.5" fill="#93762e">· 统一：分析（解析）、优化（改写）、规划（逻辑→物理）都是"在 TreeNode 上跑 Rule"——一套心智模型贯穿全程</text>
+  <text x="60" y="310" font-size="9.5" fill="#93762e">· 可扩展：加一条优化规则 = 写一个 Rule 类 + 加进某个 Batch，无需改框架</text>
+  <text x="60" y="328" font-size="9.5" fill="#93762e">· 可组合：Batch 顺序 + Once/FixedPoint 精确控制规则应用时机与迭代</text>
+  <text x="60" y="346" font-size="9" fill="#b08843">· 这是 Catalyst 能持续演进、社区能贡献优化规则的工程基础</text>
+
+  <rect x="40" y="372" width="980" height="90" rx="12" fill="#f7f7f9" stroke="#e6e6ea"/>
+  <text x="60" y="396" font-size="11" font-weight="700" fill="#1d1d1f">一句话</text>
+  <text x="60" y="418" font-size="10" fill="#4b4b50">Catalyst 的统一框架 = TreeNode（所有计划/表达式的基类，transform 做模式匹配改写）+ Rule（一个 plan→plan 变换）</text>
+  <text x="60" y="436" font-size="10" fill="#4b4b50">+ RuleExecutor（把 Rule 分成 Batch，Once/FixedPoint 迭代）。分析/优化/规划都是"在树上跑规则到不动点"。</text>
+  <text x="60" y="454" font-size="9" fill="#8a8a8f">加优化 = 写 Rule 加进 batch——这套可插拔框架是 Catalyst 可扩展性与持续演进的核心。</text>
+</svg>

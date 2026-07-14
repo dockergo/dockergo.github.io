@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="540" viewBox="0 0 920 540" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="920" height="540" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">channel 收发 · chansend / chanrecv 三条路径</text>
+
+  <!-- entry (blue) -->
+  <rect x="330" y="54" width="260" height="58" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="460" y="79" font-size="12" font-weight="600" fill="#1b2a4a" text-anchor="middle">chansend / chanrecv（持 lock）</text>
+  <text x="460" y="98" font-size="9.5" fill="#5b7db1" text-anchor="middle">chan.go:176 · chan.go:524</text>
+
+  <text x="460" y="134" font-size="10.5" fill="#8e8e93" text-anchor="middle">依次判断 ↓（命中即返回）</text>
+
+  <line x1="400" y1="112" x2="180" y2="168" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <line x1="460" y1="112" x2="460" y2="168" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <line x1="520" y1="112" x2="740" y2="168" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- Path 1: direct handoff (green) -->
+  <rect x="40" y="172" width="272" height="300" rx="13" fill="#eef7f0" stroke="#bfe0c8" filter="url(#soft)"/>
+  <text x="56" y="196" font-size="12.5" font-weight="600" fill="#1d4a2b">① 手递手直传（最快）</text>
+  <rect x="56" y="208" width="240" height="46" rx="8" fill="#ffffff" stroke="#bfe0c8"/>
+  <text x="176" y="227" font-size="10.5" font-weight="600" fill="#1d4a2b" text-anchor="middle">对面队列有等待者？</text>
+  <text x="176" y="244" font-size="9" fill="#4a8c60" text-anchor="middle">发看 recvq / 收看 sendq</text>
+
+  <!-- handoff viz -->
+  <rect x="56" y="268" width="110" height="50" rx="8" fill="#ffffff" stroke="#bfe0c8"/>
+  <text x="111" y="290" font-size="9.5" font-weight="600" fill="#1d4a2b" text-anchor="middle">当前 G</text>
+  <text x="111" y="306" font-size="8.5" fill="#4a8c60" text-anchor="middle">发送/接收</text>
+  <rect x="186" y="268" width="110" height="50" rx="8" fill="#ffffff" stroke="#bfe0c8"/>
+  <text x="241" y="290" font-size="9.5" font-weight="600" fill="#1d4a2b" text-anchor="middle">等待对家</text>
+  <text x="241" y="306" font-size="8.5" fill="#4a8c60" text-anchor="middle">已挂在队列</text>
+  <line x1="166" y1="293" x2="184" y2="293" stroke="#4a8c60" stroke-width="1.8" marker-end="url(#ar)"/>
+
+  <text x="56" y="342" font-size="10" fill="#4a8c60">send()：值直接拷到接收者栈，</text>
+  <text x="56" y="359" font-size="10" fill="#4a8c60">goready 唤醒它，不经 buf。</text>
+  <text x="56" y="381" font-size="10" fill="#4a8c60">接收对称：直接收 sendq 的值。</text>
+  <rect x="56" y="396" width="240" height="30" rx="8" fill="#ffffff" stroke="#bfe0c8"/>
+  <text x="176" y="415" font-size="10" font-weight="600" fill="#1d4a2b" text-anchor="middle">无缓冲 channel 的唯一路径</text>
+  <text x="56" y="446" font-size="9.5" fill="#7fb894">也是有缓冲有等待者时的快路径</text>
+  <text x="56" y="464" font-size="9.5" fill="#a3c9b0">send chan.go:318</text>
+
+  <!-- Path 2: buffer in/out (amber) -->
+  <rect x="324" y="172" width="272" height="300" rx="13" fill="#fdf6ec" stroke="#f0dcaf" filter="url(#soft)"/>
+  <text x="340" y="196" font-size="12.5" font-weight="600" fill="#6b4e16">② 入 / 出缓冲</text>
+  <rect x="340" y="208" width="240" height="46" rx="8" fill="#ffffff" stroke="#f0dcaf"/>
+  <text x="460" y="227" font-size="10.5" font-weight="600" fill="#6b4e16" text-anchor="middle">无对家，但 buf 未满/未空？</text>
+  <text x="460" y="244" font-size="9" fill="#a9822f" text-anchor="middle">仅有缓冲 channel 走这里</text>
+
+  <!-- buffer viz -->
+  <g text-anchor="middle" font-size="9">
+    <rect x="352" y="270" width="52" height="40" rx="6" fill="#ffffff" stroke="#e6cd94"/><text x="378" y="294" fill="#6b4e16">v</text>
+    <rect x="410" y="270" width="52" height="40" rx="6" fill="#ffffff" stroke="#e6cd94"/><text x="436" y="294" fill="#6b4e16">v</text>
+    <rect x="468" y="270" width="52" height="40" rx="6" fill="#f6f6f7" stroke="#e2e2e7"/><text x="494" y="294" fill="#a3a3a8">空</text>
+    <rect x="526" y="270" width="52" height="40" rx="6" fill="#f6f6f7" stroke="#e2e2e7"/><text x="552" y="294" fill="#a3a3a8">空</text>
+  </g>
+  <text x="460" y="332" font-size="10" fill="#a9822f" text-anchor="middle">发送 → 拷进 buf[sendx]，qcount++</text>
+  <text x="460" y="350" font-size="10" fill="#a9822f" text-anchor="middle">接收 → 从 buf[recvx] 拷出，qcount--</text>
+  <rect x="340" y="368" width="240" height="30" rx="8" fill="#ffffff" stroke="#f0dcaf"/>
+  <text x="460" y="387" font-size="10" font-weight="600" fill="#6b4e16" text-anchor="middle">不阻塞，立即返回</text>
+  <text x="340" y="426" font-size="9.5" fill="#c6a45f">环形下标回绕，O(1) 入出</text>
+  <text x="340" y="444" font-size="9.5" fill="#c6a45f">缓冲吸收生产/消费速率差</text>
+  <text x="340" y="464" font-size="9.5" fill="#c6a45f">chanrecv chan.go:702</text>
+
+  <!-- Path 3: block (red) -->
+  <rect x="608" y="172" width="272" height="300" rx="13" fill="#fbeeee" stroke="#f0c4c4" filter="url(#soft)"/>
+  <text x="624" y="196" font-size="12.5" font-weight="600" fill="#7a1f1f">③ 阻塞挂队列</text>
+  <rect x="624" y="208" width="240" height="46" rx="8" fill="#ffffff" stroke="#f0c4c4"/>
+  <text x="744" y="227" font-size="10.5" font-weight="600" fill="#7a1f1f" text-anchor="middle">buf 满(发)/空(收) 且无对家</text>
+  <text x="744" y="244" font-size="9" fill="#b15b5b" text-anchor="middle">最后兜底路径</text>
+
+  <text x="624" y="278" font-size="10" fill="#b15b5b">把当前 G 包成 sudog：</text>
+  <rect x="624" y="288" width="240" height="40" rx="8" fill="#ffffff" stroke="#f0c4c4"/>
+  <text x="744" y="306" font-size="10" font-weight="600" fill="#7a1f1f" text-anchor="middle">sudog → 挂进 sendq / recvq</text>
+  <text x="744" y="321" font-size="8.5" fill="#b15b5b" text-anchor="middle">记录 g、elem、等待原因</text>
+
+  <rect x="624" y="338" width="240" height="34" rx="8" fill="#ffffff" stroke="#f0c4c4"/>
+  <text x="744" y="359" font-size="10" font-weight="600" fill="#7a1f1f" text-anchor="middle">gopark → 让出 M</text>
+  <text x="624" y="392" font-size="9.5" fill="#b15b5b">waitReasonChanSend / Receive</text>
+  <text x="624" y="414" font-size="10" fill="#b15b5b">被对家 goready 唤醒后，</text>
+  <text x="624" y="431" font-size="10" fill="#b15b5b">回到路径①完成收发。</text>
+  <text x="624" y="464" font-size="9.5" fill="#cf9a9a">阻塞 goroutine 而非 OS 线程</text>
+
+  <!-- bottom close note -->
+  <rect x="40" y="490" width="840" height="34" rx="9" fill="#f5f0fb" stroke="#ddcdf0"/>
+  <text x="56" y="512" font-size="10.5" fill="#7d5bb1">关闭 closechan(chan.go:414)：置 closed 并唤醒所有等待者——收者得零值+ok=false，发者 panic；向已关闭/nil channel 发送均 panic</text>
+</svg>

@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="560" viewBox="0 0 1080 560" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="560" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">RocksDB Leveled Compaction · 分数选层 + L0→L1 全参与</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">CompactionPickerLevel 给每层算分数,最高者触发;L0 重叠故 L0→L1 需全 L0 + 重叠 L1 一起归并</text>
+
+  <!-- scoring -->
+  <rect x="30" y="70" width="500" height="200" rx="13" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="46" y="92" font-size="11" font-weight="700" fill="#1b2a4a">分数(score)选层</text>
+  <g font-size="8.5">
+    <rect x="46" y="104" width="470" height="34" rx="7" fill="#fef2e0" stroke="#e8cf9a"/><text x="60" y="124" fill="#5a3410">L0 分数 = 文件数 / level0_file_num_compaction_trigger(默认 4)</text>
+    <rect x="46" y="144" width="470" height="34" rx="7" fill="#eef3fb" stroke="#bcd0ec"/><text x="60" y="164" fill="#1b2a4a">L1+ 分数 = 当前字节 / 目标字节(max_bytes_for_level_*)</text>
+    <rect x="46" y="184" width="470" height="34" rx="7" fill="#eafaf1" stroke="#bfe0cd"/><text x="60" y="204" fill="#12402a">分数 ≥ 1 且最高的层 → 触发 compaction</text>
+  </g>
+  <text x="46" y="238" font-size="8.5" fill="#5b7db1">· 分数反映"该层多超标",越超越该合</text>
+  <text x="46" y="256" font-size="8.5" fill="#5b7db1">· 多层同时超标 → 优先分数最高的</text>
+
+  <!-- L0->L1 special -->
+  <rect x="550" y="70" width="500" height="200" rx="13" fill="#fff7e6" stroke="#e8cf9a"/>
+  <text x="566" y="92" font-size="11" font-weight="700" fill="#5a3410">L0→L1 特殊处理</text>
+  <g font-size="8" text-anchor="middle">
+    <rect x="566" y="104" width="470" height="30" rx="6" fill="#fef2e0" stroke="#e8cf9a"/><text x="801" y="123" fill="#5a3410">L0: [a,c] [b,e] [a,d]  ← key 范围互相重叠!</text>
+    <rect x="566" y="140" width="230" height="26" rx="6" fill="#fdf6ea" stroke="#efdcb4"/><text x="681" y="157" fill="#93762e">L1: [a..f]</text>
+    <rect x="806" y="140" width="230" height="26" rx="6" fill="#fdf6ea" stroke="#efdcb4"/><text x="921" y="157" fill="#93762e">L1: [g..z]</text>
+  </g>
+  <text x="566" y="188" font-size="8.5" fill="#93762e">· L0 文件间 key 重叠(刚从不同 MemTable flush)</text>
+  <text x="566" y="206" font-size="8.5" fill="#93762e">· 故 L0→L1 必须:取全部 L0 + 与之 key 重叠的全部 L1</text>
+  <text x="566" y="224" font-size="8.5" fill="#93762e">  文件一起归并(不能只挑一个 L0)</text>
+  <rect x="566" y="236" width="470" height="26" rx="6" fill="#fff" stroke="#e8cf9a"/><text x="581" y="253" font-size="8.3" fill="#b1483a">这也是读侧"L0 要查每个文件"的同源原因(见读取路径)</text>
+
+  <!-- L1+ pick -->
+  <rect x="30" y="286" width="500" height="130" rx="13" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="46" y="308" font-size="11" font-weight="700" fill="#12402a">L1+ 挑文件(层内已非重叠)</text>
+  <text x="46" y="330" font-size="8.8" fill="#2f6f4f">· 选一个 Ln 文件 + 与其 key 范围重叠的全部 Ln+1 文件</text>
+  <text x="46" y="348" font-size="8.8" fill="#2f6f4f">· 归并写到 Ln+1,替换掉那些文件</text>
+  <text x="46" y="366" font-size="8.8" fill="#2f6f4f">· compaction_pri 决定挑哪个文件(旧度/key 范围/…)</text>
+  <text x="46" y="386" font-size="8.5" fill="#93762e">因层内非重叠,一次只动局部,写放大可控</text>
+  <text x="46" y="404" font-size="8.5" fill="#a1a1a6">目标:维持每层非重叠有序 + 容量约束</text>
+
+  <!-- drop logic -->
+  <rect x="550" y="286" width="500" height="130" rx="13" fill="#faf4fb" stroke="#e2d2ee"/>
+  <text x="566" y="308" font-size="11" font-weight="700" fill="#5a3d78">归并时丢什么(按 seq)</text>
+  <text x="566" y="330" font-size="8.8" fill="#7a5a95">· 同 key 多版本:只留可见的最新(被覆盖的旧值丢)</text>
+  <text x="566" y="348" font-size="8.8" fill="#7a5a95">· 墓碑:若低于最老存活 snapshot 的 seq → 丢(空间回收)</text>
+  <text x="566" y="366" font-size="8.8" fill="#7a5a95">· 墓碑若还可能被某快照看到 → 保留(不能提前删)</text>
+  <text x="566" y="386" font-size="8.5" fill="#b1483a">· 到最底层(Ln)时墓碑通常可安全丢弃(下面无更老数据)</text>
+  <text x="566" y="404" font-size="8.5" fill="#a1a1a6">这解释了"Delete 的空间要等 Compaction 到底层才回收"</text>
+
+  <!-- notes -->
+  <rect x="30" y="432" width="1020" height="110" rx="13" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="46" y="454" font-size="11" font-weight="700" fill="#1d1d1f">要点</text>
+  <text x="46" y="476" font-size="9" fill="#6e6e73">· "分数选层"是负反馈:哪层超标就整哪层,把 LSM 拉回目标形状(每层容量 10× 递增、层内非重叠)</text>
+  <text x="46" y="494" font-size="9" fill="#6e6e73">· L0 是唯一允许重叠的层(直接接 Flush),故它触发条件按文件数、且 L0→L1 要全参与——L0 是 LSM 读写的关键瓶颈点</text>
+  <text x="46" y="512" font-size="9" fill="#6e6e73">· 调优:L0 触发阈值、每层倍数、单文件大小、compaction_pri、后台并发 —— 直接影响写放大与读延迟</text>
+  <text x="46" y="530" font-size="8.5" fill="#a1a1a6">· 归属:选层/挑文件在本篇;归并读写走【SST 存储格式】;换版本经【版本】;墓碑可见性依赖【事务与快照】seq</text>
+</svg>

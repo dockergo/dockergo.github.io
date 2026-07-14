@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="780" viewBox="0 0 1080 780" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="780" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Hudi 核心原理 · 总架构图（位置即语义）</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">事务性数据湖表格式(upsert 导向):时间线是真相,索引 upsert 到文件组,COW/MOR 两种表类型,表服务后台维护</text>
+
+  <!-- compute engines (external) -->
+  <rect x="30" y="64" width="1020" height="46" rx="13" fill="#f4f2ee" stroke="#e3ddd2" stroke-dasharray="6 4"/>
+  <text x="46" y="84" font-size="11" font-weight="700" fill="#6e6357">计算引擎(非 Hudi · 经 write client 读写)</text>
+  <g text-anchor="middle" font-size="8.8">
+    <rect x="46" y="90" width="490" height="16" rx="5" fill="#fbf6ef" stroke="#e6d8c4"/><text x="291" y="102" fill="#5a3410">Spark(DataSource + SparkRDDWriteClient)</text>
+    <rect x="546" y="90" width="488" height="16" rx="5" fill="#fbf6ef" stroke="#e6d8c4"/><text x="790" y="102" fill="#5a3410">Flink(sink/source + FLINK_STATE 索引)</text>
+  </g>
+
+  <!-- API -->
+  <rect x="30" y="124" width="1020" height="44" rx="13" fill="#f4eefb" stroke="#d9c7ec"/>
+  <text x="46" y="151" font-size="11" fill="#3d2a5a"><tspan font-weight="700">表读写 API 接触面</tspan>　写:upsert/insert/bulk_insert/delete　读:快照 / 读优化 / 增量查</text>
+
+  <!-- write path + timeline -->
+  <rect x="30" y="182" width="500" height="230" rx="16" fill="#fff7e6" stroke="#e8cf9a"/>
+  <text x="46" y="204" font-size="11.5" font-weight="700" fill="#5a3410">写入(upsert)· 索引路由</text>
+  <g text-anchor="middle" font-size="8.3">
+    <rect x="46" y="214" width="468" height="40" rx="8" fill="#fef2e0" stroke="#e8cf9a"/><text x="280" y="231" font-weight="600" fill="#5a3410">startCommit 开时间线 instant</text><text x="280" y="246" fill="#93762e">preWrite 预处理</text>
+    <rect x="46" y="262" width="468" height="44" rx="8" fill="#fef2e0" stroke="#e8cf9a"/><text x="280" y="280" font-weight="600" fill="#5a3410">索引 tagLocation:记录键→文件组</text><text x="280" y="296" fill="#93762e">Bloom/Simple/Bucket/RECORD_LEVEL</text>
+    <rect x="46" y="314" width="468" height="40" rx="8" fill="#fef2e0" stroke="#e8cf9a"/><text x="280" y="331" font-weight="600" fill="#5a3410">bucket 路由 UPDATE / INSERT</text><text x="280" y="346" fill="#93762e">SmallFile 塞入小文件</text>
+    <rect x="46" y="362" width="468" height="40" rx="8" fill="#eafaf1" stroke="#bfe0cd"/><text x="280" y="379" font-weight="600" fill="#12402a">写 handle:COW MergeHandle 重写 / MOR AppendHandle 追加 log</text><text x="280" y="394" fill="#2f6f4f">marker 文件标记产物(失败回滚)</text>
+  </g>
+  <line x1="280" y1="254" x2="280" y2="262" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="280" y1="306" x2="280" y2="314" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="280" y1="354" x2="280" y2="362" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+
+  <!-- timeline (core, right) -->
+  <rect x="550" y="182" width="500" height="230" rx="16" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="566" y="204" font-size="11.5" font-weight="700" fill="#1b2a4a">时间线(核心 · 表的真相)· .hoodie</text>
+  <g text-anchor="middle" font-size="8.3">
+    <rect x="566" y="214" width="468" height="52" rx="8" fill="#f3f7fc" stroke="#cfe0f2"/><text x="800" y="234" font-weight="600" fill="#274a78">HoodieInstant:动作 × 状态</text><text x="800" y="250" fill="#5b7db1">commit/deltacommit/compaction/clean/rollback</text><text x="800" y="262" fill="#5b7db1">× REQUESTED→INFLIGHT→COMPLETED</text>
+    <rect x="566" y="274" width="468" height="40" rx="8" fill="#f3f7fc" stroke="#cfe0f2"/><text x="800" y="291" font-weight="600" fill="#274a78">instant time 单调定序</text><text x="800" y="306" fill="#5b7db1">全序;文件片按 base instant 归位</text>
+    <rect x="566" y="322" width="468" height="40" rx="8" fill="#e7f0fb" stroke="#b9d2ef"/><text x="800" y="339" font-weight="600" fill="#1b2a4a">决定可见性/增量起点/回滚点</text><text x="800" y="354" fill="#5b7db1">只有 COMPLETED 的文件片可见</text>
+    <rect x="566" y="370" width="468" height="32" rx="8" fill="#fff" stroke="#bcd0ec"/><text x="800" y="390" fill="#5b7db1">不可变;过滤产新视图</text>
+  </g>
+
+  <!-- file organization + table type -->
+  <rect x="30" y="426" width="1020" height="76" rx="14" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="46" y="448" font-size="11" font-weight="700" fill="#12402a">文件组织 + 表类型(COW / MOR)</text>
+  <g text-anchor="middle" font-size="8.3">
+    <rect x="46" y="458" width="320" height="36" rx="7" fill="#eafaf1" stroke="#bfe0cd"/><text x="206" y="475" fill="#12402a">FileGroup → FileSlice(base + log)</text><text x="206" y="489" fill="#2f6f4f">upsert 路由单元 · 按 commit 分版本</text>
+    <rect x="376" y="458" width="320" height="36" rx="7" fill="#e6f7ee" stroke="#bfe0cd"/><text x="536" y="475" fill="#12402a">COW:重写文件(写慢读快)</text><text x="536" y="489" fill="#2f6f4f">slice 只有 base</text>
+    <rect x="706" y="458" width="328" height="36" rx="7" fill="#fdf6ea" stroke="#efdcb4"/><text x="870" y="475" fill="#5a3410">MOR:写 log(写快读时合并)</text><text x="870" y="489" fill="#93762e">slice = base + log,需 compaction</text>
+  </g>
+
+  <!-- table services -->
+  <rect x="30" y="516" width="1020" height="52" rx="14" fill="#faf4fb" stroke="#e2d2ee"/>
+  <text x="46" y="538" font-size="11" font-weight="700" fill="#5a3d78">表服务(后台) + 并发控制</text>
+  <text x="46" y="558" font-size="8.8" fill="#7a5a95">compaction(合 log 进 base)· cleaning(清旧 slice,KEEP_LATEST_COMMITS)· clustering(重排)· OCC 乐观并发((partition,fileId) 交集检测冲突)+ 锁 provider</text>
+
+  <!-- storage -->
+  <rect x="30" y="582" width="1020" height="50" rx="14" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="46" y="604" font-size="11" font-weight="700" fill="#5a3410">数据文件(对象存储/HDFS)· base file(parquet)+ log file(avro/parquet block)</text>
+  <text x="46" y="622" font-size="8.5" fill="#93762e">MOR 读时 HoodieMergedLogRecordReader 合并 base + log;Hudi 不执行查询,由计算引擎读</text>
+
+  <!-- flow arrows -->
+  <line x1="540" y1="110" x2="540" y2="124" stroke="#86868b" stroke-width="1.6" marker-end="url(#ar)"/>
+  <line x1="540" y1="168" x2="540" y2="182" stroke="#86868b" stroke-width="1.4" marker-end="url(#ar)"/>
+  <line x1="530" y1="290" x2="550" y2="290" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="540" y1="412" x2="540" y2="426" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="540" y1="568" x2="540" y2="582" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+
+  <!-- semantics + pervasive -->
+  <rect x="30" y="646" width="1020" height="52" rx="12" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="46" y="668" font-size="11" font-weight="700" fill="#1d1d1f">位置即语义</text>
+  <text x="46" y="688" font-size="8.8" fill="#6e6e73">上=引擎(外部)+表 API;中左=写入索引路由;中右=时间线(核心真相);中=文件组织+表类型;下=表服务+并发;底=数据文件。Hudi 只管元数据+写读逻辑。</text>
+
+  <rect x="30" y="710" width="1020" height="44" rx="12" fill="#f0f0f4" stroke="#d2d2d7"/>
+  <text x="540" y="737" font-size="10" font-weight="700" text-anchor="middle" fill="#48484a">贯穿层 · instant time(单调时间戳)—— 时间线/文件片/MoR 合并都按 instant 序,横切时间线/存储/读合并</text>
+</svg>

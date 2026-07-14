@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="620" viewBox="0 0 1080 620" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="620" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Trino 下推 · applyFilter/applyProjection 迭代下推给连接器</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">优化器通过 ConnectorMetadata 的 apply* 把计算下推;能推多少由连接器实现决定,返回"已推部分+剩余部分"</text>
+
+  <!-- flow: optimizer <-> connector -->
+  <rect x="30" y="72" width="500" height="220" rx="13" fill="#f3f7fc" stroke="#cfe0f2"/>
+  <text x="46" y="94" font-size="11" font-weight="700" fill="#274a78">Trino 侧（优化器）</text>
+  <rect x="50" y="106" width="460" height="40" rx="9" fill="#eef3fb" stroke="#bcd0ec"/><text x="64" y="130" font-size="9" fill="#1b2a4a">看到 Filter/Project/Aggregation/Limit/TopN/Join 在 TableScan 之上</text>
+  <rect x="50" y="154" width="460" height="60" rx="9" fill="#fff" stroke="#cfe0f2"/><text x="64" y="174" font-size="9" font-weight="600" fill="#274a78">调用 ConnectorMetadata.apply*：</text><text x="64" y="192" font-size="8.5" fill="#5b7db1">applyFilter / applyProjection / applyAggregation</text><text x="64" y="207" font-size="8.5" fill="#5b7db1">applyLimit / applyTopN / applyJoin / applyTableScanRedirect</text>
+  <rect x="50" y="222" width="460" height="60" rx="9" fill="#eafaf1" stroke="#bfe0cd"/><text x="64" y="242" font-size="9" font-weight="600" fill="#12402a">迭代下推契约：</text><text x="64" y="260" font-size="8.5" fill="#2f6f4f">返回 {新 TableHandle(已下推部分), 剩余表达式}</text><text x="64" y="275" font-size="8.5" fill="#2f6f4f">Trino 只处理"剩余",可再次尝试下推</text>
+
+  <rect x="550" y="72" width="500" height="220" rx="13" fill="#fff7e6" stroke="#e8cf9a"/>
+  <text x="566" y="94" font-size="11" font-weight="700" fill="#5a3410">连接器侧（数据源）</text>
+  <rect x="570" y="106" width="460" height="76" rx="9" fill="#fdf6ea" stroke="#e8cf9a"/><text x="584" y="126" font-size="9" font-weight="600" fill="#5a3410">连接器决定"能吃下多少"：</text><text x="584" y="144" font-size="8.5" fill="#93762e">JDBC 连接器：filter → SQL WHERE、agg → GROUP BY 下发给库</text><text x="584" y="160" font-size="8.5" fill="#93762e">Hive/Iceberg：filter → 分区裁剪 + 文件 min/max 跳过</text><text x="584" y="176" font-size="8.5" fill="#93762e">不支持的部分原样退回,由 Trino 侧算</text>
+  <rect x="570" y="190" width="460" height="42" rx="9" fill="#fff" stroke="#e8cf9a"/><text x="584" y="210" font-size="9" fill="#5a3410">TableHandle 是连接器私有的不透明句柄</text><text x="584" y="225" font-size="8.5" fill="#93762e">下推信息累积其中,PageSource 读时按它裁剪数据</text>
+  <rect x="570" y="240" width="460" height="42" rx="9" fill="#eafaf1" stroke="#bfe0cd"/><text x="584" y="260" font-size="9" font-weight="600" fill="#12402a">效果：数据源侧就把数据量降下来</text><text x="584" y="275" font-size="8.5" fill="#2f6f4f">→ 少读、少传、少算,联邦查询省带宽的核心</text>
+
+  <line x1="530" y1="184" x2="550" y2="144" stroke="#0a84ff" stroke-width="1.6" marker-end="url(#ar)"/><text x="540" y="130" text-anchor="middle" font-size="7.5" fill="#0a84ff">apply*</text>
+  <line x1="550" y1="230" x2="530" y2="252" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/><text x="540" y="270" text-anchor="middle" font-size="7.5" fill="#93762e">剩余</text>
+
+  <!-- example -->
+  <rect x="30" y="304" width="1020" height="150" rx="13" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="46" y="326" font-size="11" font-weight="700" fill="#2c5a3a">贯穿示例：orders 上的 WHERE o.day='2026-07-01'</text>
+  <g font-size="8.8" text-anchor="middle">
+    <rect x="60" y="340" width="220" height="90" rx="9" fill="#fff" stroke="#cfe6d5"/><text x="170" y="360" font-weight="600" fill="#2c5a3a">Hive 连接器</text><text x="170" y="380" fill="#2f6f4f">day 是分区列</text><text x="170" y="398" fill="#2f6f4f">→ 只列该分区目录的文件</text><text x="170" y="416" fill="#2f6f4f">applyFilter 全吃,剩余为空</text>
+    <rect x="300" y="340" width="220" height="90" rx="9" fill="#fff" stroke="#cfe6d5"/><text x="410" y="360" font-weight="600" fill="#2c5a3a">Iceberg 连接器</text><text x="410" y="380" fill="#2f6f4f">按 manifest/分区规约裁剪</text><text x="410" y="398" fill="#2f6f4f">+ 文件级列统计跳过</text><text x="410" y="416" fill="#2f6f4f">applyFilter 大部吃下</text>
+    <rect x="540" y="340" width="220" height="90" rx="9" fill="#fff" stroke="#cfe6d5"/><text x="650" y="360" font-weight="600" fill="#2c5a3a">JDBC(MySQL) 连接器</text><text x="650" y="380" fill="#2f6f4f">filter → SQL WHERE day=…</text><text x="650" y="398" fill="#2f6f4f">下发给库执行</text><text x="650" y="416" fill="#2f6f4f">Trino 只收结果集</text>
+    <rect x="780" y="340" width="250" height="90" rx="9" fill="#fdf6ea" stroke="#e8cf9a"/><text x="905" y="360" font-weight="600" fill="#5a3410">不支持下推的连接器</text><text x="905" y="380" fill="#93762e">applyFilter 返回空(推不动)</text><text x="905" y="398" fill="#93762e">→ 全量读进 Trino</text><text x="905" y="416" fill="#93762e">由 FilterOperator 侧过滤</text>
+  </g>
+
+  <rect x="30" y="466" width="1020" height="130" rx="13" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="46" y="488" font-size="11" font-weight="700" fill="#1d1d1f">要点</text>
+  <text x="46" y="510" font-size="9" fill="#6e6e73">· "能推多少"是连接器的自由：同一条 SQL,换连接器下推能力天差地别——这是"联邦"的代价与灵活性所在</text>
+  <text x="46" y="528" font-size="9" fill="#6e6e73">· 迭代性：apply* 可多轮(先推 filter 再推 limit…),每轮把"已消化"的从计划里摘掉</text>
+  <text x="46" y="546" font-size="9" fill="#6e6e73">· applyTableScanRedirect：连接器可把扫描重定向到另一个(如物化的)表——透明加速</text>
+  <text x="46" y="566" font-size="9" fill="#b1483a">归属：下推是【查询规划与优化】发起、【连接器框架】实现的协作;DDL/DML 也靠同样机制下推给连接器</text>
+  <text x="46" y="586" font-size="9" fill="#6e6e73">· 下推 vs 动态过滤：下推是"静态谓词"编译期推;动态过滤是"运行时值域"执行期推——两者叠加</text>
+</svg>

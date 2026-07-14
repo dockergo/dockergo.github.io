@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="430" viewBox="0 0 1020 430"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1020" height="430" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">WAL 与 Checkpoint · 先写日志求持久，后合并进单文件求整洁</text>
+
+  <!-- 写入 → WAL -->
+  <rect x="30" y="52" width="300" height="150" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="48" y="76" font-size="12" font-weight="600" fill="#1b2a4a">提交时追加 WAL</text>
+  <rect x="48" y="90" width="264" height="30" rx="7" fill="#ffffff" stroke="#bcd0ec"/><text x="180" y="110" font-size="9.5" fill="#1b2a4a" text-anchor="middle">WriteInsert（:505）</text>
+  <rect x="48" y="126" width="264" height="30" rx="7" fill="#ffffff" stroke="#bcd0ec"/><text x="180" y="146" font-size="9.5" fill="#1b2a4a" text-anchor="middle">WriteDelete（:528）</text>
+  <rect x="48" y="162" width="264" height="30" rx="7" fill="#ffffff" stroke="#bcd0ec"/><text x="180" y="182" font-size="9.5" fill="#1b2a4a" text-anchor="middle">WriteUpdate（:538）</text>
+
+  <!-- WAL 日志 -->
+  <rect x="380" y="52" width="260" height="150" rx="14" fill="#fff7e6" stroke="#f0dcae" filter="url(#soft)"/>
+  <text x="398" y="76" font-size="12" font-weight="600" fill="#7a4d00">WAL（追加日志）</text>
+  <rect x="398" y="90" width="224" height="18" rx="4" fill="#ffffff" stroke="#f0dcae"/><text x="510" y="103" font-size="8.5" fill="#9a7328" text-anchor="middle">entry: INSERT …</text>
+  <rect x="398" y="112" width="224" height="18" rx="4" fill="#ffffff" stroke="#f0dcae"/><text x="510" y="125" font-size="8.5" fill="#9a7328" text-anchor="middle">entry: UPDATE …</text>
+  <rect x="398" y="134" width="224" height="18" rx="4" fill="#ffffff" stroke="#f0dcae"/><text x="510" y="147" font-size="8.5" fill="#9a7328" text-anchor="middle">entry: DELETE …</text>
+  <text x="510" y="176" font-size="9.5" fill="#9a7328" text-anchor="middle">大小累积中…</text>
+  <text x="510" y="192" font-size="8.5" fill="#b8912e" text-anchor="middle">超 checkpoint_wal_size(16MB) 触发</text>
+
+  <!-- checkpoint -->
+  <rect x="690" y="52" width="300" height="150" rx="14" fill="#eafaf1" stroke="#bce6cd" filter="url(#soft)"/>
+  <text x="708" y="76" font-size="12" font-weight="600" fill="#0f5132">Checkpoint（合并）</text>
+  <text x="708" y="100" font-size="9.5" fill="#3f8f66">checkpoint_manager.cpp</text>
+  <rect x="708" y="112" width="264" height="26" rx="7" fill="#ffffff" stroke="#bce6cd"/><text x="840" y="130" font-size="9" fill="#0f5132" text-anchor="middle">① WAL 变更写入列存块</text>
+  <rect x="708" y="144" width="264" height="26" rx="7" fill="#ffffff" stroke="#bce6cd"/><text x="840" y="162" font-size="9" fill="#0f5132" text-anchor="middle">② 更新数据库头/元数据</text>
+  <rect x="708" y="176" width="264" height="20" rx="7" fill="#ffffff" stroke="#bce6cd"/><text x="840" y="191" font-size="9" fill="#0f5132" text-anchor="middle">③ 截断 WAL</text>
+
+  <line x1="330" y1="127" x2="380" y2="127" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+  <line x1="640" y1="127" x2="690" y2="127" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+
+  <!-- 单文件布局 -->
+  <rect x="30" y="222" width="600" height="180" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="48" y="246" font-size="12.5" font-weight="600" fill="#1d1d1f">单文件数据库布局</text>
+  <rect x="48" y="262" width="560" height="34" rx="8" fill="#f6f6f8" stroke="#e2e2e7"/><text x="328" y="284" font-size="10" fill="#494950" text-anchor="middle">Header（数据库头：块数、block_alloc_size、指向 Catalog/根）</text>
+  <rect x="48" y="304" width="270" height="40" rx="8" fill="#fff7e6" stroke="#f0dcae"/><text x="183" y="329" font-size="10" fill="#7a4d00" text-anchor="middle">Block 区（256KB/块，列存 RowGroup）</text>
+  <rect x="330" y="304" width="278" height="40" rx="8" fill="#eef3fb" stroke="#bcd0ec"/><text x="469" y="329" font-size="10" fill="#1b2a4a" text-anchor="middle">Metadata / Catalog 序列化</text>
+  <rect x="48" y="352" width="560" height="36" rx="8" fill="#eafaf1" stroke="#bce6cd"/><text x="328" y="375" font-size="10" fill="#0f5132" text-anchor="middle">.wal 旁路文件（checkpoint 后清空）　·　:memory: 模式则无文件</text>
+
+  <!-- 恢复 -->
+  <rect x="660" y="222" width="330" height="180" rx="14" fill="#fbeaea" stroke="#f0cccc" filter="url(#soft)"/>
+  <text x="678" y="246" font-size="12.5" font-weight="600" fill="#7d1f1f">重启恢复（wal_replay.cpp）</text>
+  <rect x="678" y="262" width="294" height="34" rx="8" fill="#ffffff" stroke="#f0cccc"/><text x="825" y="284" font-size="9.5" fill="#7d1f1f" text-anchor="middle">① 打开单文件，读 Header/Catalog</text>
+  <rect x="678" y="304" width="294" height="34" rx="8" fill="#ffffff" stroke="#f0cccc"/><text x="825" y="326" font-size="9.5" fill="#7d1f1f" text-anchor="middle">② 回放 .wal 里未 checkpoint 的变更</text>
+  <rect x="678" y="346" width="294" height="42" rx="8" fill="#fdf2f2" stroke="#f0cccc"/><text x="825" y="368" font-size="9.5" fill="#7d1f1f" text-anchor="middle">③ 恢复到崩溃前已提交状态</text>
+  <text x="825" y="383" font-size="8.5" fill="#b06a6a" text-anchor="middle">WAL 越大回放越慢 → 及时 checkpoint</text>
+</svg>

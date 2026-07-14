@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="540" viewBox="0 0 1080 540" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="540" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">RocksDB 写停顿 · 背压保护 LSM 形状（负反馈闸门）</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">写入超过 Flush/Compaction 消化速度时,WriteController 减速/停写,等后台追上——防 L0 暴涨读崩</text>
+
+  <!-- feedback loop -->
+  <rect x="30" y="70" width="1020" height="150" rx="13" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="46" y="92" font-size="11.5" font-weight="700" fill="#1b2a4a">负反馈闸门:观测积压 → 施加限速 → 缩小误差</text>
+  <g font-size="8.8" text-anchor="middle">
+    <rect x="60" y="106" width="220" height="90" rx="9" fill="#f3f7fc" stroke="#cfe0f2"/><text x="170" y="128" font-weight="600" fill="#274a78">观测量(积压深度)</text><text x="170" y="148" fill="#5b7db1">· 未 flush 的 immutable 数</text><text x="170" y="164" fill="#5b7db1">· L0 文件数</text><text x="170" y="180" fill="#5b7db1">· 待 compact 字节(pending)</text>
+    <rect x="410" y="106" width="220" height="90" rx="9" fill="#fff7e6" stroke="#e8cf9a"/><text x="520" y="128" font-weight="600" fill="#5a3410">动作(WriteController)</text><text x="520" y="148" fill="#93762e">· 逼近阈值 → delay(降速率)</text><text x="520" y="164" fill="#93762e">· 超上限 → stop(完全停写)</text><text x="520" y="180" fill="#93762e">令牌桶控制写速率</text>
+    <rect x="760" y="106" width="230" height="90" rx="9" fill="#eafaf1" stroke="#bfe0cd"/><text x="875" y="128" font-weight="600" fill="#12402a">缩误差(等后台追上)</text><text x="875" y="148" fill="#2f6f4f">Flush 消化 immutable</text><text x="875" y="164" fill="#2f6f4f">Compaction 消化 L0</text><text x="875" y="180" fill="#2f6f4f">积压降 → 解除限速</text>
+  </g>
+  <line x1="280" y1="151" x2="410" y2="151" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+  <line x1="630" y1="151" x2="760" y2="151" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+  <path d="M875,196 C875,232 170,232 170,196" fill="none" stroke="#c7c7cc" stroke-width="1.2" stroke-dasharray="4 3" marker-end="url(#ar)"/>
+  <text x="520" y="228" text-anchor="middle" font-size="8" fill="#a1a1a6">闭环:积压回落 → 观测量下降 → 松闸</text>
+
+  <!-- triggers table -->
+  <rect x="30" y="248" width="1020" height="140" rx="13" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="46" y="270" font-size="11" font-weight="700" fill="#1d1d1f">触发阈值（CF Options）</text>
+  <g font-size="8.8">
+    <rect x="46" y="282" width="490" height="44" rx="8" fill="#fff7e6" stroke="#e8cf9a"/><text x="60" y="302" font-weight="600" fill="#5a3410">level0_slowdown_writes_trigger</text><text x="60" y="318" fill="#93762e">L0 文件数达此 → 减速写(平滑降速,不硬停)</text>
+    <rect x="546" y="282" width="490" height="44" rx="8" fill="#ffecec" stroke="#e0a0a0"/><text x="560" y="302" font-weight="600" fill="#b1483a">level0_stop_writes_trigger</text><text x="560" y="318" fill="#b1483a">L0 文件数达此 → 完全停写,直到 Compaction 降下来</text>
+    <rect x="46" y="332" width="490" height="44" rx="8" fill="#fff7e6" stroke="#e8cf9a"/><text x="60" y="352" font-weight="600" fill="#5a3410">max_write_buffer_number</text><text x="60" y="368" fill="#93762e">immutable 堆到上限且都没 flush 完 → 停写</text>
+    <rect x="546" y="332" width="490" height="44" rx="8" fill="#fff7e6" stroke="#e8cf9a"/><text x="560" y="352" font-weight="600" fill="#5a3410">soft/hard_pending_compaction_bytes_limit</text><text x="560" y="368" fill="#93762e">待 compact 字节超软限减速、超硬限停写</text>
+  </g>
+
+  <!-- why + notes -->
+  <rect x="30" y="404" width="1020" height="120" rx="13" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="46" y="426" font-size="11" font-weight="700" fill="#2c5a3a">为什么必须有写停顿</text>
+  <text x="46" y="448" font-size="9" fill="#2f6f4f">· 若放任写入超过后台消化:L0 文件无限堆积 → 读一个 key 要查几十上百个 L0 文件 → 读性能雪崩</text>
+  <text x="46" y="466" font-size="9" fill="#2f6f4f">· 写停顿是"以暂时的写延迟,换持续的读写平衡";宁可写慢一点,不让 LSM 形状崩坏</text>
+  <text x="46" y="484" font-size="9" fill="#2f6f4f">· 调优:频繁 stall 说明后台跟不上 → 增大 max_background_jobs、调大 write_buffer_size、放宽 L0 触发阈值、用更快的盘</text>
+  <text x="46" y="504" font-size="9" fill="#b1483a">· 观测:DB 属性 rocksdb.is-write-stopped / actual-delayed-write-rate;日志会打印 stall 原因。归属:阈值属写侧,消化在【Flush】【Compaction】</text>
+</svg>

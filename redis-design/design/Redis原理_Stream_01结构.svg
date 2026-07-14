@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="450" viewBox="0 0 1000 450" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1000" height="450" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">Stream 结构：append-only 日志，rax 基数树存储（t_stream.c）</text>
+  <text x="30" y="49" font-size="10.5" fill="#a1a1a6">消息 ID = 毫秒时间戳-序号，单调递增天然有序；历史保留可回溯</text>
+
+  <!-- append-only log -->
+  <text x="40" y="84" font-size="11" font-weight="700" fill="#7a5a1e">消息条目序列（新消息追加到尾部）</text>
+  <g text-anchor="middle" font-size="8.5">
+    <rect x="50" y="96" width="170" height="60" rx="8" fill="#fdf3e5" stroke="#f0d9b5" filter="url(#soft)"/>
+    <text x="135" y="114" fill="#7a5a1e" font-weight="600">1699…000-0</text><text x="135" y="130" fill="#b08535">order:1 amt:50</text><text x="135" y="146" fill="#c79a4e" font-size="7.5">ID + field-value</text>
+    <rect x="240" y="96" width="170" height="60" rx="8" fill="#fdf3e5" stroke="#f0d9b5" filter="url(#soft)"/>
+    <text x="325" y="114" fill="#7a5a1e" font-weight="600">1699…001-0</text><text x="325" y="130" fill="#b08535">order:2 amt:30</text>
+    <rect x="430" y="96" width="170" height="60" rx="8" fill="#fdf3e5" stroke="#f0d9b5" filter="url(#soft)"/>
+    <text x="515" y="114" fill="#7a5a1e" font-weight="600">1699…001-1</text><text x="515" y="130" fill="#b08535">order:3 amt:80</text><text x="515" y="146" fill="#c79a4e" font-size="7.5">同毫秒→序号+1</text>
+    <rect x="620" y="96" width="170" height="60" rx="8" fill="#eafaf1" stroke="#b8e6cd" filter="url(#soft)"/>
+    <text x="705" y="114" fill="#1c6b45" font-weight="600">1699…002-0</text><text x="705" y="130" fill="#3a9b6e">order:4 amt:20</text><text x="705" y="146" fill="#5cb88a" font-size="7.5">XADD 追加</text>
+  </g>
+  <line x1="220" y1="126" x2="238" y2="126" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="410" y1="126" x2="428" y2="126" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="600" y1="126" x2="618" y2="126" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <text x="850" y="120" font-size="9" fill="#3a9b6e">XADD s * f v</text>
+  <text x="850" y="136" font-size="9" fill="#3a9b6e">* = 自动 ID</text>
+  <text x="850" y="152" font-size="8" fill="#5cb88a">保证单调递增</text>
+
+  <!-- rax structure -->
+  <text x="40" y="192" font-size="11" font-weight="700" fill="#1b2a4a">底层：rax 基数树（以 ID 为 key，节点内 listpack 打包多条）</text>
+  <g text-anchor="middle" font-size="9">
+    <rect x="420" y="204" width="160" height="36" rx="7" fill="#eef3fb" stroke="#bcd0ec"/><text x="500" y="226" fill="#1b2a4a">rax 根（ID 前缀）</text>
+    <rect x="250" y="258" width="160" height="50" rx="7" fill="#fff" stroke="#bcd0ec"/><text x="330" y="278" fill="#1b2a4a">节点：listpack</text><text x="330" y="294" fill="#5b7db1" font-size="8">多条消息紧凑打包</text>
+    <rect x="590" y="258" width="160" height="50" rx="7" fill="#fff" stroke="#bcd0ec"/><text x="670" y="278" fill="#1b2a4a">节点：listpack</text><text x="670" y="294" fill="#5b7db1" font-size="8">多条消息紧凑打包</text>
+  </g>
+  <line x1="470" y1="240" x2="360" y2="256" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="530" y1="240" x2="640" y2="256" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <text x="500" y="326" font-size="9" fill="#8ba7cc" text-anchor="middle">前缀共享省内存 + 有序遍历（XRANGE 按 ID 区间读）</text>
+
+  <!-- read commands -->
+  <rect x="30" y="346" width="940" height="90" rx="10" fill="#f7f7f9" stroke="#ececef"/>
+  <text x="50" y="370" font-size="11" font-weight="600" fill="#1d1d1f">读取命令</text>
+  <text x="50" y="392" font-size="10" fill="#4a4a4f">· <tspan font-weight="600">XRANGE s - +</tspan>（按 ID 范围读，- 最小 + 最大）、XREVRANGE（倒序）、XLEN（条数）</text>
+  <text x="50" y="412" font-size="10" fill="#4a4a4f">· <tspan font-weight="600">XREAD COUNT 10 STREAMS s $</tspan>（从末尾之后读新消息），XREAD BLOCK 5000 阻塞等新消息（同 BLPOP 机制，不占线程）</text>
+  <text x="50" y="430" font-size="9" fill="#86868b">与 List 不同：读取不消费/不删除消息，历史一直可回溯（append-only 日志本质）</text>
+</svg>

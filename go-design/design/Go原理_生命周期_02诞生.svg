@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="490" viewBox="0 0 900 490" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+    <marker id="arG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#7ab48f"/>
+    </marker>
+  </defs>
+  <rect width="900" height="490" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">goroutine 诞生 · go f(args) → newproc → 入 runnext 快槽</text>
+  <text x="30" y="48" font-size="11" fill="#6e6e73">成本极低：多数时候只是「取复用 G + 拷参 + 无锁入本地队列」，无系统调用</text>
+
+  <!-- step 0: go statement -->
+  <rect x="30" y="72" width="230" height="58" rx="12" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="46" y="96" font-size="12.5" font-weight="600" fill="#1d1d1f">go f(args)</text>
+  <text x="46" y="116" font-size="10" fill="#6e6e73">编译成对 newproc 的调用</text>
+
+  <line x1="260" y1="101" x2="306" y2="101" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- newproc -> newproc1 -->
+  <rect x="308" y="72" width="270" height="58" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="324" y="96" font-size="12.5" font-weight="600" fill="#1b2a4a">newproc (proc.go:5334)</text>
+  <text x="324" y="116" font-size="10" fill="#5b7db1">→ newproc1 (proc.go:5352) 干实事</text>
+
+  <line x1="443" y1="130" x2="443" y2="158" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- step 1: gfget decision (green - 复用) -->
+  <rect x="30" y="160" width="548" height="96" rx="12" fill="#eef7f0" stroke="#bfe0c8" filter="url(#soft)"/>
+  <text x="46" y="183" font-size="12.5" font-weight="600" fill="#1d4a2b">① 取 G · 先从 P 的 gFree 空闲池复用（gfget）</text>
+  <rect x="46" y="194" width="248" height="50" rx="9" fill="#dcefe0" stroke="#a9d3b6"/>
+  <text x="170" y="214" font-size="10.5" font-weight="600" fill="#1d4a2b" text-anchor="middle">池非空 → 取一个 _Gdead 的 G</text>
+  <text x="170" y="232" font-size="9.5" fill="#4a8c60" text-anchor="middle">避免频繁分配，直接复用（含栈）</text>
+  <rect x="310" y="194" width="252" height="50" rx="9" fill="#ffffff" stroke="#bfe0c8"/>
+  <text x="436" y="214" font-size="10.5" font-weight="600" fill="#1d4a2b" text-anchor="middle">池空 → malg 新建 G + 分配初始栈</text>
+  <text x="436" y="232" font-size="9.5" fill="#4a8c60" text-anchor="middle">初始栈仅 2KB（见栈管理）</text>
+
+  <!-- G struct detail (right, amber - 存储) -->
+  <rect x="602" y="160" width="278" height="96" rx="12" fill="#fdf6ec" stroke="#f0dcaf" filter="url(#soft)"/>
+  <text x="618" y="183" font-size="11.5" font-weight="600" fill="#6b4e16">复用的 g 结构 + 栈</text>
+  <text x="618" y="203" font-size="10" fill="#a9822f">newproc 的多数成本 = 池化取还，</text>
+  <text x="618" y="220" font-size="10" fill="#a9822f">而非真正的分配/释放。</text>
+  <text x="618" y="240" font-size="9.5" fill="#a9822f">这是 goroutine 廉价的关键之一。</text>
+
+  <line x1="304" y1="256" x2="304" y2="284" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- step 2: setup -->
+  <rect x="30" y="286" width="548" height="90" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="46" y="309" font-size="12.5" font-weight="600" fill="#1b2a4a">② 初始化新 G</text>
+  <text x="46" y="330" font-size="10.5" fill="#5b7db1">设栈 · 拷贝参数到新栈 · 分配 goid</text>
+  <text x="46" y="349" font-size="10.5" fill="#5b7db1">设 gobuf：sp/pc 指向 goexit 的调用点</text>
+  <text x="46" y="367" font-size="9.5" fill="#5b7db1">→ 使 f 返回后自动进入 goexit（预埋返回地址）· 置 _Grunnable</text>
+
+  <line x1="304" y1="376" x2="304" y2="404" stroke="#7ab48f" stroke-width="1.5" marker-end="url(#arG)"/>
+
+  <!-- step 3: runqput -->
+  <rect x="30" y="406" width="548" height="72" rx="12" fill="#eef7f0" stroke="#bfe0c8" filter="url(#soft)"/>
+  <text x="46" y="429" font-size="12.5" font-weight="600" fill="#1d4a2b">③ runqput(pp, newg, next=true) · 放进当前 P 的 runnext 快槽</text>
+  <text x="46" y="450" font-size="10.5" fill="#4a8c60">利用局部性 —— 新 G 大概率马上被同一 P 跑（本地队列无锁）</text>
+  <text x="46" y="468" font-size="9.5" fill="#4a8c60">runnext 优先级高于本地 runq，紧接着就被 schedule 选中</text>
+
+  <!-- step 4: wakep (right, blue) -->
+  <rect x="602" y="286" width="278" height="192" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="618" y="309" font-size="12.5" font-weight="600" fill="#1b2a4a">④ wakep()</text>
+  <text x="618" y="331" font-size="10.5" fill="#5b7db1">若有空闲 P 且无自旋 M，</text>
+  <text x="618" y="348" font-size="10.5" fill="#5b7db1">唤醒 / 新建一个 M 来跑，</text>
+  <text x="618" y="365" font-size="10.5" fill="#5b7db1">提高并行度。</text>
+  <line x1="618" y1="384" x2="864" y2="384" stroke="#bcd0ec" stroke-width="1"/>
+  <text x="618" y="406" font-size="10.5" font-weight="600" fill="#1b2a4a">诞生即 _Grunnable</text>
+  <text x="618" y="427" font-size="10" fill="#5b7db1">此后交给 GMP 调度选中执行，</text>
+  <text x="618" y="444" font-size="10" fill="#5b7db1">转入 _Grunning（见状态机图）。</text>
+  <text x="618" y="465" font-size="9.5" fill="#5b7db1">main goroutine 是特例：goid=1。</text>
+</svg>

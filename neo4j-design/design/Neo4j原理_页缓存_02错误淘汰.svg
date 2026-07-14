@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="512" viewBox="0 0 1080 512"
+     font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1080" height="512" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Neo4j 页错误与后台淘汰</text>
+  <text x="30" y="52" font-size="11.5" fill="#a1a1a6">访问不在内存的页触发页错误从盘加载(类比 OS 缺页);内存满时后台 eviction 淘汰冷页(脏页先刷盘);检查点强制刷所有脏页建持久点</text>
+
+  <!-- 上:页错误 page fault -->
+  <text x="40" y="86" font-size="12" font-weight="600" fill="#1d1d1f">页错误 page fault · PageFaultEvent · 类比 OS 缺页</text>
+
+  <rect x="40" y="100" width="230" height="96" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="56" y="128" font-size="11.5" font-weight="600" fill="#1b2a4a">访问某页</text>
+  <text x="56" y="152" font-size="10.5" fill="#274a78">按 id 定位到页</text>
+  <text x="56" y="175" font-size="10.5" fill="#274a78">页不在内存 &#8594; 未命中</text>
+
+  <rect x="330" y="100" width="230" height="96" rx="13" fill="#fbeaea" stroke="#e7c3c3" filter="url(#soft)"/>
+  <text x="346" y="128" font-size="11.5" font-weight="600" fill="#4a1414">触发 PageFaultEvent</text>
+  <text x="346" y="152" font-size="10.5" fill="#7a2a2a">从磁盘加载该页</text>
+  <text x="346" y="175" font-size="10.5" fill="#7a2a2a">载入空闲 / 被淘汰的页帧</text>
+
+  <rect x="620" y="100" width="230" height="96" rx="13" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="636" y="128" font-size="11.5" font-weight="600" fill="#12402a">页进内存</text>
+  <text x="636" y="152" font-size="10.5" fill="#2f6f4f">此后命中接近内存速度</text>
+  <text x="636" y="175" font-size="10.5" fill="#2f6f4f">冷记录按需从盘加载</text>
+
+  <path d="M270,148 L330,148" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="300" y="141" font-size="8.5" fill="#a1a1a6" text-anchor="middle">未命中</text>
+  <path d="M560,148 L620,148" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="590" y="141" font-size="8.5" fill="#a1a1a6" text-anchor="middle">加载完</text>
+
+  <rect x="880" y="100" width="160" height="96" rx="13" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="960" y="128" font-size="10.5" font-weight="600" fill="#1d1d1f" text-anchor="middle">记录直读磁盘?</text>
+  <text x="960" y="152" font-size="9.5" fill="#7a2a2a" text-anchor="middle">否 — 都经页缓存</text>
+  <text x="960" y="174" font-size="9.5" fill="#6e6e73" text-anchor="middle">命中内存 / 缺页加载</text>
+
+  <!-- 中:后台淘汰 eviction -->
+  <text x="40" y="234" font-size="12" font-weight="600" fill="#1d1d1f">后台淘汰 eviction · EvictionRunEvent / AsyncEvictionStatus · 内存满时</text>
+
+  <rect x="40" y="248" width="230" height="106" rx="13" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="56" y="276" font-size="11.5" font-weight="600" fill="#5a3410">后台线程选冷页</text>
+  <text x="56" y="300" font-size="10.5" fill="#93762e">按策略(LRU 式)淘汰</text>
+  <text x="56" y="323" font-size="10.5" fill="#93762e">热数据留内存</text>
+  <text x="56" y="344" font-size="10.5" fill="#93762e">冷数据让位</text>
+
+  <rect x="330" y="248" width="230" height="106" rx="13" fill="#fbeaea" stroke="#e7c3c3" filter="url(#soft)"/>
+  <text x="346" y="276" font-size="11.5" font-weight="600" fill="#4a1414">脏页?先刷盘</text>
+  <text x="346" y="300" font-size="10.5" fill="#7a2a2a">被修改的页标记为脏</text>
+  <text x="346" y="323" font-size="10.5" fill="#7a2a2a">淘汰前先刷回磁盘</text>
+  <text x="346" y="344" font-size="10.5" fill="#7a2a2a">再释放页帧</text>
+
+  <rect x="620" y="248" width="230" height="106" rx="13" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="636" y="276" font-size="11.5" font-weight="600" fill="#12402a">释放页帧</text>
+  <text x="636" y="300" font-size="10.5" fill="#2f6f4f">腾出帧供新页载入</text>
+  <text x="636" y="323" font-size="10.5" fill="#2f6f4f">净页可直接丢弃</text>
+  <text x="636" y="344" font-size="10.5" fill="#2f6f4f">脏页刷后再丢</text>
+
+  <path d="M270,301 L330,301" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M560,301 L620,301" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <rect x="880" y="248" width="160" height="106" rx="13" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="960" y="276" font-size="10.5" font-weight="600" fill="#1d1d1f" text-anchor="middle">脏页立即刷?</text>
+  <text x="960" y="300" font-size="9.5" fill="#7a2a2a" text-anchor="middle">否 — 延迟刷</text>
+  <text x="960" y="322" font-size="9.5" fill="#6e6e73" text-anchor="middle">批量顺序刷更快</text>
+  <text x="960" y="342" font-size="9.5" fill="#6e6e73" text-anchor="middle">WAL 已保证持久</text>
+
+  <!-- 底:检查点强制刷 -->
+  <rect x="40" y="378" width="1000" height="72" rx="13" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="56" y="406" font-size="12" font-weight="600" fill="#3d2a5a">检查点强制刷所有脏页</text>
+  <text x="56" y="431" font-size="10.5" fill="#6b5590">检查点(见事务篇)强制刷回所有脏页,建立一致的持久点;IOController 节流防打满磁盘影响前台</text>
+
+  <text x="40" y="482" font-size="9.5" fill="#a1a1a6">为什么堆外 + 自管淘汰:图数据量常远超堆大小,自管堆外内存 + LRU 淘汰,把"哪些页留内存"的决策握在手里。</text>
+</svg>

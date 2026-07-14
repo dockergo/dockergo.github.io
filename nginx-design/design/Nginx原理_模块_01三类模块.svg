@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="450" viewBox="0 0 1020 450"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1020" height="450" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">三类 HTTP 模块 · handler 产内容 / filter 加工 / upstream 转后端</text>
+
+  <!-- handler -->
+  <rect x="30" y="56" width="310" height="200" rx="14" fill="#eafaf1" stroke="#bce6cd" filter="url(#soft)"/>
+  <text x="48" y="80" font-size="12.5" font-weight="600" fill="#0f5132">① handler（内容生成器）</text>
+  <text x="48" y="104" font-size="10" fill="#3f8f66">挂在某 phase（多为 CONTENT），</text>
+  <text x="48" y="120" font-size="10" fill="#3f8f66">直接产生响应。</text>
+  <rect x="48" y="132" width="274" height="34" rx="8" fill="#ffffff" stroke="#bce6cd"/><text x="185" y="154" font-size="9.5" fill="#0f5132" text-anchor="middle">static（root/index 读文件）</text>
+  <rect x="48" y="172" width="274" height="34" rx="8" fill="#ffffff" stroke="#bce6cd"/><text x="185" y="194" font-size="9.5" fill="#0f5132" text-anchor="middle">autoindex / return / echo</text>
+  <text x="48" y="230" font-size="9" fill="#5aa06f">一个请求的 CONTENT 阶段只选一个 handler</text>
+
+  <!-- filter -->
+  <rect x="360" y="56" width="310" height="200" rx="14" fill="#f4eefb" stroke="#d9c9ef" filter="url(#soft)"/>
+  <text x="378" y="80" font-size="12.5" font-weight="600" fill="#3c1361">② filter（响应加工链）</text>
+  <text x="378" y="104" font-size="10" fill="#7a5aa8">不产内容，改 header/body；</text>
+  <text x="378" y="120" font-size="10" fill="#7a5aa8">串成责任链，逐级调 next。</text>
+  <rect x="378" y="132" width="274" height="34" rx="8" fill="#ffffff" stroke="#d9c9ef"/><text x="515" y="154" font-size="9.5" fill="#3c1361" text-anchor="middle">header filter：gzip / headers</text>
+  <rect x="378" y="172" width="274" height="34" rx="8" fill="#ffffff" stroke="#d9c9ef"/><text x="515" y="194" font-size="9.5" fill="#3c1361" text-anchor="middle">body filter：gzip / chunked / ssi</text>
+  <text x="378" y="230" font-size="9" fill="#a58fc9">可多个叠加，顺序由注册决定</text>
+
+  <!-- upstream -->
+  <rect x="690" y="56" width="300" height="200" rx="14" fill="#fff7e6" stroke="#f0dcae" filter="url(#soft)"/>
+  <text x="708" y="80" font-size="12.5" font-weight="600" fill="#7a4d00">③ upstream（后端代理）</text>
+  <text x="708" y="104" font-size="10" fill="#9a7328">特殊 content handler，把请求</text>
+  <text x="708" y="120" font-size="10" fill="#9a7328">转给后端并回传响应。</text>
+  <rect x="708" y="132" width="264" height="34" rx="8" fill="#ffffff" stroke="#f0dcae"/><text x="840" y="154" font-size="9.5" fill="#7a4d00" text-anchor="middle">proxy / fastcgi / uwsgi / grpc</text>
+  <rect x="708" y="172" width="264" height="34" rx="8" fill="#ffffff" stroke="#f0dcae"/><text x="840" y="194" font-size="9.5" fill="#7a4d00" text-anchor="middle">配 upstream{} 做负载均衡</text>
+  <text x="708" y="230" font-size="9" fill="#b8912e">见"upstream 负载均衡"篇</text>
+
+  <!-- filter 链细节 -->
+  <rect x="30" y="272" width="960" height="164" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="48" y="296" font-size="12.5" font-weight="600" fill="#1d1d1f">filter 链的构建：LIFO 注册（gzip_filter_module.c:214）</text>
+  <text x="48" y="318" font-size="9.5" fill="#494950">每个 filter 在 postconfiguration 时把全局链头存进自己的 next 指针，再把自己设为新链头——后注册的先执行。</text>
+
+  <rect x="48" y="334" width="150" height="80" rx="10" fill="#f4eefb" stroke="#d9c9ef"/><text x="123" y="360" font-size="9.5" font-weight="600" fill="#3c1361" text-anchor="middle">top（最后注册）</text><text x="123" y="380" font-size="8.5" fill="#7a5aa8" text-anchor="middle">如 gzip</text><text x="123" y="396" font-size="8" fill="#a58fc9" text-anchor="middle">ngx_http_top_body_filter</text>
+  <rect x="242" y="334" width="150" height="80" rx="10" fill="#f4eefb" stroke="#d9c9ef"/><text x="317" y="360" font-size="9.5" font-weight="600" fill="#3c1361" text-anchor="middle">…中间 filter…</text><text x="317" y="380" font-size="8.5" fill="#7a5aa8" text-anchor="middle">chunked / ssi</text>
+  <rect x="436" y="334" width="150" height="80" rx="10" fill="#f4eefb" stroke="#d9c9ef"/><text x="511" y="360" font-size="9.5" font-weight="600" fill="#3c1361" text-anchor="middle">…</text><text x="511" y="380" font-size="8.5" fill="#7a5aa8" text-anchor="middle">next → next</text>
+  <rect x="630" y="334" width="150" height="80" rx="10" fill="#eafaf1" stroke="#bce6cd"/><text x="705" y="360" font-size="9.5" font-weight="600" fill="#0f5132" text-anchor="middle">writer filter</text><text x="705" y="380" font-size="8.5" fill="#3f8f66" text-anchor="middle">链尾：真正写 socket</text>
+  <rect x="824" y="334" width="146" height="80" rx="10" fill="#f6f6f8" stroke="#e2e2e7"/><text x="897" y="360" font-size="9.5" font-weight="600" fill="#494950" text-anchor="middle">调用方向</text><text x="897" y="380" font-size="8.5" fill="#6a6a70" text-anchor="middle">每个处理后调 next</text>
+  <line x1="198" y1="374" x2="242" y2="374" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="392" y1="374" x2="436" y2="374" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="586" y1="374" x2="630" y2="374" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+</svg>

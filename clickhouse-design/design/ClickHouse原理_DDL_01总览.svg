@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="600" viewBox="0 0 1060 600" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1060" height="600" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">DDL 生命周期：SQL 文本 → 造存储对象 → 落 .sql 元数据（CREATE 不写数据）</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">InterpreterCreateQuery::doCreateTable (InterpreterCreateQuery.cpp:1763)</text>
+
+  <g text-anchor="middle">
+    <rect x="40" y="90" width="150" height="70" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/><text x="115" y="118" font-size="11" font-weight="600" fill="#1b2a4a">Parser</text><text x="115" y="136" font-size="8.5" fill="#5b7db1">CREATE TABLE AST</text><text x="115" y="150" font-size="8.5" fill="#5b7db1">ASTCreateQuery</text>
+
+    <rect x="230" y="90" width="170" height="70" rx="12" fill="#f3f7fc" stroke="#cfe0f2" filter="url(#soft)"/><text x="315" y="114" font-size="11" font-weight="600" fill="#274a78">doCreateTable</text><text x="315" y="132" font-size="8.5" fill="#5b7db1">解析库 · assertOrSetUUID</text><text x="315" y="146" font-size="8.5" fill="#5b7db1">:1798-1799</text>
+
+    <rect x="440" y="90" width="180" height="70" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/><text x="530" y="114" font-size="11" font-weight="600" fill="#12402a">StorageFactory::get</text><text x="530" y="132" font-size="8.5" fill="#2f6f4f">按 ENGINE= 造存储对象</text><text x="530" y="146" font-size="8.5" fill="#2f6f4f">:1955</text>
+
+    <rect x="660" y="90" width="180" height="70" rx="12" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/><text x="750" y="114" font-size="11" font-weight="600" fill="#5a3410">database→createTable</text><text x="750" y="132" font-size="8.5" fill="#93762e">持久化 .sql 元数据</text><text x="750" y="146" font-size="8.5" fill="#93762e">:2019</text>
+
+    <rect x="880" y="90" width="140" height="70" rx="12" fill="#f6f2fb" stroke="#d9c9ec" filter="url(#soft)"/><text x="950" y="114" font-size="11" font-weight="600" fill="#3d2a5a">startup()</text><text x="950" y="132" font-size="8.5" fill="#7a5da5">挂载 · 可用</text><text x="950" y="146" font-size="8.5" fill="#7a5da5">:2039</text>
+  </g>
+  <g stroke="#c7c7cc" stroke-width="1.5" fill="none">
+    <line x1="190" y1="125" x2="230" y2="125" marker-end="url(#ar)"/>
+    <line x1="400" y1="125" x2="440" y2="125" marker-end="url(#ar)"/>
+    <line x1="620" y1="125" x2="660" y2="125" marker-end="url(#ar)"/>
+    <line x1="840" y1="125" x2="880" y2="125" marker-end="url(#ar)"/>
+  </g>
+
+  <!-- what gets created on disk -->
+  <rect x="40" y="200" width="470" height="200" rx="13" fill="#fdf9f0" stroke="#efe3cd"/>
+  <text x="275" y="224" font-size="12" font-weight="700" fill="#7a5a1e" text-anchor="middle">磁盘上发生了什么（CREATE MergeTree 表）</text>
+  <g text-anchor="middle" font-size="8.5">
+    <rect x="64" y="238" width="200" height="60" rx="9" fill="#fff" stroke="#efdcb4"/><text x="164" y="258" font-size="9.5" font-weight="600" fill="#5a3410">元数据文件 .sql</text><text x="164" y="275" fill="#93762e">DatabaseOnDisk.cpp:626</text><text x="164" y="289" fill="#93762e">CREATE 语句原样存档</text>
+    <rect x="286" y="238" width="200" height="60" rx="9" fill="#fff" stroke="#efdcb4"/><text x="386" y="258" font-size="9.5" font-weight="600" fill="#5a3410">数据目录（空）</text><text x="386" y="275" fill="#93762e">store/&lt;uuid前3位&gt;/&lt;uuid&gt;/</text><text x="386" y="289" fill="#93762e">仅 createDirectories</text>
+    <rect x="64" y="310" width="422" height="70" rx="9" fill="#fbeef0" stroke="#f0cdd4"/><text x="275" y="332" font-size="10" font-weight="600" fill="#7a2230">✗ 没有任何 Part / 数据文件</text><text x="275" y="352" fill="#a44">MergeTreeData 构造只建目录 + 写 format_version.txt</text><text x="275" y="368" fill="#a44">MergeTreeData.cpp:403,440 · 直到第一次 INSERT 才有数据</text>
+  </g>
+
+  <!-- engine determines everything -->
+  <rect x="540" y="200" width="480" height="200" rx="13" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="780" y="224" font-size="12" font-weight="700" fill="#12402a" text-anchor="middle">ENGINE= 决定表的一切</text>
+  <g text-anchor="middle" font-size="8.5">
+    <rect x="562" y="238" width="132" height="54" rx="9" fill="#fff" stroke="#bfe0cd"/><text x="628" y="258" font-size="9.5" font-weight="600" fill="#12402a">MergeTree 族</text><text x="628" y="274" fill="#2f6f4f">列存/排序/merge</text><text x="628" y="287" fill="#2f6f4f">分析型主力</text>
+    <rect x="714" y="238" width="132" height="54" rx="9" fill="#fff" stroke="#bfe0cd"/><text x="780" y="258" font-size="9.5" font-weight="600" fill="#12402a">Log / Memory</text><text x="780" y="274" fill="#2f6f4f">小表/临时</text><text x="780" y="287" fill="#2f6f4f">无索引</text>
+    <rect x="866" y="238" width="132" height="54" rx="9" fill="#fff" stroke="#bfe0cd"/><text x="932" y="258" font-size="9.5" font-weight="600" fill="#12402a">Distributed</text><text x="932" y="274" fill="#2f6f4f">跨 shard 路由</text><text x="932" y="287" fill="#2f6f4f">不存数据</text>
+    <rect x="562" y="304" width="132" height="54" rx="9" fill="#fff" stroke="#bfe0cd"/><text x="628" y="324" font-size="9.5" font-weight="600" fill="#12402a">S3/File/URL</text><text x="628" y="340" fill="#2f6f4f">外部数据接入</text><text x="628" y="353" fill="#2f6f4f">湖仓旁路</text>
+    <rect x="714" y="304" width="132" height="54" rx="9" fill="#fff" stroke="#bfe0cd"/><text x="780" y="324" font-size="9.5" font-weight="600" fill="#12402a">Kafka</text><text x="780" y="340" fill="#2f6f4f">流式消费</text><text x="780" y="353" fill="#2f6f4f">配 MV 落地</text>
+    <rect x="866" y="304" width="132" height="54" rx="9" fill="#fff" stroke="#bfe0cd"/><text x="932" y="324" font-size="9.5" font-weight="600" fill="#12402a">Dictionary</text><text x="932" y="340" fill="#2f6f4f">KV 维表</text><text x="932" y="353" fill="#2f6f4f">点查/join</text>
+  </g>
+
+  <rect x="40" y="420" width="980" height="76" rx="12" fill="#f7f7f9" stroke="#e6e6ea"/>
+  <text x="60" y="444" font-size="11" font-weight="700" fill="#1d1d1f">一句话</text>
+  <text x="60" y="466" font-size="10" fill="#4b4b50">DDL 的核心是"注册元数据 + 选引擎"：CREATE 经 StorageFactory 按 ENGINE= 造出存储对象、把 CREATE 语句存进 .sql、</text>
+  <text x="60" y="483" font-size="10" fill="#4b4b50">建一个空数据目录——不写任何数据。表的存储/查询/复制行为全由 ENGINE= 决定，这是 ClickHouse 建表的灵魂。</text>
+</svg>

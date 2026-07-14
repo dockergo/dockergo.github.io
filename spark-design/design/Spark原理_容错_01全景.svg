@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="540" viewBox="0 0 1060 540" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs><filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter></defs>
+  <rect width="1060" height="540" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">容错全景：不靠副本/WAL/事务，靠"可重算性"（lineage）</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">RDD 不可变+血缘（RDD.scala:57 "Resilient...immutable"）· 丢分区沿血缘重算，不整体重跑</text>
+  <!-- core -->
+  <rect x="330" y="72" width="400" height="70" rx="13" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="530" y="98" font-size="12" font-weight="700" fill="#12402a" text-anchor="middle">基石：lineage 重算</text>
+  <text x="530" y="118" font-size="9" fill="#2f6f4f" text-anchor="middle">RDD 不可变 + 记录来路 → 丢哪个分区，按血缘只重算那一份</text>
+  <text x="530" y="134" font-size="8" fill="#4c8567" text-anchor="middle">不存副本、不写 WAL —— 这就是"弹性 Resilient"的本义</text>
+  <!-- 4 layers -->
+  <g text-anchor="middle">
+    <rect x="40" y="170" width="235" height="130" rx="13" fill="#eef3fb" stroke="#bcd0ec"/>
+    <text x="157" y="194" font-size="10.5" font-weight="700" fill="#1b2a4a">task 重试</text>
+    <text x="157" y="216" font-size="8.5" fill="#5b7db1">失败自动重试</text>
+    <text x="157" y="234" font-size="8.5" fill="#5b7db1">maxFailures 默认 4</text>
+    <text x="157" y="256" font-size="8" fill="#8aa6cf">应对瞬时故障</text>
+    <text x="157" y="276" font-size="8" fill="#8aa6cf">（网络抖动/临时问题）</text>
+    <rect x="285" y="170" width="235" height="130" rx="13" fill="#fdf6ea" stroke="#efdcb4"/>
+    <text x="402" y="194" font-size="10.5" font-weight="700" fill="#5a3410">推测执行</text>
+    <text x="402" y="216" font-size="8.5" fill="#93762e">慢 task 起备份</text>
+    <text x="402" y="234" font-size="8.5" fill="#93762e">先到先得，杀另一个</text>
+    <text x="402" y="256" font-size="8" fill="#b08843">治 straggler 长尾</text>
+    <text x="402" y="276" font-size="8" fill="#b08843">默认 false</text>
+    <rect x="530" y="170" width="235" height="130" rx="13" fill="#fbeef0" stroke="#f0cdd4"/>
+    <text x="647" y="194" font-size="10.5" font-weight="700" fill="#7a2230">FetchFailed 重跑</text>
+    <text x="647" y="216" font-size="8.5" fill="#a44">shuffle 输出丢</text>
+    <text x="647" y="234" font-size="8.5" fill="#a44">重跑产它的 map stage</text>
+    <text x="647" y="256" font-size="8" fill="#7a2230">非整 job 重跑</text>
+    <text x="647" y="276" font-size="8" fill="#7a2230">宽依赖处的容错</text>
+    <rect x="775" y="170" width="245" height="130" rx="13" fill="#f6f2fb" stroke="#d9c9ec"/>
+    <text x="897" y="194" font-size="10.5" font-weight="700" fill="#3d2a5a">checkpoint</text>
+    <text x="897" y="216" font-size="8.5" fill="#7a5da5">物化到 HDFS</text>
+    <text x="897" y="234" font-size="8.5" fill="#7a5da5">截断过长血缘</text>
+    <text x="897" y="256" font-size="8" fill="#9a7cc4">迭代算法必备</text>
+    <text x="897" y="276" font-size="8" fill="#9a7cc4">避免重算回溯到源头</text>
+  </g>
+  <rect x="40" y="320" width="980" height="110" rx="13" fill="#f3f7fc" stroke="#cfe0f2"/>
+  <text x="60" y="344" font-size="11" font-weight="700" fill="#274a78">与传统容错的对比</text>
+  <text x="60" y="368" font-size="9.5" fill="#5b7db1">· 传统 DB/存储：复制副本 + WAL + 事务 —— 用<tspan font-weight="600">冗余存储</tspan>换容错</text>
+  <text x="60" y="390" font-size="9.5" fill="#5b7db1">· Spark 批处理：不可变 + 血缘 —— 用<tspan font-weight="600">可重算性</tspan>换容错（省存储，代价是重算时间）</text>
+  <text x="60" y="412" font-size="9" fill="#8aa6cf">· 例外：Structured Streaming 有 checkpoint+WAL 保 exactly-once（见流式篇）；批处理默认无 WAL/副本</text>
+  <rect x="40" y="442" width="980" height="76" rx="12" fill="#f7f7f9" stroke="#e6e6ea"/>
+  <text x="60" y="466" font-size="11" font-weight="700" fill="#1d1d1f">一句话</text>
+  <text x="60" y="488" font-size="10" fill="#4b4b50">Spark 靠 RDD 不可变+lineage 实现容错——丢分区按血缘只重算那一份；叠加 task 重试、推测执行、</text>
+  <text x="60" y="506" font-size="10" fill="#4b4b50">FetchFailed 重跑 map stage、checkpoint 截断血缘四层保障。不存副本、不写 WAL，用"可重算"换"省存储"。</text>
+</svg>

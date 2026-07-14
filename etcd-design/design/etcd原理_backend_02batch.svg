@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="500" viewBox="0 0 1080 500" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs><filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+  <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker></defs>
+  <rect width="1080" height="500" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">批量提交：攒够 10000 条 或 到 100ms 才 fsync</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">backend.go: defaultBatchLimit=10000(:35) · defaultBatchInterval=100ms(:36) · batch_tx.go: pending≥limit→commit(:110)</text>
+  <g text-anchor="middle">
+    <rect x="60" y="82" width="240" height="80" rx="11" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/><text x="180" y="108" font-size="10" font-weight="700" fill="#5a3410">写进 batch（不落盘）</text><text x="180" y="128" font-size="8.5" fill="#93762e">UnsafePut → t.pending++</text><text x="180" y="146" font-size="8" fill="#b08843">数据先在内存 buffer</text>
+    <rect x="380" y="82" width="300" height="80" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/><text x="530" y="102" font-size="10" font-weight="700" fill="#1b2a4a">两个 commit 触发条件（任一）</text><text x="530" y="124" font-size="8.5" fill="#5b7db1">① pending ≥ 10000（攒够条数）</text><text x="530" y="142" font-size="8.5" fill="#5b7db1">② 距上次 ≥ 100ms（到点强制）</text>
+    <rect x="760" y="82" width="280" height="80" rx="11" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/><text x="900" y="108" font-size="10" font-weight="700" fill="#12402a">commit（一次 fsync 落全批）</text><text x="900" y="128" font-size="8.5" fill="#2f6f4f">bbolt tx.Commit → fsync</text><text x="900" y="146" font-size="8" fill="#4c8567">writeback 到读缓冲</text>
+  </g>
+  <g stroke="#c7c7cc" stroke-width="1.4" fill="none">
+    <line x1="300" y1="122" x2="380" y2="122" marker-end="url(#ar)"/>
+    <line x1="680" y1="122" x2="760" y2="122" marker-end="url(#ar)"/>
+  </g>
+  <rect x="60" y="188" width="470" height="130" rx="12" fill="#f3f7fc" stroke="#cfe0f2"/>
+  <text x="80" y="212" font-size="11" font-weight="700" fill="#274a78">摊薄 fsync 的效果</text>
+  <text x="80" y="234" font-size="9.5" fill="#5b7db1">· 无批量：10000 条 = 10000 次 fsync（每次 ms 级）→ 极慢</text>
+  <text x="80" y="254" font-size="9.5" fill="#5b7db1">· 批量：10000 条攒 1 个 bbolt 事务 = 1 次 fsync</text>
+  <text x="80" y="274" font-size="9.5" fill="#5b7db1">· 吞吐大幅提升，代价是单条写延迟略增（最多等 100ms 或凑满）</text>
+  <text x="80" y="296" font-size="9" fill="#8aa6cf">· UnsafeSeqPut 顺序写用 FillPercent=0.9 提高页填充</text>
+  <rect x="550" y="188" width="490" height="130" rx="12" fill="#fdf9f0" stroke="#efe3cd"/>
+  <text x="570" y="212" font-size="11" font-weight="700" fill="#7a5a1e">丢批安全性：WAL 兜底</text>
+  <text x="570" y="234" font-size="9.5" fill="#93762e">· backend 一批未 commit 前 crash → 这批未落盘写丢失</text>
+  <text x="570" y="254" font-size="9.5" fill="#93762e">· 但 Raft 层 WAL 已先 fsync 落盘（Ready 循环铁序）</text>
+  <text x="570" y="274" font-size="9.5" fill="#93762e">· 重启回放 WAL → 未落盘的写重新 apply 补回</text>
+  <text x="570" y="296" font-size="9" fill="#b08843">· 所以 backend 可以"慢慢批量落"，正确性由 WAL 保证</text>
+  <rect x="60" y="332" width="980" height="70" rx="12" fill="#fbeef0" stroke="#f0cdd4"/>
+  <text x="80" y="356" font-size="11" font-weight="700" fill="#7a2230">分工：WAL 快落 + backend 批量慢落</text>
+  <text x="80" y="378" font-size="9.5" fill="#a44">· WAL：每轮 Ready 立即 fsync（保证 committed 不丢）——这是关键路径，其延迟 = 写延迟</text>
+  <text x="80" y="396" font-size="9" fill="#7a2230">· backend：批量摊薄落盘（保证最终持久 + 供读）——非关键路径，可稍后。两者分工让写既快又不丢。</text>
+  <rect x="60" y="416" width="980" height="46" rx="10" fill="#f7f7f9" stroke="#e6e6ea"/>
+  <text x="80" y="444" font-size="10" fill="#4b4b50"><tspan font-weight="700" fill="#1d1d1f">一句话：</tspan>batchTx 攒够 10000 条或每 100ms 才把一批写作一个 bbolt 事务 commit（一次 fsync），摊薄成本；未落盘批 crash 由 Raft WAL 回放兜底。</text>
+</svg>

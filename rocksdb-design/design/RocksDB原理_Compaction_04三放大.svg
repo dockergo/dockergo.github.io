@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="540" viewBox="0 0 1080 540" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="540" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">RocksDB 三放大权衡 · 写/读/空间(RUM) + CompactionFilter</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">三放大互相制约、不可兼得;选 Compaction 风格与参数 = 选权衡点。CompactionFilter 让清理搭顺风车</text>
+
+  <!-- triangle -->
+  <rect x="30" y="70" width="500" height="250" rx="13" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="46" y="92" font-size="11" font-weight="700" fill="#1d1d1f">三放大(RUM 三角:摁下一个鼓起另一个)</text>
+  <g font-size="9" text-anchor="middle">
+    <rect x="90" y="112" width="350" height="56" rx="9" fill="#eef3fb" stroke="#bcd0ec"/><text x="265" y="132" font-weight="600" fill="#1b2a4a">写放大 Write Amplification</text><text x="265" y="150" font-size="8.3" fill="#5b7db1">一份数据被 Compaction 反复重写的倍数;层多/合勤则大</text>
+    <rect x="90" y="176" width="350" height="56" rx="9" fill="#f5faf6" stroke="#cfe6d5"/><text x="265" y="196" font-weight="600" fill="#12402a">读放大 Read Amplification</text><text x="265" y="214" font-size="8.3" fill="#2f6f4f">一次读要查的文件/层数;L0 多、层多则大</text>
+    <rect x="90" y="240" width="350" height="56" rx="9" fill="#fff7e6" stroke="#e8cf9a"/><text x="265" y="260" font-weight="600" fill="#5a3410">空间放大 Space Amplification</text><text x="265" y="278" font-size="8.3" fill="#93762e">磁盘占用/有效数据;旧版本墓碑未回收则大</text>
+  </g>
+
+  <!-- style tradeoff -->
+  <rect x="550" y="70" width="500" height="250" rx="13" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="566" y="92" font-size="11" font-weight="700" fill="#1b2a4a">各风格的权衡落点</text>
+  <g font-size="8.5">
+    <rect x="566" y="104" width="150" height="26" rx="6" fill="#eef3fb" stroke="#bcd0ec"/><text x="580" y="121" font-weight="600" fill="#1b2a4a">风格</text>
+    <rect x="720" y="104" width="100" height="26" rx="6" fill="#eef3fb" stroke="#bcd0ec"/><text x="734" y="121" fill="#1b2a4a">写放大</text>
+    <rect x="824" y="104" width="100" height="26" rx="6" fill="#eef3fb" stroke="#bcd0ec"/><text x="838" y="121" fill="#1b2a4a">读放大</text>
+    <rect x="928" y="104" width="106" height="26" rx="6" fill="#eef3fb" stroke="#bcd0ec"/><text x="942" y="121" fill="#1b2a4a">空间放大</text>
+
+    <text x="580" y="150" fill="#4b4b50">Leveled</text><text x="734" y="150" fill="#b1483a">高</text><text x="838" y="150" fill="#12402a">低</text><text x="942" y="150" fill="#12402a">低</text>
+    <text x="580" y="176" fill="#4b4b50">Universal</text><text x="734" y="176" fill="#12402a">低</text><text x="838" y="176" fill="#93762e">中</text><text x="942" y="176" fill="#b1483a">高</text>
+    <text x="580" y="202" fill="#4b4b50">FIFO</text><text x="734" y="202" fill="#12402a">极低</text><text x="838" y="202" fill="#93762e">中</text><text x="942" y="202" fill="#93762e">中</text>
+  </g>
+  <rect x="566" y="216" width="468" height="94" rx="8" fill="#fff" stroke="#bcd0ec"/>
+  <text x="580" y="236" font-size="9" font-weight="600" fill="#1b2a4a">调参也在移动权衡点</text>
+  <text x="580" y="254" font-size="8.3" fill="#5b7db1">· 每层倍数调大 → 层更少 → 写放大↓ 但读放大↑</text>
+  <text x="580" y="270" font-size="8.3" fill="#5b7db1">· write_buffer_size 调大 → L0 文件更大更少 → 写放大↓</text>
+  <text x="580" y="286" font-size="8.3" fill="#5b7db1">· L0 触发阈值调大 → 合得少 → 写↓ 读↑</text>
+  <text x="580" y="302" font-size="8.3" fill="#93762e">没有全局最优,只有匹配工作负载的取舍</text>
+
+  <!-- CompactionFilter -->
+  <rect x="30" y="336" width="1020" height="110" rx="13" fill="#faf4fb" stroke="#e2d2ee"/>
+  <text x="46" y="358" font-size="11" font-weight="700" fill="#5a3d78">CompactionFilter · 清理逻辑搭 Compaction 顺风车</text>
+  <text x="46" y="380" font-size="9" fill="#7a5a95">· 用户实现 CompactionFilter(include/rocksdb/compaction_filter.h),在 Compaction 归并每个 key 时被回调</text>
+  <text x="46" y="398" font-size="9" fill="#7a5a95">· 可决定:保留 / 丢弃(Remove)/ 就地修改(ChangeValue)该 key —— 典型:TTL 过期删除、格式迁移、GC</text>
+  <text x="46" y="416" font-size="9" fill="#7a5a95">· 关键优势:零额外扫描——反正 Compaction 要把每条数据过一遍,清理逻辑白搭一程</text>
+  <text x="46" y="434" font-size="8.5" fill="#b1483a">· 注意:Filter 不能依赖"看到某 key 的所有版本"(可能只处理部分层);跨版本逻辑要用 MergeOperator 或 SingleDelete</text>
+
+  <!-- notes -->
+  <rect x="30" y="462" width="1020" height="66" rx="13" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="46" y="484" font-size="11" font-weight="700" fill="#1d1d1f">要点</text>
+  <text x="46" y="506" font-size="9" fill="#6e6e73">· 理解 LSM 调优的本质 = 理解你在三放大里怎么取舍:读延迟敏感选 Leveled、写吞吐优先容忍空间用 Universal</text>
+  <text x="46" y="524" font-size="8.5" fill="#a1a1a6">· 归属:三放大是 Compaction 的核心权衡;CompactionFilter 是本主线的用户钩子;实际读写放大可从 DB 属性/统计观测</text>
+</svg>

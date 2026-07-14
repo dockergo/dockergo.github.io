@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="560" viewBox="0 0 1060 560" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1060" height="560" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">点查旁路：ClickHouse 不擅长单行点查，专门引擎才快</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">MergeTree 主键裁剪只到 granule（markRangesFromPKRange :1259）· 真点查靠 DirectKeyValueJoin (DirectJoin.cpp:119)</text>
+
+  <!-- why mergetree is bad at point query -->
+  <rect x="40" y="72" width="480" height="230" rx="14" fill="#fbeef0" stroke="#f0cdd4"/>
+  <text x="280" y="96" font-size="12" font-weight="700" fill="#7a2230" text-anchor="middle">为什么 MergeTree 点查不快</text>
+  <g text-anchor="middle" font-size="8.5">
+    <rect x="60" y="112" width="200" height="50" rx="9" fill="#fff" stroke="#f0cdd4"/><text x="160" y="132" font-size="9.5" font-weight="600" fill="#7a2230">SELECT * WHERE id=42</text><text x="160" y="150" fill="#a44">看似点查一行</text>
+    <rect x="300" y="112" width="200" height="50" rx="9" fill="#fff" stroke="#f0cdd4"/><text x="400" y="132" font-size="9.5" font-weight="600" fill="#7a2230">主键裁剪到 granule</text><text x="400" y="150" fill="#a44">定位到含 id=42 的 granule</text>
+  </g>
+  <rect x="60" y="176" width="440" height="60" rx="9" fill="#fff5f6" stroke="#f0cdd4"/>
+  <text x="280" y="196" font-size="9.5" font-weight="600" fill="#7a2230" text-anchor="middle">但 granule 默认 8192 行</text>
+  <text x="280" y="214" font-size="8.5" fill="#a44" text-anchor="middle">点查一行 = 读整个 granule（8192 行）再过滤</text>
+  <text x="280" y="230" font-size="8.5" fill="#a44" text-anchor="middle">getRowsCountInRange（:153）· 稀疏索引定位不到具体行</text>
+  <text x="280" y="258" font-size="9" fill="#7a2230" text-anchor="middle">→ 相比 OLTP 索引点查（B+ 树到行），延迟高</text>
+  <text x="280" y="278" font-size="8.5" fill="#a44" text-anchor="middle">ClickHouse 为"扫范围"而生，非"点一行"</text>
+
+  <!-- direct kv path -->
+  <rect x="540" y="72" width="480" height="230" rx="14" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="780" y="96" font-size="12" font-weight="700" fill="#12402a" text-anchor="middle">真点查：DirectKeyValueJoin + KV 引擎</text>
+  <g text-anchor="middle" font-size="8.5">
+    <rect x="560" y="112" width="200" height="50" rx="9" fill="#fff" stroke="#bfe0cd"/><text x="660" y="132" font-size="9.5" font-weight="600" fill="#12402a">DirectKeyValueJoin</text><text x="660" y="150" fill="#2f6f4f">DirectJoin.cpp:119</text>
+    <rect x="800" y="112" width="200" height="50" rx="9" fill="#fff" stroke="#bfe0cd"/><text x="900" y="132" font-size="9.5" font-weight="600" fill="#12402a">getByKeys 按键取值</text><text x="900" y="150" fill="#2f6f4f">:131 · 直达行</text>
+  </g>
+  <text x="780" y="184" font-size="9.5" font-weight="600" fill="#12402a" text-anchor="middle">支持的 KV 存储引擎</text>
+  <g text-anchor="middle" font-size="8">
+    <rect x="560" y="194" width="140" height="42" rx="8" fill="#fff" stroke="#bfe0cd"/><text x="630" y="212" font-weight="600" fill="#12402a">EmbeddedRocksDB</text><text x="630" y="227" fill="#2f6f4f">本地 KV 点查</text>
+    <rect x="710" y="194" width="140" height="42" rx="8" fill="#fff" stroke="#bfe0cd"/><text x="780" y="212" font-weight="600" fill="#12402a">KeeperMap</text><text x="780" y="227" fill="#2f6f4f">Keeper 后端 KV</text>
+    <rect x="860" y="194" width="140" height="42" rx="8" fill="#fff" stroke="#bfe0cd"/><text x="930" y="212" font-weight="600" fill="#12402a">Dictionary</text><text x="930" y="227" fill="#2f6f4f">内存维表</text>
+  </g>
+  <text x="780" y="258" font-size="9" fill="#2f6f4f" text-anchor="middle">这些引擎有真正的键索引 → 直达单行</text>
+  <text x="780" y="278" font-size="8.5" fill="#4c8567" text-anchor="middle">适合 join 维表、KV 查询、字典 lookup</text>
+
+  <!-- guidance -->
+  <rect x="40" y="322" width="980" height="110" rx="13" fill="#fdf9f0" stroke="#efe3cd"/>
+  <text x="60" y="346" font-size="11.5" font-weight="700" fill="#7a5a1e">工程选型：不同查询模式用不同引擎</text>
+  <g text-anchor="middle" font-size="8.5">
+    <rect x="60" y="360" width="300" height="56" rx="9" fill="#fff" stroke="#efdcb4"/><text x="210" y="380" font-size="9.5" font-weight="600" fill="#5a3410">分析扫描（范围/聚合）</text><text x="210" y="398" fill="#93762e">MergeTree —— 稀疏主键扫范围极快</text><text x="210" y="410" fill="#b08843">CH 的主场</text>
+    <rect x="380" y="360" width="300" height="56" rx="9" fill="#fff" stroke="#efdcb4"/><text x="530" y="380" font-size="9.5" font-weight="600" fill="#5a3410">高频单行点查</text><text x="530" y="398" fill="#93762e">EmbeddedRocksDB / KeeperMap</text><text x="530" y="410" fill="#b08843">键索引直达行</text>
+    <rect x="700" y="360" width="300" height="56" rx="9" fill="#fff" stroke="#efdcb4"/><text x="850" y="380" font-size="9.5" font-weight="600" fill="#5a3410">维表 join / lookup</text><text x="850" y="398" fill="#93762e">Dictionary（内存） + Direct join</text><text x="850" y="410" fill="#b08843">避免大 hash join</text>
+  </g>
+
+  <rect x="40" y="448" width="980" height="94" rx="12" fill="#f7f7f9" stroke="#e6e6ea"/>
+  <text x="60" y="472" font-size="11" font-weight="700" fill="#1d1d1f">一句话</text>
+  <text x="60" y="494" font-size="10" fill="#4b4b50">ClickHouse 的稀疏主键为"扫范围"优化，点查一行也要读整个 granule（默认 8192 行），延迟不如 OLTP 索引。</text>
+  <text x="60" y="512" font-size="10" fill="#4b4b50">真正的低延迟单行点查/维表 lookup 靠专门 KV 引擎（EmbeddedRocksDB/KeeperMap/Dictionary）+ DirectKeyValueJoin 旁路。</text>
+  <text x="60" y="532" font-size="9" fill="#8a8a8f">选型原则：范围分析用 MergeTree，点查/维表用 KV 引擎——别拿分析库当 KV 库使。</text>
+</svg>

@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="580" viewBox="0 0 1060 580" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1060" height="580" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">复制队列与 LogEntry：从 /log 拉 entry，判依赖，逐条重放</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">ReplicatedMergeTreeLogEntry (:30) · ReplicatedMergeTreeQueue (:39) · 决策一次写 log，各副本重放</text>
+
+  <!-- entry types -->
+  <text x="45" y="86" font-size="12" font-weight="700" fill="#274a78">LogEntry 主要类型（ReplicatedMergeTreeLogEntry.h）</text>
+  <g text-anchor="middle">
+    <rect x="40" y="98" width="310" height="110" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+    <text x="195" y="120" font-size="11" font-weight="700" fill="#1b2a4a">GET_PART（:30）</text>
+    <text x="195" y="142" font-size="9" fill="#5b7db1">从别的副本拉取一个 Part</text>
+    <text x="195" y="162" font-size="8.5" fill="#8aa6cf">触发：别处 INSERT 产生了新 Part</text>
+    <text x="195" y="182" font-size="8.5" fill="#8aa6cf">执行：DataPartsExchange fetch</text>
+    <text x="195" y="200" font-size="8" fill="#8aa6cf">（含 ATTACH_PART 变体）</text>
+
+    <rect x="375" y="98" width="310" height="110" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+    <text x="530" y="120" font-size="11" font-weight="700" fill="#12402a">MERGE_PARTS（:33）</text>
+    <text x="530" y="142" font-size="9" fill="#2f6f4f">合并若干 Part 为一个</text>
+    <text x="530" y="162" font-size="8.5" fill="#4c8567">决策在一处做（写 log）</text>
+    <text x="530" y="182" font-size="8.5" fill="#4c8567">各副本重放同样的 merge</text>
+    <text x="530" y="200" font-size="8" fill="#4c8567">→ 字节一致的结果 Part</text>
+
+    <rect x="710" y="98" width="310" height="110" rx="12" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+    <text x="865" y="120" font-size="11" font-weight="700" fill="#5a3410">MUTATE_PART（:38）</text>
+    <text x="865" y="142" font-size="9" fill="#93762e">对 Part 应用 mutation</text>
+    <text x="865" y="162" font-size="8.5" fill="#b08843">整 Part 重写（见 DML）</text>
+    <text x="865" y="182" font-size="8.5" fill="#b08843">同样决策一次、各副本重放</text>
+    <text x="865" y="200" font-size="8" fill="#b08843">mutation 队列在 /mutations</text>
+  </g>
+
+  <!-- queue processing -->
+  <rect x="40" y="228" width="980" height="160" rx="13" fill="#f3f7fc" stroke="#cfe0f2"/>
+  <text x="60" y="252" font-size="11.5" font-weight="700" fill="#274a78">ReplicatedMergeTreeQueue：每副本的本地队列处理</text>
+  <g text-anchor="middle" font-size="8.5">
+    <rect x="70" y="266" width="200" height="60" rx="9" fill="#fff" stroke="#cfe0f2"/><text x="170" y="288" font-weight="600" fill="#274a78">① 从 /log 拉 entry</text><text x="170" y="306" fill="#5b7db1">按 log_pointer 顺序拉</text><text x="170" y="320" fill="#8aa6cf">更新本地队列</text>
+    <rect x="300" y="266" width="200" height="60" rx="9" fill="#fff" stroke="#cfe0f2"/><text x="400" y="288" font-weight="600" fill="#274a78">② 判断依赖</text><text x="400" y="306" fill="#5b7db1">entry 间有先后依赖</text><text x="400" y="320" fill="#8aa6cf">如 merge 依赖其输入 Part</text>
+    <rect x="530" y="266" width="200" height="60" rx="9" fill="#fff" stroke="#cfe0f2"/><text x="630" y="288" font-weight="600" fill="#274a78">③ 逐条执行</text><text x="630" y="306" fill="#5b7db1">就绪的 entry 交后台执行</text><text x="630" y="320" fill="#8aa6cf">GET→fetch, MERGE→合并</text>
+    <rect x="760" y="266" width="240" height="60" rx="9" fill="#f2fbf6" stroke="#cdeadb"/><text x="880" y="288" font-weight="600" fill="#12402a">④ 推进 log_pointer</text><text x="880" y="306" fill="#2f6f4f">完成后前移指针</text><text x="880" y="320" fill="#4c8567">落后量随之减少</text>
+  </g>
+  <g stroke="#c7c7cc" stroke-width="1.3" fill="none">
+    <line x1="270" y1="296" x2="300" y2="296" marker-end="url(#ar)"/>
+    <line x1="500" y1="296" x2="530" y2="296" marker-end="url(#ar)"/>
+    <line x1="730" y1="296" x2="760" y2="296" marker-end="url(#ar)"/>
+  </g>
+  <text x="60" y="360" font-size="9" fill="#5b7db1">· 后台执行由「后台任务」的 MergeTreeBackgroundExecutor 承接（scheduleFetchTask/scheduleMergeMutateTask）</text>
+  <text x="60" y="378" font-size="9" fill="#5b7db1">· 队列可视化：system.replication_queue（看每个 entry 类型、状态、是否卡住）</text>
+
+  <rect x="40" y="404" width="980" height="76" rx="12" fill="#f7f7f9" stroke="#e6e6ea"/>
+  <text x="60" y="428" font-size="11" font-weight="700" fill="#1d1d1f">一句话</text>
+  <text x="60" y="450" font-size="10" fill="#4b4b50">复制以 LogEntry 为单位（GET_PART 拉 Part、MERGE_PARTS 合并、MUTATE_PART 变更）：决策只写一次进 /log，</text>
+  <text x="60" y="467" font-size="10" fill="#4b4b50">各副本的 ReplicatedMergeTreeQueue 拉取、判依赖、逐条重放并推进 log_pointer，保证所有副本最终字节一致。</text>
+
+  <rect x="40" y="496" width="980" height="60" rx="12" fill="#fdf9f0" stroke="#efe3cd"/>
+  <text x="60" y="520" font-size="10" fill="#93762e">诊断：system.replication_queue 看队列积压/卡住的 entry；last_exception 字段暴露重放失败原因（如源副本 Part 丢失）。</text>
+  <text x="60" y="540" font-size="9" fill="#b08843">队列越长 = 副本越落后；持续增长需排查（Keeper 慢、fetch 带宽不足、源 Part 缺失等）。</text>
+</svg>

@@ -1,0 +1,96 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="470" viewBox="0 0 920 470" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="920" height="470" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">词法 / 语法分析 · scanner → parser → *syntax.File（无类型 AST）</text>
+
+  <!-- source text (amber = data) -->
+  <rect x="30" y="66" width="150" height="330" rx="13" fill="#fdf6ec" stroke="#f0dcaf" filter="url(#soft)"/>
+  <text x="46" y="90" font-size="12.5" font-weight="600" fill="#6b4e16">.go 源文本</text>
+  <text x="46" y="108" font-size="10" fill="#a9822f">字节流 · UTF-8</text>
+  <rect x="46" y="122" width="118" height="72" rx="8" fill="#ffffff" stroke="#f0dcaf"/>
+  <text x="56" y="142" font-size="10" fill="#3a3a3c">func f() {</text>
+  <text x="56" y="160" font-size="10" fill="#3a3a3c">&#160;&#160;x := 1</text>
+  <text x="56" y="178" font-size="10" fill="#3a3a3c">}</text>
+  <text x="46" y="222" font-size="10" fill="#a9822f">逐字符读取</text>
+  <text x="46" y="240" font-size="10" fill="#a9822f">无换行标记，</text>
+  <text x="46" y="258" font-size="10" fill="#a9822f">由 scanner 补分号</text>
+
+  <line x1="180" y1="150" x2="214" y2="150" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- scanner (blue = compiler) -->
+  <rect x="216" y="66" width="210" height="330" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="232" y="90" font-size="12.5" font-weight="600" fill="#1b2a4a">scanner · 词法分析</text>
+  <text x="232" y="108" font-size="10" fill="#5b7db1">scanner.next() 逐字符出 token</text>
+  <rect x="232" y="120" width="178" height="46" rx="8" fill="#ffffff" stroke="#cfe0f2"/>
+  <text x="242" y="139" font-size="10.5" font-weight="600" fill="#1b2a4a">next()：识别一个 token</text>
+  <text x="242" y="156" font-size="9.5" fill="#5b7db1">标识符 / 字面量 / 运算符 · scanner.go:88</text>
+  <rect x="232" y="174" width="178" height="60" rx="8" fill="#eff9f2" stroke="#bfe0c8"/>
+  <text x="242" y="193" font-size="10.5" font-weight="600" fill="#1d4a2b">自动分号插入 (ASI)</text>
+  <text x="242" y="210" font-size="9.5" fill="#4a8c60">行尾若 token 可结束语句，</text>
+  <text x="242" y="225" font-size="9.5" fill="#4a8c60">插入隐式 ; —— Go 无需手写分号</text>
+  <text x="232" y="256" font-size="10.5" fill="#5b7db1" font-weight="600">输出 · token 流</text>
+  <rect x="232" y="266" width="52" height="24" rx="6" fill="#ffffff" stroke="#cfe0f2"/>
+  <text x="258" y="282" font-size="9.5" fill="#1b2a4a" text-anchor="middle">FUNC</text>
+  <rect x="290" y="266" width="52" height="24" rx="6" fill="#ffffff" stroke="#cfe0f2"/>
+  <text x="316" y="282" font-size="9.5" fill="#1b2a4a" text-anchor="middle">NAME</text>
+  <rect x="348" y="266" width="52" height="24" rx="6" fill="#ffffff" stroke="#cfe0f2"/>
+  <text x="374" y="282" font-size="9.5" fill="#1b2a4a" text-anchor="middle">LPAREN</text>
+  <rect x="232" y="298" width="52" height="24" rx="6" fill="#ffffff" stroke="#cfe0f2"/>
+  <text x="258" y="314" font-size="9.5" fill="#1b2a4a" text-anchor="middle">ASSIGN</text>
+  <rect x="290" y="298" width="52" height="24" rx="6" fill="#ffffff" stroke="#cfe0f2"/>
+  <text x="316" y="314" font-size="9.5" fill="#1b2a4a" text-anchor="middle">INT</text>
+  <rect x="348" y="298" width="52" height="24" rx="6" fill="#eff9f2" stroke="#bfe0c8"/>
+  <text x="374" y="314" font-size="9.5" fill="#1d4a2b" text-anchor="middle">SEMI</text>
+  <text x="232" y="346" font-size="9.5" fill="#8fabd4">token 是 parser 的输入原子</text>
+  <text x="232" y="378" font-size="9.5" fill="#8fabd4">纯扫描，不做任何类型判断</text>
+
+  <line x1="426" y1="150" x2="460" y2="150" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- parser (blue) -->
+  <rect x="462" y="66" width="210" height="330" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="478" y="90" font-size="12.5" font-weight="600" fill="#1b2a4a">parser · 语法分析</text>
+  <text x="478" y="108" font-size="10" fill="#5b7db1">递归下降 (recursive descent)</text>
+  <rect x="478" y="120" width="178" height="46" rx="8" fill="#ffffff" stroke="#cfe0f2"/>
+  <text x="488" y="139" font-size="10.5" font-weight="600" fill="#1b2a4a">fileOrNil()：解析整个文件</text>
+  <text x="488" y="156" font-size="9.5" fill="#5b7db1">每类语法各一函数 · parser.go:406</text>
+  <rect x="478" y="174" width="178" height="42" rx="8" fill="#ffffff" stroke="#cfe0f2"/>
+  <text x="488" y="192" font-size="10" fill="#3a3a3c">decl → funcDecl → stmt</text>
+  <text x="488" y="208" font-size="9.5" fill="#5b7db1">按文法规则逐层下降调用</text>
+  <rect x="478" y="224" width="178" height="42" rx="8" fill="#ffffff" stroke="#cfe0f2"/>
+  <text x="488" y="242" font-size="10" fill="#3a3a3c">expr → binaryExpr → operand</text>
+  <text x="488" y="258" font-size="9.5" fill="#5b7db1">运算符优先级在下降层次里体现</text>
+  <rect x="478" y="274" width="178" height="48" rx="8" fill="#fbeeee" stroke="#f0c4c4"/>
+  <text x="488" y="293" font-size="10.5" font-weight="600" fill="#7a1f1f">错误恢复</text>
+  <text x="488" y="310" font-size="9.5" fill="#b15b5b">遇错跳到同步点，尽量多报错误</text>
+  <text x="478" y="346" font-size="9.5" fill="#8fabd4">只做结构组装，仍不知类型</text>
+  <text x="478" y="378" font-size="9.5" fill="#8fabd4">产出树节点定义于 syntax.go:66</text>
+
+  <line x1="672" y1="150" x2="706" y2="150" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- AST output (purple = IR) -->
+  <rect x="708" y="66" width="182" height="330" rx="13" fill="#f5f0fb" stroke="#ddcdf0" filter="url(#soft)"/>
+  <text x="724" y="90" font-size="12.5" font-weight="600" fill="#3d2a5a">*syntax.File</text>
+  <text x="724" y="108" font-size="10" fill="#7d5bb1">无类型 AST · syntax.go:66</text>
+  <rect x="724" y="122" width="150" height="150" rx="8" fill="#ffffff" stroke="#ddcdf0"/>
+  <text x="778" y="144" font-size="10" fill="#3d2a5a" text-anchor="middle">File</text>
+  <line x1="778" y1="150" x2="778" y2="166" stroke="#c7c7cc" stroke-width="1.2"/>
+  <text x="778" y="180" font-size="10" fill="#3d2a5a" text-anchor="middle">FuncDecl f</text>
+  <line x1="778" y1="186" x2="778" y2="202" stroke="#c7c7cc" stroke-width="1.2"/>
+  <text x="778" y="216" font-size="10" fill="#3d2a5a" text-anchor="middle">AssignStmt</text>
+  <line x1="778" y1="222" x2="740" y2="240" stroke="#c7c7cc" stroke-width="1.2"/>
+  <line x1="778" y1="222" x2="816" y2="240" stroke="#c7c7cc" stroke-width="1.2"/>
+  <text x="740" y="254" font-size="9.5" fill="#7d5bb1" text-anchor="middle">Name x</text>
+  <text x="816" y="254" font-size="9.5" fill="#7d5bb1" text-anchor="middle">Lit 1</text>
+  <text x="724" y="298" font-size="9.5" fill="#7d5bb1">树形结构，节点无 .Type</text>
+  <text x="724" y="316" font-size="9.5" fill="#7d5bb1">类型留给下一段 types2 绑定</text>
+  <rect x="724" y="330" width="150" height="52" rx="8" fill="#eff9f2" stroke="#bfe0c8"/>
+  <text x="734" y="350" font-size="10" font-weight="600" fill="#1d4a2b">多文件并行解析</text>
+  <text x="734" y="368" font-size="9.5" fill="#4a8c60">一个包内多文件并发 syntax.Parse</text>
+</svg>

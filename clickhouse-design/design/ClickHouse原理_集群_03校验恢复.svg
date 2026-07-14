@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="540" viewBox="0 0 1060 540" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1060" height="540" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Part 校验与拉取恢复：单副本数据损坏的自动修复路径</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">PartCheckThread(:48) 校验 → GET_PART → DataPartsExchange::Fetcher 从健康副本拉完整 Part</text>
+
+  <g text-anchor="middle">
+    <rect x="40" y="86" width="200" height="70" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/><text x="140" y="110" font-size="10.5" font-weight="600" fill="#1b2a4a">① 定期/按需校验</text><text x="140" y="130" font-size="8.5" fill="#5b7db1">PartCheckThread</text><text x="140" y="146" font-size="8" fill="#8aa6cf">对比 Keeper vs 本地</text>
+    <rect x="280" y="86" width="200" height="70" rx="12" fill="#fbeef0" stroke="#f0cdd4" filter="url(#soft)"/><text x="380" y="110" font-size="10.5" font-weight="600" fill="#7a2230">② 发现损坏/缺失</text><text x="380" y="130" font-size="8.5" fill="#a44">checksum 不符</text><text x="380" y="146" font-size="8" fill="#a44">或 Part 丢失</text>
+    <rect x="520" y="86" width="200" height="70" rx="12" fill="#f3f7fc" stroke="#cfe0f2" filter="url(#soft)"/><text x="620" y="110" font-size="10.5" font-weight="600" fill="#274a78">③ 标记重新获取</text><text x="620" y="130" font-size="8.5" fill="#5b7db1">生成 GET_PART</text><text x="620" y="146" font-size="8" fill="#8aa6cf">进复制队列</text>
+    <rect x="760" y="86" width="260" height="70" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/><text x="890" y="110" font-size="10.5" font-weight="600" fill="#12402a">④ 从健康副本 fetch</text><text x="890" y="130" font-size="8.5" fill="#2f6f4f">DataPartsExchange::Fetcher</text><text x="890" y="146" font-size="8" fill="#4c8567">HTTP 拉完整 Part → 替换</text>
+  </g>
+  <g stroke="#c7c7cc" stroke-width="1.5" fill="none">
+    <line x1="240" y1="121" x2="280" y2="121" marker-end="url(#ar)"/>
+    <line x1="480" y1="121" x2="520" y2="121" marker-end="url(#ar)"/>
+    <line x1="720" y1="121" x2="760" y2="121" marker-end="url(#ar)"/>
+  </g>
+
+  <!-- scenario -->
+  <rect x="40" y="182" width="480" height="180" rx="13" fill="#fdf9f0" stroke="#efe3cd"/>
+  <text x="280" y="206" font-size="11" font-weight="700" fill="#7a5a1e" text-anchor="middle">场景：Replica A 的某 Part 磁盘坏块</text>
+  <g text-anchor="middle" font-size="8.5">
+    <rect x="60" y="220" width="200" height="50" rx="8" fill="#fbeef0" stroke="#f0cdd4"/><text x="160" y="240" font-weight="600" fill="#7a2230">Replica A</text><text x="160" y="256" fill="#a44">part_202401_5 损坏</text>
+    <rect x="300" y="220" width="200" height="50" rx="8" fill="#f2fbf6" stroke="#cdeadb"/><text x="400" y="240" font-weight="600" fill="#12402a">Replica B</text><text x="400" y="256" fill="#2f6f4f">part_202401_5 健康</text>
+  </g>
+  <path d="M300,245 L260,245" stroke="#9ccbb0" stroke-width="1.4" fill="none" marker-end="url(#ar)"/>
+  <text x="280" y="292" font-size="9" fill="#93762e">· A 的 PartCheckThread 发现 checksum 不符</text>
+  <text x="280" y="310" font-size="9" fill="#93762e">· 生成 GET_PART → 从 B fetch 完整 part_202401_5</text>
+  <text x="280" y="328" font-size="9" fill="#12402a">· 替换损坏副本 → A 恢复健康</text>
+  <text x="280" y="348" font-size="8.5" fill="#b08843">全自动，无需人工介入</text>
+
+  <!-- resilience -->
+  <rect x="540" y="182" width="480" height="180" rx="13" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="780" y="206" font-size="11" font-weight="700" fill="#12402a" text-anchor="middle">容错边界</text>
+  <text x="560" y="230" font-size="9.5" fill="#2f6f4f">· 只要有一个健康副本持有该 Part → 可恢复</text>
+  <text x="560" y="250" font-size="9.5" fill="#2f6f4f">· 所有副本都损坏该 Part → 无法自动恢复（需备份）</text>
+  <text x="560" y="270" font-size="9.5" fill="#2f6f4f">· 副本数越多，容错越强（能容忍越多同时损坏）</text>
+  <text x="560" y="294" font-size="9" fill="#4c8567">· fetch 走 InterserverIO，可限带宽避免挤占业务</text>
+  <text x="560" y="314" font-size="8.5" fill="#8aa6cf">max_replicated_fetches_network_bandwidth</text>
+  <text x="560" y="340" font-size="8.5" fill="#8aa6cf">· 手动触发：SYSTEM SYNC REPLICA</text>
+
+  <rect x="40" y="378" width="980" height="88" rx="12" fill="#f7f7f9" stroke="#e6e6ea"/>
+  <text x="60" y="402" font-size="11" font-weight="700" fill="#1d1d1f">一句话</text>
+  <text x="60" y="424" font-size="10" fill="#4b4b50">PartCheckThread 定期校验本地 Part（对比 Keeper 记录），发现损坏/缺失就生成 GET_PART，经 DataPartsExchange 从</text>
+  <text x="60" y="442" font-size="10" fill="#4b4b50">健康副本拉完整 Part 替换——全自动修复。只要还有一个健康副本持有该数据，损坏就能恢复；副本越多容错越强。</text>
+  <text x="60" y="460" font-size="9" fill="#8a8a8f">所有副本都损坏同一 Part 时才需依赖备份；恢复 fetch 可限带宽。</text>
+</svg>

@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="470" viewBox="0 0 1000 470" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1000" height="470" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">部分重同步 PSYNC2：断线重连只补缺口（masterTryPartialResync，replication.c:986）</text>
+  <text x="30" y="49" font-size="10.5" fill="#a1a1a6">复制积压缓冲（环形）+ (replid, offset) 二元组 → 避免昂贵全量</text>
+
+  <!-- backlog ring -->
+  <text x="40" y="86" font-size="11" font-weight="700" fill="#7a5a1e">主库复制积压缓冲（repl-backlog-size，默认 1mb 环形）</text>
+  <rect x="60" y="98" width="600" height="54" rx="9" fill="#fdf3e5" stroke="#f0d9b5" filter="url(#soft)"/>
+  <g font-family="'SF Mono',monospace" font-size="9" text-anchor="middle" fill="#7a5a1e">
+    <rect x="72" y="110" width="90" height="30" rx="4" fill="#fff" stroke="#f0d9b5"/><text x="117" y="129">…offset 900</text>
+    <rect x="166" y="110" width="90" height="30" rx="4" fill="#fff" stroke="#f0d9b5"/><text x="211" y="129">SET a 1</text>
+    <rect x="260" y="110" width="90" height="30" rx="4" fill="#fff" stroke="#f0d9b5"/><text x="305" y="129">INCR b</text>
+    <rect x="354" y="110" width="90" height="30" rx="4" fill="#fff" stroke="#f0d9b5"/><text x="399" y="129">DEL c</text>
+    <rect x="448" y="110" width="90" height="30" rx="4" fill="#fdeef2" stroke="#f6c9d6"/><text x="493" y="125" fill="#c02a56">SET d 4</text><text x="493" y="136" fill="#c02a56" font-size="7">断连后</text>
+    <rect x="542" y="110" width="106" height="30" rx="4" fill="#fdeef2" stroke="#f6c9d6"/><text x="595" y="125" fill="#c02a56">…offset 1200</text><text x="595" y="136" fill="#c02a56" font-size="7">缺口</text>
+  </g>
+  <text x="680" y="120" font-size="9" fill="#b08535">master_repl_offset</text>
+  <text x="680" y="134" font-size="9" fill="#b08535">= 1200（已发字节）</text>
+
+  <!-- replid/offset -->
+  <rect x="60" y="172" width="430" height="70" rx="9" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="80" y="194" font-size="10" font-weight="600" fill="#1b2a4a">复制身份标识</text>
+  <text x="80" y="214" font-size="9.5" fill="#5b7db1">replid：40 位十六进制，标识一条复制历史</text>
+  <text x="80" y="232" font-size="9.5" fill="#5b7db1">replid2：晋升时保留旧主 replid（换主也能部分同步）</text>
+
+  <rect x="510" y="172" width="450" height="70" rx="9" fill="#f6f0fb" stroke="#dcc6ee"/>
+  <text x="530" y="194" font-size="10" font-weight="600" fill="#5a2a82">从库断连时记住：(replid=X, offset=1050)</text>
+  <text x="530" y="214" font-size="9.5" fill="#8a5cae">重连时发 PSYNC X 1050</text>
+  <text x="530" y="232" font-size="9.5" fill="#8a5cae">= "我复制到 X 的 1050 字节，从这里继续"</text>
+
+  <!-- decision -->
+  <text x="40" y="278" font-size="11" font-weight="700" fill="#1d1d1f">重连判定</text>
+  <rect x="330" y="290" width="340" height="46" rx="9" fill="#f7f7f9" stroke="#ececef" filter="url(#soft)"/>
+  <text x="500" y="309" font-size="10" font-weight="600" fill="#1d1d1f" text-anchor="middle">replid 匹配 且 offset 仍在 backlog 内?</text>
+  <text x="500" y="326" font-size="8.5" fill="#86868b" text-anchor="middle">requested replid == replid/replid2 且 offset 未被环形覆盖</text>
+
+  <line x1="400" y1="336" x2="280" y2="366" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <rect x="60" y="366" width="380" height="64" rx="9" fill="#eafaf1" stroke="#b8e6cd" filter="url(#soft)"/>
+  <text x="250" y="388" font-size="11" font-weight="600" fill="#1c6b45" text-anchor="middle">是 → +CONTINUE</text>
+  <text x="250" y="408" font-size="9.5" fill="#3a9b6e" text-anchor="middle">只补发 offset 1050~1200 的缺口命令</text>
+  <text x="250" y="424" font-size="8.5" fill="#5cb88a" text-anchor="middle">秒级恢复，无需 fork / 传 RDB</text>
+
+  <line x1="600" y1="336" x2="720" y2="366" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <rect x="560" y="366" width="400" height="64" rx="9" fill="#fdeef2" stroke="#f6c9d6" filter="url(#soft)"/>
+  <text x="760" y="388" font-size="11" font-weight="600" fill="#c02a56" text-anchor="middle">否 → +FULLRESYNC</text>
+  <text x="760" y="408" font-size="9.5" fill="#88304a" text-anchor="middle">backlog 已覆盖该 offset / replid 不匹配</text>
+  <text x="760" y="424" font-size="8.5" fill="#c8607f" text-anchor="middle">退化为全量同步（fork + 传 RDB）</text>
+
+  <rect x="30" y="444" width="940" height="20" rx="6" fill="#f7f7f9" stroke="#ececef"/>
+  <text x="500" y="458" font-size="9" fill="#4a4a4f" text-anchor="middle">工程：backlog 按"预期断连时长 × 写入速率"估算 —— 太小则久断连退化全量</text>
+</svg>

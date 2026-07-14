@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="500" viewBox="0 0 1000 500"
+     font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1000" height="500" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">张量与变量 · 不可变的值 vs 有状态的资源句柄</text>
+
+  <!-- tf.Tensor -->
+  <rect x="30" y="52" width="455" height="150" rx="14" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="52" y="76" font-size="12.5" font-weight="600" fill="#5a3410">tf.Tensor —— 不可变的多维数组（一个值）</text>
+  <rect x="52" y="90" width="411" height="42" rx="9" fill="#ffffff" stroke="#e8cf9a"/><text x="257" y="108" font-size="9.5" fill="#5a3410" text-anchor="middle">shape（形状）· dtype（类型）· device（所在设备）</text><text x="257" y="124" font-size="8.5" fill="#93762e" text-anchor="middle">framework/tensor.py:139  class Tensor(...Symbol)</text>
+  <text x="66" y="152" font-size="9.5" fill="#93762e">· 算子的输入/输出都是 Tensor，产生后不可改</text>
+  <text x="66" y="170" font-size="9.5" fill="#93762e">· eager 下是 EagerTensor（有 .numpy() 具体值）</text>
+  <text x="66" y="188" font-size="9.5" fill="#93762e">· 图内是符号张量（占位，执行时才有值）</text>
+
+  <!-- tf.Variable -->
+  <rect x="515" y="52" width="455" height="150" rx="14" fill="#f4eefb" stroke="#d9c9ef" filter="url(#soft)"/>
+  <text x="537" y="76" font-size="12.5" font-weight="600" fill="#3c1361">tf.Variable —— 有状态的资源句柄（可持久、可更新）</text>
+  <rect x="537" y="90" width="411" height="42" rx="9" fill="#ffffff" stroke="#d9c9ef"/><text x="742" y="108" font-size="9.5" fill="#3c1361" text-anchor="middle">持有一个 resource handle，指向设备上的缓冲</text><text x="742" y="124" font-size="8.5" fill="#7a4fb0" text-anchor="middle">resource_variable_ops.py:377  BaseResourceVariable</text>
+  <text x="551" y="152" font-size="9.5" fill="#7a4fb0">· 读它（read_value）才产出一个 Tensor</text>
+  <text x="551" y="170" font-size="9.5" fill="#7a4fb0">· assign / assign_add 原地更新，跨调用持久</text>
+  <text x="551" y="188" font-size="9.5" fill="#7a4fb0">· 模型权重都是 Variable，被 GradientTape 自动追踪</text>
+
+  <!-- eager 调用流 -->
+  <rect x="30" y="222" width="940" height="120" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="52" y="246" font-size="12.5" font-weight="600" fill="#1b2a4a">eager 下一次算子调用（tf.matmul(a, b)）—— 立即执行，无图</text>
+  <rect x="52" y="262" width="200" height="60" rx="10" fill="#ffffff" stroke="#bcd0ec"/><text x="152" y="286" font-size="9.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">Python 调用</text><text x="152" y="304" font-size="8.5" fill="#5b7db1" text-anchor="middle">tf.matmul(a, b)</text>
+  <rect x="288" y="262" width="200" height="60" rx="10" fill="#ffffff" stroke="#bcd0ec"/><text x="388" y="286" font-size="9.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">EagerLocalExecute</text><text x="388" y="304" font-size="8.5" fill="#5b7db1" text-anchor="middle">查 KernelAndDevice</text>
+  <rect x="524" y="262" width="200" height="60" rx="10" fill="#eafaf1" stroke="#bce6cd"/><text x="624" y="286" font-size="9.5" font-weight="600" fill="#0f5132" text-anchor="middle">OpKernel::Compute()</text><text x="624" y="304" font-size="8.5" fill="#2f6f4f" text-anchor="middle">MatMul kernel 真正算</text>
+  <rect x="760" y="262" width="200" height="60" rx="10" fill="#fff7e6" stroke="#e8cf9a"/><text x="860" y="286" font-size="9.5" font-weight="600" fill="#5a3410" text-anchor="middle">返回 EagerTensor</text><text x="860" y="304" font-size="8.5" fill="#93762e" text-anchor="middle">立即有具体值</text>
+  <line x1="252" y1="292" x2="288" y2="292" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <line x1="488" y1="292" x2="524" y2="292" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <line x1="724" y1="292" x2="760" y2="292" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- 关系说明 -->
+  <rect x="30" y="362" width="940" height="118" rx="14" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="52" y="386" font-size="11.5" font-weight="600" fill="#1d1d1f">Tensor 与 Variable 的分工</text>
+  <text x="52" y="410" font-size="10" fill="#494950"><tspan font-weight="600" fill="#5a3410">Tensor</tspan> 是"计算的中间值"：不可变，用完即弃，多个 Tensor 可共享同一底层 TensorBuffer（见「张量与内存」）。</text>
+  <text x="52" y="434" font-size="10" fill="#494950"><tspan font-weight="600" fill="#3c1361">Variable</tspan> 是"跨步骤的状态"：模型参数、优化器动量、计数器都是 Variable；训练循环里被反复 assign 更新。</text>
+  <text x="52" y="460" font-size="10" fill="#7a2a2a">口诀：算子吃 Tensor 吐 Tensor；权重是 Variable，读出来变 Tensor 参与算，再把新值 assign 回去。</text>
+</svg>

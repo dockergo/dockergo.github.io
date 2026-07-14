@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="520" viewBox="0 0 1040 520" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1040" height="520" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Trino 行过滤 / 列掩码 · ViewExpression 两层合并注入</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">getRowFilters/getColumnMasks 合并式(不短路):连接器级 + 每个系统级叠加;对用户透明</text>
+
+  <!-- row filter -->
+  <rect x="30" y="72" width="490" height="200" rx="13" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="46" y="94" font-size="11" font-weight="700" fill="#1b2a4a">行过滤 RowFilter</text>
+  <rect x="50" y="108" width="450" height="40" rx="8" fill="#fff" stroke="#bcd0ec"/><text x="64" y="128" font-size="8.8" fill="#1b2a4a">ViewExpression = boolean SQL 表达式</text><text x="64" y="142" font-size="8" fill="#5b7db1">如 region = current_user_region()</text>
+  <rect x="50" y="156" width="450" height="46" rx="8" fill="#f3f7fc" stroke="#cfe0f2"/><text x="64" y="176" font-size="8.8" font-weight="600" fill="#274a78">合并（getRowFilters）</text><text x="64" y="192" font-size="8" fill="#5b7db1">连接器级 filters + 每个系统级 filters 拼接(多个 AND 生效)</text>
+  <rect x="50" y="210" width="450" height="52" rx="8" fill="#eafaf1" stroke="#bfe0cd"/><text x="64" y="230" font-size="8.8" font-weight="600" fill="#12402a">注入效果</text><text x="64" y="246" font-size="8" fill="#2f6f4f">查询自动加 WHERE region='EU' —— 用户只看到自己该看的行</text><text x="64" y="258" font-size="8" fill="#2f6f4f">对用户透明,无需改 SQL</text>
+
+  <!-- column mask -->
+  <rect x="540" y="72" width="470" height="200" rx="13" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="556" y="94" font-size="11" font-weight="700" fill="#2c5a3a">列掩码 ColumnMask</text>
+  <rect x="556" y="108" width="440" height="40" rx="8" fill="#fff" stroke="#cfe6d5"/><text x="570" y="128" font-size="8.8" fill="#2c5a3a">ViewExpression = 改写列值的 SQL 表达式</text><text x="570" y="142" font-size="8" fill="#2f6f4f">如 substr(ssn,1,3) || '****'</text>
+  <rect x="556" y="156" width="440" height="46" rx="8" fill="#fff" stroke="#cfe6d5"/><text x="570" y="176" font-size="8.8" font-weight="600" fill="#2c5a3a">合并（getColumnMasks）</text><text x="570" y="192" font-size="8" fill="#2f6f4f">连接器级 + 系统级;两源掩同一列 → INVALID_COLUMN_MASK</text>
+  <rect x="556" y="210" width="440" height="52" rx="8" fill="#eafaf1" stroke="#bfe0cd"/><text x="570" y="230" font-size="8.8" font-weight="600" fill="#12402a">注入效果</text><text x="570" y="246" font-size="8" fill="#2f6f4f">SELECT ssn 实际返回 123**** —— 敏感列脱敏</text><text x="570" y="258" font-size="8" fill="#2f6f4f">按 identity 决定是否掩(如仅非管理员)</text>
+
+  <!-- ViewExpression struct -->
+  <rect x="30" y="286" width="490" height="130" rx="13" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="46" y="308" font-size="11" font-weight="700" fill="#1d1d1f">ViewExpression 结构</text>
+  <text x="46" y="330" font-size="8.8" fill="#6e6e73">· expression：SQL 文本(过滤谓词 / 掩码表达式)</text>
+  <text x="46" y="348" font-size="8.8" fill="#6e6e73">· identity：以谁的身份求值(空=会话用户)</text>
+  <text x="46" y="366" font-size="8.8" fill="#6e6e73">· catalog/schema：表达式的解析上下文</text>
+  <text x="46" y="384" font-size="8.8" fill="#6e6e73">· path：函数解析路径</text>
+  <text x="46" y="404" font-size="8.5" fill="#93762e">由 AccessControl 在分析期返回,planner 织入计划</text>
+
+  <!-- notes -->
+  <rect x="540" y="286" width="470" height="130" rx="13" fill="#faf4fb" stroke="#e2d2ee"/>
+  <text x="556" y="308" font-size="11" font-weight="700" fill="#5a3d78">合并语义(关键)</text>
+  <text x="556" y="330" font-size="8.8" fill="#7a5a95">· getRowFilters：连接器级先、再每个系统级 → 结果拼接</text>
+  <text x="556" y="348" font-size="8.8" fill="#7a5a95">  多个行过滤 = 全部 AND(更严,不放宽)</text>
+  <text x="556" y="366" font-size="8.8" fill="#7a5a95">· getColumnMasks：ImmutableMap;同列被两源掩 → 抛错</text>
+  <text x="556" y="384" font-size="8.8" fill="#7a5a95">  (避免歧义:一列只能有一个掩码来源)</text>
+  <text x="556" y="404" font-size="8.5" fill="#b1483a">不短路：两层都要问,结果合并(与 checkCanXxx 的"任一拒即失败"不同)</text>
+
+  <rect x="30" y="430" width="980" height="76" rx="12" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="46" y="452" font-size="10" font-weight="700" fill="#2c5a3a">用途与要点</text>
+  <text x="46" y="472" font-size="8.8" fill="#2f6f4f">· 多租户数据隔离(行过滤按租户)、敏感字段脱敏(列掩码 SSN/手机号)、合规(GDPR/等保)——都在查询层透明实现</text>
+  <text x="46" y="490" font-size="8.8" fill="#b1483a">· 归属：由 AccessControl(本主线)提供,planner 织入;file 插件/连接器 security=file 可声明规则</text>
+</svg>

@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="470" viewBox="0 0 960 470"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="960" height="470" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">热加载与配置 watch · Message → 去重 → 合并 → 通知 listener → Switch 热替换（无 reload）</text>
+
+  <!-- pipeline -->
+  <rect x="30" y="60" width="160" height="80" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="110" y="84" font-size="10" font-weight="600" fill="#1b2a4a" text-anchor="middle">Provider Messages</text>
+  <text x="110" y="106" font-size="8.5" fill="#5b7db1" text-anchor="middle">各 provider 推入</text>
+  <text x="110" y="122" font-size="8.5" fill="#5b7db1" text-anchor="middle">已按 provider 去抖</text>
+  <text x="110" y="137" font-size="7.5" fill="#8fa9cf" text-anchor="middle">allProvidersConfigs</text>
+
+  <line x1="190" y1="100" x2="226" y2="100" stroke="#b8b8bf" marker-end="url(#ar)"/>
+
+  <rect x="228" y="52" width="230" height="150" rx="12" fill="#e7eefb" stroke="#a9c2e8" filter="url(#soft)"/>
+  <text x="343" y="76" font-size="10.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">receiveConfigurations</text>
+  <text x="343" y="98" font-size="8.5" fill="#5b7db1" text-anchor="middle">按 providerName 存最新配置</text>
+  <text x="343" y="116" font-size="8.5" fill="#5b7db1" text-anchor="middle">跳过 nil / 空配置</text>
+  <text x="343" y="134" font-size="8.5" fill="#5b7db1" text-anchor="middle">DeepEqual 与上次相同 → 跳过</text>
+  <text x="343" y="152" font-size="8.5" fill="#5b7db1" text-anchor="middle">运行 transformers</text>
+  <text x="343" y="170" font-size="8.5" fill="#5b7db1" text-anchor="middle">输出全量配置集</text>
+  <text x="343" y="192" font-size="7.5" fill="#8fa9cf" text-anchor="middle">configurationwatcher.go:94</text>
+
+  <line x1="458" y1="127" x2="494" y2="127" stroke="#b8b8bf" marker-end="url(#ar)"/>
+
+  <rect x="496" y="52" width="230" height="150" rx="12" fill="#e7eefb" stroke="#a9c2e8" filter="url(#soft)"/>
+  <text x="611" y="76" font-size="10.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">applyConfigurations</text>
+  <text x="611" y="98" font-size="8.5" fill="#5b7db1" text-anchor="middle">等 requiredProvider 就绪</text>
+  <text x="611" y="116" font-size="8.5" fill="#5b7db1" text-anchor="middle">与 last 相同 → 跳过</text>
+  <text x="611" y="134" font-size="8.5" fill="#5b7db1" text-anchor="middle">mergeConfiguration 合并多源</text>
+  <text x="611" y="152" font-size="8.5" fill="#5b7db1" text-anchor="middle">applyModel + resolveTLS</text>
+  <text x="611" y="170" font-size="8.5" fill="#5b7db1" text-anchor="middle">调用每个 listener(conf)</text>
+  <text x="611" y="192" font-size="7.5" fill="#8fa9cf" text-anchor="middle">configurationwatcher.go:157</text>
+
+  <line x1="726" y1="127" x2="762" y2="127" stroke="#b8b8bf" marker-end="url(#ar)"/>
+
+  <rect x="764" y="60" width="166" height="130" rx="12" fill="#fff7e6" stroke="#f0dcae" filter="url(#soft)"/>
+  <text x="847" y="84" font-size="10.5" font-weight="600" fill="#7a4d00" text-anchor="middle">listener 重建</text>
+  <text x="847" y="106" font-size="8.5" fill="#9a7328" text-anchor="middle">RouterFactory</text>
+  <text x="847" y="122" font-size="8.5" fill="#9a7328" text-anchor="middle">.CreateRouters</text>
+  <text x="847" y="140" font-size="8.5" fill="#9a7328" text-anchor="middle">EntryPoint.Switch()</text>
+  <text x="847" y="158" font-size="8.5" fill="#9a7328" text-anchor="middle">换内存路由表</text>
+  <text x="847" y="178" font-size="7.5" fill="#b08a3c" text-anchor="middle">routerfactory.go:101</text>
+
+  <!-- dedup emphasize -->
+  <rect x="30" y="222" width="900" height="86" rx="12" fill="#eafaf1" stroke="#bce6cd" filter="url(#soft)"/>
+  <text x="50" y="246" font-size="11" font-weight="600" fill="#0f5132">两道去重 + 一个就绪闸门（避免无谓重建 + 首帧完整）</text>
+  <text x="50" y="268" font-size="9.5" fill="#3f8f66">· 去重①：receiveConfigurations 对每个 provider 的新配置做 DeepEqual，未变则丢弃（configurationwatcher.go:130）。</text>
+  <text x="50" y="288" font-size="9.5" fill="#3f8f66">· 去重②：applyConfigurations 对合并后的全量集与上次做 DeepEqual，相同则不下发（:157）。</text>
+  <text x="50" y="302" font-size="8.5" fill="#5aa06f">· 就绪闸门：必须先收到 requiredProvider(internal) 的配置，才首次应用——防止用"半份配置"启动。</text>
+
+  <!-- contrast nginx -->
+  <rect x="30" y="326" width="440" height="120" rx="12" fill="#fdecea" stroke="#f3c0b8" filter="url(#soft)"/>
+  <text x="250" y="350" font-size="10.5" font-weight="600" fill="#8a2a1a" text-anchor="middle">nginx reload（对照）</text>
+  <text x="50" y="374" font-size="9" fill="#a24232">1. 改 nginx.conf → 发 SIGHUP</text>
+  <text x="50" y="392" font-size="9" fill="#a24232">2. master 重读配置、校验</text>
+  <text x="50" y="410" font-size="9" fill="#a24232">3. fork 新 worker 接管新连接</text>
+  <text x="50" y="428" font-size="9" fill="#a24232">4. 旧 worker 处理完存量连接后退出</text>
+
+  <rect x="490" y="326" width="440" height="120" rx="12" fill="#eafaf1" stroke="#bce6cd" filter="url(#soft)"/>
+  <text x="710" y="350" font-size="10.5" font-weight="600" fill="#0f5132" text-anchor="middle">Traefik 热加载（本域）</text>
+  <text x="510" y="374" font-size="9" fill="#3f8f66">1. Provider watch 到外部变更 → 推 Message</text>
+  <text x="510" y="392" font-size="9" fill="#3f8f66">2. watcher 去重 + 合并（不重启进程）</text>
+  <text x="510" y="410" font-size="9" fill="#3f8f66">3. listener 重建路由表 → Switch() 原子替换</text>
+  <text x="510" y="428" font-size="9" fill="#3f8f66">4. 端口/进程/连接全不动，秒级生效</text>
+</svg>

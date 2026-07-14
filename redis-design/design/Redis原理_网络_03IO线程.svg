@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="500" viewBox="0 0 1000 500" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1000" height="500" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">IO 线程模型：并行读写/解析，串行执行（iothread.c，此树 per-thread event loop）</text>
+  <text x="30" y="49" font-size="10.5" fill="#a1a1a6">io-threads 默认 1（config.c:3289）；命令执行永远在主线程</text>
+
+  <!-- IO threads -->
+  <text x="40" y="86" font-size="11" font-weight="700" fill="#5a2a82">IO 线程（各有独立 event loop，只做网络 IO）</text>
+  <g text-anchor="middle">
+    <rect x="40" y="98" width="200" height="90" rx="10" fill="#f6f0fb" stroke="#dcc6ee" filter="url(#soft)"/>
+    <text x="140" y="120" font-size="10.5" font-weight="600" fill="#5a2a82">IO Thread 1</text>
+    <text x="140" y="140" font-size="9" fill="#8a5cae">读 socket → 解析 RESP</text>
+    <text x="140" y="157" font-size="9" fill="#8a5cae">写回复 → socket</text>
+    <text x="140" y="177" font-size="8.5" fill="#a884c8">绑定的 client 子集</text>
+
+    <rect x="260" y="98" width="200" height="90" rx="10" fill="#f6f0fb" stroke="#dcc6ee" filter="url(#soft)"/>
+    <text x="360" y="120" font-size="10.5" font-weight="600" fill="#5a2a82">IO Thread 2</text>
+    <text x="360" y="140" font-size="9" fill="#8a5cae">读 socket → 解析 RESP</text>
+    <text x="360" y="157" font-size="9" fill="#8a5cae">写回复 → socket</text>
+    <text x="360" y="177" font-size="8.5" fill="#a884c8">绑定的 client 子集</text>
+
+    <rect x="480" y="98" width="150" height="90" rx="10" fill="#f6f0fb" stroke="#dcc6ee" filter="url(#soft)"/>
+    <text x="555" y="120" font-size="10.5" font-weight="600" fill="#5a2a82">IO Thread N</text>
+    <text x="555" y="145" font-size="9" fill="#8a5cae">…</text>
+    <text x="555" y="167" font-size="8.5" fill="#a884c8">assignClientToIOThread</text>
+    <text x="555" y="180" font-size="8" fill="#c0a5dc">选负载最轻线程</text>
+  </g>
+
+  <!-- handoff to main -->
+  <line x1="140" y1="188" x2="300" y2="250" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="360" y1="188" x2="400" y2="250" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="555" y1="188" x2="500" y2="250" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <text x="470" y="228" font-size="9" fill="#a1a1a6">解析好的 client 交回主线程</text>
+
+  <!-- main thread -->
+  <rect x="230" y="258" width="380" height="90" rx="12" fill="#eafaf1" stroke="#b8e6cd" filter="url(#soft)"/>
+  <text x="420" y="282" font-size="12" font-weight="700" fill="#1c6b45" text-anchor="middle">主线程（唯一执行命令的线程）</text>
+  <text x="420" y="304" font-size="9.5" fill="#3a9b6e" text-anchor="middle">beforeSleep: processClientsOfAllIOThreads</text>
+  <text x="420" y="322" font-size="9.5" fill="#1c6b45" text-anchor="middle">→ 串行 call() 执行 → 结果分发回 IO 线程写出</text>
+  <text x="420" y="340" font-size="8.5" fill="#5cb88a" text-anchor="middle">命令传播、过期删除也都在此串行</text>
+
+  <line x1="420" y1="348" x2="420" y2="380" stroke="#2dd4a7" stroke-width="1.4" marker-end="url(#ar)"/>
+  <text x="480" y="370" font-size="9" fill="#3a9b6e">回复经 sendPendingClientsToIOThreads 发回</text>
+
+  <!-- keyspace -->
+  <rect x="680" y="258" width="290" height="90" rx="12" fill="#fdf3e5" stroke="#f0d9b5" filter="url(#soft)"/>
+  <text x="825" y="282" font-size="11" font-weight="600" fill="#7a5a1e" text-anchor="middle">键空间（单线程独占）</text>
+  <text x="825" y="304" font-size="9.5" fill="#b08535" text-anchor="middle">只有主线程访问 → 无并发竞争</text>
+  <text x="825" y="322" font-size="9.5" fill="#b08535" text-anchor="middle">→ 无需锁、无需 CAS</text>
+  <text x="825" y="340" font-size="8.5" fill="#c79a4e" text-anchor="middle">这是单命令原子性的物理保证</text>
+  <line x1="610" y1="303" x2="678" y2="303" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+
+  <!-- why box -->
+  <rect x="30" y="392" width="940" height="80" rx="10" fill="#f7f7f9" stroke="#ececef"/>
+  <text x="50" y="416" font-size="11" font-weight="600" fill="#1d1d1f">为何这样切分</text>
+  <text x="50" y="438" font-size="10" fill="#4a4a4f">· 网络 read/parse/write 是 CPU 密集且天然可并行 → 卸载到 IO 线程，突破单线程网络吞吐瓶颈</text>
+  <text x="50" y="458" font-size="10" fill="#4a4a4f">· 命令执行保持单线程 → 保住"无锁、单命令原子"的前提。二者兼得，而非退回多线程加锁模型</text>
+</svg>

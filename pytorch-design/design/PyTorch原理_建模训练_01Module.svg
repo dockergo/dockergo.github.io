@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="440" viewBox="0 0 1020 440"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1020" height="440" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">nn.Module · 参数 + 子模块 + forward 的树（torch/nn/）</text>
+
+  <!-- Module 结构 -->
+  <rect x="30" y="56" width="470" height="240" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="48" y="80" font-size="12.5" font-weight="600" fill="#1d1d1f">一个 Module 装什么</text>
+  <rect x="48" y="96" width="434" height="44" rx="9" fill="#eafaf1" stroke="#bce6cd"/><text x="64" y="116" font-size="9.5" font-weight="600" fill="#0f5132">Parameter（可学权重）</text><text x="64" y="132" font-size="8.5" fill="#3f8f66">requires_grad=True 的张量，如 Linear 的 W/b；被 optimizer 更新</text>
+  <rect x="48" y="148" width="434" height="44" rx="9" fill="#eef3fb" stroke="#bcd0ec"/><text x="64" y="168" font-size="9.5" font-weight="600" fill="#1b2a4a">子模块（submodule）</text><text x="64" y="184" font-size="8.5" fill="#5b7db1">Module 可嵌 Module → 组成树（Sequential/自定义）</text>
+  <rect x="48" y="200" width="434" height="44" rx="9" fill="#fff7e6" stroke="#f0dcae"/><text x="64" y="220" font-size="9.5" font-weight="600" fill="#7a4d00">buffer（非学习状态）</text><text x="64" y="236" font-size="8.5" fill="#9a7328">如 BatchNorm 的均值/方差，随模型保存但不更新</text>
+  <rect x="48" y="252" width="434" height="36" rx="9" fill="#f4eefb" stroke="#d9c9ef"/><text x="265" y="274" font-size="9.5" fill="#3c1361" text-anchor="middle">forward(x)：定义前向计算（用户重写）</text>
+
+  <!-- 树 + 遍历 -->
+  <rect x="520" y="56" width="470" height="240" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="538" y="80" font-size="12.5" font-weight="600" fill="#1b2a4a">树结构带来的能力</text>
+  <rect x="620" y="96" width="120" height="30" rx="7" fill="#ffffff" stroke="#bcd0ec"/><text x="680" y="115" font-size="8.5" fill="#1b2a4a" text-anchor="middle">MyModel</text>
+  <rect x="560" y="140" width="120" height="30" rx="7" fill="#ffffff" stroke="#bcd0ec"/><text x="620" y="159" font-size="8.5" fill="#1b2a4a" text-anchor="middle">Linear1</text>
+  <rect x="700" y="140" width="120" height="30" rx="7" fill="#ffffff" stroke="#bcd0ec"/><text x="760" y="159" font-size="8.5" fill="#1b2a4a" text-anchor="middle">Linear2</text>
+  <line x1="670" y1="126" x2="620" y2="140" stroke="#c7c7cc" stroke-width="1.1" marker-end="url(#ar)"/>
+  <line x1="700" y1="126" x2="760" y2="140" stroke="#c7c7cc" stroke-width="1.1" marker-end="url(#ar)"/>
+  <text x="538" y="196" font-size="9.5" fill="#5b7db1">· parameters()：递归收集所有权重 → 交 optimizer</text>
+  <text x="538" y="216" font-size="9.5" fill="#5b7db1">· state_dict()：递归导出/加载权重（存档、迁移）</text>
+  <text x="538" y="236" font-size="9.5" fill="#5b7db1">· .cuda()/.to()：递归把所有参数搬设备</text>
+  <text x="538" y="256" font-size="9.5" fill="#5b7db1">· train()/eval()：切换 dropout/BN 行为</text>
+  <text x="538" y="278" font-size="9" fill="#8fa9cf">"一次操作递归作用于整棵模型"——树结构的红利</text>
+
+  <!-- 调用 -->
+  <rect x="30" y="312" width="960" height="122" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="48" y="336" font-size="12.5" font-weight="600" fill="#1d1d1f">model(x) 怎么跑</text>
+  <rect x="48" y="352" width="270" height="66" rx="9" fill="#eafaf1" stroke="#bce6cd"/><text x="183" y="374" font-size="9.5" font-weight="600" fill="#0f5132" text-anchor="middle">model(x) → __call__</text><text x="183" y="394" font-size="8.5" fill="#3f8f66" text-anchor="middle">跑 hook + forward(x)</text><text x="183" y="410" font-size="8.5" fill="#3f8f66" text-anchor="middle">不要直接 model.forward(x)</text>
+  <rect x="334" y="352" width="300" height="66" rx="9" fill="#eef3fb" stroke="#bcd0ec"/><text x="484" y="374" font-size="9.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">forward 里就是张量算子</text><text x="484" y="394" font-size="8.5" fill="#5b7db1" text-anchor="middle">y = x @ W.T + b = 一串可微算子</text><text x="484" y="410" font-size="8.5" fill="#5b7db1" text-anchor="middle">autograd 顺手建反向图</text>
+  <rect x="650" y="352" width="320" height="66" rx="9" fill="#fff7e6" stroke="#f0dcae"/><text x="810" y="374" font-size="9.5" font-weight="600" fill="#7a4d00" text-anchor="middle">nn 只是"张量算子的有状态封装"</text><text x="810" y="394" font-size="8.5" fill="#9a7328" text-anchor="middle">Module 管权重生命周期</text><text x="810" y="410" font-size="8.5" fill="#9a7328" text-anchor="middle">计算仍落到张量/autograd</text>
+</svg>

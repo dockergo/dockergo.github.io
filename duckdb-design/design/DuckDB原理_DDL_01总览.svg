@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="410" viewBox="0 0 1020 410"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1020" height="410" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">DDL 总览 · 定义对象 = 在 Catalog 里增删改一个 CatalogEntry（事务性、写 WAL）</text>
+
+  <!-- 语句族 -->
+  <rect x="30" y="52" width="230" height="300" rx="14" fill="#f4eefb" stroke="#d9c9ef" filter="url(#soft)"/>
+  <text x="48" y="76" font-size="12" font-weight="600" fill="#3c1361">DDL 语句族</text>
+  <rect x="48" y="90" width="194" height="30" rx="7" fill="#ffffff" stroke="#d9c9ef"/><text x="145" y="110" font-size="10" fill="#3c1361" text-anchor="middle">CREATE TABLE / VIEW</text>
+  <rect x="48" y="126" width="194" height="30" rx="7" fill="#ffffff" stroke="#d9c9ef"/><text x="145" y="146" font-size="10" fill="#3c1361" text-anchor="middle">CREATE INDEX / SEQUENCE</text>
+  <rect x="48" y="162" width="194" height="30" rx="7" fill="#ffffff" stroke="#d9c9ef"/><text x="145" y="182" font-size="10" fill="#3c1361" text-anchor="middle">CREATE SCHEMA / TYPE</text>
+  <rect x="48" y="198" width="194" height="30" rx="7" fill="#ffffff" stroke="#d9c9ef"/><text x="145" y="218" font-size="10" fill="#3c1361" text-anchor="middle">CREATE MACRO / TRIGGER</text>
+  <rect x="48" y="234" width="194" height="30" rx="7" fill="#ffffff" stroke="#d9c9ef"/><text x="145" y="254" font-size="10" fill="#3c1361" text-anchor="middle">ALTER TABLE …</text>
+  <rect x="48" y="270" width="194" height="30" rx="7" fill="#ffffff" stroke="#d9c9ef"/><text x="145" y="290" font-size="10" fill="#3c1361" text-anchor="middle">DROP … [CASCADE]</text>
+  <rect x="48" y="306" width="194" height="30" rx="7" fill="#ffffff" stroke="#d9c9ef"/><text x="145" y="326" font-size="10" fill="#3c1361" text-anchor="middle">ATTACH / DETACH DATABASE</text>
+
+  <!-- 处理链 -->
+  <rect x="290" y="52" width="380" height="300" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="308" y="76" font-size="12.5" font-weight="600" fill="#1d1d1f">处理链</text>
+
+  <rect x="308" y="92" width="344" height="48" rx="10" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="480" y="112" font-size="10.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">Binder：解析对象名、校验 schema/类型</text>
+  <text x="480" y="130" font-size="9" fill="#5b7db1" text-anchor="middle">找到目标 Catalog / Schema</text>
+
+  <rect x="308" y="152" width="344" height="48" rx="10" fill="#eafaf1" stroke="#bce6cd"/>
+  <text x="480" y="172" font-size="10.5" font-weight="600" fill="#0f5132" text-anchor="middle">CatalogSet.CreateEntry / DropEntry / Alter</text>
+  <text x="480" y="190" font-size="9" fill="#3f8f66" text-anchor="middle">在事务内建新版本条目（catalog_set.cpp:199）</text>
+
+  <rect x="308" y="212" width="344" height="48" rx="10" fill="#fff7e6" stroke="#f0dcae"/>
+  <text x="480" y="232" font-size="10.5" font-weight="600" fill="#7a4d00" text-anchor="middle">DependencyManager 记/查对象依赖</text>
+  <text x="480" y="250" font-size="9" fill="#9a7328" text-anchor="middle">被依赖对象不能被裸 DROP</text>
+
+  <rect x="308" y="272" width="344" height="64" rx="10" fill="#f6f6f8" stroke="#e2e2e7"/>
+  <text x="480" y="294" font-size="10.5" font-weight="600" fill="#494950" text-anchor="middle">COMMIT：条目版本可见 + 写 WAL</text>
+  <text x="480" y="312" font-size="9" fill="#6a6a70" text-anchor="middle">WriteCreateTable/… (write_ahead_log.cpp:300+)</text>
+  <text x="480" y="328" font-size="9" fill="#6a6a70" text-anchor="middle">回滚则整个 DDL 撤销</text>
+
+  <line x1="480" y1="140" x2="480" y2="152" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="480" y1="200" x2="480" y2="212" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="480" y1="260" x2="480" y2="272" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+
+  <!-- 特点 -->
+  <rect x="700" y="52" width="290" height="300" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="718" y="76" font-size="12" font-weight="600" fill="#1b2a4a">DuckDB DDL 的三个特点</text>
+  <rect x="718" y="92" width="254" height="76" rx="10" fill="#ffffff" stroke="#bcd0ec"/>
+  <text x="728" y="114" font-size="10.5" font-weight="600" fill="#1b2a4a">① 事务性 DDL</text>
+  <text x="728" y="134" font-size="9.5" fill="#5b7db1">CREATE/DROP/ALTER 在事务里，</text>
+  <text x="728" y="150" font-size="9.5" fill="#5b7db1">可与 DML 一起原子提交/回滚</text>
+  <rect x="718" y="180" width="254" height="76" rx="10" fill="#ffffff" stroke="#bcd0ec"/>
+  <text x="728" y="202" font-size="10.5" font-weight="600" fill="#1b2a4a">② 元数据与数据同一单文件</text>
+  <text x="728" y="222" font-size="9.5" fill="#5b7db1">Catalog 序列化进 .duckdb</text>
+  <text x="728" y="238" font-size="9.5" fill="#5b7db1">无外部元数据服务</text>
+  <rect x="718" y="268" width="254" height="68" rx="10" fill="#ffffff" stroke="#bcd0ec"/>
+  <text x="728" y="290" font-size="10.5" font-weight="600" fill="#1b2a4a">③ 多库：ATTACH</text>
+  <text x="728" y="310" font-size="9.5" fill="#5b7db1">同时挂多个库文件，跨库查询</text>
+  <text x="728" y="326" font-size="9.5" fill="#5b7db1">各库有独立 Catalog</text>
+
+  <line x1="260" y1="200" x2="290" y2="200" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+</svg>

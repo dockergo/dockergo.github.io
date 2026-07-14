@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="600" viewBox="0 0 1060 600" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1060" height="600" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Processors 框架：IProcessor 状态机 + Port + Chunk</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">IProcessor (IProcessor.h:119) · Status 状态机 (:134) · 数据以 Chunk（列批）经 Port 流动</text>
+
+  <!-- one processor anatomy -->
+  <rect x="40" y="76" width="440" height="230" rx="14" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="260" y="100" font-size="12" font-weight="700" fill="#12402a" text-anchor="middle">一个 IProcessor 的解剖</text>
+  <rect x="120" y="120" width="280" height="120" rx="12" fill="#fff" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="260" y="150" font-size="11" font-weight="700" fill="#12402a" text-anchor="middle">Processor（算子节点）</text>
+  <text x="260" y="172" font-size="8.5" fill="#2f6f4f" text-anchor="middle">prepare() 报告状态</text>
+  <text x="260" y="188" font-size="8.5" fill="#2f6f4f" text-anchor="middle">work() 干活（算一批）</text>
+  <text x="260" y="210" font-size="8" fill="#4c8567" text-anchor="middle">不主动跑，由调度器问"能做什么"</text>
+  <!-- ports -->
+  <rect x="60" y="160" width="50" height="40" rx="7" fill="#eef3fb" stroke="#bcd0ec"/><text x="85" y="184" font-size="8" fill="#1b2a4a" text-anchor="middle">输入 Port</text>
+  <rect x="410" y="160" width="50" height="40" rx="7" fill="#fdf6ea" stroke="#efdcb4"/><text x="435" y="184" font-size="8" fill="#5a3410" text-anchor="middle">输出 Port</text>
+  <g stroke="#c7c7cc" stroke-width="1.4" fill="none">
+    <line x1="110" y1="180" x2="120" y2="180" marker-end="url(#ar)"/>
+    <line x1="400" y1="180" x2="410" y2="180" marker-end="url(#ar)"/>
+  </g>
+  <text x="260" y="266" font-size="8.5" fill="#2f6f4f" text-anchor="middle">Chunk 从输入 Port 进、经 work() 处理、从输出 Port 出</text>
+  <text x="260" y="284" font-size="8.5" fill="#4c8567" text-anchor="middle">Chunk = 一批列（向量化单位），无列名只有数据+行数</text>
+
+  <!-- status machine -->
+  <rect x="500" y="76" width="520" height="230" rx="14" fill="#f3f7fc" stroke="#cfe0f2"/>
+  <text x="760" y="100" font-size="12" font-weight="700" fill="#274a78" text-anchor="middle">prepare() 返回的 Status 状态机（IProcessor.h:134）</text>
+  <g text-anchor="middle" font-size="8.5">
+    <rect x="520" y="116" width="150" height="44" rx="8" fill="#fff" stroke="#cfe0f2"/><text x="595" y="136" font-weight="600" fill="#274a78">NeedData</text><text x="595" y="150" fill="#5b7db1">等上游给数据</text>
+    <rect x="690" y="116" width="150" height="44" rx="8" fill="#fff" stroke="#cfe0f2"/><text x="765" y="136" font-weight="600" fill="#274a78">PortFull</text><text x="765" y="150" fill="#5b7db1">下游满，等消费</text>
+    <rect x="860" y="116" width="140" height="44" rx="8" fill="#f2fbf6" stroke="#cdeadb"/><text x="930" y="136" font-weight="600" fill="#12402a">Ready</text><text x="930" y="150" fill="#2f6f4f">可执行 work()</text>
+    <rect x="520" y="170" width="150" height="44" rx="8" fill="#fff" stroke="#cfe0f2"/><text x="595" y="190" font-weight="600" fill="#274a78">Async</text><text x="595" y="204" fill="#5b7db1">异步等待（如 IO）</text>
+    <rect x="690" y="170" width="150" height="44" rx="8" fill="#fff" stroke="#cfe0f2"/><text x="765" y="190" font-weight="600" fill="#274a78">ExpandPipeline</text><text x="765" y="204" fill="#5b7db1">运行期动态扩图</text>
+    <rect x="860" y="170" width="140" height="44" rx="8" fill="#f7f7f9" stroke="#e6e6ea"/><text x="930" y="190" font-weight="600" fill="#6b6b70">Finished</text><text x="930" y="204" fill="#9a9a9f">该算子完成</text>
+  </g>
+  <rect x="520" y="228" width="480" height="66" rx="9" fill="#fff" stroke="#cfe0f2"/>
+  <text x="760" y="248" font-size="9" font-weight="600" fill="#274a78" text-anchor="middle">调度器据此决定：给它数据？让它跑？还是等？</text>
+  <text x="760" y="266" font-size="8.5" fill="#5b7db1" text-anchor="middle">Ready → 空闲线程执行 work()；NeedData → 顺 Port 向上游拉</text>
+  <text x="760" y="282" font-size="8.5" fill="#8aa6cf" text-anchor="middle">这套"状态机+端口"让通用调度器能驱动任意执行图</text>
+
+  <!-- example chain -->
+  <rect x="40" y="326" width="980" height="90" rx="13" fill="#fdf9f0" stroke="#efe3cd"/>
+  <text x="60" y="350" font-size="11" font-weight="700" fill="#7a5a1e">一条 Processor 链（数据从左到右流）</text>
+  <g text-anchor="middle" font-size="8.5">
+    <rect x="70" y="362" width="150" height="42" rx="8" fill="#fdf6ea" stroke="#efdcb4"/><text x="145" y="380" font-weight="600" fill="#5a3410">Source（读存储）</text><text x="145" y="395" fill="#93762e">产出 Chunk</text>
+    <rect x="260" y="362" width="150" height="42" rx="8" fill="#f2fbf6" stroke="#cdeadb"/><text x="335" y="380" font-weight="600" fill="#12402a">FilterTransform</text><text x="335" y="395" fill="#2f6f4f">筛行</text>
+    <rect x="450" y="362" width="150" height="42" rx="8" fill="#f2fbf6" stroke="#cdeadb"/><text x="525" y="380" font-weight="600" fill="#12402a">ExpressionTransform</text><text x="525" y="395" fill="#2f6f4f">算表达式</text>
+    <rect x="640" y="362" width="150" height="42" rx="8" fill="#e9f1fb" stroke="#c4d8f0"/><text x="715" y="380" font-weight="600" fill="#1b2a4a">AggregatingTransform</text><text x="715" y="395" fill="#5b7db1">聚合</text>
+    <rect x="830" y="362" width="150" height="42" rx="8" fill="#f6f2fb" stroke="#d9c9ec"/><text x="905" y="380" font-weight="600" fill="#3d2a5a">Sink（输出）</text><text x="905" y="395" fill="#7a5da5">结果</text>
+  </g>
+  <g stroke="#9ccbb0" stroke-width="1.3" fill="none">
+    <line x1="220" y1="383" x2="260" y2="383" marker-end="url(#ar)"/>
+    <line x1="410" y1="383" x2="450" y2="383" marker-end="url(#ar)"/>
+    <line x1="600" y1="383" x2="640" y2="383" marker-end="url(#ar)"/>
+    <line x1="790" y1="383" x2="830" y2="383" marker-end="url(#ar)"/>
+  </g>
+
+  <rect x="40" y="430" width="980" height="130" rx="12" fill="#f7f7f9" stroke="#e6e6ea"/>
+  <text x="60" y="454" font-size="11" font-weight="700" fill="#1d1d1f">一句话</text>
+  <text x="60" y="476" font-size="10" fill="#4b4b50">执行的原子是 IProcessor：一个带输入/输出 Port 的算子节点，通过 prepare() 报告状态（NeedData/Ready/PortFull/</text>
+  <text x="60" y="494" font-size="10" fill="#4b4b50">Finished/Async/ExpandPipeline），由调度器驱动 work()。数据以 Chunk（列批）经 Port 在算子间流动。</text>
+  <text x="60" y="516" font-size="10" fill="#4b4b50">这套"状态机 + 端口"的通用设计，让任意复杂的执行图都能被同一个 PipelineExecutor 调度——是向量化并行的骨架。</text>
+  <text x="60" y="540" font-size="9" fill="#8a8a8f">对照 Doris：类似 Pipeline 引擎的 Operator/PipelineTask，但 CH 的 pull 模型 + 端口状态机是其特色。</text>
+</svg>

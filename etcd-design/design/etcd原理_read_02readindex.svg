@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="500" viewBox="0 0 1080 500" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs><filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+  <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker></defs>
+  <rect width="1080" height="500" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">ReadIndex 机制：拿 commit index → 等 apply 追上 → 读本地</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">read/read.go（独立包）: LinearizableReadLoop(:96) requestCurrentIndex(:148) raft.ReadIndex(:236) appliedIndex&lt;confirmedIndex→ApplyWait(:133)</text>
+  <g text-anchor="middle">
+    <rect x="40" y="80" width="230" height="80" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/><text x="155" y="106" font-size="10" font-weight="700" fill="#1b2a4a">① 请求 read index</text><text x="155" y="126" font-size="8" fill="#5b7db1">raft.ReadIndex(:236)</text><text x="155" y="142" font-size="8" fill="#8aa6cf">拿"此刻 commit index"</text>
+    <rect x="320" y="80" width="230" height="80" rx="11" fill="#e9f1fb" stroke="#c4d8f0" filter="url(#soft)"/><text x="435" y="102" font-size="10" font-weight="700" fill="#1b2a4a">② leader 心跳确认</text><text x="435" y="122" font-size="8" fill="#5b7db1">广播心跳，收多数派响应</text><text x="435" y="138" font-size="8" fill="#8aa6cf">证明"我还是 leader"</text><text x="435" y="152" font-size="7.5" fill="#8aa6cf">→ confirmedIndex</text>
+    <rect x="600" y="80" width="230" height="80" rx="11" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/><text x="715" y="102" font-size="10" font-weight="700" fill="#5a3410">③ 等本地 apply 追上</text><text x="715" y="122" font-size="8" fill="#93762e">appliedIndex &lt; confirmedIndex?</text><text x="715" y="138" font-size="8" fill="#b08843">是 → ApplyWait 阻塞</text><text x="715" y="152" font-size="7.5" fill="#b08843">直到 applied ≥ confirmed</text>
+    <rect x="880" y="80" width="160" height="80" rx="11" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/><text x="960" y="106" font-size="10" font-weight="700" fill="#12402a">④ 读本地 MVCC</text><text x="960" y="126" font-size="8" fill="#2f6f4f">本地状态已够新</text><text x="960" y="142" font-size="8" fill="#4c8567">线性一致成立</text>
+  </g>
+  <g stroke="#c7c7cc" stroke-width="1.4" fill="none">
+    <line x1="270" y1="120" x2="320" y2="120" marker-end="url(#ar)"/>
+    <line x1="550" y1="120" x2="600" y2="120" marker-end="url(#ar)"/>
+    <line x1="830" y1="120" x2="880" y2="120" marker-end="url(#ar)"/>
+  </g>
+  <rect x="40" y="186" width="490" height="150" rx="12" fill="#f3f7fc" stroke="#cfe0f2"/>
+  <text x="60" y="210" font-size="11" font-weight="700" fill="#274a78">为什么这样就够（不必复制日志）</text>
+  <text x="60" y="234" font-size="9.5" fill="#5b7db1">· confirmedIndex = 读发起时集群"已提交到哪"</text>
+  <text x="60" y="254" font-size="9.5" fill="#5b7db1">· 等本地 applied ≥ confirmedIndex → 本地已含那时所有已提交写</text>
+  <text x="60" y="274" font-size="9.5" fill="#5b7db1">· 此后读本地 → 必含最近成功写 → 线性一致</text>
+  <text x="60" y="296" font-size="9" fill="#8aa6cf">· 读不改状态，无需写日志/复制——只"确认+等待"</text>
+  <text x="60" y="316" font-size="9" fill="#8aa6cf">· 成本 = 一轮心跳（②）+ 可能的短暂等待（③）</text>
+  <rect x="550" y="186" width="490" height="150" rx="12" fill="#fdf9f0" stroke="#efe3cd"/>
+  <text x="570" y="210" font-size="11" font-weight="700" fill="#7a5a1e">批处理优化</text>
+  <text x="570" y="234" font-size="9.5" fill="#93762e">· 同一时刻多个并发线性读，共享一次 ReadIndex</text>
+  <text x="570" y="254" font-size="9.5" fill="#93762e">· 一轮心跳确认 → 一批读都用这个 confirmedIndex</text>
+  <text x="570" y="274" font-size="9.5" fill="#93762e">· 摊薄心跳成本，高并发读不会每个都发心跳</text>
+  <text x="570" y="296" font-size="9" fill="#b08843">· firstCommitInTermNotifier(:194)：新 leader 上任首次确认</text>
+  <text x="570" y="316" font-size="9" fill="#b08843">· readIndexRetryTime=500ms：确认超时重试</text>
+  <rect x="40" y="352" width="1000" height="60" rx="12" fill="#f7f7f9" stroke="#e6e6ea"/>
+  <text x="60" y="376" font-size="11" font-weight="700" fill="#1d1d1f">一句话</text>
+  <text x="60" y="398" font-size="10" fill="#4b4b50">ReadIndex：向 Raft 拿当前 commit index（leader 经一轮心跳确认仍是 leader）→ 等本地 apply 追上该 index → 读本地 MVCC；不复制日志，多个并发读共享一次确认。</text>
+</svg>

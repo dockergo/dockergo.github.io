@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="520" viewBox="0 0 1000 520"
+     font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1000" height="520" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">quic-go http3 栈 · 每个 HTTP 请求映射到一条 QUIC 双向流</text>
+  <text x="30" y="50" font-size="10" fill="#86868b">http3 包实现 net/http 的 Handler / RoundTripper 接口，把 QUIC 流当作 HTTP/3 帧的载体</text>
+
+  <!-- 应用层 -->
+  <rect x="30" y="70" width="450" height="70" rx="13" fill="#f4eefb" stroke="#d9c9ef" filter="url(#soft)"/>
+  <text x="255" y="92" font-size="11.5" font-weight="600" fill="#3c1361" text-anchor="middle">服务端：http3.Server</text>
+  <text x="255" y="110" font-size="8.5" fill="#7a52a8" text-anchor="middle">ListenAndServe(:177) / Serve(:211)</text>
+  <text x="255" y="128" font-size="8.5" fill="#7a52a8" text-anchor="middle">ServeQUICConn(:238) → handleConn(:470) 复用 http.Handler</text>
+
+  <rect x="520" y="70" width="450" height="70" rx="13" fill="#f4eefb" stroke="#d9c9ef" filter="url(#soft)"/>
+  <text x="745" y="92" font-size="11.5" font-weight="600" fill="#3c1361" text-anchor="middle">客户端：http3.Transport（RoundTripper）</text>
+  <text x="745" y="110" font-size="8.5" fill="#7a52a8" text-anchor="middle">RoundTrip(:289) → dial(:344) 建 QUIC 连接</text>
+  <text x="745" y="128" font-size="8.5" fill="#7a52a8" text-anchor="middle">NewClientConn(:434) 管理请求流</text>
+
+  <!-- HTTP/3 帧层 -->
+  <rect x="30" y="160" width="940" height="120" rx="14" fill="#f5faf6" stroke="#cfe6d5" filter="url(#soft)"/>
+  <text x="48" y="182" font-size="11.5" font-weight="600" fill="#2c5a3a">HTTP/3 帧层（frames.go）—— 帧类型用 varint 编码</text>
+  <rect x="48" y="196" width="210" height="70" rx="10" fill="#ffffff" stroke="#cfe6d5"/><text x="153" y="217" font-size="9.5" font-weight="600" fill="#2c5a3a" text-anchor="middle">HEADERS 帧 (0x1)</text><text x="153" y="235" font-size="8" fill="#5aa06f" text-anchor="middle">请求/响应头 → QPACK 编码</text><text x="153" y="251" font-size="8" fill="#5aa06f" text-anchor="middle">parseHeaders(headers.go:54)</text>
+  <rect x="268" y="196" width="210" height="70" rx="10" fill="#ffffff" stroke="#cfe6d5"/><text x="373" y="217" font-size="9.5" font-weight="600" fill="#2c5a3a" text-anchor="middle">DATA 帧 (0x0)</text><text x="373" y="235" font-size="8" fill="#5aa06f" text-anchor="middle">请求/响应体字节</text><text x="373" y="251" font-size="8" fill="#5aa06f" text-anchor="middle">body.go 流式读写</text>
+  <rect x="488" y="196" width="210" height="70" rx="10" fill="#ffffff" stroke="#cfe6d5"/><text x="593" y="217" font-size="9.5" font-weight="600" fill="#2c5a3a" text-anchor="middle">SETTINGS 帧 (0x4)</text><text x="593" y="235" font-size="8" fill="#5aa06f" text-anchor="middle">控制流首帧协商参数</text><text x="593" y="251" font-size="8" fill="#5aa06f" text-anchor="middle">MaxFieldSectionSize/Datagram(0x33)</text>
+  <rect x="708" y="196" width="244" height="70" rx="10" fill="#ffffff" stroke="#cfe6d5"/><text x="830" y="217" font-size="9.5" font-weight="600" fill="#2c5a3a" text-anchor="middle">GOAWAY 帧 (0x7)</text><text x="830" y="235" font-size="8" fill="#5aa06f" text-anchor="middle">优雅关闭</text><text x="830" y="251" font-size="8" fill="#5aa06f" text-anchor="middle">保留类型 0x2/0x6/0x8/0x9 忽略</text>
+
+  <!-- QUIC 流层 -->
+  <rect x="30" y="300" width="940" height="130" rx="14" fill="#eafaf1" stroke="#bce6cd" filter="url(#soft)"/>
+  <text x="48" y="322" font-size="11.5" font-weight="600" fill="#0f5132">QUIC 流层（承载 HTTP/3 的物理载体）</text>
+  <rect x="48" y="336" width="290" height="80" rx="10" fill="#ffffff" stroke="#bce6cd"/><text x="193" y="357" font-size="9.5" font-weight="600" fill="#0f5132" text-anchor="middle">请求流（双向流）</text><text x="193" y="375" font-size="8" fill="#3f8f66" text-anchor="middle">每个 HTTP 请求 = 一条 Stream</text><text x="193" y="391" font-size="8" fill="#3f8f66" text-anchor="middle">HEADERS + DATA 帧顺序写入</text><text x="193" y="407" font-size="8" fill="#3f8f66" text-anchor="middle">流间独立，无队头阻塞</text>
+  <rect x="348" y="336" width="290" height="80" rx="10" fill="#ffffff" stroke="#bce6cd"/><text x="493" y="357" font-size="9.5" font-weight="600" fill="#0f5132" text-anchor="middle">控制流（单向流）</text><text x="493" y="375" font-size="8" fill="#3f8f66" text-anchor="middle">连接级参数、SETTINGS、GOAWAY</text><text x="493" y="391" font-size="8" fill="#3f8f66" text-anchor="middle">每端各一条，连接建立即开</text><text x="493" y="407" font-size="8" fill="#3f8f66" text-anchor="middle">state_tracking_stream 跟踪状态</text>
+  <rect x="648" y="336" width="304" height="80" rx="10" fill="#ffffff" stroke="#bce6cd"/><text x="800" y="357" font-size="9.5" font-weight="600" fill="#0f5132" text-anchor="middle">QPACK 编/解码流（单向流）</text><text x="800" y="375" font-size="8" fill="#3f8f66" text-anchor="middle">外部库 quic-go/qpack v0.6.0</text><text x="800" y="391" font-size="8" fill="#3f8f66" text-anchor="middle">静态表 + Huffman（详见 HTTP3 与 QPACK 篇）</text><text x="800" y="407" font-size="8" fill="#3f8f66" text-anchor="middle">encoder/decoder 流传增量指令</text>
+
+  <!-- 底部 -->
+  <rect x="30" y="448" width="940" height="48" rx="12" fill="#f6f6f8" stroke="#e2e2e7"/>
+  <text x="500" y="470" font-size="9.5" fill="#494950" text-anchor="middle"><tspan font-weight="600" fill="#1d1d1f">关键：</tspan>http3 只做「HTTP 语义 + 帧编解码 + QPACK」，可靠传输/加密/拥塞全交给下面的 QUIC 层 —— 分层清晰</text>
+  <text x="500" y="487" font-size="8.5" fill="#86868b" text-anchor="middle">也支持 HTTP Datagram（capsule.go）与 WebTransport 的基础能力</text>
+
+  <path d="M255,140 L255,160" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M745,140 L745,160" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M400,280 L400,300" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+</svg>

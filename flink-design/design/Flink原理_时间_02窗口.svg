@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="540" viewBox="0 0 1080 540"
+     font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1080" height="540" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Flink 时间 · WindowOperator：assigner + trigger + 状态 + 定时器</text>
+  <text x="30" y="50" font-size="11" fill="#a1a1a6">事件时间窗口在水位线越过窗口末尾时触发 emitWindowContents;累积存 keyed state</text>
+
+  <!-- WindowOperator 大容器 -->
+  <rect x="40" y="76" width="700" height="436" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="62" y="104" font-size="13" font-weight="700" fill="#1b2a4a">WindowOperator</text>
+  <text x="62" y="125" font-size="10" fill="#5b7db1">windowAssigner.isEventTime() 决定走事件时间还是处理时间分支</text>
+
+  <!-- 输入记录 -->
+  <rect x="62" y="140" width="656" height="46" rx="10" fill="#ffffff" stroke="#ececf1"/>
+  <text x="78" y="168" font-size="11" fill="#1b2a4a">输入记录(带 key + 时间戳)进入 processElement</text>
+
+  <path d="M 390,186 L 390,204" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <!-- WindowAssigner -->
+  <rect x="62" y="206" width="320" height="96" rx="11" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="80" y="231" font-size="12" font-weight="600" fill="#12402a">① WindowAssigner 分窗</text>
+  <text x="80" y="253" font-size="9.5" fill="#2f6f4f">每条记录分到一个或多个窗口</text>
+  <text x="80" y="273" font-size="9.5" fill="#2f6f4f">滚动 / 滑动 / 会话</text>
+  <text x="80" y="293" font-size="9.5" fill="#2f6f4f">processElement 分窗 + 注册定时器</text>
+
+  <!-- Trigger -->
+  <rect x="398" y="206" width="320" height="96" rx="11" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="416" y="231" font-size="12" font-weight="600" fill="#3d2a5a">② Trigger 定触发时机</text>
+  <text x="416" y="253" font-size="9.5" fill="#7a5c9e">onEventTime / onProcessingTime</text>
+  <text x="416" y="273" font-size="9.5" fill="#7a5c9e">触发 emitWindowContents</text>
+  <text x="416" y="293" font-size="9.5" fill="#7a5c9e">事件时间窗口:水位线越过窗口末尾即触发</text>
+
+  <path d="M 222,302 L 222,322" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M 558,302 L 558,322" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <!-- 窗口状态 -->
+  <rect x="62" y="324" width="320" height="96" rx="11" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="80" y="349" font-size="12" font-weight="600" fill="#5a3410">③ 窗口累积状态</text>
+  <text x="80" y="371" font-size="9.5" fill="#93762e">存 keyed state(AppendingState)</text>
+  <text x="80" y="391" font-size="9.5" fill="#93762e">按 key + window 命名</text>
+  <text x="80" y="411" font-size="9.5" fill="#93762e">窗口有状态:状态管理存、检查点保</text>
+
+  <!-- InternalTimerService -->
+  <rect x="398" y="324" width="320" height="96" rx="11" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="416" y="349" font-size="12" font-weight="600" fill="#1b2a4a">④ InternalTimerService</text>
+  <text x="416" y="371" font-size="9.5" fill="#5b7db1">窗口结束的定时器</text>
+  <text x="416" y="391" font-size="9.5" fill="#5b7db1">由任务执行的 mailbox 触发</text>
+  <text x="416" y="411" font-size="9.5" fill="#5b7db1">到点回调 Trigger.onEventTime</text>
+
+  <!-- 触发输出 -->
+  <rect x="62" y="440" width="656" height="52" rx="11" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="80" y="464" font-size="11" font-weight="600" fill="#12402a">→ 触发时 emitWindowContents:对窗口累积值算聚合并输出</text>
+  <text x="80" y="484" font-size="9.5" fill="#2f6f4f">用增量聚合(reduce/aggregate)而非全量 process,防状态爆炸</text>
+
+  <!-- 右侧：迟到兜底 -->
+  <rect x="760" y="76" width="280" height="436" rx="14" fill="#f5faf6" stroke="#cfe6d5" filter="url(#soft)"/>
+  <text x="782" y="104" font-size="13" font-weight="700" fill="#2c5a3a">迟到数据兜底</text>
+
+  <rect x="782" y="122" width="236" height="120" rx="10" fill="#ffffff" stroke="#ececf1"/>
+  <text x="798" y="146" font-size="11" font-weight="600" fill="#2c5a3a">allowedLateness</text>
+  <text x="798" y="168" font-size="9.5" fill="#2f6f4f">窗口触发后再容忍多久</text>
+  <text x="798" y="188" font-size="9.5" fill="#2f6f4f">的迟到数据(重触发)</text>
+  <text x="798" y="212" font-size="9.5" fill="#a1a1a6">延迟越大成本越高,需权衡</text>
+  <text x="798" y="230" font-size="9.5" fill="#a1a1a6">窗口状态保留更久</text>
+
+  <rect x="782" y="256" width="236" height="110" rx="10" fill="#ffffff" stroke="#ececf1"/>
+  <text x="798" y="280" font-size="11" font-weight="600" fill="#2c5a3a">侧输出 side output</text>
+  <text x="798" y="302" font-size="9.5" fill="#2f6f4f">兜底极晚数据</text>
+  <text x="798" y="322" font-size="9.5" fill="#2f6f4f">超 allowedLateness 的数据</text>
+  <text x="798" y="342" font-size="9.5" fill="#2f6f4f">导向侧输出流,不丢弃</text>
+
+  <rect x="782" y="380" width="236" height="112" rx="10" fill="#fbeaea" stroke="#e7c3c3"/>
+  <text x="798" y="404" font-size="11" font-weight="600" fill="#4a1414">误区提醒</text>
+  <text x="798" y="426" font-size="9.5" fill="#7a2a2a">窗口并非无状态</text>
+  <text x="798" y="446" font-size="9.5" fill="#7a2a2a">长窗口 + 高基数 key</text>
+  <text x="798" y="466" font-size="9.5" fill="#7a2a2a">= 状态爆炸风险</text>
+  <text x="798" y="486" font-size="9.5" fill="#7a2a2a">迟到数据不一定丢</text>
+</svg>

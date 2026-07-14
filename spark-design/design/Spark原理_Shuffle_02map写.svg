@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="580" viewBox="0 0 1060 580" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs><filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+  <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker></defs>
+  <rect width="1060" height="580" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">map 端写：SortShuffleManager 按条件选三种 Writer</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">registerShuffle (sort/SortShuffleManager.scala:93) 选 handle → getWriter 造 writer · 都产"1 数据+1 索引"</text>
+  <rect x="360" y="72" width="340" height="50" rx="12" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="530" y="92" font-size="11" font-weight="700" fill="#5a3410" text-anchor="middle">registerShuffle 决策（按聚合/分区数）</text>
+  <text x="530" y="110" font-size="8.5" fill="#93762e" text-anchor="middle">选 BypassMergeSort / Serialized / Base handle</text>
+  <g text-anchor="middle">
+    <rect x="40" y="150" width="310" height="150" rx="13" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+    <text x="195" y="174" font-size="10.5" font-weight="700" fill="#12402a">Bypass MergeSort Writer</text>
+    <text x="195" y="196" font-size="8.5" fill="#2f6f4f">条件：无 map 聚合 且</text>
+    <text x="195" y="212" font-size="8.5" fill="#2f6f4f">分区数 ≤ bypassThreshold(默认200)</text>
+    <text x="195" y="234" font-size="8.5" fill="#12402a">每分区一临时文件直写</text>
+    <text x="195" y="250" font-size="8.5" fill="#2f6f4f">最后合并，免排序</text>
+    <text x="195" y="274" font-size="8" fill="#4c8567">小分区数最省</text>
+    <text x="195" y="290" font-size="8" fill="#8aa6cf">SortShuffleWriter.scala:118</text>
+    <rect x="375" y="150" width="310" height="150" rx="13" fill="#e9f1fb" stroke="#c4d8f0" filter="url(#soft)"/>
+    <text x="530" y="174" font-size="10.5" font-weight="700" fill="#1b2a4a">Unsafe Shuffle Writer</text>
+    <text x="530" y="196" font-size="8.5" fill="#5b7db1">条件：序列化器支持重定位</text>
+    <text x="530" y="212" font-size="8.5" fill="#5b7db1">且无聚合 且分区 ≤ 16M</text>
+    <text x="530" y="234" font-size="8.5" fill="#1b2a4a">Tungsten 二进制序列化态排序</text>
+    <text x="530" y="250" font-size="8.5" fill="#5b7db1">直接排序序列化字节</text>
+    <text x="530" y="274" font-size="8" fill="#8aa6cf">最快（免反序列化）</text>
+    <text x="530" y="290" font-size="8" fill="#8aa6cf">SortShuffleManager:227</text>
+    <rect x="710" y="150" width="310" height="150" rx="13" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+    <text x="865" y="174" font-size="10.5" font-weight="700" fill="#5a3410">Sort Shuffle Writer</text>
+    <text x="865" y="196" font-size="8.5" fill="#93762e">条件：其余（如需 map 聚合）</text>
+    <text x="865" y="218" font-size="8.5" fill="#5a3410">用 ExternalSorter 排序</text>
+    <text x="865" y="234" font-size="8.5" fill="#93762e">超内存 spill 到磁盘</text>
+    <text x="865" y="256" font-size="8" fill="#b08843">通用兜底、支持聚合</text>
+    <text x="865" y="276" font-size="8" fill="#b08843">SortShuffleWriter.scala:29</text>
+  </g>
+  <g stroke="#c7c7cc" stroke-width="1.3" fill="none">
+    <path d="M470,122 L195,150" marker-end="url(#ar)"/><line x1="530" y1="122" x2="530" y2="150" marker-end="url(#ar)"/><path d="M590,122 L865,150" marker-end="url(#ar)"/>
+  </g>
+  <rect x="40" y="316" width="980" height="76" rx="13" fill="#f3f7fc" stroke="#cfe0f2"/>
+  <text x="60" y="340" font-size="11" font-weight="700" fill="#274a78">共同产物：一数据文件 + 一索引文件（每 map task）</text>
+  <text x="60" y="362" font-size="9.5" fill="#5b7db1">· 数据文件按 reduce 分区分桶顺序存；索引文件记每个分区桶在数据文件里的偏移（IndexShuffleBlockResolver）</text>
+  <text x="60" y="380" font-size="9" fill="#8aa6cf">· 这样 M 个 map × R 个 reduce 只产 2M 个文件，而非 M×R——避免海量小文件（早期 hash shuffle 的痛）</text>
+  <rect x="40" y="402" width="980" height="76" rx="12" fill="#f7f7f9" stroke="#e6e6ea"/>
+  <text x="60" y="426" font-size="11" font-weight="700" fill="#1d1d1f">一句话</text>
+  <text x="60" y="448" font-size="10" fill="#4b4b50">map 端按聚合需求与分区数选三种 writer：Bypass（小分区免排序）、Unsafe（Tungsten 序列化态排序最快）、Sort（通用支持聚合）；</text>
+  <text x="60" y="466" font-size="10" fill="#4b4b50">都产出"一数据文件+一索引文件"，索引记分区偏移——2M 个文件而非 M×R，避免小文件爆炸。</text>
+</svg>

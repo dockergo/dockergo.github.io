@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="620" viewBox="0 0 1080 620" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="1080" height="620" fill="#fbfbfd"/>
+  <text x="40" y="40" font-size="16" font-weight="600" fill="#1d1d1f">存算一体部署 · Storage-Compute Coupled</text>
+  <text x="40" y="60" font-size="11.5" fill="#86868b">默认形态:BE 同时承担计算与本地存储,数据分片多副本落本地盘 —— 稳定高性能,扩缩容需搬数据</text>
+
+  <!-- ① 写入路径 -->
+  <rect x="40" y="80" width="1000" height="74" rx="16" fill="#f5faf6" stroke="#e2ece5"/>
+  <text x="60" y="104" font-size="13" font-weight="600" fill="#1d1d1f">① 写入路径</text>
+  <g text-anchor="middle">
+    <rect x="270" y="112" width="220" height="32" rx="9" fill="#ffffff" stroke="#cfe6d5" filter="url(#soft)"/><text x="380" y="133" font-size="12" fill="#2c5a3a">Stream Load · HTTP 直推</text>
+    <rect x="500" y="112" width="220" height="32" rx="9" fill="#ffffff" stroke="#cfe6d5" filter="url(#soft)"/><text x="610" y="133" font-size="12" fill="#2c5a3a">Broker Load · HDFS/S3</text>
+    <rect x="730" y="112" width="220" height="32" rx="9" fill="#ffffff" stroke="#cfe6d5" filter="url(#soft)"/><text x="840" y="133" font-size="12" fill="#2c5a3a">Routine Load · Kafka</text>
+  </g>
+  <line x1="540" y1="154" x2="540" y2="176" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- ② FE 集群 -->
+  <rect x="40" y="176" width="1000" height="104" rx="16" fill="#f6f8fc" stroke="#e6ecf4"/>
+  <text x="60" y="200" font-size="13" font-weight="600" fill="#1d1d1f">② FE 集群 · Java(元数据 BDB-JE + 规划 + 协调)</text>
+  <g text-anchor="middle">
+    <rect x="70" y="212" width="290" height="56" rx="12" fill="#ffffff" stroke="#ececef" filter="url(#soft)"/>
+    <text x="215" y="238" font-size="13" font-weight="600" fill="#1d1d1f">FE · Master</text><text x="215" y="257" font-size="10.5" fill="#86868b">元数据读写 + Coordinator</text>
+    <rect x="385" y="212" width="290" height="56" rx="12" fill="#ffffff" stroke="#ececef" filter="url(#soft)"/>
+    <text x="530" y="238" font-size="13" font-weight="600" fill="#1d1d1f">FE · Follower</text><text x="530" y="257" font-size="10.5" fill="#86868b">元数据副本 · 参与选主 · 只读</text>
+    <rect x="700" y="212" width="290" height="56" rx="12" fill="#ffffff" stroke="#ececef" filter="url(#soft)"/>
+    <text x="845" y="238" font-size="13" font-weight="600" fill="#1d1d1f">FE · Observer</text><text x="845" y="257" font-size="10.5" fill="#86868b">元数据只读 · 扩展读并发</text>
+  </g>
+  <line x1="540" y1="280" x2="540" y2="302" stroke="#c7c7cc" stroke-width="1.4" stroke-dasharray="4 4" marker-end="url(#ar)"/>
+  <text x="620" y="296" font-size="10" fill="#a1a1a6">Fragment 下发 / 汇聚(BRPC)</text>
+
+  <!-- ③ BE 集群(计算+存储一体) -->
+  <rect x="40" y="302" width="1000" height="212" rx="16" fill="#fbf7ef" stroke="#efe4cf"/>
+  <text x="60" y="326" font-size="13" font-weight="600" fill="#1d1d1f">③ BE 集群 · C++(share-nothing · MPP 并行 · 计算 + 本地存储一体)</text>
+  <g>
+    <rect x="70" y="338" width="290" height="162" rx="13" fill="#ffffff" stroke="#ececef" filter="url(#soft)"/>
+    <text x="215" y="362" font-size="13" font-weight="600" fill="#1d1d1f" text-anchor="middle">BE-1</text>
+    <g font-size="10.5" fill="#4a4e57" text-anchor="middle">
+      <rect x="90" y="370" width="250" height="26" rx="8" fill="#fbf3e4" stroke="#efe0c4"/><text x="215" y="387">Pipeline 执行 · 向量化算子</text>
+      <rect x="90" y="401" width="250" height="26" rx="8" fill="#f4f5f7" stroke="#e6e7ea"/><text x="215" y="418">StorageEngine · Tablet/Rowset</text>
+      <rect x="90" y="432" width="250" height="26" rx="8" fill="#f4f5f7" stroke="#e6e7ea"/><text x="215" y="449">本地盘 · Segment 列存(数据主存)</text>
+      <rect x="90" y="463" width="250" height="30" rx="8" fill="#f4f5f7" stroke="#e6e7ea"/><text x="215" y="479">Page Cache · 多副本默认 3</text><text x="215" y="490" font-size="8.5" fill="#86868b">is_local()=true</text>
+    </g>
+    <rect x="385" y="338" width="290" height="162" rx="13" fill="#ffffff" stroke="#ececef" filter="url(#soft)"/>
+    <text x="530" y="362" font-size="13" font-weight="600" fill="#1d1d1f" text-anchor="middle">BE-2</text>
+    <g font-size="10.5" fill="#4a4e57" text-anchor="middle">
+      <rect x="405" y="370" width="250" height="26" rx="8" fill="#fbf3e4" stroke="#efe0c4"/><text x="530" y="387">Pipeline 执行 · 向量化算子</text>
+      <rect x="405" y="401" width="250" height="26" rx="8" fill="#f4f5f7" stroke="#e6e7ea"/><text x="530" y="418">StorageEngine · Tablet/Rowset</text>
+      <rect x="405" y="432" width="250" height="26" rx="8" fill="#f4f5f7" stroke="#e6e7ea"/><text x="530" y="449">本地盘 · Segment 列存(数据主存)</text>
+      <rect x="405" y="463" width="250" height="30" rx="8" fill="#f4f5f7" stroke="#e6e7ea"/><text x="530" y="479">Page Cache · 多副本默认 3</text><text x="530" y="490" font-size="8.5" fill="#86868b">is_local()=true</text>
+    </g>
+    <rect x="700" y="338" width="290" height="162" rx="13" fill="#ffffff" stroke="#ececef" filter="url(#soft)"/>
+    <text x="845" y="362" font-size="13" font-weight="600" fill="#1d1d1f" text-anchor="middle">BE-3　…×N</text>
+    <g font-size="10.5" fill="#4a4e57" text-anchor="middle">
+      <rect x="720" y="370" width="250" height="26" rx="8" fill="#fbf3e4" stroke="#efe0c4"/><text x="845" y="387">Pipeline 执行 · 向量化算子</text>
+      <rect x="720" y="401" width="250" height="26" rx="8" fill="#f4f5f7" stroke="#e6e7ea"/><text x="845" y="418">StorageEngine · Tablet/Rowset</text>
+      <rect x="720" y="432" width="250" height="26" rx="8" fill="#f4f5f7" stroke="#e6e7ea"/><text x="845" y="449">本地盘 · Segment 列存(数据主存)</text>
+      <rect x="720" y="463" width="250" height="30" rx="8" fill="#f4f5f7" stroke="#e6e7ea"/><text x="845" y="479">Page Cache · 多副本默认 3</text><text x="845" y="490" font-size="8.5" fill="#86868b">is_local()=true</text>
+    </g>
+  </g>
+  <line x1="361" y1="415" x2="384" y2="415" stroke="#c7c7cc" stroke-width="1.5" marker-start="url(#ar)" marker-end="url(#ar)"/>
+  <text x="372" y="407" font-size="9" fill="#a1a1a6" text-anchor="middle">Exchange</text>
+  <line x1="676" y1="415" x2="699" y2="415" stroke="#c7c7cc" stroke-width="1.5" marker-start="url(#ar)" marker-end="url(#ar)"/>
+  <text x="687" y="407" font-size="9" fill="#a1a1a6" text-anchor="middle">Exchange</text>
+
+  <!-- ④ 数据模型 -->
+  <rect x="40" y="524" width="1000" height="72" rx="16" fill="#f7f7f9" stroke="#ececef"/>
+  <text x="60" y="548" font-size="13" font-weight="600" fill="#1d1d1f">④ 数据模型(建表选型)</text>
+  <g text-anchor="middle" font-size="11.5">
+    <rect x="270" y="556" width="220" height="30" rx="9" fill="#ffffff" stroke="#ececef" filter="url(#soft)"/><text x="380" y="576" fill="#4a4e57">Duplicate · 明细</text>
+    <rect x="500" y="556" width="220" height="30" rx="9" fill="#ffffff" stroke="#ececef" filter="url(#soft)"/><text x="610" y="576" fill="#4a4e57">Unique(MoW)· 主键+DeleteBitmap</text>
+    <rect x="730" y="556" width="220" height="30" rx="9" fill="#ffffff" stroke="#ececef" filter="url(#soft)"/><text x="840" y="576" fill="#4a4e57">Aggregate · 预聚合</text>
+  </g>
+</svg>

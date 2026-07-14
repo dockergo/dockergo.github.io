@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="440" viewBox="0 0 1020 440"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1020" height="440" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">MVCC 可见性 · 快照 + tuple 的 xmin/xmax 判可见（heapam_visibility.c:917）</text>
+
+  <!-- 快照 -->
+  <rect x="30" y="56" width="470" height="180" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="48" y="80" font-size="12.5" font-weight="600" fill="#1b2a4a">快照 Snapshot（GetSnapshotData，procarray.c）</text>
+  <text x="48" y="102" font-size="9.5" fill="#5b7db1">开始查询时对"当前哪些事务已提交"拍张照：</text>
+  <rect x="48" y="114" width="434" height="34" rx="8" fill="#ffffff" stroke="#bcd0ec"/><text x="64" y="135" font-size="9" fill="#1b2a4a">xmin：最老仍活跃的 xid（&lt;它的都已定论）</text>
+  <rect x="48" y="152" width="434" height="34" rx="8" fill="#ffffff" stroke="#bcd0ec"/><text x="64" y="173" font-size="9" fill="#1b2a4a">xmax：下一个未分配 xid（≥它的都还没开始）</text>
+  <rect x="48" y="190" width="434" height="34" rx="8" fill="#ffffff" stroke="#bcd0ec"/><text x="64" y="211" font-size="9" fill="#1b2a4a">xip[]：拍照时仍在进行中的 xid 列表</text>
+
+  <!-- 可见性规则 -->
+  <rect x="520" y="56" width="470" height="180" rx="14" fill="#eafaf1" stroke="#bce6cd" filter="url(#soft)"/>
+  <text x="538" y="80" font-size="12.5" font-weight="600" fill="#0f5132">一行 tuple 对我可见吗？</text>
+  <text x="538" y="104" font-size="9.5" fill="#3f8f66">看它的 t_xmin（谁插入）与 t_xmax（谁删除）：</text>
+  <rect x="538" y="116" width="434" height="46" rx="8" fill="#ffffff" stroke="#bce6cd"/><text x="554" y="136" font-size="9" fill="#0f5132">① 插入事务 xmin 已提交且对快照可见？</text><text x="554" y="152" font-size="8.5" fill="#3f8f66">否（未提交/在 xip/≥xmax）→ 不可见</text>
+  <rect x="538" y="166" width="434" height="46" rx="8" fill="#ffffff" stroke="#bce6cd"/><text x="554" y="186" font-size="9" fill="#0f5132">② 删除事务 xmax 已提交且对快照可见？</text><text x="554" y="202" font-size="8.5" fill="#3f8f66">是 → 已被删，不可见；否/为0 → 可见</text>
+
+  <!-- 效果 -->
+  <rect x="30" y="252" width="960" height="90" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="48" y="276" font-size="12.5" font-weight="600" fill="#1d1d1f">效果：每个事务看到"属于自己那一刻"的一致视图</text>
+  <rect x="48" y="292" width="290" height="40" rx="9" fill="#eef3fb" stroke="#bcd0ec"/><text x="193" y="317" font-size="9.5" fill="#1b2a4a" text-anchor="middle">读不阻塞写、写不阻塞读</text>
+  <rect x="354" y="292" width="290" height="40" rx="9" fill="#eafaf1" stroke="#bce6cd"/><text x="499" y="317" font-size="9.5" fill="#0f5132" text-anchor="middle">同一行多版本并存供不同快照读</text>
+  <rect x="660" y="292" width="310" height="40" rx="9" fill="#fff7e6" stroke="#f0dcae"/><text x="815" y="317" font-size="9.5" fill="#7a4d00" text-anchor="middle">hint bits 缓存提交状态省查 clog</text>
+
+  <!-- 提交状态 -->
+  <rect x="30" y="358" width="960" height="66" rx="14" fill="#f6f6f8" stroke="#e2e2e7"/>
+  <text x="48" y="382" font-size="10.5" font-weight="600" fill="#1d1d1f">xid 是否已提交查哪里</text>
+  <text x="48" y="404" font-size="9.5" fill="#494950">CLOG（commit log）记每个 xid 的提交/回滚/进行中状态；首次判定后写回 tuple 的 infomask hint bits，后续免查 CLOG。</text>
+</svg>

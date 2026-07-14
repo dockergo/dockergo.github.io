@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="548" viewBox="0 0 1080 548"
+     font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1080" height="548" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Kafka leader epoch 与截断 · 换届后按 epoch 算分叉点</text>
+  <text x="30" y="50" font-size="12" fill="#a1a1a6">LeaderEpochFileCache 存 (epoch → 起始 offset)；解决老 Kafka 靠 HW 截断的一致性漏洞</text>
+
+  <!-- epoch cache -->
+  <rect x="48" y="72" width="470" height="150" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="68" y="98" font-size="13" font-weight="700" fill="#1b2a4a">LeaderEpochFileCache（:53）</text>
+  <text x="68" y="118" font-size="11" fill="#5b7db1">(epoch → 该 epoch 起始 offset)，由控制器分配</text>
+  <rect x="68" y="130" width="430" height="26" rx="7" fill="#ffffff" stroke="#bcd0ec"/>
+  <text x="82" y="147" font-size="11" fill="#274a78">epoch 0 → startOffset 0</text>
+  <rect x="68" y="162" width="430" height="26" rx="7" fill="#ffffff" stroke="#bcd0ec"/>
+  <text x="82" y="179" font-size="11" fill="#274a78">epoch 1 → startOffset 50</text>
+  <rect x="68" y="194" width="430" height="26" rx="7" fill="#dfeafb" stroke="#bcd0ec"/>
+  <text x="82" y="211" font-size="11" font-weight="600" fill="#1b2a4a">epoch 2 → startOffset 90  ← 新 Leader 当前 epoch</text>
+
+  <!-- problem: divergence -->
+  <rect x="546" y="72" width="486" height="150" rx="13" fill="#fbeaea" stroke="#e6b8b8" filter="url(#soft)"/>
+  <text x="566" y="98" font-size="13" font-weight="700" fill="#7a2b2b">Leader 换届 → Follower 日志可能分叉</text>
+  <text x="566" y="120" font-size="11" fill="#a35555">Follower 在旧 Leader 下写到 offset=100（epoch 1）</text>
+  <text x="566" y="142" font-size="11" fill="#a35555">新 Leader 该 epoch 只到 offset=90 → 分叉点=90</text>
+  <text x="566" y="166" font-size="11" fill="#a35555">Follower offset 90..100 是"脏"分叉记录</text>
+  <text x="566" y="192" font-size="10.5" fill="#a35555">若 O 在分叉点后、且 O &lt; O'（新 Leader 同位不同值）</text>
+  <text x="566" y="212" font-size="10.5" fill="#a35555">须丢弃再续拉，否则数据不一致</text>
+
+  <!-- maybeTruncate flow -->
+  <rect x="48" y="242" width="984" height="180" rx="13" fill="#f5faf6" stroke="#cfe6d5" filter="url(#soft)"/>
+  <text x="68" y="268" font-size="13" font-weight="700" fill="#2c5a3a">maybeTruncate（AbstractFetcherThread.scala:172）—— Follower 换 Leader 后执行</text>
+
+  <rect x="68" y="284" width="270" height="118" rx="10" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="203" y="310" font-size="12" font-weight="700" fill="#1b2a4a" text-anchor="middle">有已知 epoch</text>
+  <text x="203" y="332" font-size="10.5" fill="#274a78" text-anchor="middle">truncateToEpochEndOffsets</text>
+  <text x="203" y="350" font-size="10.5" fill="#5b7db1" text-anchor="middle">（:209）</text>
+  <text x="203" y="372" font-size="10.5" fill="#5b7db1" text-anchor="middle">向新 Leader 查该 epoch</text>
+  <text x="203" y="390" font-size="10.5" fill="#5b7db1" text-anchor="middle">的结束 offset，算分叉点</text>
+
+  <rect x="356" y="284" width="270" height="118" rx="10" fill="#fff7e6" stroke="#e8cf9a"/>
+  <text x="491" y="310" font-size="12" font-weight="700" fill="#5a3410" text-anchor="middle">无已知 epoch</text>
+  <text x="491" y="332" font-size="10.5" fill="#93762e" text-anchor="middle">truncateToHighWatermark</text>
+  <text x="491" y="350" font-size="10.5" fill="#93762e" text-anchor="middle">（:242）</text>
+  <text x="491" y="372" font-size="10.5" fill="#93762e" text-anchor="middle">回退到本地 HW</text>
+  <text x="491" y="390" font-size="10.5" fill="#93762e" text-anchor="middle">作为兜底截断位</text>
+
+  <rect x="644" y="284" width="370" height="118" rx="10" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="829" y="310" font-size="12" font-weight="700" fill="#12402a" text-anchor="middle">partition.truncateTo(offset)</text>
+  <text x="829" y="332" font-size="10.5" fill="#2f6f4f" text-anchor="middle">ReplicaFetcherThread.scala:177</text>
+  <text x="829" y="356" font-size="10.5" fill="#2f6f4f" text-anchor="middle">丢弃分叉点之后的记录</text>
+  <text x="829" y="378" font-size="10.5" fill="#2f6f4f" text-anchor="middle">再从新 Leader 续拉</text>
+  <text x="829" y="396" font-size="10.5" fill="#2f6f4f" text-anchor="middle">→ 与新 Leader 一致</text>
+
+  <polyline points="338,343 356,343" fill="none" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <polyline points="626,343 644,343" fill="none" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- bottom summary -->
+  <rect x="48" y="442" width="984" height="82" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="68" y="468" font-size="12.5" font-weight="700" fill="#1b2a4a">为什么需要 leader epoch</text>
+  <text x="68" y="490" font-size="11" fill="#274a78">老 Kafka 仅靠 HW 截断：极端换届场景可能丢/重数据（Follower 与 Leader 各自截到不同位）</text>
+  <text x="68" y="510" font-size="11" fill="#274a78">epoch → offset 精确定位分叉点，截断到该点再续拉，堵住一致性漏洞</text>
+</svg>

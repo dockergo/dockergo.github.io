@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="700" viewBox="0 0 1100 700" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1100" height="700" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Trino 分布式化 · PlanFragmenter 在 REMOTE exchange 处剪断</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">LOCAL exchange 留在 fragment 内;REMOTE exchange 才是剪点 → 拆出子 fragment + RemoteSourceNode</text>
+
+  <!-- left: single plan with exchanges -->
+  <rect x="30" y="70" width="360" height="450" rx="13" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="46" y="92" font-size="11" font-weight="700" fill="#1b2a4a">优化后单棵计划（含 ExchangeNode）</text>
+  <g font-size="8.5" text-anchor="middle">
+    <rect x="110" y="104" width="200" height="30" rx="7" fill="#faf4fb" stroke="#e2d2ee"/><text x="210" y="123" fill="#5a3d78">OutputNode</text>
+    <rect x="110" y="146" width="200" height="34" rx="7" fill="#f3f7fc" stroke="#cfe0f2"/><text x="210" y="160" fill="#274a78">最终 AggregationNode</text><text x="210" y="173" fill="#5b7db1">GATHER (REMOTE)</text>
+    <rect x="110" y="192" width="200" height="34" rx="7" fill="#f5faf6" stroke="#cfe6d5"/><text x="210" y="206" fill="#2c5a3a">部分 AggregationNode</text><text x="210" y="219" fill="#2f6f4f">REPARTITION by name (REMOTE)</text>
+    <rect x="110" y="238" width="200" height="30" rx="7" fill="#f5faf6" stroke="#cfe6d5"/><text x="210" y="257" fill="#2c5a3a">JoinNode (o.cust=c.id)</text>
+    <rect x="46" y="292" width="150" height="46" rx="7" fill="#fff7e6" stroke="#e8cf9a"/><text x="121" y="310" fill="#5a3410">scan orders</text><text x="121" y="324" fill="#93762e">REPARTITION cust</text>
+    <rect x="220" y="292" width="150" height="46" rx="7" fill="#fff7e6" stroke="#e8cf9a"/><text x="295" y="310" fill="#5a3410">scan customer</text><text x="295" y="324" fill="#93762e">REPLICATE (广播)</text>
+  </g>
+  <line x1="210" y1="134" x2="210" y2="146" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="210" y1="180" x2="210" y2="192" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="210" y1="226" x2="210" y2="238" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="180" y1="268" x2="121" y2="292" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="250" y1="268" x2="295" y2="292" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <text x="210" y="368" text-anchor="middle" font-size="8.5" fill="#a1a1a6">红色横线 = REMOTE exchange = 剪点</text>
+  <line x1="60" y1="384" x2="360" y2="384" stroke="#e0a0a0" stroke-width="1" stroke-dasharray="4 3"/>
+  <rect x="46" y="398" width="328" height="108" rx="9" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="60" y="418" font-size="9" font-weight="700" fill="#1d1d1f">ExchangeNode 三型 × 两 scope</text>
+  <text x="60" y="436" font-size="8.5" fill="#4b4b50">型：GATHER(汇聚单点) / REPARTITION(按 key hash) / REPLICATE(广播)</text>
+  <text x="60" y="452" font-size="8.5" fill="#4b4b50">scope：LOCAL(worker 内,不切) / REMOTE(跨 worker,fragment 剪点)</text>
+  <text x="60" y="470" font-size="8.5" fill="#4b4b50">系统分布句柄：SINGLE / FIXED_HASH / FIXED_BROADCAST /</text>
+  <text x="74" y="484" font-size="8.5" fill="#4b4b50">FIXED_ARBITRARY / SOURCE / COORDINATOR_ONLY / SCALED_WRITER</text>
+  <text x="60" y="500" font-size="8.5" fill="#b1483a">LOCAL 用同样分区语义,但 Page 在 worker 内存直接交手</text>
+
+  <!-- right: fragment tree -->
+  <rect x="410" y="70" width="660" height="450" rx="13" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="426" y="92" font-size="11" font-weight="700" fill="#2c5a3a">切出的 SubPlan（fragment 树）</text>
+  <g font-size="8.8" text-anchor="middle">
+    <rect x="620" y="106" width="240" height="46" rx="8" fill="#faf4fb" stroke="#e2d2ee" filter="url(#soft)"/><text x="740" y="126" font-weight="600" fill="#5a3d78">Fragment 0</text><text x="740" y="142" fill="#7a5a95">Output + 最终聚合 · SINGLE</text>
+    <rect x="470" y="196" width="260" height="52" rx="8" fill="#f5faf6" stroke="#cfe6d5" filter="url(#soft)"/><text x="600" y="216" font-weight="600" fill="#2c5a3a">Fragment 1</text><text x="600" y="232" fill="#2f6f4f">Join + 部分聚合 · FIXED_HASH</text><text x="600" y="245" fill="#2f6f4f">内含 RemoteSourceNode←F2</text>
+    <rect x="770" y="196" width="240" height="52" rx="8" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/><text x="890" y="216" font-weight="600" fill="#5a3410">Fragment 2</text><text x="890" y="232" fill="#93762e">scan customer · SOURCE</text><text x="890" y="245" fill="#93762e">输出 REPLICATE 给 F1</text>
+    <rect x="470" y="290" width="260" height="46" rx="8" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/><text x="600" y="310" font-weight="600" fill="#5a3410">Fragment 3</text><text x="600" y="326" fill="#93762e">scan orders · SOURCE · 输出 REPARTITION</text>
+  </g>
+  <line x1="680" y1="152" x2="600" y2="196" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="800" y1="152" x2="890" y2="196" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="600" y1="248" x2="600" y2="290" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <text x="620" y="175" font-size="8" fill="#a1a1a6">RemoteSource</text>
+
+  <rect x="426" y="350" width="628" height="76" rx="9" fill="#fff" stroke="#cfe6d5"/>
+  <text x="440" y="371" font-size="9.5" font-weight="700" fill="#2c5a3a">Fragmenter.visitExchange 的剪断逻辑</text>
+  <text x="440" y="390" font-size="8.8" fill="#2f6f4f">LOCAL exchange → 不切,留在本 fragment;　REMOTE exchange → 子树拆成独立子 fragment</text>
+  <text x="440" y="407" font-size="8.8" fill="#2f6f4f">父 fragment 对应位置替换成 RemoteSourceNode（携带子 fragment id + 交换类型 + RetryPolicy）</text>
+  <text x="440" y="421" font-size="8.5" fill="#93762e">不变量：父的 RemoteSource 源 id 多重集 == 子 fragment id 多重集（SubPlan.sanityCheck）</text>
+
+  <rect x="426" y="436" width="628" height="76" rx="9" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="440" y="457" font-size="9.5" font-weight="700" fill="#b1483a">一个 fragment 带两个分布(别混)</text>
+  <text x="440" y="476" font-size="8.8" fill="#4b4b50">· 执行分布 partitioning：本 fragment 的 task 怎么分布(几份、按什么分)</text>
+  <text x="440" y="493" font-size="8.8" fill="#4b4b50">· 输出分布 outputPartitioningScheme：本 fragment 输出怎么分给父 fragment</text>
+  <text x="440" y="507" font-size="8.5" fill="#6e6e73">"流式 vs 物化"不在 fragment 里定：同一 RemoteSourceNode 运行期按 RetryPolicy realized</text>
+
+  <!-- bottom -->
+  <rect x="30" y="536" width="1040" height="130" rx="12" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="46" y="558" font-size="10.5" font-weight="700" fill="#1d1d1f">分布式化产物：fragment 树 → 每 fragment 1 stage → 按 RetryPolicy 分发</text>
+  <text x="46" y="580" font-size="9" fill="#6e6e73">· PlanFragmenter.createSubPlans 从根输出 SINGLE_DISTRIBUTION 开始,自顶向下 rewrite,遇 REMOTE exchange 递归 buildSubPlan</text>
+  <text x="46" y="598" font-size="9" fill="#6e6e73">· TableScan 默认 SOURCE_DISTRIBUTION(除非连接器提供分桶);TableFinish/Delete/Update 等强制 COORDINATOR_ONLY</text>
+  <text x="46" y="616" font-size="9" fill="#6e6e73">· FragmentProperties.setDistribution 合并兼容的系统/连接器分布,不兼容则报 "Cannot set distribution"</text>
+  <text x="46" y="640" font-size="9" fill="#6e6e73">· 归属提醒：split 生成属【连接器框架】(SplitManager),不属本篇;本篇只管"计划怎么切成可分发的 fragment"</text>
+</svg>

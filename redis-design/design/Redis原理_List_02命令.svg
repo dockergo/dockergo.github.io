@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="400" viewBox="0 0 1000 400" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1000" height="400" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">List 命令：两端 O(1)，组合成队列 / 栈（t_list.c）</text>
+  <text x="30" y="49" font-size="10.5" fill="#a1a1a6">LPUSH/RPUSH 推、LPOP/RPOP 弹；组合方向决定 FIFO 还是 LIFO</text>
+
+  <!-- list visual -->
+  <g text-anchor="middle" font-size="10">
+    <text x="130" y="96" font-size="9" fill="#5b7db1">← 左（L）</text>
+    <text x="600" y="96" font-size="9" fill="#5b7db1">右（R）→</text>
+    <rect x="180" y="104" width="70" height="40" rx="7" fill="#eef3fb" stroke="#bcd0ec"/><text x="215" y="128" fill="#1b2a4a">a</text>
+    <rect x="256" y="104" width="70" height="40" rx="7" fill="#eef3fb" stroke="#bcd0ec"/><text x="291" y="128" fill="#1b2a4a">b</text>
+    <rect x="332" y="104" width="70" height="40" rx="7" fill="#eef3fb" stroke="#bcd0ec"/><text x="367" y="128" fill="#1b2a4a">c</text>
+    <rect x="408" y="104" width="70" height="40" rx="7" fill="#eef3fb" stroke="#bcd0ec"/><text x="443" y="128" fill="#1b2a4a">d</text>
+    <rect x="484" y="104" width="70" height="40" rx="7" fill="#eef3fb" stroke="#bcd0ec"/><text x="519" y="128" fill="#1b2a4a">e</text>
+  </g>
+  <text x="120" y="128" font-size="9" fill="#3a9b6e">LPUSH�/LPOP</text>
+  <text x="620" y="128" font-size="9" fill="#3a9b6e">RPUSH/RPOP</text>
+  <line x1="175" y1="124" x2="140" y2="124" stroke="#2dd4a7" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="559" y1="124" x2="600" y2="124" stroke="#2dd4a7" stroke-width="1.3" marker-end="url(#ar)"/>
+
+  <!-- FIFO vs LIFO -->
+  <rect x="30" y="168" width="300" height="120" rx="12" fill="#eafaf1" stroke="#b8e6cd" filter="url(#soft)"/>
+  <text x="50" y="192" font-size="11" font-weight="700" fill="#1c6b45">队列 FIFO</text>
+  <text x="50" y="214" font-size="9.5" fill="#2f7a56">LPUSH 进 + RPOP 出</text>
+  <text x="50" y="234" font-size="9.5" fill="#2f7a56">（或 RPUSH + LPOP）</text>
+  <text x="50" y="256" font-size="9" fill="#5cb88a">先进先出：消息队列、任务队列</text>
+  <text x="50" y="276" font-size="9" fill="#5cb88a">生产者 LPUSH，消费者 RPOP</text>
+
+  <rect x="350" y="168" width="300" height="120" rx="12" fill="#f6f0fb" stroke="#dcc6ee" filter="url(#soft)"/>
+  <text x="370" y="192" font-size="11" font-weight="700" fill="#5a2a82">栈 LIFO</text>
+  <text x="370" y="214" font-size="9.5" fill="#8a5cae">LPUSH 进 + LPOP 出</text>
+  <text x="370" y="234" font-size="9.5" fill="#8a5cae">（同一端进出）</text>
+  <text x="370" y="256" font-size="9" fill="#a884c8">后进先出：撤销栈、DFS</text>
+  <text x="370" y="276" font-size="9" fill="#a884c8">最近的先处理</text>
+
+  <rect x="670" y="168" width="300" height="120" rx="12" fill="#fdf3e5" stroke="#f0d9b5" filter="url(#soft)"/>
+  <text x="690" y="192" font-size="11" font-weight="700" fill="#7a5a1e">原子移动</text>
+  <text x="690" y="214" font-size="9.5" fill="#b08535">LMOVE src dst LEFT RIGHT</text>
+  <text x="690" y="234" font-size="9.5" fill="#b08535">RPOPLPUSH src dst</text>
+  <text x="690" y="256" font-size="9" fill="#c79a4e">原子地从一端弹出、推入另一 List</text>
+  <text x="690" y="276" font-size="9" fill="#c79a4e">可靠队列基础（处理中备份）</text>
+
+  <!-- index note -->
+  <rect x="30" y="304" width="940" height="82" rx="10" fill="#f7f7f9" stroke="#ececef"/>
+  <text x="50" y="328" font-size="11" font-weight="600" fill="#1d1d1f">其他命令与复杂度提醒</text>
+  <text x="50" y="350" font-size="10" fill="#4a4a4f">· LRANGE key 0 -1（全部）、LINDEX key i（按下标）、LSET、LLEN、LREM（删指定值）</text>
+  <text x="50" y="370" font-size="10" fill="#c02a56">· 注意：LINDEX/LRANGE 访问中间位置是 O(n) —— List 为两端操作优化，别当随机访问数组用</text>
+</svg>

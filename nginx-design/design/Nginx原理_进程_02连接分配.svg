@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="440" viewBox="0 0 1020 440"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1020" height="440" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">惊群与连接分配 · 多 worker 抢同一监听套接字（event.c:53）</text>
+
+  <!-- 问题 -->
+  <rect x="30" y="56" width="300" height="180" rx="14" fill="#fbeaea" stroke="#f0cccc" filter="url(#soft)"/>
+  <text x="48" y="80" font-size="12" font-weight="600" fill="#7d1f1f">问题：惊群（thundering herd）</text>
+  <text x="48" y="104" font-size="10" fill="#b06a6a">多个 worker 共享监听 fd，一个新连接</text>
+  <text x="48" y="122" font-size="10" fill="#b06a6a">到来若唤醒所有 worker 去 accept，</text>
+  <text x="48" y="140" font-size="10" fill="#b06a6a">只有一个成功、其余空忙——浪费。</text>
+  <text x="48" y="168" font-size="10" fill="#b06a6a">还会导致连接分配不均、</text>
+  <text x="48" y="186" font-size="10" fill="#b06a6a">个别 worker 过载。</text>
+
+  <!-- 方案1 accept_mutex -->
+  <rect x="360" y="56" width="300" height="180" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="378" y="80" font-size="12" font-weight="600" fill="#1b2a4a">方案① accept_mutex</text>
+  <text x="378" y="104" font-size="10" fill="#5b7db1">同一时刻只有持锁 worker 把监听 fd</text>
+  <text x="378" y="122" font-size="10" fill="#5b7db1">加进自己的 epoll → 只它被唤醒 accept。</text>
+  <text x="378" y="146" font-size="10" fill="#5b7db1">ngx_trylock_accept_mutex（event.c:219）</text>
+  <text x="378" y="170" font-size="10" fill="#5b7db1">配 accept_mutex_delay 轮流持锁，</text>
+  <text x="378" y="188" font-size="10" fill="#5b7db1">兼顾公平；避免惊群。</text>
+  <text x="378" y="214" font-size="9" fill="#8fa9cf">默认多数平台已关（有更好机制）</text>
+
+  <!-- 方案2 reuseport -->
+  <rect x="690" y="56" width="300" height="180" rx="14" fill="#eafaf1" stroke="#bce6cd" filter="url(#soft)"/>
+  <text x="708" y="80" font-size="12" font-weight="600" fill="#0f5132">方案② SO_REUSEPORT</text>
+  <text x="708" y="104" font-size="10" fill="#3f8f66">每个 worker 各建一个绑同端口的</text>
+  <text x="708" y="122" font-size="10" fill="#3f8f66">监听 socket，内核负责把新连接</text>
+  <text x="708" y="146" font-size="10" fill="#3f8f66">均匀哈希分给各 socket。</text>
+  <text x="708" y="170" font-size="10" fill="#3f8f66">listen ... reuseport;</text>
+  <text x="708" y="194" font-size="10" fill="#3f8f66">无锁、无惊群、分配更均、延迟更低</text>
+  <text x="708" y="214" font-size="9" fill="#5aa06f">现代 Linux 首选</text>
+
+  <!-- 连接生命周期 -->
+  <rect x="30" y="256" width="960" height="160" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="48" y="280" font-size="12.5" font-weight="600" fill="#1d1d1f">连接的一生（ngx_connection_t，事件驱动状态机）</text>
+  <rect x="48" y="296" width="165" height="60" rx="10" fill="#fff7e6" stroke="#f0dcae"/><text x="130" y="320" font-size="10" font-weight="600" fill="#7a4d00" text-anchor="middle">accept</text><text x="130" y="338" font-size="8.5" fill="#9a7328" text-anchor="middle">取一个 connection 结构</text>
+  <rect x="229" y="296" width="165" height="60" rx="10" fill="#eef3fb" stroke="#bcd0ec"/><text x="311" y="320" font-size="10" font-weight="600" fill="#1b2a4a" text-anchor="middle">注册读事件</text><text x="311" y="338" font-size="8.5" fill="#5b7db1" text-anchor="middle">等请求数据到达</text>
+  <rect x="410" y="296" width="165" height="60" rx="10" fill="#eafaf1" stroke="#bce6cd"/><text x="492" y="320" font-size="10" font-weight="600" fill="#0f5132" text-anchor="middle">读就绪→处理</text><text x="492" y="338" font-size="8.5" fill="#3f8f66" text-anchor="middle">跑 HTTP 阶段</text>
+  <rect x="591" y="296" width="165" height="60" rx="10" fill="#f4eefb" stroke="#d9c9ef"/><text x="673" y="320" font-size="10" font-weight="600" fill="#3c1361" text-anchor="middle">写就绪→发响应</text><text x="673" y="338" font-size="8.5" fill="#7a5aa8" text-anchor="middle">分批非阻塞写</text>
+  <rect x="772" y="296" width="198" height="60" rx="10" fill="#f6f6f8" stroke="#e2e2e7"/><text x="871" y="320" font-size="10" font-weight="600" fill="#494950" text-anchor="middle">keepalive 或关闭</text><text x="871" y="338" font-size="8.5" fill="#6a6a70" text-anchor="middle">复用等下个请求 / 回收</text>
+  <line x1="213" y1="326" x2="229" y2="326" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="394" y1="326" x2="410" y2="326" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="575" y1="326" x2="591" y2="326" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="756" y1="326" x2="772" y2="326" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <text x="48" y="386" font-size="9.5" fill="#86868b">连接结构从预分配的连接池取（worker_connections 上限）；每步都是"就绪才回调"，中间不占线程。</text>
+  <text x="48" y="406" font-size="9.5" fill="#86868b">连接数上限 = worker_processes × worker_connections。</text>
+</svg>

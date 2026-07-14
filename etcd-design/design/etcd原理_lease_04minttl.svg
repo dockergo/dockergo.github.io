@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="500" viewBox="0 0 1080 500" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs><filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter></defs>
+  <rect width="1080" height="500" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">minLeaseTTL 与续租：TTL 下限 + Renew 不走 Raft</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">server.go: minTTL=(3*ElectionTicks)/2 * heartbeat, 取上整秒(:340,:345) · Renew 只改内存(lessor.go:396)</text>
+  <!-- minTTL -->
+  <rect x="40" y="76" width="490" height="170" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="60" y="100" font-size="11" font-weight="700" fill="#1b2a4a">minLeaseTTL 为什么有下限</text>
+  <text x="60" y="124" font-size="9.5" fill="#5b7db1">· 不是硬编码 5s，而是按选举参数算：</text>
+  <text x="75" y="144" font-size="9" fill="#8aa6cf" font-family="monospace">minTTL = (3 × ElectionTicks)/2 × heartbeat</text>
+  <text x="60" y="166" font-size="9.5" fill="#5b7db1">· 直觉：TTL 必须 &gt; 一次 leader 选举 + 恢复的时间</text>
+  <text x="60" y="186" font-size="9.5" fill="#5b7db1">· 否则 leader 切换期间 lease 就到期了</text>
+  <text x="60" y="206" font-size="9" fill="#a44">· → 误删"活着的服务"的 key（服务其实没挂，只是 etcd 在选举）</text>
+  <text x="60" y="228" font-size="8.5" fill="#8aa6cf">申请 TTL &lt; minLeaseTTL 会被抬高到 minLeaseTTL</text>
+  <!-- renew path -->
+  <rect x="550" y="76" width="490" height="170" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="570" y="100" font-size="11" font-weight="700" fill="#12402a">续租路径：流式 keepalive，不走 Raft</text>
+  <text x="570" y="124" font-size="9.5" fill="#2f6f4f">· LeaseKeepAlive 是双向 stream</text>
+  <text x="570" y="144" font-size="9.5" fill="#2f6f4f">· 客户端持续发心跳、收剩余 TTL</text>
+  <text x="570" y="164" font-size="9.5" fill="#2f6f4f">· Renew 只在 leader 内存重置到期时间</text>
+  <text x="570" y="184" font-size="9.5" fill="#2f6f4f">· 不改持久数据 → 不经 Raft</text>
+  <text x="570" y="206" font-size="9" fill="#4c8567">· 所以高频续租（如每几秒）也不压垮共识</text>
+  <text x="570" y="228" font-size="8.5" fill="#4c8567">对比 Grant/Revoke 改数据 → 走 Raft</text>
+  <!-- timeline -->
+  <rect x="40" y="266" width="1000" height="110" rx="12" fill="#f3f7fc" stroke="#cfe0f2"/>
+  <text x="60" y="290" font-size="11" font-weight="700" fill="#274a78">典型续租节奏（TTL=30s 为例）</text>
+  <line x1="80" y1="330" x2="1000" y2="330" stroke="#c7c7cc" stroke-width="1.3"/>
+  <g font-size="8" text-anchor="middle">
+    <circle cx="160" cy="330" r="4" fill="#1b8f3f"/><text x="160" y="318" fill="#2f6f4f">t=0 Grant</text><text x="160" y="350" fill="#8aa6cf">TTL=30</text>
+    <circle cx="340" cy="330" r="4" fill="#5b7db1"/><text x="340" y="318" fill="#5b7db1">t=10 keepalive</text><text x="340" y="350" fill="#8aa6cf">重置 30</text>
+    <circle cx="520" cy="330" r="4" fill="#5b7db1"/><text x="520" y="318" fill="#5b7db1">t=20 keepalive</text><text x="520" y="350" fill="#8aa6cf">重置 30</text>
+    <circle cx="700" cy="330" r="4" fill="#5b7db1"/><text x="700" y="318" fill="#5b7db1">t=30 keepalive</text><text x="700" y="350" fill="#8aa6cf">重置 30</text>
+    <circle cx="900" cy="330" r="5" fill="#ff3b30"/><text x="900" y="318" fill="#a44">进程挂，停续</text><text x="900" y="350" fill="#a44">30s 后过期→删 key</text>
+  </g>
+  <text x="60" y="368" font-size="9" fill="#8aa6cf">建议续租频率 ≤ TTL/3（此例每 10s），留重试余量；别等 TTL 快尽才续。</text>
+  <rect x="40" y="390" width="1000" height="56" rx="12" fill="#f7f7f9" stroke="#e6e6ea"/>
+  <text x="60" y="414" font-size="11" font-weight="700" fill="#1d1d1f">一句话</text>
+  <text x="60" y="436" font-size="10" fill="#4b4b50">minLeaseTTL 由选举参数算出（须 &gt; 选举恢复时间，防切换期误删）；续租是流式 keepalive、只改 leader 内存不走 Raft，故高频也不压共识——建议按 ≤TTL/3 频率续。</text>
+</svg>

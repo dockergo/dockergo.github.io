@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="450" viewBox="0 0 1000 450" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1000" height="450" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">kobject 映射 sysfs：parent 建目录层级、default_groups 建属性文件、show/store 承接读写</text>
+
+  <!-- kobject card -->
+  <rect x="40" y="64" width="290" height="168" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="185" y="86" font-size="11.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">kobject（kobject.h:64）</text>
+  <text x="56" y="110" font-size="10" fill="#5b7db1">· name → sysfs 目录名</text>
+  <text x="56" y="132" font-size="10" fill="#5b7db1">· parent → 目录树中的位置</text>
+  <text x="56" y="154" font-size="10" fill="#5b7db1">· kset → 所属集合 / 子系统</text>
+  <text x="56" y="176" font-size="10" fill="#5b7db1">· ktype → 属性与 sysfs 操作</text>
+  <text x="56" y="198" font-size="10" fill="#5b7db1">· sd（kernfs_node）→ 目录项</text>
+  <text x="56" y="220" font-size="10" fill="#5b7db1">· kref → 引用计数（生命周期）</text>
+
+  <!-- ktype card -->
+  <rect x="40" y="252" width="290" height="86" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="185" y="274" font-size="11.5" font-weight="600" fill="#12402a" text-anchor="middle">kobj_type（kobject.h:116）</text>
+  <text x="56" y="298" font-size="10" fill="#2f6f4f">· sysfs_ops：show() / store()</text>
+  <text x="56" y="320" font-size="10" fill="#2f6f4f">· default_groups：属性集合 → 文件</text>
+
+  <!-- /sys tree -->
+  <rect x="560" y="64" width="390" height="230" rx="12" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="755" y="86" font-size="11.5" font-weight="600" fill="#5a3410" text-anchor="middle">/sys 目录树（sysfs）</text>
+  <text x="580" y="112" font-size="10" fill="#93762e">/sys/</text>
+  <text x="580" y="134" font-size="10" fill="#93762e">  devices/</text>
+  <text x="580" y="156" font-size="10" fill="#93762e">    pci0000:00/</text>
+  <text x="580" y="178" font-size="10" fill="#93762e">      0000:00:1f.2/   ← 一个 device 的 kobject 目录</text>
+  <text x="580" y="200" font-size="10" fill="#93762e">        ├─ vendor      （属性文件）</text>
+  <text x="580" y="222" font-size="10" fill="#93762e">        ├─ device      （属性文件）</text>
+  <text x="580" y="244" font-size="10" fill="#93762e">        ├─ power/      （子 kobject 目录）</text>
+  <text x="580" y="266" font-size="10" fill="#93762e">        └─ driver → …  （绑定的驱动）</text>
+
+  <!-- mapping arrows -->
+  <g stroke="#c7c7cc" stroke-width="1.6" fill="none">
+    <path d="M330,148 L445,148 L445,178 L560,178" marker-end="url(#ar)"/>
+    <path d="M330,300 L470,300 L470,211 L560,211" marker-end="url(#ar)"/>
+  </g>
+  <text x="352" y="140" font-size="9" fill="#a1a1a6">kobject_add：parent 建目录层级</text>
+  <text x="352" y="292" font-size="9" fill="#a1a1a6">default_groups → 属性文件</text>
+
+  <!-- read/write chain -->
+  <rect x="40" y="366" width="250" height="62" rx="11" fill="#fbfbfd" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="165" y="390" font-size="10.5" font-weight="600" fill="#1d1d1f" text-anchor="middle">用户态</text>
+  <text x="165" y="410" font-size="9.5" fill="#6e6e73" text-anchor="middle">cat / echo /sys/.../vendor</text>
+
+  <rect x="340" y="366" width="230" height="62" rx="11" fill="#f4eefb" stroke="#dcc9ef" filter="url(#soft)"/>
+  <text x="455" y="390" font-size="10.5" font-weight="600" fill="#4a2c6b" text-anchor="middle">VFS → sysfs</text>
+  <text x="455" y="410" font-size="9.5" fill="#8a6db0" text-anchor="middle">文件读写路由到回调</text>
+
+  <rect x="620" y="366" width="330" height="62" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="785" y="390" font-size="10.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">sysfs_ops-&gt;show() / store()</text>
+  <text x="785" y="410" font-size="9.5" fill="#5b7db1" text-anchor="middle">回调打到内核对象、读/写其状态</text>
+
+  <g stroke="#c7c7cc" stroke-width="1.6" fill="none">
+    <line x1="290" y1="397" x2="340" y2="397" marker-end="url(#ar)"/>
+    <line x1="570" y1="397" x2="620" y2="397" marker-end="url(#ar)"/>
+  </g>
+</svg>

@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="560" viewBox="0 0 1040 560" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1040" height="560" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Trino 节点选择 · NodeScheduler + NodeSelector 放置 split</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">node-scheduler.policy 选 Uniform(默认) 或 TopologyAware;唯一放置策略 DynamicSplitPlacementPolicy</text>
+
+  <!-- Uniform -->
+  <rect x="30" y="72" width="490" height="230" rx="13" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="46" y="94" font-size="11" font-weight="700" fill="#1b2a4a">UniformNodeSelector（默认 · UNIFORM）</text>
+  <rect x="50" y="108" width="450" height="46" rx="8" fill="#f3f7fc" stroke="#cfe0f2"/><text x="64" y="128" font-size="9" font-weight="600" fill="#274a78">chooseNodeForSplit：选最闲节点</text><text x="64" y="145" font-size="8.5" fill="#5b7db1">SplitsBalancingPolicy：STAGE(本 stage 排队权重) / NODE(节点总权重)</text>
+  <rect x="50" y="162" width="450" height="46" rx="8" fill="#f3f7fc" stroke="#cfe0f2"/><text x="64" y="182" font-size="9" font-weight="600" fill="#274a78">数据本地性</text><text x="64" y="199" font-size="8.5" fill="#5b7db1">optimizedLocalScheduling：优先 split 偏好地址(selectExactNodes)</text>
+  <rect x="50" y="216" width="450" height="46" rx="8" fill="#f3f7fc" stroke="#cfe0f2"/><text x="64" y="236" font-size="9" font-weight="600" fill="#274a78">QueueSizeAdjuster</text><text x="64" y="253" font-size="8.5" fill="#5b7db1">自适应扩每 task pending split 队列(应对慢节点)</text>
+  <rect x="50" y="270" width="450" height="24" rx="7" fill="#fff" stroke="#bcd0ec"/><text x="64" y="286" font-size="8.5" fill="#5b7db1">ConsistentHashingAddressProvider：一致性哈希做 split→节点亲和</text>
+
+  <!-- Topology -->
+  <rect x="540" y="72" width="470" height="230" rx="13" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="556" y="94" font-size="11" font-weight="700" fill="#2c5a3a">TopologyAwareNodeSelector（TOPOLOGY）</text>
+  <rect x="556" y="108" width="440" height="46" rx="8" fill="#fff" stroke="#cfe6d5"/><text x="570" y="128" font-size="9" font-weight="600" fill="#2c5a3a">按 NetworkLocation 逐层分配</text><text x="570" y="145" font-size="8.5" fill="#2f6f4f">机架→子网→…越近越优,减跨机架传输</text>
+  <rect x="556" y="162" width="440" height="100" rx="8" fill="#fff" stroke="#cfe6d5"/><text x="570" y="182" font-size="9" font-weight="600" fill="#2c5a3a">NetworkTopology 三种</text><text x="570" y="200" font-size="8.5" fill="#2f6f4f">· FlatNetworkTopology：全在根(等价 Uniform)</text><text x="570" y="217" font-size="8.5" fill="#2f6f4f">· FileBasedNetworkTopology：文件定义机架</text><text x="570" y="234" font-size="8.5" fill="#2f6f4f">· SubnetBasedTopology：按 IP 子网推断</text><text x="570" y="254" font-size="8" fill="#93762e">每层队列比例 calculateMinPendingSplitsWeightPerTask</text>
+  <rect x="556" y="270" width="440" height="24" rx="7" fill="#f7f7f9" stroke="#ececf1"/><text x="570" y="286" font-size="8.5" fill="#6e6e73">桶分布路径委托 NodeScheduler.selectDistributionNodes</text>
+
+  <!-- limits -->
+  <rect x="30" y="322" width="980" height="110" rx="13" fill="#f3f7fc" stroke="#cfe0f2"/>
+  <text x="46" y="344" font-size="11" font-weight="700" fill="#274a78">关键限额（NodeSchedulerConfig）</text>
+  <g font-size="8.8">
+    <text x="46" y="366" fill="#5b7db1">· max-splits-per-node = 256（单节点在跑+排队的 split 上限）</text>
+    <text x="46" y="384" fill="#5b7db1">· min-pending-splits-per-task = 16 · max-adjusted-pending-splits-weight-per-task = 2000</text>
+    <text x="46" y="402" fill="#5b7db1">· include-coordinator（coordinator 是否兼跑 split,生产多为 false）· min-candidates = 10</text>
+    <text x="46" y="420" fill="#5b7db1">· NodeMap 缓存节点存活视图(默认 5s 过期,来自 discovery 心跳)</text>
+  </g>
+
+  <!-- removed -->
+  <rect x="30" y="448" width="980" height="94" rx="13" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="46" y="470" font-size="11" font-weight="700" fill="#b1483a">483 版本变化（避免踩旧文档）</text>
+  <text x="46" y="492" font-size="9" fill="#6e6e73">· TopologyAwareSplitPlacementPolicy 已移除 → 拓扑感知内化进 TopologyAwareNodeSelector,放置只剩 DynamicSplitPlacementPolicy</text>
+  <text x="46" y="510" font-size="9" fill="#6e6e73">· NodeSelectionHashStrategy 枚举已移除 → 一致性哈希经 ConsistentHashingAddressProvider</text>
+  <text x="46" y="528" font-size="9" fill="#6e6e73">· 归属：split 由连接器 SplitManager 生成;NodeScheduler 只决定"这个 split 放哪个节点的哪个 task"</text>
+</svg>

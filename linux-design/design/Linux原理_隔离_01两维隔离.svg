@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="458" viewBox="0 0 1000 458" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+  </defs>
+  <rect width="1000" height="458" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">两条正交的隔离维度：namespace 隔离"看到什么" ⊥ cgroup 限制"用多少"</text>
+
+  <!-- 左：namespace -->
+  <rect x="28" y="60" width="446" height="344" rx="13" fill="#f4eefb" stroke="#d9c7ec"/>
+  <text x="44" y="84" font-size="12" font-weight="600" fill="#3d2a5a">namespace —— 隔离"看到什么"（视图）</text>
+  <text x="44" y="102" font-size="8.5" fill="#6e6e73">每进程一组 nsproxy 指针（nsproxy.h:32）；clone(CLONE_NEW*) / unshare 创建</text>
+  <g font-size="9.5">
+    <rect x="44" y="112" width="414" height="26" rx="7" fill="#ffffff" stroke="#e7dcf2"/><text x="54" y="129" fill="#3d2a5a">mount (NEWNS)</text><text x="450" y="129" fill="#a1a1a6" text-anchor="end">挂载点 / 文件系统树</text>
+    <rect x="44" y="144" width="414" height="26" rx="7" fill="#ffffff" stroke="#e7dcf2"/><text x="54" y="161" fill="#3d2a5a">pid (NEWPID)</text><text x="450" y="161" fill="#a1a1a6" text-anchor="end">进程号（容器内从 1 号起）</text>
+    <rect x="44" y="176" width="414" height="26" rx="7" fill="#ffffff" stroke="#e7dcf2"/><text x="54" y="193" fill="#3d2a5a">net (NEWNET)</text><text x="450" y="193" fill="#a1a1a6" text-anchor="end">网卡 / 路由 / 端口</text>
+    <rect x="44" y="208" width="414" height="26" rx="7" fill="#ffffff" stroke="#e7dcf2"/><text x="54" y="225" fill="#3d2a5a">uts (NEWUTS)</text><text x="450" y="225" fill="#a1a1a6" text-anchor="end">主机名 / 域名</text>
+    <rect x="44" y="240" width="414" height="26" rx="7" fill="#ffffff" stroke="#e7dcf2"/><text x="54" y="257" fill="#3d2a5a">ipc (NEWIPC)</text><text x="450" y="257" fill="#a1a1a6" text-anchor="end">System V IPC / 消息队列</text>
+    <rect x="44" y="272" width="414" height="26" rx="7" fill="#ffffff" stroke="#e7dcf2"/><text x="54" y="289" fill="#3d2a5a">user (NEWUSER)</text><text x="450" y="289" fill="#a1a1a6" text-anchor="end">uid/gid 映射（经 cred）</text>
+    <rect x="44" y="304" width="414" height="26" rx="7" fill="#ffffff" stroke="#e7dcf2"/><text x="54" y="321" fill="#3d2a5a">cgroup (NEWCGROUP)</text><text x="450" y="321" fill="#a1a1a6" text-anchor="end">cgroup 根视图</text>
+    <rect x="44" y="336" width="414" height="26" rx="7" fill="#ffffff" stroke="#e7dcf2"/><text x="54" y="353" fill="#3d2a5a">time (NEWTIME)</text><text x="450" y="353" fill="#a1a1a6" text-anchor="end">单调 / 启动时钟偏移</text>
+  </g>
+
+  <!-- 正交标记 -->
+  <text x="500" y="215" font-size="20" font-weight="600" fill="#c1962a" text-anchor="middle">⊥</text>
+  <text x="500" y="238" font-size="8.5" fill="#a05411" text-anchor="middle">正交</text>
+  <text x="500" y="252" font-size="8.5" fill="#a05411" text-anchor="middle">互不</text>
+  <text x="500" y="264" font-size="8.5" fill="#a05411" text-anchor="middle">替代</text>
+
+  <!-- 右：cgroup -->
+  <rect x="526" y="60" width="446" height="344" rx="13" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="542" y="84" font-size="12" font-weight="600" fill="#1b2a4a">cgroup —— 限制"用多少"（资源）</text>
+  <text x="542" y="102" font-size="8.5" fill="#5b7db1">记账 + 上限；v2 统一层级 cgrp_dfl_root（cgroup.c:179）</text>
+  <g font-size="9.5">
+    <rect x="542" y="112" width="414" height="42" rx="7" fill="#ffffff" stroke="#d6e2f4"/><text x="552" y="130" fill="#1b2a4a" font-weight="600">cpu / cpuset</text><text x="552" y="146" fill="#5b7db1">CPU 时间 → 调度（组调度 + 带宽 throttle）· cpu.max / cpu.weight</text>
+    <rect x="542" y="160" width="414" height="42" rx="7" fill="#ffffff" stroke="#d6e2f4"/><text x="552" y="178" fill="#1b2a4a" font-weight="600">memory</text><text x="552" y="194" fill="#5b7db1">内存 → 虚拟内存（memcg 回收）· memory.max / memory.high</text>
+    <rect x="542" y="208" width="414" height="42" rx="7" fill="#ffffff" stroke="#d6e2f4"/><text x="552" y="226" fill="#1b2a4a" font-weight="600">io</text><text x="552" y="242" fill="#5b7db1">IO 带宽 → 块层（blkio 限速）· io.max</text>
+    <rect x="542" y="256" width="414" height="42" rx="7" fill="#ffffff" stroke="#d6e2f4"/><text x="552" y="274" fill="#1b2a4a" font-weight="600">pids</text><text x="552" y="290" fill="#5b7db1">进程 / 线程数上限 · pids.max（防 fork 炸弹）</text>
+    <rect x="542" y="304" width="414" height="58" rx="7" fill="#f5faf6" stroke="#cfe6d5"/><text x="552" y="322" fill="#2c5a3a" font-weight="600">接口文件（kernfs）</text><text x="552" y="338" fill="#2f6f4f">cgroup.controllers（可用）· cgroup.subtree_control（下发子组）</text><text x="552" y="354" fill="#2f6f4f">cgroup.procs（把进程移入）· 父组限额 = 子组天花板</text>
+  </g>
+
+  <!-- 底部 -->
+  <rect x="28" y="418" width="944" height="34" rx="9" fill="#ffffff" stroke="#ececf1"/>
+  <text x="44" y="440" font-size="10" fill="#6e6e73">互不替代：namespace 让容器 top 只看到自己进程，但不限它吃满 CPU；cgroup 限住用量，但不改它能看到什么 —— 容器需两者叠加。</text>
+</svg>

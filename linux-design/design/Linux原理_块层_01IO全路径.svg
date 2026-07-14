@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="520" viewBox="0 0 1000 520" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1000" height="520" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">IO 全路径：bio 提交 → 切分/合并 → 建 request → plug 攒批 → 硬队列派发 → 驱动 → 完成软中断回调</text>
+
+  <!-- 上游 -->
+  <rect x="28" y="60" width="944" height="46" rx="11" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="500" y="79" font-size="10.5" font-weight="600" fill="#12402a" text-anchor="middle">上游来源：页缓存回写 · 直接 IO · 裸设备访问</text>
+  <text x="500" y="96" font-size="9" fill="#2f6f4f" text-anchor="middle">每次块传输 = 一个 bio（bi_bdev 设备 · bi_opf 操作 · bi_io_vec 内存段 · bi_end_io 回调，blk_types.h:210）</text>
+
+  <!-- 提交入口 -->
+  <rect x="28" y="126" width="944" height="42" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="500" y="145" font-size="10.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">submit_bio（blk-core.c:916）→ submit_bio_noacct :780 → blk_mq_submit_bio（blk-mq.c:3124）</text>
+  <text x="500" y="161" font-size="9" fill="#5b7db1" text-anchor="middle">进入 blk-mq 处理</text>
+
+  <!-- 三步处理 -->
+  <rect x="60" y="192" width="270" height="88" rx="11" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="195" y="213" font-size="10.5" font-weight="600" fill="#1d1d1f" text-anchor="middle">① 切分 &amp; 合并</text>
+  <text x="76" y="235" font-size="9.5" fill="#6e6e73">· __bio_split_to_limits :3178</text>
+  <text x="76" y="253" font-size="9.5" fill="#6e6e73">  按设备上限切分 bio</text>
+  <text x="76" y="271" font-size="9.5" fill="#6e6e73">· attempt_bio_merge :3187 并入相邻 request</text>
+
+  <rect x="365" y="192" width="270" height="88" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="500" y="213" font-size="10.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">② 建 request</text>
+  <text x="381" y="235" font-size="9.5" fill="#5b7db1">· 未合并 → get_new_requests :3202</text>
+  <text x="381" y="253" font-size="9.5" fill="#5b7db1">· bio_to_request 填充</text>
+  <text x="381" y="271" font-size="9.5" fill="#5b7db1">  request = 可排序/派发的单位</text>
+
+  <rect x="670" y="192" width="302" height="88" rx="11" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="821" y="213" font-size="10.5" font-weight="600" fill="#5a3410" text-anchor="middle">③ 入队（二选一）</text>
+  <text x="686" y="235" font-size="9.5" fill="#93762e">· 有 plug → add_rq_to_plug :3231 攒批</text>
+  <text x="686" y="253" font-size="9.5" fill="#93762e">· 否则入软/硬队列 run_hw_queue :3239</text>
+  <text x="686" y="271" font-size="9.5" fill="#93762e">  或直发 try_issue_directly :3241</text>
+
+  <!-- 派发 -->
+  <rect x="200" y="316" width="600" height="46" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="500" y="335" font-size="10.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">派发 blk_mq_dispatch_rq_list（blk-mq.c:2116）→ 经 IO 调度器排序 → 驱动 -&gt;queue_rq</text>
+  <text x="500" y="352" font-size="9" fill="#5b7db1" text-anchor="middle">从硬件队列取请求，下发到设备</text>
+
+  <!-- 驱动/设备 -->
+  <rect x="330" y="384" width="340" height="42" rx="11" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+  <text x="500" y="410" font-size="10.5" font-weight="600" fill="#5a3410" text-anchor="middle">驱动 / 设备执行 IO（NVMe / SATA / SCSI）</text>
+
+  <!-- 完成 -->
+  <rect x="200" y="448" width="600" height="56" rx="11" fill="#fbeaea" stroke="#e7c3c3" filter="url(#soft)"/>
+  <text x="500" y="468" font-size="10.5" font-weight="600" fill="#4a1414" text-anchor="middle">完成：硬中断只做最少确认 → raise BLOCK_SOFTIRQ（blk-mq.c:1315）</text>
+  <text x="500" y="486" font-size="9.5" fill="#7a2a2a" text-anchor="middle">blk_done_softirq :1256 → 跑 bio-&gt;bi_end_io 回调、唤醒等待者（完成放软中断，缩短关中断时间）</text>
+  <text x="500" y="500" font-size="8.5" fill="#a1a1a6" text-anchor="middle">complete_request :1353 · open_softirq(BLOCK_SOFTIRQ) :5321 → 衔接中断主线</text>
+
+  <g stroke="#c7c7cc" stroke-width="1.6" fill="none">
+    <path d="M500,106 L500,126" marker-end="url(#ar)"/>
+    <path d="M195,168 L195,192" marker-end="url(#ar)"/>
+    <path d="M330,236 L365,236" marker-end="url(#ar)"/>
+    <path d="M635,236 L670,236" marker-end="url(#ar)"/>
+    <path d="M500,280 L500,316" marker-end="url(#ar)"/>
+    <path d="M500,362 L500,384" marker-end="url(#ar)"/>
+    <path d="M500,426 L500,448" marker-end="url(#ar)"/>
+  </g>
+</svg>

@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="540" viewBox="0 0 1080 540" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs><filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+  <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker></defs>
+  <rect width="1080" height="540" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">能力域依赖关系：按依赖深度分层</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">上层依赖下层；Raft 与 backend 是两个底座，一切写路径落在它们之上</text>
+  <!-- layer labels -->
+  <text x="40" y="94" font-size="10" font-weight="700" fill="#3d2a5a">接触面层</text>
+  <text x="40" y="188" font-size="10" font-weight="700" fill="#12402a">协调/读一致层</text>
+  <text x="40" y="298" font-size="10" font-weight="700" fill="#5a3410">存储/共识底座</text>
+  <text x="40" y="440" font-size="10" font-weight="700" fill="#7a2230">保障/横切</text>
+  <g text-anchor="middle">
+    <!-- L1 -->
+    <rect x="360" y="72" width="360" height="46" rx="11" fill="#f6f2fb" stroke="#d9c9ec" filter="url(#soft)"/>
+    <text x="540" y="93" font-size="10.5" font-weight="700" fill="#3d2a5a">gRPC API 族（KV/Watch/Lease/Txn/Cluster/Auth）</text>
+    <text x="540" y="109" font-size="8" fill="#9a7cc4">v3rpc + 拦截器链</text>
+    <!-- L2 -->
+    <rect x="180" y="150" width="220" height="70" rx="11" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+    <text x="290" y="176" font-size="10" font-weight="700" fill="#12402a">Watch 机制</text>
+    <text x="290" y="196" font-size="8" fill="#4c8567">按 revision 推变更</text>
+    <text x="290" y="210" font-size="7.5" fill="#4c8567">依赖 MVCC 事件流</text>
+    <rect x="430" y="150" width="220" height="70" rx="11" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+    <text x="540" y="176" font-size="10" font-weight="700" fill="#12402a">Lease 租约</text>
+    <text x="540" y="196" font-size="8" fill="#4c8567">TTL + keepalive</text>
+    <text x="540" y="210" font-size="7.5" fill="#4c8567">过期经 Raft 撤销</text>
+    <rect x="680" y="150" width="220" height="70" rx="11" fill="#fbeef0" stroke="#f0cdd4" filter="url(#soft)"/>
+    <text x="790" y="176" font-size="10" font-weight="700" fill="#7a2230">线性一致读</text>
+    <text x="790" y="196" font-size="8" fill="#a44">ReadIndex</text>
+    <text x="790" y="210" font-size="7.5" fill="#a44">依赖 Raft commit index</text>
+    <!-- L3 底座 -->
+    <rect x="200" y="252" width="300" height="120" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+    <text x="350" y="278" font-size="11" font-weight="700" fill="#1b2a4a">Raft 共识 ★灵魂</text>
+    <text x="350" y="300" font-size="8.5" fill="#5b7db1">propose → 复制 → commit → apply</text>
+    <text x="350" y="318" font-size="8.5" fill="#5b7db1">leader 选举 · 日志复制</text>
+    <text x="350" y="336" font-size="8.5" fill="#5b7db1">成员 ConfChange</text>
+    <text x="350" y="356" font-size="8" fill="#8aa6cf">go.etcd.io/raft/v3</text>
+    <rect x="560" y="252" width="300" height="120" rx="13" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+    <text x="710" y="278" font-size="11" font-weight="700" fill="#5a3410">MVCC 存储 + backend</text>
+    <text x="710" y="300" font-size="8.5" fill="#93762e">revision 多版本 · treeIndex</text>
+    <text x="710" y="318" font-size="8.5" fill="#93762e">boltdb 事务 + 批量提交</text>
+    <text x="710" y="336" font-size="8.5" fill="#93762e">compaction / defrag</text>
+    <text x="710" y="356" font-size="8" fill="#b08843">server/storage/{mvcc,backend}</text>
+    <!-- L4 横切 -->
+    <rect x="180" y="404" width="220" height="56" rx="11" fill="#fdf9f0" stroke="#efe3cd"/>
+    <text x="290" y="428" font-size="9.5" font-weight="700" fill="#7a5a1e">WAL + 快照</text>
+    <text x="290" y="446" font-size="8" fill="#b08843">崩溃恢复的地基</text>
+    <rect x="430" y="404" width="220" height="56" rx="11" fill="#fdf9f0" stroke="#efe3cd"/>
+    <text x="540" y="428" font-size="9.5" font-weight="700" fill="#7a5a1e">成员与集群</text>
+    <text x="540" y="446" font-size="8" fill="#b08843">ConfChange/learner/version</text>
+    <rect x="680" y="404" width="220" height="56" rx="11" fill="#fdf9f0" stroke="#efe3cd"/>
+    <text x="790" y="428" font-size="9.5" font-weight="700" fill="#7a5a1e">认证与权限</text>
+    <text x="790" y="446" font-size="8" fill="#b08843">RBAC · token</text>
+  </g>
+  <g stroke="#c7c7cc" stroke-width="1.3" fill="none">
+    <line x1="480" y1="118" x2="320" y2="150" marker-end="url(#ar)"/>
+    <line x1="540" y1="118" x2="540" y2="150" marker-end="url(#ar)"/>
+    <line x1="600" y1="118" x2="770" y2="150" marker-end="url(#ar)"/>
+    <line x1="290" y1="220" x2="330" y2="252" marker-end="url(#ar)"/>
+    <line x1="540" y1="220" x2="400" y2="290" marker-end="url(#ar)"/>
+    <line x1="560" y1="300" x2="500" y2="300" marker-end="url(#ar)"/>
+    <line x1="790" y1="220" x2="500" y2="280" marker-end="url(#ar)"/>
+  </g>
+  <text x="30" y="500" font-size="9.5" fill="#86868b">读法：Watch/Lease/线性读都建立在 Raft + MVCC 两个底座上；WAL/快照/成员/认证是横切保障。Raft 是所有写路径的必经之地。</text>
+</svg>

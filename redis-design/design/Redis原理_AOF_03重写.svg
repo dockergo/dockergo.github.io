@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="490" viewBox="0 0 1000 490" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1000" height="490" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">AOF 重写：fork 子进程压缩 + Multi-Part 结构（aof.c:2867,74-78）</text>
+  <text x="30" y="49" font-size="10.5" fill="#a1a1a6">此树用 base+incr+manifest 目录，父进程写新 incr 文件（无经典 aof_rewrite_buf 内存缓冲）</text>
+
+  <!-- why rewrite -->
+  <rect x="30" y="72" width="440" height="80" rx="10" fill="#fdeef2" stroke="#f6c9d6"/>
+  <text x="50" y="94" font-size="10.5" font-weight="600" fill="#c02a56">为何重写：AOF 越写越大</text>
+  <text x="50" y="114" font-size="9.5" fill="#88304a">SET k 1 → SET k 2 → … → INCR k（100 次）</text>
+  <text x="50" y="132" font-size="9.5" fill="#88304a">留一堆历史命令，但最终态只需一条 SET k 100</text>
+  <text x="50" y="148" font-size="8.5" fill="#c8607f">重写 = 用当前数据集生成最小命令集</text>
+
+  <!-- rewrite flow -->
+  <rect x="490" y="72" width="480" height="80" rx="10" fill="#eafaf1" stroke="#b8e6cd"/>
+  <text x="510" y="94" font-size="10.5" font-weight="600" fill="#1c6b45">重写流程（fork 子进程，不阻塞父进程）</text>
+  <text x="510" y="114" font-size="9.5" fill="#2f7a56">① 父：openNewIncrAofForAppend 开新 incr 文件</text>
+  <text x="510" y="132" font-size="9.5" fill="#2f7a56">② fork 子进程 → 子进程按当前内存写新 base 文件</text>
+  <text x="510" y="148" font-size="8.5" fill="#5cb88a">③ 子完成后更新 manifest 指向新 base + 新 incr</text>
+
+  <!-- multi-part structure -->
+  <text x="40" y="188" font-size="11" font-weight="700" fill="#7a5a1e">Multi-Part AOF 目录结构（appendonlydir/）</text>
+  <g text-anchor="middle" font-size="9.5">
+    <rect x="60" y="202" width="240" height="70" rx="9" fill="#fdf3e5" stroke="#f0d9b5" filter="url(#soft)"/>
+    <text x="180" y="224" font-weight="600" fill="#7a5a1e">base 文件</text>
+    <text x="180" y="242" fill="#b08535" font-size="9">appendonly.aof.N.base.rdb</text>
+    <text x="180" y="258" fill="#c79a4e" font-size="8.5">重写时刻的全量快照（RDB 格式）</text>
+
+    <rect x="330" y="202" width="240" height="70" rx="9" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+    <text x="450" y="224" font-weight="600" fill="#1b2a4a">incr 文件</text>
+    <text x="450" y="242" fill="#5b7db1" font-size="9">appendonly.aof.N.incr.aof</text>
+    <text x="450" y="258" fill="#8ba7cc" font-size="8.5">base 之后的增量命令（AOF 文本）</text>
+
+    <rect x="600" y="202" width="240" height="70" rx="9" fill="#f6f0fb" stroke="#dcc6ee" filter="url(#soft)"/>
+    <text x="720" y="224" font-weight="600" fill="#5a2a82">manifest 文件</text>
+    <text x="720" y="242" fill="#8a5cae" font-size="9">appendonly.aof.manifest</text>
+    <text x="720" y="258" fill="#a884c8" font-size="8.5">记录 base + 各 incr 的清单与顺序</text>
+  </g>
+
+  <!-- key difference -->
+  <rect x="40" y="292" width="920" height="130" rx="10" fill="#fdf9f0" stroke="#efe3cd"/>
+  <text x="60" y="316" font-size="11" font-weight="600" fill="#7a5a1e">关键：重写期间的新写入去哪了？（与经典 Redis 的差异）</text>
+  <text x="60" y="340" font-size="10" fill="#7a5a1e">· 经典 Redis（&lt;7.0）：父进程把重写期间的新命令暂存在内存 <tspan font-weight="600">aof_rewrite_buf</tspan>，子进程写完后再追加进去</text>
+  <text x="60" y="362" font-size="10" fill="#1c6b45">· 此树 Multi-Part：父进程重写一开始就打开<tspan font-weight="600">新的 incr 文件</tspan>，新命令直接落新 incr —— 无内存差量缓冲</text>
+  <text x="60" y="384" font-size="10" fill="#2f7a56">→ 子进程只管写 base；父进程只管写 incr；manifest 把它们串起来。职责清晰、无内存缓冲膨胀风险</text>
+  <text x="60" y="406" font-size="9" fill="#86868b">自动触发：auto-aof-rewrite-percentage=100（比上次大一倍）且 auto-aof-rewrite-min-size=64mb</text>
+
+  <rect x="40" y="440" width="920" height="34" rx="8" fill="#f7f7f9" stroke="#ececef"/>
+  <text x="500" y="461" font-size="10" fill="#4a4a4f" text-anchor="middle">恢复：先加载 base（RDB 快，直接建结构）→ 再重放各 incr（补最近命令）→ 得到最新数据集</text>
+</svg>

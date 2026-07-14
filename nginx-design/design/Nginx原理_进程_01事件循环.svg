@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="450" viewBox="0 0 1020 450"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1020" height="450" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">worker 事件循环 · 单线程非阻塞跑满一颗核（ngx_process_events_and_timers，event.c:195）</text>
+
+  <!-- 循环 -->
+  <rect x="30" y="56" width="580" height="360" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="48" y="80" font-size="12.5" font-weight="600" fill="#1d1d1f">一个 worker 的无限循环</text>
+
+  <rect x="200" y="96" width="240" height="46" rx="10" fill="#eef3fb" stroke="#bcd0ec"/><text x="320" y="118" font-size="10.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">① 抢 accept_mutex（可选）</text><text x="320" y="134" font-size="8.5" fill="#5b7db1" text-anchor="middle">ngx_trylock_accept_mutex（event.c:219）</text>
+
+  <rect x="200" y="162" width="240" height="46" rx="10" fill="#eafaf1" stroke="#bce6cd"/><text x="320" y="184" font-size="10.5" font-weight="600" fill="#0f5132" text-anchor="middle">② epoll_wait 等就绪事件</text><text x="320" y="200" font-size="8.5" fill="#3f8f66" text-anchor="middle">带超时=最近定时器（epoll_module.c:784）</text>
+
+  <rect x="200" y="228" width="240" height="46" rx="10" fill="#fff7e6" stroke="#f0dcae"/><text x="320" y="250" font-size="10.5" font-weight="600" fill="#7a4d00" text-anchor="middle">③ 处理就绪的读/写事件</text><text x="320" y="266" font-size="8.5" fill="#9a7328" text-anchor="middle">调用各连接的 event handler 回调</text>
+
+  <rect x="200" y="294" width="240" height="46" rx="10" fill="#f4eefb" stroke="#d9c9ef"/><text x="320" y="316" font-size="10.5" font-weight="600" fill="#3c1361" text-anchor="middle">④ 处理到期定时器</text><text x="320" y="332" font-size="8.5" fill="#7a5aa8" text-anchor="middle">红黑树管定时器（超时/keepalive）</text>
+
+  <rect x="200" y="360" width="240" height="40" rx="10" fill="#f6f6f8" stroke="#e2e2e7"/><text x="320" y="385" font-size="10" fill="#494950" text-anchor="middle">⑤ 处理 posted events → 回到 ①</text>
+
+  <line x1="320" y1="142" x2="320" y2="162" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="320" y1="208" x2="320" y2="228" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="320" y1="274" x2="320" y2="294" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="320" y1="340" x2="320" y2="360" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <path d="M200,380 L120,380 L120,119 L200,119" fill="none" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <text x="70" y="250" font-size="9" fill="#86868b" transform="rotate(-90 70 250)">永不阻塞 · 循环推进</text>
+
+  <!-- 非阻塞要义 -->
+  <rect x="630" y="56" width="360" height="360" rx="14" fill="#eafaf1" stroke="#bce6cd" filter="url(#soft)"/>
+  <text x="648" y="80" font-size="12.5" font-weight="600" fill="#0f5132">为什么一个线程能扛上万连接</text>
+  <rect x="648" y="96" width="324" height="70" rx="10" fill="#ffffff" stroke="#bce6cd"/><text x="664" y="118" font-size="10" font-weight="600" fill="#0f5132">连接 = 状态机，不占线程</text><text x="664" y="138" font-size="9" fill="#3f8f66">每个连接的读/写就绪时才被回调唤醒，</text><text x="664" y="156" font-size="9" fill="#3f8f66">处理一小步就返回——不为任何连接死等</text>
+  <rect x="648" y="176" width="324" height="70" rx="10" fill="#ffffff" stroke="#bce6cd"/><text x="664" y="198" font-size="10" font-weight="600" fill="#0f5132">一切可能阻塞的都异步化</text><text x="664" y="218" font-size="9" fill="#3f8f66">网络收发非阻塞；磁盘 IO 可选 aio/线程池；</text><text x="664" y="236" font-size="9" fill="#3f8f66">DNS 用异步 resolver</text>
+  <rect x="648" y="256" width="324" height="70" rx="10" fill="#ffffff" stroke="#bce6cd"/><text x="664" y="278" font-size="10" font-weight="600" fill="#0f5132">epoll：O(就绪数) 不 O(总连接)</text><text x="664" y="298" font-size="9" fill="#3f8f66">只返回真正有事件的连接，</text><text x="664" y="316" font-size="9" fill="#3f8f66">空闲连接零开销</text>
+  <rect x="648" y="336" width="324" height="64" rx="10" fill="#fdfdf5" stroke="#bce6cd"/><text x="810" y="358" font-size="9.5" font-weight="600" fill="#0f5132" text-anchor="middle">worker 数 ≈ CPU 核数</text><text x="810" y="378" font-size="8.5" fill="#3f8f66" text-anchor="middle">每核一 worker 跑满，无线程切换抖动</text>
+</svg>

@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="520" viewBox="0 0 1080 520" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+    <marker id="arb" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#c98a2a"/></marker>
+  </defs>
+  <rect width="1080" height="520" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Flink 原理 · 异步屏障快照（Chandy-Lamport）</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">Coordinator 触发→CheckpointBarrier 注入数据流→算子收齐屏障快照转发→ack 齐则完成</text>
+
+  <!-- Coordinator -->
+  <rect x="40" y="70" width="1000" height="52" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="60" y="92" font-size="10.5" font-weight="700" fill="#12402a">① CheckpointCoordinator（定时触发 · JobManager 侧）</text>
+  <text x="60" y="110" font-size="8.4" fill="#2f6f4f">先给 OperatorCoordinator 打点,再给各 source task triggerCheckpoint(checkpointId, timestamp, options)</text>
+
+  <line x1="150" y1="122" x2="150" y2="150" stroke="#86868b" stroke-width="1.5" marker-end="url(#ar)"/>
+  <text x="166" y="140" font-size="8" fill="#2f6f4f">注入屏障</text>
+
+  <!-- barrier legend -->
+  <rect x="620" y="132" width="420" height="26" rx="7" fill="#fff7e6" stroke="#e8cf9a"/>
+  <text x="632" y="149" font-size="8.2" fill="#5a3410">▮ CheckpointBarrier(id, timestamp, CheckpointOptions) 作为特殊记录随数据流</text>
+
+  <!-- source -->
+  <rect x="40" y="152" width="160" height="70" rx="11" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="120" y="180" font-size="10" font-weight="700" text-anchor="middle" fill="#3d2a5a">Source</text>
+  <text x="120" y="199" font-size="8" text-anchor="middle" fill="#7a5aa8">收 trigger,发出</text>
+  <text x="120" y="213" font-size="8" text-anchor="middle" fill="#7a5aa8">屏障 + 数据</text>
+
+  <!-- operator (multi-input, aligning) -->
+  <rect x="330" y="152" width="200" height="70" rx="11" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="430" y="178" font-size="10" font-weight="700" text-anchor="middle" fill="#5a3410">算子（多输入）</text>
+  <text x="430" y="196" font-size="7.8" text-anchor="middle" fill="#93762e">收齐所有通道屏障</text>
+  <text x="430" y="210" font-size="7.8" text-anchor="middle" fill="#93762e">→ 快照状态 → 转发屏障</text>
+
+  <!-- downstream operator -->
+  <rect x="660" y="152" width="200" height="70" rx="11" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="760" y="178" font-size="10" font-weight="700" text-anchor="middle" fill="#5a3410">下游算子</text>
+  <text x="760" y="196" font-size="7.8" text-anchor="middle" fill="#93762e">同样收齐、快照</text>
+  <text x="760" y="210" font-size="7.8" text-anchor="middle" fill="#93762e">继续转发屏障</text>
+
+  <!-- sink -->
+  <rect x="920" y="152" width="120" height="70" rx="11" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="980" y="184" font-size="10" font-weight="700" text-anchor="middle" fill="#12402a">Sink</text>
+  <text x="980" y="203" font-size="7.8" text-anchor="middle" fill="#2f6f4f">快照完毕</text>
+
+  <!-- data+barrier arrows (amber = barrier flow) -->
+  <line x1="200" y1="187" x2="330" y2="187" stroke="#c98a2a" stroke-width="1.8" marker-end="url(#arb)"/>
+  <line x1="530" y1="187" x2="660" y2="187" stroke="#c98a2a" stroke-width="1.8" marker-end="url(#arb)"/>
+  <line x1="860" y1="187" x2="920" y2="187" stroke="#c98a2a" stroke-width="1.8" marker-end="url(#arb)"/>
+  <text x="265" y="178" font-size="7.4" text-anchor="middle" fill="#c98a2a">屏障随数据</text>
+  <text x="595" y="178" font-size="7.4" text-anchor="middle" fill="#c98a2a">转发屏障</text>
+
+  <!-- snapshot to state store (down) -->
+  <line x1="430" y1="222" x2="430" y2="250" stroke="#86868b" stroke-width="1.4" marker-end="url(#ar)"/>
+  <line x1="760" y1="222" x2="760" y2="250" stroke="#86868b" stroke-width="1.4" marker-end="url(#ar)"/>
+  <rect x="330" y="252" width="530" height="40" rx="10" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="595" y="277" font-size="9" font-weight="600" text-anchor="middle" fill="#5a3410">各算子异步快照自己的状态 → state backend / 远端存储</text>
+
+  <!-- ack back up -->
+  <line x1="595" y1="292" x2="595" y2="320" stroke="#86868b" stroke-width="1.4" marker-end="url(#ar)"/>
+  <text x="611" y="310" font-size="8" fill="#2f6f4f">各算子 ack 回 Coordinator</text>
+  <rect x="40" y="322" width="1000" height="46" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="60" y="344" font-size="10" font-weight="700" fill="#12402a">② 全齐则完成 · completePendingCheckpoint</text>
+  <text x="60" y="361" font-size="8.4" fill="#2f6f4f">所有算子 ack 到齐 = 一个全局一致的时间点(一致切面);Coordinator 标记该检查点完成</text>
+
+  <!-- async explanation -->
+  <rect x="40" y="380" width="490" height="66" rx="12" fill="#f3f7fc" stroke="#cfe0f2"/>
+  <text x="56" y="402" font-size="10" font-weight="700" fill="#274a78">为什么叫"异步"</text>
+  <text x="56" y="420" font-size="8.4" fill="#5b7db1">同步阶段只建资源(拿状态引用)</text>
+  <text x="56" y="436" font-size="8.4" fill="#5b7db1">真正写盘/上传在异步阶段,不阻塞记录处理</text>
+
+  <rect x="550" y="380" width="490" height="66" rx="12" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="566" y="402" font-size="10" font-weight="700" fill="#12402a">全局一致快照</text>
+  <text x="566" y="420" font-size="8.4" fill="#2f6f4f">所有算子在"同一逻辑屏障"处切一刀</text>
+  <text x="566" y="436" font-size="8.4" fill="#2f6f4f">拼起来即全局一致状态,失败可回退到此点</text>
+
+  <!-- bottom banner -->
+  <rect x="40" y="460" width="1000" height="40" rx="12" fill="#f0f0f4" stroke="#d2d2d7"/>
+  <text x="540" y="485" font-size="9.5" font-weight="700" text-anchor="middle" fill="#48484a">误区破除:检查点不暂停处理——异步快照只在同步阶段短暂建资源,写盘在后台</text>
+</svg>

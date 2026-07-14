@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="400" viewBox="0 0 1000 400" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+  </defs>
+  <rect width="1000" height="400" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">Hash 命令族与对象存储（t_hash.c）</text>
+  <text x="30" y="49" font-size="10.5" fill="#a1a1a6">字段级读写 / 计数 / 遍历，适合表示结构化对象</text>
+
+  <rect x="30" y="72" width="300" height="150" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="50" y="96" font-size="11" font-weight="700" fill="#1b2a4a">字段读写</text>
+  <g font-size="9.5" fill="#5b7db1">
+    <text x="50" y="120">HSET / HGET / HMGET</text>
+    <text x="50" y="140">HDEL / HEXISTS / HLEN</text>
+    <text x="50" y="160">HGETALL / HKEYS / HVALS</text>
+    <text x="50" y="184" font-size="8.5" fill="#8ba7cc">HGETALL 大 Hash 会一次返回全部 → 慎用</text>
+    <text x="50" y="202" font-size="8.5" fill="#8ba7cc">→ 用 HSCAN 增量遍历</text>
+  </g>
+
+  <rect x="350" y="72" width="300" height="150" rx="12" fill="#eafaf1" stroke="#b8e6cd" filter="url(#soft)"/>
+  <text x="370" y="96" font-size="11" font-weight="700" fill="#1c6b45">字段级计数</text>
+  <g font-size="9.5" fill="#3a9b6e">
+    <text x="370" y="120">HINCRBY key field N</text>
+    <text x="370" y="140">HINCRBYFLOAT key field 1.5</text>
+    <text x="370" y="164" font-size="8.5" fill="#5cb88a">单线程原子，无需锁</text>
+    <text x="370" y="184" font-size="8.5" fill="#5cb88a">用途：商品库存、多维计数器</text>
+    <text x="370" y="204" font-size="8.5" fill="#5cb88a">HINCRBY stock:1 count -1（扣库存）</text>
+  </g>
+
+  <rect x="670" y="72" width="300" height="150" rx="12" fill="#f6f0fb" stroke="#dcc6ee" filter="url(#soft)"/>
+  <text x="690" y="96" font-size="11" font-weight="700" fill="#5a2a82">遍历</text>
+  <g font-size="9.5" fill="#8a5cae">
+    <text x="690" y="120">HSCAN key cursor</text>
+    <text x="690" y="140">  [MATCH pattern] [COUNT n]</text>
+    <text x="690" y="164" font-size="8.5" fill="#a884c8">游标增量遍历，不阻塞</text>
+    <text x="690" y="184" font-size="8.5" fill="#a884c8">基于 dictScan 反向二进制（见对象编码）</text>
+    <text x="690" y="204" font-size="8.5" fill="#a884c8">大 Hash 遍历首选</text>
+  </g>
+
+  <!-- comparison -->
+  <text x="40" y="258" font-size="11" font-weight="700" fill="#1d1d1f">Hash vs 多个 String key（存对象）</text>
+  <rect x="40" y="272" width="450" height="110" rx="10" fill="#fdeef2" stroke="#f6c9d6"/>
+  <text x="60" y="296" font-size="10.5" font-weight="600" fill="#c02a56">多个 String key</text>
+  <text x="60" y="318" font-size="9.5" fill="#88304a">user:1:name / user:1:age / user:1:email</text>
+  <text x="60" y="338" font-size="9.5" fill="#88304a">· 每个 key 一个 redisObject + 键空间 dict 项</text>
+  <text x="60" y="358" font-size="9.5" fill="#88304a">· 指针/元数据开销大，无法一次操作整个对象</text>
+  <text x="60" y="376" font-size="8.5" fill="#c8607f">适合：各属性生命周期/访问模式差异大</text>
+
+  <rect x="510" y="272" width="450" height="110" rx="10" fill="#eafaf1" stroke="#b8e6cd"/>
+  <text x="530" y="296" font-size="10.5" font-weight="600" fill="#1c6b45">一个 Hash</text>
+  <text x="530" y="318" font-size="9.5" fill="#2f7a56">user:1 → {name, age, email}</text>
+  <text x="530" y="338" font-size="9.5" fill="#2f7a56">· 小对象用 listpack，一段连续内存，省内存</text>
+  <text x="530" y="358" font-size="9.5" fill="#2f7a56">· 支持部分字段读写（HMGET/HSET），对象语义清晰</text>
+  <text x="530" y="376" font-size="8.5" fill="#5cb88a">适合：结构化对象（推荐默认选择）</text>
+</svg>

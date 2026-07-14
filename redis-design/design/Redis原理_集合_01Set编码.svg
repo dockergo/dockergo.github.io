@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="440" viewBox="0 0 1000 440" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1000" height="440" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">Set 三档编码：intset / listpack / hashtable（t_set.c:47-80）</text>
+  <text x="30" y="49" font-size="10.5" fill="#a1a1a6">纯整数小集合最省内存；含非整数或变大逐级升级（单向）</text>
+
+  <!-- intset -->
+  <rect x="30" y="72" width="300" height="160" rx="12" fill="#eafaf1" stroke="#b8e6cd" filter="url(#soft)"/>
+  <text x="50" y="96" font-size="11.5" font-weight="700" fill="#1c6b45">intset（纯整数）</text>
+  <text x="50" y="116" font-size="9" fill="#3a9b6e">有序整数数组，二分查找</text>
+  <g font-family="'SF Mono',monospace" font-size="9" text-anchor="middle">
+    <rect x="50" y="126" width="55" height="28" rx="4" fill="#fff" stroke="#b8e6cd"/><text x="77" y="144" fill="#1c6b45">3</text>
+    <rect x="109" y="126" width="55" height="28" rx="4" fill="#fff" stroke="#b8e6cd"/><text x="136" y="144" fill="#1c6b45">7</text>
+    <rect x="168" y="126" width="55" height="28" rx="4" fill="#fff" stroke="#b8e6cd"/><text x="195" y="144" fill="#1c6b45">12</text>
+    <rect x="227" y="126" width="55" height="28" rx="4" fill="#fff" stroke="#b8e6cd"/><text x="254" y="144" fill="#1c6b45">40</text>
+  </g>
+  <text x="50" y="178" font-size="9" fill="#3a9b6e">· INT16→32→64 单向升级</text>
+  <text x="50" y="196" font-size="9" fill="#3a9b6e">· SISMEMBER 二分 O(log n)</text>
+  <text x="50" y="214" font-size="8.5" fill="#5cb88a">≤ set-max-intset-entries（默认 512）</text>
+
+  <!-- listpack -->
+  <rect x="350" y="72" width="300" height="160" rx="12" fill="#fdf3e5" stroke="#f0d9b5" filter="url(#soft)"/>
+  <text x="370" y="96" font-size="11.5" font-weight="700" fill="#7a5a1e">listpack（含非整数小集合）</text>
+  <text x="370" y="116" font-size="9" fill="#b08535">连续内存存元素</text>
+  <g font-family="'SF Mono',monospace" font-size="8.5" text-anchor="middle">
+    <rect x="370" y="126" width="66" height="28" rx="4" fill="#fff" stroke="#f0d9b5"/><text x="403" y="144" fill="#7a5a1e">"red"</text>
+    <rect x="440" y="126" width="66" height="28" rx="4" fill="#fff" stroke="#f0d9b5"/><text x="473" y="144" fill="#7a5a1e">"blue"</text>
+    <rect x="510" y="126" width="80" height="28" rx="4" fill="#fff" stroke="#f0d9b5"/><text x="550" y="144" fill="#7a5a1e">"green"</text>
+  </g>
+  <text x="370" y="178" font-size="9" fill="#b08535">· 出现非整数元素时用它</text>
+  <text x="370" y="196" font-size="9" fill="#b08535">· 查找 O(n) 遍历（元素少）</text>
+  <text x="370" y="214" font-size="8.5" fill="#c79a4e">≤ set-max-listpack-entries（默认 128）</text>
+
+  <!-- hashtable -->
+  <rect x="670" y="72" width="300" height="160" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="690" y="96" font-size="11.5" font-weight="700" fill="#1b2a4a">hashtable（大集合）</text>
+  <text x="690" y="116" font-size="9" fill="#5b7db1">dict：member → NULL</text>
+  <g font-size="8.5" text-anchor="middle">
+    <rect x="690" y="126" width="130" height="24" rx="4" fill="#fff" stroke="#bcd0ec"/><text x="755" y="142" fill="#1b2a4a">"user:1" → NULL</text>
+    <rect x="690" y="154" width="130" height="24" rx="4" fill="#fff" stroke="#bcd0ec"/><text x="755" y="170" fill="#1b2a4a">"user:2" → NULL</text>
+  </g>
+  <text x="690" y="196" font-size="9" fill="#5b7db1">· O(1) 增删查，大集合稳定</text>
+  <text x="690" y="214" font-size="8.5" fill="#8ba7cc">value 恒为 NULL,只用 key 去重</text>
+
+  <!-- transitions -->
+  <line x1="330" y1="152" x2="348" y2="152" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <text x="340" y="145" font-size="7.5" fill="#a1a1a6" text-anchor="middle">非整数</text>
+  <line x1="650" y1="152" x2="668" y2="152" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <text x="659" y="145" font-size="7.5" fill="#a1a1a6" text-anchor="middle">超阈值</text>
+
+  <!-- set operations -->
+  <rect x="30" y="248" width="940" height="176" rx="10" fill="#f7f7f9" stroke="#ececef"/>
+  <text x="50" y="272" font-size="11" font-weight="600" fill="#1d1d1f">集合运算：标签 / 共同关注系统的基础</text>
+  <g text-anchor="middle" font-size="9.5">
+    <rect x="60" y="286" width="150" height="70" rx="8" fill="#eafaf1" stroke="#b8e6cd"/><text x="135" y="308" fill="#1c6b45" font-weight="600">SINTER 交集</text><text x="135" y="328" fill="#3a9b6e" font-size="8.5">A 和 B 都关注的人</text><text x="135" y="344" fill="#5cb88a" font-size="8">共同好友/标签</text>
+    <rect x="230" y="286" width="150" height="70" rx="8" fill="#eef3fb" stroke="#bcd0ec"/><text x="305" y="308" fill="#1b2a4a" font-weight="600">SUNION 并集</text><text x="305" y="328" fill="#5b7db1" font-size="8.5">A 或 B 关注的所有人</text><text x="305" y="344" fill="#8ba7cc" font-size="8">合并去重</text>
+    <rect x="400" y="286" width="150" height="70" rx="8" fill="#fdf3e5" stroke="#f0d9b5"/><text x="475" y="308" fill="#7a5a1e" font-weight="600">SDIFF 差集</text><text x="475" y="328" fill="#b08535" font-size="8.5">A 关注但 B 没关注</text><text x="475" y="344" fill="#c79a4e" font-size="8">推荐/独有</text>
+    <rect x="570" y="286" width="150" height="70" rx="8" fill="#f6f0fb" stroke="#dcc6ee"/><text x="645" y="308" fill="#5a2a82" font-weight="600">SADD/SREM</text><text x="645" y="328" fill="#8a5cae" font-size="8.5">增删元素（去重）</text><text x="645" y="344" fill="#a884c8" font-size="8">SISMEMBER 判存在</text>
+    <rect x="740" y="286" width="210" height="70" rx="8" fill="#fdeef2" stroke="#f6c9d6"/><text x="845" y="308" fill="#c02a56" font-weight="600">大集合运算警告</text><text x="845" y="328" fill="#88304a" font-size="8.5">SINTER 大集合 O(n×m)</text><text x="845" y="344" fill="#c8607f" font-size="8">阻塞单线程 → 用 SINTERCARD</text>
+  </g>
+  <text x="500" y="384" font-size="9.5" fill="#4a4a4f" text-anchor="middle">典型：SADD tag:redis user1 user2 …；SINTER tag:redis tag:go = 同时对 Redis 和 Go 感兴趣的用户</text>
+  <text x="500" y="406" font-size="9" fill="#86868b" text-anchor="middle">注意：Set 无序 —— SMEMBERS 返回顺序不保证（intset 恰好有序是实现细节，勿依赖）；要有序用 ZSet</text>
+</svg>

@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="430" viewBox="0 0 1020 430"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+  </defs>
+  <rect width="1020" height="430" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">信号控制 · 向 master 发信号驱动运维动作（os/unix/ngx_process.c:40）</text>
+
+  <rect x="30" y="56" width="960" height="286" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="48" y="80" font-size="12" font-weight="600" fill="#1d1d1f">master 信号表（nginx -s &lt;cmd&gt; 或 kill 发对应信号）</text>
+
+  <!-- 表头 -->
+  <text x="70" y="108" font-size="10.5" font-weight="700" fill="#86868b">命令 / 信号</text>
+  <text x="300" y="108" font-size="10.5" font-weight="700" fill="#86868b">动作</text>
+  <text x="720" y="108" font-size="10.5" font-weight="700" fill="#86868b">是否优雅</text>
+  <line x1="48" y1="116" x2="972" y2="116" stroke="#e2e2e7"/>
+
+  <rect x="48" y="126" width="230" height="34" rx="7" fill="#eafaf1" stroke="#bce6cd"/><text x="64" y="148" font-size="10" fill="#0f5132">reload · SIGHUP</text>
+  <text x="300" y="148" font-size="10" fill="#494950">重读配置，起新 worker、旧 worker 优雅退出</text>
+  <text x="720" y="148" font-size="10" fill="#1d8f3f">✓ 不中断</text>
+
+  <rect x="48" y="168" width="230" height="34" rx="7" fill="#eef3fb" stroke="#bcd0ec"/><text x="64" y="190" font-size="10" fill="#1b2a4a">reopen · SIGUSR1</text>
+  <text x="300" y="190" font-size="10" fill="#494950">重新打开日志文件（配合外部 logrotate 切割）</text>
+  <text x="720" y="190" font-size="10" fill="#1d8f3f">✓</text>
+
+  <rect x="48" y="210" width="230" height="34" rx="7" fill="#eafaf1" stroke="#bce6cd"/><text x="64" y="232" font-size="10" fill="#0f5132">quit · SIGQUIT</text>
+  <text x="300" y="232" font-size="10" fill="#494950">优雅停机：处理完存量请求再退出</text>
+  <text x="720" y="232" font-size="10" fill="#1d8f3f">✓ 优雅</text>
+
+  <rect x="48" y="252" width="230" height="34" rx="7" fill="#fbeaea" stroke="#f0cccc"/><text x="64" y="274" font-size="10" fill="#7d1f1f">stop · SIGTERM</text>
+  <text x="300" y="274" font-size="10" fill="#494950">立即停机：不等存量请求</text>
+  <text x="720" y="274" font-size="10" fill="#c4341c">✗ 强制</text>
+
+  <rect x="48" y="294" width="230" height="34" rx="7" fill="#f4eefb" stroke="#d9c9ef"/><text x="64" y="316" font-size="10" fill="#3c1361">热升级 · SIGUSR2</text>
+  <text x="300" y="316" font-size="10" fill="#494950">拉起新版 master + worker，与旧实例并存后切换</text>
+  <text x="720" y="316" font-size="10" fill="#1d8f3f">✓ 不丢连接</text>
+
+  <text x="30" y="368" font-size="10.5" fill="#86868b">worker 也收内部信号：master 通过管道/信号通知 worker 执行 reopen、优雅退出（SIGWINCH=停止接受新连接）。</text>
+  <text x="30" y="390" font-size="10.5" fill="#86868b">信号只是"触发"，具体动作由 ngx_signal_handler 置标志位、master 主循环轮询标志后执行（避免在信号上下文做复杂操作）。</text>
+  <text x="30" y="416" font-size="10.5" fill="#494950">对照配置指令："配置"声明<tspan font-weight="600">静态行为</tspan>，"信号"驱动<tspan font-weight="600">运行时运维动作</tspan>——两条接触面各管一半。</text>
+</svg>

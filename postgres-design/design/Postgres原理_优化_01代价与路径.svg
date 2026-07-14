@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="440" viewBox="0 0 1020 440"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1020" height="440" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">查询优化器 · 生成候选路径、按代价选最优（optimizer/path、plan）</text>
+
+  <!-- 流程 -->
+  <rect x="30" y="56" width="960" height="150" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="48" y="80" font-size="12.5" font-weight="600" fill="#1d1d1f">CBO 主流程（make_one_rel，allpaths.c:183）</text>
+  <rect x="48" y="96" width="210" height="90" rx="10" fill="#fff7e6" stroke="#f0dcae"/><text x="153" y="120" font-size="10" font-weight="600" fill="#7a4d00" text-anchor="middle">① 单表路径</text><text x="153" y="140" font-size="8.5" fill="#9a7328" text-anchor="middle">为每表列候选扫描</text><text x="153" y="156" font-size="8.5" fill="#9a7328" text-anchor="middle">seq/index/bitmap</text><text x="153" y="174" font-size="8.5" fill="#9a7328" text-anchor="middle">各算代价</text>
+  <rect x="278" y="96" width="230" height="90" rx="10" fill="#eef3fb" stroke="#bcd0ec"/><text x="393" y="120" font-size="10" font-weight="600" fill="#1b2a4a" text-anchor="middle">② Join 定序 + 算法</text><text x="393" y="140" font-size="8.5" fill="#5b7db1" text-anchor="middle">枚举连接顺序 × Join 算法</text><text x="393" y="156" font-size="8.5" fill="#5b7db1" text-anchor="middle">DP / GEQO（下图）</text><text x="393" y="174" font-size="8.5" fill="#5b7db1" text-anchor="middle">各算代价</text>
+  <rect x="528" y="96" width="210" height="90" rx="10" fill="#eafaf1" stroke="#bce6cd"/><text x="633" y="120" font-size="10" font-weight="600" fill="#0f5132" text-anchor="middle">③ 加顶层算子</text><text x="633" y="140" font-size="8.5" fill="#3f8f66" text-anchor="middle">agg/sort/limit</text><text x="633" y="156" font-size="8.5" fill="#3f8f66" text-anchor="middle">grouping/window</text>
+  <rect x="758" y="96" width="214" height="90" rx="10" fill="#f4eefb" stroke="#d9c9ef"/><text x="865" y="120" font-size="10" font-weight="600" fill="#3c1361" text-anchor="middle">④ 选最小代价路径</text><text x="865" y="140" font-size="8.5" fill="#7a5aa8" text-anchor="middle">→ 转成 plan tree</text><text x="865" y="156" font-size="8.5" fill="#7a5aa8" text-anchor="middle">createplan</text>
+  <line x1="258" y1="141" x2="278" y2="141" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="508" y1="141" x2="528" y2="141" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="738" y1="141" x2="758" y2="141" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+
+  <!-- 代价模型 -->
+  <rect x="30" y="222" width="470" height="200" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="48" y="246" font-size="12" font-weight="600" fill="#1b2a4a">代价模型</text>
+  <rect x="48" y="260" width="434" height="44" rx="9" fill="#ffffff" stroke="#bcd0ec"/><text x="64" y="280" font-size="9.5" font-weight="600" fill="#1b2a4a">代价 = IO + CPU 的加权和</text><text x="64" y="296" font-size="8.5" fill="#5b7db1">seq_page_cost / random_page_cost / cpu_tuple_cost…</text>
+  <rect x="48" y="312" width="434" height="44" rx="9" fill="#ffffff" stroke="#bcd0ec"/><text x="64" y="332" font-size="9.5" font-weight="600" fill="#1b2a4a">基数估计（关键输入）</text><text x="64" y="348" font-size="8.5" fill="#5b7db1">来自 pg_statistic：直方图、MCV、n_distinct</text>
+  <rect x="48" y="364" width="434" height="44" rx="9" fill="#fdfdf5" stroke="#bcd0ec"/><text x="64" y="384" font-size="9.5" font-weight="600" fill="#1b2a4a">估准 → 选对；估错 → 选坏</text><text x="64" y="400" font-size="8.5" fill="#5b7db1">统计陈旧是坏计划头号原因 → ANALYZE</text>
+
+  <!-- 统计来源 -->
+  <rect x="520" y="222" width="470" height="200" rx="14" fill="#fff7e6" stroke="#f0dcae" filter="url(#soft)"/>
+  <text x="538" y="246" font-size="12" font-weight="600" fill="#7a4d00">统计从哪来</text>
+  <rect x="538" y="260" width="434" height="44" rx="9" fill="#ffffff" stroke="#f0dcae"/><text x="554" y="280" font-size="9.5" font-weight="600" fill="#7a4d00">ANALYZE 采样收集</text><text x="554" y="296" font-size="8.5" fill="#9a7328">autovacuum 顺带跑，或手动 ANALYZE</text>
+  <rect x="538" y="312" width="434" height="44" rx="9" fill="#ffffff" stroke="#f0dcae"/><text x="554" y="332" font-size="9.5" font-weight="600" fill="#7a4d00">存进 pg_statistic</text><text x="554" y="348" font-size="8.5" fill="#9a7328">优化器每次规划都读它</text>
+  <rect x="538" y="364" width="434" height="44" rx="9" fill="#fdfdf5" stroke="#f0dcae"/><text x="554" y="384" font-size="9.5" font-weight="600" fill="#7a4d00">扩展统计（多列相关性）</text><text x="554" y="400" font-size="8.5" fill="#9a7328">CREATE STATISTICS 处理列间依赖</text>
+</svg>

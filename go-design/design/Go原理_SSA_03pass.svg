@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="940" height="560" viewBox="0 0 940 560" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="940" height="560" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">SSA pass 流水线 · ~60 遍有序（机器无关优化 → lower 分水岭 → 机器相关收尾）</text>
+
+  <!-- driver -->
+  <rect x="30" y="50" width="880" height="26" rx="8" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="46" y="67" font-size="10.5" font-weight="600" fill="#1b2a4a">ssa.Compile 按 passes 列表顺序跑（compile.go:457）· 顺序有硬约束，init 自检（compile.go:615）· 非优化模式跳过非必需 pass</text>
+
+  <!-- segment A: machine-independent opt (green = optimization) -->
+  <rect x="30" y="92" width="880" height="150" rx="13" fill="#eef7f0" stroke="#bfe0c8" filter="url(#soft)"/>
+  <text x="46" y="116" font-size="12.5" font-weight="600" fill="#1d4a2b">A · 机器无关优化（lower 之前 · 与目标架构无关）</text>
+
+  <rect x="46" y="128" width="128" height="46" rx="8" fill="#ffffff" stroke="#bfe0c8"/>
+  <text x="110" y="147" font-size="10.5" font-weight="600" fill="#1d4a2b" text-anchor="middle">opt</text>
+  <text x="110" y="164" font-size="9" fill="#4a8c60" text-anchor="middle">通用重写规则</text>
+  <rect x="182" y="128" width="128" height="46" rx="8" fill="#ffffff" stroke="#bfe0c8"/>
+  <text x="246" y="147" font-size="10.5" font-weight="600" fill="#1d4a2b" text-anchor="middle">cse</text>
+  <text x="246" y="164" font-size="9" fill="#4a8c60" text-anchor="middle">公共子表达式消除</text>
+  <rect x="318" y="128" width="128" height="46" rx="8" fill="#ffffff" stroke="#bfe0c8"/>
+  <text x="382" y="147" font-size="10.5" font-weight="600" fill="#1d4a2b" text-anchor="middle">nilcheckelim</text>
+  <text x="382" y="164" font-size="9" fill="#4a8c60" text-anchor="middle">消冗余 nil 检查</text>
+  <rect x="454" y="128" width="128" height="46" rx="8" fill="#e3f3e9" stroke="#bfe0c8"/>
+  <text x="518" y="147" font-size="10.5" font-weight="600" fill="#1d4a2b" text-anchor="middle">prove</text>
+  <text x="518" y="164" font-size="9" fill="#4a8c60" text-anchor="middle">值域推断·消边界检查</text>
+  <rect x="590" y="128" width="128" height="46" rx="8" fill="#ffffff" stroke="#bfe0c8"/>
+  <text x="654" y="147" font-size="10.5" font-weight="600" fill="#1d4a2b" text-anchor="middle">branchelim</text>
+  <text x="654" y="164" font-size="9" fill="#4a8c60" text-anchor="middle">分支转条件移动</text>
+  <rect x="726" y="128" width="80" height="46" rx="8" fill="#ffffff" stroke="#bfe0c8"/>
+  <text x="766" y="147" font-size="10.5" font-weight="600" fill="#1d4a2b" text-anchor="middle">dse</text>
+  <text x="766" y="164" font-size="9" fill="#4a8c60" text-anchor="middle">死存储消除</text>
+  <rect x="814" y="128" width="80" height="46" rx="8" fill="#ffffff" stroke="#bfe0c8"/>
+  <text x="854" y="144" font-size="10" font-weight="600" fill="#1d4a2b" text-anchor="middle">deadcode</text>
+  <text x="854" y="164" font-size="9" fill="#4a8c60" text-anchor="middle">死代码消除</text>
+
+  <!-- memory / call subrow -->
+  <rect x="46" y="184" width="404" height="46" rx="8" fill="#ffffff" stroke="#bfe0c8"/>
+  <text x="56" y="203" font-size="10" fill="#3a3a3c"><tspan font-weight="600">expand calls</tspan> 展开调用参数/返回布局 · <tspan font-weight="600">memcombine</tspan> 合并相邻内存访问</text>
+  <text x="56" y="220" font-size="9" fill="#4a8c60">调用与内存相关变换，仍属机器无关阶段</text>
+  <rect x="458" y="184" width="436" height="46" rx="8" fill="#fbeeee" stroke="#f0c4c4"/>
+  <text x="468" y="203" font-size="10" font-weight="600" fill="#7a1f1f">writebarrier · 为指针写插入 GC 写屏障</text>
+  <text x="468" y="220" font-size="9" fill="#b15b5b">编译器在此插桩（非运行时自加）· 服务【GC】并发标记正确性</text>
+
+  <line x1="470" y1="242" x2="470" y2="264" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- watershed: lower (amber, emphasized) -->
+  <rect x="30" y="266" width="880" height="66" rx="13" fill="#fdf6ec" stroke="#f0dcaf" filter="url(#soft)"/>
+  <text x="46" y="290" font-size="13" font-weight="600" fill="#6b4e16">lower · 分水岭 pass（lower.go:8）</text>
+  <text x="46" y="310" font-size="10.5" fill="#a9822f">把机器无关 SSA 转成机器相关 SSA —— 用目标架构具体指令 Op（如 amd64 的 LEAQ / MOVQ），套用各架构 _gen 规则</text>
+  <text x="46" y="326" font-size="9.5" fill="#c6a45f">此线之上：任何架构通用；此线之下：绑定到具体 CPU 架构</text>
+  <rect x="740" y="278" width="154" height="42" rx="10" fill="#ffffff" stroke="#f0dcaf"/>
+  <text x="817" y="296" font-size="10" font-weight="600" fill="#6b4e16" text-anchor="middle">机器无关 ↑</text>
+  <text x="817" y="313" font-size="10" font-weight="600" fill="#6b4e16" text-anchor="middle">机器相关 ↓</text>
+
+  <line x1="470" y1="332" x2="470" y2="354" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- segment C: machine-dependent (neutral/blue) -->
+  <rect x="30" y="356" width="880" height="140" rx="13" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="46" y="380" font-size="12.5" font-weight="600" fill="#1d1d1f">C · 机器相关收尾（lower 之后 · 目标架构专属）</text>
+
+  <rect x="46" y="392" width="150" height="46" rx="8" fill="#f6f6f7" stroke="#e2e2e7"/>
+  <text x="121" y="411" font-size="10.5" font-weight="600" fill="#1d1d1f" text-anchor="middle">late lower</text>
+  <text x="121" y="428" font-size="9" fill="#6e6e73" text-anchor="middle">架构相关二次重写</text>
+  <rect x="204" y="392" width="150" height="46" rx="8" fill="#f6f6f7" stroke="#e2e2e7"/>
+  <text x="279" y="411" font-size="10.5" font-weight="600" fill="#1d1d1f" text-anchor="middle">schedule</text>
+  <text x="279" y="428" font-size="9" fill="#6e6e73" text-anchor="middle">块内指令调度排序</text>
+  <rect x="362" y="392" width="150" height="46" rx="8" fill="#f6f6f7" stroke="#e2e2e7"/>
+  <text x="437" y="411" font-size="10.5" font-weight="600" fill="#1d1d1f" text-anchor="middle">flagalloc</text>
+  <text x="437" y="428" font-size="9" fill="#6e6e73" text-anchor="middle">标志寄存器分配</text>
+  <rect x="520" y="392" width="150" height="46" rx="8" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="595" y="411" font-size="10.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">regalloc</text>
+  <text x="595" y="428" font-size="9" fill="#5b7db1" text-anchor="middle">线性扫描寄存器分配</text>
+  <rect x="678" y="392" width="102" height="46" rx="8" fill="#f6f6f7" stroke="#e2e2e7"/>
+  <text x="729" y="411" font-size="10.5" font-weight="600" fill="#1d1d1f" text-anchor="middle">loop rotate</text>
+  <text x="729" y="428" font-size="9" fill="#6e6e73" text-anchor="middle">循环旋转</text>
+  <rect x="788" y="392" width="106" height="46" rx="8" fill="#f6f6f7" stroke="#e2e2e7"/>
+  <text x="841" y="411" font-size="10.5" font-weight="600" fill="#1d1d1f" text-anchor="middle">trim</text>
+  <text x="841" y="428" font-size="9" fill="#6e6e73" text-anchor="middle">删空块整理</text>
+
+  <text x="46" y="462" font-size="10" fill="#6e6e73">硬约束示例：regalloc 必须在 schedule / critical 之后（passOrder compile.go:530）</text>
+  <rect x="46" y="470" width="848" height="18" rx="6" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="470" y="483" font-size="9.5" fill="#1b2a4a" text-anchor="middle">收尾后：SSA 值都落到具体寄存器 / 栈槽，指令已排定次序 → 交给 genssa 发射</text>
+
+  <!-- output arrow + box -->
+  <line x1="470" y1="496" x2="470" y2="516" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <rect x="330" y="518" width="280" height="34" rx="10" fill="#fdf6ec" stroke="#f0dcaf"/>
+  <text x="470" y="540" font-size="10.5" font-weight="600" fill="#6b4e16" text-anchor="middle">最终机器相关 SSA → genssa 逐 Value 翻 obj.Prog</text>
+</svg>

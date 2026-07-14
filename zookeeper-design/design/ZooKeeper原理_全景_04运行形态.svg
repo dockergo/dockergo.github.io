@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="500" viewBox="0 0 960 500"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="960" height="500" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">运行形态 · 集群角色与部署（奇数节点 · 过半可用）</text>
+
+  <!-- 3 节点集群 -->
+  <rect x="30" y="56" width="470" height="250" rx="14" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="48" y="80" font-size="12" font-weight="600" fill="#2c5a3a">3 节点集群（生产最小 · quorum=2 · 容 1 故障）</text>
+
+  <rect x="180" y="98" width="160" height="56" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="260" y="120" font-size="11" font-weight="600" fill="#1b2a4a" text-anchor="middle">Leader</text>
+  <text x="260" y="138" font-size="8.5" fill="#5b7db1" text-anchor="middle">唯一写入口 · 广播提议</text>
+
+  <rect x="56" y="210" width="160" height="56" rx="11" fill="#eafaf1" stroke="#bce6cd" filter="url(#soft)"/>
+  <text x="136" y="232" font-size="11" font-weight="600" fill="#0f5132" text-anchor="middle">Follower</text>
+  <text x="136" y="250" font-size="8.5" fill="#3f8f66" text-anchor="middle">投票 + 服务读 + Ack</text>
+
+  <rect x="300" y="210" width="160" height="56" rx="11" fill="#eafaf1" stroke="#bce6cd" filter="url(#soft)"/>
+  <text x="380" y="232" font-size="11" font-weight="600" fill="#0f5132" text-anchor="middle">Follower</text>
+  <text x="380" y="250" font-size="8.5" fill="#3f8f66" text-anchor="middle">投票 + 服务读 + Ack</text>
+
+  <line x1="228" y1="154" x2="150" y2="210" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="292" y1="154" x2="366" y2="210" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <text x="140" y="288" font-size="8.5" fill="#86868b" text-anchor="middle">Proposal ↓ / Ack ↑</text>
+  <text x="380" y="288" font-size="8.5" fill="#86868b" text-anchor="middle">过半 Ack → Commit</text>
+
+  <!-- 5 节点 + Observer -->
+  <rect x="520" y="56" width="410" height="250" rx="14" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="538" y="80" font-size="12" font-weight="600" fill="#2c5a3a">5 节点 + Observer（高可用 · quorum=3 · 容 2）</text>
+
+  <rect x="640" y="98" width="150" height="48" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="715" y="118" font-size="10.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">Leader</text>
+  <text x="715" y="135" font-size="8" fill="#5b7db1" text-anchor="middle">1</text>
+
+  <rect x="538" y="168" width="120" height="44" rx="10" fill="#eafaf1" stroke="#bce6cd"/><text x="598" y="194" font-size="9.5" fill="#0f5132" text-anchor="middle">Follower ×4</text>
+  <rect x="672" y="168" width="120" height="44" rx="10" fill="#eafaf1" stroke="#bce6cd"/><text x="732" y="188" font-size="9.5" fill="#0f5132" text-anchor="middle">投票成员</text><text x="732" y="202" font-size="8" fill="#3f8f66" text-anchor="middle">共 5 个</text>
+
+  <rect x="600" y="230" width="240" height="52" rx="11" fill="#fff7e6" stroke="#f0dcae" filter="url(#soft)"/>
+  <text x="720" y="250" font-size="10.5" font-weight="600" fill="#7a4d00" text-anchor="middle">Observer（不投票）</text>
+  <text x="720" y="268" font-size="8.5" fill="#9a7328" text-anchor="middle">只同步 + 服务读，扩读吞吐不拖慢 quorum</text>
+
+  <!-- 底部说明 -->
+  <rect x="30" y="326" width="900" height="150" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="48" y="352" font-size="11.5" font-weight="600" fill="#1d1d1f">角色与容错</text>
+  <text x="48" y="376" font-size="10" fill="#494950">· Leader：集群唯一写入口，负责发起 Proposal、收集 Ack、广播 Commit；由 FastLeaderElection 选出。</text>
+  <text x="48" y="396" font-size="10" fill="#494950">· Follower：参与选举投票与写提交（回 Ack），本地服务读请求。Leader + Follower 合称"投票成员（participant）"。</text>
+  <text x="48" y="416" font-size="10" fill="#494950">· Observer：不参与投票、不计入 quorum，只被动同步数据并服务读——用来横向扩读吞吐、跨机房只读副本。</text>
+  <text x="48" y="436" font-size="10" fill="#494950">· 过半原则：N 节点容忍 ⌊(N-1)/2⌋ 故障。偶数无收益（4 节点仍只容 1），永远用奇数：1(无容错)/3/5/7。</text>
+  <text x="48" y="458" font-size="9.5" fill="#86868b">单机模式（standalone）用于开发测试，无容错；ZAB 与选举退化为空转，请求处理链是 Prep→Sync→Final。</text>
+</svg>

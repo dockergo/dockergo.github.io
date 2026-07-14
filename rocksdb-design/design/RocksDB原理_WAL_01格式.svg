@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="520" viewBox="0 0 1080 520" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="520" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">RocksDB WAL 格式 · 32KB 块对齐 + 记录跨块分片</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">日志按 32KB 块(kBlockSize)组织;每条物理记录头含 checksum+length+type;逻辑记录跨块则切片,读端据此识别边界、跳过损坏块</text>
+
+  <!-- record header -->
+  <rect x="30" y="70" width="1020" height="96" rx="13" fill="#faf4fb" stroke="#e2d2ee"/>
+  <text x="46" y="92" font-size="11" font-weight="700" fill="#5a3d78">物理记录头(record header)</text>
+  <g font-size="8.5" text-anchor="middle">
+    <rect x="46" y="104" width="200" height="46" rx="7" fill="#f4eefb" stroke="#d9c7ec"/><text x="146" y="124" font-weight="600" fill="#3d2a5a">checksum(4B)</text><text x="146" y="140" fill="#7a5a95">CRC 校验,查损坏</text>
+    <rect x="254" y="104" width="200" height="46" rx="7" fill="#f4eefb" stroke="#d9c7ec"/><text x="354" y="124" font-weight="600" fill="#3d2a5a">length(2B)</text><text x="354" y="140" fill="#7a5a95">本片数据长度</text>
+    <rect x="462" y="104" width="200" height="46" rx="7" fill="#faf4fb" stroke="#e2d2ee"/><text x="562" y="124" font-weight="600" fill="#5a3d78">type(1B)</text><text x="562" y="140" fill="#7a5a95">RecordType:Full/First/Mid/Last</text>
+    <rect x="670" y="104" width="364" height="46" rx="7" fill="#fff" stroke="#e2d2ee"/><text x="852" y="124" font-weight="600" fill="#5a3d78">payload</text><text x="852" y="140" fill="#7a5a95">WriteBatch 序列化字节(seq 基准 + 各写操作)</text>
+  </g>
+
+  <!-- block layout -->
+  <text x="30" y="196" font-size="11" font-weight="700" fill="#1d1d1f">块布局:一条大 WriteBatch 跨两个 32KB 块 → 切成 First + Last</text>
+  <!-- block 1 -->
+  <rect x="30" y="210" width="500" height="150" rx="12" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="46" y="230" font-size="10" font-weight="700" fill="#1b2a4a">Block N(32KB)</text>
+  <rect x="46" y="240" width="470" height="34" rx="7" fill="#f3f7fc" stroke="#cfe0f2"/><text x="60" y="261" font-size="8.5" fill="#274a78">记录 A · type=<tspan font-weight="700">Full</tspan>(小 batch,单块放得下)</text>
+  <rect x="46" y="282" width="470" height="34" rx="7" fill="#e7f0fb" stroke="#b9d2ef"/><text x="60" y="303" font-size="8.5" fill="#274a78">记录 B(前半)· type=<tspan font-weight="700">First</tspan> → 块尾装不下,续到下块</text>
+  <rect x="46" y="324" width="470" height="24" rx="6" fill="#fff" stroke="#cfe0f2"/><text x="60" y="340" font-size="8" fill="#5b7db1">块尾若不足一个记录头 → 填 0 padding,新记录从下块起</text>
+
+  <!-- block 2 -->
+  <rect x="550" y="210" width="500" height="150" rx="12" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="566" y="230" font-size="10" font-weight="700" fill="#1b2a4a">Block N+1(32KB)</text>
+  <rect x="566" y="240" width="470" height="34" rx="7" fill="#e7f0fb" stroke="#b9d2ef"/><text x="580" y="261" font-size="8.5" fill="#274a78">记录 B(后半)· type=<tspan font-weight="700">Last</tspan>(跨中间块则中段为 Middle)</text>
+  <rect x="566" y="282" width="470" height="34" rx="7" fill="#f3f7fc" stroke="#cfe0f2"/><text x="580" y="303" font-size="8.5" fill="#274a78">记录 C · type=<tspan font-weight="700">Full</tspan></text>
+  <rect x="566" y="324" width="470" height="24" rx="6" fill="#fff" stroke="#cfe0f2"/><text x="580" y="340" font-size="8" fill="#5b7db1">读端(log_reader)按 type 拼回逻辑记录:First…Middle…Last</text>
+  <line x1="530" y1="299" x2="566" y2="299" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+
+  <!-- type table -->
+  <rect x="30" y="376" width="1020" height="60" rx="12" fill="#fff7e6" stroke="#e8cf9a"/>
+  <text x="46" y="397" font-size="10" font-weight="700" fill="#5a3410">RecordType 四态(一条逻辑记录 = 一个 WriteBatch)</text>
+  <text x="46" y="418" font-size="8.8" fill="#93762e"><tspan font-weight="600">Full</tspan> 整条在一块内   ·   <tspan font-weight="600">First</tspan> 跨块的首片   ·   <tspan font-weight="600">Middle</tspan> 中间片(跨≥3块)   ·   <tspan font-weight="600">Last</tspan> 末片   →   缺 Last 说明尾部损坏/截断</text>
+  <text x="46" y="431" font-size="8" fill="#a1a1a6">db/log_writer.cc · db/log_reader.cc · kBlockSize=32768</text>
+
+  <!-- notes -->
+  <rect x="30" y="452" width="1020" height="52" rx="13" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="46" y="474" font-size="11" font-weight="700" fill="#1d1d1f">要点</text>
+  <text x="46" y="494" font-size="9" fill="#6e6e73">· 块对齐 + 分片是为了"顺序写 + 可定位边界 + 抗尾部损坏":整机断电常只坏最后一个块,分片让读端能精确丢弃损坏尾、保住前面完好记录(见 WAL 恢复)</text>
+</svg>

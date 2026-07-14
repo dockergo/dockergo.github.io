@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="520" viewBox="0 0 1080 520"
+     font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1080" height="520" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Flink 调度 · 三方协作：JobMaster + ResourceManager + TaskExecutor</text>
+  <text x="30" y="50" font-size="11" fill="#a1a1a6">流程：JobMaster 申请 slot → RM 分配 → TM offer → JobMaster 部署子任务到该 slot</text>
+
+  <!-- JobMaster -->
+  <rect x="40" y="80" width="300" height="180" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="62" y="108" font-size="13" font-weight="700" fill="#1b2a4a">JobMaster</text>
+  <text x="62" y="129" font-size="10.5" fill="#5b7db1">每作业一个领导</text>
+  <rect x="62" y="142" width="256" height="46" rx="9" fill="#ffffff" stroke="#ececf1"/>
+  <text x="78" y="163" font-size="11" font-weight="600" fill="#1b2a4a">持 SchedulerNG(调度器)</text>
+  <text x="78" y="180" font-size="9.5" fill="#5b7db1">createScheduler 经 slot pool 工厂创建</text>
+  <rect x="62" y="196" width="256" height="46" rx="9" fill="#ffffff" stroke="#ececf1"/>
+  <text x="78" y="217" font-size="11" font-weight="600" fill="#1b2a4a">updateTaskExecutionState</text>
+  <text x="78" y="234" font-size="9.5" fill="#5b7db1">子任务状态回流</text>
+
+  <!-- ResourceManager -->
+  <rect x="390" y="80" width="300" height="180" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="412" y="108" font-size="13" font-weight="700" fill="#1b2a4a">ResourceManager</text>
+  <text x="412" y="129" font-size="10.5" fill="#5b7db1">集群级资源管理</text>
+  <rect x="412" y="142" width="256" height="46" rx="9" fill="#ffffff" stroke="#ececf1"/>
+  <text x="428" y="163" font-size="11" font-weight="600" fill="#1b2a4a">持 SlotManager</text>
+  <text x="428" y="180" font-size="9.5" fill="#5b7db1">掌握全集群 slot 供给</text>
+  <rect x="412" y="196" width="256" height="46" rx="9" fill="#ffffff" stroke="#ececf1"/>
+  <text x="428" y="217" font-size="11" font-weight="600" fill="#1b2a4a">registerTaskExecutor</text>
+  <text x="428" y="234" font-size="9.5" fill="#5b7db1">TM 向 RM 注册</text>
+
+  <!-- TaskExecutor -->
+  <rect x="740" y="80" width="300" height="180" rx="14" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="762" y="108" font-size="13" font-weight="700" fill="#5a3410">TaskExecutor (TM)</text>
+  <text x="762" y="129" font-size="10.5" fill="#93762e">工作节点,真正跑数据</text>
+  <rect x="762" y="142" width="256" height="46" rx="9" fill="#ffffff" stroke="#ececf1"/>
+  <text x="778" y="163" font-size="11" font-weight="600" fill="#5a3410">requestSlot → allocateSlot</text>
+  <text x="778" y="180" font-size="9.5" fill="#93762e">taskSlotTable.allocateSlot</text>
+  <rect x="762" y="196" width="256" height="46" rx="9" fill="#ffffff" stroke="#ececf1"/>
+  <text x="778" y="217" font-size="11" font-weight="600" fill="#5a3410">submitTask</text>
+  <text x="778" y="234" font-size="9.5" fill="#93762e">slot 被接受后收部署描述符</text>
+
+  <!-- 流程连线 -->
+  <!-- ① JobMaster -> RM 申请 slot -->
+  <path d="M 340,130 L 390,130" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="345" y="122" font-size="9.5" fill="#a1a1a6">① 申请 slot</text>
+  <!-- ② RM -> TM 分配 -->
+  <path d="M 690,130 L 740,130" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="695" y="122" font-size="9.5" fill="#a1a1a6">② 从注册 TM 分配</text>
+
+  <!-- ③ TM offer slot 给 JobMaster (下方回环) -->
+  <path d="M 890,260 L 890,320 L 190,320 L 190,260" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="500" y="313" font-size="9.5" fill="#a1a1a6">③ offerSlotsToJobManager(TM 把 slot offer 给 JobMaster)</text>
+
+  <!-- ④ JobMaster 部署子任务 -> TM -->
+  <path d="M 190,340 L 190,370 L 890,370 L 890,340" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="450" y="363" font-size="9.5" fill="#a1a1a6">④ 部署子任务到该 slot(submitTask 收部署描述符)</text>
+
+  <!-- 底部说明 -->
+  <rect x="40" y="400" width="1000" height="90" rx="12" fill="#f5faf6" stroke="#cfe6d5" filter="url(#soft)"/>
+  <text x="62" y="428" font-size="12" font-weight="600" fill="#2c5a3a">职责边界</text>
+  <text x="62" y="452" font-size="10.5" fill="#2f6f4f">JobMaster / ResourceManager 只调度协调,不处理数据</text>
+  <text x="62" y="474" font-size="10.5" fill="#2f6f4f">数据处理全在 TaskExecutor 的 slot 里进行 · DeclarativeSlotPool 是 JobMaster 侧 slot 池</text>
+</svg>

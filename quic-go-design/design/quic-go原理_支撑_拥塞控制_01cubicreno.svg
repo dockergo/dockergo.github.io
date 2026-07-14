@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="500" viewBox="0 0 1000 500"
+     font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1000" height="500" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">quic-go 拥塞控制 · 内置 Cubic/Reno（可插拔 SendAlgorithm）+ pacer 平滑发送</text>
+  <text x="30" y="50" font-size="10" fill="#86868b">与 quiche 的分水岭：quiche 内置 BBRv1/v2 + CUBIC；quic-go 只自带 Cubic 与 Reno（无 BBR），但接口可插拔</text>
+
+  <!-- 接口 -->
+  <rect x="30" y="70" width="440" height="150" rx="14" fill="#f4eefb" stroke="#d9c9ef" filter="url(#soft)"/>
+  <text x="48" y="92" font-size="11.5" font-weight="600" fill="#3c1361">可插拔接口 SendAlgorithm（interface.go:9）</text>
+  <rect x="48" y="104" width="404" height="26" rx="7" fill="#ffffff" stroke="#d9c9ef"/><text x="250" y="121" font-size="8.5" fill="#3c1361" text-anchor="middle">OnPacketSent(:12) 发包后登记在途字节</text>
+  <rect x="48" y="136" width="404" height="26" rx="7" fill="#ffffff" stroke="#d9c9ef"/><text x="250" y="153" font-size="8.5" fill="#3c1361" text-anchor="middle">CanSend(:13) 在途 &lt; cwnd 才准发</text>
+  <rect x="48" y="168" width="404" height="26" rx="7" fill="#ffffff" stroke="#d9c9ef"/><text x="250" y="185" font-size="8.5" fill="#3c1361" text-anchor="middle">OnCongestionEvent(:16) 丢包时降窗</text>
+  <text x="48" y="212" font-size="8.5" fill="#7a52a8">SendAlgorithmWithDebugInfos(:22)：InSlowStart / InRecovery 可观测</text>
+
+  <!-- cubicSender -->
+  <rect x="510" y="70" width="460" height="150" rx="14" fill="#eafaf1" stroke="#bce6cd" filter="url(#soft)"/>
+  <text x="528" y="92" font-size="11.5" font-weight="600" fill="#0f5132">内置实现 cubicSender（cubic_sender.go:23）</text>
+  <text x="528" y="112" font-size="8.5" fill="#3f8f66">一个 struct 同时实现 Cubic 与 Reno，靠标志切换</text>
+  <rect x="528" y="122" width="210" height="40" rx="8" fill="#ffffff" stroke="#bce6cd"/><text x="633" y="140" font-size="8.5" font-weight="600" fill="#0f5132" text-anchor="middle">Cubic（默认）</text><text x="633" y="155" font-size="8" fill="#3f8f66" text-anchor="middle">三次函数增窗，高 BDP 友好</text>
+  <rect x="748" y="122" width="204" height="40" rx="8" fill="#ffffff" stroke="#bce6cd"/><text x="850" y="140" font-size="8.5" font-weight="600" fill="#0f5132" text-anchor="middle">Reno</text><text x="850" y="155" font-size="8" fill="#3f8f66" text-anchor="middle">renoBeta=0.7 回退因子</text>
+  <text x="528" y="182" font-size="8.5" fill="#3f8f66">cwnd 上限 = MaxCongestionWindowPackets(10000) × 包长</text>
+  <text x="528" y="200" font-size="8.5" fill="#3f8f66">OnCongestionEvent(:199) 丢包 → cwnd × renoBeta（:212）</text>
+
+  <!-- 阶段 -->
+  <rect x="30" y="238" width="940" height="120" rx="14" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="48" y="260" font-size="11.5" font-weight="600" fill="#5a3410">增窗阶段</text>
+  <rect x="60" y="274" width="270" height="66" rx="10" fill="#ffffff" stroke="#e8cf9a"/><text x="195" y="296" font-size="9.5" font-weight="600" fill="#5a3410" text-anchor="middle">慢启动 Slow Start</text><text x="195" y="314" font-size="8" fill="#93762e" text-anchor="middle">每 ACK 指数增 cwnd</text><text x="195" y="330" font-size="8" fill="#93762e" text-anchor="middle">HybridSlowStart 提前探测退出点</text>
+  <rect x="352" y="274" width="270" height="66" rx="10" fill="#ffffff" stroke="#e8cf9a"/><text x="487" y="296" font-size="9.5" font-weight="600" fill="#5a3410" text-anchor="middle">拥塞避免</text><text x="487" y="314" font-size="8" fill="#93762e" text-anchor="middle">Cubic 三次曲线 / Reno 线性</text><text x="487" y="330" font-size="8" fill="#93762e" text-anchor="middle">MaybeExitSlowStart(:174)</text>
+  <rect x="644" y="274" width="308" height="66" rx="10" fill="#fbeaea" stroke="#e7c3c3"/><text x="798" y="296" font-size="9.5" font-weight="600" fill="#7a2a2a" text-anchor="middle">恢复 Recovery</text><text x="798" y="314" font-size="8" fill="#a05555" text-anchor="middle">丢包 → 降 cwnd，进恢复期</text><text x="798" y="330" font-size="8" fill="#a05555" text-anchor="middle">恢复期内不再对同轮丢包重复降窗</text>
+
+  <!-- pacer -->
+  <rect x="30" y="374" width="940" height="110" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="48" y="396" font-size="11.5" font-weight="600" fill="#1b2a4a">pacer 平滑节流（pacer.go:14）—— cwnd 决定「能发多少」，pacer 决定「什么时候发」</text>
+  <text x="48" y="416" font-size="8.5" fill="#5b7db1">Budget(:48) 按 adjustedBandwidth 累积发送预算，避免瞬间突发把中间队列打满</text>
+  <text x="48" y="434" font-size="8.5" fill="#5b7db1">SentPacket(:38) 扣减预算；TimeUntilSend(:92) 算出下一个可发时刻 → 挂到 run() 的 timer 上</text>
+  <text x="48" y="452" font-size="8.5" fill="#5b7db1">adjustedBandwidth ≈ cwnd / SRTT 再乘一个大于 1 的系数，允许略微突发以打满链路</text>
+  <text x="48" y="472" font-size="8.5" fill="#5b7db1">发送门禁串联：CanSend（拥塞）→ 流控窗口 → 放大限制 → pacer 时机，全绿才真正发包</text>
+</svg>

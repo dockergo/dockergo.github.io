@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="500" viewBox="0 0 1080 500" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs><filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter></defs>
+  <rect width="1080" height="500" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">线性读 vs 串行读：v3_server.go 按 Serializable 分流</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">Range(:106): if !r.Serializable → LinearizableReadNotify（:138）；否则直接本地读（:149）</text>
+  <g text-anchor="middle">
+    <rect x="40" y="80" width="490" height="200" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+    <text x="285" y="106" font-size="12" font-weight="700" fill="#1b2a4a">线性读（linearizable，默认）</text>
+    <text x="285" y="130" font-size="9" fill="#5b7db1">!r.Serializable → 先 ReadIndex 等 apply 追上</text>
+    <rect x="60" y="144" width="450" height="26" rx="5" fill="#e9f1fb" stroke="#c4d8f0"/><text x="285" y="161" font-size="8.5" fill="#1b2a4a">✓ 保证读到所有已成功的写（读己之写）</text>
+    <rect x="60" y="174" width="450" height="26" rx="5" fill="#e9f1fb" stroke="#c4d8f0"/><text x="285" y="191" font-size="8.5" fill="#1b2a4a">✓ 强一致（CP），正确性优先</text>
+    <rect x="60" y="204" width="450" height="26" rx="5" fill="#fdf6ea" stroke="#efdcb4"/><text x="285" y="221" font-size="8.5" fill="#5a3410">✗ 每次读一轮 leader 心跳往返 + 可能等待</text>
+    <text x="285" y="250" font-size="9" fill="#8aa6cf">延迟 ≈ leader 到多数派 RTT（跨地域明显）</text>
+    <text x="285" y="270" font-size="8.5" fill="#8aa6cf">适合：CAS 前读、选主、锁、读己之写</text>
+
+    <rect x="550" y="80" width="490" height="200" rx="13" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+    <text x="795" y="106" font-size="12" font-weight="700" fill="#12402a">串行读（serializable）</text>
+    <text x="795" y="130" font-size="9" fill="#2f6f4f">r.Serializable → 直接读本地 MVCC，不经 ReadIndex</text>
+    <rect x="570" y="144" width="450" height="26" rx="5" fill="#f2fbf6" stroke="#cdeadb"/><text x="795" y="161" font-size="8.5" fill="#12402a">✓ 无网络往返、最快、最低延迟</text>
+    <rect x="570" y="174" width="450" height="26" rx="5" fill="#f2fbf6" stroke="#cdeadb"/><text x="795" y="191" font-size="8.5" fill="#12402a">✓ 任意节点（含 follower）可服务 → 分摊读压力</text>
+    <rect x="570" y="204" width="450" height="26" rx="5" fill="#fbeef0" stroke="#f0cdd4"/><text x="795" y="221" font-size="8.5" fill="#a44">✗ 可能读到略旧数据（该节点未 apply 最新写）</text>
+    <text x="795" y="250" font-size="9" fill="#4c8567">clientv3: WithSerializable()</text>
+    <text x="795" y="270" font-size="8.5" fill="#4c8567">适合：容忍陈旧、要极致吞吐（监控/缓存预热）</text>
+  </g>
+  <rect x="40" y="298" width="1000" height="110" rx="12" fill="#fdf9f0" stroke="#efe3cd"/>
+  <text x="60" y="322" font-size="11" font-weight="700" fill="#7a5a1e">怎么选</text>
+  <text x="60" y="344" font-size="9.5" fill="#93762e">· 默认线性读——etcd 把正确性放在性能之前，绝大多数场景直接用</text>
+  <text x="60" y="364" font-size="9.5" fill="#93762e">· 依赖"读到最新"的逻辑（分布式锁、选主、Txn CAS 前的读）必须线性读，否则会出错</text>
+  <text x="60" y="384" font-size="9" fill="#b08843">· 只有明确"能容忍轻微陈旧 + 要极致读性能/让 follower 分流"时，才显式串行读；错用串行读是隐蔽 bug 源</text>
+  <rect x="40" y="424" width="1000" height="56" rx="12" fill="#f7f7f9" stroke="#e6e6ea"/>
+  <text x="60" y="448" font-size="11" font-weight="700" fill="#1d1d1f">一句话</text>
+  <text x="60" y="470" font-size="10" fill="#4b4b50">线性读（默认）经 ReadIndex 保证读到最新、代价一轮心跳；串行读直接读本地最快但可能略旧——正确性敏感用线性，容忍陈旧且要性能用串行。</text>
+</svg>

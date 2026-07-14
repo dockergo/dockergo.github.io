@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="520" viewBox="0 0 1060 520" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1060" height="520" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">后台线程池与优先级：既跟上写入，又不抢前台</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">运行时队列 RoundRobin/Priority/Dynamic(:107/:194/:260) · background_pool_size 等控制并发</text>
+
+  <!-- queue types -->
+  <g text-anchor="middle">
+    <rect x="40" y="80" width="310" height="120" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+    <text x="195" y="104" font-size="11" font-weight="700" fill="#1b2a4a">RoundRobinRuntimeQueue（:107）</text>
+    <text x="195" y="126" font-size="9" fill="#5b7db1">轮转调度，公平</text>
+    <text x="195" y="146" font-size="9" fill="#5b7db1">各表/各任务雨露均沾</text>
+    <text x="195" y="170" font-size="8.5" fill="#8aa6cf">避免某个大表 merge 饿死其他</text>
+
+    <rect x="375" y="80" width="310" height="120" rx="13" fill="#f6f2fb" stroke="#d9c9ec" filter="url(#soft)"/>
+    <text x="530" y="104" font-size="11" font-weight="700" fill="#3d2a5a">PriorityRuntimeQueue（:194）</text>
+    <text x="530" y="126" font-size="9" fill="#7a5da5">按优先级调度</text>
+    <text x="530" y="146" font-size="9" fill="#7a5da5">紧急任务优先</text>
+    <text x="530" y="170" font-size="8.5" fill="#9a7cc4">如小 merge 优先于大 merge</text>
+
+    <rect x="710" y="80" width="310" height="120" rx="13" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+    <text x="865" y="104" font-size="11" font-weight="700" fill="#12402a">DynamicRuntimeQueue（:260）</text>
+    <text x="865" y="126" font-size="9" fill="#2f6f4f">RoundRobin + Priority 结合</text>
+    <text x="865" y="146" font-size="9" fill="#2f6f4f">动态调整</text>
+    <text x="865" y="170" font-size="8.5" fill="#4c8567">兼顾公平与优先</text>
+  </g>
+
+  <!-- config -->
+  <rect x="40" y="220" width="980" height="130" rx="13" fill="#fdf9f0" stroke="#efe3cd"/>
+  <text x="60" y="244" font-size="11" font-weight="700" fill="#7a5a1e">池大小与并发配置（关键调优）</text>
+  <g text-anchor="middle" font-size="8.5">
+    <rect x="60" y="258" width="290" height="40" rx="7" fill="#fff" stroke="#efdcb4"/><text x="205" y="276" font-weight="600" fill="#5a3410">background_pool_size</text><text x="205" y="290" fill="#93762e">merge/mutation 线程数</text>
+    <rect x="370" y="258" width="290" height="40" rx="7" fill="#fff" stroke="#efdcb4"/><text x="515" y="276" font-weight="600" fill="#5a3410">background_fetches_pool_size</text><text x="515" y="290" fill="#93762e">副本 fetch 线程数</text>
+    <rect x="680" y="258" width="320" height="40" rx="7" fill="#fff" stroke="#efdcb4"/><text x="840" y="276" font-weight="600" fill="#5a3410">background_move_pool_size</text><text x="840" y="290" fill="#93762e">TTL move 线程数</text>
+  </g>
+  <text x="60" y="322" font-size="9.5" fill="#93762e">· 太小 → merge 跟不上写入，Part 堆积拖慢查询；太大 → 抢占前台查询的 CPU/IO</text>
+  <text x="60" y="340" font-size="9.5" fill="#93762e">· 与「资源与负载」Workload 调度协同：后台任务归低优先 workload，不饿死在线查询</text>
+
+  <rect x="40" y="368" width="980" height="130" rx="12" fill="#f7f7f9" stroke="#e6e6ea"/>
+  <text x="60" y="392" font-size="11" font-weight="700" fill="#1d1d1f">一句话</text>
+  <text x="60" y="414" font-size="10" fill="#4b4b50">MergeTreeBackgroundExecutor 用运行时队列区分优先级（RoundRobin 公平 / Priority 优先 / Dynamic 结合），</text>
+  <text x="60" y="432" font-size="10" fill="#4b4b50">池大小由 background_*_pool_size 控制。核心平衡：太小则 merge 跟不上写入导致 Part 堆积，太大则抢前台资源。</text>
+  <text x="60" y="454" font-size="10" fill="#4b4b50" font-weight="600">与 Workload 调度协同——把后台任务归低优先 workload，保证在线查询不被后台饿死。</text>
+  <text x="60" y="476" font-size="9" fill="#8a8a8f">调优信号：active parts 持续增长 = 后台池不够；前台查询延迟抖动 = 后台抢资源。</text>
+</svg>

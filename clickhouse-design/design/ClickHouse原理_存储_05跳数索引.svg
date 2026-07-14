@@ -1,0 +1,106 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="740" viewBox="0 0 1060 740" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1060" height="740" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">跳数索引（Data Skipping Index）：判"这段能否整体跳过"</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">工厂注册 MergeTreeIndices.cpp · 读时 filterMarksUsingIndex(SelectExecutor.cpp:1624)：condition-&gt;mayBeTrueOnGranule(:1783)</text>
+
+  <!-- concept: GRANULARITY -->
+  <rect x="40" y="72" width="980" height="118" rx="13" fill="#f3f7fc" stroke="#cfe0f2"/>
+  <text x="60" y="94" font-size="12" font-weight="700" fill="#274a78">GRANULARITY N = 一个索引条目覆盖 N 个数据 granule（IMergeTreeIndex::getGranularity, MergeTreeIndices.h:291）</text>
+  <g text-anchor="middle" font-size="8.5">
+    <rect x="60" y="106" width="70" height="30" rx="5" fill="#fdf6ea" stroke="#efdcb4"/><text x="95" y="125" fill="#5a3410">granule0</text>
+    <rect x="134" y="106" width="70" height="30" rx="5" fill="#fdf6ea" stroke="#efdcb4"/><text x="169" y="125" fill="#5a3410">granule1</text>
+    <rect x="208" y="106" width="70" height="30" rx="5" fill="#fdf6ea" stroke="#efdcb4"/><text x="243" y="125" fill="#5a3410">granule2</text>
+    <rect x="282" y="106" width="70" height="30" rx="5" fill="#fdf6ea" stroke="#efdcb4"/><text x="317" y="125" fill="#5a3410">granule3</text>
+    <rect x="56" y="144" width="300" height="26" rx="5" fill="#eafaf1" stroke="#bfe0cd"/><text x="206" y="161" fill="#12402a">skp_idx 条目（GRANULARITY 4 → 1 条覆盖 4 段）</text>
+  </g>
+  <text x="680" y="128" font-size="10" fill="#5b7db1" text-anchor="middle">索引粒度越大 → 索引越小、越省，但跳过越粗</text>
+  <text x="680" y="148" font-size="10" fill="#5b7db1" text-anchor="middle">与主键裁剪互补：主键管排序前缀，跳数管非排序列</text>
+  <text x="680" y="168" font-size="9" fill="#8aa6cf" text-anchor="middle">判"可能命中"仍要读原始数据（只排除"一定不含"）</text>
+
+  <!-- index type cards -->
+  <g text-anchor="middle">
+    <rect x="40" y="212" width="235" height="150" rx="12" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+    <text x="157" y="234" font-size="12" font-weight="700" fill="#5a3410">minmax</text>
+    <text x="157" y="250" font-size="8.5" fill="#93762e">MergeTreeIndices.cpp:123</text>
+    <text x="157" y="272" font-size="9.5" fill="#5a3410">存段内 min/max</text>
+    <text x="157" y="288" font-size="9.5" fill="#5a3410">范围外整段跳过</text>
+    <text x="157" y="312" font-size="9" fill="#93762e">适用：范围过滤</text>
+    <text x="157" y="328" font-size="9" fill="#93762e">准有序列（如递增 id）</text>
+    <text x="157" y="348" font-size="8.5" fill="#b08843">最轻量、最常用</text>
+
+    <rect x="290" y="212" width="235" height="150" rx="12" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+    <text x="407" y="234" font-size="12" font-weight="700" fill="#5a3410">set(max_rows)</text>
+    <text x="407" y="250" font-size="8.5" fill="#93762e">MergeTreeIndices.cpp:126</text>
+    <text x="407" y="272" font-size="9.5" fill="#5a3410">存段内去重值集合</text>
+    <text x="407" y="288" font-size="9.5" fill="#5a3410">值不在集合 → 跳过</text>
+    <text x="407" y="312" font-size="9" fill="#93762e">适用：低基数枚举列</text>
+    <text x="407" y="328" font-size="9" fill="#93762e">状态码/类型/地区</text>
+    <text x="407" y="348" font-size="8.5" fill="#b08843">超 max_rows 则失效</text>
+
+    <rect x="540" y="212" width="235" height="150" rx="12" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+    <text x="657" y="234" font-size="12" font-weight="700" fill="#5a3410">bloom_filter</text>
+    <text x="657" y="250" font-size="8.5" fill="#93762e">MergeTreeIndices.cpp:135</text>
+    <text x="657" y="272" font-size="9.5" fill="#5a3410">布隆过滤器</text>
+    <text x="657" y="288" font-size="9.5" fill="#5a3410">判"一定不在"</text>
+    <text x="657" y="312" font-size="9" fill="#93762e">适用：高基数等值点查</text>
+    <text x="657" y="328" font-size="9" fill="#93762e">col = 'x'（minmax 失效时）</text>
+    <text x="657" y="348" font-size="8.5" fill="#b08843">有假阳、无假阴</text>
+
+    <rect x="790" y="212" width="230" height="150" rx="12" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+    <text x="905" y="234" font-size="11.5" font-weight="700" fill="#5a3410">ngrambf / tokenbf</text>
+    <text x="905" y="250" font-size="8.5" fill="#93762e">:129 / :132</text>
+    <text x="905" y="272" font-size="9.5" fill="#5a3410">n-gram / 分词 布隆</text>
+    <text x="905" y="288" font-size="9.5" fill="#5a3410">子串/分词的存在性</text>
+    <text x="905" y="312" font-size="9" fill="#93762e">适用：LIKE '%x%'</text>
+    <text x="905" y="328" font-size="9" fill="#93762e">分词等值搜索</text>
+    <text x="905" y="348" font-size="8.5" fill="#b08843">文本重则用 text 索引</text>
+  </g>
+
+  <!-- second row: hypothesis, vector, text -->
+  <g text-anchor="middle">
+    <rect x="40" y="380" width="310" height="120" rx="12" fill="#f6f2fb" stroke="#d9c9ec" filter="url(#soft)"/>
+    <text x="195" y="402" font-size="11.5" font-weight="700" fill="#3d2a5a">hypothesis</text>
+    <text x="195" y="418" font-size="8.5" fill="#7a5da5">MergeTreeIndices.cpp:138</text>
+    <text x="195" y="440" font-size="9.5" fill="#3d2a5a">存"表达式恒成立"假设</text>
+    <text x="195" y="458" font-size="9.5" fill="#3d2a5a">用于谓词化简/推导</text>
+    <text x="195" y="482" font-size="9" fill="#9a7cc4">适用：已知约束的列</text>
+
+    <rect x="365" y="380" width="310" height="120" rx="12" fill="#f6f2fb" stroke="#d9c9ec" filter="url(#soft)"/>
+    <text x="520" y="402" font-size="11.5" font-weight="700" fill="#3d2a5a">vector_similarity</text>
+    <text x="520" y="418" font-size="8.5" fill="#7a5da5">:143（#if USE_USEARCH）</text>
+    <text x="520" y="440" font-size="9.5" fill="#3d2a5a">向量近邻（USearch/HNSW）</text>
+    <text x="520" y="458" font-size="9.5" fill="#3d2a5a">加速 ORDER BY distance LIMIT</text>
+    <text x="520" y="482" font-size="9" fill="#9a7cc4">适用：ANN 向量检索</text>
+
+    <rect x="690" y="380" width="330" height="120" rx="12" fill="#f6f2fb" stroke="#d9c9ec" filter="url(#soft)"/>
+    <text x="855" y="402" font-size="11.5" font-weight="700" fill="#3d2a5a">text（全文倒排）</text>
+    <text x="855" y="418" font-size="8.5" fill="#7a5da5">:147（旧名 full_text/inverted/gin :158-162）</text>
+    <text x="855" y="440" font-size="9.5" fill="#3d2a5a">分词建倒排索引</text>
+    <text x="855" y="458" font-size="9.5" fill="#3d2a5a">支持 hasToken / 全文检索</text>
+    <text x="855" y="482" font-size="9" fill="#9a7cc4">适用：日志/文本搜索</text>
+  </g>
+
+  <!-- apply flow -->
+  <rect x="40" y="518" width="980" height="96" rx="13" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="60" y="540" font-size="12" font-weight="700" fill="#12402a">读时应用顺序（层层收窄，越靠前越省）</text>
+  <g text-anchor="middle" font-size="9">
+    <rect x="70" y="552" width="180" height="46" rx="9" fill="#fff" stroke="#cdeadb"/><text x="160" y="572" font-weight="600" fill="#12402a">① 分区裁剪</text><text x="160" y="588" fill="#2f6f4f">minmax_*.idx / partition</text>
+    <rect x="290" y="552" width="180" height="46" rx="9" fill="#fff" stroke="#cdeadb"/><text x="380" y="572" font-weight="600" fill="#12402a">② 主键裁剪</text><text x="380" y="588" fill="#2f6f4f">KeyCondition → MarkRange</text>
+    <rect x="510" y="552" width="180" height="46" rx="9" fill="#fff" stroke="#cdeadb"/><text x="600" y="572" font-weight="600" fill="#12402a">③ 跳数索引</text><text x="600" y="588" fill="#2f6f4f">filterMarksUsingIndex</text>
+    <rect x="730" y="552" width="230" height="46" rx="9" fill="#fff" stroke="#cdeadb"/><text x="845" y="572" font-weight="600" fill="#12402a">④ 读存活 granule + PREWHERE</text><text x="845" y="588" fill="#2f6f4f">读原始数据精确过滤</text>
+  </g>
+  <g stroke="#9ccbb0" stroke-width="1.5" fill="none">
+    <line x1="250" y1="575" x2="290" y2="575" marker-end="url(#ar)"/>
+    <line x1="470" y1="575" x2="510" y2="575" marker-end="url(#ar)"/>
+    <line x1="690" y1="575" x2="730" y2="575" marker-end="url(#ar)"/>
+  </g>
+
+  <rect x="40" y="632" width="980" height="80" rx="12" fill="#f7f7f9" stroke="#e6e6ea"/>
+  <text x="60" y="656" font-size="11" font-weight="700" fill="#1d1d1f">一句话</text>
+  <text x="60" y="678" font-size="10" fill="#4b4b50">跳数索引是"可选的、粒度更粗的排除器"：只能判"这一段一定不含目标"从而整段跳过，判不了"含在哪一行"。</text>
+  <text x="60" y="695" font-size="10" fill="#4b4b50">建在选择性高、且与主键排序无关的过滤列上收益最大；建错列反而只增写入/存储成本而不省读。</text>
+</svg>

@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="580" viewBox="0 0 1060 580" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1060" height="580" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">优化全景：分析改写 → 计划优化 → 存储裁剪（层层减少要做的事）</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">三层递进：Analyzer → QueryPlan passes → KeyCondition；核心信条=真正读算之前把工作量削到最小</text>
+
+  <g text-anchor="middle">
+    <rect x="40" y="80" width="300" height="200" rx="14" fill="#f3f7fc" stroke="#cfe0f2" filter="url(#soft)"/>
+    <text x="190" y="104" font-size="12" font-weight="700" fill="#274a78">① 分析改写</text>
+    <text x="190" y="124" font-size="8.5" fill="#5b7db1">Analyzer · QueryTree 40+ pass</text>
+    <text x="190" y="148" font-size="9" fill="#274a78">名称解析 · 常量折叠</text>
+    <text x="190" y="166" font-size="9" fill="#274a78">谓词化简 · 函数重写</text>
+    <text x="190" y="184" font-size="9" fill="#274a78">子查询/CTE 展开</text>
+    <rect x="60" y="200" width="260" height="60" rx="9" fill="#fff" stroke="#cfe0f2"/>
+    <text x="190" y="220" font-size="8.5" fill="#5b7db1">把"用户写的 SQL"</text>
+    <text x="190" y="238" font-size="8.5" fill="#5b7db1">规整成"引擎好优化的语义树"</text>
+    <text x="190" y="254" font-size="8" fill="#8aa6cf">是后续优化的前提</text>
+
+    <rect x="380" y="80" width="300" height="200" rx="14" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+    <text x="530" y="104" font-size="12" font-weight="700" fill="#12402a">② 计划优化</text>
+    <text x="530" y="124" font-size="8.5" fill="#2f6f4f">QueryPlan passes · optimizeTree</text>
+    <text x="530" y="148" font-size="9" fill="#12402a">谓词下推 · PREWHERE 移动</text>
+    <text x="530" y="166" font-size="9" fill="#12402a">read-in-order · limit 下推</text>
+    <text x="530" y="184" font-size="9" fill="#12402a">投影使用 · TopN</text>
+    <rect x="400" y="200" width="260" height="60" rx="9" fill="#fff" stroke="#bfe0cd"/>
+    <text x="530" y="220" font-size="8.5" fill="#2f6f4f">在逻辑算子树上做变换</text>
+    <text x="530" y="238" font-size="8.5" fill="#2f6f4f">把过滤/裁剪条件推给读取步</text>
+    <text x="530" y="254" font-size="8" fill="#4c8567">减少算子、减少行数</text>
+
+    <rect x="720" y="80" width="300" height="200" rx="14" fill="#fdf9f0" stroke="#efe3cd" filter="url(#soft)"/>
+    <text x="870" y="104" font-size="12" font-weight="700" fill="#7a5a1e">③ 存储裁剪</text>
+    <text x="870" y="124" font-size="8.5" fill="#93762e">KeyCondition (KeyCondition.h:64)</text>
+    <text x="870" y="148" font-size="9" fill="#5a3410">WHERE → 主键区间判定</text>
+    <text x="870" y="166" font-size="9" fill="#5a3410">稀疏索引二分 → MarkRange</text>
+    <text x="870" y="184" font-size="9" fill="#5a3410">+ 跳数索引整段跳过</text>
+    <rect x="740" y="200" width="260" height="60" rx="9" fill="#fff" stroke="#efdcb4"/>
+    <text x="870" y="220" font-size="8.5" fill="#93762e">把 TB 级扫描缩到几个 granule</text>
+    <text x="870" y="238" font-size="8.5" fill="#93762e">"少读盘"最关键一环</text>
+    <text x="870" y="254" font-size="8" fill="#b08843">深依存储引擎稀疏主键</text>
+  </g>
+  <g stroke="#c7c7cc" stroke-width="1.6" fill="none">
+    <line x1="340" y1="180" x2="380" y2="180" marker-end="url(#ar)"/>
+    <line x1="680" y1="180" x2="720" y2="180" marker-end="url(#ar)"/>
+  </g>
+
+  <!-- caches orthogonal -->
+  <rect x="40" y="300" width="980" height="80" rx="13" fill="#f6f2fb" stroke="#d9c9ec"/>
+  <text x="60" y="324" font-size="11" font-weight="700" fill="#3d2a5a">正交叠加：多层缓存（命中即省对应工作）</text>
+  <g text-anchor="middle" font-size="8">
+    <rect x="70" y="336" width="160" height="32" rx="7" fill="#fff" stroke="#d9c9ec"/><text x="150" y="356" fill="#3d2a5a">QueryResultCache（整条查询）</text>
+    <rect x="246" y="336" width="160" height="32" rx="7" fill="#fff" stroke="#d9c9ec"/><text x="326" y="356" fill="#3d2a5a">QueryConditionCache</text>
+    <rect x="422" y="336" width="140" height="32" rx="7" fill="#fff" stroke="#d9c9ec"/><text x="492" y="356" fill="#3d2a5a">MarkCache</text>
+    <rect x="578" y="336" width="180" height="32" rx="7" fill="#fff" stroke="#d9c9ec"/><text x="668" y="356" fill="#3d2a5a">UncompressedCache</text>
+    <rect x="774" y="336" width="180" height="32" rx="7" fill="#fff" stroke="#d9c9ec"/><text x="864" y="356" fill="#3d2a5a">PrimaryIndexCache</text>
+  </g>
+
+  <rect x="40" y="394" width="980" height="146" rx="12" fill="#f7f7f9" stroke="#e6e6ea"/>
+  <text x="60" y="418" font-size="11" font-weight="700" fill="#1d1d1f">一句话</text>
+  <text x="60" y="440" font-size="10" fill="#4b4b50">优化技术三层递进地"减少要做的事"：① Analyzer 把 SQL 规整成好优化的 QueryTree；② QueryPlan pass 做下推/</text>
+  <text x="60" y="458" font-size="10" fill="#4b4b50">PREWHERE/read-in-order/投影；③ KeyCondition 把过滤编译成主键区间裁剪，只读命中 granule。</text>
+  <text x="60" y="480" font-size="10" fill="#4b4b50">再正交叠加多层缓存（结果/条件/mark/解压/主键索引），从粗到细跳过重复工作。</text>
+  <text x="60" y="504" font-size="10" fill="#4b4b50" font-weight="600">核心信条：在真正读数据/算数据之前，把工作量削到最小——这是分析库性能的规划期来源。</text>
+  <text x="60" y="528" font-size="9" fill="#8a8a8f">各层细节见后续分图；执行期由「执行引擎」把削减后的计划并行跑出来。</text>
+</svg>

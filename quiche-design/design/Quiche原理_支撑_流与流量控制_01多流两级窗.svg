@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="430" viewBox="0 0 1020 430"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1020" height="430" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">流与流量控制 · 一连接多流、无队头阻塞，两级流控 + 流数上限</text>
+
+  <!-- 多流 -->
+  <rect x="30" y="56" width="470" height="230" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="48" y="80" font-size="12.5" font-weight="600" fill="#1d1d1f">一连接多流（对比 TCP）</text>
+  <rect x="48" y="96" width="434" height="60" rx="10" fill="#fbeaea" stroke="#f0cccc"/><text x="64" y="116" font-size="9.5" font-weight="600" fill="#7d1f1f">TCP：单字节流，一处丢包全队阻塞</text><text x="64" y="135" font-size="8" fill="#b06a6a">多路复用（HTTP/2）仍受 TCP 层队头阻塞拖累</text><text x="64" y="150" font-size="8" fill="#b06a6a">所有请求共享一个有序字节流</text>
+  <rect x="48" y="164" width="434" height="112" rx="10" fill="#eafaf1" stroke="#bce6cd"/><text x="64" y="184" font-size="9.5" font-weight="600" fill="#0f5132">QUIC：多条独立流，流间无阻塞</text><text x="64" y="202" font-size="8" fill="#3f8f66">流 A 丢包只阻塞 A，流 B/C 照常交付</text>
+  <rect x="64" y="212" width="126" height="52" rx="7" fill="#ffffff" stroke="#bce6cd"/><text x="127" y="234" font-size="8.5" fill="#0f5132" text-anchor="middle">流 A</text><text x="127" y="250" font-size="7.5" fill="#3f8f66" text-anchor="middle">双向</text>
+  <rect x="200" y="212" width="126" height="52" rx="7" fill="#ffffff" stroke="#bce6cd"/><text x="263" y="234" font-size="8.5" fill="#0f5132" text-anchor="middle">流 B</text><text x="263" y="250" font-size="7.5" fill="#3f8f66" text-anchor="middle">单向</text>
+  <rect x="336" y="212" width="130" height="52" rx="7" fill="#ffffff" stroke="#bce6cd"/><text x="401" y="234" font-size="8.5" fill="#0f5132" text-anchor="middle">流 C…</text><text x="401" y="250" font-size="7.5" fill="#3f8f66" text-anchor="middle">流号奇偶分主/被动</text>
+
+  <!-- 流控 -->
+  <rect x="520" y="56" width="470" height="230" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="538" y="80" font-size="12.5" font-weight="600" fill="#1b2a4a">两级流量控制 + 流数上限</text>
+  <rect x="538" y="96" width="434" height="56" rx="9" fill="#ffffff" stroke="#bcd0ec"/><text x="554" y="116" font-size="9.5" font-weight="600" fill="#1b2a4a">流级：QuicFlowController（quic_flow_controller.h:37）</text><text x="554" y="134" font-size="8" fill="#5b7db1">每流独立窗口，MAX_STREAM_DATA 更新；收方拨额度</text>
+  <rect x="538" y="158" width="434" height="56" rx="9" fill="#ffffff" stroke="#bcd0ec"/><text x="554" y="178" font-size="9.5" font-weight="600" fill="#1b2a4a">连接级：所有流字节总和窗口</text><text x="554" y="196" font-size="8" fill="#5b7db1">MAX_DATA 更新；防单连接吃爆内存</text>
+  <rect x="538" y="220" width="434" height="56" rx="9" fill="#ffffff" stroke="#bcd0ec"/><text x="554" y="240" font-size="9.5" font-weight="600" fill="#1b2a4a">流数上限：QuicConfig(:311)</text><text x="554" y="258" font-size="8" fill="#5b7db1">MaxBidirectionalStreams；MAX_STREAMS 帧动态放开</text>
+
+  <!-- 反压 -->
+  <rect x="30" y="302" width="960" height="108" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="48" y="326" font-size="12" font-weight="600" fill="#1d1d1f">窗口反压闭环</text>
+  <rect x="70" y="342" width="190" height="48" rx="9" fill="#eef3fb" stroke="#bcd0ec"/><text x="165" y="363" font-size="8.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">发方按窗口发数据</text><text x="165" y="379" font-size="8" fill="#5b7db1" text-anchor="middle">受流/连接双窗口约束</text>
+  <rect x="310" y="342" width="190" height="48" rx="9" fill="#fff7e6" stroke="#f0dcae"/><text x="405" y="363" font-size="8.5" font-weight="600" fill="#7a4d00" text-anchor="middle">窗口耗尽 → 暂停</text><text x="405" y="379" font-size="8" fill="#9a7328" text-anchor="middle">发 BLOCKED 帧</text>
+  <rect x="550" y="342" width="190" height="48" rx="9" fill="#eafaf1" stroke="#bce6cd"/><text x="645" y="363" font-size="8.5" font-weight="600" fill="#0f5132" text-anchor="middle">收方消费后拨额度</text><text x="645" y="379" font-size="8" fill="#3f8f66" text-anchor="middle">MAX_DATA/MAX_STREAM_DATA</text>
+  <rect x="790" y="342" width="170" height="48" rx="9" fill="#eef3fb" stroke="#bcd0ec"/><text x="875" y="363" font-size="8.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">发方恢复发送</text><text x="875" y="379" font-size="8" fill="#5b7db1" text-anchor="middle">窗口滑动</text>
+  <line x1="260" y1="366" x2="310" y2="366" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="500" y1="366" x2="550" y2="366" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="740" y1="366" x2="790" y2="366" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+</svg>

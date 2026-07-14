@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="580" viewBox="0 0 1060 580" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1060" height="580" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">znode 结构与 replicas 拓扑：一张 ReplicatedMergeTree 表在 Keeper 下的布局</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">恢复/校验/清理线程都围绕这套 znode 工作（见集群与自愈）</text>
+
+  <!-- znode tree -->
+  <rect x="40" y="76" width="520" height="330" rx="14" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="300" y="100" font-size="12" font-weight="700" fill="#12402a" text-anchor="middle">/clickhouse/tables/&lt;shard&gt;/&lt;table&gt;/ 下的 znode</text>
+  <g font-size="9">
+    <rect x="60" y="114" width="480" height="40" rx="7" fill="#fff" stroke="#bfe0cd"/><text x="76" y="132" font-weight="600" fill="#12402a" text-anchor="start">/log</text><text x="200" y="132" fill="#2f6f4f" text-anchor="start">复制日志（所有变更 entry 顺序流）</text><text x="76" y="147" fill="#4c8567" text-anchor="start" font-size="8">复制的核心：各副本按序拉取重放</text>
+    <rect x="60" y="160" width="480" height="40" rx="7" fill="#fff" stroke="#bfe0cd"/><text x="76" y="178" font-weight="600" fill="#12402a" text-anchor="start">/replicas/&lt;name&gt;</text><text x="240" y="178" fill="#2f6f4f" text-anchor="start">每副本状态 + log_pointer</text><text x="76" y="193" fill="#4c8567" text-anchor="start" font-size="8">落后量 = /log 最大序号 − log_pointer</text>
+    <rect x="60" y="206" width="480" height="40" rx="7" fill="#fff" stroke="#bfe0cd"/><text x="76" y="224" font-weight="600" fill="#12402a" text-anchor="start">/blocks</text><text x="200" y="224" fill="#2f6f4f" text-anchor="start">插入块 hash（幂等去重）</text><text x="76" y="239" fill="#4c8567" text-anchor="start" font-size="8">重发同批 → 命中 → 跳过</text>
+    <rect x="60" y="252" width="480" height="40" rx="7" fill="#fff" stroke="#bfe0cd"/><text x="76" y="270" font-weight="600" fill="#12402a" text-anchor="start">/mutations</text><text x="220" y="270" fill="#2f6f4f" text-anchor="start">mutation 队列</text><text x="76" y="285" fill="#4c8567" text-anchor="start" font-size="8">ALTER UPDATE/DELETE 的复制载体</text>
+    <rect x="60" y="298" width="480" height="40" rx="7" fill="#fff" stroke="#bfe0cd"/><text x="76" y="316" font-weight="600" fill="#12402a" text-anchor="start">/quorum</text><text x="200" y="316" fill="#2f6f4f" text-anchor="start">quorum 写入状态</text><text x="76" y="331" fill="#4c8567" text-anchor="start" font-size="8">insert_quorum 开启时用</text>
+    <rect x="60" y="344" width="480" height="50" rx="7" fill="#f2fbf6" stroke="#cdeadb"/><text x="76" y="362" font-weight="600" fill="#12402a" text-anchor="start">/columns, /metadata, /leader_election …</text><text x="76" y="380" fill="#4c8567" text-anchor="start" font-size="8">schema、leader 选举等辅助 znode</text>
+  </g>
+
+  <!-- threads around znodes -->
+  <rect x="580" y="76" width="440" height="330" rx="14" fill="#f3f7fc" stroke="#cfe0f2"/>
+  <text x="800" y="100" font-size="12" font-weight="700" fill="#274a78" text-anchor="middle">围绕 znode 工作的守护线程</text>
+  <g font-size="9">
+    <rect x="600" y="116" width="400" height="56" rx="8" fill="#fff" stroke="#cfe0f2"/><text x="616" y="136" font-weight="600" fill="#274a78" text-anchor="start">ReplicatedMergeTreeRestartingThread</text><text x="616" y="154" fill="#5b7db1" text-anchor="start" font-size="8">Keeper 会话恢复、重新注册副本、拉起队列</text>
+    <rect x="600" y="180" width="400" height="56" rx="8" fill="#fff" stroke="#cfe0f2"/><text x="616" y="200" font-weight="600" fill="#274a78" text-anchor="start">ReplicatedMergeTreePartCheckThread</text><text x="616" y="218" fill="#5b7db1" text-anchor="start" font-size="8">校验本地 Part 完整性，损坏则重新 fetch</text>
+    <rect x="600" y="244" width="400" height="56" rx="8" fill="#fff" stroke="#cfe0f2"/><text x="616" y="264" font-weight="600" fill="#274a78" text-anchor="start">ReplicatedMergeTreeCleanupThread</text><text x="616" y="282" fill="#5b7db1" text-anchor="start" font-size="8">清理过期 /log entry、旧 /blocks、outdated Part</text>
+  </g>
+  <rect x="600" y="312" width="400" height="80" rx="9" fill="#fdf9f0" stroke="#efe3cd"/>
+  <text x="800" y="332" font-size="9.5" font-weight="600" fill="#7a5a1e" text-anchor="middle">诊断视图</text>
+  <text x="800" y="352" font-size="8.5" fill="#93762e" text-anchor="middle">system.replicas：每副本 log_pointer、queue 大小、is_readonly</text>
+  <text x="800" y="370" font-size="8.5" fill="#93762e" text-anchor="middle">system.zookeeper：直接查 znode 内容</text>
+  <text x="800" y="386" font-size="8" fill="#b08843" text-anchor="middle">（这些线程详见「集群与自愈」）</text>
+
+  <rect x="40" y="424" width="980" height="116" rx="12" fill="#f7f7f9" stroke="#e6e6ea"/>
+  <text x="60" y="448" font-size="11" font-weight="700" fill="#1d1d1f">一句话</text>
+  <text x="60" y="470" font-size="10" fill="#4b4b50">每张 ReplicatedMergeTree 表在 Keeper 下有一套 znode：/log（复制日志）、/replicas（副本状态+log_pointer）、</text>
+  <text x="60" y="488" font-size="10" fill="#4b4b50">/blocks（幂等去重）、/mutations、/quorum。副本落后量 = /log 最大序号 − 本副本 log_pointer。</text>
+  <text x="60" y="506" font-size="10" fill="#4b4b50">恢复/校验/清理三线程围绕这套 znode 保证副本健康——这是复制与"集群自愈"的交接面。</text>
+  <text x="60" y="528" font-size="9" fill="#8a8a8f">Keeper 是复制的命脉：它挂了，副本转只读、无法写入与 merge。</text>
+</svg>

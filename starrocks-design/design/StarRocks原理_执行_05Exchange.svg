@@ -1,0 +1,97 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="540" viewBox="0 0 1080 540" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="540" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">StarRocks 数据交换 Exchange · 跨 BE 网络 vs 同 BE 本地</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">fragment 间移动数据靠 Exchange:跨 BE 才走 SinkBuffer + RPC,同 BE 内 pipeline 间用 LocalExchange(内存)</text>
+
+  <!-- Cross-BE container -->
+  <rect x="30" y="66" width="1020" height="270" rx="13" fill="#f3f7fc" stroke="#cfe0f2"/>
+  <text x="46" y="88" font-size="12" font-weight="700" fill="#274a78">① 跨 BE(网络)· ExchangeSink / Source + SinkBuffer + RPC</text>
+
+  <!-- upstream BE -->
+  <rect x="50" y="102" width="300" height="218" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="200" y="124" font-size="11" font-weight="700" text-anchor="middle" fill="#1b2a4a">上游 BE · 发送端</text>
+  <rect x="68" y="136" width="264" height="52" rx="9" fill="#ffffff" stroke="#bcd0ec"/>
+  <text x="200" y="157" font-size="10" font-weight="600" text-anchor="middle" fill="#1b2a4a">ExchangeSinkOperator</text>
+  <text x="200" y="175" font-size="8.3" text-anchor="middle" fill="#5b7db1">exchange_sink_operator.h:47 · 持 TPartitionType</text>
+
+  <rect x="68" y="198" width="264" height="52" rx="9" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="200" y="219" font-size="10" font-weight="600" text-anchor="middle" fill="#12402a">Shuffler · shuffler.h:24</text>
+  <text x="200" y="237" font-size="8.3" text-anchor="middle" fill="#2f6f4f">按 TPartitionType 决定去向</text>
+
+  <rect x="68" y="260" width="264" height="48" rx="9" fill="#fff7e6" stroke="#e8cf9a"/>
+  <text x="200" y="280" font-size="10" font-weight="600" text-anchor="middle" fill="#5a3410">共享 SinkBuffer</text>
+  <text x="200" y="297" font-size="8.3" text-anchor="middle" fill="#93762e">解耦生产与 RPC 发送 · 缓冲 + 背压</text>
+
+  <!-- RPC middle -->
+  <g text-anchor="middle">
+    <rect x="410" y="176" width="160" height="70" rx="12" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+    <text x="490" y="205" font-size="11" font-weight="700" fill="#3d2a5a">RPC 网络</text>
+    <text x="490" y="225" font-size="8.5" fill="#5a3d78">跨节点唯一走网络</text>
+  </g>
+
+  <!-- partition type legend -->
+  <rect x="410" y="260" width="160" height="60" rx="10" fill="#ffffff" stroke="#ececf1"/>
+  <text x="490" y="279" font-size="9" font-weight="600" text-anchor="middle" fill="#1d1d1f">TPartitionType</text>
+  <text x="490" y="296" font-size="8" text-anchor="middle" fill="#6e6e73">HASH_PARTITIONED(可两级)</text>
+  <text x="490" y="310" font-size="8" text-anchor="middle" fill="#6e6e73">RANDOM / UNPARTITIONED …</text>
+
+  <!-- downstream BE -->
+  <rect x="630" y="102" width="400" height="218" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="830" y="124" font-size="11" font-weight="700" text-anchor="middle" fill="#1b2a4a">下游 BE(多个)· 接收端</text>
+  <g text-anchor="middle">
+    <rect x="648" y="140" width="176" height="80" rx="9" fill="#ffffff" stroke="#bcd0ec"/>
+    <text x="736" y="164" font-size="9.5" font-weight="600" fill="#1b2a4a">ExchangeSourceOperator</text>
+    <text x="736" y="182" font-size="8.3" fill="#5b7db1">收 hash 分区 #0 的数据</text>
+    <text x="736" y="200" font-size="8.3" fill="#5b7db1">喂给本地下游算子</text>
+    <rect x="836" y="140" width="176" height="80" rx="9" fill="#ffffff" stroke="#bcd0ec"/>
+    <text x="924" y="164" font-size="9.5" font-weight="600" fill="#1b2a4a">ExchangeSourceOperator</text>
+    <text x="924" y="182" font-size="8.3" fill="#5b7db1">收 hash 分区 #1 的数据</text>
+    <text x="924" y="200" font-size="8.3" fill="#5b7db1">…按分区各收各的</text>
+  </g>
+  <rect x="648" y="234" width="364" height="74" rx="9" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="830" y="256" font-size="9.5" font-weight="600" text-anchor="middle" fill="#5a3410">Shuffler 分区路由(HASH 走 hash 映射)</text>
+  <text x="830" y="276" font-size="8.5" text-anchor="middle" fill="#93762e">同 key 落同一下游 BE → Join / 聚合按 key 就地完成</text>
+  <text x="830" y="294" font-size="8.5" text-anchor="middle" fill="#93762e">大 shuffle 可两级(先本地聚合再跨节点)减小网络量</text>
+
+  <!-- cross-BE arrows -->
+  <g stroke="#c7c7cc" stroke-width="1.6" fill="none">
+    <line x1="350" y1="211" x2="410" y2="211" marker-end="url(#ar)"/>
+    <line x1="570" y1="200" x2="630" y2="176" marker-end="url(#ar)"/>
+    <line x1="570" y1="222" x2="630" y2="248" marker-end="url(#ar)"/>
+  </g>
+
+  <!-- Same-BE container -->
+  <rect x="30" y="350" width="1020" height="172" rx="13" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="46" y="372" font-size="12" font-weight="700" fill="#12402a">② 同 BE(本地)· LocalExchange(内存,无 RPC)· 同 fragment 内 pipeline 间</text>
+
+  <g text-anchor="middle">
+    <rect x="50" y="386" width="230" height="118" rx="11" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+    <text x="165" y="410" font-size="10.5" font-weight="700" fill="#12402a">LocalExchangeSinkOperator</text>
+    <text x="165" y="430" font-size="8.5" fill="#2f6f4f">上游 pipeline 写入</text>
+    <text x="165" y="448" font-size="8.5" fill="#2f6f4f">内存队列传 ChunkPtr</text>
+    <text x="165" y="470" font-size="8.5" fill="#2f6f4f">零网络 / 零序列化</text>
+    <text x="165" y="490" font-size="8" fill="#a1a1a6">共享同进程内存</text>
+
+    <rect x="415" y="386" width="250" height="118" rx="11" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+    <text x="540" y="410" font-size="10.5" font-weight="700" fill="#12402a">本地交换算子</text>
+    <text x="540" y="432" font-size="8.8" fill="#2f6f4f">MultiCastLocalExchange</text>
+    <text x="540" y="450" font-size="8" fill="#93762e">一对多广播</text>
+    <text x="540" y="472" font-size="8.8" fill="#2f6f4f">SplitLocalExchange</text>
+    <text x="540" y="490" font-size="8" fill="#93762e">同 fragment 内重分区</text>
+
+    <rect x="800" y="386" width="230" height="118" rx="11" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+    <text x="915" y="410" font-size="10.5" font-weight="700" fill="#12402a">LocalExchangeSourceOperator</text>
+    <text x="915" y="430" font-size="8.5" fill="#2f6f4f">下游 pipeline 读取</text>
+    <text x="915" y="448" font-size="8.5" fill="#2f6f4f">按 DOP 拉走各自份额</text>
+    <text x="915" y="470" font-size="8.5" fill="#2f6f4f">支撑一对多 / 重分区</text>
+    <text x="915" y="490" font-size="8" fill="#a1a1a6">内存直传,微秒级</text>
+  </g>
+  <g stroke="#c7c7cc" stroke-width="1.6" fill="none">
+    <line x1="280" y1="445" x2="415" y2="445" marker-end="url(#ar)"/>
+    <line x1="665" y1="445" x2="800" y2="445" marker-end="url(#ar)"/>
+  </g>
+</svg>

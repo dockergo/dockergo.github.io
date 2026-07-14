@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="940" height="560" viewBox="0 0 940 560" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="940" height="560" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">sync.Pool · 每 P 本地 + victim cache + poolCleanup</text>
+
+  <!-- per-P local pools (blue coordinator) -->
+  <rect x="40" y="58" width="580" height="238" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="56" y="82" font-size="12.5" font-weight="600" fill="#1b2a4a">每 P 本地池 poolLocal · Get/Put 优先无锁</text>
+  <text x="56" y="100" font-size="9.5" fill="#8fabd4">pool.go:52</text>
+
+  <!-- P0 local -->
+  <rect x="56" y="112" width="264" height="120" rx="10" fill="#ffffff" stroke="#bcd0ec"/>
+  <text x="72" y="133" font-size="11" font-weight="600" fill="#1b2a4a">P0 · poolLocal</text>
+  <rect x="72" y="142" width="232" height="34" rx="7" fill="#fdf6ec" stroke="#f0dcaf"/>
+  <text x="82" y="163" font-size="10" font-weight="600" fill="#6b4e16">private · 单槽（仅本 P 存取，最快）</text>
+  <rect x="72" y="182" width="232" height="42" rx="7" fill="#eef7f0" stroke="#bfe0c8"/>
+  <text x="82" y="200" font-size="10" font-weight="600" fill="#1d4a2b">shared · 无锁双端队列</text>
+  <text x="82" y="216" font-size="8.5" fill="#4a8c60">本 P 从头存取，别 P 从尾偷</text>
+
+  <!-- P1 local -->
+  <rect x="336" y="112" width="264" height="120" rx="10" fill="#ffffff" stroke="#bcd0ec"/>
+  <text x="352" y="133" font-size="11" font-weight="600" fill="#1b2a4a">P1 · poolLocal</text>
+  <rect x="352" y="142" width="232" height="34" rx="7" fill="#fdf6ec" stroke="#f0dcaf"/>
+  <text x="362" y="163" font-size="10" font-weight="600" fill="#6b4e16">private · 单槽</text>
+  <rect x="352" y="182" width="232" height="42" rx="7" fill="#f6f6f7" stroke="#e2e2e7"/>
+  <text x="362" y="200" font-size="10" font-weight="600" fill="#6e6e73">shared · 空</text>
+  <text x="362" y="216" font-size="8.5" fill="#8e8e93">本地空 → 去别 P 偷</text>
+
+  <!-- steal arrow (routed in the gap between the two cards, clear of text) -->
+  <line x1="350" y1="203" x2="308" y2="203" stroke="#5b7db1" stroke-width="1.6" stroke-dasharray="4,3" marker-end="url(#ar)"/>
+  <text x="329" y="193" font-size="9" fill="#5b7db1" text-anchor="middle">偷</text>
+
+  <text x="56" y="256" font-size="10" fill="#5b7db1">Get 顺序：private → 本 P shared 头 → 偷别 P shared 尾 → victim → New()</text>
+  <text x="56" y="276" font-size="10" fill="#5b7db1">Put 顺序：优先回 private，否则压入本 P shared 头。绑定 P，常态无锁无争用。</text>
+
+  <!-- Get/New flow (purple, right) -->
+  <rect x="636" y="58" width="264" height="238" rx="13" fill="#f5f0fb" stroke="#ddcdf0" filter="url(#soft)"/>
+  <text x="652" y="82" font-size="12" font-weight="600" fill="#3d2a5a">Get 未命中兜底</text>
+  <rect x="652" y="96" width="232" height="40" rx="8" fill="#ffffff" stroke="#ddcdf0"/>
+  <text x="768" y="114" font-size="10" font-weight="600" fill="#3d2a5a" text-anchor="middle">本地 + 偷 都空</text>
+  <text x="768" y="129" font-size="8.5" fill="#7d5bb1" text-anchor="middle">→ 查 victim cache</text>
+  <line x1="768" y1="136" x2="768" y2="152" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+  <rect x="652" y="156" width="232" height="40" rx="8" fill="#ffffff" stroke="#ddcdf0"/>
+  <text x="768" y="174" font-size="10" font-weight="600" fill="#3d2a5a" text-anchor="middle">victim 也空</text>
+  <text x="768" y="189" font-size="8.5" fill="#7d5bb1" text-anchor="middle">→ 调用 New() 新建</text>
+  <line x1="768" y1="196" x2="768" y2="212" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+  <rect x="652" y="216" width="232" height="40" rx="8" fill="#eef7f0" stroke="#bfe0c8"/>
+  <text x="768" y="234" font-size="10" font-weight="600" fill="#1d4a2b" text-anchor="middle">返回对象给调用方</text>
+  <text x="768" y="249" font-size="8.5" fill="#4a8c60" text-anchor="middle">用完 Put 回本地池复用</text>
+  <text x="652" y="280" font-size="9" fill="#a58fce">New 是唯一「真正分配」的地方</text>
+
+  <!-- poolCleanup / victim (amber storage + green GC) -->
+  <rect x="40" y="312" width="860" height="164" rx="13" fill="#fdf6ec" stroke="#f0dcaf" filter="url(#soft)"/>
+  <text x="56" y="336" font-size="12.5" font-weight="600" fill="#6b4e16">victim cache 与 GC 协作 · poolCleanup（pool.go:258）</text>
+  <text x="56" y="354" font-size="10" fill="#a9822f">每轮 GC 在 STW 开始时回调（runtime_registerPoolCleanup 注册），不直接清空，而是「降级」</text>
+
+  <!-- two-generation flow -->
+  <rect x="56" y="368" width="240" height="90" rx="10" fill="#eef7f0" stroke="#bfe0c8"/>
+  <text x="176" y="390" font-size="11" font-weight="600" fill="#1d4a2b" text-anchor="middle">allPools（当前活跃）</text>
+  <text x="176" y="411" font-size="9" fill="#4a8c60" text-anchor="middle">本轮 Get/Put 命中的对象</text>
+  <text x="176" y="429" font-size="9" fill="#4a8c60" text-anchor="middle">GC 到来时……</text>
+  <text x="176" y="447" font-size="8.5" fill="#7fb894" text-anchor="middle">oldPools, allPools = allPools, nil</text>
+
+  <line x1="296" y1="413" x2="356" y2="413" stroke="#c7c7cc" stroke-width="1.6" marker-end="url(#ar)"/>
+  <text x="326" y="405" font-size="9" fill="#8e8e93" text-anchor="middle">降级</text>
+
+  <rect x="360" y="368" width="240" height="90" rx="10" fill="#ffffff" stroke="#f0dcaf"/>
+  <text x="480" y="390" font-size="11" font-weight="600" fill="#6b4e16" text-anchor="middle">victim（上一代）</text>
+  <text x="480" y="411" font-size="9" fill="#a9822f" text-anchor="middle">仍可被 Get 命中（续命一轮）</text>
+  <text x="480" y="429" font-size="9" fill="#a9822f" text-anchor="middle">下轮 GC 到来时……</text>
+  <text x="480" y="447" font-size="8.5" fill="#c6a45f" text-anchor="middle">未被取走的才真正丢弃</text>
+
+  <line x1="600" y1="413" x2="660" y2="413" stroke="#c7c7cc" stroke-width="1.6" marker-end="url(#ar)"/>
+  <text x="630" y="405" font-size="9" fill="#8e8e93" text-anchor="middle">再一轮</text>
+
+  <rect x="664" y="368" width="220" height="90" rx="10" fill="#fbeeee" stroke="#f0c4c4"/>
+  <text x="774" y="390" font-size="11" font-weight="600" fill="#7a1f1f" text-anchor="middle">丢弃 · 交还 GC 回收</text>
+  <text x="774" y="413" font-size="9" fill="#b15b5b" text-anchor="middle">对象最终存活约两轮 GC</text>
+  <text x="774" y="431" font-size="9" fill="#b15b5b" text-anchor="middle">避免「GC 一来 Pool 全空、</text>
+  <text x="774" y="447" font-size="9" fill="#b15b5b" text-anchor="middle">命中率暴跌」</text>
+
+  <!-- bottom warning -->
+  <rect x="40" y="492" width="860" height="52" rx="12" fill="#f5f0fb" stroke="#ddcdf0"/>
+  <text x="56" y="514" font-size="11" font-weight="600" fill="#3d2a5a">工程要点</text>
+  <text x="56" y="533" font-size="10" fill="#7d5bb1">Pool 里对象随时可能被 GC 回收——只适合「可重建的临时对象」（如 buffer），不能存「必须保留」的状态。</text>
+</svg>

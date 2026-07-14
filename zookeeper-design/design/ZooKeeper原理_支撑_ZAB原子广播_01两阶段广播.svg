@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="540" viewBox="0 0 960 540"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="960" height="540" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">ZAB 广播：Proposal → Ack → Commit（类两阶段提交 · 过半即定）</text>
+
+  <!-- 泳道 -->
+  <text x="90" y="70" font-size="11" font-weight="600" fill="#1b2a4a" text-anchor="middle">Leader</text>
+  <text x="90" y="84" font-size="8" fill="#5b7db1" text-anchor="middle">唯一写入口</text>
+  <text x="90" y="250" font-size="11" font-weight="600" fill="#0f5132" text-anchor="middle">Follower A</text>
+  <text x="90" y="400" font-size="11" font-weight="600" fill="#0f5132" text-anchor="middle">Follower B</text>
+  <line x1="150" y1="56" x2="150" y2="470" stroke="#e6e6ea"/>
+
+  <!-- Leader 步骤 -->
+  <rect x="170" y="56" width="180" height="44" rx="10" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="260" y="74" font-size="9.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">① 分配 zxid（counter++）</text>
+  <text x="260" y="90" font-size="8" fill="#5b7db1" text-anchor="middle">propose()  Leader.java:1295</text>
+
+  <rect x="380" y="56" width="180" height="44" rx="10" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="470" y="74" font-size="9.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">② 存 outstandingProposals</text>
+  <text x="470" y="90" font-size="8" fill="#5b7db1" text-anchor="middle">sendPacket(PROPOSAL) 广播</text>
+
+  <rect x="590" y="56" width="180" height="44" rx="10" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="680" y="74" font-size="9.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">④ processAck 计票</text>
+  <text x="680" y="90" font-size="8" fill="#5b7db1" text-anchor="middle">Leader.java:1054</text>
+
+  <rect x="790" y="56" width="150" height="44" rx="10" fill="#eafaf1" stroke="#bce6cd" filter="url(#soft)"/>
+  <text x="865" y="74" font-size="9.5" font-weight="600" fill="#0f5132" text-anchor="middle">⑤ 过半 → Commit</text>
+  <text x="865" y="90" font-size="8" fill="#3f8f66" text-anchor="middle">tryToCommit :970</text>
+
+  <!-- Follower A -->
+  <rect x="380" y="180" width="200" height="60" rx="10" fill="#eafaf1" stroke="#bce6cd" filter="url(#soft)"/>
+  <text x="480" y="202" font-size="9.5" font-weight="600" fill="#0f5132" text-anchor="middle">③ 收 PROPOSAL</text>
+  <text x="480" y="219" font-size="8" fill="#3f8f66" text-anchor="middle">logRequest → 落 TxnLog（fsync）</text>
+  <text x="480" y="233" font-size="8" fill="#3f8f66" text-anchor="middle">回 ACK  Follower.java:161/180</text>
+
+  <!-- Follower B -->
+  <rect x="380" y="330" width="200" height="60" rx="10" fill="#eafaf1" stroke="#bce6cd" filter="url(#soft)"/>
+  <text x="480" y="352" font-size="9.5" font-weight="600" fill="#0f5132" text-anchor="middle">③ 收 PROPOSAL</text>
+  <text x="480" y="369" font-size="8" fill="#3f8f66" text-anchor="middle">落 TxnLog 后回 ACK</text>
+  <text x="480" y="383" font-size="8" fill="#3f8f66" text-anchor="middle">（本地落盘才算数）</text>
+
+  <!-- commit 回推 -->
+  <rect x="620" y="180" width="230" height="60" rx="10" fill="#fff7e6" stroke="#f0dcae" filter="url(#soft)"/>
+  <text x="735" y="202" font-size="9.5" font-weight="600" fill="#7a4d00" text-anchor="middle">⑥ 收 COMMIT → apply</text>
+  <text x="735" y="219" font-size="8" fill="#9a7328" text-anchor="middle">processTxn 到 DataTree</text>
+  <text x="735" y="233" font-size="8" fill="#9a7328" text-anchor="middle">Follower.java:199（case COMMIT）</text>
+
+  <rect x="620" y="330" width="230" height="60" rx="10" fill="#fff7e6" stroke="#f0dcae" filter="url(#soft)"/>
+  <text x="735" y="359" font-size="9.5" font-weight="600" fill="#7a4d00" text-anchor="middle">⑥ 收 COMMIT → apply</text>
+  <text x="735" y="376" font-size="8" fill="#9a7328" text-anchor="middle">各 follower 按 zxid 顺序提交</text>
+
+  <!-- 连线 -->
+  <line x1="470" y1="100" x2="480" y2="180" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="470" y1="100" x2="480" y2="330" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="500" y1="180" x2="640" y2="100" stroke="#bce6cd" stroke-width="1.3" marker-end="url(#ar)"/>
+  <text x="560" y="150" font-size="8" fill="#3f8f66">ACK ↑</text>
+  <line x1="770" y1="100" x2="740" y2="180" stroke="#f0dcae" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="770" y1="100" x2="740" y2="330" stroke="#f0dcae" stroke-width="1.3" marker-end="url(#ar)"/>
+  <text x="800" y="150" font-size="8" fill="#9a7328">COMMIT ↓</text>
+
+  <!-- 底部要点 -->
+  <rect x="30" y="428" width="900" height="96" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="48" y="452" font-size="11.5" font-weight="600" fill="#1d1d1f">关键不变量</text>
+  <text x="48" y="474" font-size="9.5" fill="#494950">· 过半即定：只要 Leader 收到含自己在内的多数 Ack，该 Proposal 就已"可提交"，不必等所有 follower。</text>
+  <text x="48" y="494" font-size="9.5" fill="#494950">· 按 zxid 顺序提交：tryToCommit 要求 zxid == lastCommitted+1、且前一个 Proposal 不在 outstanding，才提交（全序）。</text>
+  <text x="48" y="514" font-size="9.5" fill="#494950">· 先落盘再 Ack：follower 收 PROPOSAL 先写 TxnLog（可 fsync）再回 Ack——已提交事务不会因崩溃丢失。</text>
+</svg>

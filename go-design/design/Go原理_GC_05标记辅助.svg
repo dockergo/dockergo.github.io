@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="940" height="500" viewBox="0 0 940 500" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+    <marker id="arG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#4a8c60"/>
+    </marker>
+  </defs>
+  <rect width="940" height="500" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">标记辅助 · gcAssistAlloc 的债务与信用</text>
+  <text x="30" y="48" font-size="11" fill="#6e6e73">分配太快会在标记完成前爆堆 —— 让"分配得多的 goroutine 帮忙标记"（gcAssistAlloc mgcmark.go:499）</text>
+
+  <!-- ==== allocation accrues debt (amber) ==== -->
+  <rect x="30" y="72" width="280" height="188" rx="13" fill="#fdf6ec" stroke="#f0dcaf" filter="url(#soft)"/>
+  <text x="46" y="96" font-size="12.5" font-weight="600" fill="#6b4e16">① 分配累加标记债务</text>
+  <rect x="46" y="112" width="248" height="56" rx="9" fill="#ffffff" stroke="#f0dcaf"/>
+  <text x="56" y="132" font-size="10.5" font-weight="600" fill="#6b4e16">gp.gcAssistBytes</text>
+  <text x="56" y="149" font-size="9.5" fill="#a9822f">每次分配按字节扣减，</text>
+  <text x="56" y="164" font-size="9.5" fill="#a9822f">按 assistWorkPerByte 比例。</text>
+  <rect x="46" y="178" width="248" height="66" rx="9" fill="#fbeeee" stroke="#f0c4c4"/>
+  <text x="56" y="198" font-size="10.5" font-weight="600" fill="#7a1f1f">债务为负（欠得多）</text>
+  <text x="56" y="215" font-size="9.5" fill="#b15b5b">分配前必须先标记等量对象</text>
+  <text x="56" y="230" font-size="9.5" fill="#b15b5b">"还债"（gcAssistAlloc1 :711），</text>
+  <text x="56" y="243" font-size="9.5" fill="#b15b5b">否则挂起等信用。</text>
+
+  <line x1="310" y1="166" x2="352" y2="166" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <text x="331" y="158" font-size="9" fill="#8e8e93" text-anchor="middle">欠债</text>
+
+  <!-- ==== debt vs credit balance (center, purple) ==== -->
+  <rect x="360" y="72" width="240" height="188" rx="13" fill="#f5f0fb" stroke="#ddcdf0" filter="url(#soft)"/>
+  <text x="480" y="96" font-size="12.5" font-weight="600" fill="#3d2a5a" text-anchor="middle">债务 / 信用 天平</text>
+
+  <!-- scale beam -->
+  <line x1="400" y1="150" x2="560" y2="150" stroke="#b0a0c8" stroke-width="2.5"/>
+  <line x1="480" y1="130" x2="480" y2="150" stroke="#b0a0c8" stroke-width="2.5"/>
+  <path d="M 468 130 L 492 130 L 480 118 z" fill="#7d5bb1"/>
+  <!-- left pan: debt -->
+  <line x1="410" y1="150" x2="410" y2="176" stroke="#b0a0c8" stroke-width="1.2"/>
+  <rect x="380" y="176" width="60" height="34" rx="8" fill="#fbeeee" stroke="#f0c4c4"/>
+  <text x="410" y="197" font-size="10" font-weight="600" fill="#7a1f1f" text-anchor="middle">债务</text>
+  <!-- right pan: credit -->
+  <line x1="550" y1="150" x2="550" y2="176" stroke="#b0a0c8" stroke-width="1.2"/>
+  <rect x="520" y="176" width="60" height="34" rx="8" fill="#eef7f0" stroke="#bfe0c8"/>
+  <text x="550" y="197" font-size="10" font-weight="600" fill="#1d4a2b" text-anchor="middle">信用</text>
+
+  <text x="480" y="234" font-size="9.5" fill="#7d5bb1" text-anchor="middle">分配 → 加债务</text>
+  <text x="480" y="250" font-size="9.5" fill="#7d5bb1" text-anchor="middle">标记 / 借用 → 抵债</text>
+
+  <!-- ==== bgScanCredit (right, green) ==== -->
+  <rect x="650" y="72" width="260" height="188" rx="13" fill="#eef7f0" stroke="#bfe0c8" filter="url(#soft)"/>
+  <text x="666" y="96" font-size="12.5" font-weight="600" fill="#1d4a2b">② 后台超额标记 → 信用池</text>
+  <rect x="666" y="112" width="228" height="56" rx="9" fill="#ffffff" stroke="#bfe0c8"/>
+  <text x="676" y="132" font-size="10.5" font-weight="600" fill="#1d4a2b">bgScanCredit</text>
+  <text x="676" y="149" font-size="9.5" fill="#4a8c60">后台 worker 超额标记的量</text>
+  <text x="676" y="164" font-size="9.5" fill="#4a8c60">存入全局信用池。</text>
+  <rect x="666" y="178" width="228" height="66" rx="9" fill="#eef7f0" stroke="#bfe0c8"/>
+  <text x="676" y="198" font-size="10.5" font-weight="600" fill="#1d4a2b">assist 可"借"来抵债</text>
+  <text x="676" y="215" font-size="9.5" fill="#4a8c60">有信用时直接扣抵，</text>
+  <text x="676" y="230" font-size="9.5" fill="#4a8c60">避免每次分配都真扫，</text>
+  <text x="676" y="243" font-size="9.5" fill="#4a8c60">降低分配延迟毛刺。</text>
+
+  <path d="M 666 210 Q 620 210 600 190" fill="none" stroke="#4a8c60" stroke-width="1.5" marker-end="url(#arG)"/>
+  <text x="628" y="228" font-size="9" fill="#4a8c60" text-anchor="middle">借用</text>
+
+  <!-- ==== self-balancing conclusion (blue) ==== -->
+  <rect x="30" y="284" width="880" height="196" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="46" y="308" font-size="12.5" font-weight="600" fill="#1b2a4a">自平衡机制 · 分配越猛，标记越多</text>
+  <text x="46" y="326" font-size="10" fill="#5b7db1">负反馈闭环：分配速率越高 → 债务累积越快 → 被拉去还债标记越多 → 标记速度追上分配速度</text>
+
+  <!-- loop diagram -->
+  <rect x="60" y="352" width="180" height="60" rx="10" fill="#ffffff" stroke="#cfe0f2"/>
+  <text x="150" y="378" font-size="11" font-weight="600" fill="#1b2a4a" text-anchor="middle">分配变猛</text>
+  <text x="150" y="396" font-size="9.5" fill="#5b7db1" text-anchor="middle">gcAssistBytes 快速转负</text>
+
+  <rect x="380" y="352" width="180" height="60" rx="10" fill="#ffffff" stroke="#cfe0f2"/>
+  <text x="470" y="378" font-size="11" font-weight="600" fill="#1b2a4a" text-anchor="middle">被拉去多标记</text>
+  <text x="470" y="396" font-size="9.5" fill="#5b7db1" text-anchor="middle">还债 = 标记等量对象</text>
+
+  <rect x="700" y="352" width="180" height="60" rx="10" fill="#eef7f0" stroke="#bfe0c8"/>
+  <text x="790" y="378" font-size="11" font-weight="600" fill="#1d4a2b" text-anchor="middle">标记追上分配</text>
+  <text x="790" y="396" font-size="9.5" fill="#4a8c60" text-anchor="middle">堆达标前完成 GC</text>
+
+  <line x1="240" y1="382" x2="378" y2="382" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <line x1="560" y1="382" x2="698" y2="382" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <text x="46" y="456" font-size="10" fill="#5b7db1">保证：GC 总能在堆增长到 heapGoal 之前完成标记，防止"分配跑赢标记"导致的堆爆炸与内存失控。</text>
+</svg>

@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="500" viewBox="0 0 1020 500"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+    <marker id="arg" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#5aa06f"/>
+    </marker>
+  </defs>
+  <rect width="1020" height="500" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">向量化 push-based 执行模型 · 算子三面 Source / Operator / Sink，数据被"推"过流水线</text>
+
+  <!-- 算子接口三面 -->
+  <rect x="30" y="50" width="470" height="200" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="48" y="74" font-size="12.5" font-weight="600" fill="#1d1d1f">PhysicalOperator 的三面（physical_operator.hpp）</text>
+
+  <rect x="48" y="90" width="434" height="44" rx="10" fill="#fff7e6" stroke="#f0dcae"/>
+  <text x="64" y="110" font-size="11.5" font-weight="600" fill="#7a4d00">Source · GetData()  :137</text>
+  <text x="64" y="126" font-size="10" fill="#9a7328">产出数据：表扫描 / 聚合结果读出 —— 管道的起点</text>
+
+  <rect x="48" y="142" width="434" height="44" rx="10" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="64" y="162" font-size="11.5" font-weight="600" fill="#1b2a4a">Operator · Execute()  :102</text>
+  <text x="64" y="178" font-size="10" fill="#5b7db1">逐块变换：投影 / 过滤 / 表达式 —— 输入一块、输出一块（可 1:N）</text>
+
+  <rect x="48" y="194" width="434" height="44" rx="10" fill="#eafaf1" stroke="#bce6cd"/>
+  <text x="64" y="214" font-size="11.5" font-weight="600" fill="#0f5132">Sink · Sink() + Finalize  :181</text>
+  <text x="64" y="230" font-size="10" fill="#3f8f66">吸收全部输入后才产出：Hash 表构建 / 聚合 / 排序 —— 管道断点</text>
+
+  <!-- 一条 Pipeline 的推进 -->
+  <rect x="520" y="50" width="470" height="200" rx="14" fill="#f6f6f8" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="538" y="74" font-size="12.5" font-weight="600" fill="#1d1d1f">一条 Pipeline = Source → Operators → Sink</text>
+  <rect x="546" y="96" width="90" height="120" rx="10" fill="#fff7e6" stroke="#f0dcae"/>
+  <text x="591" y="150" font-size="10.5" font-weight="600" fill="#7a4d00" text-anchor="middle">Source</text>
+  <text x="591" y="168" font-size="9" fill="#9a7328" text-anchor="middle">扫描</text>
+  <rect x="656" y="96" width="90" height="120" rx="10" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="701" y="144" font-size="10.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">Operator</text>
+  <text x="701" y="162" font-size="9" fill="#5b7db1" text-anchor="middle">Filter</text>
+  <text x="701" y="176" font-size="9" fill="#5b7db1" text-anchor="middle">Project</text>
+  <rect x="766" y="96" width="90" height="120" rx="10" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="811" y="150" font-size="10.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">Operator</text>
+  <text x="811" y="168" font-size="9" fill="#5b7db1" text-anchor="middle">…</text>
+  <rect x="876" y="96" width="98" height="120" rx="10" fill="#eafaf1" stroke="#bce6cd"/>
+  <text x="925" y="150" font-size="10.5" font-weight="600" fill="#0f5132" text-anchor="middle">Sink</text>
+  <text x="925" y="168" font-size="9" fill="#3f8f66" text-anchor="middle">聚合/构建</text>
+
+  <line x1="636" y1="156" x2="656" y2="156" stroke="#5aa06f" stroke-width="1.6" marker-end="url(#arg)"/>
+  <line x1="746" y1="156" x2="766" y2="156" stroke="#5aa06f" stroke-width="1.6" marker-end="url(#arg)"/>
+  <line x1="856" y1="156" x2="876" y2="156" stroke="#5aa06f" stroke-width="1.6" marker-end="url(#arg)"/>
+  <text x="700" y="236" font-size="10" fill="#0f5132">DataChunk（列批）沿箭头被"推"进下一算子</text>
+
+  <!-- 推进循环 -->
+  <rect x="30" y="268" width="960" height="132" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="48" y="292" font-size="12.5" font-weight="600" fill="#1d1d1f">PipelineExecutor 的推进循环（一个工作线程反复做）</text>
+  <rect x="48" y="308" width="200" height="72" rx="10" fill="#fff7e6" stroke="#f0dcae"/>
+  <text x="148" y="338" font-size="10.5" font-weight="600" fill="#7a4d00" text-anchor="middle">① 向 Source 要一块</text>
+  <text x="148" y="358" font-size="9.5" fill="#9a7328" text-anchor="middle">GetData → 一个 DataChunk</text>
+  <rect x="288" y="308" width="240" height="72" rx="10" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="408" y="332" font-size="10.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">② 依次穿过中间 Operator</text>
+  <text x="408" y="352" font-size="9.5" fill="#5b7db1" text-anchor="middle">Execute 逐块变换</text>
+  <text x="408" y="368" font-size="9.5" fill="#5b7db1" text-anchor="middle">向量化：整列批量算</text>
+  <rect x="568" y="308" width="200" height="72" rx="10" fill="#eafaf1" stroke="#bce6cd"/>
+  <text x="668" y="338" font-size="10.5" font-weight="600" fill="#0f5132" text-anchor="middle">③ 推入 Sink</text>
+  <text x="668" y="358" font-size="9.5" fill="#3f8f66" text-anchor="middle">Sink 累积状态</text>
+  <rect x="808" y="308" width="166" height="72" rx="10" fill="#f6f6f8" stroke="#e2e2e7"/>
+  <text x="891" y="332" font-size="10.5" font-weight="600" fill="#6a6a70" text-anchor="middle">④ Source 取尽</text>
+  <text x="891" y="352" font-size="9.5" fill="#8a8a90" text-anchor="middle">Finalize 收尾</text>
+  <text x="891" y="368" font-size="9.5" fill="#8a8a90" text-anchor="middle">下游管道解锁</text>
+
+  <line x1="248" y1="344" x2="288" y2="344" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="528" y1="344" x2="568" y2="344" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="768" y1="344" x2="808" y2="344" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+
+  <text x="30" y="428" font-size="11" fill="#6a6a70">对照 pull（火山/ClickHouse Processors 上层 pull）：push 模型由 <tspan font-weight="600" fill="#0f5132">数据到达驱动</tspan>下游，天然契合"一次算一整列批"的向量化，且让</text>
+  <text x="30" y="448" font-size="11" fill="#6a6a70">morsel 并行与 pipeline 断点（Sink）自然对齐——每个 Sink 处切开一条新管道，见"morsel 并行与 Pipeline 调度"。</text>
+  <text x="30" y="476" font-size="10.5" fill="#86868b">缓存友好：中间不物化整表，DataChunk 在 CPU cache 内穿过多个算子（EnableCachingOperators 复用块）。</text>
+</svg>

@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="400" viewBox="0 0 1000 400" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1000" height="400" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">页缓存回写：标脏 → 三种触发（周期 / 后台阈值 / 限流）→ wb_workfn 内核线程 → 块层</text>
+
+  <!-- 脏页产生 -->
+  <rect x="30" y="150" width="188" height="92" rx="12" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="124" y="182" font-size="11.5" font-weight="600" fill="#5a3410" text-anchor="middle">write 标脏</text>
+  <text x="124" y="204" font-size="9.5" fill="#93762e" text-anchor="middle">folio_mark_dirty</text>
+  <text x="124" y="219" font-size="9" fill="#93762e" text-anchor="middle">page-writeback.c:2774</text>
+  <text x="124" y="236" font-size="9" fill="#93762e" text-anchor="middle">脏页累积在页缓存</text>
+
+  <!-- 三触发 -->
+  <rect x="248" y="72" width="404" height="74" rx="11" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="266" y="96" font-size="11" font-weight="600" fill="#12402a">① 周期回写</text>
+  <text x="266" y="116" font-size="9.5" fill="#2f6f4f">dirty_writeback_interval = 5s（:103）定时唤醒</text>
+  <text x="266" y="133" font-size="9.5" fill="#2f6f4f">回写驻留超 dirty_expire = 30s（:110）的脏页</text>
+
+  <rect x="248" y="158" width="404" height="74" rx="11" fill="#fff7e6" stroke="#e8cf9a"/>
+  <text x="266" y="182" font-size="11" font-weight="600" fill="#5a3410">② 后台阈值（不阻塞写者）</text>
+  <text x="266" y="202" font-size="9.5" fill="#93762e">脏页占比 &gt; dirty_background_ratio = 10%（:75）</text>
+  <text x="266" y="219" font-size="9.5" fill="#93762e">→ wb_start_background_writeback 唤醒后台（:1841）</text>
+
+  <rect x="248" y="244" width="404" height="74" rx="11" fill="#fbeaea" stroke="#e7c3c3"/>
+  <text x="266" y="268" font-size="11" font-weight="600" fill="#4a1414">③ 限流（阻塞写者）</text>
+  <text x="266" y="288" font-size="9.5" fill="#7a2a2a">脏页占比 &gt; vm_dirty_ratio = 20%（:92）</text>
+  <text x="266" y="305" font-size="9.5" fill="#7a2a2a">→ balance_dirty_pages 写者自身限速/回写（:2111）</text>
+
+  <!-- wb_workfn -->
+  <rect x="682" y="150" width="288" height="120" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="826" y="176" font-size="11.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">wb_workfn 后台回写</text>
+  <text x="826" y="197" font-size="9.5" fill="#5b7db1" text-anchor="middle">fs-writeback.c:2411（每 bdi 一个）</text>
+  <text x="826" y="216" font-size="9.5" fill="#5b7db1" text-anchor="middle">→ wb_do_writeback(:2380)</text>
+  <text x="826" y="233" font-size="9.5" fill="#5b7db1" text-anchor="middle">→ wb_writeback(:2184)</text>
+  <text x="826" y="255" font-size="9.5" fill="#5b7db1" text-anchor="middle">批量提交脏页 → 块层</text>
+
+  <!-- 箭头 脏页→三触发 -->
+  <g stroke="#c7c7cc" stroke-width="1.5" fill="none">
+    <path d="M218,180 L232,180 L232,109 L248,109" marker-end="url(#ar)"/>
+    <path d="M218,196 L248,196" marker-end="url(#ar)"/>
+    <path d="M218,212 L232,212 L232,281 L248,281" marker-end="url(#ar)"/>
+  </g>
+  <!-- 三触发→wb_workfn -->
+  <g stroke="#c7c7cc" stroke-width="1.5" fill="none">
+    <path d="M652,109 L667,109 L667,185 L682,185" marker-end="url(#ar)"/>
+    <path d="M652,195 L667,195 L667,205 L682,205" marker-end="url(#ar)"/>
+    <path d="M652,281 L667,281 L667,235 L682,235" marker-end="url(#ar)"/>
+  </g>
+
+  <!-- 块层衔接 -->
+  <rect x="700" y="300" width="252" height="40" rx="10" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="826" y="325" font-size="10.5" font-weight="600" fill="#5a3410" text-anchor="middle">块层 blk-mq 下发磁盘（见 块层 主线）</text>
+  <path d="M826,270 L826,300" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <text x="360" y="360" font-size="10" fill="#6e6e73" text-anchor="middle">要点：write 通常只标脏即返回（异步），故"write 返回 ≠ 落盘"；真正落盘靠回写线程或 fsync/sync 强制。</text>
+</svg>

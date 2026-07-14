@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="500" viewBox="0 0 1000 500" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1000" height="500" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">复制握手与全量同步（syncWithMaster 状态机，replication.c:3081,1188）</text>
+  <text x="30" y="49" font-size="10.5" fill="#a1a1a6">从库 REPLICAOF 发起；PSYNC 决定全量还是部分</text>
+
+  <!-- handshake sequence -->
+  <text x="220" y="86" font-size="11" font-weight="700" fill="#1b2a4a" text-anchor="middle">从库 Replica</text>
+  <text x="780" y="86" font-size="11" font-weight="700" fill="#7a5a1e" text-anchor="middle">主库 Master</text>
+  <line x1="220" y1="96" x2="220" y2="430" stroke="#bcd0ec" stroke-width="2"/>
+  <line x1="780" y1="96" x2="780" y2="430" stroke="#f0d9b5" stroke-width="2"/>
+
+  <g font-size="9.5">
+    <text x="230" y="118" fill="#5b7db1">① CONNECTING → 发 PING</text>
+    <line x1="220" y1="124" x2="778" y2="124" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+    <text x="770" y="146" fill="#b08535" text-anchor="end">+PONG</text>
+    <line x1="780" y1="152" x2="222" y2="152" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+    <text x="230" y="174" fill="#5b7db1">② REPLCONF listening-port / capa eof psync2</text>
+    <line x1="220" y1="180" x2="778" y2="180" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+    <text x="770" y="202" fill="#b08535" text-anchor="end">+OK（认证 / 能力协商）</text>
+    <line x1="780" y1="208" x2="222" y2="208" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+    <text x="230" y="230" fill="#5b7db1">③ PSYNC ? -1（首次:未知 replid）</text>
+    <line x1="220" y1="236" x2="778" y2="236" stroke="#4f9dff" stroke-width="1.5" marker-end="url(#ar)"/>
+    <text x="770" y="258" fill="#c02a56" text-anchor="end">+FULLRESYNC replid offset</text>
+    <line x1="780" y1="264" x2="222" y2="264" stroke="#f43f7e" stroke-width="1.5" marker-end="url(#ar)"/>
+  </g>
+
+  <!-- full resync -->
+  <rect x="560" y="284" width="420" height="70" rx="9" fill="#fdf3e5" stroke="#f0d9b5" filter="url(#soft)"/>
+  <text x="580" y="306" font-size="10" font-weight="600" fill="#7a5a1e">主库 fork 生成 RDB</text>
+  <text x="580" y="326" font-size="9" fill="#b08535">磁盘方式：BGSAVE 写文件再发</text>
+  <text x="580" y="342" font-size="9" fill="#b08535">无盘方式：RDB 流直写从库 socket（repl-diskless-sync）</text>
+  <line x1="780" y1="290" x2="222" y2="310" stroke="#f0d9b5" stroke-width="2" marker-end="url(#ar)"/>
+  <text x="490" y="300" font-size="9" fill="#a1a1a6" text-anchor="middle">RDB 快照</text>
+
+  <rect x="60" y="284" width="420" height="70" rx="9" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="80" y="306" font-size="10" font-weight="600" fill="#1b2a4a">从库加载 RDB</text>
+  <text x="80" y="326" font-size="9" fill="#5b7db1">清空旧数据 → 载入 RDB → 建立全量副本</text>
+  <text x="80" y="342" font-size="9" fill="#8ba7cc">状态 WAIT_BGSAVE → ONLINE</text>
+
+  <!-- ongoing stream -->
+  <g font-size="9.5">
+    <text x="230" y="382" fill="#5b7db1">④ 之后：持续接收命令流（增量）</text>
+    <line x1="780" y1="388" x2="222" y2="388" stroke="#8b6cff" stroke-width="1.8" marker-end="url(#ar)"/>
+    <text x="500" y="382" fill="#5a2a82" text-anchor="middle" font-size="8.5">SET / DEL / …（异步，主库不等 ACK）</text>
+  </g>
+
+  <rect x="30" y="410" width="940" height="30" rx="8" fill="#f7f7f9" stroke="#ececef"/>
+  <text x="500" y="429" font-size="10" fill="#4a4a4f" text-anchor="middle">全量同步 = 握手 → fork RDB → 从库加载 → 转入持续命令流复制;首次或缺口过大时走此路径</text>
+
+  <rect x="30" y="452" width="940" height="34" rx="8" fill="#eafaf1" stroke="#b8e6cd"/>
+  <text x="500" y="473" font-size="10" fill="#1c6b45" text-anchor="middle">无盘同步 repl-diskless-sync-delay=5s：等几秒攒多个从库，一份 RDB 流同时发给它们，省重复 fork</text>
+</svg>

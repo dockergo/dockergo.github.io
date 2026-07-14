@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="450" viewBox="0 0 1020 450"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1020" height="450" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">隔离级别与 VACUUM · 快照粒度 + 死元组回收（xact.h / vacuumlazy.c）</text>
+
+  <!-- 隔离级别 -->
+  <rect x="30" y="56" width="470" height="200" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="48" y="80" font-size="12.5" font-weight="600" fill="#1b2a4a">三种隔离级别（快照的粒度不同）</text>
+  <rect x="48" y="96" width="434" height="44" rx="9" fill="#ffffff" stroke="#bcd0ec"/><text x="64" y="116" font-size="9.5" font-weight="600" fill="#1b2a4a">Read Committed（默认）</text><text x="64" y="132" font-size="8.5" fill="#5b7db1">每条语句取新快照——看得到期间新提交</text>
+  <rect x="48" y="148" width="434" height="44" rx="9" fill="#ffffff" stroke="#bcd0ec"/><text x="64" y="168" font-size="9.5" font-weight="600" fill="#1b2a4a">Repeatable Read（快照隔离）</text><text x="64" y="184" font-size="8.5" fill="#5b7db1">事务级快照——全程同一视图，防不可重复读</text>
+  <rect x="48" y="200" width="434" height="44" rx="9" fill="#ffffff" stroke="#bcd0ec"/><text x="64" y="220" font-size="9.5" font-weight="600" fill="#1b2a4a">Serializable（SSI）</text><text x="64" y="236" font-size="8.5" fill="#5b7db1">可串行化快照隔离，检测读写依赖环 → 冲突回滚</text>
+
+  <!-- 为什么需要 VACUUM -->
+  <rect x="520" y="56" width="470" height="200" rx="14" fill="#fbeaea" stroke="#f0cccc" filter="url(#soft)"/>
+  <text x="538" y="80" font-size="12.5" font-weight="600" fill="#7d1f1f">MVCC 的代价：死元组堆积</text>
+  <text x="538" y="104" font-size="9.5" fill="#b06a6a">UPDATE/DELETE 留下旧版本；一旦没有快照</text>
+  <text x="538" y="122" font-size="9.5" fill="#b06a6a">还需要它，就成"死元组"——占空间但不可见。</text>
+  <rect x="538" y="136" width="434" height="44" rx="9" fill="#ffffff" stroke="#f0cccc"/><text x="554" y="156" font-size="9" fill="#7d1f1f">不回收 → 表/索引膨胀（bloat）→ 扫描变慢</text><text x="554" y="172" font-size="8.5" fill="#b06a6a">磁盘涨、cache 命中降</text>
+  <rect x="538" y="188" width="434" height="56" rx="9" fill="#fdf2f2" stroke="#f0cccc"/><text x="554" y="208" font-size="9" fill="#7d1f1f">XID 回卷风险：xid 是 32 位、会回绕</text><text x="554" y="226" font-size="8.5" fill="#b06a6a">老 tuple 不"冻结"会在回卷后误判可见性</text><text x="554" y="240" font-size="8.5" fill="#b06a6a">→ 数据库强制停写保护</text>
+
+  <!-- VACUUM -->
+  <rect x="30" y="272" width="960" height="160" rx="14" fill="#eafaf1" stroke="#bce6cd" filter="url(#soft)"/>
+  <text x="48" y="296" font-size="12.5" font-weight="600" fill="#0f5132">VACUUM（autovacuum 后台自动，vacuumlazy.c）</text>
+  <rect x="48" y="312" width="220" height="70" rx="10" fill="#ffffff" stroke="#bce6cd"/><text x="158" y="336" font-size="10" font-weight="600" fill="#0f5132" text-anchor="middle">① 回收死元组</text><text x="158" y="356" font-size="8.5" fill="#3f8f66" text-anchor="middle">清页内死 tuple + 死索引项</text><text x="158" y="372" font-size="8.5" fill="#3f8f66" text-anchor="middle">空间可复用（非缩文件）</text>
+  <rect x="284" y="312" width="220" height="70" rx="10" fill="#ffffff" stroke="#bce6cd"/><text x="394" y="336" font-size="10" font-weight="600" fill="#0f5132" text-anchor="middle">② 冻结老事务</text><text x="394" y="356" font-size="8.5" fill="#3f8f66" text-anchor="middle">把足够老的 xmin 标记 frozen</text><text x="394" y="372" font-size="8.5" fill="#3f8f66" text-anchor="middle">防 XID 回卷</text>
+  <rect x="520" y="312" width="220" height="70" rx="10" fill="#ffffff" stroke="#bce6cd"/><text x="630" y="336" font-size="10" font-weight="600" fill="#0f5132" text-anchor="middle">③ 更新 FSM/VM + 统计</text><text x="630" y="356" font-size="8.5" fill="#3f8f66" text-anchor="middle">维护空闲/可见性图</text><text x="630" y="372" font-size="8.5" fill="#3f8f66" text-anchor="middle">顺带 ANALYZE</text>
+  <rect x="756" y="312" width="214" height="70" rx="10" fill="#fff7e6" stroke="#f0dcae"/><text x="863" y="336" font-size="10" font-weight="600" fill="#7a4d00" text-anchor="middle">VACUUM FULL（重写）</text><text x="863" y="356" font-size="8.5" fill="#9a7328" text-anchor="middle">真正缩小文件但锁表</text><text x="863" y="372" font-size="8.5" fill="#9a7328" text-anchor="middle">谨慎用</text>
+  <text x="48" y="412" font-size="9.5" fill="#5aa06f">autovacuum 按死元组比例自动触发（autovacuum_vacuum_scale_factor 等）——关掉它是生产大忌</text>
+</svg>

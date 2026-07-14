@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="600" viewBox="0 0 1080 600" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="1080" height="600" fill="#fbfbfd"/>
+  <text x="40" y="40" font-size="16" font-weight="600" fill="#1d1d1f">冷热分离部署 · Hot-Cold Tiering</text>
+  <text x="40" y="60" font-size="11.5" fill="#86868b">正交策略(可叠加于一体/分离):按数据生命周期把冷数据下沉对象存储,热数据留本地盘</text>
+
+  <!-- ① 配置层 -->
+  <rect x="40" y="80" width="1000" height="80" rx="16" fill="#f6f8fc" stroke="#e6ecf4"/>
+  <text x="60" y="104" font-size="13" font-weight="600" fill="#1d1d1f">① 配置层</text>
+  <g text-anchor="middle" font-size="11.5" fill="#1d5fb8">
+    <rect x="90" y="114" width="270" height="36" rx="10" fill="#ffffff" stroke="#ececef" filter="url(#soft)"/><text x="225" y="130">CREATE RESOURCE</text><text x="225" y="145" font-size="9.5" fill="#86868b">type=s3/hdfs 指向远程</text>
+    <rect x="405" y="114" width="270" height="36" rx="10" fill="#ffffff" stroke="#ececef" filter="url(#soft)"/><text x="540" y="130">CREATE STORAGE POLICY</text><text x="540" y="145" font-size="9.5" fill="#86868b">绑 Resource + cooldown_ttl</text>
+    <rect x="720" y="114" width="270" height="36" rx="10" fill="#ffffff" stroke="#ececef" filter="url(#soft)"/><text x="855" y="130">建表设 storage_policy</text><text x="855" y="145" font-size="9.5" fill="#86868b">分区/表级绑定</text>
+  </g>
+  <line x1="360" y1="132" x2="404" y2="132" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+  <line x1="675" y1="132" x2="719" y2="132" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+  <line x1="855" y1="160" x2="855" y2="184" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- ② 热数据 -->
+  <rect x="620" y="184" width="420" height="60" rx="14" fill="#fdf1e7" stroke="#f2d9c2" filter="url(#soft)"/>
+  <text x="830" y="210" font-size="13" font-weight="600" fill="#8a3a12" text-anchor="middle">② 热数据(本地磁盘)· 新写 Rowset</text>
+  <text x="830" y="230" font-size="10.5" fill="#a86a3a" text-anchor="middle">本地 Segment · rs-&gt;is_local()=true</text>
+  <line x1="620" y1="214" x2="470" y2="214" stroke="#c7c7cc" stroke-width="1.6" marker-end="url(#ar)"/>
+  <text x="545" y="206" font-size="10" fill="#a1a1a6" text-anchor="middle">达 cooldown_ttl</text>
+
+  <!-- ③ 冷却过程 -->
+  <rect x="40" y="184" width="560" height="228" rx="16" fill="#fbf7ef" stroke="#efe4cf"/>
+  <text x="60" y="208" font-size="13" font-weight="600" fill="#1d1d1f">③ 冷却过程 · BE 后台</text>
+  <g font-size="11.5" fill="#8a5a12">
+    <rect x="60" y="220" width="520" height="38" rx="10" fill="#ffffff" stroke="#ececef" filter="url(#soft)"/><text x="320" y="238" text-anchor="middle" font-weight="600">need_cooldown()</text><text x="320" y="252" font-size="9.5" fill="#86868b" text-anchor="middle">newest_write_ts + ttl &lt; now</text>
+    <rect x="60" y="264" width="520" height="38" rx="10" fill="#ffffff" stroke="#ececef" filter="url(#soft)"/><text x="320" y="282" text-anchor="middle" font-weight="600">Tablet::cooldown()</text><text x="320" y="296" font-size="9.5" fill="#86868b" text-anchor="middle">仅 cooldown_replica 上传 · 余副本 follow</text>
+    <rect x="60" y="308" width="520" height="38" rx="10" fill="#ffffff" stroke="#ececef" filter="url(#soft)"/><text x="320" y="326" text-anchor="middle" font-weight="600">upload_to(resource)</text><text x="320" y="340" font-size="9.5" fill="#86868b" text-anchor="middle">传 Segment · 生成新 RowsetMeta</text>
+    <rect x="60" y="352" width="520" height="38" rx="10" fill="#ffffff" stroke="#ececef" filter="url(#soft)"/><text x="320" y="370" text-anchor="middle" font-weight="600">write_cooldown_meta()</text><text x="320" y="384" font-size="9.5" fill="#86868b" text-anchor="middle">传 meta 供其他副本同步</text>
+  </g>
+  <g stroke="#c7c7cc" stroke-width="1.4" fill="none">
+    <line x1="320" y1="258" x2="320" y2="263" marker-end="url(#ar)"/>
+    <line x1="320" y1="302" x2="320" y2="307" marker-end="url(#ar)"/>
+    <line x1="320" y1="346" x2="320" y2="351" marker-end="url(#ar)"/>
+  </g>
+  <line x1="320" y1="390" x2="320" y2="440" stroke="#c7c7cc" stroke-width="1.6" marker-end="url(#ar)"/>
+
+  <!-- ④ 冷数据 -->
+  <rect x="40" y="440" width="620" height="60" rx="14" fill="#f2f4f7" stroke="#dbe0e8" filter="url(#soft)"/>
+  <text x="350" y="466" font-size="13" font-weight="600" fill="#3a4a63" text-anchor="middle">④ 冷数据(远程)· S3 / HDFS</text>
+  <text x="350" y="486" font-size="10.5" fill="#6a7488" text-anchor="middle">is_local()=false · 直读无 FileCache</text>
+  <line x1="660" y1="470" x2="700" y2="470" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- ⑤ 冷数据 Compaction -->
+  <rect x="700" y="440" width="340" height="60" rx="14" fill="#f2f4f7" stroke="#dbe0e8" filter="url(#soft)"/>
+  <text x="870" y="466" font-size="12.5" font-weight="600" fill="#3a4a63" text-anchor="middle">⑤ cold_compaction</text>
+  <text x="870" y="486" font-size="10" fill="#6a7488" text-anchor="middle">远程 Rowset 合并回写 · 持 lock</text>
+
+  <text x="60" y="540" font-size="11" fill="#86868b">说明:冷热分离是可叠加的分层策略,不是与存算一体/分离平级的部署模式 —— 上层计算/优化逻辑不变,仅数据位置随生命周期迁移。</text>
+</svg>

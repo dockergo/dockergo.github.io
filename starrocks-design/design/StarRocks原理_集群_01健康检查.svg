@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="520" viewBox="0 0 1080 520" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="520" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">StarRocks Tablet 健康检查 · TabletChecker 周期扫描算健康度与优先级</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">健康度是可观测量,优先级是动作排序依据——自愈闭环的 sense 环节;不健康 Tablet 交调度器修复</text>
+
+  <!-- phase labels -->
+  <text x="155" y="76" font-size="9.5" font-weight="700" text-anchor="middle" fill="#86868b">① sense · 检查</text>
+  <text x="545" y="76" font-size="9.5" font-weight="700" text-anchor="middle" fill="#86868b">② compare · 算健康度 + 优先级</text>
+  <text x="930" y="76" font-size="9.5" font-weight="700" text-anchor="middle" fill="#86868b">③ act · 排队修复</text>
+
+  <!-- TabletChecker card -->
+  <rect x="30" y="90" width="250" height="210" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <g text-anchor="middle">
+    <text x="155" y="122" font-size="12" font-weight="700" fill="#1b2a4a">TabletChecker</text>
+    <text x="155" y="140" font-size="8" fill="#5b7db1">extends LeaderDaemon</text>
+    <text x="155" y="156" font-size="8" fill="#5b7db1">clone/TabletChecker.java:92</text>
+    <text x="155" y="188" font-size="9.5" fill="#1b2a4a">周期扫描所有 Tablet</text>
+    <text x="155" y="212" font-size="9" fill="#1b2a4a">调用 getTabletHealthStatus</text>
+    <text x="155" y="230" font-size="9" fill="#1b2a4a">WithPriority()</text>
+    <text x="155" y="262" font-size="8.5" fill="#5b7db1">→ 得 (TabletHealthStatus,</text>
+    <text x="155" y="280" font-size="8.5" fill="#5b7db1">Priority) 二元组</text>
+  </g>
+
+  <!-- health status container -->
+  <rect x="300" y="90" width="490" height="210" rx="13" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="316" y="112" font-size="9.5" font-weight="700" fill="#1d1d1f">健康状态枚举 TabletHealthStatus(6 态)</text>
+  <text x="316" y="128" font-size="8" fill="#86868b">绿 = 健康无需动作;红 / 琥珀 = 需修复</text>
+  <g text-anchor="middle">
+    <rect x="316" y="140" width="150" height="64" rx="9" fill="#eafaf1" stroke="#bfe0cd"/><text x="391" y="168" font-size="8.5" font-weight="600" fill="#12402a">HEALTHY</text><text x="391" y="186" font-size="8" fill="#2f6f4f">健康,无需动作</text>
+    <rect x="474" y="140" width="150" height="64" rx="9" fill="#fbeaea" stroke="#e6b8b8"/><text x="549" y="168" font-size="8" font-weight="600" fill="#8a2a2a">REPLICA_MISSING</text><text x="549" y="186" font-size="8" fill="#a5453a">副本缺失</text>
+    <rect x="632" y="140" width="150" height="64" rx="9" fill="#fff7e6" stroke="#e8cf9a"/><text x="707" y="168" font-size="8" font-weight="600" fill="#5a3410">VERSION_INCOMPLETE</text><text x="707" y="186" font-size="8" fill="#93762e">版本不全</text>
+    <rect x="316" y="212" width="150" height="64" rx="9" fill="#fff7e6" stroke="#e8cf9a"/><text x="391" y="240" font-size="8" font-weight="600" fill="#5a3410">LOCATION_MISMATCH</text><text x="391" y="258" font-size="8" fill="#93762e">位置不符</text>
+    <rect x="474" y="212" width="150" height="64" rx="9" fill="#fff7e6" stroke="#e8cf9a"/><text x="549" y="240" font-size="8" font-weight="600" fill="#5a3410">FORCE_REDUNDANT</text><text x="549" y="258" font-size="8" fill="#93762e">强制冗余</text>
+    <rect x="632" y="212" width="150" height="64" rx="9" fill="#fbeaea" stroke="#e6b8b8"/><text x="707" y="240" font-size="8" font-weight="600" fill="#8a2a2a">NEED_FURTHER_REPAIR</text><text x="707" y="258" font-size="8" fill="#a5453a">需进一步修复</text>
+  </g>
+
+  <!-- TabletSchedCtx card -->
+  <rect x="810" y="90" width="240" height="210" rx="13" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <g text-anchor="middle">
+    <text x="930" y="122" font-size="11.5" font-weight="700" fill="#5a3d78">TabletSchedCtx</text>
+    <text x="930" y="140" font-size="8" fill="#8d6bb0">clone/TabletChecker.java:853</text>
+    <text x="930" y="174" font-size="9.5" fill="#5a3d78">不健康 Tablet 打包为</text>
+    <text x="930" y="192" font-size="9.5" fill="#5a3d78">待调度上下文</text>
+    <text x="930" y="210" font-size="8" fill="#8d6bb0">(一个 Tablet 一个 ctx)</text>
+    <text x="930" y="242" font-size="9.5" fill="#5a3d78">→ 交 TabletScheduler</text>
+    <text x="930" y="260" font-size="9.5" fill="#5a3d78">排队克隆修复</text>
+    <text x="930" y="284" font-size="8" fill="#8d6bb0">ADMIN REPAIR → VERY_HIGH (:179)</text>
+  </g>
+
+  <!-- arrows -->
+  <line x1="281" y1="195" x2="299" y2="195" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <line x1="791" y1="195" x2="809" y2="195" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- feedback loop strip -->
+  <rect x="30" y="318" width="1020" height="178" rx="13" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="46" y="342" font-size="11" font-weight="700" fill="#1d1d1f">反馈即控制 · 自愈闭环</text>
+  <g text-anchor="middle">
+    <rect x="46" y="356" width="300" height="62" rx="10" fill="#eef3fb" stroke="#bcd0ec"/><text x="196" y="382" font-size="9.5" font-weight="600" fill="#1b2a4a">① sense · 检查</text><text x="196" y="401" font-size="8" fill="#5b7db1">TabletChecker 周期采集副本实况</text>
+    <rect x="386" y="356" width="300" height="62" rx="10" fill="#eafaf1" stroke="#bfe0cd"/><text x="536" y="382" font-size="9.5" font-weight="600" fill="#12402a">② compare · 算健康度 + 优先级</text><text x="536" y="401" font-size="8" fill="#2f6f4f">对比期望副本数 / 版本,定 (状态,优先级)</text>
+    <rect x="726" y="356" width="300" height="62" rx="10" fill="#fff7e6" stroke="#e8cf9a"/><text x="876" y="382" font-size="9.5" font-weight="600" fill="#5a3410">③ act · 排队修复</text><text x="876" y="401" font-size="8" fill="#93762e">TabletSchedCtx 入队 → 发 CloneTask 补副本</text>
+  </g>
+  <line x1="346" y1="387" x2="384" y2="387" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+  <line x1="686" y1="387" x2="724" y2="387" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+  <path d="M876,418 L876,438 L196,438 L196,420" fill="none" stroke="#c7c7cc" stroke-width="1.3" stroke-dasharray="4 3" marker-end="url(#ar)"/>
+  <text x="536" y="454" font-size="8.5" text-anchor="middle" fill="#86868b">闭环:修复后下一轮重扫,健康度误差趋零</text>
+  <text x="46" y="480" font-size="9" fill="#6e6e73">· 健康度是可观测量,优先级是动作排序依据;缺副本(REPLICA_MISSING)比分布不均更急,优先级更高。</text>
+</svg>

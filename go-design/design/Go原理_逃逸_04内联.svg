@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="940" height="540" viewBox="0 0 940 540" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="940" height="540" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">内联 · 预算成本模型与 mid-stack inlining</text>
+
+  <!-- cost model (blue) -->
+  <rect x="30" y="50" width="470" height="242" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="46" y="74" font-size="12.5" font-weight="600" fill="#1b2a4a">CanInline · 预算成本模型 (inl.go:236)</text>
+  <text x="46" y="92" font-size="10" fill="#5b7db1">hairyVisitor 遍历函数体累加成本 (inl.go:441)</text>
+
+  <!-- budget bar -->
+  <text x="46" y="120" font-size="10.5" fill="#3a3a3c">成本累加 →</text>
+  <rect x="46" y="128" width="424" height="26" rx="7" fill="#ffffff" stroke="#cfe0f2"/>
+  <rect x="46" y="128" width="300" height="26" rx="7" fill="#eef7f0" stroke="#bfe0c8"/>
+  <line x1="346" y1="120" x2="346" y2="164" stroke="#7a1f1f" stroke-width="1.5" stroke-dasharray="3 3"/>
+  <text x="196" y="145" font-size="10.5" font-weight="600" fill="#1d4a2b" text-anchor="middle">可内联区间</text>
+  <text x="410" y="145" font-size="10.5" font-weight="600" fill="#b15b5b" text-anchor="middle">超限拒绝</text>
+  <text x="346" y="176" font-size="10" font-weight="600" fill="#7a1f1f" text-anchor="middle">inlineMaxBudget = 80 (inl.go:48)</text>
+
+  <rect x="46" y="192" width="424" height="34" rx="9" fill="#fdf6ec" stroke="#f0dcaf"/>
+  <text x="60" y="213" font-size="10.5" fill="#6b4e16">含调用的函数成本更高：+ inlineExtraCallCost = 57</text>
+
+  <rect x="46" y="234" width="424" height="44" rx="9" fill="#ffffff" stroke="#cfe0f2"/>
+  <text x="60" y="254" font-size="10.5" fill="#3a3a3c">超预算 / 含 recover / 某些 defer·闭包 / //go:noinline</text>
+  <text x="60" y="271" font-size="10.5" fill="#3a3a3c">→ 不可内联</text>
+
+  <!-- mid-stack inlining (green) -->
+  <rect x="516" y="50" width="394" height="242" rx="13" fill="#eef7f0" stroke="#bfe0c8" filter="url(#soft)"/>
+  <text x="532" y="74" font-size="12.5" font-weight="600" fill="#1d4a2b">mid-stack inlining (inl.go:554)</text>
+  <text x="532" y="92" font-size="10" fill="#4a8c60">可内联"含函数调用的非叶函数"，不只叶子</text>
+
+  <!-- call chain -->
+  <rect x="536" y="112" width="100" height="40" rx="9" fill="#ffffff" stroke="#bfe0c8"/>
+  <text x="586" y="136" font-size="10.5" fill="#1d4a2b" text-anchor="middle">A（叶）</text>
+  <line x1="636" y1="132" x2="672" y2="132" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <rect x="674" y="112" width="100" height="40" rx="9" fill="#eef7f0" stroke="#bfe0c8"/>
+  <text x="724" y="130" font-size="10.5" font-weight="600" fill="#1d4a2b" text-anchor="middle">B（含调用）</text>
+  <text x="724" y="145" font-size="9" fill="#4a8c60" text-anchor="middle">可被内联</text>
+  <line x1="774" y1="132" x2="810" y2="132" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <rect x="812" y="112" width="82" height="40" rx="9" fill="#ffffff" stroke="#bfe0c8"/>
+  <text x="853" y="136" font-size="10.5" fill="#1d4a2b" text-anchor="middle">C</text>
+
+  <rect x="536" y="168" width="358" height="48" rx="9" fill="#fdf6ec" stroke="#f0dcaf"/>
+  <text x="552" y="189" font-size="10.5" font-weight="600" fill="#6b4e16">PGO 热点：inlineHotMaxBudget = 2000</text>
+  <text x="552" y="207" font-size="10" fill="#a9822f">有剖析数据时，热路径预算大幅提高，更激进内联</text>
+
+  <rect x="536" y="224" width="358" height="52" rx="9" fill="#ffffff" stroke="#bfe0c8"/>
+  <text x="552" y="245" font-size="10.5" fill="#1d4a2b">好处：省调用/返回开销，并把被调体暴露给</text>
+  <text x="552" y="263" font-size="10.5" fill="#1d4a2b">后续 SSA pass 做统一优化</text>
+
+  <!-- interleaved (purple) -->
+  <rect x="30" y="310" width="880" height="130" rx="13" fill="#f5f0fb" stroke="#ddcdf0" filter="url(#soft)"/>
+  <text x="46" y="334" font-size="12.5" font-weight="600" fill="#3d2a5a">交织去虚拟化 + 内联 · DevirtualizeAndInlinePackage (interleaved.go:22)</text>
+
+  <rect x="46" y="352" width="230" height="70" rx="10" fill="#ffffff" stroke="#ddcdf0"/>
+  <text x="161" y="378" font-size="10.5" fill="#3d2a5a" text-anchor="middle">接口方法调用</text>
+  <text x="161" y="398" font-size="9.5" fill="#7d5bb1" text-anchor="middle">i.M() · 动态派发</text>
+  <line x1="276" y1="387" x2="320" y2="387" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <text x="298" y="379" font-size="9" fill="#8e8e93" text-anchor="middle">去虚拟化</text>
+
+  <rect x="322" y="352" width="230" height="70" rx="10" fill="#ffffff" stroke="#ddcdf0"/>
+  <text x="437" y="378" font-size="10.5" fill="#3d2a5a" text-anchor="middle">具体类型直接调用</text>
+  <text x="437" y="398" font-size="9.5" fill="#7d5bb1" text-anchor="middle">T.M() · 静态确定</text>
+  <line x1="552" y1="387" x2="596" y2="387" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <text x="574" y="379" font-size="9" fill="#8e8e93" text-anchor="middle">又可内联</text>
+
+  <rect x="598" y="352" width="296" height="70" rx="10" fill="#eef7f0" stroke="#bfe0c8"/>
+  <text x="746" y="378" font-size="10.5" font-weight="600" fill="#1d4a2b" text-anchor="middle">内联展开 → 交替进行放大彼此</text>
+  <text x="746" y="398" font-size="9.5" fill="#4a8c60" text-anchor="middle">去虚拟化 ↔ 内联 循环增益</text>
+
+  <!-- anchor bar -->
+  <rect x="30" y="458" width="880" height="60" rx="12" fill="#f6f6f7" stroke="#e2e2e7"/>
+  <text x="46" y="482" font-size="10.5" fill="#6e6e73">锚点：CanInline inl.go:236 · inlineMaxBudget=80 inl.go:48 · mid-stack inl.go:554 · hairyVisitor inl.go:441</text>
+  <text x="46" y="503" font-size="10.5" fill="#6e6e73">inlineHotMaxBudget=2000 inl.go:85 · 交织去虚拟化 interleaved.go:22</text>
+</svg>

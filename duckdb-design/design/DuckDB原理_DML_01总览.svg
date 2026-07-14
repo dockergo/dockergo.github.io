@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="420" viewBox="0 0 1020 420"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1020" height="420" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">DML 总览 · 写入先入事务本地空间，提交才对外可见（INSERT / UPDATE / DELETE）</text>
+
+  <!-- 三种语句 -->
+  <rect x="30" y="52" width="290" height="120" rx="12" fill="#f4eefb" stroke="#d9c9ef"/>
+  <text x="175" y="76" font-size="12" font-weight="600" fill="#3c1361" text-anchor="middle">INSERT</text>
+  <text x="175" y="98" font-size="10" fill="#7a5aa8" text-anchor="middle">新行 → 事务本地存储</text>
+  <text x="175" y="116" font-size="10" fill="#7a5aa8" text-anchor="middle">大批量经 OptimisticDataWriter</text>
+  <text x="175" y="134" font-size="10" fill="#7a5aa8" text-anchor="middle">预写磁盘，提交时并入表</text>
+  <text x="175" y="156" font-size="9" fill="#a58fc9" text-anchor="middle">data_table.cpp:982/1007/1039</text>
+
+  <rect x="360" y="52" width="290" height="120" rx="12" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="505" y="76" font-size="12" font-weight="600" fill="#1b2a4a" text-anchor="middle">UPDATE</text>
+  <text x="505" y="98" font-size="10" fill="#5b7db1" text-anchor="middle">旧值存入 UpdateInfo 版本链</text>
+  <text x="505" y="116" font-size="10" fill="#5b7db1" text-anchor="middle">新值就地写；其他快照仍读旧值</text>
+  <text x="505" y="134" font-size="10" fill="#5b7db1" text-anchor="middle">UpdateSegment 按列管理</text>
+  <text x="505" y="156" font-size="9" fill="#8fa9cf" text-anchor="middle">data_table.cpp:1721</text>
+
+  <rect x="690" y="52" width="300" height="120" rx="12" fill="#fbeaea" stroke="#f0cccc"/>
+  <text x="840" y="76" font-size="12" font-weight="600" fill="#7d1f1f" text-anchor="middle">DELETE</text>
+  <text x="840" y="98" font-size="10" fill="#b06a6a" text-anchor="middle">打删除标记（ChunkInfo）</text>
+  <text x="840" y="116" font-size="10" fill="#b06a6a" text-anchor="middle">记本事务 id，不物理擦除</text>
+  <text x="840" y="134" font-size="10" fill="#b06a6a" text-anchor="middle">RowVersionManager 管可见性</text>
+  <text x="840" y="156" font-size="9" fill="#c99" text-anchor="middle">data_table.cpp:1569</text>
+
+  <!-- 提交管线 -->
+  <rect x="30" y="196" width="960" height="90" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="48" y="220" font-size="12.5" font-weight="600" fill="#1d1d1f">提交（COMMIT）时统一收口</text>
+  <rect x="48" y="234" width="220" height="40" rx="9" fill="#eafaf1" stroke="#bce6cd"/><text x="158" y="259" font-size="10.5" fill="#0f5132" text-anchor="middle">① 定 commit_id → 版本可见</text>
+  <rect x="288" y="234" width="220" height="40" rx="9" fill="#fff7e6" stroke="#f0dcae"/><text x="398" y="259" font-size="10.5" fill="#7a4d00" text-anchor="middle">② 变更写 WAL（持久）</text>
+  <rect x="528" y="234" width="220" height="40" rx="9" fill="#eef3fb" stroke="#bcd0ec"/><text x="638" y="259" font-size="10.5" fill="#1b2a4a" text-anchor="middle">③ 本地行并入 RowGroup</text>
+  <rect x="768" y="234" width="206" height="40" rx="9" fill="#f6f6f8" stroke="#e2e2e7"/><text x="871" y="259" font-size="10.5" fill="#6a6a70" text-anchor="middle">④ 更新 ART 索引</text>
+  <line x1="268" y1="254" x2="288" y2="254" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="508" y1="254" x2="528" y2="254" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="748" y1="254" x2="768" y2="254" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+
+  <!-- 后台 checkpoint -->
+  <rect x="30" y="308" width="960" height="90" rx="14" fill="#fff7e6" stroke="#f0dcae" filter="url(#soft)"/>
+  <text x="48" y="332" font-size="12.5" font-weight="600" fill="#7a4d00">后台 · WAL 达阈值自动 Checkpoint（checkpoint_wal_size 默认 16MB，config.hpp:82）</text>
+  <text x="48" y="358" font-size="10.5" fill="#9a7328">把 WAL 里的变更合并进单文件的列存结构 → 截断 WAL → 加快重启回放。也可显式 CHECKPOINT；shutdown 默认 checkpoint。</text>
+  <text x="48" y="380" font-size="10.5" fill="#9a7328">批量导入建议结束后显式 CHECKPOINT，避免 WAL 膨胀与重启变慢。</text>
+
+  <line x1="175" y1="172" x2="230" y2="196" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="505" y1="172" x2="505" y2="196" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="840" y1="172" x2="770" y2="196" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+</svg>

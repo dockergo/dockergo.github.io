@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="560" viewBox="0 0 1060 560" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1060" height="560" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">主键裁剪：KeyCondition 把 WHERE 编译成主键区间判定 → MarkRanges</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">KeyCondition (KeyCondition.h:64) · markRangesFromPKRange 在稀疏 primary.idx 上二分 → 需读的 MarkRange</text>
+
+  <g text-anchor="middle">
+    <rect x="40" y="80" width="230" height="80" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/><text x="155" y="106" font-size="10.5" font-weight="600" fill="#1b2a4a">WHERE 谓词</text><text x="155" y="126" font-size="8.5" fill="#5b7db1">如 dt BETWEEN … AND id &gt; 100</text><text x="155" y="144" font-size="8" fill="#8aa6cf">优化后的过滤条件</text>
+    <rect x="320" y="80" width="250" height="80" rx="12" fill="#f3f7fc" stroke="#cfe0f2" filter="url(#soft)"/><text x="445" y="102" font-size="10.5" font-weight="600" fill="#274a78">KeyCondition 编译</text><text x="445" y="122" font-size="8.5" fill="#5b7db1">谓词 → 对主键区间的判定函数</text><text x="445" y="140" font-size="8" fill="#8aa6cf">checkInRange / mayBeTrueInRange</text>
+    <rect x="620" y="80" width="230" height="80" rx="12" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/><text x="735" y="102" font-size="10.5" font-weight="600" fill="#5a3410">在 primary.idx 上二分</text><text x="735" y="122" font-size="8.5" fill="#93762e">markRangesFromPKRange</text><text x="735" y="140" font-size="8" fill="#b08843">MergeTreeDataSelectExecutor</text>
+    <rect x="900" y="80" width="120" height="80" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/><text x="960" y="106" font-size="10.5" font-weight="600" fill="#12402a">MarkRanges</text><text x="960" y="126" font-size="8.5" fill="#2f6f4f">需读的 granule 段</text><text x="960" y="144" font-size="8" fill="#4c8567">交读取步</text>
+  </g>
+  <g stroke="#c7c7cc" stroke-width="1.5" fill="none">
+    <line x1="270" y1="120" x2="320" y2="120" marker-end="url(#ar)"/>
+    <line x1="570" y1="120" x2="620" y2="120" marker-end="url(#ar)"/>
+    <line x1="850" y1="120" x2="900" y2="120" marker-end="url(#ar)"/>
+  </g>
+
+  <!-- example -->
+  <rect x="40" y="180" width="980" height="180" rx="13" fill="#fdf9f0" stroke="#efe3cd"/>
+  <text x="60" y="204" font-size="11" font-weight="700" fill="#7a5a1e">例：主键 (dt, id)，WHERE dt = '2024-07-13'</text>
+  <g text-anchor="middle" font-size="8">
+    <rect x="70" y="218" width="120" height="34" rx="6" fill="#fff" stroke="#efdcb4"/><text x="130" y="238" fill="#5a3410">idx[0] dt=07-11</text>
+    <rect x="200" y="218" width="120" height="34" rx="6" fill="#f7f7f9" stroke="#e6e6ea"/><text x="260" y="238" fill="#9a9a9f">idx[1] dt=07-12（跳）</text>
+    <rect x="330" y="218" width="120" height="34" rx="6" fill="#f2fbf6" stroke="#cdeadb"/><text x="390" y="238" fill="#12402a">idx[2] dt=07-13 ✓</text>
+    <rect x="460" y="218" width="120" height="34" rx="6" fill="#f2fbf6" stroke="#cdeadb"/><text x="520" y="238" fill="#12402a">idx[3] dt=07-13 ✓</text>
+    <rect x="590" y="218" width="120" height="34" rx="6" fill="#f7f7f9" stroke="#e6e6ea"/><text x="650" y="238" fill="#9a9a9f">idx[4] dt=07-14（跳）</text>
+    <rect x="720" y="218" width="120" height="34" rx="6" fill="#f7f7f9" stroke="#e6e6ea"/><text x="780" y="238" fill="#9a9a9f">idx[5] …（跳）</text>
+  </g>
+  <text x="60" y="284" font-size="9.5" fill="#93762e">· KeyCondition 判定：只有 idx[2]、idx[3] 对应的 granule 可能含 dt='2024-07-13'</text>
+  <text x="60" y="304" font-size="9.5" fill="#93762e">· 其余 granule 整段跳过 → MarkRange = [granule2, granule3]</text>
+  <text x="60" y="324" font-size="9.5" fill="#12402a">· 100 亿行的表可能只读 2 个 granule（约 16384 行）——这就是稀疏主键的威力</text>
+  <text x="60" y="346" font-size="9" fill="#b08843">· 若 WHERE 不含主键前缀（如只按非主键列过滤）→ 主键裁剪失效，退化为全扫（此时靠跳数索引/PREWHERE）</text>
+
+  <rect x="40" y="376" width="980" height="76" rx="13" fill="#f3f7fc" stroke="#cfe0f2"/>
+  <text x="60" y="400" font-size="11" font-weight="700" fill="#274a78">优化与存储的接合点</text>
+  <text x="60" y="422" font-size="9.5" fill="#5b7db1">· KeyCondition 属于"优化技术"（把谓词编译成区间判定），但它服务于"存储引擎"的读取裁剪</text>
+  <text x="60" y="440" font-size="9.5" fill="#5b7db1">· 是"优化决定读多少" → "存储真正少读"的桥梁；主键设计的好坏直接决定它能省多少</text>
+
+  <rect x="40" y="466" width="980" height="76" rx="12" fill="#f7f7f9" stroke="#e6e6ea"/>
+  <text x="60" y="490" font-size="11" font-weight="700" fill="#1d1d1f">一句话</text>
+  <text x="60" y="512" font-size="10" fill="#4b4b50">KeyCondition 把 WHERE 里与主键相关的谓词编译成对主键区间的判定，在稀疏 primary.idx 上二分定位出需读的 MarkRange，</text>
+  <text x="60" y="529" font-size="10" fill="#4b4b50">让 TB 级表的扫描缩到几个 granule——这是"少读盘"最关键一环，前提是查询命中了主键前缀。</text>
+</svg>

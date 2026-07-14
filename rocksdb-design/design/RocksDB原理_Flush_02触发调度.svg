@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="500" viewBox="0 0 1080 500" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="500" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">RocksDB Flush 触发与调度 · 多触发源 + 后台线程池</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">多种情形触发 flush;FlushScheduler 记录待 flush CF,后台线程池(与 Compaction 共享)执行</text>
+
+  <!-- triggers -->
+  <rect x="30" y="70" width="500" height="240" rx="13" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="46" y="92" font-size="11" font-weight="700" fill="#1b2a4a">触发源</text>
+  <rect x="46" y="104" width="470" height="34" rx="7" fill="#eafaf1" stroke="#bfe0cd"/><text x="60" y="124" font-size="8.8" fill="#12402a"><tspan font-weight="600">① MemTable 满</tspan>(最常见):达 write_buffer_size 转 immutable</text>
+  <rect x="46" y="142" width="470" height="34" rx="7" fill="#f3f7fc" stroke="#cfe0f2"/><text x="60" y="162" font-size="8.8" fill="#274a78"><tspan font-weight="600">② WAL 超限</tspan>:max_total_wal_size → flush 以释放老 WAL</text>
+  <rect x="46" y="180" width="470" height="34" rx="7" fill="#f3f7fc" stroke="#cfe0f2"/><text x="60" y="200" font-size="8.8" fill="#274a78"><tspan font-weight="600">③ WriteBufferManager</tspan>:跨 CF 总内存超限</text>
+  <rect x="46" y="218" width="470" height="34" rx="7" fill="#f3f7fc" stroke="#cfe0f2"/><text x="60" y="238" font-size="8.8" fill="#274a78"><tspan font-weight="600">④ 手动 Flush()</tspan> / <tspan font-weight="600">⑤ DB 关闭</tspan></text>
+  <rect x="46" y="256" width="470" height="44" rx="7" fill="#fff" stroke="#bcd0ec"/><text x="60" y="276" font-size="8.5" fill="#1b2a4a">共同点:都把该 CF 的 MemTable 转 immutable</text><text x="60" y="292" font-size="8" fill="#5b7db1">并加入 FlushScheduler 待处理集合</text>
+
+  <!-- scheduler + pool -->
+  <rect x="550" y="70" width="500" height="240" rx="13" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="566" y="92" font-size="11" font-weight="700" fill="#12402a">调度与执行</text>
+  <g font-size="8.8" text-anchor="middle">
+    <rect x="566" y="104" width="470" height="44" rx="8" fill="#f5faf6" stroke="#cfe6d5"/><text x="801" y="124" font-weight="600" fill="#2c5a3a">FlushScheduler(无锁栈)</text><text x="801" y="140" fill="#2f6f4f">记录哪些 CF 有 immutable 待 flush</text>
+    <rect x="566" y="156" width="470" height="44" rx="8" fill="#eef3fb" stroke="#bcd0ec"/><text x="801" y="176" font-weight="600" fill="#1b2a4a">后台线程池(max_background_jobs)</text><text x="801" y="192" fill="#5b7db1">取出待 flush CF,并发执行 FlushJob</text>
+    <rect x="566" y="208" width="470" height="44" rx="8" fill="#fdf6ea" stroke="#efdcb4"/><text x="801" y="228" font-weight="600" fill="#5a3410">与 Compaction 共享线程池</text><text x="801" y="244" fill="#93762e">flush 通常优先(释放内存更急迫)</text>
+  </g>
+  <rect x="566" y="260" width="470" height="40" rx="8" fill="#fff" stroke="#cfe6d5"/><text x="580" y="280" font-size="8.5" fill="#2c5a3a">多 CF / 多 immutable 可并发 flush(各占一个后台任务)</text><text x="580" y="294" font-size="8" fill="#93762e">max_background_flushes 可单独限 flush 并发(旧)</text>
+  <line x1="530" y1="190" x2="550" y2="126" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+
+  <!-- notes -->
+  <rect x="30" y="330" width="1020" height="150" rx="13" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="46" y="352" font-size="11" font-weight="700" fill="#1d1d1f">要点</text>
+  <text x="46" y="374" font-size="9" fill="#6e6e73">· "WAL 超限触发 flush"是间接机制:WAL 只有等它覆盖的 MemTable flush 了才能删,所以 WAL 太大时主动 flush 来释放它</text>
+  <text x="46" y="392" font-size="9" fill="#6e6e73">· WriteBufferManager:跨多个 CF/DB 限制 MemTable 总内存,超限挑最大的 flush —— 多 CF/多 DB 共享内存预算时用</text>
+  <text x="46" y="410" font-size="9" fill="#6e6e73">· 后台线程不够(max_background_jobs 太小)→ flush 排队 → immutable 堆积 → 触发写停顿(见写入路径)</text>
+  <text x="46" y="428" font-size="9" fill="#6e6e73">· 调优:写突发多 → 增大 write_buffer_size + max_write_buffer_number 缓冲;后台跟不上 → 增 max_background_jobs</text>
+  <text x="46" y="450" font-size="9" fill="#b1483a">· 归属:触发条件涉及【写入路径】(MemTable)、【WAL】(WAL 大小);执行产物在【SST】,登记在【版本】</text>
+  <text x="46" y="470" font-size="8.5" fill="#a1a1a6">· 观测:DB 属性 rocksdb.num-immutable-mem-table / rocksdb.mem-table-flush-pending 看积压</text>
+</svg>

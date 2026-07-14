@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="540" viewBox="0 0 1080 540" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="540" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">RocksDB Column Family 全景 · 各自一棵 LSM,共享一份 WAL</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">一个 DB 划成多个独立键空间:各 CF 有独立 MemTable/SST/Version + 独立配置;但共享同一份 WAL、同一 seq 空间、同一恢复单元。ColumnFamilySet 管理全部 CF</text>
+
+  <!-- CF columns -->
+  <!-- default -->
+  <rect x="30" y="72" width="315" height="290" rx="13" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="46" y="94" font-size="11" font-weight="700" fill="#1b2a4a">CF: default</text>
+  <rect x="46" y="104" width="283" height="40" rx="8" fill="#e6f7ee" stroke="#bfe0cd"/><text x="60" y="122" font-size="8.5" font-weight="600" fill="#12402a">活跃 MemTable(独立)</text><text x="60" y="137" font-size="8" fill="#2f6f4f">+ immutable 队列</text>
+  <rect x="46" y="152" width="283" height="94" rx="8" fill="#f3f7fc" stroke="#cfe0f2"/><text x="60" y="170" font-size="8.5" font-weight="600" fill="#274a78">自己的 LSM(独立 SST/Version)</text>
+  <rect x="60" y="180" width="255" height="16" rx="4" fill="#dce9f8"/><text x="66" y="192" font-size="7.5" fill="#274a78">L0</text>
+  <rect x="60" y="200" width="255" height="16" rx="4" fill="#e7f0fb"/><text x="66" y="212" font-size="7.5" fill="#274a78">L1</text>
+  <rect x="60" y="220" width="255" height="16" rx="4" fill="#eef4fc"/><text x="66" y="232" font-size="7.5" fill="#274a78">L2 …</text>
+  <rect x="46" y="254" width="283" height="94" rx="8" fill="#fff" stroke="#cfe0f2"/><text x="60" y="272" font-size="8.5" font-weight="600" fill="#1b2a4a">ColumnFamilyOptions(独立)</text><text x="60" y="290" font-size="8" fill="#5b7db1">compaction_style / compression</text><text x="60" y="306" font-size="8" fill="#5b7db1">write_buffer_size / comparator</text><text x="60" y="322" font-size="8" fill="#5b7db1">merge_operator …</text><text x="60" y="340" font-size="7.5" fill="#a1a1a6">各 CF 可完全不同的调优</text>
+
+  <!-- meta -->
+  <rect x="360" y="72" width="315" height="290" rx="13" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="376" y="94" font-size="11" font-weight="700" fill="#12402a">CF: meta</text>
+  <rect x="376" y="104" width="283" height="40" rx="8" fill="#eafaf1" stroke="#bfe0cd"/><text x="390" y="122" font-size="8.5" font-weight="600" fill="#12402a">活跃 MemTable(独立)</text><text x="390" y="137" font-size="8" fill="#2f6f4f">+ immutable 队列</text>
+  <rect x="376" y="152" width="283" height="94" rx="8" fill="#f5faf6" stroke="#cfe6d5"/><text x="390" y="170" font-size="8.5" font-weight="600" fill="#2c5a3a">自己的 LSM(独立 SST/Version)</text>
+  <rect x="390" y="180" width="255" height="16" rx="4" fill="#d8efe0"/><text x="396" y="192" font-size="7.5" fill="#2c5a3a">L0</text>
+  <rect x="390" y="200" width="255" height="16" rx="4" fill="#e4f5eb"/><text x="396" y="212" font-size="7.5" fill="#2c5a3a">L1 …</text>
+  <rect x="390" y="254" width="283" height="94" rx="8" fill="#fff" stroke="#cfe6d5"/><text x="390" y="272" font-size="8.5" font-weight="600" fill="#12402a">ColumnFamilyOptions(独立)</text><text x="390" y="290" font-size="8" fill="#2f6f4f">例:小而热 → 更激进缓存</text><text x="390" y="306" font-size="8" fill="#2f6f4f">FIFO 或 Level 皆可单独选</text><text x="390" y="330" font-size="7.5" fill="#a1a1a6">与 default 互不影响</text>
+
+  <!-- events (dots) -->
+  <rect x="690" y="72" width="360" height="290" rx="13" fill="#faf4fb" stroke="#e2d2ee"/>
+  <text x="706" y="94" font-size="11" font-weight="700" fill="#5a3d78">CF: events(可再加更多)</text>
+  <rect x="706" y="104" width="328" height="40" rx="8" fill="#f4eefb" stroke="#d9c7ec"/><text x="720" y="122" font-size="8.5" font-weight="600" fill="#3d2a5a">活跃 MemTable(独立)</text>
+  <rect x="706" y="152" width="328" height="94" rx="8" fill="#faf4fb" stroke="#e2d2ee"/><text x="720" y="170" font-size="8.5" font-weight="600" fill="#5a3d78">自己的 LSM(独立 SST/Version)</text>
+  <rect x="720" y="180" width="300" height="16" rx="4" fill="#eaddf5"/><text x="726" y="192" font-size="7.5" fill="#5a3d78">L0</text>
+  <rect x="720" y="200" width="300" height="16" rx="4" fill="#f0e6f8"/><text x="726" y="212" font-size="7.5" fill="#5a3d78">L1 …</text>
+  <rect x="706" y="254" width="328" height="94" rx="8" fill="#fff" stroke="#e2d2ee"/><text x="720" y="272" font-size="8.5" font-weight="600" fill="#5a3d78">ColumnFamilyOptions(独立)</text><text x="720" y="290" font-size="8" fill="#7a5a95">例:纯追加日志 → Universal</text><text x="720" y="308" font-size="8" fill="#7a5a95">写多读少 → 大 write_buffer</text>
+
+  <!-- shared WAL bar -->
+  <rect x="30" y="378" width="1020" height="64" rx="13" fill="#fff7e6" stroke="#e8cf9a"/>
+  <text x="46" y="400" font-size="11" font-weight="700" fill="#5a3410">共享:同一份 WAL + 同一 SequenceNumber 空间 + 同一恢复流程</text>
+  <text x="46" y="420" font-size="8.8" fill="#93762e">三个 CF 的写都落进同一个 WAL、领同一个全局递增 seq → 跨 CF 的一批写要么全恢复、要么全不恢复(原子性)</text>
+  <text x="46" y="435" font-size="8" fill="#a1a1a6">db/column_family.cc · ColumnFamilySet 管理一个 DB 的所有 CF</text>
+  <!-- arrows from CFs into WAL -->
+  <line x1="187" y1="362" x2="187" y2="378" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="517" y1="362" x2="517" y2="378" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="870" y1="362" x2="870" y2="378" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+
+  <!-- notes -->
+  <rect x="30" y="454" width="1020" height="72" rx="13" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="46" y="476" font-size="11" font-weight="700" fill="#1d1d1f">要点</text>
+  <text x="46" y="498" font-size="9" fill="#6e6e73">· CF = "一个库里的多张表":纵向各自独立(MemTable/SST/Version/调优),横向共享一根写日志与一个 seq 空间(事务边界仍是整个 DB)</text>
+  <text x="46" y="516" font-size="8.5" fill="#b1483a">· 归属:CF 被【接触面】CF API 依赖;独立 LSM 关联【写入】【版本】;共享 WAL 见【WAL】主线</text>
+</svg>

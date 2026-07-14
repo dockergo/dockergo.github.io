@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="470" viewBox="0 0 1020 470"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1020" height="470" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">优化 pass 流水线 · 逻辑计划顺序重写 ~30 遍（optimizer/optimizer.cpp）</text>
+
+  <text x="30" y="66" font-size="11.5" font-weight="600" fill="#3c1361">① 表达式与结构化简</text>
+  <rect x="30" y="76" width="230" height="30" rx="7" fill="#f4eefb" stroke="#d9c9ef"/><text x="145" y="96" font-size="9" fill="#3c1361" text-anchor="middle">EXPRESSION_REWRITER（:199）</text>
+  <rect x="270" y="76" width="230" height="30" rx="7" fill="#f4eefb" stroke="#d9c9ef"/><text x="385" y="96" font-size="9" fill="#3c1361" text-anchor="middle">CTE_INLINING / IN_CLAUSE</text>
+  <rect x="510" y="76" width="230" height="30" rx="7" fill="#f4eefb" stroke="#d9c9ef"/><text x="625" y="96" font-size="9" fill="#3c1361" text-anchor="middle">COMMON_SUBEXPRESSIONS（:323）</text>
+  <rect x="750" y="76" width="240" height="30" rx="7" fill="#f4eefb" stroke="#d9c9ef"/><text x="870" y="96" font-size="9" fill="#3c1361" text-anchor="middle">GROUPING_SETS / DELIMINATOR</text>
+
+  <text x="30" y="140" font-size="11.5" font-weight="600" fill="#1b2a4a">② 下推 / 上拉 / 裁剪</text>
+  <rect x="30" y="150" width="230" height="30" rx="7" fill="#eef3fb" stroke="#bcd0ec"/><text x="145" y="170" font-size="9" fill="#1b2a4a" text-anchor="middle">FILTER_PULLUP（:214）→ PUSHDOWN（:220）</text>
+  <rect x="270" y="150" width="230" height="30" rx="7" fill="#eef3fb" stroke="#bcd0ec"/><text x="385" y="170" font-size="9" fill="#1b2a4a" text-anchor="middle">UNUSED_COLUMNS（:311）</text>
+  <rect x="510" y="150" width="230" height="30" rx="7" fill="#eef3fb" stroke="#bcd0ec"/><text x="625" y="170" font-size="9" fill="#1b2a4a" text-anchor="middle">LIMIT_PUSHDOWN（:352）</text>
+  <rect x="750" y="150" width="240" height="30" rx="7" fill="#eef3fb" stroke="#bcd0ec"/><text x="870" y="170" font-size="9" fill="#1b2a4a" text-anchor="middle">ROW_GROUP_PRUNER（:357）</text>
+
+  <text x="30" y="214" font-size="11.5" font-weight="600" fill="#0f5132">③ Join 与聚合</text>
+  <rect x="30" y="224" width="230" height="30" rx="7" fill="#eafaf1" stroke="#bce6cd"/><text x="145" y="244" font-size="9" fill="#0f5132" text-anchor="middle">JOIN_ORDER（:287）</text>
+  <rect x="270" y="224" width="230" height="30" rx="7" fill="#eafaf1" stroke="#bce6cd"/><text x="385" y="244" font-size="9" fill="#0f5132" text-anchor="middle">BUILD_SIDE_PROBE_SIDE（:336）</text>
+  <rect x="510" y="224" width="230" height="30" rx="7" fill="#eafaf1" stroke="#bce6cd"/><text x="625" y="244" font-size="9" fill="#0f5132" text-anchor="middle">JOIN_ELIMINATION（:299）</text>
+  <rect x="750" y="224" width="240" height="30" rx="7" fill="#eafaf1" stroke="#bce6cd"/><text x="870" y="244" font-size="9" fill="#0f5132" text-anchor="middle">PARTIAL_AGGREGATE_PUSHDOWN（:294）</text>
+
+  <text x="30" y="288" font-size="11.5" font-weight="600" fill="#7a4d00">④ 物化 / Top-N / 统计</text>
+  <rect x="30" y="298" width="230" height="30" rx="7" fill="#fff7e6" stroke="#f0dcae"/><text x="145" y="318" font-size="9" fill="#7a4d00" text-anchor="middle">LATE_MATERIALIZATION（:375）</text>
+  <rect x="270" y="298" width="230" height="30" rx="7" fill="#fff7e6" stroke="#f0dcae"/><text x="385" y="318" font-size="9" fill="#7a4d00" text-anchor="middle">TOP_N（:369）</text>
+  <rect x="510" y="298" width="230" height="30" rx="7" fill="#fff7e6" stroke="#f0dcae"/><text x="625" y="318" font-size="9" fill="#7a4d00" text-anchor="middle">STATISTICS_PROPAGATION（:387）</text>
+  <rect x="750" y="298" width="240" height="30" rx="7" fill="#fff7e6" stroke="#f0dcae"/><text x="870" y="318" font-size="9" fill="#7a4d00" text-anchor="middle">COMMON_AGGREGATE / REORDER_FILTER</text>
+
+  <line x1="510" y1="106" x2="510" y2="150" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="510" y1="180" x2="510" y2="224" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="510" y1="254" x2="510" y2="298" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+
+  <rect x="30" y="352" width="960" height="100" rx="14" fill="#f6f6f8" stroke="#e2e2e7"/>
+  <text x="48" y="376" font-size="12" font-weight="600" fill="#1d1d1f">pass 流水线的性质</text>
+  <text x="48" y="400" font-size="10.5" fill="#494950">• 每个 pass 用 RunOptimizer（:121）包裹并计时（可 EXPLAIN ANALYZE 看各阶段耗时），逐个改写逻辑计划树。</text>
+  <text x="48" y="422" font-size="10.5" fill="#494950">• 顺序有讲究：先化简与下推缩小规模，再定 Join 顺序（此时基数估计更准），最后物化/Top-N/统计传播。</text>
+  <text x="48" y="444" font-size="10.5" fill="#494950">• 输出仍是逻辑计划；具体物理算子（Hash/NL Join、Radix 聚合）在其后的 PhysicalPlanGenerator 选定。</text>
+</svg>

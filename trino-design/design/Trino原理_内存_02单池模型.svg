@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="520" viewBox="0 0 1040 520" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+  </defs>
+  <rect width="1040" height="520" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Trino 单池模型 · 483 无 reserved/system 池（关键简化）</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">每 worker 只有一个无名 MemoryPool;旧三池模型与 MemoryPoolId 已彻底移除</text>
+
+  <!-- worker memory layout -->
+  <rect x="30" y="72" width="600" height="280" rx="13" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="46" y="94" font-size="11" font-weight="700" fill="#1b2a4a">单 worker 内存布局</text>
+  <rect x="50" y="108" width="560" height="40" rx="8" fill="#f7f7f9" stroke="#ececf1"/><text x="330" y="132" text-anchor="middle" font-size="9.5" fill="#6e6e73">JVM 可用内存（availableMemory）</text>
+  <rect x="50" y="156" width="180" height="120" rx="9" fill="#fdf6ea" stroke="#e8cf9a"/><text x="140" y="178" text-anchor="middle" font-size="9.5" font-weight="600" fill="#5a3410">heap headroom</text><text x="140" y="196" text-anchor="middle" font-size="8" fill="#93762e">默认 30%</text><text x="140" y="214" text-anchor="middle" font-size="8" fill="#93762e">留给池之外</text><text x="140" y="228" text-anchor="middle" font-size="8" fill="#93762e">(JVM 其他开销)</text><text x="140" y="248" text-anchor="middle" font-size="8" fill="#93762e">memory.heap-headroom</text><text x="140" y="264" text-anchor="middle" font-size="8" fill="#93762e">-per-node</text>
+  <rect x="240" y="156" width="370" height="120" rx="9" fill="#eafaf1" stroke="#bfe0cd"/><text x="425" y="178" text-anchor="middle" font-size="9.5" font-weight="700" fill="#12402a">MemoryPool（唯一 · 无名）</text><text x="425" y="198" text-anchor="middle" font-size="8.5" fill="#2f6f4f">大小 = 可用内存 − heap headroom</text><text x="425" y="216" text-anchor="middle" font-size="8.5" fill="#2f6f4f">reservedBytes（user）+ reservedRevocableBytes</text><text x="425" y="234" text-anchor="middle" font-size="8.5" fill="#2f6f4f">getFreeBytes = max − reserved − reservedRevocable</text><text x="425" y="254" text-anchor="middle" font-size="8" fill="#2f6f4f">满(free≤0)则 reserve 返回阻塞 future</text><text x="425" y="270" text-anchor="middle" font-size="8" fill="#93762e">"general" 仅作 JMX 导出标签(非池身份)</text>
+  <rect x="50" y="286" width="560" height="52" rx="8" fill="#fff" stroke="#bcd0ec"/><text x="60" y="306" font-size="8.8" font-weight="600" fill="#1b2a4a">关键限额</text><text x="60" y="324" font-size="8.5" fill="#5b7db1">query.max-memory-per-node（默认可用 30%）· validateHeapHeadroom：headroom + maxQueryMem ≤ 可用</text>
+
+  <!-- removed -->
+  <rect x="650" y="72" width="360" height="280" rx="13" fill="#faf4fb" stroke="#e2d2ee"/>
+  <text x="666" y="94" font-size="11" font-weight="700" fill="#b1483a">已移除（旧文档陷阱）</text>
+  <rect x="666" y="108" width="328" height="54" rx="8" fill="#fff" stroke="#e2d2ee"/><text x="680" y="128" font-size="9" font-weight="600" fill="#5a3d78">general / reserved / system 三池</text><text x="680" y="146" font-size="8.5" fill="#7a5a95">→ 合并为单池;不再有"大查询进保留池"</text>
+  <rect x="666" y="170" width="328" height="54" rx="8" fill="#fff" stroke="#e2d2ee"/><text x="680" y="190" font-size="9" font-weight="600" fill="#5a3d78">MemoryPoolId 类型</text><text x="680" y="208" font-size="8.5" fill="#7a5a95">→ 全代码库 0 引用,已删</text>
+  <rect x="666" y="232" width="328" height="72" rx="8" fill="#fff" stroke="#e2d2ee"/><text x="680" y="252" font-size="9" font-weight="600" fill="#5a3d78">@DefunctConfig（设了会报错）</text><text x="680" y="270" font-size="8" fill="#7a5a95">reserved-pool-enabled / -disabled</text><text x="680" y="285" font-size="8" fill="#7a5a95">query.max-total-memory-per-node</text><text x="680" y="299" font-size="8" fill="#7a5a95">legacy-system-pool-enabled</text>
+  <text x="666" y="330" font-size="8.5" fill="#7a5a95">"reserved"一词现仅指预留字段(reservedBytes),非池</text>
+
+  <!-- why -->
+  <rect x="30" y="368" width="980" height="140" rx="13" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="46" y="390" font-size="11" font-weight="700" fill="#1d1d1f">为什么简化成单池</text>
+  <text x="46" y="412" font-size="9" fill="#6e6e73">· 旧三池模型：general 给普通查询,reserved 给"当前最耗内存的一个查询"避免死锁,system 给系统开销——配置复杂、易调错</text>
+  <text x="46" y="430" font-size="9" fill="#6e6e73">· 单池 + OOM killer：不再靠"保留池"防死锁,改为集群内存耗尽时由 ClusterMemoryManager 主动杀查询/task(见 04)</text>
+  <text x="46" y="448" font-size="9" fill="#6e6e73">· 好处：配置简单(只需 max-memory-per-node + headroom)、行为可预测、与 FTE 的 task 重试配合更自然</text>
+  <text x="46" y="470" font-size="9" fill="#b1483a">· 迁移提醒：任何提到"general/reserved 池""MemoryPoolId""reserved-pool 配置"的资料对 483 已过时——只讲一个池</text>
+  <text x="46" y="490" font-size="8.5" fill="#6e6e73">· LocalMemoryManager 持单个 MemoryPool 字段;无池 map/枚举。JMX 里 "general" 只是导出名(LocalMemoryManagerExporter)</text>
+</svg>

@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="660" viewBox="0 0 900 660" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect x="0" y="0" width="900" height="660" fill="#fbfbfd"/>
+  <text x="40" y="38" font-size="15" font-weight="600" fill="#1d1d1f">④ OPTIMIZED PLAN · CBO 物理优化</text>
+  <text x="40" y="58" font-size="11" fill="#86868b">Join Reorder + 分布策略 + 两阶段聚合;逻辑算子 → 物理算子</text>
+  <rect x="40" y="74" width="820" height="26" rx="8" fill="#fbf7ef" stroke="#efe0c4"/><text x="54" y="91" font-size="10.5" fill="#8a5a12">CBO:用统计信息估代价,选 Join 顺序/物理实现/数据分布方式(Broadcast vs Shuffle)</text>
+  <g text-anchor="middle" font-size="11.5">
+    <rect x="330" y="112" width="240" height="42" rx="10" fill="#ecf2fb" stroke="#c4d5ee" filter="url(#soft)"/><text x="450" y="132" fill="#274a78" font-weight="600">PhysicalTopN 10</text><text x="450" y="147" font-size="9" fill="#7d93b5">Sort+Limit 合并</text>
+    <rect x="320" y="170" width="260" height="42" rx="10" fill="#ecf2fb" stroke="#c4d5ee" filter="url(#soft)"/><text x="450" y="190" fill="#274a78" font-weight="600">HashAggregate GLOBAL</text><text x="450" y="205" font-size="9" fill="#7d93b5">sum merge</text>
+    <rect x="330" y="228" width="240" height="38" rx="10" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/><text x="450" y="252" fill="#8a5a12">Distribute(SHUFFLE by region)</text>
+    <rect x="320" y="282" width="260" height="42" rx="10" fill="#ecf2fb" stroke="#c4d5ee" filter="url(#soft)"/><text x="450" y="302" fill="#274a78" font-weight="600">HashAggregate LOCAL</text><text x="450" y="317" font-size="9" fill="#7d93b5">预聚合减少 shuffle 量</text>
+    <rect x="320" y="340" width="260" height="44" rx="10" fill="#eef2fb" stroke="#c9d6ef" filter="url(#soft)"/><text x="450" y="360" fill="#2f4a7c" font-weight="600">PhysicalHashJoin INNER</text><text x="450" y="376" font-size="9" fill="#7d93b5">users = build 侧(小表)</text>
+    <rect x="120" y="430" width="270" height="58" rx="10" fill="#f5faf6" stroke="#cfe6d5" filter="url(#soft)"/><text x="255" y="452" fill="#2c5a3a" font-weight="600">PhysicalOlapScan orders</text><text x="255" y="470" font-size="9" fill="#4e7a5c">分区裁剪 + 谓词下推(probe 侧)</text>
+    <rect x="480" y="430" width="140" height="58" rx="10" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/><text x="550" y="456" fill="#8a5a12">Distribute</text><text x="550" y="472" font-size="9" fill="#a98b52">BROADCAST</text>
+    <rect x="640" y="430" width="150" height="58" rx="10" fill="#f5faf6" stroke="#cfe6d5" filter="url(#soft)"/><text x="715" y="452" fill="#2c5a3a" font-weight="600">OlapScan users</text><text x="715" y="470" font-size="9" fill="#4e7a5c">age&gt;30</text>
+  </g>
+  <g stroke="#c7c7cc" stroke-width="1.5" fill="none">
+    <line x1="450" y1="154" x2="450" y2="169" marker-end="url(#ar)"/>
+    <line x1="450" y1="212" x2="450" y2="227" marker-end="url(#ar)"/>
+    <line x1="450" y1="266" x2="450" y2="281" marker-end="url(#ar)"/>
+    <line x1="450" y1="324" x2="450" y2="339" marker-end="url(#ar)"/>
+    <line x1="410" y1="384" x2="255" y2="429" marker-end="url(#ar)"/>
+    <line x1="490" y1="384" x2="550" y2="429" marker-end="url(#ar)"/>
+    <line x1="620" y1="459" x2="639" y2="459" marker-end="url(#ar)"/>
+  </g>
+  <text x="40" y="536" font-size="10.5" fill="#86868b">小表 users 走 BROADCAST 到各节点作 build 侧;聚合拆两阶段(LOCAL 预聚合 → SHUFFLE → GLOBAL 合并)减少网络。</text>
+</svg>

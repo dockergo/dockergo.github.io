@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="600" viewBox="0 0 1060 600" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1060" height="600" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Join 算法决策：按 join_algorithm 偏好列表逐个尝试</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">默认 join_algorithm = "direct,parallel_hash,hash"（Settings.cpp:2958）· chooseJoinAlgorithm (PlannerJoins.cpp:1219)</text>
+
+  <!-- decision flow -->
+  <g text-anchor="middle">
+    <rect x="420" y="72" width="220" height="44" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/><text x="530" y="90" font-size="10.5" font-weight="600" fill="#1b2a4a">chooseJoinAlgorithm</text><text x="530" y="106" font-size="8" fill="#5b7db1">按偏好列表依次判定</text>
+  </g>
+
+  <!-- algorithm cards -->
+  <g text-anchor="middle">
+    <rect x="40" y="140" width="235" height="130" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+    <text x="157" y="162" font-size="11" font-weight="700" fill="#12402a">① Direct KV</text>
+    <text x="157" y="180" font-size="8" fill="#2f6f4f">DirectKeyValueJoin :1004</text>
+    <text x="157" y="200" font-size="9" fill="#12402a">右表是 KV/字典引擎</text>
+    <text x="157" y="216" font-size="9" fill="#12402a">按键直接取值</text>
+    <text x="157" y="238" font-size="8.5" fill="#4c8567">内存低 · 维表点查式 join</text>
+    <text x="157" y="256" font-size="8" fill="#8aa6cf">RocksDB/字典/KeeperMap 右表</text>
+
+    <rect x="290" y="140" width="235" height="130" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+    <text x="407" y="162" font-size="11" font-weight="700" fill="#1b2a4a">② parallel_hash（默认首选）</text>
+    <text x="407" y="180" font-size="8" fill="#5b7db1">ConcurrentHashJoin :1138</text>
+    <text x="407" y="200" font-size="9" fill="#1b2a4a">右表可放内存</text>
+    <text x="407" y="216" font-size="9" fill="#1b2a4a">多线程并行建哈希表</text>
+    <text x="407" y="238" font-size="8.5" fill="#5b7db1">内存高 · 大多数 join</text>
+    <text x="407" y="256" font-size="8" fill="#8aa6cf">默认场景的主力</text>
+
+    <rect x="540" y="140" width="235" height="130" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+    <text x="657" y="162" font-size="11" font-weight="700" fill="#1b2a4a">③ hash</text>
+    <text x="657" y="180" font-size="8" fill="#5b7db1">HashJoin :1121</text>
+    <text x="657" y="200" font-size="9" fill="#1b2a4a">经典单线程哈希 join</text>
+    <text x="657" y="216" font-size="9" fill="#1b2a4a">parallel 不适用时</text>
+    <text x="657" y="238" font-size="8.5" fill="#5b7db1">内存高 · 兜底</text>
+    <text x="657" y="256" font-size="8" fill="#8aa6cf">右表放内存建表</text>
+
+    <rect x="790" y="140" width="230" height="130" rx="12" fill="#f6f2fb" stroke="#d9c9ec" filter="url(#soft)"/>
+    <text x="905" y="162" font-size="11" font-weight="700" fill="#3d2a5a">④ 排序/落盘类</text>
+    <text x="905" y="180" font-size="8" fill="#7a5da5">FullSortingMerge :1148 / Grace :1154</text>
+    <text x="905" y="200" font-size="9" fill="#3d2a5a">FullSortingMerge：两侧排序归并</text>
+    <text x="905" y="216" font-size="9" fill="#3d2a5a">GraceHash：右表超内存分批落盘</text>
+    <text x="905" y="238" font-size="8.5" fill="#7a5da5">内存可控 · 大表/内存受限</text>
+    <text x="905" y="256" font-size="8" fill="#9a7cc4">需显式指定或内存不足时</text>
+  </g>
+  <g stroke="#c7c7cc" stroke-width="1.4" fill="none">
+    <path d="M470,116 L157,140" marker-end="url(#ar)"/>
+    <path d="M510,116 L407,140" marker-end="url(#ar)"/>
+    <path d="M560,116 L657,140" marker-end="url(#ar)"/>
+    <path d="M600,116 L905,140" marker-end="url(#ar)"/>
+  </g>
+
+  <!-- selection table -->
+  <rect x="40" y="292" width="980" height="140" rx="13" fill="#fdf9f0" stroke="#efe3cd"/>
+  <text x="60" y="316" font-size="11.5" font-weight="700" fill="#7a5a1e">选择逻辑（默认 direct,parallel_hash,hash 顺序偏好）</text>
+  <text x="60" y="338" font-size="9.5" fill="#93762e">· 右表是 KV/字典 → Direct（最省，点查式）</text>
+  <text x="60" y="356" font-size="9.5" fill="#93762e">· 否则右表能放内存 → parallel_hash（并行建表，默认首选）→ 退化到 hash</text>
+  <text x="60" y="374" font-size="9.5" fill="#93762e">· 显式配 full_sorting_merge → 两侧排序归并（内存友好，适合两大表）</text>
+  <text x="60" y="392" font-size="9.5" fill="#93762e">· 右表超内存且配 grace_hash → 分批 build/probe 落盘，控内存峰值</text>
+  <text x="60" y="414" font-size="9" fill="#b08843">· 可用 SETTINGS join_algorithm='…' 覆盖偏好（如强制 grace_hash 防 OOM）</text>
+
+  <rect x="40" y="448" width="980" height="120" rx="12" fill="#f7f7f9" stroke="#e6e6ea"/>
+  <text x="60" y="472" font-size="11" font-weight="700" fill="#1d1d1f">一句话</text>
+  <text x="60" y="494" font-size="10" fill="#4b4b50">ClickHouse join 按 join_algorithm 偏好列表逐个尝试：右表是 KV/字典走 Direct（最省），否则默认 parallel_hash</text>
+  <text x="60" y="512" font-size="10" fill="#4b4b50">（并行建哈希表）退化到 hash；内存受限或右表超内存时用 full_sorting_merge / grace_hash（可控内存、分批落盘）。</text>
+  <text x="60" y="534" font-size="10" fill="#4b4b50">工程要点：默认哈希 join 把右表全放内存，大右表 join 前评估内存，必要时显式选 grace_hash 防 OOM。</text>
+  <text x="60" y="556" font-size="9" fill="#8a8a8f">分布式跨 shard join 另需 GLOBAL join 广播右表（见分布式篇）。</text>
+</svg>

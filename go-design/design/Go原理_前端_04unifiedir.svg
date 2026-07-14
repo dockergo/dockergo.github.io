@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="520" viewBox="0 0 920 520" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="920" height="520" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">Unified IR · 单一规范写者 → UIR 字节流 → 读回建 IR（消除两套不一致实现）</text>
+
+  <!-- input: typed AST -->
+  <rect x="30" y="60" width="200" height="52" rx="11" fill="#eef7f0" stroke="#bfe0c8" filter="url(#soft)"/>
+  <text x="46" y="84" font-size="11.5" font-weight="600" fill="#1d4a2b">类型完备语法树</text>
+  <text x="46" y="102" font-size="9.5" fill="#4a8c60">types2 定型后的 *syntax.File</text>
+
+  <line x1="230" y1="86" x2="266" y2="86" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- writer (purple = IR) -->
+  <rect x="268" y="60" width="256" height="52" rx="11" fill="#f5f0fb" stroke="#ddcdf0" filter="url(#soft)"/>
+  <text x="284" y="84" font-size="11.5" font-weight="600" fill="#3d2a5a">writer · 单一规范写者</text>
+  <text x="284" y="102" font-size="9.5" fill="#7d5bb1">把定型 AST 序列化为字节 · writer.go:52</text>
+
+  <line x1="524" y1="86" x2="560" y2="86" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- UIR byte stream (amber = data) -->
+  <rect x="562" y="60" width="328" height="52" rx="11" fill="#fdf6ec" stroke="#f0dcaf" filter="url(#soft)"/>
+  <text x="578" y="84" font-size="11.5" font-weight="600" fill="#6b4e16">UIR 字节流 · pkgbits</text>
+  <text x="578" y="102" font-size="9.5" fill="#a9822f">规范二进制编码 · uirVersion = V4 · unified.go:192</text>
+
+  <!-- central emphasis: single writer -->
+  <rect x="268" y="132" width="256" height="40" rx="10" fill="#f5f0fb" stroke="#ddcdf0"/>
+  <text x="396" y="151" font-size="10.5" font-weight="600" fill="#3d2a5a" text-anchor="middle">「写一次，两处消费」</text>
+  <text x="396" y="166" font-size="9.5" fill="#7d5bb1" text-anchor="middle">同一份字节流既编本包，又作导出数据</text>
+  <line x1="396" y1="112" x2="396" y2="130" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- split arrows down to two roles -->
+  <line x1="396" y1="172" x2="396" y2="192" stroke="#c7c7cc" stroke-width="1.5"/>
+  <line x1="200" y1="192" x2="592" y2="192" stroke="#c7c7cc" stroke-width="1.5"/>
+  <line x1="200" y1="192" x2="200" y2="212" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <line x1="592" y1="192" x2="592" y2="212" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- role A: compile current package (blue) -->
+  <rect x="30" y="216" width="400" height="278" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="46" y="240" font-size="12.5" font-weight="600" fill="#1b2a4a">角色一 · 编译当前包</text>
+  <text x="46" y="258" font-size="10" fill="#5b7db1">写完立即读回，建当前包的编译器 IR</text>
+
+  <rect x="46" y="270" width="368" height="46" rx="8" fill="#ffffff" stroke="#cfe0f2"/>
+  <text x="56" y="290" font-size="10.5" font-weight="600" fill="#1b2a4a">reader · 读者</text>
+  <text x="56" y="307" font-size="9.5" fill="#5b7db1">读 UIR 字节流 → 重建 ir.Node 树 · reader.go:36</text>
+
+  <line x1="230" y1="316" x2="230" y2="330" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <rect x="46" y="332" width="368" height="46" rx="8" fill="#f5f0fb" stroke="#ddcdf0"/>
+  <text x="56" y="352" font-size="10.5" font-weight="600" fill="#3d2a5a">ir.Node 树</text>
+  <text x="56" y="369" font-size="9.5" fill="#7d5bb1">编译器 IR，交给后续相位（内联/逃逸/SSA）</text>
+
+  <rect x="46" y="392" width="368" height="86" rx="8" fill="#eff9f2" stroke="#bfe0c8"/>
+  <text x="56" y="413" font-size="10.5" font-weight="600" fill="#1d4a2b">为何绕一圈「写再读」</text>
+  <text x="56" y="432" font-size="9.5" fill="#4a8c60">本包 IR 与导出数据走同一条 writer→reader 路径，</text>
+  <text x="56" y="449" font-size="9.5" fill="#4a8c60">避免「本包构造」与「跨包导入」两套代码分叉，</text>
+  <text x="56" y="466" font-size="9.5" fill="#4a8c60">消除历史上两套实现的行为不一致。</text>
+
+  <!-- role B: export data (green/purple) -->
+  <rect x="446" y="216" width="444" height="278" rx="13" fill="#f5f0fb" stroke="#ddcdf0" filter="url(#soft)"/>
+  <text x="462" y="240" font-size="12.5" font-weight="600" fill="#3d2a5a">角色二 · 导出数据（供下游包 import）</text>
+  <text x="462" y="258" font-size="10" fill="#7d5bb1">同一份 UIR 存入 .a/.o，下游编译时读取</text>
+
+  <rect x="462" y="270" width="412" height="46" rx="8" fill="#ffffff" stroke="#ddcdf0"/>
+  <text x="472" y="290" font-size="10.5" font-weight="600" fill="#3d2a5a">下游包 import 时 reader 读同一格式</text>
+  <text x="472" y="307" font-size="9.5" fill="#7d5bb1">取得被依赖包的类型 / 函数体 / 泛型定义</text>
+
+  <line x1="668" y1="316" x2="668" y2="330" stroke="#c7c7cc" stroke-width="1.5"/>
+  <line x1="540" y1="330" x2="796" y2="330" stroke="#c7c7cc" stroke-width="1.5"/>
+  <line x1="540" y1="330" x2="540" y2="344" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <line x1="796" y1="330" x2="796" y2="344" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <rect x="462" y="346" width="200" height="60" rx="8" fill="#eff9f2" stroke="#bfe0c8"/>
+  <text x="472" y="366" font-size="10.5" font-weight="600" fill="#1d4a2b">跨包内联</text>
+  <text x="472" y="384" font-size="9.5" fill="#4a8c60">携带函数体字节，下游</text>
+  <text x="472" y="399" font-size="9.5" fill="#4a8c60">可内联外包的小函数</text>
+
+  <rect x="674" y="346" width="200" height="60" rx="8" fill="#eff9f2" stroke="#bfe0c8"/>
+  <text x="684" y="366" font-size="10.5" font-weight="600" fill="#1d4a2b">泛型实例化</text>
+  <text x="684" y="384" font-size="9.5" fill="#4a8c60">携带泛型定义，下游按</text>
+  <text x="684" y="399" font-size="9.5" fill="#4a8c60">实参单态化 · 见【泛型】</text>
+
+  <rect x="462" y="418" width="412" height="60" rx="8" fill="#ffffff" stroke="#ddcdf0"/>
+  <text x="472" y="439" font-size="10.5" font-weight="600" fill="#3d2a5a">对比旧方案</text>
+  <text x="472" y="458" font-size="9.5" fill="#7d5bb1">旧编译器：本包 IR 与导出数据各写一套，易分叉；</text>
+  <text x="472" y="473" font-size="9.5" fill="#7d5bb1">Unified IR 统一为单一格式与单一 writer / reader。</text>
+</svg>

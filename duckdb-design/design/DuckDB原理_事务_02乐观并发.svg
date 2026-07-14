@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="430" viewBox="0 0 1020 430"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1020" height="430" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">乐观并发与旧版本清理 · 冲突提交失败，无用版本按最低活跃事务回收</text>
+
+  <!-- 乐观并发时序 -->
+  <rect x="30" y="52" width="600" height="230" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="48" y="76" font-size="12.5" font-weight="600" fill="#1d1d1f">乐观并发：不加写锁，提交时检测冲突</text>
+
+  <text x="60" y="104" font-size="10" font-weight="600" fill="#1b2a4a">事务 A</text>
+  <rect x="60" y="112" width="500" height="30" rx="7" fill="#eef3fb" stroke="#bcd0ec"/><text x="76" y="131" font-size="9" fill="#1b2a4a">BEGIN → UPDATE row#7 → …（改动记 UndoBuffer，未提交）</text>
+
+  <text x="60" y="164" font-size="10" font-weight="600" fill="#eafaf1"></text>
+  <text x="60" y="164" font-size="10" font-weight="600" fill="#0f5132">事务 B（并发）</text>
+  <rect x="60" y="172" width="500" height="30" rx="7" fill="#eafaf1" stroke="#bce6cd"/><text x="76" y="191" font-size="9" fill="#0f5132">BEGIN → UPDATE row#7 → COMMIT ✓（先提交，定 commit_id）</text>
+
+  <rect x="60" y="216" width="500" height="52" rx="9" fill="#fbeaea" stroke="#f0cccc"/>
+  <text x="310" y="238" font-size="10" font-weight="600" fill="#7d1f1f" text-anchor="middle">A 再 COMMIT → 检测到 row#7 已被 B 改动</text>
+  <text x="310" y="256" font-size="9" fill="#b06a6a" text-anchor="middle">→ A 冲突失败、回滚（不是阻塞等待）</text>
+
+  <!-- 对比说明 -->
+  <rect x="650" y="52" width="340" height="230" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="668" y="76" font-size="12" font-weight="600" fill="#1b2a4a">乐观 vs 悲观</text>
+  <text x="668" y="100" font-size="10" fill="#5b7db1">• 无行锁：读不阻塞写、写不阻塞读</text>
+  <text x="668" y="122" font-size="10" fill="#5b7db1">（读走快照、写记 undo）。</text>
+  <text x="668" y="148" font-size="10" fill="#5b7db1">• 冲突罕见时吞吐高，适合分析型</text>
+  <text x="668" y="170" font-size="10" fill="#5b7db1">负载（多读少写、少并发写同行）。</text>
+  <text x="668" y="196" font-size="10" fill="#5b7db1">• 冲突多时靠应用重试；不适合</text>
+  <text x="668" y="218" font-size="10" fill="#5b7db1">高并发写同一批行的 OLTP 场景。</text>
+  <text x="668" y="252" font-size="9" fill="#8fa9cf">DuckTransactionManager 协调提交顺序</text>
+  <text x="668" y="268" font-size="9" fill="#8fa9cf">与冲突判定。</text>
+
+  <!-- 清理 -->
+  <rect x="30" y="302" width="960" height="118" rx="14" fill="#fff7e6" stroke="#f0dcae" filter="url(#soft)"/>
+  <text x="48" y="326" font-size="12.5" font-weight="600" fill="#7a4d00">旧版本清理：UndoBuffer.Cleanup(lowest_active_transaction)（undo_buffer.hpp:57）</text>
+  <rect x="48" y="340" width="290" height="64" rx="10" fill="#ffffff" stroke="#f0dcae"/>
+  <text x="193" y="362" font-size="10" font-weight="600" fill="#7a4d00" text-anchor="middle">找最低活跃事务 start_time</text>
+  <text x="193" y="382" font-size="9" fill="#9a7328" text-anchor="middle">早于它的旧版本再无人需要</text>
+  <rect x="348" y="340" width="290" height="64" rx="10" fill="#ffffff" stroke="#f0dcae"/>
+  <text x="493" y="362" font-size="10" font-weight="600" fill="#7a4d00" text-anchor="middle">回收 UndoBuffer 旧值/删除标记</text>
+  <text x="493" y="382" font-size="9" fill="#9a7328" text-anchor="middle">释放内存，避免版本无限堆积</text>
+  <rect x="648" y="340" width="320" height="64" rx="10" fill="#ffffff" stroke="#f0dcae"/>
+  <text x="808" y="362" font-size="10" font-weight="600" fill="#7a4d00" text-anchor="middle">长事务的代价</text>
+  <text x="808" y="382" font-size="9" fill="#9a7328" text-anchor="middle">久不结束会压住清理水位、版本涨</text>
+
+  <line x1="310" y1="202" x2="310" y2="216" stroke="#e0a0a0" stroke-width="1.2" marker-end="url(#ar)"/>
+</svg>

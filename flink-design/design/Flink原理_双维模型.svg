@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="536" viewBox="0 0 1080 536" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="536" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Flink 原理 · 双维模型（能力域 × 执行时机）</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">纵维=能力域(接触面 + 支撑 7);横维=执行时机(前台 mailbox 处理记录 vs 后台异步快照/watermark/credit)</text>
+
+  <!-- 纵维标注 -->
+  <text x="30" y="72" font-size="10" font-weight="700" fill="#86868b">能力域（纵维） ↓</text>
+
+  <!-- 接触面 band -->
+  <rect x="30" y="80" width="1020" height="58" rx="13" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="46" y="100" font-size="11" font-weight="700" fill="#3d2a5a">接触面 能力域（面向用户 · 多 API,非 SQL 语句族）</text>
+  <g text-anchor="middle" font-size="8.8">
+    <rect x="46" y="108" width="490" height="24" rx="7" fill="#faf4fb" stroke="#e2d2ee"/><text x="291" y="124" fill="#3d2a5a">DataStream API(命令式:map / keyBy / window,含 V2 FLIP-409)</text>
+    <rect x="546" y="108" width="488" height="24" rx="7" fill="#faf4fb" stroke="#e2d2ee"/><text x="790" y="124" fill="#3d2a5a">Table / SQL API(声明式:Calcite planner)</text>
+  </g>
+
+  <line x1="540" y1="138" x2="540" y2="154" stroke="#86868b" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- 支撑 7 能力域 -->
+  <rect x="30" y="154" width="1020" height="98" rx="14" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="46" y="174" font-size="11" font-weight="700" fill="#1b2a4a">支撑 7 能力域（引擎内部 · 分层归位）</text>
+  <g text-anchor="middle">
+    <rect x="44" y="184" width="134" height="58" rx="8" fill="#f3f7fc" stroke="#cfe0f2"/><text x="111" y="208" font-size="9" font-weight="600" fill="#274a78">图变换</text><text x="111" y="224" font-size="7.6" fill="#5b7db1">编译成三级图</text>
+    <rect x="186" y="184" width="134" height="58" rx="8" fill="#f3f7fc" stroke="#cfe0f2"/><text x="253" y="208" font-size="9" font-weight="600" fill="#274a78">调度与部署</text><text x="253" y="224" font-size="7.6" fill="#5b7db1">JM/TM/slot</text>
+    <rect x="328" y="184" width="134" height="58" rx="8" fill="#f3f7fc" stroke="#cfe0f2"/><text x="395" y="208" font-size="9" font-weight="600" fill="#274a78">任务执行</text><text x="395" y="224" font-size="7.6" fill="#5b7db1">mailbox 单线程</text>
+    <rect x="470" y="184" width="134" height="58" rx="8" fill="#f3f7fc" stroke="#cfe0f2"/><text x="537" y="208" font-size="9" font-weight="600" fill="#274a78">状态管理</text><text x="537" y="224" font-size="7.6" fill="#5b7db1">keyed/operator</text>
+    <rect x="612" y="184" width="134" height="58" rx="8" fill="#eafaf1" stroke="#bfe0cd"/><text x="679" y="208" font-size="9" font-weight="600" fill="#12402a">检查点容错</text><text x="679" y="224" font-size="7.6" fill="#2f6f4f">分布式快照(灵魂)</text>
+    <rect x="754" y="184" width="134" height="58" rx="8" fill="#f3f7fc" stroke="#cfe0f2"/><text x="821" y="208" font-size="9" font-weight="600" fill="#274a78">时间与窗口</text><text x="821" y="224" font-size="7.6" fill="#5b7db1">事件时间/水位线</text>
+    <rect x="896" y="184" width="134" height="58" rx="8" fill="#f3f7fc" stroke="#cfe0f2"/><text x="963" y="204" font-size="9" font-weight="600" fill="#274a78">网络与</text><text x="963" y="218" font-size="9" font-weight="600" fill="#274a78">数据交换</text><text x="963" y="232" font-size="7.6" fill="#5b7db1">credit 流控</text>
+  </g>
+
+  <!-- 横维标注 -->
+  <text x="30" y="278" font-size="10" font-weight="700" fill="#86868b">执行时机（横维） →</text>
+
+  <!-- 前台 -->
+  <rect x="30" y="286" width="502" height="192" rx="14" fill="#f3f7fc" stroke="#cfe0f2" filter="url(#soft)"/>
+  <text x="48" y="308" font-size="11" font-weight="700" fill="#274a78">前台 · mailbox 单线程（处理记录）</text>
+  <text x="48" y="326" font-size="8.6" fill="#5b7db1">算子在单线程里串行处理每条记录,免加锁</text>
+  <g font-size="8.4" fill="#274a78">
+    <rect x="48" y="336" width="466" height="30" rx="7" fill="#ffffff" stroke="#cfe0f2"/><text x="60" y="355">① 处理数据记录:map / filter / window 逐条计算</text>
+    <rect x="48" y="372" width="466" height="30" rx="7" fill="#ffffff" stroke="#cfe0f2"/><text x="60" y="391">② 响应检查点触发 / 定时器回调(与记录同队列串行)</text>
+    <rect x="48" y="408" width="466" height="30" rx="7" fill="#ffffff" stroke="#cfe0f2"/><text x="60" y="427">③ 读写状态 backend(热路径,低延迟)</text>
+  </g>
+  <text x="48" y="458" font-size="8.2" fill="#5b7db1">归位:任务执行能力域 —— 用户感知的实时热路径</text>
+
+  <!-- 后台 -->
+  <rect x="548" y="286" width="502" height="192" rx="14" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="566" y="308" font-size="11" font-weight="700" fill="#5a3410">后台 · 异步（不阻塞记录处理）</text>
+  <text x="566" y="326" font-size="8.6" fill="#93762e">与前台并行推进,对用户基本无感</text>
+  <g font-size="8.4" fill="#5a3410">
+    <rect x="566" y="336" width="466" height="30" rx="7" fill="#ffffff" stroke="#e8cf9a"/><text x="578" y="355">① 检查点异步快照:同步建资源,异步写盘/上传</text>
+    <rect x="566" y="372" width="466" height="30" rx="7" fill="#ffffff" stroke="#e8cf9a"/><text x="578" y="391">② watermark 推进:驱动事件时间与窗口触发</text>
+    <rect x="566" y="408" width="466" height="30" rx="7" fill="#ffffff" stroke="#e8cf9a"/><text x="578" y="427">③ 网络 credit 流控:背压不阻塞 TCP</text>
+  </g>
+  <text x="566" y="458" font-size="8.2" fill="#93762e">归位:检查点容错 / 时间与窗口 / 网络交换能力域</text>
+
+  <!-- bottom -->
+  <rect x="30" y="490" width="1020" height="34" rx="11" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="540" y="511" font-size="9" font-weight="600" text-anchor="middle" fill="#48484a">双维交叉:同一能力域可有前台/后台两副面孔——如状态在前台读写、在后台快照;执行时机横切所有能力域</text>
+</svg>

@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="520" viewBox="0 0 1080 520" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="520" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">StarRocks Runtime Filter / CTE 复用 / 物化视图透明改写</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">三种规划期减负手段:RF 下推谓词、CTE 复用去重算、MV 改写命中预计算</text>
+
+  <!-- Runtime Filter -->
+  <rect x="30" y="72" width="1020" height="128" rx="13" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="46" y="94" font-size="11" font-weight="700" fill="#1b2a4a">Runtime Filter · 构建侧谓词下推探测侧扫描层</text>
+  <g text-anchor="middle" font-size="8.5">
+    <rect x="46" y="106" width="240" height="76" rx="9" fill="#f3f7fc" stroke="#cfe0f2"/><text x="166" y="128" font-weight="600" fill="#274a78">Join 构建侧(小表)</text><text x="166" y="148" fill="#5b7db1">build 侧 key 集合</text><text x="166" y="166" fill="#5b7db1">RuntimeFilterBuildNode</text>
+    <rect x="420" y="106" width="240" height="76" rx="9" fill="#f3f7fc" stroke="#cfe0f2"/><text x="540" y="128" font-weight="600" fill="#274a78">FE 规划 RF 下推</text><text x="540" y="148" fill="#5b7db1">RuntimeFilterDescription</text><text x="540" y="166" fill="#5b7db1">RuntimeFilterPushDownContext</text>
+    <rect x="794" y="106" width="240" height="76" rx="9" fill="#eafaf1" stroke="#bfe0cd"/><text x="914" y="128" font-weight="600" fill="#12402a">探测侧扫描层过滤</text><text x="914" y="148" fill="#2f6f4f">be/storage/runtime_filter_predicate.h</text><text x="914" y="166" fill="#2f6f4f">扫描时就少读大量行</text>
+  </g>
+  <line x1="286" y1="144" x2="420" y2="144" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+  <line x1="660" y1="144" x2="794" y2="144" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+
+  <!-- CTE reuse -->
+  <rect x="30" y="216" width="500" height="150" rx="13" fill="#fff7e6" stroke="#e8cf9a"/>
+  <text x="46" y="238" font-size="11" font-weight="700" fill="#5a3410">CTE 复用 · CTEContext 决策</text>
+  <rect x="46" y="250" width="468" height="40" rx="8" fill="#fdf6ea" stroke="#efdcb4"/><text x="60" y="270" font-size="8.8" font-weight="600" fill="#5a3410">内联 inline</text><text x="60" y="284" font-size="8.3" fill="#93762e">复用关闭 或 消费者只用一次 → 直接展开</text>
+  <rect x="46" y="298" width="468" height="40" rx="8" fill="#eafaf1" stroke="#bfe0cd"/><text x="60" y="318" font-size="8.8" font-weight="600" fill="#12402a">复用 reuse</text><text x="60" y="332" font-size="8.3" fill="#2f6f4f">isForceCTE / 比例阈值触发 → 算一次多处用</text>
+  <text x="46" y="356" font-size="8" fill="#a1a1a6">CTEContext.java:38 · 规则 CollectCTEProduce/Consume, ForceCTEReuse</text>
+
+  <!-- MV rewrite -->
+  <rect x="550" y="216" width="500" height="150" rx="13" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="566" y="238" font-size="11" font-weight="700" fill="#12402a">物化视图透明改写 · CBO 内自动</text>
+  <text x="566" y="260" font-size="8.8" fill="#2f6f4f">· BaseMaterializedViewRewriteRule(rule/.../materialization/)</text>
+  <text x="566" y="280" font-size="8.8" fill="#2f6f4f">· 把命中 MV 的查询自动重写到 MV,用户无感知</text>
+  <rect x="566" y="290" width="468" height="34" rx="7" fill="#eafaf1" stroke="#bfe0cd"/><text x="580" y="311" font-size="8.3" fill="#12402a">MvRewriteStrategy:单表 / 多表 / CBO / 视图改写 开关</text>
+  <text x="566" y="342" font-size="8.8" fill="#2f6f4f">· 改写后 MVRewriteValidator.validateMV 校验(QueryOptimizer.java:330)</text>
+  <text x="566" y="358" font-size="8" fill="#a1a1a6">materialization/MvRewriteStrategy.java</text>
+
+  <!-- note -->
+  <rect x="30" y="382" width="1020" height="120" rx="13" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="46" y="404" font-size="11" font-weight="700" fill="#1d1d1f">要点</text>
+  <text x="46" y="426" font-size="9" fill="#6e6e73">· 三者都是"规划期把要做的事减到最少":RF 减扫描行、CTE 减重复计算、MV 改写用预计算结果替代现算</text>
+  <text x="46" y="446" font-size="9" fill="#6e6e73">· RF 高选择性 Join 收益大;低选择性(过滤不掉多少行)时构建/传播开销可能得不偿失</text>
+  <text x="46" y="466" font-size="9" fill="#6e6e73">· MV 透明改写在 CBO 里自动完成,用户查基表即可命中 MV,无需改 SQL</text>
+  <text x="46" y="486" font-size="8.5" fill="#b1483a">· 归属:RF 在扫描层的应用属【存储引擎】读路径;MV 的刷新维护在【后台任务】;规划决策是本主线</text>
+</svg>

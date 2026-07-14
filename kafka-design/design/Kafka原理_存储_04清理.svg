@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="540" viewBox="0 0 1080 540"
+     font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1080" height="540" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Kafka 清理策略 · retention 删除 vs compaction 压缩</text>
+  <text x="30" y="50" font-size="12" fill="#a1a1a6">cleanup.policy 可为 delete 和/或 compact（LogConfig.java:171）；后台 kafka-log-retention 周期跑（LogManager.java:813）</text>
+
+  <!-- DELETE side -->
+  <rect x="48" y="72" width="492" height="440" rx="14" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="70" y="100" font-size="14" font-weight="700" fill="#5a3410">delete · 按时间/大小整段删</text>
+  <text x="70" y="120" font-size="11" fill="#93762e">deleteOldSegments（UnifiedLog.java:1967）· 整段删除，不改段内</text>
+
+  <text x="70" y="150" font-size="12" font-weight="600" fill="#5a3410">三条删除谓词（满足任一即删该段）</text>
+  <rect x="70" y="162" width="448" height="40" rx="9" fill="#ffffff" stroke="#e8cf9a"/>
+  <text x="84" y="180" font-size="11" font-weight="600" fill="#5a3410">① log-start 越界</text>
+  <text x="84" y="196" font-size="10.5" fill="#93762e">段整体在 log start offset 之前</text>
+  <rect x="70" y="210" width="448" height="40" rx="9" fill="#ffffff" stroke="#e8cf9a"/>
+  <text x="84" y="228" font-size="11" font-weight="600" fill="#5a3410">② 大小超 retention.bytes</text>
+  <text x="84" y="244" font-size="10.5" fill="#93762e">总日志超上限，从最旧段删起</text>
+  <rect x="70" y="258" width="448" height="40" rx="9" fill="#ffffff" stroke="#e8cf9a"/>
+  <text x="84" y="276" font-size="11" font-weight="600" fill="#5a3410">③ 时间超 retention.ms</text>
+  <text x="84" y="292" font-size="10.5" fill="#93762e">startMs − segment.largestTimestamp &gt; retentionMs（:2002）</text>
+
+  <text x="70" y="326" font-size="12" font-weight="600" fill="#5a3410">整段淘汰示意</text>
+  <rect x="70" y="338" width="104" height="52" rx="9" fill="#f0ddb8" stroke="#e8cf9a"/>
+  <text x="122" y="360" font-size="10.5" fill="#8a5a1e" text-anchor="middle">seg base=0</text>
+  <text x="122" y="378" font-size="10" fill="#a35555" text-anchor="middle">过期 → 删</text>
+  <rect x="182" y="338" width="104" height="52" rx="9" fill="#f0ddb8" stroke="#e8cf9a"/>
+  <text x="234" y="360" font-size="10.5" fill="#8a5a1e" text-anchor="middle">seg base=5k</text>
+  <text x="234" y="378" font-size="10" fill="#a35555" text-anchor="middle">过期 → 删</text>
+  <rect x="294" y="338" width="104" height="52" rx="9" fill="#ffffff" stroke="#e8cf9a"/>
+  <text x="346" y="360" font-size="10.5" fill="#5a3410" text-anchor="middle">seg base=9k</text>
+  <text x="346" y="378" font-size="10" fill="#93762e" text-anchor="middle">保留</text>
+  <rect x="406" y="338" width="112" height="52" rx="9" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="462" y="360" font-size="10.5" fill="#12402a" text-anchor="middle">active</text>
+  <text x="462" y="378" font-size="10" fill="#2f6f4f" text-anchor="middle">保留</text>
+
+  <rect x="70" y="410" width="448" height="86" rx="10" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="84" y="434" font-size="11.5" font-weight="600" fill="#2c5a3a">适用：流水日志（按时间/大小淘汰）</text>
+  <text x="84" y="456" font-size="10.5" fill="#2f6f4f">消费不删数据；淘汰只看 retention 窗口</text>
+  <text x="84" y="478" font-size="10.5" fill="#2f6f4f">粒度是整个 Segment，不精确到单条</text>
+
+  <!-- COMPACT side -->
+  <rect x="558" y="72" width="474" height="440" rx="14" fill="#f4eefb" stroke="#dcc9f0" filter="url(#soft)"/>
+  <text x="580" y="100" font-size="14" font-weight="700" fill="#4a2b6b">compact · 按 key 保最新</text>
+  <text x="580" y="120" font-size="11" fill="#7c5aa6">LogCleaner（LogCleaner.java:49）· 同 key 更大 offset 覆盖旧值</text>
+
+  <text x="580" y="150" font-size="12" font-weight="600" fill="#4a2b6b">规则：key=K offset=O，若存在同 key 更大 offset O' 则 O 过时</text>
+  <rect x="580" y="162" width="220" height="40" rx="9" fill="#ffffff" stroke="#dcc9f0"/>
+  <text x="594" y="180" font-size="11" font-weight="600" fill="#4a2b6b">① buildOffsetMap（:710）</text>
+  <text x="594" y="196" font-size="10.5" fill="#7c5aa6">key → 最新 offset 映射</text>
+  <rect x="812" y="162" width="200" height="40" rx="9" fill="#ffffff" stroke="#dcc9f0"/>
+  <text x="826" y="180" font-size="11" font-weight="600" fill="#4a2b6b">② cleanInto 重拷贝段</text>
+  <text x="826" y="196" font-size="10.5" fill="#7c5aa6">丢被覆盖的 key</text>
+  <rect x="580" y="210" width="432" height="40" rx="9" fill="#ffffff" stroke="#dcc9f0"/>
+  <text x="594" y="228" font-size="11" font-weight="600" fill="#4a2b6b">③ shouldRetainRecord（:567）判每条是否保留</text>
+  <text x="594" y="244" font-size="10.5" fill="#7c5aa6">保留 = 该 key 的最新 offset</text>
+
+  <text x="580" y="278" font-size="12" font-weight="600" fill="#4a2b6b">压缩前 → 压缩后（同 key 只留最新）</text>
+  <rect x="580" y="290" width="432" height="34" rx="8" fill="#efe4fb" stroke="#dcc9f0"/>
+  <text x="594" y="311" font-size="10.5" fill="#4a2b6b">前：A=1  B=1  A=2  C=1  B=2  A=3  C=null(墓碑)</text>
+  <rect x="580" y="330" width="432" height="34" rx="8" fill="#ffffff" stroke="#dcc9f0"/>
+  <text x="594" y="351" font-size="10.5" fill="#4a2b6b">后：B=2  A=3  <tspan font-weight="600" fill="#7a2b2b">C=null → 墓碑</tspan></text>
+  <polyline points="796,324 796,330" fill="none" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <rect x="580" y="378" width="432" height="52" rx="10" fill="#fbeaea" stroke="#e6b8b8"/>
+  <text x="594" y="401" font-size="11.5" font-weight="600" fill="#7a2b2b">墓碑（tombstone）：null payload = 删除标记</text>
+  <text x="594" y="421" font-size="10.5" fill="#a35555">过 deleteHorizonMs 后才真正清除</text>
+
+  <rect x="580" y="440" width="432" height="56" rx="10" fill="#f5f0fb" stroke="#dcc9f0"/>
+  <text x="594" y="464" font-size="11.5" font-weight="600" fill="#4a2b6b">适用：每 key 保最新值的变更流</text>
+  <text x="594" y="485" font-size="10.5" fill="#7c5aa6">如 CDC、状态表；compaction ≠ gzip/lz4 压缩算法</text>
+</svg>

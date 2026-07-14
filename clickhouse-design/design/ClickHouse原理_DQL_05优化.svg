@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="600" viewBox="0 0 1060 600" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1060" height="600" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">优化 pass：在 QueryPlan 上做变换，把过滤/裁剪推给读取步</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">optimizeTree (Optimizations/optimizeTree.cpp:24) 两轮 pass · 第一轮 getOptimizations 15 条 · 第二轮含 PREWHERE/主键裁剪</text>
+
+  <!-- first pass -->
+  <rect x="40" y="72" width="480" height="220" rx="13" fill="#f3f7fc" stroke="#cfe0f2"/>
+  <text x="280" y="96" font-size="12" font-weight="700" fill="#274a78" text-anchor="middle">第一轮 pass（getOptimizations, 15 条）</text>
+  <g text-anchor="middle" font-size="8.5">
+    <rect x="60" y="110" width="215" height="42" rx="8" fill="#fff" stroke="#cfe0f2"/><text x="167" y="128" font-weight="600" fill="#274a78">filterPushDown（谓词下推）</text><text x="167" y="143" fill="#5b7db1">把 WHERE 尽量下推到源附近</text>
+    <rect x="285" y="110" width="215" height="42" rx="8" fill="#fff" stroke="#cfe0f2"/><text x="392" y="128" font-weight="600" fill="#274a78">pushDownLimit（limit 下推）</text><text x="392" y="143" fill="#5b7db1">尽早截断行数</text>
+    <rect x="60" y="160" width="215" height="42" rx="8" fill="#fff" stroke="#cfe0f2"/><text x="167" y="178" font-weight="600" fill="#274a78">splitFilter / mergeFilters</text><text x="167" y="193" fill="#5b7db1">拆分/合并过滤条件</text>
+    <rect x="285" y="160" width="215" height="42" rx="8" fill="#fff" stroke="#cfe0f2"/><text x="392" y="178" font-weight="600" fill="#274a78">mergeExpressions</text><text x="392" y="193" fill="#5b7db1">合并相邻表达式步</text>
+    <rect x="60" y="210" width="215" height="42" rx="8" fill="#fff" stroke="#cfe0f2"/><text x="167" y="228" font-weight="600" fill="#274a78">convertOuterJoinToInner</text><text x="167" y="243" fill="#5b7db1">外连接转内连接（可行时）</text>
+    <rect x="285" y="210" width="215" height="42" rx="8" fill="#fff" stroke="#cfe0f2"/><text x="392" y="228" font-weight="600" fill="#274a78">liftUpUnion / convertJoinToIn</text><text x="392" y="243" fill="#5b7db1">结构性重排</text>
+  </g>
+  <text x="280" y="278" font-size="8.5" fill="#8aa6cf" text-anchor="middle">目标：减少行数、减少算子、简化结构</text>
+
+  <!-- second pass -->
+  <rect x="540" y="72" width="480" height="220" rx="13" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="780" y="96" font-size="12" font-weight="700" fill="#12402a" text-anchor="middle">第二轮 pass（存储相关裁剪）</text>
+  <g text-anchor="middle" font-size="8.5">
+    <rect x="560" y="110" width="215" height="42" rx="8" fill="#fff" stroke="#bfe0cd"/><text x="667" y="128" font-weight="600" fill="#12402a">optimizePrewhere（:141）</text><text x="667" y="143" fill="#2f6f4f">WHERE → PREWHERE</text>
+    <rect x="785" y="110" width="215" height="42" rx="8" fill="#fff" stroke="#bfe0cd"/><text x="892" y="128" font-weight="600" fill="#12402a">主键裁剪+limit（:134）</text><text x="892" y="143" fill="#2f6f4f">optimizePrimaryKeyConditionAndLimit</text>
+    <rect x="560" y="160" width="215" height="42" rx="8" fill="#fff" stroke="#bfe0cd"/><text x="667" y="178" font-weight="600" fill="#12402a">optimizeReadInOrder（:172）</text><text x="667" y="193" fill="#2f6f4f">利用已有序省排序</text>
+    <rect x="785" y="160" width="215" height="42" rx="8" fill="#fff" stroke="#bfe0cd"/><text x="892" y="178" font-weight="600" fill="#12402a">useAggregateProjections（:243）</text><text x="892" y="193" fill="#2f6f4f">命中预聚合投影</text>
+    <rect x="560" y="210" width="440" height="42" rx="8" fill="#fff" stroke="#bfe0cd"/><text x="780" y="228" font-weight="600" fill="#12402a">useNormalProjections（:265）· applyOrder（:329）</text><text x="780" y="243" fill="#2f6f4f">用重排序投影 · 确定读取顺序</text>
+  </g>
+  <text x="780" y="278" font-size="8.5" fill="#4c8567" text-anchor="middle">目标：让存储少读、少排、命中投影</text>
+
+  <!-- push to ReadFromMergeTree -->
+  <rect x="40" y="312" width="980" height="120" rx="13" fill="#fdf9f0" stroke="#efe3cd"/>
+  <text x="60" y="336" font-size="11.5" font-weight="700" fill="#7a5a1e">优化的落点：把条件推给 ReadFromMergeTree（optimizePrimaryKeyConditionAndLimit.cpp）</text>
+  <g text-anchor="middle" font-size="8.5">
+    <rect x="70" y="350" width="210" height="60" rx="9" fill="#fff" stroke="#efdcb4"/><text x="175" y="370" font-size="9" font-weight="600" fill="#5a3410">addFilter（PREWHERE）:21</text><text x="175" y="388" fill="#93762e">PREWHERE 条件下推</text><text x="175" y="402" fill="#b08843">先读判断列</text>
+    <rect x="290" y="350" width="210" height="60" rx="9" fill="#fff" stroke="#efdcb4"/><text x="395" y="370" font-size="9" font-weight="600" fill="#5a3410">row-level filter :23</text><text x="395" y="388" fill="#93762e">行级安全过滤</text><text x="395" y="402" fill="#b08843">RowPolicy 注入</text>
+    <rect x="510" y="350" width="210" height="60" rx="9" fill="#fff" stroke="#efdcb4"/><text x="615" y="370" font-size="9" font-weight="600" fill="#5a3410">WHERE + setLimit :30,:34</text><text x="615" y="388" fill="#93762e">主键裁剪条件 + limit</text><text x="615" y="402" fill="#b08843">缩小 MarkRange</text>
+    <rect x="730" y="350" width="270" height="60" rx="9" fill="#fff" stroke="#efdcb4"/><text x="865" y="370" font-size="9" font-weight="600" fill="#5a3410">applyFilters() :50</text><text x="865" y="388" fill="#93762e">读取步据此裁剪 granule</text><text x="865" y="402" fill="#b08843">= 真正少读盘</text>
+  </g>
+
+  <rect x="40" y="448" width="980" height="130" rx="12" fill="#f7f7f9" stroke="#e6e6ea"/>
+  <text x="60" y="472" font-size="11" font-weight="700" fill="#1d1d1f">一句话</text>
+  <text x="60" y="494" font-size="10" fill="#4b4b50">优化 pass 分两轮：第一轮做通用变换（谓词/limit 下推、表达式合并、结构重排），第二轮做存储相关裁剪</text>
+  <text x="60" y="512" font-size="10" fill="#4b4b50">（PREWHERE 移动、主键裁剪、按序读、投影命中）。所有裁剪条件最终"推给 ReadFromMergeTree"，让存储层真正少读数据。</text>
+  <text x="60" y="534" font-size="10" fill="#4b4b50">这就是"规划期减少要做的事"的精髓：优化不改变结果，只改变"读多少、算多少"。</text>
+  <text x="60" y="558" font-size="9" fill="#8a8a8f">更系统的优化视角（含缓存、投影、KeyCondition）见「优化技术」主线。</text>
+</svg>

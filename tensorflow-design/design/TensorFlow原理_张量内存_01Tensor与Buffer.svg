@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="470" viewBox="0 0 1000 470"
+     font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1000" height="470" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">张量与内存 · Tensor = 元信息 + 共享的引用计数缓冲</text>
+
+  <!-- Tensor 结构 -->
+  <rect x="30" y="52" width="600" height="200" rx="14" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="52" y="76" font-size="12.5" font-weight="600" fill="#5a3410">Tensor 的两半：轻量元信息 + 重的数据缓冲</text>
+  <rect x="52" y="90" width="260" height="146" rx="10" fill="#ffffff" stroke="#e8cf9a"/>
+  <text x="182" y="112" font-size="10" font-weight="600" fill="#5a3410" text-anchor="middle">元信息（轻，值语义）</text>
+  <text x="68" y="136" font-size="9.5" fill="#93762e">· TensorShape（各维大小）</text>
+  <text x="68" y="158" font-size="9.5" fill="#93762e">· dtype（float32/int32/…）</text>
+  <text x="68" y="180" font-size="9.5" fill="#93762e">· 指向 TensorBuffer 的指针</text>
+  <text x="68" y="210" font-size="9" fill="#a1791f">framework/tensor.h Tensor 类</text>
+  <rect x="336" y="90" width="278" height="146" rx="10" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="475" y="112" font-size="10" font-weight="600" fill="#5a3410" text-anchor="middle">TensorBuffer（重，引用计数）</text>
+  <text x="352" y="136" font-size="9.5" fill="#93762e">· class TensorBuffer : RefCounted</text>
+  <text x="352" y="158" font-size="9.5" fill="#93762e">· 一块设备内存 data_ptr</text>
+  <text x="352" y="180" font-size="9.5" fill="#93762e">· 多个 Tensor 可共享同一 buffer</text>
+  <text x="352" y="210" font-size="9" fill="#a1791f">tensor.h:72 引用计数管生命周期</text>
+  <line x1="312" y1="163" x2="336" y2="163" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- 共享示例 -->
+  <rect x="650" y="52" width="320" height="200" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="672" y="76" font-size="12" font-weight="600" fill="#1b2a4a">共享缓冲（零拷贝视图）</text>
+  <rect x="672" y="92" width="132" height="40" rx="8" fill="#ffffff" stroke="#bcd0ec"/><text x="738" y="116" font-size="9" fill="#1b2a4a" text-anchor="middle">Tensor A</text>
+  <rect x="816" y="92" width="132" height="40" rx="8" fill="#ffffff" stroke="#bcd0ec"/><text x="882" y="116" font-size="9" fill="#1b2a4a" text-anchor="middle">Tensor B（reshape）</text>
+  <rect x="736" y="168" width="150" height="44" rx="8" fill="#fdf6ea" stroke="#efdcb4"/><text x="811" y="194" font-size="9" fill="#5a3410" text-anchor="middle">同一 TensorBuffer</text>
+  <line x1="738" y1="132" x2="790" y2="168" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+  <line x1="882" y1="132" x2="830" y2="168" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+  <text x="672" y="234" font-size="8.5" fill="#5b7db1">reshape/slice 等复用底层内存，引用计数保活</text>
+
+  <!-- Allocator -->
+  <rect x="30" y="272" width="940" height="118" rx="14" fill="#eafaf1" stroke="#bce6cd" filter="url(#soft)"/>
+  <text x="52" y="296" font-size="12.5" font-weight="600" fill="#0f5132">分设备分配：Allocator（每个设备一个）</text>
+  <rect x="52" y="312" width="290" height="62" rx="10" fill="#ffffff" stroke="#bce6cd"/><text x="197" y="336" font-size="9.5" font-weight="600" fill="#0f5132" text-anchor="middle">CPU Allocator</text><text x="197" y="356" font-size="8.5" fill="#2f6f4f" text-anchor="middle">系统内存，对齐分配</text>
+  <rect x="356" y="312" width="290" height="62" rx="10" fill="#ffffff" stroke="#bce6cd"/><text x="501" y="336" font-size="9.5" font-weight="600" fill="#0f5132" text-anchor="middle">GPU BFC Allocator</text><text x="501" y="356" font-size="8.5" fill="#2f6f4f" text-anchor="middle">best-fit + 合并，显存池化复用</text>
+  <rect x="660" y="312" width="288" height="62" rx="10" fill="#ffffff" stroke="#bce6cd"/><text x="804" y="336" font-size="9.5" font-weight="600" fill="#0f5132" text-anchor="middle">framework/allocator.h</text><text x="804" y="356" font-size="8.5" fill="#2f6f4f" text-anchor="middle">Allocator 抽象接口</text>
+
+  <!-- 收尾 -->
+  <rect x="30" y="410" width="940" height="46" rx="12" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="52" y="438" font-size="10.5" fill="#494950">口诀：<tspan font-weight="600" fill="#5a3410">Tensor 是"元信息 + 共享缓冲指针"</tspan>；缓冲用引用计数管生命周期，视图零拷贝；显存靠 BFC 分配器池化，避免频繁 cudaMalloc。</text>
+</svg>

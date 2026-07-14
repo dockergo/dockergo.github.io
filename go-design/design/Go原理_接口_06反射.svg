@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="510" viewBox="0 0 920 510" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="920" height="510" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">反射 · reflect.Value / Type 映射运行时 abi.Type</text>
+  <text x="30" y="49" font-size="10.5" fill="#6e6e73">reflect 是运行时类型系统的用户态镜像——把编译期擦除的静态类型经接口里的 _type 重新取回</text>
+
+  <!-- interface value source (purple) -->
+  <rect x="30" y="66" width="270" height="120" rx="13" fill="#f5f0fb" stroke="#ddcdf0" filter="url(#soft)"/>
+  <text x="46" y="92" font-size="12.5" font-weight="600" fill="#3d2a5a">接口值（eface / iface）</text>
+  <text x="46" y="110" font-size="10" fill="#7d5bb1">保存 (类型, 数据) 二元组</text>
+  <rect x="46" y="120" width="238" height="26" rx="7" fill="#ffffff" stroke="#ddcdf0"/>
+  <text x="56" y="138" font-size="10" fill="#3d2a5a">_type / tab → 类型信息</text>
+  <rect x="46" y="152" width="238" height="26" rx="7" fill="#ffffff" stroke="#ddcdf0"/>
+  <text x="56" y="170" font-size="10" fill="#3d2a5a">data → 数据指针</text>
+
+  <!-- ValueOf splits (blue) -->
+  <rect x="330" y="66" width="270" height="120" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="346" y="92" font-size="12.5" font-weight="600" fill="#1b2a4a">reflect.ValueOf(x)</text>
+  <text x="346" y="110" font-size="10" fill="#5b7db1">把接口拆成 (type, data)</text>
+  <rect x="346" y="120" width="238" height="26" rx="7" fill="#ffffff" stroke="#bcd0ec"/>
+  <text x="356" y="138" font-size="10" fill="#1b2a4a">取 _type → 填 Value.typ_</text>
+  <rect x="346" y="152" width="238" height="26" rx="7" fill="#ffffff" stroke="#bcd0ec"/>
+  <text x="356" y="170" font-size="10" fill="#1b2a4a">取 data → 填 Value.ptr</text>
+
+  <line x1="300" y1="126" x2="328" y2="126" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <line x1="600" y1="126" x2="628" y2="126" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- reflect.Type = rtype (green = mapping success) -->
+  <rect x="630" y="66" width="260" height="120" rx="13" fill="#eef7f0" stroke="#bfe0c8" filter="url(#soft)"/>
+  <text x="646" y="92" font-size="12.5" font-weight="600" fill="#1d4a2b">reflect.Type → rtype</text>
+  <text x="646" y="110" font-size="10" fill="#4a8c60">type.go:351 · TypeOf(x) 取 x 的 _type</text>
+  <rect x="646" y="120" width="228" height="58" rx="8" fill="#ffffff" stroke="#bfe0c8"/>
+  <text x="656" y="141" font-size="10.5" font-weight="600" fill="#1d4a2b">rtype 就是 abi.Type 的包装</text>
+  <text x="656" y="159" font-size="9.5" fill="#4a8c60">注释：rtype must be kept in sync</text>
+  <text x="656" y="173" font-size="9.5" fill="#4a8c60">with abi.Type</text>
+
+  <!-- reflect.Value struct (blue) -->
+  <rect x="30" y="206" width="570" height="200" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="46" y="232" font-size="13" font-weight="600" fill="#1b2a4a">reflect.Value · value.go:40（三字段）</text>
+  <rect x="46" y="244" width="538" height="34" rx="8" fill="#ffffff" stroke="#bcd0ec"/>
+  <text x="60" y="265" font-size="10.5" fill="#3a3a3c"><tspan font-weight="600">typ_ *abi.Type</tspan> · 类型描述符（读元数据的入口）</text>
+  <rect x="46" y="284" width="538" height="34" rx="8" fill="#ffffff" stroke="#bcd0ec"/>
+  <text x="60" y="305" font-size="10.5" fill="#3a3a3c"><tspan font-weight="600">ptr unsafe.Pointer</tspan> · 数据指针</text>
+  <rect x="46" y="324" width="538" height="70" rx="8" fill="#fdf6ec" stroke="#f0dcaf"/>
+  <text x="60" y="345" font-size="10.5" font-weight="600" fill="#6b4e16">flag uintptr · 低 5 位 = Kind + 高位标志</text>
+  <text x="60" y="363" font-size="10" fill="#a9822f">flagRO（只读，来自未导出字段，禁止改）· flagIndir（间接）</text>
+  <text x="60" y="381" font-size="10" fill="#a9822f">flagAddr（可寻址，决定能否 Set）· flagMethod（方法号）</text>
+
+  <!-- reflect ops (purple = rule) -->
+  <rect x="630" y="206" width="260" height="200" rx="13" fill="#f5f0fb" stroke="#ddcdf0" filter="url(#soft)"/>
+  <text x="646" y="232" font-size="12.5" font-weight="600" fill="#3d2a5a">反射操作的本质</text>
+  <text x="646" y="252" font-size="10" fill="#7d5bb1">读 abi.Type 元数据</text>
+  <text x="646" y="268" font-size="10" fill="#7d5bb1">+ 按 flag 解释 ptr</text>
+  <rect x="646" y="278" width="228" height="30" rx="7" fill="#ffffff" stroke="#ddcdf0"/>
+  <text x="656" y="297" font-size="10" fill="#3d2a5a">取字段 / 调方法 / 改值</text>
+  <rect x="646" y="314" width="228" height="30" rx="7" fill="#eff9f2" stroke="#bfe0c8"/>
+  <text x="656" y="333" font-size="10" fill="#1d4a2b">flagAddr → 能否 Set</text>
+  <rect x="646" y="350" width="228" height="30" rx="7" fill="#fbeeee" stroke="#f0c4c4"/>
+  <text x="656" y="369" font-size="10" fill="#7a1f1f">flagRO → 禁止修改</text>
+
+  <!-- typ_ links to abi.Type -->
+  <line x1="470" y1="244" x2="740" y2="188" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <text x="600" y="212" font-size="9.5" fill="#8e8e93">typ_ 指向 abi.Type</text>
+
+  <!-- bottom essence (amber) -->
+  <rect x="30" y="426" width="860" height="66" rx="12" fill="#fdf6ec" stroke="#f0dcaf" filter="url(#soft)"/>
+  <text x="46" y="451" font-size="12" font-weight="600" fill="#6b4e16">反射本质与代价</text>
+  <text x="46" y="472" font-size="10.5" fill="#a9822f">把编译期擦除的静态类型，经接口值里保存的 _type 在运行期重新「取回」并操作。</text>
+  <text x="46" y="488" font-size="10.5" fill="#a9822f">慢（每步查元数据、常伴分配）——是「灵活性换性能」；热路径宜用代码生成 / 类型 switch 替代。</text>
+</svg>

@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="560" viewBox="0 0 1000 560" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1000" height="560" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">编码升级：小规模紧凑 → 超阈值单向升级为标准结构</text>
+  <text x="30" y="49" font-size="10.5" fill="#a1a1a6">阈值默认值取自 config.c；升级不可逆（删元素也不降级，避免抖动）</text>
+
+  <!-- 5 type rows -->
+  <!-- String -->
+  <g>
+    <text x="40" y="92" font-size="11.5" font-weight="700" fill="#5a2a82">String</text>
+    <rect x="120" y="76" width="150" height="34" rx="8" fill="#f6f0fb" stroke="#dcc6ee" filter="url(#soft)"/><text x="195" y="97" font-size="10" fill="#5a2a82" text-anchor="middle">int（≤20位整数）</text>
+    <rect x="290" y="76" width="150" height="34" rx="8" fill="#f6f0fb" stroke="#dcc6ee" filter="url(#soft)"/><text x="365" y="97" font-size="10" fill="#5a2a82" text-anchor="middle">embstr（≤44字节）</text>
+    <rect x="460" y="76" width="150" height="34" rx="8" fill="#f6f0fb" stroke="#dcc6ee" filter="url(#soft)"/><text x="535" y="97" font-size="10" fill="#5a2a82" text-anchor="middle">raw（&gt;44字节）</text>
+    <line x1="270" y1="93" x2="288" y2="93" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+    <line x1="440" y1="93" x2="458" y2="93" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+    <text x="720" y="97" font-size="9.5" fill="#86868b">EMBSTR_SIZE_LIMIT=44（object.c:337）；0-9999 用共享对象</text>
+  </g>
+  <!-- Hash -->
+  <g>
+    <text x="40" y="152" font-size="11.5" font-weight="700" fill="#7a5a1e">Hash</text>
+    <rect x="120" y="136" width="200" height="34" rx="8" fill="#fdf3e5" stroke="#f0d9b5" filter="url(#soft)"/><text x="220" y="157" font-size="10" fill="#7a5a1e" text-anchor="middle">listpack</text>
+    <rect x="460" y="136" width="200" height="34" rx="8" fill="#fdf3e5" stroke="#f0d9b5" filter="url(#soft)"/><text x="560" y="157" font-size="10" fill="#7a5a1e" text-anchor="middle">hashtable</text>
+    <line x1="320" y1="153" x2="458" y2="153" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+    <text x="390" y="148" font-size="8.5" fill="#a1a1a6" text-anchor="middle">超阈值</text>
+    <text x="700" y="157" font-size="9.5" fill="#86868b">entries&gt;512 或 value&gt;64B（config.c:3371,3377）</text>
+  </g>
+  <!-- List -->
+  <g>
+    <text x="40" y="212" font-size="11.5" font-weight="700" fill="#7a5a1e">List</text>
+    <rect x="120" y="196" width="200" height="34" rx="8" fill="#fdf3e5" stroke="#f0d9b5" filter="url(#soft)"/><text x="220" y="217" font-size="10" fill="#7a5a1e" text-anchor="middle">listpack</text>
+    <rect x="460" y="196" width="200" height="34" rx="8" fill="#fdf3e5" stroke="#f0d9b5" filter="url(#soft)"/><text x="560" y="217" font-size="10" fill="#7a5a1e" text-anchor="middle">quicklist（listpack 链）</text>
+    <line x1="320" y1="213" x2="458" y2="213" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+    <text x="700" y="217" font-size="9.5" fill="#86868b">list-max-listpack-size=-2→8KB/节点（config.c:3293）</text>
+  </g>
+  <!-- Set -->
+  <g>
+    <text x="40" y="272" font-size="11.5" font-weight="700" fill="#1c6b45">Set</text>
+    <rect x="120" y="256" width="150" height="34" rx="8" fill="#eafaf1" stroke="#b8e6cd" filter="url(#soft)"/><text x="195" y="277" font-size="10" fill="#1c6b45" text-anchor="middle">intset（纯整数）</text>
+    <rect x="290" y="256" width="150" height="34" rx="8" fill="#eafaf1" stroke="#b8e6cd" filter="url(#soft)"/><text x="365" y="277" font-size="10" fill="#1c6b45" text-anchor="middle">listpack</text>
+    <rect x="460" y="256" width="200" height="34" rx="8" fill="#eafaf1" stroke="#b8e6cd" filter="url(#soft)"/><text x="560" y="277" font-size="10" fill="#1c6b45" text-anchor="middle">hashtable</text>
+    <line x1="270" y1="273" x2="288" y2="273" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+    <line x1="440" y1="273" x2="458" y2="273" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+    <text x="700" y="277" font-size="9.5" fill="#86868b">intset&gt;512 / listpack&gt;128 / value&gt;64B（config.c:3372-74）</text>
+  </g>
+  <!-- ZSet -->
+  <g>
+    <text x="40" y="332" font-size="11.5" font-weight="700" fill="#1c6b45">ZSet</text>
+    <rect x="120" y="316" width="200" height="34" rx="8" fill="#eafaf1" stroke="#b8e6cd" filter="url(#soft)"/><text x="220" y="337" font-size="10" fill="#1c6b45" text-anchor="middle">listpack</text>
+    <rect x="460" y="316" width="200" height="34" rx="8" fill="#eafaf1" stroke="#b8e6cd" filter="url(#soft)"/><text x="560" y="337" font-size="10" fill="#1c6b45" text-anchor="middle">skiplist + dict</text>
+    <line x1="320" y1="333" x2="458" y2="333" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+    <text x="700" y="337" font-size="9.5" fill="#86868b">entries&gt;128 或 value&gt;64B（config.c:3375,3379）</text>
+  </g>
+
+  <!-- one-way note -->
+  <path d="M560 350 C 560 400 220 400 220 230" fill="none" stroke="#f43f7e" stroke-width="1.3" stroke-dasharray="5 4"/>
+  <text x="390" y="396" font-size="9.5" fill="#f43f7e" text-anchor="middle">✕ 不可逆：删元素不会降回 listpack</text>
+
+  <!-- decision recap box -->
+  <rect x="40" y="424" width="920" height="110" rx="10" fill="#f7f7f9" stroke="#ececef"/>
+  <text x="60" y="448" font-size="11" font-weight="600" fill="#1d1d1f">升级判定通用逻辑（每次写入后检查）</text>
+  <text x="60" y="470" font-size="10" fill="#4a4a4f">1. 元素个数超过 max-listpack-entries → 升级</text>
+  <text x="60" y="490" font-size="10" fill="#4a4a4f">2. 任一元素字节数超过 max-listpack-value → 升级</text>
+  <text x="60" y="510" font-size="10" fill="#4a4a4f">3. Set 特例：纯整数用 intset，出现非整数或超 intset-entries → listpack/hashtable</text>
+  <text x="540" y="470" font-size="10" fill="#4a4a4f">意义：小集合省内存（连续内存、无指针/dictEntry 开销）；</text>
+  <text x="540" y="490" font-size="10" fill="#4a4a4f">大集合保性能（listpack 操作 O(n)，标准结构 O(1)/O(log n)）；</text>
+  <text x="540" y="510" font-size="10" fill="#4a4a4f">单向升级避免在阈值附近反复重建的抖动开销。</text>
+</svg>

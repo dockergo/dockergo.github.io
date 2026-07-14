@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="470" viewBox="0 0 1000 470" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1000" height="470" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">Stream 消费组：负载均衡 + PEL 待确认列表（可靠消费）</text>
+  <text x="30" y="49" font-size="10.5" fill="#a1a1a6">每条消息只投给组内一个消费者；投递即入 PEL，XACK 才移除 —— 崩溃不丢</text>
+
+  <!-- stream + group -->
+  <rect x="30" y="72" width="200" height="180" rx="12" fill="#fdf3e5" stroke="#f0d9b5" filter="url(#soft)"/>
+  <text x="130" y="96" font-size="11" font-weight="700" fill="#7a5a1e" text-anchor="middle">Stream</text>
+  <g text-anchor="middle" font-size="8.5">
+    <rect x="50" y="108" width="160" height="24" rx="5" fill="#fff" stroke="#f0d9b5"/><text x="130" y="124" fill="#7a5a1e">msg A（-0）</text>
+    <rect x="50" y="136" width="160" height="24" rx="5" fill="#fff" stroke="#f0d9b5"/><text x="130" y="152" fill="#7a5a1e">msg B（-1）</text>
+    <rect x="50" y="164" width="160" height="24" rx="5" fill="#fff" stroke="#f0d9b5"/><text x="130" y="180" fill="#7a5a1e">msg C（-2）</text>
+    <rect x="50" y="192" width="160" height="24" rx="5" fill="#fff" stroke="#f0d9b5"/><text x="130" y="208" fill="#7a5a1e">msg D（-3）</text>
+  </g>
+  <text x="130" y="238" font-size="8.5" fill="#b08535" text-anchor="middle">XGROUP CREATE 建组，记 last-id</text>
+
+  <!-- consumer group -->
+  <rect x="270" y="72" width="440" height="180" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="290" y="96" font-size="11" font-weight="700" fill="#1b2a4a">消费组 group1（XREADGROUP 分摊）</text>
+  <g text-anchor="middle" font-size="9">
+    <rect x="290" y="110" width="190" height="60" rx="8" fill="#fff" stroke="#bcd0ec"/><text x="385" y="130" fill="#1b2a4a" font-weight="600">消费者 C1</text><text x="385" y="148" fill="#5b7db1" font-size="8">领到 msg A, C</text><text x="385" y="162" fill="#8ba7cc" font-size="7.5">每条消息只投一个消费者</text>
+    <rect x="500" y="110" width="190" height="60" rx="8" fill="#fff" stroke="#bcd0ec"/><text x="595" y="130" fill="#1b2a4a" font-weight="600">消费者 C2</text><text x="595" y="148" fill="#5b7db1" font-size="8">领到 msg B, D</text><text x="595" y="162" fill="#8ba7cc" font-size="7.5">组内负载均衡</text>
+  </g>
+  <text x="490" y="196" font-size="9" fill="#5b7db1" text-anchor="middle">XREADGROUP GROUP group1 C1 COUNT 10 STREAMS s &gt;</text>
+  <text x="490" y="216" font-size="8.5" fill="#8ba7cc" text-anchor="middle">&gt; = 只取从未投递过的新消息</text>
+  <text x="490" y="238" font-size="8.5" fill="#8ba7cc" text-anchor="middle">多个消费组可各自独立消费同一 Stream（组间广播）</text>
+
+  <line x1="230" y1="160" x2="268" y2="160" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+
+  <!-- PEL -->
+  <rect x="750" y="72" width="220" height="180" rx="12" fill="#fdeef2" stroke="#f6c9d6" filter="url(#soft)"/>
+  <text x="860" y="96" font-size="11" font-weight="700" fill="#c02a56" text-anchor="middle">PEL 待确认列表</text>
+  <text x="860" y="114" font-size="8.5" fill="#88304a" text-anchor="middle">已投递 · 未 XACK</text>
+  <g text-anchor="middle" font-size="8">
+    <rect x="770" y="124" width="180" height="24" rx="5" fill="#fff" stroke="#f6c9d6"/><text x="860" y="140" fill="#c02a56">A → C1（待确认）</text>
+    <rect x="770" y="152" width="180" height="24" rx="5" fill="#fff" stroke="#f6c9d6"/><text x="860" y="168" fill="#c02a56">B → C2（待确认）</text>
+    <rect x="770" y="180" width="180" height="24" rx="5" fill="#fff" stroke="#f6c9d6"/><text x="860" y="196" fill="#c02a56">…</text>
+  </g>
+  <text x="860" y="230" font-size="8" fill="#c8607f" text-anchor="middle">消费者崩溃 → 消息仍在 PEL</text>
+  <line x1="710" y1="150" x2="748" y2="150" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <text x="730" y="143" font-size="7" fill="#a1a1a6" text-anchor="middle">投递入 PEL</text>
+
+  <!-- lifecycle -->
+  <text x="40" y="290" font-size="11" font-weight="700" fill="#1d1d1f">消息生命周期（可靠消费的关键）</text>
+  <g text-anchor="middle" font-size="9">
+    <rect x="50" y="304" width="160" height="48" rx="8" fill="#fdf3e5" stroke="#f0d9b5"/><text x="130" y="324" fill="#7a5a1e">① XREADGROUP 投递</text><text x="130" y="340" fill="#b08535" font-size="8">进入 PEL</text>
+    <rect x="250" y="304" width="160" height="48" rx="8" fill="#eef3fb" stroke="#bcd0ec"/><text x="330" y="324" fill="#1b2a4a">② 消费者处理</text><text x="330" y="340" fill="#5b7db1" font-size="8">业务逻辑执行</text>
+    <rect x="450" y="304" width="160" height="48" rx="8" fill="#eafaf1" stroke="#b8e6cd"/><text x="530" y="324" fill="#1c6b45">③ XACK 确认</text><text x="530" y="340" fill="#3a9b6e" font-size="8">从 PEL 移除</text>
+    <rect x="650" y="304" width="300" height="48" rx="8" fill="#fdeef2" stroke="#f6c9d6"/><text x="800" y="324" fill="#c02a56">崩溃未 ACK → XCLAIM/XAUTOCLAIM</text><text x="800" y="340" fill="#88304a" font-size="8">超空闲时长转交其他消费者重新处理</text>
+  </g>
+  <line x1="210" y1="328" x2="248" y2="328" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="410" y1="328" x2="448" y2="328" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="610" y1="328" x2="648" y2="328" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+
+  <rect x="30" y="368" width="940" height="86" rx="10" fill="#f7f7f9" stroke="#ececef"/>
+  <text x="50" y="392" font-size="11" font-weight="600" fill="#1c6b45">PEL 是可靠消费的核心</text>
+  <text x="50" y="414" font-size="10" fill="#4a4a4f">"已投递未确认"的消息一直挂在 PEL 里 —— 消费者崩溃、超时、重启都不丢，可被 XCLAIM 重新认领处理</text>
+  <text x="50" y="434" font-size="9.5" fill="#c02a56">工程警告：忘记 XACK 会导致 PEL 无限堆积 —— 处理完必须确认；用 XPENDING 监控积压</text>
+</svg>

@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="560" viewBox="0 0 1080 560" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+  </defs>
+  <rect width="1080" height="560" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">StarRocks 两种形态对比 · 本地表 vs 云原生表</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">同一套 Tablet / Rowset / Segment 抽象,两种落地——差异在数据放置、副本、计算节点与读延迟</text>
+
+  <!-- column background panels -->
+  <rect x="30" y="72" width="160" height="436" rx="12" fill="#ffffff" stroke="#ececf1"/>
+  <rect x="196" y="72" width="424" height="436" rx="12" fill="#f5faf6" stroke="#cfe6d5" filter="url(#soft)"/>
+  <rect x="626" y="72" width="424" height="436" rx="12" fill="#faf4fb" stroke="#e2d2ee" filter="url(#soft)"/>
+
+  <!-- header band -->
+  <rect x="196" y="72" width="424" height="46" rx="12" fill="#eafaf1" stroke="#cfe6d5"/>
+  <rect x="626" y="72" width="424" height="46" rx="12" fill="#f4eefb" stroke="#e2d2ee"/>
+  <text x="110" y="101" font-size="10" font-weight="700" text-anchor="middle" fill="#6e6e73">维度</text>
+  <text x="408" y="94" font-size="11.5" font-weight="700" text-anchor="middle" fill="#12402a">本地表 · shared-nothing</text>
+  <text x="408" y="110" font-size="8.3" text-anchor="middle" fill="#2f6f4f">存算一体 · 与 Doris 一致(默认)</text>
+  <text x="838" y="94" font-size="11.5" font-weight="700" text-anchor="middle" fill="#5a3d78">云原生表 · shared-data</text>
+  <text x="838" y="110" font-size="8.3" text-anchor="middle" fill="#7a5a95">存算分离 / Lake · 相对 Doris 最大分叉</text>
+
+  <!-- row dividers -->
+  <line x1="30" y1="118" x2="1050" y2="118" stroke="#ececf1" stroke-width="1"/>
+  <line x1="30" y1="161" x2="1050" y2="161" stroke="#ececf1" stroke-width="1"/>
+  <line x1="30" y1="204" x2="1050" y2="204" stroke="#ececf1" stroke-width="1"/>
+  <line x1="30" y1="247" x2="1050" y2="247" stroke="#ececf1" stroke-width="1"/>
+  <line x1="30" y1="290" x2="1050" y2="290" stroke="#ececf1" stroke-width="1"/>
+  <line x1="30" y1="333" x2="1050" y2="333" stroke="#ececf1" stroke-width="1"/>
+  <line x1="30" y1="376" x2="1050" y2="376" stroke="#ececf1" stroke-width="1"/>
+  <line x1="30" y1="419" x2="1050" y2="419" stroke="#ececf1" stroke-width="1"/>
+  <line x1="30" y1="462" x2="1050" y2="462" stroke="#ececf1" stroke-width="1"/>
+
+  <!-- row 1: 架构范式 -->
+  <text x="110" y="143" font-size="9" font-weight="600" text-anchor="middle" fill="#1d1d1f">架构范式</text>
+  <text x="210" y="143" font-size="8.8" fill="#12402a">数据与计算耦合在同一 BE(shared-nothing)</text>
+  <text x="640" y="143" font-size="8.8" fill="#5a3d78">存储与计算解耦(shared-data / Lake)</text>
+
+  <!-- row 2: 数据位置 -->
+  <text x="110" y="186" font-size="9" font-weight="600" text-anchor="middle" fill="#1d1d1f">数据位置</text>
+  <text x="210" y="186" font-size="8.8" fill="#12402a">固定在 BE 本地盘</text>
+  <text x="640" y="186" font-size="8.8" fill="#5a3d78">对象存储 S3 / OSS(版本化 TabletMetadata)</text>
+
+  <!-- row 3: 副本 / 冗余 -->
+  <text x="110" y="229" font-size="9" font-weight="600" text-anchor="middle" fill="#1d1d1f">副本 / 冗余</text>
+  <text x="210" y="229" font-size="8.8" fill="#12402a">三副本冗余 · 节点挂了从健康副本克隆修复</text>
+  <text x="640" y="229" font-size="8.8" fill="#5a3d78">由对象存储保证冗余(无三副本)</text>
+
+  <!-- row 4: Tablet 归属 -->
+  <text x="110" y="272" font-size="9" font-weight="600" text-anchor="middle" fill="#1d1d1f">Tablet 归属</text>
+  <text x="210" y="272" font-size="8.8" fill="#12402a">绑 DataDir(create_tablet 绑 stores 本地盘)</text>
+  <text x="640" y="272" font-size="8.8" fill="#5a3d78">= StarOS Shard(tablet id 即 Shard id)</text>
+
+  <!-- row 5: 计算节点 -->
+  <text x="110" y="315" font-size="9" font-weight="600" text-anchor="middle" fill="#1d1d1f">计算节点</text>
+  <text x="210" y="315" font-size="8.8" fill="#12402a">BE:计算 + 存储耦合(有状态)</text>
+  <text x="640" y="315" font-size="8.8" fill="#5a3d78">CN:纯计算 · 无状态 · 任何 CN 服务任何 Tablet</text>
+
+  <!-- row 6: 弹性伸缩 -->
+  <text x="110" y="358" font-size="9" font-weight="600" text-anchor="middle" fill="#1d1d1f">弹性伸缩</text>
+  <text x="210" y="358" font-size="8.8" fill="#12402a">存算同扩;扩容需迁移数据</text>
+  <text x="640" y="358" font-size="8.8" fill="#5a3d78">秒级增减 CN,无需搬数据;存算独立扩容</text>
+
+  <!-- row 7: 读延迟 -->
+  <text x="110" y="401" font-size="9" font-weight="600" text-anchor="middle" fill="#1d1d1f">读延迟</text>
+  <text x="210" y="401" font-size="8.8" fill="#12402a">本地盘直读,低且稳定</text>
+  <text x="640" y="401" font-size="8.8" fill="#5a3d78">经 DataCache 命中才达本地盘级(首读远端慢)</text>
+
+  <!-- row 8: 主键索引落地 -->
+  <text x="110" y="444" font-size="9" font-weight="600" text-anchor="middle" fill="#1d1d1f">主键索引</text>
+  <text x="210" y="444" font-size="8.8" fill="#12402a">PersistentIndex(内存 L0 + 落盘 L1)</text>
+  <text x="640" y="444" font-size="8.8" fill="#5a3d78">LakePersistentIndex(SSTable + 布隆)</text>
+
+  <!-- row 9: 适合场景 -->
+  <text x="110" y="487" font-size="9" font-weight="600" text-anchor="middle" fill="#1d1d1f">适合场景</text>
+  <text x="210" y="487" font-size="8.8" fill="#12402a">稳定负载 / 低延迟 / 私有化 / 无对象存储</text>
+  <text x="640" y="487" font-size="8.8" fill="#5a3d78">弹性伸缩 / 冷数据成本敏感 / 云上部署</text>
+
+  <!-- bottom note -->
+  <rect x="30" y="520" width="1020" height="30" rx="9" fill="#fff7e6" stroke="#e8cf9a"/>
+  <text x="46" y="539" font-size="8.6" fill="#93762e">一句话:层级词汇同源(fork 自 Doris),分叉只在"数据放哪、谁管放置、计算是否有状态"——存算分离用 DataCache 补回读延迟,换来独立弹性与冷数据省钱。</text>
+</svg>

@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="480" viewBox="0 0 980 480"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="980" height="480" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">Provider 动态发现与聚合 ★灵魂 · 每 Provider 一个 goroutine 推 Message → 聚合去抖 → 配置通道</text>
+
+  <!-- interface -->
+  <rect x="30" y="58" width="270" height="66" rx="11" fill="#f6eefb" stroke="#e0c9f0" filter="url(#soft)"/>
+  <text x="165" y="80" font-size="10.5" font-weight="600" fill="#5b2a7a" text-anchor="middle">provider.Provider 接口（provider.go:9）</text>
+  <text x="165" y="100" font-size="9" fill="#8b5fb0" text-anchor="middle">Provide(chan&lt;- dynamic.Message, *Pool) error</text>
+  <text x="165" y="116" font-size="9" fill="#8b5fb0" text-anchor="middle">Init() error</text>
+
+  <!-- provider instances -->
+  <text x="150" y="156" font-size="10.5" font-weight="600" fill="#5b7db1">各 Provider（独立 goroutine · Watch 外部真源）</text>
+  <rect x="30" y="168" width="128" height="46" rx="9" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="94" y="188" font-size="9.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">Docker / Swarm</text>
+  <text x="94" y="204" font-size="8" fill="#5b7db1" text-anchor="middle">监听 events + labels</text>
+  <rect x="166" y="168" width="128" height="46" rx="9" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="230" y="188" font-size="9.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">Kubernetes</text>
+  <text x="230" y="204" font-size="8" fill="#5b7db1" text-anchor="middle">CRD/Ingress/Gateway</text>
+  <rect x="302" y="168" width="128" height="46" rx="9" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="366" y="188" font-size="9.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">File</text>
+  <text x="366" y="204" font-size="8" fill="#5b7db1" text-anchor="middle">fsnotify 监听</text>
+  <rect x="30" y="222" width="128" height="46" rx="9" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="94" y="242" font-size="9.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">KV：Consul/Etcd</text>
+  <text x="94" y="258" font-size="8" fill="#5b7db1" text-anchor="middle">ZooKeeper/Redis</text>
+  <rect x="166" y="222" width="128" height="46" rx="9" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="230" y="242" font-size="9.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">Nomad/ECS/HTTP</text>
+  <text x="230" y="258" font-size="8" fill="#5b7db1" text-anchor="middle">ConsulCatalog/Rest</text>
+  <rect x="302" y="222" width="128" height="46" rx="9" fill="#eafaf1" stroke="#bce6cd"/>
+  <text x="366" y="242" font-size="9.5" font-weight="600" fill="#0f5132" text-anchor="middle">internal / ACME</text>
+  <text x="366" y="258" font-size="8" fill="#3f8f66" text-anchor="middle">requiredProvider 收尾</text>
+
+  <!-- arrows to aggregator -->
+  <path d="M430,190 C470,190 470,300 494,300" fill="none" stroke="#b8b8bf" marker-end="url(#ar)"/>
+  <path d="M430,245 C470,245 470,300 494,300" fill="none" stroke="#b8b8bf"/>
+
+  <!-- aggregator + throttle -->
+  <rect x="496" y="168" width="210" height="180" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="601" y="192" font-size="11" font-weight="600" fill="#1b2a4a" text-anchor="middle">ProviderAggregator</text>
+  <text x="601" y="208" font-size="8" fill="#8fa9cf" text-anchor="middle">aggregator.go:63 / :178</text>
+  <text x="601" y="232" font-size="9" fill="#5b7db1" text-anchor="middle">每 provider 一个 goroutine</text>
+  <text x="601" y="250" font-size="9" fill="#5b7db1" text-anchor="middle">safe.Go(launchProvider)</text>
+  <rect x="512" y="262" width="178" height="72" rx="10" fill="#fff7e6" stroke="#f0dcae"/>
+  <text x="601" y="282" font-size="9.5" font-weight="600" fill="#7a4d00" text-anchor="middle">Throttle 去抖</text>
+  <text x="601" y="300" font-size="8.5" fill="#9a7328" text-anchor="middle">ringChannel 合并突发</text>
+  <text x="601" y="316" font-size="8.5" fill="#9a7328" text-anchor="middle">≥ ThrottleDuration 间隔</text>
+  <text x="601" y="330" font-size="7.5" fill="#b08a3c" text-anchor="middle">aggregator.go:32</text>
+
+  <line x1="706" y1="300" x2="738" y2="300" stroke="#b8b8bf" marker-end="url(#ar)"/>
+
+  <!-- config channel -->
+  <rect x="740" y="230" width="210" height="140" rx="12" fill="#e7eefb" stroke="#a9c2e8" filter="url(#soft)"/>
+  <text x="845" y="254" font-size="11" font-weight="600" fill="#1b2a4a" text-anchor="middle">configurationChan</text>
+  <text x="845" y="276" font-size="9" fill="#5b7db1" text-anchor="middle">dynamic.Message</text>
+  <text x="845" y="294" font-size="8.5" fill="#5b7db1" text-anchor="middle">{ProviderName, Configuration}</text>
+  <text x="845" y="312" font-size="8" fill="#8fa9cf" text-anchor="middle">config.go:10</text>
+  <text x="845" y="336" font-size="9" fill="#5b7db1" text-anchor="middle">→ 交 ConfigurationWatcher</text>
+  <text x="845" y="352" font-size="8.5" fill="#8fa9cf" text-anchor="middle">（见「热加载与配置 watch」）</text>
+
+  <!-- soul note -->
+  <rect x="30" y="368" width="920" height="96" rx="12" fill="#fdecea" stroke="#f3c0b8" filter="url(#soft)"/>
+  <text x="50" y="392" font-size="11" font-weight="600" fill="#8a2a1a">为何是灵魂：这是 Traefik 区别于 nginx 的分水岭</text>
+  <text x="50" y="414" font-size="9.5" fill="#a24232">· nginx：路由写死在配置文件，靠人工改文件 + reload；Traefik：Provider 主动 watch 编排系统/文件/KV，真实状态一变就自动产出新配置。</text>
+  <text x="50" y="434" font-size="9.5" fill="#a24232">· internal provider（含 ACME、API、ping）作为 requiredProvider 最后加载，watcher 以它为信号确认「所有 provider 已就绪」才首次应用配置。</text>
+  <text x="50" y="454" font-size="9.5" fill="#a24232">· 关掉整条 Provider 链，Traefik 就没有任何路由——它本身不存路由，只是外部状态的实时投影。</text>
+</svg>

@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="510" viewBox="0 0 1000 510" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1000" height="510" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">TCP 状态机（tcp_states.h:13） + 拥塞控制（可插拔 tcp_congestion_ops，tcp.h:1316）</text>
+
+  <!-- 左：状态机 -->
+  <rect x="28" y="58" width="560" height="434" rx="13" fill="#fbfbfd" stroke="#ececf1"/>
+  <text x="46" y="80" font-size="11.5" font-weight="600" fill="#1d1d1f">连接生命周期状态机</text>
+
+  <!-- CLOSE 起点 -->
+  <rect x="230" y="96" width="150" height="40" rx="10" fill="#ffffff" stroke="#ececf1"/><text x="305" y="121" font-size="11" font-weight="600" fill="#1d1d1f" text-anchor="middle">CLOSE</text>
+
+  <!-- 建连 主动 -->
+  <rect x="60" y="164" width="150" height="40" rx="10" fill="#eef3fb" stroke="#bcd0ec"/><text x="135" y="189" font-size="10.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">SYN_SENT</text>
+  <!-- 建连 被动 -->
+  <rect x="400" y="164" width="150" height="40" rx="10" fill="#f4eefb" stroke="#d9c7ec"/><text x="475" y="182" font-size="10" font-weight="600" fill="#3d2a5a" text-anchor="middle">LISTEN → SYN_RECV</text><text x="475" y="196" font-size="8" fill="#7a5aa6" text-anchor="middle">被动方</text>
+
+  <!-- ESTABLISHED -->
+  <rect x="205" y="232" width="200" height="44" rx="10" fill="#eafaf1" stroke="#bfe0cd"/><text x="305" y="256" font-size="11.5" font-weight="600" fill="#12402a" text-anchor="middle">ESTABLISHED</text><text x="305" y="270" font-size="8.5" fill="#2f6f4f" text-anchor="middle">数据传输</text>
+
+  <g stroke="#c7c7cc" stroke-width="1.4" fill="none" font-size="8.5">
+    <path d="M280,136 L135,164" marker-end="url(#ar)"/>
+    <path d="M330,136 L475,164" marker-end="url(#ar)"/>
+    <path d="M135,204 L230,236" marker-end="url(#ar)"/>
+    <path d="M475,204 L380,236" marker-end="url(#ar)"/>
+  </g>
+  <text x="150" y="150" font-size="8.5" fill="#a1a1a6">主动 connect：发 SYN</text>
+  <text x="470" y="150" font-size="8.5" fill="#a1a1a6" text-anchor="middle">收 SYN、回 SYN+ACK</text>
+  <text x="120" y="228" font-size="8.5" fill="#a1a1a6">收 SYN+ACK、回 ACK</text>
+  <text x="490" y="228" font-size="8.5" fill="#a1a1a6" text-anchor="middle">收 ACK</text>
+
+  <!-- 断连 主动方 -->
+  <rect x="60" y="308" width="150" height="38" rx="10" fill="#fff7e6" stroke="#e8cf9a"/><text x="135" y="332" font-size="10.5" font-weight="600" fill="#5a3410" text-anchor="middle">FIN_WAIT1 / 2</text>
+  <rect x="60" y="380" width="150" height="42" rx="10" fill="#fbeaea" stroke="#e7c3c3"/><text x="135" y="402" font-size="10.5" font-weight="600" fill="#4a1414" text-anchor="middle">TIME_WAIT</text><text x="135" y="416" font-size="8" fill="#7a2a2a" text-anchor="middle">等 2×MSL</text>
+
+  <!-- 断连 被动方 -->
+  <rect x="400" y="308" width="150" height="38" rx="10" fill="#fff7e6" stroke="#e8cf9a"/><text x="475" y="332" font-size="10.5" font-weight="600" fill="#5a3410" text-anchor="middle">CLOSE_WAIT</text>
+  <rect x="400" y="380" width="150" height="38" rx="10" fill="#fff7e6" stroke="#e8cf9a"/><text x="475" y="404" font-size="10.5" font-weight="600" fill="#5a3410" text-anchor="middle">LAST_ACK</text>
+
+  <rect x="230" y="446" width="150" height="38" rx="10" fill="#ffffff" stroke="#ececf1"/><text x="305" y="470" font-size="11" font-weight="600" fill="#1d1d1f" text-anchor="middle">CLOSE</text>
+
+  <g stroke="#c7c7cc" stroke-width="1.4" fill="none">
+    <path d="M245,276 L135,308" marker-end="url(#ar)"/>
+    <path d="M365,276 L475,308" marker-end="url(#ar)"/>
+    <path d="M135,346 L135,380" marker-end="url(#ar)"/>
+    <path d="M475,346 L475,380" marker-end="url(#ar)"/>
+    <path d="M135,422 L135,465 L230,465" marker-end="url(#ar)"/>
+    <path d="M475,418 L475,465 L380,465" marker-end="url(#ar)"/>
+  </g>
+  <text x="150" y="296" font-size="8.5" fill="#a1a1a6">主动关：发 FIN</text>
+  <text x="490" y="296" font-size="8.5" fill="#a1a1a6" text-anchor="middle">收 FIN：回 ACK</text>
+
+  <!-- 右：拥塞控制 cwnd 曲线 -->
+  <rect x="608" y="58" width="364" height="434" rx="13" fill="#fbfbfd" stroke="#ececf1"/>
+  <text x="626" y="80" font-size="11.5" font-weight="600" fill="#1d1d1f">拥塞窗口 snd_cwnd 演化 (tcp.h:1509)</text>
+
+  <!-- 坐标轴 -->
+  <line x1="650" y1="330" x2="946" y2="330" stroke="#b8b8bf" stroke-width="1.5" marker-end="url(#ar)"/>
+  <line x1="650" y1="330" x2="650" y2="110" stroke="#b8b8bf" stroke-width="1.5" marker-end="url(#ar)"/>
+  <text x="946" y="348" font-size="9" fill="#8a8a8e" text-anchor="end">时间 / RTT</text>
+  <text x="642" y="108" font-size="9" fill="#8a8a8e" text-anchor="end">cwnd</text>
+
+  <!-- ssthresh 虚线 -->
+  <line x1="650" y1="200" x2="946" y2="200" stroke="#c1962a" stroke-width="1.2" stroke-dasharray="5 3"/>
+  <text x="940" y="194" font-size="8.5" fill="#a05411" text-anchor="end">ssthresh 阈值</text>
+
+  <!-- 慢启动 指数段 -->
+  <path d="M650,325 L690,300 L720,255 L745,200" stroke="#2f6f4f" stroke-width="2.2" fill="none"/>
+  <!-- 拥塞避免 线性段 -->
+  <path d="M745,200 L840,150" stroke="#1b2a4a" stroke-width="2.2" fill="none"/>
+  <!-- 丢包回退 -->
+  <path d="M840,150 L842,250" stroke="#7a2a2a" stroke-width="2" fill="none" stroke-dasharray="3 2"/>
+  <path d="M842,250 L920,215" stroke="#1b2a4a" stroke-width="2.2" fill="none"/>
+
+  <circle cx="745" cy="200" r="3.5" fill="#c1962a"/>
+  <circle cx="840" cy="150" r="3.5" fill="#7a2a2a"/>
+
+  <text x="682" y="345" font-size="8.5" fill="#2f6f4f">慢启动</text>
+  <text x="770" y="345" font-size="8.5" fill="#1b2a4a">拥塞避免</text>
+  <text x="846" y="145" font-size="8.5" fill="#7a2a2a">丢包</text>
+
+  <text x="626" y="378" font-size="9.5" fill="#2f6f4f">· 慢启动：cwnd 指数增长，直到达 ssthresh</text>
+  <text x="626" y="398" font-size="9.5" fill="#1b2a4a">· 拥塞避免：过阈值后线性增长（每 RTT+1）</text>
+  <text x="626" y="418" font-size="9.5" fill="#7a2a2a">· 丢包：cwnd 回退、降 ssthresh，重新爬升</text>
+  <line x1="626" y1="432" x2="954" y2="432" stroke="#ececf1"/>
+  <text x="626" y="454" font-size="9.5" fill="#3a3a3c">算法可插拔：内置 tcp_reno 兜底 (tcp_cong.c:531)，</text>
+  <text x="626" y="472" font-size="9.5" fill="#3a3a3c">默认由 CONFIG_DEFAULT_TCP_CONG 定（通常 CUBIC），</text>
+  <text x="626" y="488" font-size="9.5" fill="#6e6e73">可经 sysctl tcp_congestion_control 运行时切换。</text>
+</svg>

@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="820" height="290" viewBox="0 0 820 290" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs><filter id="s" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter><marker id="a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker></defs>
+  <rect width="820" height="290" fill="#fbfbfd"/>
+  <text x="30" y="28" font-size="14" font-weight="600" fill="#1d1d1f">Checkpoint：dump Image 快照 + 截断旧 Journal，防日志无限增长</text>
+
+  <text x="40" y="66" font-size="11" fill="#86868b">Checkpoint 前：Image_old + 不断增长的 Journal</text>
+  <g text-anchor="middle" font-size="10.5">
+    <rect x="40" y="74" width="110" height="34" rx="8" fill="#eafaf1" stroke="#bfe0cd"/><text x="95" y="95" fill="#12402a">Image_old</text>
+    <rect x="156" y="74" width="60" height="34" rx="7" fill="#fff7e6" stroke="#e8cf9a"/><text x="186" y="95" fill="#5a3410">j1</text>
+    <rect x="220" y="74" width="60" height="34" rx="7" fill="#fff7e6" stroke="#e8cf9a"/><text x="250" y="95" fill="#5a3410">j2</text>
+    <rect x="284" y="74" width="60" height="34" rx="7" fill="#fff7e6" stroke="#e8cf9a"/><text x="314" y="95" fill="#5a3410">j3</text>
+    <rect x="348" y="74" width="60" height="34" rx="7" fill="#fff7e6" stroke="#e8cf9a"/><text x="378" y="95" fill="#5a3410">j4</text>
+    <rect x="412" y="74" width="60" height="34" rx="7" fill="#fff7e6" stroke="#e8cf9a"/><text x="442" y="95" fill="#5a3410">j5</text>
+  </g>
+
+  <rect x="530" y="66" width="250" height="50" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#s)"/><text x="655" y="88" font-size="12" font-weight="600" fill="#1b2a4a" text-anchor="middle">Checkpoint 触发</text><text x="655" y="105" font-size="9.5" fill="#5b7db1" text-anchor="middle">周期 / Journal 过大 → 加载 Image+回放</text>
+
+  <line x1="256" y1="130" x2="256" y2="158" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#a)"/>
+  <text x="330" y="148" font-size="10" fill="#a1a1a6">dump 新快照 + 截断</text>
+
+  <text x="40" y="192" font-size="11" fill="#86868b">Checkpoint 后：Image_new（含 j1~j5）+ 仅保留其后 Journal</text>
+  <g text-anchor="middle" font-size="10.5">
+    <rect x="40" y="200" width="130" height="34" rx="8" fill="#eafaf1" stroke="#bfe0cd"/><text x="105" y="221" fill="#12402a">Image_new</text>
+    <rect x="176" y="200" width="60" height="34" rx="7" fill="#fff7e6" stroke="#e8cf9a"/><text x="206" y="221" fill="#5a3410">j6</text>
+    <rect x="240" y="200" width="60" height="34" rx="7" fill="#f4f4f6" stroke="#e0e0e5" stroke-dasharray="3 2"/><text x="270" y="221" fill="#b0b0b5">j1~j5</text>
+  </g>
+  <text x="270" y="252" font-size="9" fill="#a1a1a6" text-anchor="middle">旧日志已截断回收</text>
+  <text x="40" y="276" font-size="10.5" fill="#6e6e73">恢复 = 加载最近 Image + 回放其后 Journal；Checkpoint 让恢复更快、磁盘可控。</text>
+</svg>

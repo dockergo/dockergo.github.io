@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="500" viewBox="0 0 1000 500" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1000" height="500" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">ae 事件循环：单线程 Reactor（aeProcessEvents，ae.c:365-473）</text>
+  <text x="30" y="49" font-size="10.5" fill="#a1a1a6">后端编译期择优 evport &gt; epoll &gt; kqueue &gt; select（ae.c:32-42）</text>
+
+  <!-- loop cycle -->
+  <ellipse cx="360" cy="270" rx="290" ry="150" fill="none" stroke="#e3ecf7" stroke-width="2" stroke-dasharray="6 5"/>
+  <text x="360" y="130" font-size="11" font-weight="700" fill="#1b2a4a" text-anchor="middle">aeMain：while(!stop) 循环（ae.c:497）</text>
+
+  <!-- steps around the loop -->
+  <g text-anchor="middle">
+    <rect x="270" y="150" width="180" height="46" rx="9" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+    <text x="360" y="169" font-size="10.5" font-weight="600" fill="#1b2a4a">① beforeSleep()</text>
+    <text x="360" y="186" font-size="8.5" fill="#5b7db1">刷回复 / FAST expire / AOF flush</text>
+
+    <rect x="470" y="220" width="170" height="46" rx="9" fill="#f6f0fb" stroke="#dcc6ee" filter="url(#soft)"/>
+    <text x="555" y="239" font-size="10.5" font-weight="600" fill="#5a2a82">② aeApiPoll()</text>
+    <text x="555" y="256" font-size="8.5" fill="#8a5cae">epoll_wait 阻塞等事件</text>
+
+    <rect x="470" y="290" width="170" height="42" rx="9" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+    <text x="555" y="308" font-size="10.5" font-weight="600" fill="#1b2a4a">③ afterSleep()</text>
+    <text x="555" y="324" font-size="8.5" fill="#5b7db1">解锁 GIL / 更新缓存时间</text>
+
+    <rect x="270" y="344" width="180" height="46" rx="9" fill="#eafaf1" stroke="#b8e6cd" filter="url(#soft)"/>
+    <text x="360" y="363" font-size="10.5" font-weight="600" fill="#1c6b45">④ 文件事件回调</text>
+    <text x="360" y="380" font-size="8.5" fill="#3a9b6e">readQueryFromClient / writeToClient</text>
+
+    <rect x="80" y="290" width="170" height="42" rx="9" fill="#fdf3e5" stroke="#f0d9b5" filter="url(#soft)"/>
+    <text x="165" y="308" font-size="10.5" font-weight="600" fill="#7a5a1e">⑤ processTimeEvents</text>
+    <text x="165" y="324" font-size="8.5" fill="#b08535">serverCron 定时任务</text>
+
+    <rect x="80" y="220" width="170" height="42" rx="9" fill="#f7f7f9" stroke="#ececef" filter="url(#soft)"/>
+    <text x="165" y="238" font-size="10.5" font-weight="600" fill="#4a4a4f">算超时</text>
+    <text x="165" y="254" font-size="8.5" fill="#a1a1a6">最近定时器 → poll 超时</text>
+  </g>
+  <!-- flow arrows along ellipse -->
+  <line x1="450" y1="180" x2="478" y2="222" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="555" y1="266" x2="555" y2="288" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="470" y1="330" x2="450" y2="352" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="270" y1="372" x2="240" y2="332" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="165" y1="288" x2="165" y2="264" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="180" y1="218" x2="268" y2="180" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+
+  <!-- right side: file/time events -->
+  <rect x="700" y="150" width="270" height="130" rx="10" fill="#fdf9f0" stroke="#efe3cd"/>
+  <text x="720" y="174" font-size="10.5" font-weight="600" fill="#7a5a1e">两类事件</text>
+  <text x="720" y="196" font-size="9.5" fill="#7a5a1e">· 文件事件 aeFileEvent：socket 可读/可写</text>
+  <text x="720" y="216" font-size="9.5" fill="#7a5a1e">  → rfileProc / wfileProc 回调</text>
+  <text x="720" y="238" font-size="9.5" fill="#7a5a1e">· 时间事件 aeTimeEvent：定时任务链表</text>
+  <text x="720" y="258" font-size="9.5" fill="#7a5a1e">  → serverCron（hz=10 → 100ms）</text>
+
+  <rect x="700" y="300" width="270" height="120" rx="10" fill="#f7f7f9" stroke="#ececef"/>
+  <text x="720" y="324" font-size="10.5" font-weight="600" fill="#1d1d1f">AE_BARRIER</text>
+  <text x="720" y="346" font-size="9.5" fill="#4a4a4f">默认"先读后写";置位则"先写后读",</text>
+  <text x="720" y="364" font-size="9.5" fill="#4a4a4f">用于让 beforeSleep 的 AOF fsync</text>
+  <text x="720" y="382" font-size="9.5" fill="#4a4a4f">先于回复发出（数据落盘再答用户）</text>
+  <text x="720" y="404" font-size="9" fill="#a1a1a6">appendfsync=always 时的正确性保证</text>
+
+  <rect x="30" y="446" width="940" height="30" rx="8" fill="#f7f7f9" stroke="#ececef"/>
+  <text x="500" y="465" font-size="10" fill="#4a4a4f" text-anchor="middle">要点：单线程 Reactor 的每一轮 = 处理就绪 socket + 跑定时任务;命令执行也在这条线程上,故不会有并发数据竞争</text>
+</svg>

@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="580" viewBox="0 0 1040 580" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1040" height="580" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Trino 下推契约 · apply* 返回"已推 + 剩余",可多轮迭代</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">连接器决定能吃下多少;每轮把消化掉的从计划摘掉,再尝试下一个——直到推不动</text>
+
+  <!-- iterative loop -->
+  <rect x="30" y="72" width="980" height="230" rx="13" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="46" y="94" font-size="11" font-weight="700" fill="#1b2a4a">迭代下推循环（以 Filter+Limit 为例）</text>
+
+  <g font-size="8.8" text-anchor="middle">
+    <rect x="50" y="108" width="180" height="70" rx="9" fill="#f3f7fc" stroke="#cfe0f2"/><text x="140" y="130" font-size="9.5" font-weight="600" fill="#274a78">优化器：看到</text><text x="140" y="148" fill="#5b7db1">Limit(Filter(TableScan))</text><text x="140" y="164" fill="#5b7db1">想把 Filter 推进 Scan</text>
+    <rect x="290" y="108" width="200" height="70" rx="9" fill="#fff7e6" stroke="#e8cf9a"/><text x="390" y="130" font-size="9.5" font-weight="600" fill="#5a3410">applyFilter(handle,谓词)</text><text x="390" y="148" fill="#93762e">连接器：分区列全吃</text><text x="390" y="164" fill="#93762e">非分区列部分吃</text>
+    <rect x="550" y="108" width="200" height="70" rx="9" fill="#eafaf1" stroke="#bfe0cd"/><text x="650" y="130" font-size="9.5" font-weight="600" fill="#12402a">返回结果</text><text x="650" y="148" fill="#2f6f4f">新 handle(含已推 filter)</text><text x="650" y="164" fill="#2f6f4f">+ 剩余谓词(引擎自己 Filter)</text>
+    <rect x="810" y="108" width="180" height="70" rx="9" fill="#f3f7fc" stroke="#cfe0f2"/><text x="900" y="130" font-size="9.5" font-weight="600" fill="#274a78">优化器：摘掉已推</text><text x="900" y="148" fill="#5b7db1">再 applyLimit</text><text x="900" y="164" fill="#5b7db1">下一轮…</text>
+  </g>
+  <line x1="230" y1="143" x2="290" y2="143" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+  <line x1="490" y1="143" x2="550" y2="143" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+  <line x1="750" y1="143" x2="810" y2="143" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+  <path d="M900,178 C900,220 140,220 140,178" fill="none" stroke="#c7c7cc" stroke-width="1.3" stroke-dasharray="4 3" marker-end="url(#ar)"/>
+  <text x="520" y="216" text-anchor="middle" font-size="8" fill="#a1a1a6">循环直到没有可推的 → 计划里 TableScan 携带全部已下推信息,其上只剩连接器吃不下的算子</text>
+
+  <rect x="50" y="240" width="940" height="50" rx="9" fill="#fff" stroke="#bcd0ec"/>
+  <text x="64" y="260" font-size="9" font-weight="600" fill="#1b2a4a">apply* 方法族（ConnectorMetadata）</text>
+  <text x="64" y="278" font-size="8.5" fill="#5b7db1">applyFilter · applyProjection · applyAggregation · applyLimit · applyTopN · applyJoin · applyTableScanRedirect</text>
+
+  <!-- return type -->
+  <rect x="30" y="322" width="490" height="230" rx="13" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="46" y="344" font-size="11" font-weight="700" fill="#2c5a3a">返回对象的三段结构（以 applyFilter 为例）</text>
+  <rect x="50" y="358" width="450" height="44" rx="8" fill="#fff" stroke="#cfe6d5"/><text x="64" y="378" font-size="9" font-weight="600" fill="#2c5a3a">① 新 TableHandle</text><text x="64" y="394" font-size="8.5" fill="#2f6f4f">吸收了连接器能下推的那部分谓词</text>
+  <rect x="50" y="410" width="450" height="44" rx="8" fill="#fff" stroke="#cfe6d5"/><text x="64" y="430" font-size="9" font-weight="600" fill="#2c5a3a">② remaining（剩余表达式）</text><text x="64" y="446" font-size="8.5" fill="#2f6f4f">连接器吃不下的,留给引擎侧 FilterOperator 算</text>
+  <rect x="50" y="462" width="450" height="44" rx="8" fill="#fff" stroke="#cfe6d5"/><text x="64" y="482" font-size="9" font-weight="600" fill="#2c5a3a">③ precalculateStatistics 标志</text><text x="64" y="498" font-size="8.5" fill="#2f6f4f">是否需重算统计(下推改变了输出规模)</text>
+  <text x="46" y="528" font-size="8.5" fill="#2f6f4f">空 Optional = 连接器完全推不动这个算子,计划不变</text>
+
+  <!-- per-connector -->
+  <rect x="540" y="322" width="470" height="230" rx="13" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="556" y="344" font-size="11" font-weight="700" fill="#1d1d1f">"能吃多少"是连接器的自由</text>
+  <text x="556" y="366" font-size="8.8" fill="#6e6e73">· JDBC(MySQL/PG)：filter→SQL WHERE、agg→GROUP BY、limit→LIMIT,大量下发给库</text>
+  <text x="556" y="386" font-size="8.8" fill="#6e6e73">· Hive：filter→分区裁剪 + ORC/Parquet 谓词下推(行组 min/max)</text>
+  <text x="556" y="406" font-size="8.8" fill="#6e6e73">· Iceberg：manifest/分区规约裁剪 + 文件列统计跳过</text>
+  <text x="556" y="426" font-size="8.8" fill="#6e6e73">· 简单连接器：apply* 全返回空 → 引擎全量读入自己算(正确但慢)</text>
+  <rect x="556" y="442" width="438" height="94" rx="9" fill="#fbfbfd" stroke="#ececf1"/>
+  <text x="570" y="462" font-size="9.5" font-weight="700" fill="#b1483a">工程含义</text>
+  <text x="570" y="481" font-size="8.5" fill="#4b4b50">· 同一条 SQL,换连接器性能可能天差地别——这是"联邦"的代价与灵活性</text>
+  <text x="570" y="499" font-size="8.5" fill="#4b4b50">· applyTableScanRedirect：连接器可把扫描重定向到物化表,透明加速</text>
+  <text x="570" y="517" font-size="8.5" fill="#4b4b50">· 下推是"静态谓词"编译期推;动态过滤是"运行时值域"执行期推(见 05)</text>
+</svg>

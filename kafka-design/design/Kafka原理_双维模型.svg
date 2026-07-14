@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="546" viewBox="0 0 1080 546" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="546" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Kafka 原理 · 双维模型（能力域 × 执行时机）</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">两个正交维度:能力域(做什么·接触面+支撑 6 域)× 执行时机(何时做·前台在线请求路径 vs 后台异步/后台线程)</text>
+
+  <!-- axis labels -->
+  <text transform="rotate(-90 20 312)" x="20" y="312" font-size="9.5" font-weight="600" fill="#86868b" text-anchor="middle">能力域（WHAT · 做什么）</text>
+  <text x="668" y="76" font-size="9.5" font-weight="600" fill="#86868b" text-anchor="middle">执行时机（WHEN · 何时做）→</text>
+
+  <!-- column washes -->
+  <rect x="286" y="100" width="384" height="426" rx="14" fill="#f3f7fc" stroke="#dbe7f5"/>
+  <rect x="678" y="100" width="372" height="426" rx="14" fill="#fdf6ea" stroke="#efe3cc"/>
+  <text x="478" y="93" font-size="10.5" font-weight="700" fill="#274a78" text-anchor="middle">前台 · 在线请求路径</text>
+  <text x="864" y="93" font-size="10.5" font-weight="700" fill="#5a3410" text-anchor="middle">后台 · 异步 / 后台线程</text>
+
+  <!-- Row 1: API -->
+  <rect x="30" y="108" width="248" height="48" rx="10" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="46" y="130" font-size="11.5" font-weight="600" fill="#3d2a5a">接触面 · 生产/消费 API</text>
+  <text x="46" y="147" font-size="8.3" fill="#8a6db0">面向用户的接触面(非 SQL)</text>
+  <rect x="298" y="110" width="360" height="44" rx="8" fill="#ffffff" stroke="#e3ecf6"/>
+  <text x="478" y="137" font-size="9.2" fill="#3a4a63" text-anchor="middle">produce / fetch 请求发起 · poll 循环拉取</text>
+  <rect x="690" y="110" width="348" height="44" rx="8" fill="#ffffff" stroke="#efe3cc"/>
+  <text x="864" y="137" font-size="9.2" fill="#5a3410" text-anchor="middle">Sender 线程攒批发送 · Consumer 网络线程</text>
+
+  <!-- Row 2: log storage -->
+  <rect x="30" y="166" width="248" height="48" rx="10" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="46" y="188" font-size="11.5" font-weight="600" fill="#5a3410">日志存储（核心）</text>
+  <text x="46" y="205" font-size="8.3" fill="#93762e">分区追加日志 + 稀疏索引</text>
+  <rect x="298" y="168" width="360" height="44" rx="8" fill="#ffffff" stroke="#e3ecf6"/>
+  <text x="478" y="195" font-size="9.2" fill="#3a4a63" text-anchor="middle">追加 active LogSegment · 顺序读 + 零拷贝</text>
+  <rect x="690" y="168" width="348" height="44" rx="8" fill="#ffffff" stroke="#efe3cc"/>
+  <text x="864" y="195" font-size="9.2" fill="#5a3410" text-anchor="middle">retention 删除 · compaction 压缩清理</text>
+
+  <!-- Row 3: replica ISR -->
+  <rect x="30" y="224" width="248" height="48" rx="10" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="46" y="246" font-size="11.5" font-weight="600" fill="#5a3410">副本与 ISR</text>
+  <text x="46" y="263" font-size="8.3" fill="#93762e">Leader/Follower 复制 + HW</text>
+  <rect x="298" y="226" width="360" height="44" rx="8" fill="#ffffff" stroke="#e3ecf6"/>
+  <text x="478" y="253" font-size="9.2" fill="#3a4a63" text-anchor="middle">acks=all 等 ISR 确认 · HW 推进定可见</text>
+  <rect x="690" y="226" width="348" height="44" rx="8" fill="#ffffff" stroke="#efe3cc"/>
+  <text x="864" y="253" font-size="9.2" fill="#5a3410" text-anchor="middle">ISR 收缩 / 扩张 · 副本 fetch 线程复制</text>
+
+  <!-- Row 4: consumer group -->
+  <rect x="30" y="282" width="248" height="48" rx="10" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="46" y="304" font-size="11.5" font-weight="600" fill="#12402a">消费者组与协调</text>
+  <text x="46" y="321" font-size="8.3" fill="#2f6f4f">GroupCoordinator · 位点</text>
+  <rect x="298" y="284" width="360" height="44" rx="8" fill="#ffffff" stroke="#e3ecf6"/>
+  <text x="478" y="311" font-size="9.2" fill="#3a4a63" text-anchor="middle">心跳请求 · 位点提交处理(生成记录)</text>
+  <rect x="690" y="284" width="348" height="44" rx="8" fill="#ffffff" stroke="#efe3cc"/>
+  <text x="864" y="311" font-size="9.2" fill="#5a3410" text-anchor="middle">rebalance 增量对账推进各成员</text>
+
+  <!-- Row 5: KRaft -->
+  <rect x="30" y="340" width="248" height="48" rx="10" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="46" y="362" font-size="11.5" font-weight="600" fill="#1b2a4a">KRaft 元数据（灵魂）</text>
+  <text x="46" y="379" font-size="8.3" fill="#5b7db1">QuorumController + Raft</text>
+  <rect x="298" y="342" width="360" height="44" rx="8" fill="#ffffff" stroke="#e3ecf6"/>
+  <text x="478" y="369" font-size="9.2" fill="#3a4a63" text-anchor="middle">控制器单线程处理元数据写请求</text>
+  <rect x="690" y="342" width="348" height="44" rx="8" fill="#ffffff" stroke="#efe3cc"/>
+  <text x="864" y="369" font-size="9.2" fill="#5a3410" text-anchor="middle">经 __cluster_metadata 复制传播各 Broker</text>
+
+  <!-- Row 6: network -->
+  <rect x="30" y="398" width="248" height="48" rx="10" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="46" y="420" font-size="11.5" font-weight="600" fill="#1d1d1f">网络与请求处理</text>
+  <text x="46" y="437" font-size="8.3" fill="#6e6e73">SocketServer · KafkaApis</text>
+  <rect x="298" y="400" width="360" height="44" rx="8" fill="#ffffff" stroke="#e3ecf6"/>
+  <text x="478" y="427" font-size="9.2" fill="#3a4a63" text-anchor="middle">KafkaApis 分派请求(data-plane)</text>
+  <rect x="690" y="400" width="348" height="44" rx="8" fill="#ffffff" stroke="#efe3cc"/>
+  <text x="864" y="427" font-size="9.2" fill="#5a3410" text-anchor="middle">purgatory 延迟操作到期回调</text>
+
+  <!-- Row 7: txn -->
+  <rect x="30" y="456" width="248" height="48" rx="10" fill="#fbeaea" stroke="#e7c3c3" filter="url(#soft)"/>
+  <text x="46" y="478" font-size="11.5" font-weight="600" fill="#4a1414">事务与幂等</text>
+  <text x="46" y="495" font-size="8.3" fill="#7a2a2a">PID + seq · 2PC 标记</text>
+  <rect x="298" y="458" width="360" height="44" rx="8" fill="#ffffff" stroke="#e3ecf6"/>
+  <text x="478" y="485" font-size="9.2" fill="#3a4a63" text-anchor="middle">序列号校验去重(nextSeq==lastSeq+1)</text>
+  <rect x="690" y="458" width="348" height="44" rx="8" fill="#ffffff" stroke="#efe3cc"/>
+  <text x="864" y="485" font-size="9.2" fill="#5a3410" text-anchor="middle">事务超时 abort · 写 commit/abort 标记</text>
+
+  <text x="30" y="524" font-size="8.5" fill="#a1a1a6">读法:行=能力域(颜色即角色·紫接触面/琥珀数据面/绿协调/蓝元数据/中性网络/红一致性);列=执行时机(蓝列前台在线 · 琥珀列后台异步)</text>
+</svg>

@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="520" viewBox="0 0 1080 520" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect x="0" y="0" width="1080" height="520" fill="#fbfbfd"/>
+  <text x="40" y="38" font-size="16" font-weight="600" fill="#1d1d1f">写入事务 · 双泳道(数据落盘 ≠ 对读可见)</text>
+  <text x="40" y="58" font-size="11.5" fill="#86868b">物理落盘与逻辑可见是两条泳道;rowset 生成后,要到 publish 定 version 才对读可见</text>
+
+  <!-- 泳道 A -->
+  <rect x="30" y="82" width="300" height="150" rx="14" fill="#f6f8fc" stroke="#e6ecf4"/>
+  <text x="48" y="105" font-size="12.5" font-weight="600" fill="#1d5fb8">泳道 A · 数据落盘(物理)</text>
+  <g font-size="9.5" fill="#4a4e57">
+    <text x="48" y="128">· LoadChannel open 分 tablet</text>
+    <text x="48" y="148">· DeltaWriter write → MemTable</text>
+    <text x="48" y="168">· flush segment 文件</text>
+    <text x="48" y="188">· SegmentFileCollection close 落盘</text>
+    <text x="48" y="212" fill="#a86a3a">数据已在磁盘,但不可见</text>
+  </g>
+  <!-- 泳道 B -->
+  <rect x="30" y="252" width="300" height="150" rx="14" fill="#faf4fb" stroke="#ecd9ef"/>
+  <text x="48" y="275" font-size="12.5" font-weight="600" fill="#7a3fb0">泳道 B · 事务状态(逻辑)</text>
+  <g font-size="9.5" fill="#4a4e57">
+    <text x="48" y="298">· begin_txn 分配 Label + TxnId</text>
+    <text x="48" y="318">· 状态 PREPARE</text>
+    <text x="48" y="338">· 幂等:同 Label 拒重复</text>
+    <text x="48" y="362" fill="#a06fc0">GlobalTransactionMgr(FE)</text>
+  </g>
+
+  <!-- COMMIT -->
+  <rect x="390" y="150" width="220" height="184" rx="14" fill="#fbf7ef" stroke="#efe4cf" filter="url(#soft)"/>
+  <text x="500" y="176" font-size="13" font-weight="600" fill="#8a5a12" text-anchor="middle">COMMIT(FE 记账)</text>
+  <g font-size="9.5" fill="#8a5a12" text-anchor="middle">
+    <text x="500" y="202">commit_txn 校验 quorum 副本</text>
+    <text x="500" y="224">写 EditLog:txn → COMMITTED</text>
+    <text x="500" y="246">delete bitmap(MoW)提交期算</text>
+    <text x="500" y="278" fill="#a86a3a">数据齐但尚未 publish</text>
+  </g>
+  <!-- PUBLISH -->
+  <rect x="650" y="150" width="200" height="184" rx="14" fill="#f5faf6" stroke="#cfe6d5" filter="url(#soft)"/>
+  <text x="750" y="176" font-size="13" font-weight="600" fill="#2c5a3a" text-anchor="middle">PUBLISH(版本发布)</text>
+  <g font-size="9.5" fill="#4e7a5c" text-anchor="middle">
+    <text x="750" y="202">publish_version 分发各 BE</text>
+    <text x="750" y="224">add_inc_rowset 挂 version</text>
+    <text x="750" y="246">version++ 连续无洞</text>
+    <text x="750" y="278" fill="#5a8a6a">EnginePublishVersionTask</text>
+  </g>
+  <!-- VISIBLE -->
+  <rect x="890" y="150" width="160" height="184" rx="14" fill="#eef2fb" stroke="#c9d6ef" filter="url(#soft)"/>
+  <text x="970" y="176" font-size="13" font-weight="600" fill="#2f4a7c" text-anchor="middle">VISIBLE</text>
+  <g font-size="9.5" fill="#5a6a8c" text-anchor="middle">
+    <text x="970" y="204">读快照 capture</text>
+    <text x="970" y="224">≤ 该 version</text>
+    <text x="970" y="252" fill="#2c8a4a" font-size="12" font-weight="600">✓ 此刻可查</text>
+  </g>
+
+  <!-- arrows -->
+  <g stroke="#c7c7cc" stroke-width="1.6" fill="none">
+    <path d="M330,150 L389,200" marker-end="url(#ar)"/><text x="360" y="168" font-size="8.5" fill="#a1a1a6">数据就绪</text>
+    <path d="M330,300 L389,270" marker-end="url(#ar)"/><text x="358" y="298" font-size="8.5" fill="#a1a1a6">txn 提交</text>
+    <line x1="610" y1="242" x2="649" y2="242" marker-end="url(#ar)"/><text x="630" y="234" font-size="8" fill="#a1a1a6" text-anchor="middle">COMMITTED</text>
+    <line x1="850" y1="242" x2="889" y2="242" marker-end="url(#ar)"/><text x="870" y="234" font-size="8" fill="#a1a1a6" text-anchor="middle">version 生效</text>
+    <line x1="500" y1="334" x2="500" y2="372" marker-end="url(#ar)"/><text x="520" y="358" font-size="8.5" fill="#a1a1a6">异常</text>
+  </g>
+
+  <!-- 失败路径 -->
+  <rect x="30" y="392" width="1020" height="106" rx="14" fill="#fdf1e7" stroke="#f2d9c2"/>
+  <text x="50" y="416" font-size="13" font-weight="600" fill="#8a3a12">失败 / 回滚路径(半成功不脏读)</text>
+  <g font-size="10" fill="#a86a3a">
+    <text x="50" y="440">· PREPARE 超时 → abort_txn 清临时 segment</text>
+    <text x="50" y="462">· COMMIT 后 crash → 重启 replay EditLog 续 publish(publish 幂等,version 已定则跳过)</text>
+    <text x="50" y="484">· publish 部分失败 → 缺副本重试;version 不推进则整体不可见 —— 读永远只看到完整 publish 的 version</text>
+  </g>
+</svg>

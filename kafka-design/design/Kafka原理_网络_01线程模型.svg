@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="520" viewBox="0 0 1080 520"
+     font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1080" height="520" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Kafka Reactor 线程模型 · Acceptor / Processor / IO 线程三级分离</text>
+  <text x="30" y="50" font-size="12" fill="#a1a1a6">网络 IO 与业务处理分离，互不阻塞（SocketServer.scala）；4.x 只剩 data-plane</text>
+
+  <!-- clients -->
+  <rect x="40" y="120" width="120" height="160" rx="12" fill="#f4eefb" stroke="#dcc9f0" filter="url(#soft)"/>
+  <text x="100" y="192" font-size="12.5" font-weight="700" fill="#4a2b6b" text-anchor="middle">客户端</text>
+  <text x="100" y="214" font-size="10.5" fill="#7c5aa6" text-anchor="middle">大量连接</text>
+
+  <!-- Acceptor -->
+  <rect x="196" y="120" width="160" height="160" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="276" y="150" font-size="12.5" font-weight="700" fill="#1b2a4a" text-anchor="middle">Acceptor</text>
+  <text x="276" y="172" font-size="10.5" fill="#5b7db1" text-anchor="middle">每 endpoint 一个</text>
+  <text x="276" y="192" font-size="10.5" fill="#5b7db1" text-anchor="middle">NIO 循环 accept</text>
+  <text x="276" y="212" font-size="10.5" fill="#5b7db1" text-anchor="middle">轮询分给 Processor</text>
+  <text x="276" y="234" font-size="10" fill="#5b7db1" text-anchor="middle">assignNewConnection</text>
+  <text x="276" y="252" font-size="10" fill="#5b7db1" text-anchor="middle">:461 / :626</text>
+
+  <!-- Processors -->
+  <rect x="392" y="96" width="200" height="208" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="492" y="122" font-size="12.5" font-weight="700" fill="#1b2a4a" text-anchor="middle">Processor 池</text>
+  <text x="492" y="142" font-size="10" fill="#5b7db1" text-anchor="middle">num.network.threads=3</text>
+  <rect x="408" y="152" width="168" height="42" rx="8" fill="#ffffff" stroke="#bcd0ec"/>
+  <text x="492" y="170" font-size="10.5" font-weight="600" fill="#274a78" text-anchor="middle">Processor 0</text>
+  <text x="492" y="186" font-size="9.5" fill="#5b7db1" text-anchor="middle">收发字节</text>
+  <rect x="408" y="200" width="168" height="42" rx="8" fill="#ffffff" stroke="#bcd0ec"/>
+  <text x="492" y="218" font-size="10.5" font-weight="600" fill="#274a78" text-anchor="middle">Processor 1</text>
+  <text x="492" y="234" font-size="9.5" fill="#5b7db1" text-anchor="middle">processCompletedReceives</text>
+  <rect x="408" y="248" width="168" height="42" rx="8" fill="#ffffff" stroke="#bcd0ec"/>
+  <text x="492" y="266" font-size="10.5" font-weight="600" fill="#274a78" text-anchor="middle">Processor 2</text>
+  <text x="492" y="282" font-size="9.5" fill="#5b7db1" text-anchor="middle">mute 连接至响应发出</text>
+
+  <!-- RequestChannel -->
+  <rect x="628" y="120" width="150" height="160" rx="12" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+  <text x="703" y="150" font-size="12" font-weight="700" fill="#5a3410" text-anchor="middle">RequestChannel</text>
+  <text x="703" y="172" font-size="10.5" fill="#93762e" text-anchor="middle">有界队列</text>
+  <text x="703" y="192" font-size="10.5" fill="#93762e" text-anchor="middle">ArrayBlockingQueue</text>
+  <rect x="644" y="206" width="118" height="20" rx="5" fill="#ffffff" stroke="#efdcb4"/>
+  <rect x="644" y="230" width="118" height="20" rx="5" fill="#ffffff" stroke="#efdcb4"/>
+  <text x="703" y="270" font-size="10" fill="#93762e" text-anchor="middle">RequestChannel:50</text>
+
+  <!-- IO threads -->
+  <rect x="814" y="96" width="226" height="208" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="927" y="122" font-size="12.5" font-weight="700" fill="#12402a" text-anchor="middle">IO 线程池</text>
+  <text x="927" y="142" font-size="10" fill="#2f6f4f" text-anchor="middle">KafkaRequestHandler · num.io.threads=8</text>
+  <rect x="830" y="152" width="194" height="42" rx="8" fill="#ffffff" stroke="#bfe0cd"/>
+  <text x="927" y="170" font-size="10.5" font-weight="600" fill="#12402a" text-anchor="middle">Handler 0 · receiveRequest</text>
+  <text x="927" y="186" font-size="9.5" fill="#2f6f4f" text-anchor="middle">→ apis.handle(request)</text>
+  <rect x="830" y="200" width="194" height="42" rx="8" fill="#ffffff" stroke="#bfe0cd"/>
+  <text x="927" y="218" font-size="10.5" font-weight="600" fill="#12402a" text-anchor="middle">Handler 1 …</text>
+  <text x="927" y="234" font-size="9.5" fill="#2f6f4f" text-anchor="middle">处理业务逻辑</text>
+  <rect x="830" y="248" width="194" height="42" rx="8" fill="#ffffff" stroke="#bfe0cd"/>
+  <text x="927" y="266" font-size="10.5" font-weight="600" fill="#12402a" text-anchor="middle">Handler 7</text>
+  <text x="927" y="282" font-size="9.5" fill="#2f6f4f" text-anchor="middle">KafkaRequestHandler:108</text>
+
+  <!-- connectors -->
+  <polyline points="160,200 196,200" fill="none" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <polyline points="356,200 392,200" fill="none" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <polyline points="592,200 628,200" fill="none" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <polyline points="778,200 814,200" fill="none" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- separation note -->
+  <rect x="40" y="332" width="500" height="76" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="60" y="358" font-size="12.5" font-weight="700" fill="#1b2a4a">网络层（Processor）：只收发字节</text>
+  <text x="60" y="380" font-size="11" fill="#274a78">每轮 configure / process / poll；解析请求投入 RequestChannel</text>
+  <text x="60" y="400" font-size="11" fill="#274a78">num.network.threads 决定 Processor 数</text>
+
+  <rect x="556" y="332" width="484" height="76" rx="13" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="576" y="358" font-size="12.5" font-weight="700" fill="#12402a">业务层（IO 线程）：调 apis.handle</text>
+  <text x="576" y="380" font-size="11" fill="#2f6f4f">从队列取请求，执行业务并访问日志存储 / 副本</text>
+  <text x="576" y="400" font-size="11" fill="#2f6f4f">num.io.threads 决定 IO 线程数（≈磁盘数或核数）</text>
+
+  <rect x="40" y="424" width="1000" height="72" rx="13" fill="#f5faf6" stroke="#cfe6d5" filter="url(#soft)"/>
+  <text x="60" y="450" font-size="12.5" font-weight="700" fill="#2c5a3a">为什么分两池</text>
+  <text x="60" y="472" font-size="11" fill="#2f6f4f">网络 IO 慢（等 socket）与业务处理慢（等磁盘/复制）解耦：一方阻塞不拖垮另一方</text>
+  <text x="60" y="490" font-size="11" fill="#2f6f4f">RequestChannel 作为背压边界：队列满则背压回网络层（queued.max.requests）</text>
+</svg>

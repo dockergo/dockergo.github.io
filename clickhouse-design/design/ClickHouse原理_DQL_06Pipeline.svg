@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="580" viewBox="0 0 1060 580" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1060" height="580" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">QueryPlan → QueryPipeline → Processors 执行（pull 模型 · Chunk 列式批）</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">buildQueryPipeline (QueryPlan.cpp:168) 逐步 updatePipeline(:202) · PipelineExecutor (PipelineExecutor.cpp:125) 驱动</text>
+
+  <!-- logical to physical -->
+  <rect x="40" y="76" width="300" height="220" rx="13" fill="#f3f7fc" stroke="#cfe0f2"/>
+  <text x="190" y="98" font-size="11" font-weight="700" fill="#274a78" text-anchor="middle">逻辑 QueryPlan</text>
+  <g text-anchor="middle" font-size="8.5">
+    <rect x="90" y="112" width="200" height="30" rx="7" fill="#eef3fb" stroke="#bcd0ec"/><text x="190" y="131" fill="#1b2a4a">AggregatingStep</text>
+    <rect x="90" y="150" width="200" height="30" rx="7" fill="#eef3fb" stroke="#bcd0ec"/><text x="190" y="169" fill="#1b2a4a">FilterStep</text>
+    <rect x="90" y="188" width="200" height="30" rx="7" fill="#fdf6ea" stroke="#efdcb4"/><text x="190" y="207" fill="#5a3410">ReadFromMergeTree</text>
+  </g>
+  <text x="190" y="244" font-size="8.5" fill="#8aa6cf" text-anchor="middle">一个 Step = 一个逻辑算子</text>
+  <text x="190" y="262" font-size="8.5" fill="#8aa6cf" text-anchor="middle">updatePipeline 把它展开成</text>
+  <text x="190" y="278" font-size="8.5" fill="#8aa6cf" text-anchor="middle">多个并行 Processor</text>
+
+  <text x="380" y="190" font-size="20" fill="#c7c7cc" text-anchor="middle">→</text>
+
+  <!-- physical processors graph -->
+  <rect x="420" y="76" width="600" height="220" rx="13" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="720" y="98" font-size="11" font-weight="700" fill="#12402a" text-anchor="middle">物理 QueryPipeline（Processors 图）</text>
+  <g text-anchor="middle" font-size="7.5">
+    <!-- read processors (parallel) -->
+    <rect x="440" y="240" width="80" height="34" rx="6" fill="#fdf6ea" stroke="#efdcb4"/><text x="480" y="260" fill="#5a3410">Source×N</text>
+    <rect x="530" y="240" width="80" height="34" rx="6" fill="#fdf6ea" stroke="#efdcb4"/><text x="570" y="260" fill="#5a3410">读线程 2</text>
+    <rect x="620" y="240" width="80" height="34" rx="6" fill="#fdf6ea" stroke="#efdcb4"/><text x="660" y="260" fill="#5a3410">读线程 3</text>
+    <!-- filter transforms -->
+    <rect x="440" y="188" width="80" height="34" rx="6" fill="#f2fbf6" stroke="#cdeadb"/><text x="480" y="208" fill="#12402a">Filter</text>
+    <rect x="530" y="188" width="80" height="34" rx="6" fill="#f2fbf6" stroke="#cdeadb"/><text x="570" y="208" fill="#12402a">Filter</text>
+    <rect x="620" y="188" width="80" height="34" rx="6" fill="#f2fbf6" stroke="#cdeadb"/><text x="660" y="208" fill="#12402a">Filter</text>
+    <!-- partial agg -->
+    <rect x="440" y="136" width="80" height="34" rx="6" fill="#e9f1fb" stroke="#c4d8f0"/><text x="480" y="156" fill="#1b2a4a">部分聚合</text>
+    <rect x="530" y="136" width="80" height="34" rx="6" fill="#e9f1fb" stroke="#c4d8f0"/><text x="570" y="156" fill="#1b2a4a">部分聚合</text>
+    <rect x="620" y="136" width="80" height="34" rx="6" fill="#e9f1fb" stroke="#c4d8f0"/><text x="660" y="156" fill="#1b2a4a">部分聚合</text>
+    <!-- merge -->
+    <rect x="760" y="136" width="120" height="86" rx="8" fill="#eef3fb" stroke="#bcd0ec"/><text x="820" y="172" font-size="8.5" font-weight="600" fill="#1b2a4a">Resize/Merge</text><text x="820" y="188" fill="#5b7db1">汇聚多路</text>
+    <rect x="900" y="150" width="100" height="58" rx="8" fill="#f6f2fb" stroke="#d9c9ec"/><text x="950" y="176" font-size="8.5" font-weight="600" fill="#3d2a5a">输出</text><text x="950" y="192" fill="#7a5da5">结果 Chunk</text>
+  </g>
+  <g stroke="#9ccbb0" stroke-width="1.2" fill="none">
+    <line x1="480" y1="240" x2="480" y2="222" marker-end="url(#ar)"/>
+    <line x1="570" y1="240" x2="570" y2="222" marker-end="url(#ar)"/>
+    <line x1="660" y1="240" x2="660" y2="222" marker-end="url(#ar)"/>
+    <line x1="480" y1="188" x2="480" y2="170" marker-end="url(#ar)"/>
+    <line x1="570" y1="188" x2="570" y2="170" marker-end="url(#ar)"/>
+    <line x1="660" y1="188" x2="660" y2="170" marker-end="url(#ar)"/>
+    <path d="M520,153 L760,165" marker-end="url(#ar)"/>
+    <path d="M610,153 L760,175" marker-end="url(#ar)"/>
+    <path d="M700,153 L760,185" marker-end="url(#ar)"/>
+    <line x1="880" y1="179" x2="900" y2="179" marker-end="url(#ar)"/>
+  </g>
+  <text x="720" y="290" font-size="8" fill="#4c8567" text-anchor="middle">一个逻辑 Step 展开成多路并行 Processor（宽度 = max_threads）</text>
+
+  <!-- pull model -->
+  <rect x="40" y="316" width="480" height="130" rx="13" fill="#f6f2fb" stroke="#d9c9ec"/>
+  <text x="280" y="340" font-size="11" font-weight="700" fill="#3d2a5a" text-anchor="middle">pull 模型 · PipelineExecutor</text>
+  <text x="60" y="362" font-size="9" fill="#7a5da5">· 下游 Processor 向上游"要数据"（拉），非上游推</text>
+  <text x="60" y="380" font-size="9" fill="#7a5da5">· ExecutingGraph 追踪每个 Processor 的就绪状态</text>
+  <text x="60" y="398" font-size="9" fill="#7a5da5">· 数据单位 = Chunk（一批列，向量化处理）</text>
+  <text x="60" y="418" font-size="9" fill="#7a5da5">· 空闲线程从图中取"可执行"节点跑（work-stealing 式）</text>
+  <text x="60" y="436" font-size="8.5" fill="#9a7cc4">PipelineExecutor.cpp:125 · ExecutingGraph :63</text>
+
+  <!-- parallelism -->
+  <rect x="540" y="316" width="480" height="130" rx="13" fill="#fdf9f0" stroke="#efe3cd"/>
+  <text x="780" y="340" font-size="11" font-weight="700" fill="#7a5a1e" text-anchor="middle">并行度 max_threads</text>
+  <text x="560" y="362" font-size="9" fill="#93762e">· 默认 0 = 自动取 CPU 核数（Settings.cpp:206）</text>
+  <text x="560" y="380" font-size="9" fill="#93762e">· 决定读取/过滤/部分聚合的并行宽度</text>
+  <text x="560" y="398" font-size="9" fill="#93762e">· 大查询设大，高并发场景设小以保隔离</text>
+  <text x="560" y="418" font-size="9" fill="#93762e">· 与「资源与负载」的并发控制/内存追踪协同</text>
+  <text x="560" y="436" font-size="8.5" fill="#b08843">→ 执行细节见「执行引擎」主线</text>
+
+  <rect x="40" y="462" width="980" height="100" rx="12" fill="#f7f7f9" stroke="#e6e6ea"/>
+  <text x="60" y="486" font-size="11" font-weight="700" fill="#1d1d1f">一句话</text>
+  <text x="60" y="508" font-size="10" fill="#4b4b50">执行阶段把逻辑 QueryPlan 逐步展开成物理 Processors 图（每个逻辑 Step → 多路并行 Processor），</text>
+  <text x="60" y="526" font-size="10" fill="#4b4b50">由 PipelineExecutor 以 pull 模型驱动、以 Chunk 为单位向量化并行执行，宽度由 max_threads 决定。</text>
+  <text x="60" y="548" font-size="9" fill="#8a8a8f">Processors 框架、算子内部实现见「执行引擎」主线。</text>
+</svg>

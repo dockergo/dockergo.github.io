@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="450" viewBox="0 0 1000 450" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1000" height="450" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">锁选择决策树：第一判据是"临界区能否睡眠"</text>
+
+  <!-- Q1 -->
+  <polygon points="410,78 500,46 590,78 500,110" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="500" y="82" font-size="11" font-weight="600" fill="#1b2a4a" text-anchor="middle">持锁会睡眠吗？</text>
+
+  <!-- Q2 -->
+  <polygon points="160,204 250,172 340,204 250,236" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="250" y="208" font-size="11" font-weight="600" fill="#1b2a4a" text-anchor="middle">与中断互斥？</text>
+
+  <!-- Q3 -->
+  <polygon points="660,204 750,172 840,204 750,236" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="750" y="208" font-size="11" font-weight="600" fill="#1b2a4a" text-anchor="middle">读远多于写？</text>
+
+  <!-- leaves -->
+  <rect x="34" y="298" width="196" height="88" rx="11" fill="#f3f7fc" stroke="#cfe0f2" filter="url(#soft)"/>
+  <text x="132" y="322" font-size="11" font-weight="600" fill="#274a78" text-anchor="middle">spin_lock_irqsave / _bh</text>
+  <text x="50" y="344" font-size="9.5" fill="#5b7db1">忙等 · 关中断 / 关软中断</text>
+  <text x="50" y="364" font-size="9.5" fill="#5b7db1">与硬 / 软中断共享数据</text>
+
+  <rect x="252" y="298" width="196" height="88" rx="11" fill="#f3f7fc" stroke="#cfe0f2" filter="url(#soft)"/>
+  <text x="350" y="322" font-size="11" font-weight="600" fill="#274a78" text-anchor="middle">spin_lock</text>
+  <text x="268" y="344" font-size="9.5" fill="#5b7db1">忙等 · 关抢占（preempt_disable）</text>
+  <text x="268" y="364" font-size="9.5" fill="#5b7db1">短临界区、原子上下文</text>
+
+  <rect x="556" y="298" width="184" height="88" rx="11" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="648" y="322" font-size="11" font-weight="600" fill="#12402a" text-anchor="middle">mutex</text>
+  <text x="572" y="344" font-size="9.5" fill="#2f6f4f">睡眠锁 · 单一持有者</text>
+  <text x="572" y="364" font-size="9.5" fill="#2f6f4f">乐观自旋（mutex.c:474）</text>
+
+  <rect x="760" y="298" width="206" height="88" rx="11" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="863" y="322" font-size="11" font-weight="600" fill="#12402a" text-anchor="middle">RCU 或 rwsem</text>
+  <text x="776" y="344" font-size="9.5" fill="#2f6f4f">读侧要零开销 → RCU</text>
+  <text x="776" y="364" font-size="9.5" fill="#2f6f4f">否则可并发读 → rwsem</text>
+
+  <!-- 连线 -->
+  <g stroke="#c7c7cc" stroke-width="1.5" fill="none">
+    <path d="M500,110 L500,142 L250,142 L250,172" marker-end="url(#ar)"/>
+    <path d="M500,110 L500,142 L750,142 L750,172" marker-end="url(#ar)"/>
+    <path d="M250,236 L250,270 L132,270 L132,298" marker-end="url(#ar)"/>
+    <path d="M250,236 L250,270 L350,270 L350,298" marker-end="url(#ar)"/>
+    <path d="M750,236 L750,270 L648,270 L648,298" marker-end="url(#ar)"/>
+    <path d="M750,236 L750,270 L863,270 L863,298" marker-end="url(#ar)"/>
+  </g>
+  <text x="360" y="136" font-size="9" fill="#7a2a2a">否（不睡）</text>
+  <text x="600" y="136" font-size="9" fill="#2f6f4f">是（会睡）</text>
+  <text x="150" y="264" font-size="9" fill="#a1a1a6">是</text>
+  <text x="366" y="264" font-size="9" fill="#a1a1a6">否</text>
+  <text x="612" y="264" font-size="9" fill="#a1a1a6">否</text>
+  <text x="770" y="264" font-size="9" fill="#a1a1a6">是</text>
+
+  <!-- 特殊场景 -->
+  <rect x="34" y="402" width="932" height="34" rx="9" fill="#ffffff" stroke="#ececf1"/>
+  <text x="50" y="424" font-size="10" fill="#6e6e73">特殊场景：需"计数/资源配额、可 N 并发" → semaphore；极读多写少且读可重试（如时间戳） → seqlock（写者递增序号、读者变了就重试）。</text>
+</svg>

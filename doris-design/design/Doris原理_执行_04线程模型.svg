@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="430" viewBox="0 0 960 430" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="960" height="430" fill="#fbfbfd"/>
+  <text x="40" y="34" font-size="14" font-weight="600" fill="#1d1d1f">Pipeline 依赖驱动调度：少量线程（≈核数）支撑海量 Task，不阻塞占线程</text>
+
+  <!-- Ready Queue -->
+  <rect x="34" y="56" width="220" height="300" rx="14" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="144" y="80" font-size="12.5" font-weight="600" fill="#274a78" text-anchor="middle">就绪队列 Ready</text>
+  <g text-anchor="middle" font-size="11" fill="#1b2a4a">
+    <rect x="54" y="96" width="180" height="34" rx="9" fill="#eef3fb" stroke="#bcd0ec"/><text x="144" y="118">PipelineTask #1</text>
+    <rect x="54" y="138" width="180" height="34" rx="9" fill="#eef3fb" stroke="#bcd0ec"/><text x="144" y="160">PipelineTask #2</text>
+    <rect x="54" y="180" width="180" height="34" rx="9" fill="#eef3fb" stroke="#bcd0ec"/><text x="144" y="202">PipelineTask #3</text>
+    <rect x="54" y="222" width="180" height="34" rx="9" fill="#f0f4f9" stroke="#dfe6ef"/><text x="144" y="244" fill="#6e6e73">… 就绪即可被取</text>
+  </g>
+
+  <!-- Scheduler -->
+  <rect x="300" y="150" width="180" height="110" rx="14" fill="#e8eefb" stroke="#b6cdf0" filter="url(#soft)"/>
+  <text x="390" y="196" font-size="13" font-weight="600" fill="#274a78" text-anchor="middle">调度器</text>
+  <text x="390" y="218" font-size="10.5" fill="#5b7db1" text-anchor="middle">依赖驱动</text>
+  <text x="390" y="236" font-size="10.5" fill="#5b7db1" text-anchor="middle">就绪才分派</text>
+
+  <!-- Worker Pool -->
+  <rect x="526" y="56" width="180" height="300" rx="14" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="616" y="80" font-size="12.5" font-weight="600" fill="#2c5a3a" text-anchor="middle">Worker 线程池</text>
+  <text x="616" y="97" font-size="10" fill="#86868b" text-anchor="middle">数量 ≈ 核数</text>
+  <g text-anchor="middle" font-size="11" fill="#2c5a3a">
+    <rect x="546" y="110" width="140" height="30" rx="8" fill="#f5faf6" stroke="#e2ece5"/><text x="616" y="130">Thread 1</text>
+    <rect x="546" y="148" width="140" height="30" rx="8" fill="#f5faf6" stroke="#e2ece5"/><text x="616" y="168">Thread 2</text>
+    <rect x="546" y="186" width="140" height="30" rx="8" fill="#f5faf6" stroke="#e2ece5"/><text x="616" y="206">Thread 3</text>
+    <rect x="546" y="224" width="140" height="30" rx="8" fill="#f5faf6" stroke="#e2ece5"/><text x="616" y="244">Thread … N</text>
+  </g>
+
+  <!-- Blocked -->
+  <rect x="752" y="56" width="188" height="300" rx="14" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="846" y="80" font-size="12.5" font-weight="600" fill="#5a3410" text-anchor="middle">阻塞集 Blocked</text>
+  <text x="846" y="97" font-size="10" fill="#93762e" text-anchor="middle">等依赖满足</text>
+  <g text-anchor="middle" font-size="10.5" fill="#5a3410">
+    <rect x="768" y="112" width="156" height="40" rx="9" fill="#fff7e6" stroke="#e8cf9a"/><text x="846" y="136">等 Exchange 数据</text>
+    <rect x="768" y="160" width="156" height="40" rx="9" fill="#fff7e6" stroke="#e8cf9a"/><text x="846" y="184">等 Build 哈希表</text>
+    <rect x="768" y="208" width="156" height="40" rx="9" fill="#fff7e6" stroke="#e8cf9a"/><text x="846" y="232">等 Runtime Filter</text>
+  </g>
+
+  <g stroke="#c7c7cc" stroke-width="1.5" fill="none">
+    <line x1="254" y1="205" x2="300" y2="205" marker-end="url(#ar)"/>
+    <line x1="480" y1="205" x2="526" y2="205" marker-end="url(#ar)"/>
+    <path d="M706,270 L730,270 L730,300 L752,300" marker-end="url(#ar)"/>
+    <path d="M768,300 L730,300 L730,388 L144,388 L144,356" stroke-dasharray="5 3" marker-end="url(#ar)"/>
+  </g>
+  <g font-size="10" fill="#a1a1a6" text-anchor="middle">
+    <text x="277" y="198">取就绪</text><text x="503" y="198">分派</text>
+    <text x="700" y="292">依赖未就绪→让出线程</text><text x="430" y="381">依赖满足→唤醒重新入队</text>
+  </g>
+</svg>

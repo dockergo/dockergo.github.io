@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="540" viewBox="0 0 1080 540" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="540" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">StarRocks 三种 Load · Stream / Broker / Routine 对比</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">三种外部导入,差异在数据源与驱动方式;都用 label 幂等去重、共享 beginTxn→写→commit→publish 骨架</text>
+
+  <!-- Stream Load -->
+  <rect x="30" y="74" width="333" height="376" rx="14" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="196" y="100" font-size="12" font-weight="700" text-anchor="middle" fill="#12402a">Stream Load</text>
+  <text x="196" y="120" font-size="9" text-anchor="middle" fill="#2f6f4f">同步 HTTP · 客户端 PUT 一批</text>
+  <g text-anchor="middle">
+    <rect x="46" y="134" width="301" height="60" rx="10" fill="#e5f6ec" stroke="#bfe0cd" filter="url(#soft)"/><text x="196" y="158" font-size="10" font-weight="700" fill="#12402a">客户端 HTTP PUT 数据</text><text x="196" y="176" font-size="8.5" fill="#2f6f4f">CSV / JSON · column_separator</text>
+    <rect x="46" y="204" width="301" height="60" rx="10" fill="#e5f6ec" stroke="#bfe0cd" filter="url(#soft)"/><text x="196" y="228" font-size="10" font-weight="700" fill="#12402a">StreamLoadMgr</text><text x="196" y="246" font-size="8.5" fill="#2f6f4f">beginLoadTaskFromFrontend(:172)</text>
+    <rect x="46" y="274" width="301" height="60" rx="10" fill="#e5f6ec" stroke="#bfe0cd" filter="url(#soft)"/><text x="196" y="298" font-size="10" font-weight="700" fill="#12402a">建 StreamLoadTask + 开事务</text><text x="196" y="316" font-size="8.5" fill="#2f6f4f">beginTxnFromFrontend(:189)</text>
+    <rect x="46" y="344" width="301" height="52" rx="10" fill="#e5f6ec" stroke="#bfe0cd" filter="url(#soft)"/><text x="196" y="366" font-size="10" font-weight="700" fill="#12402a">同步返回 JSON(看 Status)</text><text x="196" y="383" font-size="8.5" fill="#2f6f4f">label 幂等:重复 label 拒绝</text>
+    <rect x="46" y="406" width="301" height="34" rx="9" fill="#eafaf1" stroke="#bfe0cd"/><text x="196" y="427" font-size="8.8" fill="#2f6f4f">适合:实时小批 · 客户端等结果</text>
+  </g>
+  <line x1="196" y1="194" x2="196" y2="204" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+  <line x1="196" y1="264" x2="196" y2="274" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+  <line x1="196" y1="334" x2="196" y2="344" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+
+  <!-- Broker Load -->
+  <rect x="373" y="74" width="333" height="376" rx="14" fill="#fff7e6" stroke="#e8cf9a"/>
+  <text x="539" y="100" font-size="12" font-weight="700" text-anchor="middle" fill="#5a3410">Broker Load</text>
+  <text x="539" y="120" font-size="9" text-anchor="middle" fill="#93762e">异步拉取 · FE 从 HDFS/S3 拉大文件</text>
+  <g text-anchor="middle">
+    <rect x="389" y="134" width="301" height="60" rx="10" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/><text x="539" y="158" font-size="10" font-weight="700" fill="#5a3410">提交 LOAD 作业</text><text x="539" y="176" font-size="8.5" fill="#93762e">指定 HDFS / S3 路径</text>
+    <rect x="389" y="204" width="301" height="60" rx="10" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/><text x="539" y="228" font-size="10" font-weight="700" fill="#5a3410">BrokerLoadJob extends BulkLoadJob</text><text x="539" y="246" font-size="8.5" fill="#93762e">beginTxn(:142) · 异步作业(:108)</text>
+    <rect x="389" y="274" width="301" height="60" rx="10" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/><text x="539" y="298" font-size="10" font-weight="700" fill="#5a3410">派 BrokerPendingTask</text><text x="539" y="316" font-size="8.5" fill="#93762e">unprotectedExecuteJob(:176)</text>
+    <rect x="389" y="344" width="301" height="52" rx="10" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/><text x="539" y="366" font-size="10" font-weight="700" fill="#5a3410">从 HDFS/S3 拉数据写入</text><text x="539" y="383" font-size="8.5" fill="#93762e">适合 TB 级批量</text>
+    <rect x="389" y="406" width="301" height="34" rx="9" fill="#fff7e6" stroke="#e8cf9a"/><text x="539" y="427" font-size="8.8" fill="#93762e">适合:离线大文件 · 后台跑不阻塞</text>
+  </g>
+  <line x1="539" y1="194" x2="539" y2="204" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+  <line x1="539" y1="264" x2="539" y2="274" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+  <line x1="539" y1="334" x2="539" y2="344" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+
+  <!-- Routine Load -->
+  <rect x="716" y="74" width="334" height="376" rx="14" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="883" y="100" font-size="12" font-weight="700" text-anchor="middle" fill="#1b2a4a">Routine Load</text>
+  <text x="883" y="120" font-size="9" text-anchor="middle" fill="#5b7db1">常驻流 · 持续消费 Kafka/Pulsar</text>
+  <g text-anchor="middle">
+    <rect x="732" y="134" width="302" height="60" rx="10" fill="#f3f7fc" stroke="#cfe0f2" filter="url(#soft)"/><text x="883" y="158" font-size="10" font-weight="700" fill="#274a78">CREATE ROUTINE LOAD 作业</text><text x="883" y="176" font-size="8.5" fill="#5b7db1">Kafka / Pulsar 数据源</text>
+    <rect x="732" y="204" width="302" height="60" rx="10" fill="#f3f7fc" stroke="#cfe0f2" filter="url(#soft)"/><text x="883" y="226" font-size="10" font-weight="700" fill="#274a78">① RoutineLoadScheduler</text><text x="883" y="244" font-size="8.5" fill="#5b7db1">调度作业(守护线程,:51)</text>
+    <rect x="732" y="274" width="302" height="60" rx="10" fill="#f3f7fc" stroke="#cfe0f2" filter="url(#soft)"/><text x="883" y="296" font-size="10" font-weight="700" fill="#274a78">② RoutineLoadTaskScheduler</text><text x="883" y="314" font-size="8.5" fill="#5b7db1">scheduleOneTask→allocateTaskToBe(:77)</text>
+    <rect x="732" y="344" width="302" height="52" rx="10" fill="#f3f7fc" stroke="#cfe0f2" filter="url(#soft)"/><text x="883" y="366" font-size="10" font-weight="700" fill="#274a78">submitTask 派分区任务给 BE(:262)</text><text x="883" y="383" font-size="8.5" fill="#5b7db1">Kafka/Pulsar RoutineLoadJob 持续消费</text>
+    <rect x="732" y="406" width="302" height="34" rx="9" fill="#eef3fb" stroke="#bcd0ec"/><text x="883" y="427" font-size="8.8" fill="#5b7db1">适合:流式增量 · 两级调度守护常驻</text>
+  </g>
+  <line x1="883" y1="194" x2="883" y2="204" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+  <line x1="883" y1="264" x2="883" y2="274" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+  <line x1="883" y1="334" x2="883" y2="344" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+
+  <rect x="30" y="466" width="1020" height="52" rx="12" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="46" y="488" font-size="9.5" font-weight="700" fill="#1d1d1f">读法</text>
+  <text x="46" y="506" font-size="9" fill="#6e6e73">同步等结果小批用 Stream Load;离线 TB 级大文件用 Broker Load 异步拉;Kafka/Pulsar 流式增量用 Routine Load 两级调度常驻消费。三者都以 label 保证幂等去重。</text>
+</svg>

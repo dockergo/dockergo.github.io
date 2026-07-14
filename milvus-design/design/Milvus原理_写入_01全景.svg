@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="500" viewBox="0 0 1080 500" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="500" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Milvus 写入全景 · Proxy → WAL → binlog（日志驱动）</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">insert 不直接改存储:先追加 streaming WAL(按 vchannel 分片的日志),再由消费端异步落成列式 binlog——快、可回放、写落解耦</text>
+
+  <!-- Card 1 Proxy (blue / access) -->
+  <rect x="30" y="96" width="180" height="190" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <circle cx="50" cy="114" r="9" fill="#ffffff" stroke="#bcd0ec"/><text x="50" y="117" font-size="9" font-weight="700" text-anchor="middle" fill="#1b2a4a">1</text>
+  <text x="120" y="120" font-size="10.5" font-weight="700" text-anchor="middle" fill="#1b2a4a">Proxy 接入层</text>
+  <g font-size="8" text-anchor="middle" fill="#274a78">
+    <text x="120" y="146">建可变消息</text>
+    <text x="120" y="164">主键 hash → vchannel</text>
+    <text x="120" y="182">streaming.WAL()</text>
+    <text x="120" y="200">.AppendMessages</text>
+  </g>
+  <text x="120" y="228" font-size="8" text-anchor="middle" fill="#5b7db1">段 id 传 0</text>
+  <text x="120" y="244" font-size="8" text-anchor="middle" fill="#5b7db1">streaming node 分配</text>
+
+  <!-- Card 2 streaming WAL (amber / write truth) -->
+  <rect x="240" y="96" width="180" height="190" rx="13" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <circle cx="260" cy="114" r="9" fill="#ffffff" stroke="#e8cf9a"/><text x="260" y="117" font-size="9" font-weight="700" text-anchor="middle" fill="#5a3410">2</text>
+  <text x="330" y="120" font-size="10.5" font-weight="700" text-anchor="middle" fill="#5a3410">streaming WAL</text>
+  <g font-size="8" text-anchor="middle" fill="#93762e">
+    <text x="330" y="146" fill="#5a3410">写入的真相(日志)</text>
+    <text x="330" y="164">按 PChannel 组织</text>
+    <text x="330" y="182">Append(ctx, msg)</text>
+    <text x="330" y="200">顺序追加 · 可回放</text>
+  </g>
+  <text x="330" y="228" font-size="8" text-anchor="middle" fill="#93762e">底层 MQ</text>
+  <text x="330" y="244" font-size="8" text-anchor="middle" fill="#93762e">Pulsar/Kafka/woodpecker</text>
+
+  <!-- Card 3 Flusher consume (amber variant / consumer) -->
+  <rect x="450" y="96" width="180" height="190" rx="13" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+  <circle cx="470" cy="114" r="9" fill="#ffffff" stroke="#efdcb4"/><text x="470" y="117" font-size="9" font-weight="700" text-anchor="middle" fill="#5a3410">3</text>
+  <text x="540" y="120" font-size="10.5" font-weight="700" text-anchor="middle" fill="#5a3410">Flusher 消费</text>
+  <g font-size="8" text-anchor="middle" fill="#93762e">
+    <text x="540" y="146" fill="#5a3410">StreamingNode 持 WAL</text>
+    <text x="540" y="164">从恢复检查点扫 WAL</text>
+    <text x="540" y="182">按 vchannel 路由</text>
+    <text x="540" y="200">→ DataSyncService</text>
+  </g>
+  <text x="540" y="228" font-size="8" text-anchor="middle" fill="#93762e">per-vchannel</text>
+  <text x="540" y="244" font-size="8" text-anchor="middle" fill="#93762e">各路由独立处理</text>
+
+  <!-- Card 4 WriteBuffer (amber / buffers) -->
+  <rect x="660" y="96" width="180" height="190" rx="13" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <circle cx="680" cy="114" r="9" fill="#ffffff" stroke="#e8cf9a"/><text x="680" y="117" font-size="9" font-weight="700" text-anchor="middle" fill="#5a3410">4</text>
+  <text x="750" y="120" font-size="10.5" font-weight="700" text-anchor="middle" fill="#5a3410">WriteBuffer</text>
+  <g font-size="8" text-anchor="middle" fill="#93762e">
+    <text x="750" y="146" fill="#5a3410">消息攒进 buffer</text>
+    <text x="750" y="164">insert(新数据)</text>
+    <text x="750" y="182">delta(删除标记)</text>
+    <text x="750" y="200">stats(主键/bloom)</text>
+  </g>
+  <text x="750" y="228" font-size="8" text-anchor="middle" fill="#93762e">三类 buffer</text>
+  <text x="750" y="244" font-size="8" text-anchor="middle" fill="#93762e">满/过期触发 sync</text>
+
+  <!-- Card 5 SyncManager (amber variant / process) -->
+  <rect x="870" y="96" width="180" height="190" rx="13" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+  <circle cx="890" cy="114" r="9" fill="#ffffff" stroke="#efdcb4"/><text x="890" y="117" font-size="9" font-weight="700" text-anchor="middle" fill="#5a3410">5</text>
+  <text x="960" y="120" font-size="10.5" font-weight="700" text-anchor="middle" fill="#5a3410">SyncManager</text>
+  <g font-size="8" text-anchor="middle" fill="#93762e">
+    <text x="960" y="146" fill="#5a3410">pack writer 序列化</text>
+    <text x="960" y="164">→ insert binlog</text>
+    <text x="960" y="182">→ delta log</text>
+    <text x="960" y="200">→ stats log</text>
+  </g>
+  <text x="960" y="228" font-size="8" text-anchor="middle" fill="#93762e">列式(每字段一文件)</text>
+  <text x="960" y="244" font-size="8" text-anchor="middle" fill="#93762e">落对象存储</text>
+
+  <!-- horizontal flow arrows -->
+  <line x1="210" y1="191" x2="240" y2="191" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="420" y1="191" x2="450" y2="191" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="630" y1="191" x2="660" y2="191" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="840" y1="191" x2="870" y2="191" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+
+  <!-- arrow to object storage -->
+  <line x1="960" y1="286" x2="960" y2="322" stroke="#86868b" stroke-width="1.4" marker-end="url(#ar)"/>
+
+  <!-- object storage band -->
+  <rect x="30" y="322" width="1020" height="58" rx="14" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+  <text x="46" y="346" font-size="11" font-weight="700" fill="#5a3410">对象存储(S3 / MinIO)· 列式 binlog + delta log + stats log</text>
+  <text x="46" y="366" font-size="8.8" fill="#93762e">WAL 是写入的真相;binlog 是异步落盘的产物 · 删除写 delta log,查询时叠加应用(数据由 compaction 惰性清除,不立即移除)</text>
+
+  <!-- insight -->
+  <rect x="30" y="400" width="1020" height="70" rx="12" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="46" y="424" font-size="10.5" font-weight="700" fill="#12402a">日志驱动:写入与落盘解耦</text>
+  <text x="46" y="444" font-size="8.8" fill="#2f6f4f">Proxy 只管追加日志(快)→ 消费端异步 buffer→binlog 落盘 → 崩溃后从 WAL 检查点回放恢复未落盘数据(WAL 落 MQ 后才持久)</text>
+  <text x="46" y="461" font-size="8.8" fill="#2f6f4f">vchannel 分片让写入并行 —— 与 Kafka 的“分区日志 + 消费者”同构;WAL 定序靠全局 TSO(见【一致性与时间】)</text>
+</svg>

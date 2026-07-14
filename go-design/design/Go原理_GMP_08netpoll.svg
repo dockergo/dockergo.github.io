@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="940" height="580" viewBox="0 0 940 580" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+    <marker id="arG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#4a8c60"/>
+    </marker>
+  </defs>
+  <rect width="940" height="580" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">集成网络轮询器 · 阻塞 I/O 的 goroutine 如何 park/ready</text>
+
+  <!-- FD register (amber) -->
+  <rect x="40" y="52" width="400" height="86" rx="12" fill="#fdf6ec" stroke="#f0dcaf" filter="url(#soft)"/>
+  <text x="56" y="77" font-size="12.5" font-weight="600" fill="#6b4e16">① 非阻塞 FD 注册进 OS poller</text>
+  <text x="56" y="98" font-size="10.5" fill="#a9822f">conn 的 FD 设为非阻塞，注册到 epoll / kqueue / IOCP</text>
+  <text x="56" y="117" font-size="10.5" fill="#a9822f">pollDesc 持有该 FD 的读/写等待者 rg / wg（原子 G 指针）</text>
+  <text x="424" y="75" font-size="9" fill="#a9822f" text-anchor="end">netpoll.go:75</text>
+
+  <!-- G doing conn.Read (green) -->
+  <rect x="40" y="166" width="220" height="72" rx="12" fill="#eef7f0" stroke="#bfe0c8" filter="url(#soft)"/>
+  <text x="56" y="191" font-size="12" font-weight="600" fill="#1d4a2b">G · conn.Read()</text>
+  <text x="56" y="212" font-size="10" fill="#4a8c60">看似阻塞的读调用</text>
+  <text x="56" y="229" font-size="10" fill="#4a8c60">数据未就绪</text>
+
+  <line x1="260" y1="202" x2="320" y2="202" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <text x="290" y="194" font-size="9" fill="#8e8e93" text-anchor="middle">未就绪</text>
+
+  <!-- netpollblock -> gopark (blue) -->
+  <rect x="322" y="160" width="300" height="84" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="338" y="185" font-size="12" font-weight="600" fill="#1b2a4a">② poll_runtime_pollWait</text>
+  <text x="606" y="183" font-size="9" fill="#5b7db1" text-anchor="end">netpoll.go:342</text>
+  <text x="338" y="206" font-size="10" fill="#5b7db1">→ netpollblock 把 G gopark</text>
+  <text x="338" y="224" font-size="10" fill="#5b7db1">等待原因 waitReasonIOWait</text>
+  <text x="606" y="240" font-size="9" fill="#5b7db1" text-anchor="end">netpoll.go:548</text>
+
+  <!-- parked G (grey) -->
+  <rect x="322" y="270" width="300" height="66" rx="12" fill="#f6f6f7" stroke="#e2e2e7"/>
+  <text x="338" y="294" font-size="11.5" font-weight="600" fill="#6e6e73">G 已 park · _Gwaiting</text>
+  <text x="338" y="314" font-size="10" fill="#8e8e93">挂在 pollDesc.rg 上，不在运行队列</text>
+  <text x="338" y="330" font-size="10" fill="#8e8e93">等待 OS 通知 FD 就绪</text>
+
+  <!-- M released (blue, key point) -->
+  <rect x="660" y="160" width="240" height="176" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="676" y="185" font-size="12.5" font-weight="600" fill="#1b2a4a">M 不阻塞</text>
+  <text x="676" y="206" font-size="10" fill="#5b7db1">G park 后 M 立即释放</text>
+  <text x="676" y="223" font-size="10" fill="#5b7db1">回到 schedule 去跑别的 G</text>
+  <rect x="676" y="236" width="208" height="42" rx="8" fill="#ffffff" stroke="#cfe0f2"/>
+  <text x="780" y="253" font-size="10" fill="#1b2a4a" text-anchor="middle">线程不被单个慢 I/O 占住</text>
+  <text x="780" y="270" font-size="9.5" fill="#5b7db1" text-anchor="middle">这是"千万并发"的根基</text>
+  <text x="676" y="298" font-size="10" fill="#5b7db1">一万个网络 G 只需极少 M：</text>
+  <text x="676" y="316" font-size="10" fill="#5b7db1">绝大多数 park 在 netpoll 里，</text>
+  <text x="676" y="333" font-size="10" fill="#5b7db1">就绪一个跑一个。</text>
+
+  <!-- M released arrow from block -->
+  <line x1="622" y1="188" x2="656" y2="188" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <text x="639" y="180" font-size="8.5" fill="#8e8e93" text-anchor="middle">释放M</text>
+
+  <!-- OS ready notify -->
+  <rect x="40" y="368" width="400" height="72" rx="12" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="56" y="393" font-size="12.5" font-weight="600" fill="#1d1d1f">③ OS 通知 FD 就绪</text>
+  <text x="56" y="414" font-size="10.5" fill="#6e6e73">findRunnable / sysmon / GC 调 netpoll(delay)</text>
+  <text x="56" y="431" font-size="10.5" fill="#6e6e73">返回就绪 G 列表（netpollBreak 可打断阻塞轮询）</text>
+
+  <line x1="240" y1="368" x2="240" y2="342" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <text x="252" y="358" font-size="9" fill="#8e8e93">就绪</text>
+
+  <!-- netpollready -> requeue (green) -->
+  <rect x="460" y="368" width="440" height="72" rx="12" fill="#eef7f0" stroke="#bfe0c8" filter="url(#soft)"/>
+  <text x="476" y="393" font-size="12.5" font-weight="600" fill="#1d4a2b">④ netpollready → netpollgoready</text>
+  <text x="884" y="391" font-size="9" fill="#4a8c60" text-anchor="end">netpoll.go:494</text>
+  <text x="476" y="414" font-size="10.5" fill="#4a8c60">取出 pollDesc 上 park 的 G，置 _Grunnable</text>
+  <text x="476" y="431" font-size="10.5" fill="#4a8c60">重新入运行队列，等待某 M 调度执行</text>
+
+  <line x1="440" y1="404" x2="458" y2="404" stroke="#4a8c60" stroke-width="1.6" marker-end="url(#arG)"/>
+
+  <!-- ready G back to loop (green dashed) -->
+  <path d="M620,404 C700,404 720,404 720,360 L720,344" fill="none" stroke="#4a8c60" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#arG)"/>
+  <text x="742" y="362" font-size="9" fill="#4a8c60">被 M 重新执行</text>
+
+  <!-- park/ready cycle summary (purple) -->
+  <rect x="40" y="468" width="860" height="92" rx="12" fill="#f5f0fb" stroke="#ddcdf0"/>
+  <text x="58" y="492" font-size="12" font-weight="600" fill="#3d2a5a">park / ready 循环</text>
+  <text x="58" y="514" font-size="10.5" fill="#7d5bb1">读未就绪 → netpollblock 把 G gopark、M 去跑别的 G；OS 就绪通知 → netpoll 收集 → netpollready 重新入队 → 某 M 调度它继续。</text>
+  <text x="58" y="534" font-size="10.5" fill="#7d5bb1">整个过程 M 从不为单个 FD 空等——阻塞的是 G（用户态、极轻量），不是 OS 线程。</text>
+  <text x="58" y="553" font-size="10.5" fill="#7d5bb1">这与"系统调用阻塞 M"形成对比：网络 I/O 走 poller 不占线程，普通阻塞 syscall 才需要 handoffp 移交 P。</text>
+</svg>

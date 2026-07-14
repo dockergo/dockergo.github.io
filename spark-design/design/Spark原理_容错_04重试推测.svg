@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="520" viewBox="0 0 1060 520" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs><filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+  <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker></defs>
+  <rect width="1060" height="520" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">task 重试 与 推测执行：治瞬时故障 与 慢 task 长尾</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">maxFailures 默认 4(:953) · abort(TaskSetManager:1107/:1110) · speculation 默认 false(:2514) · multiplier 3(:2526) · quantile 0.9(:2532)</text>
+  <!-- retry -->
+  <rect x="40" y="76" width="480" height="180" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="280" y="100" font-size="12" font-weight="700" fill="#1b2a4a" text-anchor="middle">① task 重试（瞬时故障）</text>
+  <g text-anchor="middle" font-size="8">
+    <rect x="60" y="116" width="90" height="44" rx="7" fill="#fff" stroke="#bcd0ec"/><text x="105" y="138" fill="#1b2a4a">task 失败</text><text x="105" y="152" fill="#5b7db1">尝试 1</text>
+    <text x="162" y="142" fill="#8aa6cf">→</text>
+    <rect x="176" y="116" width="90" height="44" rx="7" fill="#fff" stroke="#bcd0ec"/><text x="221" y="138" fill="#1b2a4a">重试</text><text x="221" y="152" fill="#5b7db1">尝试 2,3</text>
+    <text x="278" y="142" fill="#8aa6cf">→</text>
+    <rect x="292" y="116" width="100" height="44" rx="7" fill="#eafaf1" stroke="#bfe0cd"/><text x="342" y="138" fill="#12402a">成功</text><text x="342" y="152" fill="#4c8567">继续</text>
+    <rect x="408" y="116" width="92" height="44" rx="7" fill="#fbeef0" stroke="#f0cdd4"/><text x="454" y="134" fill="#7a2230">达 4 次</text><text x="454" y="148" fill="#a44">abort stage</text>
+  </g>
+  <text x="280" y="186" font-size="9" fill="#5b7db1" text-anchor="middle">· maxFailures 默认 4：累计失败达 4 → abort 整 stage → job 失败</text>
+  <text x="280" y="208" font-size="9" fill="#5b7db1" text-anchor="middle">· 应对：网络抖动、节点临时问题、偶发异常等瞬时故障</text>
+  <text x="280" y="230" font-size="8.5" fill="#8aa6cf" text-anchor="middle">· numFailures(index) >= maxTaskFailures → abort(:1107/:1110)</text>
+  <text x="280" y="248" font-size="8.5" fill="#8aa6cf" text-anchor="middle">· 不稳环境可调大 maxFailures</text>
+  <!-- speculation -->
+  <rect x="540" y="76" width="480" height="180" rx="14" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+  <text x="780" y="100" font-size="12" font-weight="700" fill="#5a3410" text-anchor="middle">② 推测执行（慢 task 长尾）</text>
+  <g text-anchor="middle" font-size="8">
+    <rect x="560" y="116" width="130" height="44" rx="7" fill="#fff" stroke="#efdcb4"/><text x="625" y="134" fill="#5a3410">task A 明显慢</text><text x="625" y="150" fill="#93762e">超中位数×3</text>
+    <text x="700" y="142" fill="#b08843">→</text>
+    <rect x="716" y="116" width="130" height="44" rx="7" fill="#fff7e6" stroke="#e8cf9a"/><text x="781" y="134" fill="#5a3410">起备份 task A'</text><text x="781" y="150" fill="#93762e">另一节点</text>
+    <text x="856" y="142" fill="#b08843">→</text>
+    <rect x="872" y="116" width="128" height="44" rx="7" fill="#eafaf1" stroke="#bfe0cd"/><text x="936" y="134" fill="#12402a">谁先完成用谁</text><text x="936" y="150" fill="#4c8567">杀另一个</text>
+  </g>
+  <text x="780" y="186" font-size="9" fill="#93762e" text-anchor="middle">· 默认 false；开启后 checkSpeculatableTasks(:1330) 周期检查</text>
+  <text x="780" y="208" font-size="9" fill="#93762e" text-anchor="middle">· 判慢：已完成比例达 quantile(0.9) 后，慢于中位数 × multiplier(3)</text>
+  <text x="780" y="230" font-size="8.5" fill="#b08843" text-anchor="middle">· 治：某节点变慢（磁盘老化/资源竞争）导致的 straggler</text>
+  <text x="780" y="248" font-size="8.5" fill="#b08843" text-anchor="middle">· 异构集群/易出长尾场景开启</text>
+  <rect x="40" y="272" width="980" height="90" rx="13" fill="#fbeef0" stroke="#f0cdd4"/>
+  <text x="60" y="296" font-size="11" font-weight="700" fill="#7a2230">关键区分：推测执行 ≠ 治数据倾斜</text>
+  <text x="60" y="318" font-size="9.5" fill="#a44">· 推测执行治的是"<tspan font-weight="600">同样的活别人快、这个节点慢</tspan>"（环境问题）——起备份到好节点能救</text>
+  <text x="60" y="340" font-size="9.5" fill="#a44">· 数据倾斜是"<tspan font-weight="600">这个 task 本来就重</tspan>"（数据问题）——起备份同样慢，白费；要 AQE skew join / 加盐</text>
+  <rect x="40" y="374" width="980" height="90" rx="13" fill="#f3f7fc" stroke="#cfe0f2"/>
+  <text x="60" y="398" font-size="11" font-weight="700" fill="#274a78">还有：excludeOnFailure（屏蔽故障节点）</text>
+  <text x="60" y="420" font-size="9.5" fill="#5b7db1">· spark.excludeOnFailure.enabled（无默认值，须显式开）：某 executor/node 频繁失败 → 拉黑不再派 task</text>
+  <text x="60" y="440" font-size="9" fill="#8aa6cf">· 避免"坏节点反复接 task 反复失败"拖垮作业；与重试互补</text>
+  <rect x="40" y="476" width="980" height="36" rx="12" fill="#f7f7f9" stroke="#e6e6ea"/>
+  <text x="60" y="500" font-size="10" fill="#4b4b50"><tspan font-weight="700" fill="#1d1d1f">一句话：</tspan>重试（默认4）治瞬时故障、推测执行起备份治慢节点长尾（非倾斜）、excludeOnFailure 拉黑坏节点。</text>
+</svg>

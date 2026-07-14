@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="420" viewBox="0 0 1020 420"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1020" height="420" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">ATen 算子库 · schema 声明 + structured kernel（aten/src/ATen/native/）</text>
+
+  <!-- schema -->
+  <rect x="30" y="56" width="470" height="150" rx="14" fill="#eafaf1" stroke="#bce6cd" filter="url(#soft)"/>
+  <text x="48" y="80" font-size="12.5" font-weight="600" fill="#0f5132">算子 schema（native_functions.yaml 单一真源）</text>
+  <rect x="48" y="96" width="434" height="44" rx="9" fill="#ffffff" stroke="#bce6cd"/><text x="64" y="116" font-size="8.5" fill="#0f5132" font-family="monospace">- func: add.Tensor(Tensor self, Tensor other) -&gt; Tensor</text><text x="64" y="132" font-size="8" fill="#3f8f66">声明：名 / 参数类型 / 返回 / 别名与可变性标注</text>
+  <text x="48" y="162" font-size="9.5" fill="#3f8f66">代码生成据此产出 C++ 签名、Python 绑定、分发注册样板</text>
+  <text x="48" y="182" font-size="9.5" fill="#3f8f66">~2000 算子统一登记于此——一处声明，多处生成</text>
+
+  <!-- structured -->
+  <rect x="520" y="56" width="470" height="150" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="538" y="80" font-size="12.5" font-weight="600" fill="#1b2a4a">structured kernel：形状与计算分离</text>
+  <rect x="538" y="96" width="210" height="44" rx="9" fill="#ffffff" stroke="#bcd0ec"/><text x="643" y="116" font-size="9" font-weight="600" fill="#1b2a4a" text-anchor="middle">meta 函数</text><text x="643" y="132" font-size="8" fill="#5b7db1" text-anchor="middle">推导输出形状/dtype、分配</text>
+  <rect x="762" y="96" width="210" height="44" rx="9" fill="#ffffff" stroke="#bcd0ec"/><text x="867" y="116" font-size="9" font-weight="600" fill="#1b2a4a" text-anchor="middle">impl 函数</text><text x="867" y="132" font-size="8" fill="#5b7db1" text-anchor="middle">在已分配输出上算数值</text>
+  <line x1="748" y1="118" x2="762" y2="118" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <text x="538" y="162" font-size="9.5" fill="#5b7db1">meta 复用于形状推断/编译（无需真算），impl 各后端各写</text>
+  <text x="538" y="182" font-size="9.5" fill="#5b7db1">减少 CPU/CUDA 重复样板、支撑 meta 设备（只推形状）</text>
+
+  <!-- 分解 -->
+  <rect x="30" y="222" width="960" height="184" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="48" y="246" font-size="12.5" font-weight="600" fill="#1d1d1f">算子分层：基础算子 vs 复合算子</text>
+  <rect x="48" y="262" width="300" height="120" rx="10" fill="#fff7e6" stroke="#f0dcae"/><text x="198" y="286" font-size="10" font-weight="600" fill="#7a4d00" text-anchor="middle">基础算子（有专门 kernel）</text><text x="198" y="308" font-size="9" fill="#9a7328" text-anchor="middle">add / mm / conv …</text><text x="198" y="328" font-size="9" fill="#9a7328" text-anchor="middle">每后端写高效实现</text><text x="198" y="348" font-size="9" fill="#9a7328" text-anchor="middle">调 MKL/cuBLAS/cuDNN</text><text x="198" y="368" font-size="8.5" fill="#b8912e" text-anchor="middle">性能热点在这里</text>
+  <rect x="364" y="262" width="300" height="120" rx="10" fill="#f4eefb" stroke="#d9c9ef"/><text x="514" y="286" font-size="10" font-weight="600" fill="#3c1361" text-anchor="middle">复合算子（CompositeImplicit）</text><text x="514" y="308" font-size="9" fill="#7a5aa8" text-anchor="middle">用更基础的算子拼出来</text><text x="514" y="328" font-size="9" fill="#7a5aa8" text-anchor="middle">如 softmax = exp/sum/div</text><text x="514" y="348" font-size="9" fill="#7a5aa8" text-anchor="middle">自动获得 autograd（拆开后可微）</text><text x="514" y="368" font-size="8.5" fill="#a58fc9" text-anchor="middle">不必每个都写反向</text>
+  <rect x="680" y="262" width="290" height="120" rx="10" fill="#eafaf1" stroke="#bce6cd"/><text x="825" y="286" font-size="10" font-weight="600" fill="#0f5132" text-anchor="middle">对编译的价值</text><text x="825" y="308" font-size="9" fill="#3f8f66" text-anchor="middle">复合算子可"降解"成基础算子集</text><text x="825" y="328" font-size="9" fill="#3f8f66" text-anchor="middle">编译器（Inductor）在小算子集上</text><text x="825" y="348" font-size="9" fill="#3f8f66" text-anchor="middle">做融合/优化</text><text x="825" y="368" font-size="8.5" fill="#5aa06f" text-anchor="middle">见编译栈</text>
+</svg>

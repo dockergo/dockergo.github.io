@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="520" viewBox="0 0 1060 520" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs><filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+  <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker></defs>
+  <rect width="1060" height="520" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">state 管理：有状态算子跨批次累积中间态</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">StateStore(state/StateStore.scala:285) · HDFSBacked(默认,:72,SQLConf:2935-2946) / RocksDB(:41) · 按 shuffle.partitions 分区</text>
+  <!-- stateful ops -->
+  <rect x="40" y="76" width="480" height="160" rx="13" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="60" y="100" font-size="11" font-weight="700" fill="#1b2a4a">哪些算子有状态（跨批累积）</text>
+  <text x="60" y="124" font-size="9.5" fill="#5b7db1">· 聚合：count/sum/avg over time —— 累计计数</text>
+  <text x="60" y="144" font-size="9.5" fill="#5b7db1">· 去重 dropDuplicates —— 记已见 key</text>
+  <text x="60" y="164" font-size="9.5" fill="#5b7db1">· stream-stream join —— 缓一侧等另一侧</text>
+  <text x="60" y="184" font-size="9.5" fill="#5b7db1">· [flat]MapGroupsWithState —— 用户自定义状态</text>
+  <text x="60" y="208" font-size="9" fill="#8aa6cf">共性：本批结果依赖历史批 → 必须存中间态</text>
+  <text x="60" y="226" font-size="8.5" fill="#a1a1a6">无状态算子（map/filter/select）不需 state</text>
+  <!-- state store -->
+  <rect x="540" y="76" width="480" height="160" rx="13" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="560" y="100" font-size="11" font-weight="700" fill="#5a3410">StateStore：键值状态存储</text>
+  <text x="560" y="124" font-size="9.5" fill="#93762e">· 每分区一个 store（按 shuffle.partitions=200 分）</text>
+  <text x="560" y="144" font-size="9.5" fill="#93762e">· 每批读旧 state → 更新 → 写新版本</text>
+  <text x="560" y="164" font-size="9.5" fill="#93762e">· 随 checkpoint 持久化（故障恢复的基础）</text>
+  <text x="560" y="186" font-size="9" fill="#b08843">· StatefulOperatorStateInfo(:73) 记 ckpt 位置/版本</text>
+  <text x="560" y="206" font-size="9" fill="#b08843">· 状态是流式的关键负担——须有界（见 watermark）</text>
+  <text x="560" y="226" font-size="8.5" fill="#a1a1a6">providerClass 默认 HDFSBackedStateStoreProvider</text>
+  <!-- two backends -->
+  <g text-anchor="middle">
+    <rect x="40" y="256" width="480" height="150" rx="13" fill="#eafaf1" stroke="#bfe0cd"/>
+    <text x="280" y="280" font-size="11" font-weight="700" fill="#12402a">HDFSBackedStateStoreProvider（默认）</text>
+    <text x="280" y="304" font-size="9" fill="#2f6f4f">状态在内存 + 定期 HDFS 快照/增量</text>
+    <text x="280" y="324" font-size="9" fill="#2f6f4f">state/HDFSBackedStateStoreProvider.scala:72</text>
+    <text x="280" y="346" font-size="9" fill="#4c8567">✓ 简单、无额外依赖</text>
+    <text x="280" y="366" font-size="9" fill="#4c8567">✗ 大状态占 JVM 内存、GC 压力</text>
+    <text x="280" y="388" font-size="8.5" fill="#8aa6cf">适合：中小状态</text>
+    <rect x="540" y="256" width="480" height="150" rx="13" fill="#f6f2fb" stroke="#d9c9ec"/>
+    <text x="780" y="280" font-size="11" font-weight="700" fill="#3d2a5a">RocksDBStateStoreProvider</text>
+    <text x="780" y="304" font-size="9" fill="#7a5da5">状态落本地 RocksDB（磁盘）</text>
+    <text x="780" y="324" font-size="9" fill="#7a5da5">state/RocksDBStateStoreProvider.scala:41</text>
+    <text x="780" y="346" font-size="9" fill="#9a7cc4">✓ 大状态不撑爆 JVM 堆、减 GC</text>
+    <text x="780" y="366" font-size="9" fill="#9a7cc4">✓ 海量 key/长窗口聚合推荐</text>
+    <text x="780" y="388" font-size="8.5" fill="#a1a1a6">适合：大状态（显式配 providerClass）</text>
+  </g>
+  <rect x="40" y="418" width="980" height="52" rx="12" fill="#f7f7f9" stroke="#e6e6ea"/>
+  <text x="60" y="442" font-size="11" font-weight="700" fill="#1d1d1f">一句话</text>
+  <text x="60" y="462" font-size="10" fill="#4b4b50">有状态算子（聚合/去重/join/mapGroupsWithState）跨批累积中间态存 StateStore（按分区），随 checkpoint 持久化；默认 HDFSBacked，大状态换 RocksDB。</text>
+</svg>

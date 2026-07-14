@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="510" viewBox="0 0 900 510" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="900" height="510" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">recover 拦截与恢复 · gorecover 标记 + recovery 伪装栈帧正常返回</text>
+
+  <!-- step 1: gorecover (purple = rule/API) -->
+  <rect x="30" y="48" width="410" height="150" rx="13" fill="#f5f0fb" stroke="#ddcdf0" filter="url(#soft)"/>
+  <text x="46" y="74" font-size="13" font-weight="600" fill="#3d2a5a">① recover() → gorecover · panic.go:1083</text>
+  <text x="46" y="93" font-size="10.5" fill="#7d5bb1">仅在 defer 函数中「直接调用」才有效</text>
+  <rect x="46" y="104" width="378" height="30" rx="8" fill="#ffffff" stroke="#ddcdf0"/>
+  <text x="56" y="123" font-size="10.5" fill="#3a3a3c">检查 g._panic 非空、未被 recover、非 Goexit</text>
+  <rect x="46" y="140" width="378" height="30" rx="8" fill="#ffffff" stroke="#ddcdf0"/>
+  <text x="56" y="159" font-size="10.5" fill="#3a3a3c">满足 → 置 <tspan font-weight="600">_panic.recovered = true</tspan></text>
+  <text x="46" y="188" font-size="10" fill="#7d5bb1">返回 panic 传入的值（无 panic 时返回 nil）</text>
+
+  <!-- validity note (amber) — why direct only -->
+  <rect x="460" y="48" width="410" height="150" rx="13" fill="#fdf6ec" stroke="#f0dcaf" filter="url(#soft)"/>
+  <text x="476" y="74" font-size="13" font-weight="600" fill="#6b4e16">合法性判定：靠栈帧位置</text>
+  <text x="476" y="93" font-size="10.5" fill="#a9822f">gorecover 用 sp 判断调用者是否为被 defer 的函数</text>
+  <rect x="476" y="104" width="378" height="30" rx="8" fill="#eff9f2" stroke="#bfe0c8"/>
+  <text x="486" y="123" font-size="10.5" fill="#1d4a2b">✓ defer func(){ if r := recover(); ... }()  有效</text>
+  <rect x="476" y="140" width="378" height="30" rx="8" fill="#fbeeee" stroke="#f0c4c4"/>
+  <text x="486" y="159" font-size="10.5" fill="#7a1f1f">✗ defer 里再调别的函数、那函数里 recover  无效</text>
+  <text x="476" y="188" font-size="10" fill="#a9822f">间接调用栈帧位置不符 → gorecover 判定不合法</text>
+
+  <line x1="235" y1="198" x2="235" y2="222" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- step 2: back to gopanic (red) -->
+  <rect x="30" y="224" width="410" height="80" rx="13" fill="#fbeeee" stroke="#f0c4c4" filter="url(#soft)"/>
+  <text x="46" y="250" font-size="12.5" font-weight="600" fill="#7a1f1f">② 控制权回到 gopanic</text>
+  <text x="46" y="270" font-size="10.5" fill="#b15b5b">它见 _panic.recovered 为真</text>
+  <text x="46" y="290" font-size="10.5" fill="#b15b5b">→ 停止 defer 链展开，调用 recovery</text>
+
+  <line x1="440" y1="264" x2="486" y2="264" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- step 3: recovery (blue = coordination) -->
+  <rect x="490" y="224" width="380" height="80" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="506" y="250" font-size="12.5" font-weight="600" fill="#1b2a4a">③ recovery · panic.go:1310</text>
+  <text x="506" y="270" font-size="10.5" fill="#5b7db1">把 defer 所在函数栈帧「伪装成正常返回」</text>
+  <text x="506" y="290" font-size="10.5" fill="#5b7db1">用 _panic 里的 sp / pc / retpc 恢复到返回点</text>
+
+  <line x1="235" y1="304" x2="235" y2="340" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <line x1="680" y1="304" x2="680" y2="322" stroke="#c7c7cc" stroke-width="1.5"/>
+  <line x1="680" y1="322" x2="237" y2="322" stroke="#c7c7cc" stroke-width="1.5"/>
+
+  <!-- step 4: resume normally (green = success) -->
+  <rect x="30" y="342" width="840" height="90" rx="13" fill="#eef7f0" stroke="#bfe0c8" filter="url(#soft)"/>
+  <text x="46" y="368" font-size="13" font-weight="600" fill="#1d4a2b">④ panic 被「吞掉」· 程序从 recover 所在函数的调用者处继续正常执行</text>
+  <text x="46" y="389" font-size="10.5" fill="#4a8c60">该函数像正常 return 一样返回 · goroutine 恢复正常</text>
+  <rect x="46" y="398" width="808" height="26" rx="7" fill="#eff9f2" stroke="#bfe0c8"/>
+  <text x="56" y="415" font-size="10.5" fill="#1d4a2b">配合命名返回值：defer 中 recover 后可改命名返回值（返回错误的常见手法）；亦可 re-panic 重新抛出</text>
+
+  <!-- bottom rules (purple) -->
+  <rect x="30" y="448" width="840" height="46" rx="12" fill="#f5f0fb" stroke="#ddcdf0"/>
+  <text x="46" y="468" font-size="11" font-weight="600" fill="#3d2a5a">铁律</text>
+  <text x="46" y="486" font-size="10.5" fill="#7d5bb1">recover 只拦「同一 goroutine」的 panic，且必须在 defer 函数里直接调用；别的 goroutine 的 panic 拦不住（崩整个进程）。</text>
+</svg>

@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="520" viewBox="0 0 1080 520"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1080" height="520" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Iceberg 行级删除 · 两种 delete file(v2 · 不重写 data)</text>
+  <text x="30" y="50" font-size="11" fill="#a1a1a6">位置删除按文件+行号精确跳过;等值删除按列值比对免查位置 —— 都存 delete manifest</text>
+
+  <!-- DataFile.CONTENT (metadata / blue) -->
+  <rect x="40" y="80" width="1000" height="90" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="60" y="108" font-size="12.5" font-weight="600" fill="#1b2a4a">DataFile.CONTENT · 区分文件类型 · api/.../DataFile.java:37</text>
+  <rect x="60" y="122" width="300" height="34" rx="8" fill="#fff7e6" stroke="#e8cf9a"/>
+  <text x="210" y="143" font-size="10.5" fill="#5a3410" text-anchor="middle">CONTENT 0 = data</text>
+  <rect x="376" y="122" width="300" height="34" rx="8" fill="#fbeaea" stroke="#e9c4c4"/>
+  <text x="526" y="143" font-size="10.5" fill="#7a2626" text-anchor="middle">CONTENT 1 = position deletes</text>
+  <rect x="692" y="122" width="328" height="34" rx="8" fill="#fbeaea" stroke="#e9c4c4"/>
+  <text x="856" y="143" font-size="10.5" fill="#7a2626" text-anchor="middle">CONTENT 2 = equality deletes</text>
+
+  <!-- position delete (red) -->
+  <rect x="40" y="200" width="490" height="160" rx="13" fill="#fbeaea" stroke="#e9c4c4" filter="url(#soft)"/>
+  <text x="60" y="230" font-size="12.5" font-weight="600" fill="#7a2626">位置删除 · position delete</text>
+  <rect x="60" y="246" width="450" height="34" rx="8" fill="#ffffff" stroke="#eccccc"/>
+  <text x="76" y="267" font-size="10.5" fill="#7a2626">记 (file_path, row_position)</text>
+  <text x="60" y="304" font-size="10" fill="#7a2626">"某文件的第 N 行被删"</text>
+  <text x="60" y="326" font-size="9.5" fill="#a15252">适合已知位置(MERGE/UPDATE 定位到具体行)</text>
+  <text x="60" y="348" font-size="9.5" font-weight="600" fill="#12402a">读时按位置跳过 —— 精确、快</text>
+
+  <!-- equality delete (red) -->
+  <rect x="550" y="200" width="490" height="160" rx="13" fill="#fbeaea" stroke="#e9c4c4" filter="url(#soft)"/>
+  <text x="570" y="230" font-size="12.5" font-weight="600" fill="#7a2626">等值删除 · equality delete</text>
+  <rect x="570" y="246" width="450" height="34" rx="8" fill="#ffffff" stroke="#eccccc"/>
+  <text x="586" y="267" font-size="10.5" fill="#7a2626">记列值,如 id=123</text>
+  <text x="570" y="304" font-size="10" fill="#7a2626">"所有 id=123 的行被删"</text>
+  <text x="570" y="326" font-size="9.5" fill="#a15252">适合按条件删(不用先查位置)</text>
+  <text x="570" y="348" font-size="9.5" font-weight="600" fill="#93762e">读时按列值比对 —— 较慢</text>
+
+  <path d="M526,170 L526,186 L285,186 L285,200" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M856,170 L856,186 L795,186 L795,200" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <!-- delete manifest (metadata / blue) -->
+  <rect x="40" y="390" width="1000" height="106" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="60" y="420" font-size="12.5" font-weight="600" fill="#1b2a4a">delete files 存 delete manifest(ManifestFile.content == 1)</text>
+  <text x="60" y="440" font-size="9.5" fill="#5b7db1">经 ManifestFiles.readDeleteManifest 读 · BaseSnapshot.java:275</text>
+  <text x="60" y="470" font-size="10" fill="#1b2a4a">与 data manifest(content == 0)分离管理,读规划时分别加载</text>
+
+  <path d="M285,360 L285,378 L540,378 L540,390" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M795,360 L795,378 L540,378" stroke="#c7c7cc" stroke-width="1.5" fill="none"/>
+</svg>

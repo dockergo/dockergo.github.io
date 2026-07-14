@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="420" viewBox="0 0 1000 420" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1000" height="420" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">分布式规划：物理计划 → 以 Exchange 切成 PlanFragment → 选 BE + 定 instance 并行度 → 下发</text>
+
+  <!-- top flow -->
+  <rect x="28" y="50" width="286" height="46" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="171" y="70" font-size="11" font-weight="600" fill="#1b2a4a" text-anchor="middle">① CBO 物理计划（算子树）</text>
+  <text x="171" y="86" font-size="9.5" fill="#5b7db1" text-anchor="middle">含 Exchange（PhysicalDistribute）切点</text>
+
+  <rect x="346" y="50" width="286" height="46" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="489" y="70" font-size="11" font-weight="600" fill="#1b2a4a" text-anchor="middle">② 以 Exchange 为界切 PlanFragment</text>
+  <text x="489" y="86" font-size="9.5" fill="#5b7db1" text-anchor="middle">DistributePlanner · FragmentIdMapping</text>
+
+  <rect x="664" y="50" width="308" height="46" rx="11" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="818" y="70" font-size="11" font-weight="600" fill="#3d2a5a" text-anchor="middle">③ 选 BE + 定 instance 并行度 → 下发</text>
+  <text x="818" y="86" font-size="9.5" fill="#7a5aa0" text-anchor="middle">AssignedJobBuilder → AssignedJob（instance 级）</text>
+
+  <g stroke="#c7c7cc" stroke-width="1.5" fill="none">
+    <line x1="314" y1="73" x2="346" y2="73" marker-end="url(#ar)"/>
+    <line x1="632" y1="73" x2="664" y2="73" marker-end="url(#ar)"/>
+  </g>
+
+  <!-- body: 3 fragments with instance assignment -->
+  <!-- F2 -->
+  <rect x="36" y="120" width="176" height="52" rx="10" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="124" y="142" font-size="10.5" font-weight="600" fill="#12402a" text-anchor="middle">F2 · Result / Gather</text>
+  <text x="124" y="159" font-size="9" fill="#2f6f4f" text-anchor="middle">收口返回客户端</text>
+  <rect x="228" y="120" width="150" height="52" rx="8" fill="#f5faf6" stroke="#cfe6d5"/><text x="303" y="150" font-size="10" fill="#2f6f4f" text-anchor="middle">1 instance @ BE2</text>
+
+  <!-- F1 -->
+  <rect x="36" y="212" width="176" height="52" rx="10" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="124" y="234" font-size="10.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">F1 · Join / 全局 Agg</text>
+  <text x="124" y="251" font-size="9" fill="#5b7db1" text-anchor="middle">Shuffle 后并行</text>
+  <rect x="228" y="212" width="118" height="52" rx="8" fill="#f3f7fc" stroke="#cfe0f2"/><text x="287" y="242" font-size="10" fill="#274a78" text-anchor="middle">inst @ BE1</text>
+  <rect x="356" y="212" width="118" height="52" rx="8" fill="#f3f7fc" stroke="#cfe0f2"/><text x="415" y="242" font-size="10" fill="#274a78" text-anchor="middle">inst @ BE2</text>
+  <rect x="484" y="212" width="118" height="52" rx="8" fill="#f3f7fc" stroke="#cfe0f2"/><text x="543" y="242" font-size="10" fill="#274a78" text-anchor="middle">inst @ BE3</text>
+
+  <!-- F0 -->
+  <rect x="36" y="304" width="176" height="52" rx="10" fill="#fff7e6" stroke="#e8cf9a"/>
+  <text x="124" y="326" font-size="10.5" font-weight="600" fill="#5a3410" text-anchor="middle">F0 · OlapScan</text>
+  <text x="124" y="343" font-size="9" fill="#93762e" text-anchor="middle">按 bucket / scan-range</text>
+  <rect x="228" y="304" width="118" height="52" rx="8" fill="#fdf6ea" stroke="#efdcb4"/><text x="287" y="327" font-size="10" fill="#5a3410" text-anchor="middle">inst @ BE1</text><text x="287" y="343" font-size="8.5" fill="#93762e" text-anchor="middle">bucket 0,3</text>
+  <rect x="356" y="304" width="118" height="52" rx="8" fill="#fdf6ea" stroke="#efdcb4"/><text x="415" y="327" font-size="10" fill="#5a3410" text-anchor="middle">inst @ BE2</text><text x="415" y="343" font-size="8.5" fill="#93762e" text-anchor="middle">bucket 1,4</text>
+  <rect x="484" y="304" width="118" height="52" rx="8" fill="#fdf6ea" stroke="#efdcb4"/><text x="543" y="327" font-size="10" fill="#5a3410" text-anchor="middle">inst @ BE3</text><text x="543" y="343" font-size="8.5" fill="#93762e" text-anchor="middle">bucket 2,5</text>
+
+  <!-- data flow up between fragments -->
+  <g stroke="#c7c7cc" stroke-width="1.5" fill="none">
+    <line x1="124" y1="304" x2="124" y2="266" marker-end="url(#ar)"/>
+    <line x1="124" y1="212" x2="124" y2="174" marker-end="url(#ar)"/>
+  </g>
+  <text x="150" y="290" font-size="9" fill="#a05411">↑ Shuffle Exchange</text>
+  <text x="150" y="198" font-size="9" fill="#2f6f4f">↑ Gather Exchange</text>
+
+  <!-- right note -->
+  <rect x="632" y="116" width="344" height="244" rx="12" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="804" y="140" font-size="11.5" font-weight="600" fill="#1d1d1f" text-anchor="middle">instance（并行度）怎么定</text>
+  <text x="650" y="166" font-size="10" fill="#6e6e73">· 叶子 Scan：按数据分布切——bucket 表按</text>
+  <text x="650" y="182" font-size="10" fill="#6e6e73">  bucket、按 tablet/scan-range 分给持副本的 BE</text>
+  <text x="650" y="204" font-size="10" fill="#6e6e73">· 上限：parallel_pipeline_task_num（默认=核数）</text>
+  <text x="650" y="220" font-size="10" fill="#6e6e73">  封顶，过高反增调度/内存开销</text>
+  <text x="650" y="242" font-size="10" fill="#6e6e73">· 中间 Fragment：Shuffle 后按并行度起多 instance</text>
+  <text x="650" y="264" font-size="10" fill="#6e6e73">· Colocate / Bucket Shuffle：instance 按 bucket</text>
+  <text x="650" y="280" font-size="10" fill="#6e6e73">  对齐，同 bucket 落同 BE → 免网络重分布</text>
+  <text x="650" y="308" font-size="9.5" fill="#93762e">产物：每 Fragment → 一组 (BE, instance)</text>
+  <text x="650" y="324" font-size="9.5" fill="#93762e">的 DistributedPlan，下发各 BE 执行</text>
+  <text x="650" y="346" font-size="9" fill="#a1a1a6">源：DistributePlanner / AssignedJobBuilder</text>
+
+  <text x="303" y="392" font-size="10" fill="#6e6e73" text-anchor="middle">这是"逻辑物理计划 → 分布在哪些机器、各起几个并行实例"的关键一环，衔接 CBO 规划与 BE 执行</text>
+</svg>

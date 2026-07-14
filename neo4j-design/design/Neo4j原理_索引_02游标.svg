@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="520" viewBox="0 0 1080 520"
+     font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1080" height="520" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Neo4j Kernel API 游标:读图的统一接口</text>
+  <text x="30" y="52" font-size="11.5" fill="#a1a1a6">所有读图都经 Read 接口的游标;游标是流式、零拷贝的可移动指针,next() 按需前进,不 materialize 整个结果集</text>
+
+  <!-- 左:Read 接口方法 -->
+  <rect x="40" y="88" width="330" height="300" rx="13" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="56" y="116" font-size="12" font-weight="600" fill="#3d2a5a">Read 接口 · kernel-api/Read.java:38</text>
+
+  <rect x="58" y="130" width="294" height="36" rx="9" fill="#ffffff" stroke="#d9c7ec"/>
+  <text x="70" y="153" font-size="10.5" fill="#3d2a5a"><tspan font-weight="600">singleNode</tspan>(id, NodeCursor) · :330</text>
+
+  <rect x="58" y="172" width="294" height="36" rx="9" fill="#ffffff" stroke="#d9c7ec"/>
+  <text x="70" y="195" font-size="10.5" fill="#3d2a5a"><tspan font-weight="600">allNodesScan</tspan>(NodeCursor) · :311</text>
+
+  <rect x="58" y="214" width="294" height="36" rx="9" fill="#ffffff" stroke="#d9c7ec"/>
+  <text x="70" y="237" font-size="10.5" fill="#3d2a5a"><tspan font-weight="600">singleRelationship</tspan>(...) · :446</text>
+
+  <rect x="58" y="256" width="294" height="36" rx="9" fill="#ffffff" stroke="#d9c7ec"/>
+  <text x="70" y="279" font-size="10.5" fill="#3d2a5a"><tspan font-weight="600">nodeProperties</tspan>(PropertyCursor) · :585</text>
+
+  <rect x="58" y="298" width="294" height="36" rx="9" fill="#ffffff" stroke="#d9c7ec"/>
+  <text x="70" y="321" font-size="10.5" fill="#3d2a5a"><tspan font-weight="600">nodeIndexSeek</tspan>(...) · :76</text>
+
+  <rect x="58" y="340" width="294" height="36" rx="9" fill="#ffffff" stroke="#d9c7ec"/>
+  <text x="70" y="363" font-size="10.5" fill="#3d2a5a"><tspan font-weight="600">nodeLabelScan</tspan>(NodeLabelIndexCursor) · :283</text>
+
+  <!-- 中:游标类型 -->
+  <rect x="400" y="88" width="300" height="300" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="416" y="116" font-size="12" font-weight="600" fill="#1b2a4a">游标类型 · 指向当前实体的可移动指针</text>
+
+  <rect x="418" y="132" width="264" height="38" rx="9" fill="#ffffff" stroke="#bcd0ec"/>
+  <text x="430" y="156" font-size="10.5" font-weight="600" fill="#1b2a4a">NodeCursor</text>
+
+  <rect x="418" y="178" width="264" height="38" rx="9" fill="#ffffff" stroke="#bcd0ec"/>
+  <text x="430" y="202" font-size="10.5" font-weight="600" fill="#1b2a4a">PropertyCursor</text>
+
+  <rect x="418" y="224" width="264" height="38" rx="9" fill="#ffffff" stroke="#bcd0ec"/>
+  <text x="430" y="248" font-size="10.5" font-weight="600" fill="#1b2a4a">RelationshipTraversalCursor</text>
+
+  <rect x="418" y="270" width="264" height="38" rx="9" fill="#ffffff" stroke="#bcd0ec"/>
+  <text x="430" y="294" font-size="10.5" font-weight="600" fill="#1b2a4a">NodeIndexCursor</text>
+
+  <rect x="418" y="316" width="264" height="38" rx="9" fill="#ffffff" stroke="#bcd0ec"/>
+  <text x="430" y="340" font-size="10.5" font-weight="600" fill="#1b2a4a">NodeLabelIndexCursor</text>
+
+  <text x="416" y="376" font-size="9.5" fill="#5b7db1">next() 前进到下一个实体</text>
+
+  <path d="M370,238 L400,238" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="385" y="231" font-size="8.5" fill="#a1a1a6" text-anchor="middle">分配</text>
+
+  <!-- 右:运行时->内核桥 -->
+  <rect x="730" y="88" width="310" height="300" rx="13" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="746" y="116" font-size="12" font-weight="600" fill="#12402a">运行时 &#8594; 内核桥</text>
+  <text x="746" y="142" font-size="10.5" fill="#2f6f4f">TransactionBoundQueryContext</text>
+  <text x="746" y="163" font-size="10.5" fill="#2f6f4f"><tspan font-weight="600">.getRelationshipsForIds</tspan>(:787)</text>
+
+  <rect x="748" y="180" width="274" height="42" rx="10" fill="#ffffff" stroke="#bfe0cd"/>
+  <text x="762" y="200" font-size="10" fill="#12402a">1 · 分配 NodeCursor</text>
+  <text x="762" y="215" font-size="9" fill="#2f6f4f">拿到可移动指针</text>
+
+  <rect x="748" y="230" width="274" height="42" rx="10" fill="#ffffff" stroke="#bfe0cd"/>
+  <text x="762" y="250" font-size="10" fill="#12402a">2 · read.singleNode 定位</text>
+  <text x="762" y="265" font-size="9" fill="#2f6f4f">游标指向该节点</text>
+
+  <rect x="748" y="280" width="274" height="42" rx="10" fill="#ffffff" stroke="#bfe0cd"/>
+  <text x="762" y="300" font-size="10" fill="#12402a">3 · 按方向建关系游标遍历</text>
+  <text x="762" y="315" font-size="9" fill="#2f6f4f">所有图读汇聚到 kernel 游标</text>
+
+  <text x="746" y="346" font-size="9.5" fill="#2f6f4f">Cypher 运行时经此桥读图</text>
+  <text x="746" y="366" font-size="9" fill="#6e6e73">配合免索引邻接边遍历边产结果</text>
+
+  <path d="M700,238 L730,238" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <!-- 底:为什么游标 -->
+  <rect x="40" y="404" width="1000" height="66" rx="13" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="56" y="432" font-size="11.5" font-weight="600" fill="#1d1d1f">为什么游标:流式、零拷贝</text>
+  <text x="56" y="456" font-size="10.5" fill="#3f3f43">不 materialize 整个结果集,而是按需前进 — 配合免索引邻接实现"边遍历边产结果",游标读取经页缓存取记录</text>
+</svg>

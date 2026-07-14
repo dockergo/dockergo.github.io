@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="380" viewBox="0 0 1000 380" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs><filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter><marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker></defs>
+  <rect width="1000" height="380" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">Colocate 表组：同组表共享"桶→BE"分布，同 key 落同 BE → Join 零 Shuffle</text>
+
+  <rect x="30" y="52" width="620" height="30" rx="8" fill="#f4eefb" stroke="#e2d3f3"/><text x="340" y="72" font-size="11.5" font-weight="600" fill="#42246b" text-anchor="middle">Colocate Group（group_id）· 同分桶键 / 同桶数 / 同副本数 · 共享 BackendsPerBucketSeq</text>
+
+  <!-- 3 BE columns -->
+  <g text-anchor="middle">
+    <rect x="40" y="98" width="180" height="150" rx="12" fill="#f5faf6" stroke="#e2ece5" filter="url(#soft)"/><text x="130" y="120" font-size="12" font-weight="600" fill="#2c5a3a">BE-1（bucket 0）</text>
+    <rect x="58" y="132" width="144" height="34" rx="8" fill="#eef3fb" stroke="#bcd0ec"/><text x="130" y="154" font-size="10.5" fill="#1b2a4a">表 A · 桶0（k%3=0）</text>
+    <rect x="58" y="176" width="144" height="34" rx="8" fill="#eafaf1" stroke="#bfe0cd"/><text x="130" y="198" font-size="10.5" fill="#12402a">表 B · 桶0（k%3=0）</text>
+    <text x="130" y="232" font-size="10" fill="#a05411">本地 Join ⋈</text>
+
+    <rect x="240" y="98" width="180" height="150" rx="12" fill="#f5faf6" stroke="#e2ece5" filter="url(#soft)"/><text x="330" y="120" font-size="12" font-weight="600" fill="#2c5a3a">BE-2（bucket 1）</text>
+    <rect x="258" y="132" width="144" height="34" rx="8" fill="#eef3fb" stroke="#bcd0ec"/><text x="330" y="154" font-size="10.5" fill="#1b2a4a">表 A · 桶1</text>
+    <rect x="258" y="176" width="144" height="34" rx="8" fill="#eafaf1" stroke="#bfe0cd"/><text x="330" y="198" font-size="10.5" fill="#12402a">表 B · 桶1</text>
+    <text x="330" y="232" font-size="10" fill="#a05411">本地 Join ⋈</text>
+
+    <rect x="440" y="98" width="180" height="150" rx="12" fill="#f5faf6" stroke="#e2ece5" filter="url(#soft)"/><text x="530" y="120" font-size="12" font-weight="600" fill="#2c5a3a">BE-3（bucket 2）</text>
+    <rect x="458" y="132" width="144" height="34" rx="8" fill="#eef3fb" stroke="#bcd0ec"/><text x="530" y="154" font-size="10.5" fill="#1b2a4a">表 A · 桶2</text>
+    <rect x="458" y="176" width="144" height="34" rx="8" fill="#eafaf1" stroke="#bfe0cd"/><text x="530" y="198" font-size="10.5" fill="#12402a">表 B · 桶2</text>
+    <text x="530" y="232" font-size="10" fill="#a05411">本地 Join ⋈</text>
+  </g>
+  <g stroke="#c1962a" stroke-width="1.3" fill="none"><line x1="130" y1="166" x2="130" y2="176" marker-end="url(#ar)"/><line x1="330" y1="166" x2="330" y2="176" marker-end="url(#ar)"/><line x1="530" y1="166" x2="530" y2="176" marker-end="url(#ar)"/></g>
+
+  <rect x="680" y="130" width="290" height="86" rx="13" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/><text x="825" y="158" font-size="13" font-weight="600" fill="#12402a" text-anchor="middle">Colocate Join · 零 Shuffle</text><text x="825" y="180" font-size="10.5" fill="#2f6f4f" text-anchor="middle">同 key 已在同 BE，无需重分布</text><text x="825" y="198" font-size="10.5" fill="#2f6f4f" text-anchor="middle">大表 Join 大表首选</text>
+  <path d="M620,173 L680,173" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <!-- contrast -->
+  <rect x="30" y="272" width="940" height="82" rx="13" fill="#fbeaea" stroke="#e7c3c3"/>
+  <text x="48" y="296" font-size="12.5" font-weight="600" fill="#4a1414">对比：非 Colocate → 需 Shuffle（走网络）</text>
+  <g font-size="10.5" fill="#7a2a2a">
+    <text x="48" y="320">· 两表按 Join key 各自 Shuffle 到同一分布，再 Join —— 跨节点传输大</text>
+    <text x="48" y="342">· 前提约束：同分桶键/桶数/副本数；均衡按组整体迁移保对齐，破坏对齐则退化为 Shuffle</text>
+  </g>
+</svg>

@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="520" viewBox="0 0 1060 520" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1060" height="520" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">RESTORE REPLICA：副本元数据丢失但本地数据还在时的重建</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">SYSTEM RESTORE REPLICA (InterpreterSystemQuery.cpp:983) → restoreMetadataInZooKeeper(:1289)</text>
+
+  <!-- problem -->
+  <rect x="40" y="80" width="480" height="160" rx="13" fill="#fbeef0" stroke="#f0cdd4"/>
+  <text x="280" y="104" font-size="11.5" font-weight="700" fill="#7a2230" text-anchor="middle">问题：Keeper 里副本元数据丢了</text>
+  <g text-anchor="middle" font-size="8.5">
+    <rect x="60" y="120" width="200" height="56" rx="8" fill="#fff5f6" stroke="#f0cdd4"/><text x="160" y="140" font-weight="600" fill="#7a2230">Keeper /replicas/A</text><text x="160" y="158" fill="#a44">znode 被误删/丢失</text><text x="160" y="170" fill="#a44">复制元数据没了</text>
+    <rect x="300" y="120" width="200" height="56" rx="8" fill="#f2fbf6" stroke="#cdeadb"/><text x="400" y="140" font-weight="600" fill="#12402a">本地磁盘</text><text x="400" y="158" fill="#2f6f4f">Part 数据还在！</text><text x="400" y="170" fill="#2f6f4f">只是 Keeper 不认识了</text>
+  </g>
+  <text x="280" y="200" font-size="9" fill="#a44">· 副本"脱离"了集群：Keeper 不知道它有哪些 Part</text>
+  <text x="280" y="220" font-size="9" fill="#7a2230">· 但本地数据完好——不该丢弃重拉全量（浪费）</text>
+
+  <!-- solution -->
+  <rect x="540" y="80" width="480" height="160" rx="13" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="780" y="104" font-size="11.5" font-weight="700" fill="#12402a" text-anchor="middle">解法：SYSTEM RESTORE REPLICA</text>
+  <g text-anchor="middle" font-size="8.5">
+    <rect x="560" y="120" width="200" height="56" rx="8" fill="#fff" stroke="#bfe0cd"/><text x="660" y="140" font-weight="600" fill="#12402a">扫描本地 Part</text><text x="660" y="158" fill="#2f6f4f">枚举磁盘实际有的 Part</text><text x="660" y="170" fill="#4c8567">restoreMetadataInZooKeeper</text>
+    <rect x="780" y="120" width="220" height="56" rx="8" fill="#fff" stroke="#bfe0cd"/><text x="890" y="140" font-weight="600" fill="#12402a">重建 Keeper 元数据</text><text x="890" y="158" fill="#2f6f4f">把本地 Part 登记回 /replicas</text><text x="890" y="170" fill="#4c8567">重新加入复制（:1289）</text>
+  </g>
+  <text x="780" y="200" font-size="9" fill="#2f6f4f">· 用本地实际数据重建 Keeper 里的元数据条目</text>
+  <text x="780" y="220" font-size="9" fill="#4c8567">· 避免全量重拉，快速让副本重新"上线"</text>
+  <g stroke="#9ccbb0" stroke-width="1.4" fill="none"><line x1="760" y1="148" x2="780" y2="148" marker-end="url(#ar)"/></g>
+
+  <!-- vs full recovery -->
+  <rect x="40" y="256" width="980" height="90" rx="13" fill="#f3f7fc" stroke="#cfe0f2"/>
+  <text x="60" y="280" font-size="11" font-weight="700" fill="#274a78">两种恢复的区别</text>
+  <text x="60" y="302" font-size="9.5" fill="#5b7db1">· RESTORE REPLICA：本地数据在、Keeper 元数据丢 → 用本地重建元数据（快，不传数据）</text>
+  <text x="60" y="320" font-size="9.5" fill="#5b7db1">· 新副本/全量恢复：本地数据也没了 → 从其他副本全量 fetch（慢，传全部数据）</text>
+  <text x="60" y="338" font-size="9" fill="#8aa6cf">· 需 SYSTEM_RESTORE_REPLICA 权限（:1278）</text>
+
+  <rect x="40" y="362" width="980" height="130" rx="12" fill="#f7f7f9" stroke="#e6e6ea"/>
+  <text x="60" y="386" font-size="11" font-weight="700" fill="#1d1d1f">一句话</text>
+  <text x="60" y="408" font-size="10" fill="#4b4b50">当副本在 Keeper 里的元数据丢失（znode 被删）但本地 Part 数据还完好时，SYSTEM RESTORE REPLICA 用本地实际数据</text>
+  <text x="60" y="426" font-size="10" fill="#4b4b50">重建 Keeper 元数据、重新加入复制——避免丢弃本地数据再全量重拉。</text>
+  <text x="60" y="450" font-size="10" fill="#4b4b50" font-weight="600">区别于全量恢复：本地数据在就用 RESTORE REPLICA（快）；本地也没了才全量 fetch（慢）。</text>
+  <text x="60" y="474" font-size="9" fill="#8a8a8f">这是"元数据损坏"这一类故障的针对性恢复手段，是自愈体系里人工可触发的补充。</text>
+</svg>

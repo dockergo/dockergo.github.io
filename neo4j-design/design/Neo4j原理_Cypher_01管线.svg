@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="500" viewBox="0 0 1080 500"
+     font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1080" height="500" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Neo4j Cypher 编译管线</text>
+  <text x="30" y="50" font-size="11.5" fill="#a1a1a6">一条 Cypher 的旅程:解析 → 语义分析/改写 → 逻辑计划 → 执行计划(缓存)</text>
+
+  <!-- input query -->
+  <rect x="40" y="82" width="1000" height="40" rx="10" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="60" y="107" font-size="11.5" font-weight="600" fill="#3d2a5a">输入 Cypher:MATCH (a)-[:KNOWS]-&gt;(b) RETURN b  ——  声明式,你说要什么</text>
+
+  <!-- Phase 1 解析 -->
+  <rect x="40" y="150" width="232" height="150" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <rect x="40" y="150" width="232" height="30" rx="13" fill="#dbe7f7"/>
+  <text x="156" y="170" font-size="12" font-weight="700" fill="#1b2a4a" text-anchor="middle">1 解析 Parse</text>
+  <text x="60" y="200" font-size="10" fill="#274a78">ANTLR 生成的 parser</text>
+  <text x="60" y="219" font-size="10" fill="#274a78">两版共存:v5 / v25</text>
+  <text x="60" y="238" font-size="10" fill="#274a78">按版本选 parser</text>
+  <rect x="60" y="250" width="192" height="26" rx="7" fill="#ffffff" stroke="#bcd0ec"/>
+  <text x="156" y="267" font-size="10" font-weight="600" fill="#1b2a4a" text-anchor="middle">产出 AST</text>
+  <text x="156" y="291" font-size="8.5" fill="#5b7db1" text-anchor="middle">Parse.scala:40</text>
+
+  <!-- Phase 2 语义分析+改写 -->
+  <rect x="296" y="150" width="232" height="150" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <rect x="296" y="150" width="232" height="30" rx="13" fill="#dbe7f7"/>
+  <text x="412" y="170" font-size="12" font-weight="700" fill="#1b2a4a" text-anchor="middle">2 语义分析 + 改写</text>
+  <text x="316" y="200" font-size="10" fill="#274a78">AstRewriting 与</text>
+  <text x="316" y="219" font-size="10" fill="#274a78">SemanticAnalysis 交替多趟</text>
+  <text x="316" y="238" font-size="10" fill="#274a78">查类型 / 变量作用域 / 规范化</text>
+  <rect x="316" y="250" width="192" height="26" rx="7" fill="#ffffff" stroke="#bcd0ec"/>
+  <text x="412" y="267" font-size="10" font-weight="600" fill="#1b2a4a" text-anchor="middle">规范化的 AST</text>
+  <text x="412" y="291" font-size="8.5" fill="#5b7db1" text-anchor="middle">FrontEndCompilationPhases:143</text>
+
+  <!-- Phase 3 逻辑计划 -->
+  <rect x="552" y="150" width="232" height="150" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <rect x="552" y="150" width="232" height="30" rx="13" fill="#dbe7f7"/>
+  <text x="668" y="170" font-size="12" font-weight="700" fill="#1b2a4a" text-anchor="middle">3 逻辑计划</text>
+  <text x="572" y="200" font-size="10" fill="#274a78">astPlanPipelineSteps</text>
+  <text x="580" y="217" font-size="9" fill="#5b7db1">命名空间 / token 解析 / CNF</text>
+  <text x="572" y="236" font-size="10" fill="#274a78">irPlanPipelineSteps</text>
+  <text x="580" y="253" font-size="9" fill="#5b7db1">CreatePlannerQuery</text>
+  <rect x="572" y="262" width="192" height="24" rx="7" fill="#ffffff" stroke="#bcd0ec"/>
+  <text x="668" y="278" font-size="10" font-weight="600" fill="#1b2a4a" text-anchor="middle">逻辑计划(logical plan)</text>
+  <text x="668" y="296" font-size="8.5" fill="#5b7db1" text-anchor="middle">CompilationPhases</text>
+
+  <!-- Phase 4 执行计划 -->
+  <rect x="808" y="150" width="232" height="150" rx="13" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <rect x="808" y="150" width="232" height="30" rx="13" fill="#d6f0e1"/>
+  <text x="924" y="170" font-size="12" font-weight="700" fill="#12402a" text-anchor="middle">4 执行计划</text>
+  <text x="828" y="200" font-size="10" fill="#2f6f4f">CypherCurrentCompiler</text>
+  <text x="836" y="217" font-size="9" fill="#2f6f4f">.compile → planner.plan</text>
+  <text x="828" y="236" font-size="10" fill="#2f6f4f">computeExecutionPlan</text>
+  <text x="836" y="253" font-size="9" fill="#2f6f4f">按 runtime 选运行时</text>
+  <rect x="828" y="262" width="192" height="24" rx="7" fill="#ffffff" stroke="#bfe0cd"/>
+  <text x="924" y="278" font-size="10" font-weight="600" fill="#12402a" text-anchor="middle">缓存进 executionPlanCache</text>
+  <text x="924" y="296" font-size="8.5" fill="#2f6f4f" text-anchor="middle">CypherCurrentCompiler.scala:150 / :197</text>
+
+  <!-- flow connectors -->
+  <path d="M272,225 L296,225" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M528,225 L552,225" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M784,225 L808,225" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M84,122 L84,150" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <!-- cache reuse arrow -->
+  <path d="M924,300 L924,326 L156,326 L156,300" stroke="#c7c7cc" stroke-width="1.5" fill="none" stroke-dasharray="5 4" marker-end="url(#ar)"/>
+  <text x="500" y="321" font-size="9" fill="#a1a1a6">相同查询命中执行计划缓存,跳过重编译</text>
+
+  <!-- bottom key point -->
+  <rect x="40" y="356" width="1000" height="106" rx="14" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="60" y="384" font-size="13" font-weight="700" fill="#3d2a5a">声明式的关键:第 3-4 步 —— 成本规划器决定物理执行形态</text>
+  <text x="60" y="408" font-size="10.5" fill="#8b7aa8">你只声明图模式(要什么);规划器决定怎么执行:从哪找起点、按什么顺序展开、用哪个运行时 —— 见 Cypher 规划篇。</text>
+  <text x="60" y="430" font-size="10" fill="#a1a1a6">解析(v5/v25 parser)与执行计划缓存是两端:前者按版本产 AST,后者缓存编译结果供相同查询复用。</text>
+  <text x="60" y="450" font-size="9.5" fill="#a1a1a6">community/cypher/ ——  Parse.scala:40 · FrontEndCompilationPhases:143 · CypherCurrentCompiler.scala:150/:197</text>
+</svg>

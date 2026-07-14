@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="540" viewBox="0 0 1060 540" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1060" height="540" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">任务分配：BackgroundJobsAssignee 决策"该干哪个后台活"</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">BackgroundJobsAssignee (h:47) 提交三类任务 · 统一抽象为 IExecutableTask (h:25) · 执行器不关心具体类型</text>
+
+  <!-- assignee -->
+  <rect x="380" y="80" width="300" height="56" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="530" y="102" font-size="11.5" font-weight="700" fill="#1b2a4a" text-anchor="middle">BackgroundJobsAssignee（:47）</text>
+  <text x="530" y="122" font-size="8.5" fill="#5b7db1" text-anchor="middle">决策：现在该调度哪个后台任务</text>
+
+  <!-- three schedule methods -->
+  <g text-anchor="middle">
+    <rect x="60" y="180" width="290" height="90" rx="12" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+    <text x="205" y="204" font-size="10.5" font-weight="700" fill="#5a3410">scheduleMergeMutateTask（:72）</text>
+    <text x="205" y="226" font-size="9" fill="#93762e">承接：存储 merge + DML mutation</text>
+    <text x="205" y="246" font-size="8.5" fill="#b08843">最核心、最频繁的后台任务</text>
+    <text x="205" y="262" font-size="8" fill="#b08843">进 merge/mutation 线程池</text>
+
+    <rect x="385" y="180" width="290" height="90" rx="12" fill="#f6f2fb" stroke="#d9c9ec" filter="url(#soft)"/>
+    <text x="530" y="204" font-size="10.5" font-weight="700" fill="#3d2a5a">scheduleFetchTask（:73）</text>
+    <text x="530" y="226" font-size="9" fill="#7a5da5">承接：复制的 GET_PART 拉取</text>
+    <text x="530" y="246" font-size="8.5" fill="#9a7cc4">从健康副本拉 Part</text>
+    <text x="530" y="262" font-size="8" fill="#9a7cc4">进 fetch 线程池</text>
+
+    <rect x="710" y="180" width="290" height="90" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+    <text x="855" y="204" font-size="10.5" font-weight="700" fill="#12402a">scheduleMoveTask（:74）</text>
+    <text x="855" y="226" font-size="9" fill="#2f6f4f">承接：TTL move + 卷间均衡</text>
+    <text x="855" y="246" font-size="8.5" fill="#4c8567">MergeTreePartsMover 执行</text>
+    <text x="855" y="262" font-size="8" fill="#4c8567">进 move 线程池</text>
+  </g>
+  <g stroke="#c7c7cc" stroke-width="1.4" fill="none">
+    <path d="M460,136 L205,180" marker-end="url(#ar)"/>
+    <line x1="530" y1="136" x2="530" y2="180" marker-end="url(#ar)"/>
+    <path d="M600,136 L855,180" marker-end="url(#ar)"/>
+  </g>
+
+  <!-- unified abstraction -->
+  <rect x="280" y="300" width="500" height="70" rx="12" fill="#f2fbf6" stroke="#cdeadb"/>
+  <text x="530" y="324" font-size="11" font-weight="700" fill="#12402a" text-anchor="middle">统一抽象：IExecutableTask（IExecutableTask.h:25）</text>
+  <text x="530" y="344" font-size="8.5" fill="#2f6f4f" text-anchor="middle">执行器不关心是 merge 还是 fetch，只管调度执行 executeStep()</text>
+  <text x="530" y="360" font-size="8" fill="#4c8567" text-anchor="middle">→ 这就是"统一调度载体"的实现</text>
+  <g stroke="#9ccbb0" stroke-width="1.3" fill="none">
+    <path d="M205,270 L400,300" marker-end="url(#ar)"/>
+    <line x1="530" y1="270" x2="530" y2="300" marker-end="url(#ar)"/>
+    <path d="M855,270 L660,300" marker-end="url(#ar)"/>
+  </g>
+
+  <rect x="40" y="392" width="980" height="130" rx="12" fill="#f7f7f9" stroke="#e6e6ea"/>
+  <text x="60" y="416" font-size="11" font-weight="700" fill="#1d1d1f">一句话</text>
+  <text x="60" y="438" font-size="10" fill="#4b4b50">BackgroundJobsAssignee 是后台任务的分配者，提交三类任务：scheduleMergeMutateTask（存储 merge + DML mutation）、</text>
+  <text x="60" y="456" font-size="10" fill="#4b4b50">scheduleFetchTask（复制拉取）、scheduleMoveTask（TTL move/均衡）。它们统一抽象为 IExecutableTask，</text>
+  <text x="60" y="474" font-size="10" fill="#4b4b50" font-weight="600">执行器只管调度、不关心具体类型——这正是"后台任务是各能力域异步部分的统一调度载体"的代码体现。</text>
+  <text x="60" y="498" font-size="9" fill="#8a8a8f">三类任务各有独立线程池（merge/fetch/move pool），互不阻塞。</text>
+  <text x="60" y="514" font-size="9" fill="#8a8a8f">谁触发分配：写入产生小 Part 触发 merge、复制队列有 GET_PART 触发 fetch、TTL 到期触发 move。</text>
+</svg>

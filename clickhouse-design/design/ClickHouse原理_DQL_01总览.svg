@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="560" viewBox="0 0 1060 560" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1060" height="560" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">DQL 生命周期总览：五阶段（接入 → 分析 → 规划 → 优化 → 执行）</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">executeQueryImpl 漏斗（executeQuery.cpp:973）· 新路径 Analyzer→Planner→QueryPlan→Processors 为 v25.8 默认</text>
+
+  <g text-anchor="middle">
+    <rect x="40" y="90" width="180" height="90" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/><text x="130" y="118" font-size="11.5" font-weight="700" fill="#1b2a4a">① 接入</text><text x="130" y="138" font-size="8.5" fill="#5b7db1">TCP/HTTP → executeQuery</text><text x="130" y="154" font-size="8.5" fill="#5b7db1">查结果缓存</text><text x="130" y="170" font-size="8" fill="#8aa6cf">命中即返回</text>
+    <rect x="250" y="90" width="180" height="90" rx="12" fill="#f3f7fc" stroke="#cfe0f2" filter="url(#soft)"/><text x="340" y="118" font-size="11.5" font-weight="700" fill="#274a78">② 分析</text><text x="340" y="138" font-size="8.5" fill="#5b7db1">Parser → AST</text><text x="340" y="154" font-size="8.5" fill="#5b7db1">Analyzer → QueryTree</text><text x="340" y="170" font-size="8" fill="#8aa6cf">40+ pass 语义规整</text>
+    <rect x="460" y="90" width="180" height="90" rx="12" fill="#f3f7fc" stroke="#cfe0f2" filter="url(#soft)"/><text x="550" y="118" font-size="11.5" font-weight="700" fill="#274a78">③ 规划</text><text x="550" y="138" font-size="8.5" fill="#5b7db1">Planner → QueryPlan</text><text x="550" y="154" font-size="8.5" fill="#5b7db1">逻辑算子树</text><text x="550" y="170" font-size="8" fill="#8aa6cf">选 join 算法</text>
+    <rect x="670" y="90" width="180" height="90" rx="12" fill="#f3f7fc" stroke="#cfe0f2" filter="url(#soft)"/><text x="760" y="118" font-size="11.5" font-weight="700" fill="#274a78">④ 优化</text><text x="760" y="138" font-size="8.5" fill="#5b7db1">下推 / PREWHERE</text><text x="760" y="154" font-size="8.5" fill="#5b7db1">主键裁剪 / read-in-order</text><text x="760" y="170" font-size="8" fill="#8aa6cf">减少要做的事</text>
+    <rect x="880" y="90" width="140" height="90" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/><text x="950" y="118" font-size="11.5" font-weight="700" fill="#12402a">⑤ 执行</text><text x="950" y="138" font-size="8.5" fill="#2f6f4f">Pipeline</text><text x="950" y="154" font-size="8.5" fill="#2f6f4f">Processors 向量化</text><text x="950" y="170" font-size="8" fill="#4c8567">pull · Chunk</text>
+  </g>
+  <g stroke="#c7c7cc" stroke-width="1.5" fill="none">
+    <line x1="220" y1="135" x2="250" y2="135" marker-end="url(#ar)"/>
+    <line x1="430" y1="135" x2="460" y2="135" marker-end="url(#ar)"/>
+    <line x1="640" y1="135" x2="670" y2="135" marker-end="url(#ar)"/>
+    <line x1="850" y1="135" x2="880" y2="135" marker-end="url(#ar)"/>
+  </g>
+
+  <!-- old vs new -->
+  <rect x="40" y="210" width="980" height="130" rx="13" fill="#f6f2fb" stroke="#d9c9ec"/>
+  <text x="60" y="234" font-size="11.5" font-weight="700" fill="#3d2a5a">两条分析路径（v25.8 默认新路径）</text>
+  <rect x="60" y="248" width="460" height="76" rx="9" fill="#faf7fd" stroke="#d9c9ec"/>
+  <text x="290" y="268" font-size="10" font-weight="600" fill="#3d2a5a" text-anchor="middle">新（默认，enable_analyzer=true :6521）</text>
+  <text x="290" y="288" font-size="8.5" fill="#7a5da5" text-anchor="middle">AST → QueryTree（Analyzer）→ QueryPlan（Planner）</text>
+  <text x="290" y="304" font-size="8.5" fill="#7a5da5" text-anchor="middle">→ 优化 pass → Processors</text>
+  <text x="290" y="318" font-size="8" fill="#9a7cc4" text-anchor="middle">语义清晰、优化更强、支持更复杂查询</text>
+  <rect x="540" y="248" width="460" height="76" rx="9" fill="#f7f7f9" stroke="#e6e6ea"/>
+  <text x="770" y="268" font-size="10" font-weight="600" fill="#6b6b70" text-anchor="middle">旧（enable_analyzer=0 兜底）</text>
+  <text x="770" y="288" font-size="8.5" fill="#9a9a9f" text-anchor="middle">InterpreterSelectQuery + ExpressionAnalyzer</text>
+  <text x="770" y="304" font-size="8.5" fill="#9a9a9f" text-anchor="middle">TreeRewriter 直接生成执行</text>
+  <text x="770" y="318" font-size="8" fill="#b8b8bf" text-anchor="middle">仅为兼容旧行为保留，不推荐主动关</text>
+
+  <rect x="40" y="356" width="980" height="76" rx="12" fill="#fdf9f0" stroke="#efe3cd"/>
+  <text x="60" y="380" font-size="11" font-weight="700" fill="#7a5a1e">执行引擎始终是 Processors</text>
+  <text x="60" y="402" font-size="10" fill="#93762e">· 无论新旧分析路径，最终都转成 Processors 物理执行图——老的 BlockInputStream 流式引擎已彻底移除</text>
+  <text x="60" y="420" font-size="10" fill="#93762e">· 所以"换分析器"只影响规划/优化质量，不影响执行模型</text>
+
+  <rect x="40" y="448" width="980" height="88" rx="12" fill="#f7f7f9" stroke="#e6e6ea"/>
+  <text x="60" y="472" font-size="11" font-weight="700" fill="#1d1d1f">一句话</text>
+  <text x="60" y="494" font-size="10" fill="#4b4b50">DQL 五阶段：接入（查缓存）→ 分析（AST→QueryTree，40+ pass 规整）→ 规划（→QueryPlan 逻辑树）→</text>
+  <text x="60" y="511" font-size="10" fill="#4b4b50">优化（下推/裁剪）→ 执行（Processors 向量化）。前四步是"规划期减少要做的事"，第五步是"执行期并行跑"。</text>
+  <text x="60" y="528" font-size="9" fill="#8a8a8f">各阶段详见后续分图；本图给全局骨架。</text>
+</svg>

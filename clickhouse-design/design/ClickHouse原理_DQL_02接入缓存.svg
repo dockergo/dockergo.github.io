@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="560" viewBox="0 0 1060 560" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1060" height="560" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">接入与结果缓存：完全相同的查询走最快路径</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">QueryResultCache 在 executeQuery 内 get/set（get :1460, set :1606）· can_use_query_result_cache :1421</text>
+
+  <!-- entry -->
+  <g text-anchor="middle">
+    <rect x="40" y="90" width="170" height="60" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/><text x="125" y="114" font-size="10.5" font-weight="600" fill="#1b2a4a">客户端查询</text><text x="125" y="132" font-size="8.5" fill="#5b7db1">TCPHandler / HTTPHandler</text>
+    <rect x="250" y="90" width="180" height="60" rx="11" fill="#f3f7fc" stroke="#cfe0f2" filter="url(#soft)"/><text x="340" y="114" font-size="10.5" font-weight="600" fill="#274a78">executeQuery 漏斗</text><text x="340" y="132" font-size="8.5" fill="#5b7db1">检查是否可用结果缓存</text>
+  </g>
+  <!-- decision -->
+  <rect x="470" y="82" width="180" height="76" rx="12" fill="#f6f2fb" stroke="#d9c9ec" filter="url(#soft)"/>
+  <text x="560" y="106" font-size="10.5" font-weight="700" fill="#3d2a5a" text-anchor="middle">缓存命中？</text>
+  <text x="560" y="126" font-size="8.5" fill="#7a5da5" text-anchor="middle">按 query + 设置 + 用户</text>
+  <text x="560" y="142" font-size="8.5" fill="#7a5da5" text-anchor="middle">构成 cache key</text>
+
+  <!-- hit -->
+  <rect x="700" y="72" width="320" height="70" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="860" y="96" font-size="11" font-weight="700" fill="#12402a" text-anchor="middle">✓ 命中 → 直接读缓存</text>
+  <text x="860" y="116" font-size="8.5" fill="#2f6f4f" text-anchor="middle">createReader(:1460) → readFromQueryResultCache(:1464)</text>
+  <text x="860" y="132" font-size="8.5" fill="#4c8567" text-anchor="middle">跳过分析/规划/执行 → 最快路径</text>
+
+  <!-- miss -->
+  <rect x="700" y="156" width="320" height="70" rx="12" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+  <text x="860" y="180" font-size="11" font-weight="700" fill="#5a3410" text-anchor="middle">✗ 未命中 → 正常执行</text>
+  <text x="860" y="200" font-size="8.5" fill="#93762e" text-anchor="middle">走完整五阶段 → 产出结果</text>
+  <text x="860" y="216" font-size="8.5" fill="#93762e" text-anchor="middle">允许时写入缓存（Writer :1606）</text>
+
+  <g stroke="#c7c7cc" stroke-width="1.5" fill="none">
+    <line x1="210" y1="120" x2="250" y2="120" marker-end="url(#ar)"/>
+    <line x1="430" y1="120" x2="470" y2="120" marker-end="url(#ar)"/>
+    <path d="M650,110 L700,100" marker-end="url(#ar)"/>
+    <path d="M650,135 L700,180" marker-end="url(#ar)"/>
+  </g>
+  <!-- write back -->
+  <path d="M860,226 L860,250 L560,250 L560,200 L560,158" stroke="#9ccbb0" stroke-width="1.3" fill="none" stroke-dasharray="4 3" marker-end="url(#ar)"/>
+  <text x="700" y="246" font-size="8" fill="#4c8567" text-anchor="middle">结果写回缓存</text>
+
+  <!-- cache types -->
+  <rect x="40" y="280" width="480" height="120" rx="13" fill="#f3f7fc" stroke="#cfe0f2"/>
+  <text x="280" y="304" font-size="11" font-weight="700" fill="#274a78" text-anchor="middle">ClickHouse 的多层缓存（各司其职）</text>
+  <g text-anchor="middle" font-size="8">
+    <rect x="60" y="318" width="140" height="34" rx="7" fill="#fff" stroke="#cfe0f2"/><text x="130" y="333" font-weight="600" fill="#274a78">QueryResultCache</text><text x="130" y="346" fill="#5b7db1">整条查询结果</text>
+    <rect x="210" y="318" width="140" height="34" rx="7" fill="#fff" stroke="#cfe0f2"/><text x="280" y="333" font-weight="600" fill="#274a78">MarkCache</text><text x="280" y="346" fill="#5b7db1">.mrk 标记</text>
+    <rect x="360" y="318" width="140" height="34" rx="7" fill="#fff" stroke="#cfe0f2"/><text x="430" y="333" font-weight="600" fill="#274a78">UncompressedCache</text><text x="430" y="346" fill="#5b7db1">解压后数据块</text>
+    <rect x="60" y="358" width="215" height="32" rx="7" fill="#fff" stroke="#cfe0f2"/><text x="167" y="378" fill="#5b7db1">PrimaryIndexCache · 稀疏主键</text>
+    <rect x="285" y="358" width="215" height="32" rx="7" fill="#fff" stroke="#cfe0f2"/><text x="392" y="378" fill="#5b7db1">QueryConditionCache · 条件跳过</text>
+  </g>
+
+  <!-- caveat -->
+  <rect x="540" y="280" width="480" height="120" rx="13" fill="#fbeef0" stroke="#f0cdd4"/>
+  <text x="780" y="304" font-size="11" font-weight="700" fill="#7a2230" text-anchor="middle">结果缓存的适用与陷阱</text>
+  <text x="560" y="326" font-size="9" fill="#a44">· 仅对确定性查询有效（now()/rand() 等非确定性慎用）</text>
+  <text x="560" y="344" font-size="9" fill="#a44">· 底层数据变化后需失效（有 TTL / 依赖新鲜度设置）</text>
+  <text x="560" y="362" font-size="9" fill="#a44">· 适合"重复的、结果稳定的"仪表盘类查询</text>
+  <text x="560" y="382" font-size="9" fill="#7a2230">· 默认不开，需 use_query_cache=1 显式启用</text>
+
+  <rect x="40" y="416" width="980" height="120" rx="12" fill="#f7f7f9" stroke="#e6e6ea"/>
+  <text x="60" y="440" font-size="11" font-weight="700" fill="#1d1d1f">一句话</text>
+  <text x="60" y="462" font-size="10" fill="#4b4b50">接入阶段第一件事是查 QueryResultCache：命中就跳过全部计算直接返回结果（最快路径），未命中才走完整五阶段</text>
+  <text x="60" y="480" font-size="10" fill="#4b4b50">并按需回写。结果缓存之外还有 Mark/Uncompressed/PrimaryIndex 等更细粒度缓存，服务于"少读盘、少解压"。</text>
+  <text x="60" y="502" font-size="10" fill="#4b4b50">工程上：结果缓存只对确定性、重复的查询有价值，默认关闭，按仪表盘场景选择性开启。</text>
+  <text x="60" y="524" font-size="9" fill="#8a8a8f">细粒度缓存详见「优化技术 · 缓存体系」。</text>
+</svg>

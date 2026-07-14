@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="540" viewBox="0 0 1040 540" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1040" height="540" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Trino OOM killer · 集群内存耗尽时择一杀之</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">ClusterMemoryManager 轮询各 worker;真正 OOM 时先杀 task 再杀 query,取首个非空目标</text>
+
+  <!-- detect loop -->
+  <rect x="30" y="72" width="980" height="88" rx="13" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="46" y="94" font-size="11" font-weight="700" fill="#1b2a4a">检测循环 ClusterMemoryManager.process()</text>
+  <g font-size="8.8" text-anchor="middle">
+    <rect x="46" y="106" width="220" height="44" rx="8" fill="#f3f7fc" stroke="#cfe0f2"/><text x="156" y="124" font-weight="600" fill="#274a78">轮询各 worker MemoryPoolInfo</text><text x="156" y="140" fill="#5b7db1">聚合成 ClusterMemoryPool</text>
+    <rect x="290" y="106" width="220" height="44" rx="8" fill="#fff7e6" stroke="#e8cf9a"/><text x="400" y="124" font-weight="600" fill="#5a3410">isClusterOutOfMemory?</text><text x="400" y="140" fill="#93762e">= getBlockedNodes() &gt; 0</text>
+    <rect x="534" y="106" width="220" height="44" rx="8" fill="#f5faf6" stroke="#cfe6d5"/><text x="644" y="124" font-weight="600" fill="#2c5a3a">且无查询已被限额杀</text><text x="644" y="140" fill="#2f6f4f">且上次 kill 目标已消失</text>
+    <rect x="778" y="106" width="232" height="44" rx="8" fill="#ffecec" stroke="#e0a0a0"/><text x="894" y="124" font-weight="600" fill="#b1483a">→ callOomKiller</text><text x="894" y="140" fill="#b1483a">先 task killer 后 query killer</text>
+  </g>
+  <line x1="266" y1="128" x2="290" y2="128" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="510" y1="128" x2="534" y2="128" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="754" y1="128" x2="778" y2="128" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+
+  <!-- task killer -->
+  <rect x="30" y="180" width="490" height="180" rx="13" fill="#faf4fb" stroke="#e2d2ee"/>
+  <text x="46" y="202" font-size="11" font-weight="700" fill="#5a3d78">Task killer（先跑 · 仅 FTE 查询）</text>
+  <rect x="46" y="216" width="458" height="40" rx="8" fill="#fff" stroke="#e2d2ee"/><text x="60" y="234" font-size="8.8" font-weight="600" fill="#5a3d78">TotalReservationOnBlockedNodesTaskLowMemoryKiller（默认）</text><text x="60" y="250" font-size="8" fill="#7a5a95">在 blocked 节点上择大 task 杀(speculative 优先)</text>
+  <rect x="46" y="262" width="458" height="40" rx="8" fill="#fff" stroke="#e2d2ee"/><text x="60" y="280" font-size="8.8" font-weight="600" fill="#5a3d78">LeastWastedEffortTaskLowMemoryKiller（可选）</text><text x="60" y="296" font-size="8" fill="#7a5a95">最大化 memoryUsed/wallTime,杀"浪费功最少"的 task</text>
+  <rect x="46" y="308" width="458" height="40" rx="8" fill="#eafaf1" stroke="#bfe0cd"/><text x="60" y="326" font-size="8.8" font-weight="600" fill="#12402a">目标为 task → 逐个 failTask</text><text x="60" y="342" font-size="8" fill="#2f6f4f">FTE 下 task 可重试(见容错执行篇),不整查询挂</text>
+
+  <!-- query killer -->
+  <rect x="540" y="180" width="470" height="180" rx="13" fill="#fff7e6" stroke="#e8cf9a"/>
+  <text x="556" y="202" font-size="11" font-weight="700" fill="#5a3410">Query killer（后跑 · 非 FTE 查询）</text>
+  <rect x="556" y="216" width="438" height="40" rx="8" fill="#fff" stroke="#e8cf9a"/><text x="570" y="234" font-size="8.8" font-weight="600" fill="#5a3410">TotalReservationOnBlockedNodesQuery…（默认）</text><text x="570" y="250" font-size="8" fill="#93762e">只看 blocked 节点,杀其上总预留最大的查询;跳过 TASK 策略查询</text>
+  <rect x="556" y="262" width="438" height="40" rx="8" fill="#fff" stroke="#e8cf9a"/><text x="570" y="280" font-size="8.8" font-weight="600" fill="#5a3410">TotalReservationLowMemoryKiller（可选）</text><text x="570" y="296" font-size="8" fill="#93762e">杀全集群总预留最大的单个查询</text>
+  <rect x="556" y="308" width="438" height="40" rx="8" fill="#ffecec" stroke="#e0a0a0"/><text x="570" y="326" font-size="8.8" font-weight="600" fill="#b1483a">目标为整查询 → query.fail(CLUSTER_OUT_OF_MEMORY)</text><text x="570" y="342" font-size="8" fill="#b1483a">非 FTE 查询无 task 重试,直接失败</text>
+
+  <!-- policy + notes -->
+  <rect x="30" y="376" width="980" height="140" rx="13" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="46" y="398" font-size="11" font-weight="700" fill="#1d1d1f">策略与要点</text>
+  <text x="46" y="420" font-size="9" fill="#6e6e73">· query.low-memory-killer.policy：NONE / TOTAL_RESERVATION / TOTAL_RESERVATION_ON_BLOCKED_NODES（默认后者）</text>
+  <text x="46" y="438" font-size="9" fill="#6e6e73">· task.low-memory-killer.policy：NONE / TOTAL_RESERVATION_ON_BLOCKED_NODES（默认）/ LEAST_WASTE</text>
+  <text x="46" y="456" font-size="9" fill="#6e6e73">· 顺序：ImmutableList.of(taskKiller, queryKiller),取首个非空 KillTarget 就 break——FTE 优先杀 task(可重试)保住整查询</text>
+  <text x="46" y="474" font-size="9" fill="#6e6e73">· 去重：isLastKillTargetGone 保证上个目标真消失才再杀,避免连杀</text>
+  <text x="46" y="494" font-size="9" fill="#b1483a">· 单池模型的必然：既然没了 reserved 池防死锁,集群 OOM 时主动杀就是兜底手段(见单池模型篇)</text>
+</svg>

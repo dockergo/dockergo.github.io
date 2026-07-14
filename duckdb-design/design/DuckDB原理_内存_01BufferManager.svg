@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="450" viewBox="0 0 1020 450"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1020" height="450" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">Buffer 管理 · Block 按需换入、内存压力驱逐（buffer_manager.cpp / buffer_pool.hpp）</text>
+
+  <!-- pin / 换入 -->
+  <rect x="30" y="52" width="470" height="200" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="48" y="76" font-size="12.5" font-weight="600" fill="#1d1d1f">读某块：Pin → 用 → Unpin</text>
+  <rect x="48" y="92" width="200" height="60" rx="10" fill="#fff7e6" stroke="#f0dcae"/><text x="148" y="116" font-size="10" font-weight="600" fill="#7a4d00" text-anchor="middle">Pin(block)</text><text x="148" y="136" font-size="8.5" fill="#9a7328" text-anchor="middle">在内存？直接用；否则从文件读入</text>
+  <rect x="278" y="92" width="200" height="60" rx="10" fill="#eafaf1" stroke="#bce6cd"/><text x="378" y="116" font-size="10" font-weight="600" fill="#0f5132" text-anchor="middle">BlockHandle 持有内存</text><text x="378" y="136" font-size="8.5" fill="#3f8f66" text-anchor="middle">pin 计数&gt;0 时不可被驱逐</text>
+  <rect x="48" y="164" width="430" height="76" rx="10" fill="#eef3fb" stroke="#bcd0ec"/><text x="263" y="186" font-size="10" font-weight="600" fill="#1b2a4a" text-anchor="middle">Unpin：pin 计数归零 → 可进驱逐队列</text><text x="263" y="208" font-size="9" fill="#5b7db1" text-anchor="middle">块仍在内存缓存着，下次 Pin 命中就免读盘</text><text x="263" y="226" font-size="9" fill="#5b7db1" text-anchor="middle">AddToEvictionQueue（buffer_pool.hpp:109）</text>
+
+  <line x1="248" y1="122" x2="278" y2="122" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="378" y1="152" x2="263" y2="164" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+
+  <!-- 驱逐 -->
+  <rect x="520" y="52" width="470" height="200" rx="14" fill="#fbeaea" stroke="#f0cccc" filter="url(#soft)"/>
+  <text x="538" y="76" font-size="12.5" font-weight="600" fill="#7d1f1f">内存超 memory_limit：驱逐</text>
+  <rect x="538" y="92" width="434" height="52" rx="10" fill="#ffffff" stroke="#f0cccc"/><text x="755" y="114" font-size="10" font-weight="600" fill="#7d1f1f" text-anchor="middle">EvictBlocks（buffer_pool.hpp:94）</text><text x="755" y="132" font-size="8.5" fill="#b06a6a" text-anchor="middle">从驱逐队列挑未 pin 的块，腾出空间</text>
+  <rect x="538" y="152" width="210" height="88" rx="10" fill="#fdf2f2" stroke="#f0cccc"/><text x="643" y="176" font-size="9.5" font-weight="600" fill="#7d1f1f" text-anchor="middle">干净块（已落盘）</text><text x="643" y="198" font-size="8.5" fill="#b06a6a" text-anchor="middle">直接丢弃内存副本</text><text x="643" y="216" font-size="8.5" fill="#b06a6a" text-anchor="middle">需要时再读回</text>
+  <rect x="762" y="152" width="210" height="88" rx="10" fill="#fdf2f2" stroke="#f0cccc"/><text x="867" y="176" font-size="9.5" font-weight="600" fill="#7d1f1f" text-anchor="middle">脏块 / 临时数据</text><text x="867" y="198" font-size="8.5" fill="#b06a6a" text-anchor="middle">先写盘（WAL/临时文件）</text><text x="867" y="216" font-size="8.5" fill="#b06a6a" text-anchor="middle">再释放内存</text>
+
+  <line x1="500" y1="122" x2="520" y2="122" stroke="#e0a0a0" stroke-width="1.3" marker-end="url(#ar)"/>
+
+  <!-- 说明 -->
+  <rect x="30" y="272" width="960" height="160" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="48" y="296" font-size="12.5" font-weight="600" fill="#1d1d1f">要点</text>
+  <text x="48" y="320" font-size="10.5" fill="#494950">• <tspan font-weight="600">Block 是缓存与 I/O 单位</tspan>（256KB）：文件可远大于内存——只把用到的块换进来，用完可驱逐。</text>
+  <text x="48" y="344" font-size="10.5" fill="#494950">• <tspan font-weight="600">memory_limit</tspan> 是总预算：BufferManager 维持内存占用在其下，超了就驱逐或触发溢写。</text>
+  <text x="48" y="368" font-size="10.5" fill="#494950">• <tspan font-weight="600">多驱逐队列</tspan>（buffer_pool.hpp:177 queues）+ 年龄清理（PurgeAgedBlocks）：近似 LRU，兼顾不同内存标签(MemoryTag)。</text>
+  <text x="48" y="392" font-size="10.5" fill="#494950">• <tspan font-weight="600">external_file_cache</tspan>：读外部 Parquet/CSV 等也可走块缓存，重复读命中内存。</text>
+  <text x="48" y="416" font-size="10.5" fill="#86868b">这让"单机处理远大于内存的数据"成为可能——配合下图的外存溢写。</text>
+</svg>

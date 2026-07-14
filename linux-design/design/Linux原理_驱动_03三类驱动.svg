@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="450" viewBox="0 0 1000 450" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1000" height="450" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">三类驱动接入：字符→VFS · 块→块层(blk-mq) · 网络→协议栈；三者 probe 前统一经 device/driver/bus</text>
+
+  <!-- C1 char -->
+  <rect x="40" y="66" width="290" height="38" rx="10" fill="#dce7f7" stroke="#bcd0ec"/>
+  <text x="185" y="90" font-size="11.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">字符设备</text>
+  <rect x="40" y="120" width="290" height="58" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="56" y="144" font-size="10" fill="#1b2a4a">用户态入口：/dev/xxx 设备节点</text>
+  <text x="56" y="164" font-size="9.5" fill="#5b7db1">（主设备号 / 次设备号）</text>
+  <rect x="40" y="196" width="290" height="78" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="185" y="218" font-size="10.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">上层子系统 · VFS</text>
+  <text x="56" y="240" font-size="9.5" fill="#5b7db1">open() 按设备号找到 cdev</text>
+  <text x="56" y="260" font-size="9.5" fill="#5b7db1">把 file 换上驱动 fops</text>
+  <rect x="40" y="292" width="290" height="92" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="185" y="314" font-size="10.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">操作集 + 登记</text>
+  <text x="56" y="336" font-size="9.5" fill="#5b7db1">file_operations（read/write/ioctl）</text>
+  <text x="56" y="356" font-size="9.5" fill="#5b7db1">register_chrdev_region</text>
+  <text x="56" y="376" font-size="9.5" fill="#5b7db1">(char_dev.c:197) + cdev_add</text>
+
+  <!-- C2 block -->
+  <rect x="355" y="66" width="290" height="38" rx="10" fill="#f6ead0" stroke="#e8cf9a"/>
+  <text x="500" y="90" font-size="11.5" font-weight="600" fill="#5a3410" text-anchor="middle">块设备</text>
+  <rect x="355" y="120" width="290" height="58" rx="11" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="371" y="144" font-size="10" fill="#5a3410">用户态入口：/dev/sdX 节点</text>
+  <text x="371" y="164" font-size="9.5" fill="#93762e">或经文件系统挂载点</text>
+  <rect x="355" y="196" width="290" height="78" rx="11" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="500" y="218" font-size="10.5" font-weight="600" fill="#5a3410" text-anchor="middle">上层子系统 · 块层</text>
+  <text x="371" y="240" font-size="9.5" fill="#93762e">submit_bio → blk-mq</text>
+  <text x="371" y="260" font-size="9.5" fill="#93762e">调度 / 合并 / 下发到驱动</text>
+  <rect x="355" y="292" width="290" height="92" rx="11" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="500" y="314" font-size="10.5" font-weight="600" fill="#5a3410" text-anchor="middle">操作集 + 登记</text>
+  <text x="371" y="336" font-size="9.5" fill="#93762e">block_device_operations + gendisk</text>
+  <text x="371" y="356" font-size="9.5" fill="#93762e">add_disk 登记磁盘</text>
+  <text x="371" y="376" font-size="9.5" fill="#93762e">(blkdev.h:146 / :163)</text>
+
+  <!-- C3 net -->
+  <rect x="670" y="66" width="290" height="38" rx="10" fill="#d8f2e2" stroke="#bfe0cd"/>
+  <text x="815" y="90" font-size="11.5" font-weight="600" fill="#12402a" text-anchor="middle">网络设备</text>
+  <rect x="670" y="120" width="290" height="58" rx="11" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="686" y="144" font-size="10" fill="#12402a">用户态入口：socket API</text>
+  <text x="686" y="164" font-size="9.5" fill="#2f6f4f">（无 /dev 设备节点）</text>
+  <rect x="670" y="196" width="290" height="78" rx="11" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="815" y="218" font-size="10.5" font-weight="600" fill="#12402a" text-anchor="middle">上层子系统 · 网络协议栈</text>
+  <text x="686" y="240" font-size="9.5" fill="#2f6f4f">发包 → ndo_start_xmit</text>
+  <text x="686" y="260" font-size="9.5" fill="#2f6f4f">收包 → NAPI / netif_rx 上送</text>
+  <rect x="670" y="292" width="290" height="92" rx="11" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="815" y="314" font-size="10.5" font-weight="600" fill="#12402a" text-anchor="middle">操作集 + 登记</text>
+  <text x="686" y="336" font-size="9.5" fill="#2f6f4f">net_device_ops（ndo_start_xmit…）</text>
+  <text x="686" y="356" font-size="9.5" fill="#2f6f4f">register_netdev 登记</text>
+  <text x="686" y="376" font-size="9.5" fill="#2f6f4f">(netdevice.h:1436 / :4991)</text>
+
+  <!-- arrows -->
+  <g stroke="#c7c7cc" stroke-width="1.6" fill="none">
+    <line x1="185" y1="178" x2="185" y2="196" marker-end="url(#ar)"/>
+    <line x1="185" y1="274" x2="185" y2="292" marker-end="url(#ar)"/>
+    <line x1="500" y1="178" x2="500" y2="196" marker-end="url(#ar)"/>
+    <line x1="500" y1="274" x2="500" y2="292" marker-end="url(#ar)"/>
+    <line x1="815" y1="178" x2="815" y2="196" marker-end="url(#ar)"/>
+    <line x1="815" y1="274" x2="815" y2="292" marker-end="url(#ar)"/>
+  </g>
+
+  <text x="40" y="414" font-size="10" fill="#6e6e73">· 字符 / 块设备是“文件式”接入（有 /dev 节点、经 VFS 路由），块设备额外多一层块层做调度合并；网络设备“非文件式”接入（无 /dev 节点，收发包直挂协议栈两端）。</text>
+  <text x="40" y="434" font-size="10" fill="#6e6e73">· 三者都先经本主线的 device/driver/bus 注册与 probe，probe 成功后各自向对应子系统登记（cdev_add / add_disk / register_netdev）。</text>
+</svg>

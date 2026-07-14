@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="540" viewBox="0 0 1080 540" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect x="0" y="0" width="1080" height="540" fill="#fbfbfd"/>
+  <text x="40" y="38" font-size="16" font-weight="600" fill="#1d1d1f">副本调度与修复结构</text>
+  <text x="40" y="58" font-size="11.5" fill="#86868b">Checker 发现 → Scheduler 优先级排队 → Clone 修复 / Rebalancer 均衡;修复永远优先于均衡</text>
+
+  <!-- 主链 Detect→Decide→Act 三段 -->
+  <g text-anchor="middle">
+    <rect x="30" y="82" width="320" height="70" rx="14" fill="#f6f8fc" stroke="#e6ecf4" filter="url(#soft)"/>
+    <text x="190" y="110" font-size="13" font-weight="600" fill="#1d5fb8">① TabletChecker 巡检</text>
+    <text x="190" y="132" font-size="9.5" fill="#7d93b5">checkTablets:遍历 db/table/partition,两路入队</text>
+    <rect x="380" y="82" width="320" height="70" rx="14" fill="#fbf7ef" stroke="#efe4cf" filter="url(#soft)"/>
+    <text x="540" y="110" font-size="13" font-weight="600" fill="#8a5a12">② TabletScheduler 调度</text>
+    <text x="540" y="132" font-size="9.5" fill="#a98b52">pending MinMaxPriorityQueue + running Map</text>
+    <rect x="730" y="82" width="320" height="70" rx="14" fill="#f5faf6" stroke="#e2ece5" filter="url(#soft)"/>
+    <text x="890" y="110" font-size="13" font-weight="600" fill="#2c5a3a">③ 修复 / 均衡通道</text>
+    <text x="890" y="132" font-size="9.5" fill="#4e7a5c">Clone 拉源副本 / Rebalancer 均衡</text>
+  </g>
+  <g stroke="#c7c7cc" stroke-width="1.6" fill="none">
+    <line x1="350" y1="117" x2="379" y2="117" marker-end="url(#ar)"/>
+    <line x1="700" y1="117" x2="729" y2="117" marker-end="url(#ar)"/>
+  </g>
+
+  <!-- 详情三列 -->
+  <g font-size="10.5">
+    <!-- TabletStatus 12态 -->
+    <rect x="30" y="172" width="320" height="330" rx="13" fill="#ffffff" stroke="#ececef" filter="url(#soft)"/>
+    <text x="48" y="196" font-size="12" font-weight="600" fill="#1d5fb8">TabletStatus · 12 态健康(调度输入)</text>
+    <text x="48" y="213" font-size="9" fill="#7d93b5">Tablet.java · getHealth/getColocateHealth</text>
+    <g fill="#4a4e57">
+      <rect x="46" y="224" width="288" height="26" rx="7" fill="#f5faf6" stroke="#cfe6d5"/><text x="60" y="241">HEALTHY 健康(不调度)</text>
+      <rect x="46" y="256" width="288" height="26" rx="7" fill="#fdf1e7" stroke="#f2d9c2"/><text x="60" y="273">REPLICA_MISSING 缺副本(高优)</text>
+      <rect x="46" y="288" width="288" height="26" rx="7" fill="#fdf1e7" stroke="#f2d9c2"/><text x="60" y="305">VERSION_INCOMPLETE 版本缺失</text>
+      <rect x="46" y="320" width="288" height="26" rx="7" fill="#fbf7ef" stroke="#efe0c4"/><text x="60" y="337">REDUNDANT 冗余(删多余)</text>
+      <rect x="46" y="352" width="288" height="26" rx="7" fill="#fbf7ef" stroke="#efe0c4"/><text x="60" y="369">COLOCATE_MISMATCH 不匹配</text>
+      <rect x="46" y="384" width="288" height="26" rx="7" fill="#f7f7f9" stroke="#ececef"/><text x="60" y="401">… 共 12 态,各带 priority</text>
+    </g>
+    <text x="48" y="432" font-size="9.5" fill="#86868b">状态 + 优先级 → 决定是否入队、排多前。</text>
+    <text x="48" y="452" font-size="9.5" fill="#86868b">prio 与 normal 两路队列分离。</text>
+  </g>
+  <!-- Scheduler 主循环 -->
+  <rect x="380" y="172" width="320" height="330" rx="13" fill="#ffffff" stroke="#ececef" filter="url(#soft)"/>
+  <text x="398" y="196" font-size="12" font-weight="600" fill="#8a5a12">TabletScheduler 主循环</text>
+  <text x="398" y="213" font-size="9" fill="#a98b52">TabletScheduler.java</text>
+  <g font-size="10" fill="#4a4e57" text-anchor="middle">
+    <rect x="398" y="224" width="284" height="40" rx="9" fill="#fbf7ef" stroke="#efe0c4"/><text x="540" y="242" font-weight="600" fill="#1d1d1f">schedulePendingTablets</text><text x="540" y="257" font-size="9">updateLoadStatistics→handleRunning→balance</text>
+    <rect x="398" y="276" width="284" height="40" rx="9" fill="#fbf7ef" stroke="#efe0c4"/><text x="540" y="294" font-weight="600" fill="#1d1d1f">handleTabletByTypeAndStatus</text><text x="540" y="309" font-size="9">按 status 分派处理器</text>
+  </g>
+  <g font-size="9.5" fill="#a98b52" text-anchor="start">
+    <text x="398" y="340">→ handleReplicaMissing(补副本)</text>
+    <text x="398" y="360">→ handleVersionIncomplete(补版本)</text>
+    <text x="398" y="380">→ handleRedundant(删冗余)</text>
+    <text x="398" y="400">→ handleColocateMismatch(迁移对齐)</text>
+  </g>
+  <text x="398" y="432" font-size="9.5" fill="#a98b52">pending 按优先级出队;running 限并发,</text>
+  <text x="398" y="452" font-size="9.5" fill="#a98b52">超时回收重排。</text>
+  <!-- 修复均衡通道 -->
+  <rect x="730" y="172" width="320" height="330" rx="13" fill="#ffffff" stroke="#ececef" filter="url(#soft)"/>
+  <text x="748" y="196" font-size="12" font-weight="600" fill="#2c5a3a">修复与均衡通道(共用 clone)</text>
+  <rect x="746" y="212" width="288" height="86" rx="10" fill="#f5faf6" stroke="#cfe6d5"/><text x="762" y="234" font-size="11" font-weight="600" fill="#1d1d1f">CloneTask.toThrift(修复)</text><text x="762" y="254" font-size="9.5" fill="#4e7a5c">TCloneReq → BE 拉源副本 rowset</text><text x="762" y="272" font-size="9.5" fill="#4e7a5c">clone 幂等:版本追平即完成</text><text x="762" y="290" font-size="9" fill="#2c8a4a">高优先级</text>
+  <rect x="746" y="310" width="288" height="86" rx="10" fill="#f4f5f7" stroke="#e6e7ea"/><text x="762" y="332" font-size="11" font-weight="600" fill="#1d1d1f">Rebalancer(均衡)</text><text x="762" y="352" font-size="9.5" fill="#4a4e57">BeLoadRebalancer 跨 BE</text><text x="762" y="370" font-size="9.5" fill="#4a4e57">DiskRebalancer BE 内磁盘</text><text x="762" y="388" font-size="9" fill="#a86a3a">优先级低于修复</text>
+  <text x="748" y="426" font-size="9.5" fill="#86868b">修复保可用(补齐多数派),</text>
+  <text x="748" y="446" font-size="9.5" fill="#86868b">均衡保均匀 —— 修复永远优先。</text>
+</svg>

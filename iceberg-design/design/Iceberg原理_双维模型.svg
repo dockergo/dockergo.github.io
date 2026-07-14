@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="540" viewBox="0 0 1080 540"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1080" height="540" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Iceberg 原理 · 双维模型:能力域 × 执行时机</text>
+  <text x="30" y="50" font-size="12" fill="#a1a1a6">Iceberg = 数据文件之上一层元数据规范;能力域(接触面 + 支撑 5)沿执行时机(前台运行 / 后台维护)展开</text>
+
+  <!-- ===== 左:能力域 axis ===== -->
+  <rect x="30" y="66" width="486" height="430" rx="14" fill="#f6f7fa" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="48" y="90" font-size="12" font-weight="700" fill="#1d1d1f">维度 A · 能力域</text>
+  <text x="150" y="90" font-size="10" fill="#a1a1a6">capability domain — 接触面(引擎可见) + 支撑侧(内部)</text>
+
+  <!-- 接触面 (purple) -->
+  <rect x="44" y="100" width="458" height="96" rx="12" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="60" y="122" font-size="12" font-weight="700" fill="#3d2a5a">接触面 · 面向计算引擎(Spark / Trino / Flink)</text>
+  <rect x="60" y="132" width="212" height="54" rx="10" fill="#ffffff" stroke="#d9c7ec"/>
+  <text x="72" y="154" font-size="11" font-weight="700" fill="#3d2a5a">表 API</text>
+  <text x="72" y="173" font-size="9.5" fill="#8a6db0">catalog 找表 · commit · DDL</text>
+  <rect x="284" y="132" width="204" height="54" rx="10" fill="#ffffff" stroke="#d9c7ec"/>
+  <text x="296" y="154" font-size="11" font-weight="700" fill="#3d2a5a">快照读</text>
+  <text x="296" y="173" font-size="9.5" fill="#8a6db0">TableScan · 时间旅行</text>
+
+  <!-- 支撑 label -->
+  <text x="60" y="222" font-size="11" font-weight="700" fill="#1b2a4a">支撑侧 · 5 能力域(不面向引擎,被接触面调用)</text>
+
+  <!-- 支撑 5 cards (blue) -->
+  <rect x="44" y="232" width="144" height="58" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="56" y="256" font-size="11" font-weight="700" fill="#1b2a4a">元数据树</text>
+  <text x="56" y="276" font-size="9" fill="#5b7db1">metadata→manifest→file</text>
+
+  <rect x="200" y="232" width="144" height="58" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="212" y="256" font-size="11" font-weight="700" fill="#1b2a4a">快照与提交</text>
+  <text x="212" y="276" font-size="9" fill="#5b7db1">原子 CAS + OCC 重试</text>
+
+  <rect x="356" y="232" width="146" height="58" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="368" y="256" font-size="11" font-weight="700" fill="#1b2a4a">schema/分区演进</text>
+  <text x="368" y="276" font-size="9" fill="#5b7db1">按字段 ID,不重写数据</text>
+
+  <rect x="44" y="302" width="144" height="58" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="56" y="326" font-size="11" font-weight="700" fill="#1b2a4a">扫描规划</text>
+  <text x="56" y="346" font-size="9" fill="#5b7db1">两级剪枝出 data file</text>
+
+  <rect x="200" y="302" width="144" height="58" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="212" y="326" font-size="11" font-weight="700" fill="#1b2a4a">行级删除(v2)</text>
+  <text x="212" y="346" font-size="9" fill="#5b7db1">delete files + MoR</text>
+
+  <rect x="356" y="302" width="146" height="58" rx="11" fill="#ffffff" stroke="#ececf1"/>
+  <text x="368" y="323" font-size="10" font-weight="700" fill="#6e6e73">规范/库,非进程</text>
+  <text x="368" y="341" font-size="9" fill="#a1a1a6">链接进引擎,不执行查询</text>
+
+  <text x="60" y="392" font-size="10" fill="#6e6e73">数据文件躺对象存储,Iceberg 只管"表的元数据规范"——不读写数据、不执行查询。</text>
+  <text x="60" y="412" font-size="10" fill="#6e6e73">理解:元数据树 + 原子提交 + 按字段 ID 演进,三点即懂 Iceberg。</text>
+  <text x="60" y="440" font-size="9.5" fill="#a1a1a6">6 主线归位:接触面 / 元数据 / 事务 / 演进 / 规划 / 删除</text>
+  <text x="60" y="470" font-size="9.5" fill="#a1a1a6">同一能力域可在不同时机呈现 →</text>
+
+  <!-- ===== 右:执行时机 axis ===== -->
+  <rect x="560" y="66" width="490" height="430" rx="14" fill="#f6f7fa" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="578" y="90" font-size="12" font-weight="700" fill="#1d1d1f">维度 B · 执行时机</text>
+  <text x="686" y="90" font-size="10" fill="#a1a1a6">execution timing — 前台运行 vs 后台维护</text>
+
+  <!-- 前台 (blue) -->
+  <rect x="574" y="100" width="462" height="150" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="590" y="122" font-size="12" font-weight="700" fill="#1b2a4a">前台 · foreground(引擎主动调用,请求路径)</text>
+  <rect x="590" y="132" width="140" height="102" rx="10" fill="#ffffff" stroke="#bcd0ec"/>
+  <text x="602" y="156" font-size="11" font-weight="700" fill="#1b2a4a">commit 提交</text>
+  <text x="602" y="176" font-size="9.5" fill="#5b7db1">写新快照</text>
+  <text x="602" y="193" font-size="9.5" fill="#5b7db1">换 metadata 指针</text>
+  <rect x="744" y="132" width="140" height="102" rx="10" fill="#ffffff" stroke="#bcd0ec"/>
+  <text x="756" y="156" font-size="11" font-weight="700" fill="#1b2a4a">scan 规划</text>
+  <text x="756" y="176" font-size="9.5" fill="#5b7db1">读 current 快照</text>
+  <text x="756" y="193" font-size="9.5" fill="#5b7db1">两级剪枝</text>
+  <rect x="898" y="132" width="138" height="102" rx="10" fill="#ffffff" stroke="#bcd0ec"/>
+  <text x="910" y="156" font-size="11" font-weight="700" fill="#1b2a4a">读数据文件</text>
+  <text x="910" y="176" font-size="9.5" fill="#5b7db1">得 data file 列表</text>
+  <text x="910" y="193" font-size="9.5" fill="#5b7db1">交引擎扫</text>
+
+  <!-- 后台 (amber) -->
+  <rect x="574" y="266" width="462" height="170" rx="12" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="590" y="288" font-size="12" font-weight="700" fill="#5a3410">后台 · background(维护任务触发,非请求路径)</text>
+  <rect x="590" y="298" width="140" height="90" rx="10" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="602" y="322" font-size="11" font-weight="700" fill="#5a3410">过期快照清理</text>
+  <text x="602" y="342" font-size="9.5" fill="#93762e">expire snapshots</text>
+  <text x="602" y="360" font-size="9.5" fill="#93762e">回收旧元数据</text>
+  <rect x="744" y="298" width="140" height="90" rx="10" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="756" y="322" font-size="11" font-weight="700" fill="#5a3410">孤儿文件清理</text>
+  <text x="756" y="342" font-size="9.5" fill="#93762e">remove orphan</text>
+  <text x="756" y="360" font-size="9.5" fill="#93762e">删无引用文件</text>
+  <rect x="898" y="298" width="138" height="90" rx="10" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="910" y="322" font-size="11" font-weight="700" fill="#5a3410">manifest 合并</text>
+  <text x="910" y="342" font-size="9.5" fill="#93762e">rewrite manifests</text>
+  <text x="910" y="360" font-size="9.5" fill="#93762e">compaction</text>
+  <text x="590" y="414" font-size="10" fill="#93762e">由计算引擎的存储过程 / 维护任务触发 —— 非 Iceberg 自动运行。</text>
+
+  <!-- 轴间连接 -->
+  <path d="M516,300 L560,300" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+</svg>

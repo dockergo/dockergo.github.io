@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="560" viewBox="0 0 920 560"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+  </defs>
+  <rect width="920" height="560" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">双维模型 · 把 12 条主线归位（表模型 × 执行时机）</text>
+
+  <!-- axes -->
+  <text x="30" y="70" font-size="12" font-weight="600" fill="#6e6e73">纵轴 · 表模型（世界观）</text>
+  <text x="30" y="88" font-size="11" fill="#7a4d00">▲ 日志表 Log Table：仅追加、无更新，一切是分区追加日志</text>
+  <text x="30" y="104" font-size="11" fill="#12633a">▼ 主键表 PrimaryKey Table：可 upsert/delete，KV 物化最新值 + 生成 changelog</text>
+  <text x="500" y="70" font-size="12" font-weight="600" fill="#6e6e73">横轴 · 执行时机</text>
+  <text x="500" y="88" font-size="11" fill="#1b2a4a">◀ 前台请求：produce / fetch / lookup / scan（同步、低延迟）</text>
+  <text x="500" y="104" font-size="11" fill="#1b2a4a">▶ 后台异步：复制 / 快照 / 分层 / 清理（吞吐、可靠）</text>
+
+  <!-- quadrant grid -->
+  <line x1="460" y1="130" x2="460" y2="530" stroke="#d2d2d7" stroke-width="1.5"/>
+  <line x1="60" y1="330" x2="890" y2="330" stroke="#d2d2d7" stroke-width="1.5"/>
+  <text x="470" y="126" font-size="10.5" fill="#a1a1a6">前台 ↔ 后台</text>
+
+  <!-- Q1 上左: 日志表 前台 -->
+  <rect x="70" y="140" width="380" height="180" rx="10" fill="#fdf0d5" stroke="#f0c674" filter="url(#soft)"/>
+  <text x="88" y="164" font-size="12.5" font-weight="600" fill="#7a4d00">日志表 · 前台</text>
+  <text x="88" y="188" font-size="11" fill="#9c6a1a">• 接口：表模型与写入（Append）</text>
+  <text x="88" y="210" font-size="11" fill="#9c6a1a">• 接口：读取（LogScanner 流式）</text>
+  <text x="88" y="232" font-size="11" fill="#9c6a1a">• 支撑：Log 追加存储引擎</text>
+  <text x="88" y="254" font-size="11" fill="#9c6a1a">• 支撑：Arrow 列存与投影下推</text>
+  <text x="88" y="286" font-size="10.5" fill="#b98a3a">顺序写 + 页缓存 + 零拷贝 → 高吞吐</text>
+
+  <!-- Q2 上右: 日志表 后台 -->
+  <rect x="470" y="140" width="420" height="180" rx="10" fill="#fdecea" stroke="#f5c2bd" filter="url(#soft)"/>
+  <text x="488" y="164" font-size="12.5" font-weight="600" fill="#8a2a1c">日志表 · 后台</text>
+  <text x="488" y="188" font-size="11" fill="#b25a4a">• 支撑：副本复制与 ISR（Leader/Follower）</text>
+  <text x="488" y="210" font-size="11" fill="#b25a4a">• 支撑：远程日志分层（RemoteLogManager）</text>
+  <text x="488" y="232" font-size="11" fill="#b25a4a">• 支撑：Lakehouse 分层与联合读</text>
+  <text x="488" y="254" font-size="11" fill="#b25a4a">• 支撑：协调器 ISR/Leader 调度</text>
+  <text x="488" y="286" font-size="10.5" fill="#c07a6a">数据不丢、冷热分离、湖仓打通</text>
+
+  <!-- Q3 下左: 主键表 前台 -->
+  <rect x="70" y="342" width="380" height="176" rx="10" fill="#e8f7ee" stroke="#b6e2c6" filter="url(#soft)"/>
+  <text x="88" y="366" font-size="12.5" font-weight="600" fill="#12633a">主键表 · 前台</text>
+  <text x="88" y="390" font-size="11" fill="#2e8b57">• 接口：表模型与写入（Upsert/Delete）</text>
+  <text x="88" y="412" font-size="11" fill="#2e8b57">• 接口：读取（Lookup 点查 / 前缀查）</text>
+  <text x="88" y="434" font-size="11" fill="#2e8b57">• 支撑：KV 主键表与 changelog 生成</text>
+  <text x="88" y="466" font-size="10.5" fill="#4ba572">RocksDB 物化最新值 + rowMerger 合并</text>
+  <text x="88" y="486" font-size="10.5" fill="#4ba572">写入即产出 CDC changelog 到 LogTablet</text>
+
+  <!-- Q4 下右: 主键表 后台 -->
+  <rect x="470" y="342" width="420" height="176" rx="10" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="488" y="366" font-size="12.5" font-weight="600" fill="#1b2a4a">主键表 · 后台 / 全局</text>
+  <text x="488" y="390" font-size="11" fill="#5b7db1">• 支撑：KV 快照（增量 → DFS）与恢复</text>
+  <text x="488" y="412" font-size="11" fill="#5b7db1">• 支撑：协调器（元数据/状态机/建表）</text>
+  <text x="488" y="434" font-size="11" fill="#5b7db1">• 支撑：网络 RPC 与安全鉴权</text>
+  <text x="488" y="456" font-size="11" fill="#5b7db1">• 接口：Flink/Lakehouse 集成</text>
+  <text x="488" y="488" font-size="10.5" fill="#7a9dc9">协调面 + 通信面横切所有表</text>
+</svg>

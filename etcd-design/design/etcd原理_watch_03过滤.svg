@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="500" viewBox="0 0 1080 500" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs><filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+  <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker></defs>
+  <rect width="1080" height="500" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">事件过滤与推送：谁收到这个事件</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">watcher_group.go: newWatcherBatch(:79) minRev 检查(:87) · watcherSetByKey(:273) · watcher.go watchStream(:102)</text>
+  <!-- one event -->
+  <rect x="40" y="80" width="220" height="70" rx="11" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+  <text x="150" y="106" font-size="10" font-weight="700" fill="#5a3410" text-anchor="middle">一个变更事件</text>
+  <text x="150" y="126" font-size="8.5" fill="#93762e" text-anchor="middle">key="/svc/a", rev=42, PUT</text>
+  <text x="150" y="140" font-size="8" fill="#b08843" text-anchor="middle">newWatcherBatch 分发</text>
+  <!-- two filters -->
+  <rect x="300" y="80" width="340" height="150" rx="12" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="470" y="104" font-size="10.5" font-weight="700" fill="#1b2a4a" text-anchor="middle">两道过滤（都过才推）</text>
+  <text x="320" y="128" font-size="9.5" fill="#5b7db1">① key 范围匹配（watcherSetByKey）</text>
+  <text x="335" y="146" font-size="8.5" fill="#8aa6cf">watcher 的 [key, rangeEnd) 覆盖此 key？</text>
+  <text x="320" y="170" font-size="9.5" fill="#5b7db1">② 事件 rev ≥ watcher.minRev</text>
+  <text x="335" y="188" font-size="8.5" fill="#8aa6cf">防重推：只推比"已推最大 rev"更新的</text>
+  <text x="320" y="212" font-size="8.5" fill="#8aa6cf">③ 可选过滤器：只看 PUT / 只看 DELETE</text>
+  <!-- watchers -->
+  <g text-anchor="middle" font-size="8">
+    <rect x="700" y="82" width="340" height="34" rx="7" fill="#eafaf1" stroke="#bfe0cd"/><text x="870" y="103" fill="#12402a">watcher A: watch "/svc/" 前缀, minRev=40 → ✓ 收到</text>
+    <rect x="700" y="120" width="340" height="34" rx="7" fill="#eafaf1" stroke="#bfe0cd"/><text x="870" y="141" fill="#12402a">watcher B: watch "/svc/a", minRev=10 → ✓ 收到</text>
+    <rect x="700" y="158" width="340" height="34" rx="7" fill="#fbeef0" stroke="#f0cdd4"/><text x="870" y="179" fill="#a44">watcher C: watch "/lock/", → ✗ key 不匹配</text>
+    <rect x="700" y="196" width="340" height="34" rx="7" fill="#fbeef0" stroke="#f0cdd4"/><text x="870" y="217" fill="#a44">watcher D: watch "/svc/a", minRev=50 → ✗ rev&lt;minRev</text>
+  </g>
+  <g stroke="#c7c7cc" stroke-width="1.3" fill="none">
+    <line x1="260" y1="115" x2="300" y2="115" marker-end="url(#ar)"/>
+    <line x1="640" y1="140" x2="700" y2="140" marker-end="url(#ar)"/>
+  </g>
+  <rect x="40" y="256" width="1000" height="110" rx="12" fill="#fdf9f0" stroke="#efe3cd"/>
+  <text x="60" y="280" font-size="11" font-weight="700" fill="#7a5a1e">minRev 机制：不重不漏</text>
+  <text x="60" y="302" font-size="9.5" fill="#93762e">· watcher 每收一批事件，minRev 前移到"已推最大 revision + 1"</text>
+  <text x="60" y="322" font-size="9.5" fill="#93762e">· 下次分发只推 rev ≥ 新 minRev 的事件 → 同一事件不会推两次</text>
+  <text x="60" y="342" font-size="9.5" fill="#93762e">· 配合 revision 单调有序 → 客户端收到的事件严格按 revision 递增、无重复、无跳跃</text>
+  <text x="60" y="360" font-size="9" fill="#b08843">· 这是"断连重连从 lastRev+1 续订即可补齐"能成立的底层保证</text>
+  <rect x="40" y="380" width="1000" height="60" rx="12" fill="#f7f7f9" stroke="#e6e6ea"/>
+  <text x="60" y="404" font-size="11" font-weight="700" fill="#1d1d1f">一句话</text>
+  <text x="60" y="426" font-size="10" fill="#4b4b50">事件只推给"key 范围匹配 且 rev≥minRev"的 watcher（可加 PUT/DELETE 过滤）；minRev 每批前移，保证不重推——客户端收到严格递增、不重不漏的事件序列。</text>
+</svg>

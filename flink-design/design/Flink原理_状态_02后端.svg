@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="520" viewBox="0 0 1080 520"
+     font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1080" height="520" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Flink 状态 · 可插拔后端：HashMap(堆) vs RocksDB(盘)</text>
+  <text x="30" y="50" font-size="11" fill="#a1a1a6">小状态低延迟选 heap;大状态 + 增量检查点选 RocksDB</text>
+
+  <!-- 左：HashMapStateBackend -->
+  <rect x="40" y="72" width="495" height="360" rx="14" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="62" y="99" font-size="13" font-weight="700" fill="#12402a">HashMapStateBackend</text>
+  <text x="62" y="120" font-size="10.5" fill="#2f6f4f">状态存 JVM 堆内 · 快,但受 GC 与堆大小限制 · 适合小状态</text>
+
+  <rect x="62" y="136" width="451" height="120" rx="11" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="80" y="161" font-size="12" font-weight="600" fill="#12402a">StateTable(按 key-group 分片)</text>
+  <rect x="82" y="176" width="130" height="62" rx="8" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="147" y="203" font-size="10.5" fill="#2c5a3a" text-anchor="middle">StateMap[0]</text>
+  <text x="147" y="223" font-size="9" fill="#2f6f4f" text-anchor="middle">key-group 0</text>
+  <rect x="222" y="176" width="130" height="62" rx="8" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="287" y="203" font-size="10.5" fill="#2c5a3a" text-anchor="middle">StateMap[1]</text>
+  <text x="287" y="223" font-size="9" fill="#2f6f4f" text-anchor="middle">key-group 1</text>
+  <rect x="362" y="176" width="130" height="62" rx="8" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="427" y="203" font-size="10.5" fill="#2c5a3a" text-anchor="middle">StateMap[…]</text>
+  <text x="427" y="223" font-size="9" fill="#2f6f4f" text-anchor="middle">key-group n</text>
+
+  <rect x="62" y="270" width="451" height="70" rx="11" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="80" y="296" font-size="11.5" font-weight="600" fill="#12402a">✓ 低延迟(内存直存)</text>
+  <text x="80" y="320" font-size="10.5" fill="#2f6f4f">✗ 受 GC / 堆上限约束,大状态会 OOM</text>
+
+  <rect x="62" y="354" width="451" height="58" rx="11" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="80" y="380" font-size="11.5" font-weight="600" fill="#12402a">适用场景</text>
+  <text x="80" y="401" font-size="10.5" fill="#2f6f4f">小状态、追求最低延迟的作业</text>
+
+  <!-- 右：EmbeddedRocksDBStateBackend -->
+  <rect x="545" y="72" width="495" height="360" rx="14" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="567" y="99" font-size="13" font-weight="700" fill="#5a3410">EmbeddedRocksDBStateBackend</text>
+  <text x="567" y="120" font-size="10.5" fill="#93762e">状态存嵌入式 RocksDB(堆外 + 盘) · 序列化 + LSM 读写开销</text>
+
+  <rect x="567" y="136" width="451" height="120" rx="11" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="585" y="161" font-size="12" font-weight="600" fill="#5a3410">每个注册状态一个 ColumnFamily</text>
+  <rect x="587" y="176" width="130" height="62" rx="8" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="652" y="203" font-size="10.5" fill="#5a3410" text-anchor="middle">CF: countState</text>
+  <text x="652" y="223" font-size="9" fill="#93762e" text-anchor="middle">状态 A</text>
+  <rect x="727" y="176" width="130" height="62" rx="8" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="792" y="203" font-size="10.5" fill="#5a3410" text-anchor="middle">CF: windowState</text>
+  <text x="792" y="223" font-size="9" fill="#93762e" text-anchor="middle">状态 B</text>
+  <rect x="867" y="176" width="130" height="62" rx="8" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="932" y="203" font-size="10.5" fill="#5a3410" text-anchor="middle">CF: …</text>
+  <text x="932" y="223" font-size="9" fill="#93762e" text-anchor="middle">状态 N</text>
+
+  <rect x="567" y="270" width="451" height="70" rx="11" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="585" y="296" font-size="11.5" font-weight="600" fill="#5a3410">✓ 超大状态(TB 级) + 增量检查点</text>
+  <text x="585" y="320" font-size="10.5" fill="#93762e">key-group 前缀字节入复合键,恢复按前缀切片</text>
+
+  <rect x="567" y="354" width="451" height="58" rx="11" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="585" y="380" font-size="11.5" font-weight="600" fill="#5a3410">适用场景</text>
+  <text x="585" y="401" font-size="10.5" fill="#93762e">大状态作业;可 block cache / write buffer 调优</text>
+
+  <!-- 中间对比连线 -->
+  <path d="M 535,252 L 545,252" stroke="#c7c7cc" stroke-width="1.5" fill="none"/>
+  <text x="490" y="464" font-size="10.5" fill="#a1a1a6">选型：小状态低延迟 → heap</text>
+  <text x="800" y="464" font-size="10.5" fill="#a1a1a6">大状态 + 增量 → RocksDB</text>
+</svg>

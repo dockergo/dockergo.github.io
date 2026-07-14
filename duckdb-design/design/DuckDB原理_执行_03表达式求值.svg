@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="440" viewBox="0 0 1020 440"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1020" height="440" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">表达式向量化求值 · 一次算一整列，不是一行一行（expression_executor.hpp:23）</text>
+
+  <!-- 表达式树 -->
+  <rect x="30" y="52" width="470" height="340" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="48" y="76" font-size="12.5" font-weight="600" fill="#1d1d1f">表达式：amount * 1.1 &gt; 100</text>
+
+  <rect x="190" y="92" width="150" height="42" rx="9" fill="#f4eefb" stroke="#d9c9ef"/><text x="265" y="118" font-size="10" font-weight="600" fill="#3c1361" text-anchor="middle">&gt;（比较）</text>
+  <rect x="70" y="180" width="150" height="42" rx="9" fill="#eef3fb" stroke="#bcd0ec"/><text x="145" y="206" font-size="10" font-weight="600" fill="#1b2a4a" text-anchor="middle">*（乘法）</text>
+  <rect x="300" y="180" width="150" height="42" rx="9" fill="#eafaf1" stroke="#bce6cd"/><text x="375" y="206" font-size="10" fill="#0f5132" text-anchor="middle">常量 100</text>
+  <rect x="40" y="268" width="140" height="42" rx="9" fill="#fff7e6" stroke="#f0dcae"/><text x="110" y="294" font-size="10" fill="#7a4d00" text-anchor="middle">列 amount</text>
+  <rect x="196" y="268" width="140" height="42" rx="9" fill="#eafaf1" stroke="#bce6cd"/><text x="266" y="294" font-size="10" fill="#0f5132" text-anchor="middle">常量 1.1</text>
+
+  <line x1="220" y1="134" x2="145" y2="180" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="310" y1="134" x2="375" y2="180" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="120" y1="222" x2="110" y2="268" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="170" y1="222" x2="266" y2="268" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <text x="48" y="344" font-size="9.5" fill="#494950">自底向上：每个节点对整个 2048 列批求值，</text>
+  <text x="48" y="362" font-size="9.5" fill="#494950">产出一个中间 Vector 交给父节点。</text>
+  <text x="48" y="382" font-size="9.5" fill="#86868b">ExpressionExecutor.Execute(input, result)（:50）</text>
+
+  <!-- 向量化 vs 逐行 -->
+  <rect x="520" y="52" width="470" height="200" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="538" y="76" font-size="12.5" font-weight="600" fill="#1b2a4a">向量化：内层循环跑满一列</text>
+  <rect x="538" y="90" width="434" height="60" rx="10" fill="#ffffff" stroke="#bcd0ec"/>
+  <text x="548" y="112" font-size="9.5" fill="#1b2a4a">for (i=0; i&lt;2048; i++)</text>
+  <text x="548" y="130" font-size="9.5" fill="#1b2a4a">  out[i] = amount[i] * 1.1;   // 紧密循环</text>
+  <text x="548" y="144" font-size="8.5" fill="#5b7db1">无虚函数/无每行解释开销，编译器可自动向量化(SIMD)</text>
+  <text x="538" y="176" font-size="10" fill="#5b7db1">对比逐行火山模型：每行一次虚函数调用、</text>
+  <text x="538" y="196" font-size="10" fill="#5b7db1">分支预测差、cache 命中低。</text>
+  <text x="538" y="222" font-size="10" fill="#5b7db1">向量化把"每行开销"摊薄到 2048 行一次。</text>
+
+  <!-- 快路径 -->
+  <rect x="520" y="272" width="470" height="120" rx="14" fill="#eafaf1" stroke="#bce6cd" filter="url(#soft)"/>
+  <text x="538" y="296" font-size="12" font-weight="600" fill="#0f5132">布局感知快路径</text>
+  <text x="538" y="320" font-size="10" fill="#3f8f66">• 若某子表达式是 CONSTANT_VECTOR → 只算一次，结果广播。</text>
+  <text x="538" y="342" font-size="10" fill="#3f8f66">• 比较结果用 SelectionVector 表达"哪些行通过"，不搬数据。</text>
+  <text x="538" y="364" font-size="10" fill="#3f8f66">• 全 NULL / 全通过等特例走短路。</text>
+  <text x="538" y="384" font-size="9" fill="#5aa06f">这些优化让表达式求值随数据形态自适应提速。</text>
+</svg>

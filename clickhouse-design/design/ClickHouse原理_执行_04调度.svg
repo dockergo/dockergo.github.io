@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="580" viewBox="0 0 1060 580" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1060" height="580" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">调度执行：PipelineExecutor + ExecutingGraph（pull 模型 · work-stealing）</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">PipelineExecutor::execute (PipelineExecutor.cpp:125) · ExecutingGraph (ExecutingGraph.h:17) · max_threads 线程池</text>
+
+  <!-- executing graph -->
+  <rect x="40" y="76" width="600" height="250" rx="14" fill="#f3f7fc" stroke="#cfe0f2"/>
+  <text x="340" y="100" font-size="12" font-weight="700" fill="#274a78" text-anchor="middle">ExecutingGraph：追踪每个 Processor 的就绪状态</text>
+  <g text-anchor="middle" font-size="8">
+    <rect x="70" y="120" width="100" height="40" rx="7" fill="#f2fbf6" stroke="#cdeadb"/><text x="120" y="138" font-weight="600" fill="#12402a">P1 Ready</text><text x="120" y="152" fill="#2f6f4f">可跑 work()</text>
+    <rect x="200" y="120" width="100" height="40" rx="7" fill="#fff" stroke="#cfe0f2"/><text x="250" y="138" font-weight="600" fill="#274a78">P2 NeedData</text><text x="250" y="152" fill="#5b7db1">等 P1</text>
+    <rect x="330" y="120" width="100" height="40" rx="7" fill="#fff" stroke="#cfe0f2"/><text x="380" y="138" font-weight="600" fill="#274a78">P3 PortFull</text><text x="380" y="152" fill="#5b7db1">等下游</text>
+    <rect x="460" y="120" width="100" height="40" rx="7" fill="#f2fbf6" stroke="#cdeadb"/><text x="510" y="138" font-weight="600" fill="#12402a">P4 Ready</text><text x="510" y="152" fill="#2f6f4f">可跑</text>
+    <rect x="200" y="185" width="100" height="40" rx="7" fill="#f7f7f9" stroke="#e6e6ea"/><text x="250" y="203" font-weight="600" fill="#6b6b70">P5 Finished</text><text x="250" y="217" fill="#9a9a9f">已完成</text>
+    <rect x="330" y="185" width="100" height="40" rx="7" fill="#f2fbf6" stroke="#cdeadb"/><text x="380" y="203" font-weight="600" fill="#12402a">P6 Ready</text><text x="380" y="217" fill="#2f6f4f">可跑</text>
+  </g>
+  <rect x="70" y="245" width="490" height="66" rx="9" fill="#fff" stroke="#cfe0f2"/>
+  <text x="315" y="265" font-size="9.5" font-weight="600" fill="#274a78" text-anchor="middle">调度器维护"就绪队列"</text>
+  <text x="315" y="283" font-size="8.5" fill="#5b7db1" text-anchor="middle">Processor 状态变化 → 更新图 → 就绪的进队列</text>
+  <text x="315" y="299" font-size="8.5" fill="#8aa6cf" text-anchor="middle">executeStepImpl (PipelineExecutor.cpp:289)</text>
+
+  <!-- thread pool -->
+  <rect x="660" y="76" width="360" height="250" rx="14" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="840" y="100" font-size="12" font-weight="700" fill="#12402a" text-anchor="middle">线程池：work-stealing 式并行</text>
+  <g text-anchor="middle" font-size="8.5">
+    <rect x="680" y="116" width="150" height="50" rx="8" fill="#fff" stroke="#bfe0cd"/><text x="755" y="136" font-weight="600" fill="#12402a">线程 1</text><text x="755" y="152" fill="#2f6f4f">取 P1 跑 work()</text>
+    <rect x="850" y="116" width="150" height="50" rx="8" fill="#fff" stroke="#bfe0cd"/><text x="925" y="136" font-weight="600" fill="#12402a">线程 2</text><text x="925" y="152" fill="#2f6f4f">取 P4 跑 work()</text>
+    <rect x="680" y="176" width="150" height="50" rx="8" fill="#fff" stroke="#bfe0cd"/><text x="755" y="196" font-weight="600" fill="#12402a">线程 3</text><text x="755" y="212" fill="#2f6f4f">取 P6 跑 work()</text>
+    <rect x="850" y="176" width="150" height="50" rx="8" fill="#fff" stroke="#bfe0cd"/><text x="925" y="196" font-weight="600" fill="#12402a">线程 4</text><text x="925" y="212" fill="#2f6f4f">空闲→找就绪节点</text>
+  </g>
+  <rect x="680" y="240" width="320" height="70" rx="9" fill="#f2fbf6" stroke="#cdeadb"/>
+  <text x="840" y="260" font-size="9" font-weight="600" fill="#12402a" text-anchor="middle">无中央协调线程</text>
+  <text x="840" y="278" font-size="8.5" fill="#2f6f4f" text-anchor="middle">每个线程自己从就绪队列取节点执行</text>
+  <text x="840" y="294" font-size="8.5" fill="#4c8567" text-anchor="middle">天然负载均衡 · 池大小 = max_threads</text>
+
+  <!-- pull model -->
+  <rect x="40" y="340" width="980" height="90" rx="13" fill="#fdf9f0" stroke="#efe3cd"/>
+  <text x="60" y="364" font-size="11" font-weight="700" fill="#7a5a1e">pull 模型（拉，非推）</text>
+  <text x="60" y="386" font-size="9.5" fill="#93762e">· 下游 NeedData → 顺 Port 向上游"要数据"；上游产出后下游变 Ready</text>
+  <text x="60" y="404" font-size="9.5" fill="#93762e">· 好处：自然反压（下游 PortFull 时上游停产，不会内存爆）；早停友好（LIMIT 够了整链停）</text>
+  <text x="60" y="422" font-size="9" fill="#b08843">· 对照 Doris Pipeline：同为算子图并行，CH 以 Port 状态 + pull 驱动，反压内建于端口</text>
+
+  <rect x="40" y="444" width="980" height="100" rx="12" fill="#f7f7f9" stroke="#e6e6ea"/>
+  <text x="60" y="468" font-size="11" font-weight="700" fill="#1d1d1f">一句话</text>
+  <text x="60" y="490" font-size="10" fill="#4b4b50">PipelineExecutor 用 ExecutingGraph 追踪每个 Processor 的就绪状态，以 pull 模型 + work-stealing 驱动：空闲线程自己</text>
+  <text x="60" y="508" font-size="10" fill="#4b4b50">从就绪队列取 Ready 节点跑 work()，数据不足就向上游拉。没有中央协调、天然负载均衡、端口反压内建，池大小=max_threads。</text>
+  <text x="60" y="530" font-size="9" fill="#8a8a8f">这套调度让任意拓扑的执行图都能高效并行，是 CH 向量化引擎的运行时核心。</text>
+</svg>

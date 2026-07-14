@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="440" viewBox="0 0 1000 440" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+  </defs>
+  <rect width="1000" height="440" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">ZSet 多维查询：同一份数据支持四种正交查询（t_zset.c）</text>
+  <text x="30" y="49" font-size="10.5" fill="#a1a1a6">按分数 / 按排名 / 按成员 / 按字典序 —— 这是 ZSet 强大的根源</text>
+
+  <!-- 4 query dimensions -->
+  <rect x="30" y="72" width="460" height="120" rx="12" fill="#eafaf1" stroke="#b8e6cd" filter="url(#soft)"/>
+  <text x="50" y="96" font-size="11" font-weight="700" fill="#1c6b45">① 按分数范围　ZRANGEBYSCORE</text>
+  <text x="50" y="118" font-size="9.5" fill="#2f7a56">ZRANGEBYSCORE grade 60 90</text>
+  <text x="50" y="138" font-size="9.5" fill="#2f7a56">→ 分数在 [60,90] 的所有成员</text>
+  <text x="50" y="160" font-size="9" fill="#5cb88a">skiplist 从 60 起点顺序扫到 90</text>
+  <text x="50" y="180" font-size="8.5" fill="#5cb88a">场景：区间筛选、延迟队列取到期项</text>
+
+  <rect x="510" y="72" width="460" height="120" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="530" y="96" font-size="11" font-weight="700" fill="#1b2a4a">② 按排名范围　ZRANGE / ZREVRANGE</text>
+  <text x="530" y="118" font-size="9.5" fill="#5b7db1">ZREVRANGE rank 0 9 WITHSCORES</text>
+  <text x="530" y="138" font-size="9.5" fill="#5b7db1">→ 分数最高的前 10 名</text>
+  <text x="530" y="160" font-size="9" fill="#8ba7cc">skiplist 用 span 累加定位 rank</text>
+  <text x="530" y="180" font-size="8.5" fill="#8ba7cc">场景：排行榜 Top N</text>
+
+  <rect x="30" y="204" width="460" height="120" rx="12" fill="#f6f0fb" stroke="#dcc6ee" filter="url(#soft)"/>
+  <text x="50" y="228" font-size="11" font-weight="700" fill="#5a2a82">③ 按成员查分 / 排名　ZSCORE / ZRANK</text>
+  <text x="50" y="250" font-size="9.5" fill="#8a5cae">ZSCORE grade alice → 92（O(1) 走 dict）</text>
+  <text x="50" y="270" font-size="9.5" fill="#8a5cae">ZRANK grade alice → 3（O(log n) 走 skiplist）</text>
+  <text x="50" y="292" font-size="9" fill="#a884c8">ZINCRBY grade 5 alice：原子增分</text>
+  <text x="50" y="312" font-size="8.5" fill="#a884c8">场景：查某人分数/名次、实时更新排行榜</text>
+
+  <rect x="510" y="204" width="460" height="120" rx="12" fill="#fdf3e5" stroke="#f0d9b5" filter="url(#soft)"/>
+  <text x="530" y="228" font-size="11" font-weight="700" fill="#7a5a1e">④ 按字典序　ZRANGEBYLEX</text>
+  <text x="530" y="250" font-size="9.5" fill="#b08535">ZRANGEBYLEX names [a [c</text>
+  <text x="530" y="270" font-size="9.5" fill="#b08535">→ 所有 score 相同时按成员名字典序范围查</text>
+  <text x="530" y="292" font-size="9" fill="#c79a4e">前提：所有成员 score 相同才有意义</text>
+  <text x="530" y="312" font-size="8.5" fill="#c79a4e">场景：自动补全、字典序分页</text>
+
+  <!-- application box -->
+  <rect x="30" y="336" width="940" height="90" rx="10" fill="#f7f7f9" stroke="#ececef"/>
+  <text x="50" y="360" font-size="11" font-weight="600" fill="#1d1d1f">典型应用：排行榜 / 延迟队列 / 优先级队列</text>
+  <text x="50" y="382" font-size="10" fill="#4a4a4f">· <tspan font-weight="600">排行榜</tspan>：ZADD 加成员，ZINCRBY 实时增分，ZREVRANGE 取 Top N —— 分数即排名依据</text>
+  <text x="50" y="402" font-size="10" fill="#4a4a4f">· <tspan font-weight="600">延迟队列</tspan>：score = 执行时间戳，轮询 ZRANGEBYSCORE 0 now 取所有到期任务 —— 比精确定时器简单可靠</text>
+  <text x="50" y="420" font-size="9" fill="#86868b">· <tspan font-weight="600">优先级队列</tspan>：score = 优先级，ZPOPMIN/ZPOPMAX 取最高/最低优先级项。注意大范围查询配 LIMIT 分页避免一次返回过多</text>
+</svg>

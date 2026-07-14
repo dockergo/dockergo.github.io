@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="600" viewBox="0 0 1040 600" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1040" height="600" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Trino 关键算子实现 · 聚合 / Join / 扫描 / 交换</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">各算子内部机制;红色标注可溢写(revocable 内存,压力大时落盘)</text>
+
+  <!-- HashAggregation -->
+  <rect x="30" y="72" width="490" height="230" rx="13" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="46" y="94" font-size="11" font-weight="700" fill="#1b2a4a">HashAggregationOperator（可溢写）</text>
+  <rect x="50" y="108" width="450" height="40" rx="8" fill="#f3f7fc" stroke="#cfe0f2"/><text x="64" y="132" font-size="8.8" fill="#274a78">按 group-by 键建哈希表（FlatGroupByHash / FlatHash）</text>
+  <rect x="50" y="156" width="450" height="40" rx="8" fill="#f3f7fc" stroke="#cfe0f2"/><text x="64" y="180" font-size="8.8" fill="#274a78">addInput 累积;满/收尾时 buildResult 流式出 Page</text>
+  <rect x="50" y="204" width="450" height="40" rx="8" fill="#eafaf1" stroke="#bfe0cd"/><text x="64" y="228" font-size="8.8" fill="#12402a">SpillableHashAggregationBuilder：revocable 内存,溢写分区再归并</text>
+  <rect x="50" y="252" width="450" height="40" rx="8" fill="#fff" stroke="#bcd0ec"/><text x="64" y="270" font-size="8.5" fill="#5b7db1">部分聚合自适应关闭：SkipAggregationBuilder（低基数时不值当）</text><text x="64" y="285" font-size="8" fill="#93762e">局部→全局两阶段聚合减少网络传输</text>
+
+  <!-- Join -->
+  <rect x="540" y="72" width="470" height="230" rx="13" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="556" y="94" font-size="11" font-weight="700" fill="#2c5a3a">Hash Join（构建 + 探测，可溢写）</text>
+  <rect x="556" y="108" width="440" height="56" rx="8" fill="#fff" stroke="#cfe6d5"/><text x="570" y="128" font-size="9" font-weight="600" fill="#2c5a3a">构建侧 HashBuilderOperator</text><text x="570" y="146" font-size="8.5" fill="#2f6f4f">右表灌进 PagesIndex 建 LookupSource</text><text x="570" y="160" font-size="8" fill="#93762e">8 态状态机：CONSUMING→SPILLING→BUILT→UNSPILLING…</text>
+  <rect x="556" y="172" width="440" height="56" rx="8" fill="#fff" stroke="#cfe6d5"/><text x="570" y="192" font-size="9" font-weight="600" fill="#2c5a3a">探测侧 LookupJoinOperator（WorkProcessor）</text><text x="570" y="210" font-size="8.5" fill="#2f6f4f">逐行查 LookupSource,DefaultPageJoiner 产结果</text><text x="570" y="224" font-size="8" fill="#93762e">构建侧溢写时探测侧对应分区也溢写</text>
+  <rect x="556" y="236" width="440" height="56" rx="8" fill="#eafaf1" stroke="#bfe0cd"/><text x="570" y="256" font-size="9" font-weight="600" fill="#12402a">分布：PARTITIONED(双边重分区) / REPLICATED(广播小表)</text><text x="570" y="274" font-size="8.5" fill="#2f6f4f">由 DetermineJoinDistributionType 定(见 DQL Join 优化篇)</text><text x="570" y="288" font-size="8" fill="#2f6f4f">JoinBridgeManager 跨构建/探测 pipeline 传 LookupSource</text>
+
+  <!-- Scan -->
+  <rect x="30" y="322" width="490" height="150" rx="13" fill="#fff7e6" stroke="#e8cf9a"/>
+  <text x="46" y="344" font-size="11" font-weight="700" fill="#5a3410">扫描算子</text>
+  <rect x="50" y="358" width="450" height="46" rx="8" fill="#fdf6ea" stroke="#e8cf9a"/><text x="64" y="378" font-size="9" font-weight="600" fill="#5a3410">TableScanOperator（SourceOperator）</text><text x="64" y="395" font-size="8.5" fill="#93762e">逐 split 从 ConnectorPageSource 拉 SourcePage→Page</text>
+  <rect x="50" y="412" width="450" height="52" rx="8" fill="#fdf6ea" stroke="#e8cf9a"/><text x="64" y="432" font-size="9" font-weight="600" fill="#5a3410">ScanFilterAndProjectOperator（WorkProcessorSource）</text><text x="64" y="450" font-size="8.5" fill="#93762e">融合 扫描+过滤+投影 为一条流水,编译期生成 filter/project 字节码</text>
+
+  <!-- Exchange/sort -->
+  <rect x="540" y="322" width="470" height="150" rx="13" fill="#f3f7fc" stroke="#cfe0f2"/>
+  <text x="556" y="344" font-size="11" font-weight="700" fill="#274a78">交换 / 排序算子</text>
+  <rect x="556" y="358" width="440" height="46" rx="8" fill="#eef3fb" stroke="#bcd0ec"/><text x="570" y="378" font-size="9" font-weight="600" fill="#1b2a4a">ExchangeOperator / MergeOperator</text><text x="570" y="395" font-size="8.5" fill="#5b7db1">前者拉远端序列化 Page 反序列化;后者保序 k 路归并</text>
+  <rect x="556" y="412" width="440" height="52" rx="8" fill="#eef3fb" stroke="#bcd0ec"/><text x="570" y="432" font-size="9" font-weight="600" fill="#1b2a4a">OrderByOperator / TopNOperator / WindowOperator</text><text x="570" y="450" font-size="8.5" fill="#5b7db1">OrderBy 全排序(可溢写)、TopN 有界堆、Window 分区内计算</text>
+
+  <!-- footer -->
+  <rect x="30" y="492" width="980" height="88" rx="13" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="46" y="514" font-size="10.5" font-weight="700" fill="#1d1d1f">可溢写算子（revocable 内存 → 落盘）</text>
+  <text x="46" y="534" font-size="9" fill="#6e6e73">HashAggregation · HashBuilder(Join 构建) · OrderBy · Window —— 用 localRevocableMemoryContext 申请;</text>
+  <text x="46" y="552" font-size="9" fill="#6e6e73">内存压力时框架调 startMemoryRevoke() 令其溢写,把 revocable 转成盘上数据;输出时把保留部分记为 user 内存。</text>
+  <text x="46" y="572" font-size="9" fill="#b1483a">归属：溢写"触发"在本主线(算子);spill 空间配额与内存池在【内存管理】篇。</text>
+</svg>

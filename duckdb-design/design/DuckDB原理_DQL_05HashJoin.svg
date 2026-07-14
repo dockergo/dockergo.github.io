@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="450" viewBox="0 0 1020 450"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1020" height="450" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">Hash Join · 先 build 后 probe（sales ⋈ customers ON cust_id）</text>
+
+  <!-- Build 管道 -->
+  <rect x="30" y="50" width="440" height="360" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="48" y="74" font-size="12.5" font-weight="600" fill="#1d1d1f">阶段一 · Build（构建端 = 较小表 customers）</text>
+
+  <rect x="48" y="90" width="180" height="52" rx="10" fill="#fff7e6" stroke="#f0dcae"/>
+  <text x="138" y="112" font-size="10.5" font-weight="600" fill="#7a4d00" text-anchor="middle">扫描 customers</text>
+  <text x="138" y="130" font-size="9" fill="#9a7328" text-anchor="middle">morsel 并行</text>
+
+  <rect x="48" y="166" width="404" height="90" rx="11" fill="#eafaf1" stroke="#bce6cd"/>
+  <text x="250" y="188" font-size="11" font-weight="600" fill="#0f5132" text-anchor="middle">Sink：构建分区 Hash 表（JoinHashTable）</text>
+  <rect x="64" y="200" width="120" height="46" rx="7" fill="#ffffff" stroke="#bce6cd"/><text x="124" y="220" font-size="8.5" fill="#0f5132" text-anchor="middle">线程本地 HT</text><text x="124" y="234" font-size="8" fill="#3f8f66" text-anchor="middle">radix 分区</text>
+  <rect x="192" y="200" width="120" height="46" rx="7" fill="#ffffff" stroke="#bce6cd"/><text x="252" y="220" font-size="8.5" fill="#0f5132" text-anchor="middle">线程本地 HT</text><text x="252" y="234" font-size="8" fill="#3f8f66" text-anchor="middle">radix 分区</text>
+  <rect x="320" y="200" width="120" height="46" rx="7" fill="#ffffff" stroke="#bce6cd"/><text x="380" y="220" font-size="8.5" fill="#0f5132" text-anchor="middle">线程本地 HT</text><text x="380" y="234" font-size="8" fill="#3f8f66" text-anchor="middle">radix 分区</text>
+
+  <rect x="48" y="280" width="404" height="52" rx="11" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="250" y="302" font-size="11" font-weight="600" fill="#1b2a4a" text-anchor="middle">Finalize：合并为全局 Hash 表</text>
+  <text x="250" y="320" font-size="9" fill="#5b7db1" text-anchor="middle">按分区聚合各线程本地表，probe 端即可查</text>
+
+  <text x="48" y="360" font-size="10" fill="#6a6a70">若构建端过大超内存：分区落盘，probe 端同分区匹配</text>
+  <text x="48" y="378" font-size="10" fill="#6a6a70">（Grace/分区 Hash Join，larger-than-memory）。</text>
+  <text x="48" y="398" font-size="10" fill="#6a6a70">构建端选择由 BUILD_SIDE_PROBE_SIDE 优化 pass 依基数估计决定。</text>
+
+  <line x1="138" y1="142" x2="138" y2="166" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="250" y1="256" x2="250" y2="280" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+
+  <!-- Probe 管道 -->
+  <rect x="490" y="50" width="500" height="360" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="508" y="74" font-size="12.5" font-weight="600" fill="#1d1d1f">阶段二 · Probe（探测端 = 较大表 sales）</text>
+
+  <rect x="508" y="90" width="200" height="52" rx="10" fill="#fff7e6" stroke="#f0dcae"/>
+  <text x="608" y="112" font-size="10.5" font-weight="600" fill="#7a4d00" text-anchor="middle">扫描 sales（morsel）</text>
+  <text x="608" y="130" font-size="9" fill="#9a7328" text-anchor="middle">每块 cust_id 算哈希</text>
+
+  <rect x="508" y="166" width="462" height="90" rx="11" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="739" y="188" font-size="11" font-weight="600" fill="#1b2a4a" text-anchor="middle">Operator：探测全局 Hash 表，输出匹配行</text>
+  <text x="739" y="210" font-size="9.5" fill="#5b7db1" text-anchor="middle">对每个 probe 向量：向量化算哈希 → 查桶 → 拼接匹配列</text>
+  <text x="739" y="230" font-size="9.5" fill="#5b7db1" text-anchor="middle">语义（inner/outer/semi/anti/mark）决定未匹配行如何处理</text>
+
+  <rect x="508" y="280" width="462" height="52" rx="11" fill="#eafaf1" stroke="#bce6cd"/>
+  <text x="739" y="302" font-size="11" font-weight="600" fill="#0f5132" text-anchor="middle">输出 → 下游（本例：Hash 聚合）</text>
+  <text x="739" y="320" font-size="9" fill="#3f8f66" text-anchor="middle">probe 管道与 build 管道由 Event 依赖：build 完才 probe</text>
+
+  <rect x="508" y="352" width="462" height="46" rx="10" fill="#f6f6f8" stroke="#e2e2e7"/>
+  <text x="524" y="372" font-size="10" fill="#494950">动态过滤：build 端可生成 min/max 过滤（filter_pushdown）回推给 probe 端扫描，</text>
+  <text x="524" y="390" font-size="10" fill="#494950">提前裁掉 probe 侧不可能匹配的 RowGroup —— 类似 Runtime Filter。</text>
+
+  <line x1="608" y1="142" x2="608" y2="166" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="739" y1="256" x2="739" y2="280" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="470" y1="211" x2="490" y2="211" stroke="#c7c7cc" stroke-width="1.6" marker-end="url(#ar)"/>
+  <text x="426" y="204" font-size="8.5" fill="#86868b">全局 HT</text>
+  <text x="426" y="216" font-size="8.5" fill="#86868b">就绪</text>
+</svg>

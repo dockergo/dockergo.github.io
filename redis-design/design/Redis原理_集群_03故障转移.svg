@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="470" viewBox="0 0 1000 470" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1000" height="470" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">Gossip 与故障转移：PFAIL→FAIL 多数确认 + configEpoch 选举（cluster_legacy.c:1913）</text>
+  <text x="30" y="49" font-size="10.5" fill="#a1a1a6">集群总线端口 = 服务端口 + 10000；节点间去中心传播状态</text>
+
+  <!-- gossip mesh -->
+  <text x="40" y="86" font-size="11" font-weight="700" fill="#1b2a4a">① Gossip 心跳（PING/PONG 携带部分节点状态）</text>
+  <g text-anchor="middle" font-size="9">
+    <circle cx="140" cy="150" r="34" fill="#eef3fb" stroke="#bcd0ec"/><text x="140" y="148" fill="#1b2a4a" font-weight="600">A</text><text x="140" y="162" fill="#5b7db1" font-size="8">主</text>
+    <circle cx="320" cy="150" r="34" fill="#eafaf1" stroke="#b8e6cd"/><text x="320" y="148" fill="#1c6b45" font-weight="600">B</text><text x="320" y="162" fill="#3a9b6e" font-size="8">主</text>
+    <circle cx="230" cy="240" r="34" fill="#fdf3e5" stroke="#f0d9b5"/><text x="230" y="238" fill="#7a5a1e" font-weight="600">C</text><text x="230" y="252" fill="#b08535" font-size="8">主</text>
+  </g>
+  <line x1="174" y1="150" x2="286" y2="150" stroke="#c7c7cc" stroke-width="1.2" stroke-dasharray="3 3"/>
+  <line x1="160" y1="182" x2="210" y2="212" stroke="#c7c7cc" stroke-width="1.2" stroke-dasharray="3 3"/>
+  <line x1="300" y1="182" x2="250" y2="212" stroke="#c7c7cc" stroke-width="1.2" stroke-dasharray="3 3"/>
+  <text x="230" y="300" font-size="9" fill="#a1a1a6" text-anchor="middle">每节点定期 PING 随机若干节点，PONG 回带其所知状态</text>
+  <text x="230" y="316" font-size="9" fill="#a1a1a6" text-anchor="middle">→ 状态去中心地扩散到全集群</text>
+
+  <!-- failure detection -->
+  <text x="470" y="86" font-size="11" font-weight="700" fill="#c02a56">② 失败检测两阶段</text>
+  <g font-size="9.5">
+    <rect x="470" y="98" width="480" height="60" rx="9" fill="#fdf9f0" stroke="#efe3cd"/>
+    <text x="490" y="120" font-weight="600" fill="#7a5a1e">PFAIL（疑似下线）</text>
+    <text x="490" y="140" fill="#b08535">某节点 cluster-node-timeout（默认 15000ms）内未回 PONG</text>
+    <text x="490" y="153" fill="#c79a4e" font-size="8.5">单个节点的主观判断，先记为 PFAIL</text>
+
+    <rect x="470" y="168" width="480" height="72" rx="9" fill="#fdeef2" stroke="#f6c9d6"/>
+    <text x="490" y="190" font-weight="600" fill="#c02a56">FAIL（确认下线）</text>
+    <text x="490" y="210" fill="#88304a">markNodeAsFailingIfNeeded：当 size/2+1（多数主节点）</text>
+    <text x="490" y="226" fill="#88304a">都报告该主 PFAIL → 升级为 FAIL 并广播全集群</text>
+  </g>
+  <text x="710" y="256" font-size="9" fill="#c8607f" text-anchor="middle">多数派确认避免单节点误判导致的错误切换</text>
+
+  <!-- failover election -->
+  <text x="40" y="332" font-size="11" font-weight="700" fill="#5a2a82">③ 故障转移：从库选举晋升</text>
+  <g text-anchor="middle" font-size="9.5">
+    <rect x="60" y="346" width="200" height="50" rx="8" fill="#fdeef2" stroke="#f6c9d6"/><text x="160" y="366" fill="#c02a56">主 A 被标 FAIL</text><text x="160" y="382" fill="#88304a" font-size="8.5">其从库 A1 感知</text>
+    <rect x="300" y="346" width="220" height="50" rx="8" fill="#f6f0fb" stroke="#dcc6ee"/><text x="410" y="366" fill="#5a2a82">A1 发起选举</text><text x="410" y="382" fill="#8a5cae" font-size="8.5">凭 configEpoch 请求投票</text>
+    <rect x="560" y="346" width="220" height="50" rx="8" fill="#eef3fb" stroke="#bcd0ec"/><text x="670" y="366" fill="#1b2a4a">获多数主节点票</text><text x="670" y="382" fill="#5b7db1" font-size="8.5">auth_count ≥ 多数</text>
+    <rect x="820" y="346" width="140" height="50" rx="8" fill="#eafaf1" stroke="#b8e6cd"/><text x="890" y="366" fill="#1c6b45">A1 晋升新主</text><text x="890" y="382" fill="#3a9b6e" font-size="8.5">接管 A 的槽</text>
+  </g>
+  <line x1="260" y1="371" x2="298" y2="371" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="520" y1="371" x2="558" y2="371" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="780" y1="371" x2="818" y2="371" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+
+  <rect x="40" y="412" width="920" height="46" rx="8" fill="#f7f7f9" stroke="#ececef"/>
+  <text x="60" y="434" font-size="10" fill="#4a4a4f">configEpoch（配置纪元）单调递增，保证选举不脑裂：同一纪元只投一票，胜者纪元更高，槽归属以最高纪元为准。</text>
+  <text x="60" y="452" font-size="9" fill="#86868b">注意：故障转移仍是异步复制基础上的切换 —— 可能丢失原主已确认但未传播到该从库的写。</text>
+</svg>

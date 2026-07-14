@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="540" viewBox="0 0 1060 540" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1060" height="540" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Mutation 与 TTL：删除/重压缩"寄生"在 merge 上，减少重复扫描</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">Mutation 后台执行 · TTLMergeSelector 在 merge 时触发 TTL 删除/重压缩（TTLMergeSelector.h:82,:96）</text>
+
+  <!-- mutation -->
+  <rect x="40" y="80" width="480" height="150" rx="14" fill="#f6f2fb" stroke="#d9c9ec"/>
+  <text x="280" y="104" font-size="12" font-weight="700" fill="#3d2a5a" text-anchor="middle">Mutation（后台整 Part 重写）</text>
+  <text x="60" y="128" font-size="9.5" fill="#7a5da5">· ALTER UPDATE/DELETE → scheduleMergeMutateTask</text>
+  <text x="60" y="148" font-size="9.5" fill="#7a5da5">· 后台异步读旧 Part、应用变更、写新 Part</text>
+  <text x="60" y="168" font-size="9.5" fill="#7a5da5">· 进度看 system.mutations</text>
+  <text x="60" y="190" font-size="9" fill="#9a7cc4">· 重操作：改一行也重写整个 Part</text>
+  <text x="60" y="210" font-size="8.5" fill="#9a7cc4">（细节见「DML · Mutation」篇）</text>
+
+  <!-- ttl -->
+  <rect x="540" y="80" width="480" height="150" rx="14" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="780" y="104" font-size="12" font-weight="700" fill="#5a3410" text-anchor="middle">TTL：寄生在 merge 上</text>
+  <g text-anchor="middle" font-size="8.5">
+    <rect x="560" y="120" width="205" height="46" rx="8" fill="#fff" stroke="#efdcb4"/><text x="662" y="138" font-weight="600" fill="#5a3410">TTL delete</text><text x="662" y="156" fill="#93762e">TTLRowDeleteMergeSelector(:82)</text>
+    <rect x="775" y="120" width="225" height="46" rx="8" fill="#fff" stroke="#efdcb4"/><text x="887" y="138" font-weight="600" fill="#5a3410">TTL recompress</text><text x="887" y="156" fill="#93762e">TTLRecompressMergeSelector(:96)</text>
+  </g>
+  <text x="780" y="186" font-size="9" fill="#93762e">· 过期行删除、冷数据重压缩都在 merge 时顺便做</text>
+  <text x="780" y="206" font-size="8.5" fill="#b08843">· 不单独扫全表——搭 merge 的便车</text>
+
+  <!-- key insight -->
+  <rect x="40" y="252" width="980" height="130" rx="14" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="530" y="278" font-size="12" font-weight="700" fill="#12402a" text-anchor="middle">核心思想：把多种后台工作合并到一次 Part 重写</text>
+  <g text-anchor="middle" font-size="8.5">
+    <rect x="80" y="294" width="200" height="70" rx="9" fill="#fff" stroke="#bfe0cd"/><text x="180" y="316" font-size="9.5" font-weight="600" fill="#12402a">一次 merge</text><text x="180" y="336" fill="#2f6f4f">合并多个 Part</text><text x="180" y="352" fill="#4c8567">本来就要重写</text>
+    <text x="310" y="334" font-size="16" fill="#c7c7cc">+</text>
+    <rect x="340" y="294" width="200" height="70" rx="9" fill="#f2fbf6" stroke="#cdeadb"/><text x="440" y="316" font-size="9.5" font-weight="600" fill="#12402a">顺便删过期行</text><text x="440" y="336" fill="#2f6f4f">TTL delete</text><text x="440" y="352" fill="#4c8567">无额外扫描</text>
+    <text x="570" y="334" font-size="16" fill="#c7c7cc">+</text>
+    <rect x="600" y="294" width="200" height="70" rx="9" fill="#f2fbf6" stroke="#cdeadb"/><text x="700" y="316" font-size="9.5" font-weight="600" fill="#12402a">顺便重压缩</text><text x="700" y="336" fill="#2f6f4f">TTL recompress</text><text x="700" y="352" fill="#4c8567">冷数据换 codec</text>
+    <text x="830" y="334" font-size="16" fill="#c7c7cc">=</text>
+    <rect x="860" y="294" width="140" height="70" rx="9" fill="#eafaf1" stroke="#bfe0cd"/><text x="930" y="320" font-size="9.5" font-weight="600" fill="#12402a">一次重写</text><text x="930" y="340" fill="#2f6f4f">多活一起干</text><text x="930" y="356" fill="#4c8567">省 IO</text>
+  </g>
+
+  <rect x="40" y="400" width="980" height="122" rx="12" fill="#f7f7f9" stroke="#e6e6ea"/>
+  <text x="60" y="424" font-size="11" font-weight="700" fill="#1d1d1f">一句话</text>
+  <text x="60" y="446" font-size="10" fill="#4b4b50">Mutation（ALTER UPDATE/DELETE）在后台整 Part 重写；TTL 删除/重压缩则"寄生"在 merge 上——由 TTLMergeSelector</text>
+  <text x="60" y="464" font-size="10" fill="#4b4b50">在 merge 时顺便剔除过期行、重压缩冷数据，不单独扫全表。</text>
+  <text x="60" y="486" font-size="10" fill="#4b4b50" font-weight="600">核心思想：ClickHouse 尽量把多种后台工作合并到一次 Part 重写里（merge + TTL delete + recompress），减少重复扫描。</text>
+  <text x="60" y="508" font-size="9" fill="#8a8a8f">TTL move（换存储介质）走 PartsMover 另一条路（见「集群与自愈」）。</text>
+</svg>

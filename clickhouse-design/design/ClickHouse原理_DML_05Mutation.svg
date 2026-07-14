@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="580" viewBox="0 0 1060 580" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1060" height="580" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Mutation：ALTER UPDATE/DELETE = 异步整 Part 重写（非原地更新）</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">MutationsInterpreter (MutationsInterpreter.h:43) 编译成读取管线 · MutateTask 重写整 Part · mutations_sync 默认 0 (Settings.cpp:3979)</text>
+
+  <!-- flow -->
+  <g text-anchor="middle">
+    <rect x="40" y="86" width="180" height="66" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/><text x="130" y="110" font-size="10.5" font-weight="600" fill="#1b2a4a">ALTER TABLE t</text><text x="130" y="128" font-size="9" fill="#5b7db1">UPDATE c=… WHERE …</text><text x="130" y="143" font-size="8.5" fill="#5b7db1">或 DELETE WHERE …</text>
+    <rect x="258" y="86" width="180" height="66" rx="12" fill="#f3f7fc" stroke="#cfe0f2" filter="url(#soft)"/><text x="348" y="106" font-size="10.5" font-weight="600" fill="#274a78">生成 mutation 条目</text><text x="348" y="124" font-size="8.5" fill="#5b7db1">startMutation :574</text><text x="348" y="138" font-size="8.5" fill="#5b7db1">进 system.mutations</text>
+    <rect x="476" y="86" width="180" height="66" rx="12" fill="#fff3e0" stroke="#e8cf9a" filter="url(#soft)"/><text x="566" y="110" font-size="10.5" font-weight="600" fill="#7a5a1e">后台异步执行</text><text x="566" y="128" font-size="8.5" fill="#93762e">MutateTask 逐 Part</text><text x="566" y="143" font-size="8.5" fill="#93762e">MutateTask.h:23</text>
+    <rect x="694" y="86" width="180" height="66" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/><text x="784" y="110" font-size="10.5" font-weight="600" fill="#12402a">产新 Part 替旧</text><text x="784" y="128" font-size="8.5" fill="#2f6f4f">mutation 版本号 +1</text><text x="784" y="143" font-size="8.5" fill="#2f6f4f">旧 Part → outdated</text>
+  </g>
+  <g stroke="#c7c7cc" stroke-width="1.5" fill="none">
+    <line x1="220" y1="119" x2="258" y2="119" marker-end="url(#ar)"/>
+    <line x1="438" y1="119" x2="476" y2="119" marker-end="url(#ar)"/>
+    <line x1="656" y1="119" x2="694" y2="119" marker-end="url(#ar)"/>
+  </g>
+
+  <!-- per part rewrite detail -->
+  <rect x="40" y="180" width="600" height="200" rx="13" fill="#fbeef0" stroke="#f0cdd4"/>
+  <text x="340" y="204" font-size="12" font-weight="700" fill="#7a2230" text-anchor="middle">"整 Part 重写"意味着什么</text>
+  <g text-anchor="middle" font-size="8.5">
+    <rect x="64" y="220" width="150" height="80" rx="9" fill="#fff" stroke="#f0cdd4"/><text x="139" y="242" font-size="9.5" font-weight="600" fill="#7a2230">旧 Part（含目标行）</text><text x="139" y="262" fill="#a44">100 万行</text><text x="139" y="278" fill="#a44">只需改其中 1 行</text>
+    <rect x="235" y="248" width="90" height="30" rx="7" fill="#fff5f6" stroke="#f0cdd4"/><text x="280" y="267" fill="#7a2230">读全部 + 改</text>
+    <rect x="346" y="220" width="150" height="80" rx="9" fill="#fff" stroke="#f0cdd4"/><text x="421" y="242" font-size="9.5" font-weight="600" fill="#7a2230">全新 Part</text><text x="421" y="262" fill="#a44">重写 100 万行</text><text x="421" y="278" fill="#a44">（含未改的 999999 行）</text>
+  </g>
+  <text x="340" y="330" font-size="9.5" fill="#7a2230" text-anchor="middle">改 1 行 = 重写整个 Part 的所有行</text>
+  <text x="340" y="350" font-size="9" fill="#a44" text-anchor="middle">大表 mutation ≈ 重写整表的 IO 代价，且异步——不适合高频</text>
+  <text x="340" y="368" font-size="8.5" fill="#a44" text-anchor="middle">进度看 system.mutations；复制表队列在 Keeper /mutations</text>
+  <g stroke="#c7c7cc" stroke-width="1.3" fill="none"><line x1="214" y1="263" x2="235" y2="263" marker-end="url(#ar)"/><line x1="325" y1="263" x2="346" y2="263" marker-end="url(#ar)"/></g>
+
+  <!-- alternatives -->
+  <rect x="660" y="180" width="360" height="200" rx="13" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="840" y="204" font-size="11.5" font-weight="700" fill="#12402a" text-anchor="middle">高频更新的正确替代</text>
+  <g text-anchor="start" font-size="9">
+    <rect x="680" y="218" width="320" height="44" rx="8" fill="#fff" stroke="#bfe0cd"/><text x="694" y="236" font-weight="600" fill="#12402a">ReplacingMergeTree + FINAL</text><text x="694" y="252" fill="#2f6f4f">写新版本行，merge 时留最新</text>
+    <rect x="680" y="270" width="320" height="44" rx="8" fill="#fff" stroke="#bfe0cd"/><text x="694" y="288" font-weight="600" fill="#12402a">CoalescingMergeTree</text><text x="694" y="304" fill="#2f6f4f">列级 upsert（取最后非 NULL）</text>
+    <rect x="680" y="322" width="320" height="44" rx="8" fill="#fff" stroke="#bfe0cd"/><text x="694" y="340" font-weight="600" fill="#12402a">轻量 UPDATE / PatchParts</text><text x="694" y="356" fill="#2f6f4f">实验性：写补丁读期叠加（见下页）</text>
+  </g>
+
+  <rect x="40" y="400" width="980" height="76" rx="12" fill="#fdf9f0" stroke="#efe3cd"/>
+  <text x="60" y="424" font-size="11" font-weight="700" fill="#7a5a1e">与 Doris 的差异</text>
+  <text x="60" y="446" font-size="10" fill="#93762e">· Doris Unique 模型支持"实时主键更新"（写时/读时合并），是一等公民的在线更新能力</text>
+  <text x="60" y="464" font-size="10" fill="#93762e">· ClickHouse Mutation 是"批量订正"工具，异步、重、无事务——不要拿它当 OLTP UPDATE 用</text>
+
+  <rect x="40" y="496" width="980" height="72" rx="12" fill="#f7f7f9" stroke="#e6e6ea"/>
+  <text x="60" y="520" font-size="11" font-weight="700" fill="#1d1d1f">一句话</text>
+  <text x="60" y="542" font-size="10" fill="#4b4b50">Mutation 是"异步整 Part 重写"：改一行也要重写含它的整个 Part，大表代价等同重写整表，且默认异步不等待。</text>
+  <text x="60" y="559" font-size="10" fill="#4b4b50">它是偶发批量订正的工具，不是在线更新；高频更新应改用 Replacing/Coalescing 引擎或轻量 UPDATE。</text>
+</svg>

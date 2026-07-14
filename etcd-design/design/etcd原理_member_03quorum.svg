@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="500" viewBox="0 0 1080 500" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs><filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter></defs>
+  <rect width="1080" height="500" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">quorum 与 cluster version：多数派 + 滚动升级门控</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">cluster.go quorum=nmembers/2+1(:644) · version/monitor.go decideClusterVersion 取最小(:67/:155)</text>
+  <!-- quorum table -->
+  <rect x="40" y="76" width="490" height="180" rx="12" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="60" y="100" font-size="11" font-weight="700" fill="#1b2a4a">quorum = N/2+1（N = 投票成员数）</text>
+  <g font-size="9">
+    <rect x="60" y="112" width="450" height="24" fill="#e9f1fb" stroke="#c4d8f0"/><text x="120" y="129" font-weight="700" fill="#1b2a4a" text-anchor="middle">N</text><text x="260" y="129" font-weight="700" fill="#1b2a4a" text-anchor="middle">quorum</text><text x="420" y="129" font-weight="700" fill="#1b2a4a" text-anchor="middle">容错 (N-q)</text>
+    <rect x="60" y="136" width="450" height="22" fill="#fff" stroke="#e6eef8"/><text x="120" y="152" fill="#48484c" text-anchor="middle">1</text><text x="260" y="152" fill="#48484c" text-anchor="middle">1</text><text x="420" y="152" fill="#a44" text-anchor="middle">0</text>
+    <rect x="60" y="158" width="450" height="22" fill="#eafaf1" stroke="#e6eef8"/><text x="120" y="174" fill="#12402a" font-weight="600" text-anchor="middle">3 ★</text><text x="260" y="174" fill="#12402a" text-anchor="middle">2</text><text x="420" y="174" fill="#2f6f4f" text-anchor="middle">1</text>
+    <rect x="60" y="180" width="450" height="22" fill="#f7fbff" stroke="#e6eef8"/><text x="120" y="196" fill="#1b2a4a" text-anchor="middle">5</text><text x="260" y="196" fill="#48484c" text-anchor="middle">3</text><text x="420" y="196" fill="#2f6f4f" text-anchor="middle">2</text>
+    <rect x="60" y="202" width="450" height="22" fill="#fdeef0" stroke="#e6eef8"/><text x="120" y="218" fill="#a44" text-anchor="middle">4（偶）</text><text x="260" y="218" fill="#48484c" text-anchor="middle">3</text><text x="420" y="218" fill="#a44" text-anchor="middle">1（同3！）</text>
+  </g>
+  <text x="60" y="244" font-size="8.5" fill="#8aa6cf">4 节点 quorum=3 只容忍 1，同 3 节点却更慢 → 永远奇数</text>
+  <!-- what quorum decides -->
+  <rect x="550" y="76" width="490" height="180" rx="12" fill="#fdf9f0" stroke="#efe3cd"/>
+  <text x="570" y="100" font-size="11" font-weight="700" fill="#7a5a1e">quorum 决定三件事</text>
+  <text x="570" y="126" font-size="9.5" fill="#93762e">· 写 commit：要 quorum 个节点 ack 才算 committed</text>
+  <text x="570" y="150" font-size="9.5" fill="#93762e">· leader 选举：要 quorum 张票才当选</text>
+  <text x="570" y="174" font-size="9.5" fill="#93762e">· 容错能力：能挂 N-quorum 个节点仍可用</text>
+  <text x="570" y="200" font-size="9" fill="#b08843">· 写延迟 ≈ 第 quorum 快的节点的落盘延迟</text>
+  <text x="570" y="222" font-size="9" fill="#b08843">· learner 不算进 N（不计 quorum）</text>
+  <text x="570" y="242" font-size="8.5" fill="#a98a4a">这是"奇数节点 + 别太多节点"的数学根源</text>
+  <!-- cluster version -->
+  <rect x="40" y="276" width="1000" height="140" rx="12" fill="#f3f7fc" stroke="#cfe0f2"/>
+  <text x="60" y="300" font-size="11" font-weight="700" fill="#274a78">cluster version：滚动升级的门控</text>
+  <g text-anchor="middle" font-size="8.5">
+    <rect x="70" y="314" width="200" height="54" rx="8" fill="#fff" stroke="#cfe0f2"/><text x="170" y="334" font-weight="600" fill="#274a78">各成员上报自己版本</text><text x="170" y="352" fill="#5b7db1">如 3.7 / 3.7 / 3.8</text>
+    <text x="290" y="345" font-size="15" fill="#c7c7cc">→</text>
+    <rect x="320" y="314" width="220" height="54" rx="8" fill="#fff" stroke="#cfe0f2"/><text x="430" y="334" font-weight="600" fill="#274a78">cluster version = 最小</text><text x="430" y="352" fill="#5b7db1">= 3.7（decideClusterVersion）</text>
+    <text x="560" y="345" font-size="15" fill="#c7c7cc">→</text>
+    <rect x="590" y="314" width="440" height="54" rx="8" fill="#eafaf1" stroke="#bfe0cd"/><text x="810" y="334" font-weight="600" fill="#12402a">新特性只在 cluster version 达标后启用</text><text x="810" y="352" fill="#2f6f4f">→ 高版本节点不会用低版本不认识的特性 → 不一致</text>
+  </g>
+  <text x="60" y="392" font-size="9" fill="#8aa6cf">滚动升级：逐个升级节点，cluster version 保持最低；全升完才跳版本、开新特性 → 平滑无中断</text>
+  <text x="60" y="410" font-size="8.5" fill="#8aa6cf">这让混版本集群在升级过程中始终行为一致、安全</text>
+  <rect x="40" y="430" width="1000" height="52" rx="10" fill="#f7f7f9" stroke="#e6e6ea"/>
+  <text x="60" y="454" font-size="11" font-weight="700" fill="#1d1d1f">一句话</text>
+  <text x="60" y="474" font-size="10" fill="#4b4b50">quorum=N/2+1（投票成员数）决定 commit/选举/容错，是奇数节点的数学根源；cluster version 取全员最小版本、门控新特性直到全升完——实现平滑滚动升级。</text>
+</svg>

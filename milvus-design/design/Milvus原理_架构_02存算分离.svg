@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="520" viewBox="0 0 1080 520"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1080" height="520" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Milvus 存算分离 · 计算无状态 + 数据在共享对象存储</text>
+  <text x="30" y="50" font-size="11" fill="#a1a1a6">Proxy 接入 / QueryNode 读 / DataNode 写;计算节点挂了重加载,读多加 QueryNode、写多加 DataNode</text>
+
+  <!-- Proxy (接入) top -->
+  <rect x="380" y="72" width="320" height="52" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="540" y="95" font-size="12" font-weight="600" fill="#1b2a4a" text-anchor="middle">Proxy(接入层,无状态)</text>
+  <text x="540" y="112" font-size="9" fill="#5b7db1" text-anchor="middle">收 client 请求 · 路由 · 聚合结果 · 可多副本负载均衡</text>
+
+  <!-- 计算层 group -->
+  <rect x="40" y="152" width="1000" height="180" rx="15" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="60" y="176" font-size="12" font-weight="600" fill="#2c5a3a">计算层(无状态,可弹性扩缩)</text>
+
+  <!-- QueryNode -->
+  <rect x="70" y="192" width="440" height="124" rx="13" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="290" y="218" font-size="12" font-weight="600" fill="#12402a" text-anchor="middle">QueryNode = 读 / 检索</text>
+  <text x="290" y="240" font-size="9.5" fill="#2f6f4f" text-anchor="middle">持段管理器 + loader,加载 sealed 段 + 索引</text>
+  <text x="290" y="260" font-size="9.5" fill="#2f6f4f" text-anchor="middle">检索经 cgo 调 C++ segcore(csegment.Search)</text>
+  <rect x="90" y="272" width="400" height="34" rx="8" fill="#ffffff" stroke="#bfe0cd"/>
+  <text x="290" y="293" font-size="9.5" font-weight="600" fill="#12402a" text-anchor="middle">读负载高 → 加 QueryNode(server.go:90)</text>
+
+  <!-- DataNode -->
+  <rect x="570" y="192" width="440" height="124" rx="13" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="790" y="218" font-size="12" font-weight="600" fill="#5a3410" text-anchor="middle">DataNode = 写路径</text>
+  <text x="790" y="240" font-size="9.5" fill="#93762e" text-anchor="middle">持 SyncManager,把写 buffer 落成 binlog</text>
+  <text x="790" y="260" font-size="9.5" fill="#93762e" text-anchor="middle">IndexNode 已并入,异步建向量索引(knowhere)</text>
+  <rect x="590" y="272" width="400" height="34" rx="8" fill="#ffffff" stroke="#e8cf9a"/>
+  <text x="790" y="293" font-size="9.5" font-weight="600" fill="#5a3410" text-anchor="middle">写负载高 → 加 DataNode(data_node.go:67)</text>
+
+  <!-- 存储层 -->
+  <rect x="40" y="360" width="1000" height="90" rx="15" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+  <text x="60" y="386" font-size="12" font-weight="600" fill="#5a3410">对象存储(共享持久层,所有段数据)· internal/storage/factory.go:54</text>
+  <text x="60" y="410" font-size="10" fill="#93762e">minio(默认)/ remote / opendal / local —— 计算节点共享,独立扩容</text>
+  <text x="60" y="432" font-size="9.5" fill="#93762e">段 binlog / 索引文件都落这里;计算与存储解耦,是弹性伸缩的基础</text>
+
+  <!-- connectors: Proxy -> QueryNode/DataNode -->
+  <path d="M470,124 L470,140 L290,140 L290,192" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="330" y="156" font-size="8.5" fill="#a1a1a6" text-anchor="middle">search 下发</text>
+  <path d="M610,124 L610,140 L790,140 L790,192" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="750" y="156" font-size="8.5" fill="#a1a1a6" text-anchor="middle">insert 下发</text>
+
+  <!-- QueryNode <- storage (load) -->
+  <path d="M290,360 L290,338 L250,338 L250,316" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="210" y="345" font-size="8.5" fill="#a1a1a6" text-anchor="middle">加载段+索引</text>
+  <!-- DataNode -> storage (write) -->
+  <path d="M790,316 L790,338 L830,338 L830,360" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="872" y="345" font-size="8.5" fill="#a1a1a6" text-anchor="middle">落 binlog</text>
+
+  <!-- 红利 footer -->
+  <rect x="40" y="466" width="1000" height="42" rx="11" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="60" y="492" font-size="10.5" fill="#12402a">存算分离红利:QueryNode 无状态 —— 挂了重新加载段即可(数据在对象存储);读/写负载独立扩,存储独立扩</text>
+</svg>

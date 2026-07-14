@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="560" viewBox="0 0 1060 560" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1060" height="560" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">副本 Part 拉取：DataPartsExchange 经 HTTP 整份传输 Part</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">Fetcher (DataPartsExchange.h:61) 拉 · Service (:32) 供 · 整 Part 目录传输，非逐行同步</text>
+
+  <!-- fetch flow -->
+  <g text-anchor="middle">
+    <rect x="60" y="90" width="260" height="150" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+    <text x="190" y="114" font-size="11.5" font-weight="700" fill="#1b2a4a">Replica B（缺 Part）</text>
+    <text x="190" y="134" font-size="8.5" fill="#5b7db1">队列里有 GET_PART entry</text>
+    <rect x="80" y="146" width="220" height="34" rx="7" fill="#fff" stroke="#bcd0ec"/><text x="190" y="167" font-size="8.5" fill="#1b2a4a">DataPartsExchange::Fetcher</text>
+    <text x="190" y="200" font-size="8" fill="#8aa6cf">发起 HTTP 请求拉 Part</text>
+    <text x="190" y="218" font-size="8" fill="#8aa6cf">(InterserverIO 端口)</text>
+
+    <rect x="740" y="90" width="260" height="150" rx="14" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+    <text x="870" y="114" font-size="11.5" font-weight="700" fill="#5a3410">Replica A（有 Part）</text>
+    <text x="870" y="134" font-size="8.5" fill="#93762e">持有目标 Part</text>
+    <rect x="760" y="146" width="220" height="34" rx="7" fill="#fff" stroke="#efdcb4"/><text x="870" y="167" font-size="8.5" fill="#5a3410">DataPartsExchange::Service</text>
+    <text x="870" y="200" font-size="8" fill="#b08843">InterserverIOEndpoint</text>
+    <text x="870" y="218" font-size="8" fill="#b08843">流式发送整个 Part 目录</text>
+  </g>
+  <g stroke="#c7c7cc" stroke-width="1.6" fill="none">
+    <path d="M320,150 L740,150" marker-end="url(#ar)"/>
+  </g>
+  <text x="530" y="140" font-size="9" fill="#4b4b50" text-anchor="middle">HTTP：整 Part 目录（.bin/.mrk/primary.idx/checksums…）</text>
+  <text x="530" y="170" font-size="8" fill="#8a8a8f" text-anchor="middle">校验 checksums 后 attach 为本地 active Part</text>
+
+  <!-- shared storage variant -->
+  <rect x="40" y="264" width="480" height="150" rx="13" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="280" y="288" font-size="11.5" font-weight="700" fill="#12402a" text-anchor="middle">存算分离 + zero-copy replication</text>
+  <text x="60" y="312" font-size="9.5" fill="#2f6f4f">· 数据在共享对象存储（S3/HDFS），多副本共享同一份</text>
+  <text x="60" y="332" font-size="9.5" fill="#2f6f4f">· "复制"只复制元数据（Part 引用），不真正传数据</text>
+  <text x="60" y="352" font-size="9.5" fill="#2f6f4f">· GET_PART 变成"注册对远端 Part 的引用"</text>
+  <text x="60" y="374" font-size="9" fill="#4c8567">→ 极大减少副本间网络传输与存储冗余</text>
+  <text x="60" y="394" font-size="8.5" fill="#8aa6cf">适合云上、副本多、数据大的场景</text>
+
+  <!-- vs doris -->
+  <rect x="540" y="264" width="480" height="150" rx="13" fill="#f6f2fb" stroke="#d9c9ec"/>
+  <text x="780" y="288" font-size="11.5" font-weight="700" fill="#3d2a5a" text-anchor="middle">与不可变 Part 模型的一致性</text>
+  <text x="560" y="312" font-size="9.5" fill="#7a5da5">· Part 不可变 → 传输时无需担心传输中被改</text>
+  <text x="560" y="332" font-size="9.5" fill="#7a5da5">· 整份传输 + checksum 校验 → 简单可靠</text>
+  <text x="560" y="352" font-size="9.5" fill="#7a5da5">· 与 Doris 的副本克隆类似（都是整 Rowset/Part 级）</text>
+  <text x="560" y="374" font-size="9" fill="#9a7cc4">· 传输走 InterserverIO 端口，带宽可限流</text>
+  <text x="560" y="394" font-size="8.5" fill="#9a7cc4">max_replicated_fetches_network_bandwidth</text>
+
+  <rect x="40" y="438" width="980" height="104" rx="12" fill="#f7f7f9" stroke="#e6e6ea"/>
+  <text x="60" y="462" font-size="11" font-weight="700" fill="#1d1d1f">一句话</text>
+  <text x="60" y="484" font-size="10" fill="#4b4b50">副本间数据流动 = DataPartsExchange 经 HTTP 整份传输 Part 目录（Fetcher 拉、Service 供），校验后 attach 为本地 Part。</text>
+  <text x="60" y="502" font-size="10" fill="#4b4b50">这与"不可变 Part"模型天然契合（传输中不会变）。存算分离 + zero-copy 时只复制元数据、不传数据，省网络与存储。</text>
+  <text x="60" y="524" font-size="9" fill="#8a8a8f">fetch 是后台任务，可限带宽；异常（源 Part 丢失）会让队列 entry 卡住，需排查。</text>
+</svg>

@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="540" viewBox="0 0 920 540" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="920" height="540" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">select · selectgo 的随机公平选择</text>
+
+  <!-- entry (blue) -->
+  <rect x="40" y="58" width="400" height="92" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="56" y="82" font-size="12.5" font-weight="600" fill="#1b2a4a">selectgo · select 编译后的运行时入口</text>
+  <text x="56" y="101" font-size="10" fill="#5b7db1">select.go:122 · 收集各 case（scase）</text>
+  <text x="56" y="120" font-size="10" fill="#5b7db1">scase(select.go:20)= channel + 元素指针 + 方向</text>
+  <text x="56" y="139" font-size="9.5" fill="#8fabd4">目标：从多个 channel 操作里选一个就绪的执行</text>
+
+  <!-- scase chips (neutral / white) -->
+  <rect x="460" y="58" width="420" height="92" rx="13" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="476" y="82" font-size="11.5" font-weight="600" fill="#1d1d1f">待选 case</text>
+  <g text-anchor="middle" font-size="9.5">
+    <rect x="476" y="96" width="90" height="40" rx="8" fill="#eef3fb" stroke="#bcd0ec"/><text x="521" y="114" fill="#1b2a4a">case A</text><text x="521" y="128" fill="#5b7db1">&lt;-chA</text>
+    <rect x="574" y="96" width="90" height="40" rx="8" fill="#eef3fb" stroke="#bcd0ec"/><text x="619" y="114" fill="#1b2a4a">case B</text><text x="619" y="128" fill="#5b7db1">chB&lt;-v</text>
+    <rect x="672" y="96" width="90" height="40" rx="8" fill="#eef3fb" stroke="#bcd0ec"/><text x="717" y="114" fill="#1b2a4a">case C</text><text x="717" y="128" fill="#5b7db1">&lt;-chC</text>
+    <rect x="770" y="96" width="94" height="40" rx="8" fill="#f6f6f7" stroke="#e2e2e7"/><text x="817" y="114" fill="#6e6e73">default</text><text x="817" y="128" fill="#8e8e93">可选</text>
+  </g>
+
+  <!-- flow down -->
+  <line x1="240" y1="150" x2="240" y2="180" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- Step 1: random poll (purple rule) -->
+  <rect x="40" y="184" width="400" height="150" rx="13" fill="#f5f0fb" stroke="#ddcdf0" filter="url(#soft)"/>
+  <text x="56" y="208" font-size="12.5" font-weight="600" fill="#3d2a5a">① 随机顺序轮询各 scase</text>
+  <text x="56" y="228" font-size="10" fill="#7d5bb1">生成随机 pollorder，避免总从第一个开始</text>
+  <!-- shuffled order chips -->
+  <g text-anchor="middle" font-size="9.5">
+    <rect x="56" y="242" width="76" height="32" rx="7" fill="#ffffff" stroke="#ddcdf0"/><text x="94" y="262" fill="#3d2a5a">C</text>
+    <rect x="140" y="242" width="76" height="32" rx="7" fill="#ffffff" stroke="#ddcdf0"/><text x="178" y="262" fill="#3d2a5a">A</text>
+    <rect x="224" y="242" width="76" height="32" rx="7" fill="#eef7f0" stroke="#bfe0c8"/><text x="262" y="262" fill="#1d4a2b">B ✓就绪</text>
+    <rect x="308" y="242" width="76" height="32" rx="7" fill="#ffffff" stroke="#ddcdf0"/><text x="346" y="262" fill="#3d2a5a">...</text>
+  </g>
+  <text x="56" y="298" font-size="10.5" fill="#7d5bb1">找到就绪 case → 直接执行收发，返回其序号。</text>
+  <text x="56" y="318" font-size="9.5" fill="#a58fce">随机公平：多 case 同时就绪时等概率选择，防饥饿</text>
+
+  <!-- branch to default -->
+  <line x1="440" y1="230" x2="490" y2="230" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <text x="465" y="222" font-size="9" fill="#8e8e93" text-anchor="middle">全不就绪</text>
+
+  <!-- Step 2: default (green non-block) -->
+  <rect x="494" y="184" width="386" height="70" rx="13" fill="#eef7f0" stroke="#bfe0c8" filter="url(#soft)"/>
+  <text x="510" y="208" font-size="12.5" font-weight="600" fill="#1d4a2b">② 有 default → 立即执行（非阻塞 select）</text>
+  <text x="510" y="230" font-size="10" fill="#4a8c60">全不就绪且写了 default：跑 default 分支，不阻塞</text>
+  <text x="510" y="246" font-size="9.5" fill="#7fb894">select{}（空 select）→ 永久阻塞</text>
+
+  <!-- arrow to step3 -->
+  <line x1="687" y1="254" x2="687" y2="284" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <text x="700" y="272" font-size="9" fill="#8e8e93">无 default</text>
+
+  <!-- Step 3: park on all (red block) -->
+  <rect x="494" y="288" width="386" height="180" rx="13" fill="#fbeeee" stroke="#f0c4c4" filter="url(#soft)"/>
+  <text x="510" y="312" font-size="12.5" font-weight="600" fill="#7a1f1f">③ 无 default → 挂到所有 channel 队列</text>
+  <text x="510" y="332" font-size="10" fill="#b15b5b">为每个 case 建一个 sudog，同时入各自等待队列</text>
+  <!-- multi sudog viz -->
+  <g text-anchor="middle" font-size="9">
+    <rect x="510" y="346" width="108" height="36" rx="7" fill="#ffffff" stroke="#f0c4c4"/><text x="564" y="368" fill="#7a1f1f">sudog→chA.recvq</text>
+    <rect x="626" y="346" width="108" height="36" rx="7" fill="#ffffff" stroke="#f0c4c4"/><text x="680" y="368" fill="#7a1f1f">sudog→chB.sendq</text>
+    <rect x="742" y="346" width="122" height="36" rx="7" fill="#ffffff" stroke="#f0c4c4"/><text x="803" y="368" fill="#7a1f1f">sudog→chC.recvq</text>
+  </g>
+  <rect x="510" y="392" width="354" height="30" rx="8" fill="#ffffff" stroke="#f0c4c4"/>
+  <text x="687" y="411" font-size="10.5" font-weight="600" fill="#7a1f1f" text-anchor="middle">gopark 让出 M，整体阻塞</text>
+  <text x="510" y="442" font-size="10" fill="#b15b5b">任一 channel 就绪 → 唤醒该 G，执行中选的 case，</text>
+  <text x="510" y="459" font-size="10" fill="#b15b5b">再把自己从其余队列一一摘除。</text>
+
+  <!-- bottom summary -->
+  <rect x="40" y="352" width="400" height="116" rx="13" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="56" y="376" font-size="12" font-weight="600" fill="#1d1d1f">为何随机</text>
+  <text x="56" y="399" font-size="10.5" fill="#6e6e73">· 若按书写顺序选，第一个 case 永远优先，</text>
+  <text x="56" y="417" font-size="10.5" fill="#6e6e73">  后面的可能永远饿死。</text>
+  <text x="56" y="439" font-size="10.5" fill="#6e6e73">· 随机等概率 → 公平，是刻意的语言设计，</text>
+  <text x="56" y="457" font-size="10.5" fill="#6e6e73">  不可依赖 case 顺序。</text>
+</svg>

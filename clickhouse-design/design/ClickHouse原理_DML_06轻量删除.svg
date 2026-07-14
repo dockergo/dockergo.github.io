@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="600" viewBox="0 0 1060 600" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1060" height="600" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">轻量 DELETE（_row_exists 掩码）与轻量 UPDATE（PatchParts 读期叠加）</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">InterpreterDeleteQuery → _row_exists=0 · 轻量 UPDATE 走 PatchParts（allow_experimental_lightweight_update, Settings.cpp:6797）</text>
+
+  <!-- lightweight delete -->
+  <rect x="40" y="72" width="480" height="240" rx="14" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="280" y="96" font-size="12.5" font-weight="700" fill="#5a3410" text-anchor="middle">轻量 DELETE（DELETE FROM）</text>
+  <g text-anchor="middle" font-size="8.5">
+    <rect x="60" y="110" width="200" height="52" rx="9" fill="#fff" stroke="#efdcb4"/><text x="160" y="130" font-size="9.5" font-weight="600" fill="#5a3410">改写为置掩码列</text><text x="160" y="148" fill="#93762e">_row_exists = 0</text>
+    <rect x="300" y="110" width="200" height="52" rx="9" fill="#fff" stroke="#efdcb4"/><text x="400" y="130" font-size="9.5" font-weight="600" fill="#5a3410">默认 ALTER_UPDATE 模式</text><text x="400" y="148" fill="#93762e">:172 · lightweight_delete_mode:3994</text>
+  </g>
+  <rect x="60" y="172" width="440" height="60" rx="9" fill="#fffdf5" stroke="#e8cf9a"/>
+  <text x="280" y="192" font-size="9.5" font-weight="600" fill="#5a3410" text-anchor="middle">读时跳过 _row_exists=0 的行</text>
+  <text x="280" y="210" font-size="8.5" fill="#93762e" text-anchor="middle">对用户"已删除"，但物理数据还在</text>
+  <text x="280" y="226" font-size="8.5" fill="#b08843" text-anchor="middle">物理清除延后到后续 merge</text>
+  <rect x="60" y="242" width="440" height="60" rx="9" fill="#f7f7f9" stroke="#e6e6ea"/>
+  <text x="280" y="262" font-size="9" font-weight="600" fill="#4b4b50" text-anchor="middle">代价</text>
+  <text x="280" y="280" font-size="8.5" fill="#6b6b70" text-anchor="middle">写入极轻（只写掩码），比整 Part 重写快得多</text>
+  <text x="280" y="296" font-size="8.5" fill="#6b6b70" text-anchor="middle">lightweight_deletes_sync 默认 2（Settings.cpp:4002）</text>
+
+  <!-- lightweight update / patch parts -->
+  <rect x="540" y="72" width="480" height="240" rx="14" fill="#f6f2fb" stroke="#d9c9ec" filter="url(#soft)"/>
+  <text x="780" y="96" font-size="12.5" font-weight="700" fill="#3d2a5a" text-anchor="middle">轻量 UPDATE（v25.8 · PatchParts）</text>
+  <g text-anchor="middle" font-size="8.5">
+    <rect x="560" y="110" width="200" height="52" rx="9" fill="#fff" stroke="#d9c9ec"/><text x="660" y="130" font-size="9.5" font-weight="600" fill="#3d2a5a">变更写成补丁 Part</text><text x="660" y="148" fill="#7a5da5">只含被改的列/行</text>
+    <rect x="800" y="110" width="200" height="52" rx="9" fill="#fff" stroke="#d9c9ec"/><text x="900" y="130" font-size="9.5" font-weight="600" fill="#3d2a5a">查询时 applyPatches</text><text x="900" y="148" fill="#7a5da5">原 Part + 补丁 → 最新值</text>
+  </g>
+  <rect x="560" y="172" width="440" height="60" rx="9" fill="#faf7fd" stroke="#d9c9ec"/>
+  <text x="780" y="192" font-size="9.5" font-weight="600" fill="#3d2a5a" text-anchor="middle">把更新代价从写侧转到读侧</text>
+  <text x="780" y="210" font-size="8.5" fill="#7a5da5" text-anchor="middle">写快（不重写整 Part）· 读时叠加补丁</text>
+  <text x="780" y="226" font-size="8.5" fill="#9a7cc4" text-anchor="middle">补丁多则读变慢 → 后台合并补丁</text>
+  <rect x="560" y="242" width="440" height="60" rx="9" fill="#f7f7f9" stroke="#e6e6ea"/>
+  <text x="780" y="262" font-size="9" font-weight="600" fill="#4b4b50" text-anchor="middle">开关（实验性）</text>
+  <text x="780" y="280" font-size="8.5" fill="#6b6b70" text-anchor="middle">allow_experimental_lightweight_update 默认 false :6797</text>
+  <text x="780" y="296" font-size="8.5" fill="#6b6b70" text-anchor="middle">apply_patch_parts 默认 true :4787</text>
+
+  <!-- three-tier cost gradient -->
+  <rect x="40" y="330" width="980" height="90" rx="13" fill="#f3f7fc" stroke="#cfe0f2"/>
+  <text x="60" y="354" font-size="11.5" font-weight="700" fill="#274a78">"改数据"三档代价梯度（从重到轻）</text>
+  <g text-anchor="middle" font-size="9">
+    <rect x="60" y="366" width="290" height="44" rx="8" fill="#fbeef0" stroke="#f0cdd4"/><text x="205" y="384" font-weight="600" fill="#7a2230">Mutation（整 Part 重写）</text><text x="205" y="400" font-size="8" fill="#a44">最重 · 偶发批量订正</text>
+    <rect x="366" y="366" width="290" height="44" rx="8" fill="#f6f2fb" stroke="#d9c9ec"/><text x="511" y="384" font-weight="600" fill="#3d2a5a">PatchParts（写补丁读叠加）</text><text x="511" y="400" font-size="8" fill="#7a5da5">折中 · 较频繁更新</text>
+    <rect x="672" y="366" width="290" height="44" rx="8" fill="#fff7e6" stroke="#e8cf9a"/><text x="817" y="384" font-weight="600" fill="#5a3410">轻量 DELETE（写掩码）</text><text x="817" y="400" font-size="8" fill="#93762e">最轻 · 常规删行</text>
+  </g>
+
+  <rect x="40" y="436" width="980" height="140" rx="12" fill="#f7f7f9" stroke="#e6e6ea"/>
+  <text x="60" y="460" font-size="11" font-weight="700" fill="#1d1d1f">共同点与一句话</text>
+  <text x="60" y="482" font-size="10" fill="#4b4b50">· 三者都不原地改数据：删除写掩码、更新写补丁、mutation 写新 Part——原数据始终不可变。</text>
+  <text x="60" y="500" font-size="10" fill="#4b4b50">· 真正的物理清理都推迟到后台 merge：掩码行、被补丁覆盖的旧值、被替换的旧 Part 都在 merge 时剔除。</text>
+  <text x="60" y="518" font-size="10" fill="#4b4b50">· 所以"改得多"会累积读放大（掩码/补丁越多读越慢），要靠 merge 兜底——高频改场景需关注 merge 是否跟得上。</text>
+  <text x="60" y="544" font-size="10" fill="#4b4b50" font-weight="600">一句话：删除用轻量 DELETE（写 _row_exists 掩码），更新优先 Replacing/Coalescing 引擎，</text>
+  <text x="60" y="562" font-size="10" fill="#4b4b50" font-weight="600">较频繁的行级更新可试轻量 UPDATE（PatchParts）；整 Part 重写的 Mutation 只用于偶发批量订正。</text>
+</svg>

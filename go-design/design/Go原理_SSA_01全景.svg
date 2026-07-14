@@ -1,0 +1,110 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="500" viewBox="0 0 920 500" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="920" height="500" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">SSA 后端全景 · IR → SSA → ~60 遍 pass → 机器码（每函数独立，可并行编译）</text>
+
+  <!-- parallel band -->
+  <rect x="30" y="52" width="860" height="26" rx="8" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="46" y="69" font-size="10.5" font-weight="600" fill="#1b2a4a">compileFunctions 触发 · 每个函数是独立编译单元 → 多 worker 并行跑下面整条链</text>
+
+  <!-- stage 1: walk (blue = compiler transform) -->
+  <rect x="30" y="94" width="164" height="330" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="46" y="118" font-size="12.5" font-weight="600" fill="#1b2a4a">1 · walk</text>
+  <text x="46" y="135" font-size="9.5" fill="#5b7db1">IR 降级到近机器形式</text>
+  <rect x="44" y="146" width="136" height="52" rx="7" fill="#ffffff" stroke="#cfe0f2"/>
+  <text x="54" y="165" font-size="9.5" fill="#3a3a3c">range 展开为</text>
+  <text x="54" y="181" font-size="9.5" fill="#3a3a3c">下标循环</text>
+  <rect x="44" y="204" width="136" height="52" rx="7" fill="#ffffff" stroke="#cfe0f2"/>
+  <text x="54" y="223" font-size="9.5" fill="#3a3a3c">map/chan 操作换</text>
+  <text x="54" y="239" font-size="9.5" fill="#3a3a3c">成 runtime 调用</text>
+  <rect x="44" y="262" width="136" height="52" rx="7" fill="#ffffff" stroke="#cfe0f2"/>
+  <text x="54" y="281" font-size="9.5" fill="#3a3a3c">插入 defer /</text>
+  <text x="54" y="297" font-size="9.5" fill="#3a3a3c">写屏障占位</text>
+  <text x="46" y="340" font-size="9.5" fill="#8fabd4">高层语法糖 → 显式操作</text>
+  <text x="46" y="404" font-size="9.5" fill="#8fabd4">ssagen/ssa.go:292</text>
+
+  <line x1="194" y1="259" x2="214" y2="259" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- stage 2: buildssa (blue) -->
+  <rect x="216" y="94" width="164" height="330" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="232" y="118" font-size="12.5" font-weight="600" fill="#1b2a4a">2 · buildssa</text>
+  <text x="232" y="135" font-size="9.5" fill="#5b7db1">IR → 初始 SSA</text>
+  <rect x="230" y="146" width="136" height="60" rx="7" fill="#ffffff" stroke="#cfe0f2"/>
+  <text x="240" y="165" font-size="9.5" fill="#3a3a3c">按块遍历 IR，</text>
+  <text x="240" y="181" font-size="9.5" fill="#3a3a3c">发射 Value /</text>
+  <text x="240" y="197" font-size="9.5" fill="#3a3a3c">Block</text>
+  <rect x="230" y="214" width="136" height="60" rx="7" fill="#f5f0fb" stroke="#ddcdf0"/>
+  <text x="240" y="233" font-size="9.5" fill="#3d2a5a">变量 → SSA 值，</text>
+  <text x="240" y="249" font-size="9.5" fill="#3d2a5a">插 phi 处理</text>
+  <text x="240" y="265" font-size="9.5" fill="#3d2a5a">控制流合并</text>
+  <text x="232" y="300" font-size="9.5" fill="#8fabd4">建出未优化 CFG</text>
+  <text x="232" y="340" font-size="9.5" fill="#8fabd4">静态单赋值形式，</text>
+  <text x="232" y="356" font-size="9.5" fill="#8fabd4">每值只赋一次</text>
+  <text x="232" y="404" font-size="9.5" fill="#8fabd4">见【SSA表示】</text>
+
+  <line x1="380" y1="259" x2="400" y2="259" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- stage 3: ssa.Compile (blue, ~60 pass) -->
+  <rect x="402" y="94" width="164" height="330" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="418" y="118" font-size="12.5" font-weight="600" fill="#1b2a4a">3 · ssa.Compile</text>
+  <text x="418" y="135" font-size="9.5" fill="#5b7db1">~60 遍有序 pass</text>
+  <rect x="416" y="146" width="136" height="46" rx="7" fill="#eff9f2" stroke="#bfe0c8"/>
+  <text x="426" y="165" font-size="9.5" fill="#1d4a2b">机器无关优化：</text>
+  <text x="426" y="181" font-size="9.5" fill="#1d4a2b">opt/cse/prove…</text>
+  <rect x="416" y="198" width="136" height="40" rx="7" fill="#fdf6ec" stroke="#f0dcaf"/>
+  <text x="426" y="223" font-size="9.5" fill="#6b4e16">lower · 分水岭</text>
+  <rect x="416" y="244" width="136" height="46" rx="7" fill="#ffffff" stroke="#cfe0f2"/>
+  <text x="426" y="263" font-size="9.5" fill="#3a3a3c">机器相关：schedule</text>
+  <text x="426" y="279" font-size="9.5" fill="#3a3a3c">/regalloc/trim</text>
+  <text x="418" y="316" font-size="9.5" fill="#8fabd4">数据流分析 + 重写规则</text>
+  <text x="418" y="356" font-size="9.5" fill="#8fabd4">见【SSA pass 流水线】</text>
+  <text x="418" y="404" font-size="9.5" fill="#8fabd4">compile.go:30</text>
+
+  <line x1="566" y1="259" x2="586" y2="259" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- stage 4: genssa (amber = machine) -->
+  <rect x="588" y="94" width="146" height="330" rx="13" fill="#fdf6ec" stroke="#f0dcaf" filter="url(#soft)"/>
+  <text x="604" y="118" font-size="12.5" font-weight="600" fill="#6b4e16">4 · genssa</text>
+  <text x="604" y="135" font-size="9.5" fill="#a9822f">逐 Value 翻指令</text>
+  <rect x="602" y="146" width="118" height="60" rx="7" fill="#ffffff" stroke="#f0dcaf"/>
+  <text x="612" y="165" font-size="9.5" fill="#3a3a3c">每个 Value →</text>
+  <text x="612" y="181" font-size="9.5" fill="#3a3a3c">obj.Prog</text>
+  <text x="612" y="197" font-size="9.5" fill="#3a3a3c">（汇编指令）</text>
+  <rect x="602" y="214" width="118" height="72" rx="7" fill="#fbeeee" stroke="#f0c4c4"/>
+  <text x="612" y="233" font-size="9.5" fill="#7a1f1f">序言插栈检查</text>
+  <text x="612" y="250" font-size="9.5" fill="#b15b5b">/ 抢占检查</text>
+  <text x="612" y="270" font-size="9.5" fill="#b15b5b">（见【栈管理】）</text>
+  <text x="604" y="316" font-size="9.5" fill="#c6a45f">架构后端定义</text>
+  <text x="604" y="332" font-size="9.5" fill="#c6a45f">SSAGenValue</text>
+  <text x="604" y="404" font-size="9.5" fill="#c6a45f">ssagen/ssa.go:6978</text>
+
+  <line x1="734" y1="259" x2="754" y2="259" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- stage 5: obj assembler (amber) -->
+  <rect x="756" y="94" width="134" height="330" rx="13" fill="#fdf6ec" stroke="#f0dcaf" filter="url(#soft)"/>
+  <text x="772" y="118" font-size="12.5" font-weight="600" fill="#6b4e16">5 · obj 汇编器</text>
+  <text x="772" y="135" font-size="9.5" fill="#a9822f">Prog → 机器码</text>
+  <rect x="770" y="146" width="106" height="60" rx="7" fill="#ffffff" stroke="#f0dcaf"/>
+  <text x="780" y="165" font-size="9.5" fill="#3a3a3c">编码成机器</text>
+  <text x="780" y="181" font-size="9.5" fill="#3a3a3c">码字节 +</text>
+  <text x="780" y="197" font-size="9.5" fill="#3a3a3c">重定位项</text>
+  <rect x="770" y="214" width="106" height="72" rx="7" fill="#f6f6f7" stroke="#e2e2e7"/>
+  <text x="780" y="234" font-size="9.5" fill="#3a3a3c">输出目标</text>
+  <text x="780" y="251" font-size="9.5" fill="#3a3a3c">文件 .o</text>
+  <text x="780" y="271" font-size="9.5" fill="#6e6e73">供链接器消费</text>
+  <text x="772" y="316" font-size="9.5" fill="#c6a45f">符号 + pclntab</text>
+  <text x="772" y="332" font-size="9.5" fill="#c6a45f">素材写入</text>
+  <text x="772" y="404" font-size="9.5" fill="#c6a45f">plist.go:24</text>
+
+  <!-- bottom flow summary -->
+  <rect x="30" y="440" width="860" height="42" rx="11" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="46" y="459" font-size="10.5" font-weight="600" fill="#1d1d1f">数据流：高层 IR → 降级 IR → 初始 SSA → 优化后 SSA → obj.Prog → 机器码字节</text>
+  <text x="46" y="475" font-size="9.5" fill="#6e6e73">前段（walk/buildssa/Compile）机器无关或半相关；后段（genssa/obj）落到具体架构，产出 .o 交【go命令与链接】</text>
+</svg>

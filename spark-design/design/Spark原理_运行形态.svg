@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="580" viewBox="0 0 1060 580" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1060" height="580" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">运行形态：一个 app 的生命周期时间线（driver 位置 × 执行时机）</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">同一 job→stage→task 模型；client/cluster 决定 driver 生命周期，与 cluster manager 正交（cluster manager 见物理部署图）</text>
+
+  <!-- lifecycle timeline -->
+  <rect x="40" y="76" width="980" height="150" rx="14" fill="#f3f7fc" stroke="#cfe0f2"/>
+  <text x="60" y="100" font-size="11.5" font-weight="700" fill="#274a78">app 生命周期（提交 → 执行 → 结束）</text>
+  <g text-anchor="middle" font-size="8.5">
+    <rect x="60" y="114" width="150" height="50" rx="9" fill="#f4eefb" stroke="#d9c7ec"/><text x="135" y="134" font-weight="600" fill="#3d2a5a">SparkSubmit</text><text x="135" y="150" fill="#7a5da5">提交，定 deploy mode</text>
+    <rect x="230" y="114" width="150" height="50" rx="9" fill="#eef3fb" stroke="#bcd0ec"/><text x="305" y="134" font-weight="600" fill="#1b2a4a">driver 启动</text><text x="305" y="150" fill="#5b7db1">建 SparkContext</text>
+    <rect x="400" y="114" width="150" height="50" rx="9" fill="#eafaf1" stroke="#bfe0cd"/><text x="475" y="134" font-weight="600" fill="#12402a">申请 executor</text><text x="475" y="150" fill="#2f6f4f">向 cluster mgr</text>
+    <rect x="570" y="114" width="180" height="50" rx="9" fill="#fff7e6" stroke="#e8cf9a"/><text x="660" y="134" font-weight="600" fill="#5a3410">action→job→stage→task</text><text x="660" y="150" fill="#93762e">反复执行（每 action 一 job）</text>
+    <rect x="770" y="114" width="150" height="50" rx="9" fill="#f6f2fb" stroke="#d9c9ec"/><text x="845" y="134" font-weight="600" fill="#3d2a5a">app 结束</text><text x="845" y="150" fill="#7a5da5">释放 executor</text>
+  </g>
+  <g stroke="#c7c7cc" stroke-width="1.4" fill="none">
+    <line x1="210" y1="139" x2="230" y2="139" marker-end="url(#ar)"/>
+    <line x1="380" y1="139" x2="400" y2="139" marker-end="url(#ar)"/>
+    <line x1="550" y1="139" x2="570" y2="139" marker-end="url(#ar)"/>
+    <line x1="750" y1="139" x2="770" y2="139" marker-end="url(#ar)"/>
+  </g>
+  <text x="530" y="196" font-size="9" fill="#5b7db1" text-anchor="middle">driver 存活 = app 存活；driver 是单点，挂了整个 app 失败（lineage 不覆盖 driver 丢失）</text>
+  <text x="530" y="214" font-size="8.5" fill="#8aa6cf" text-anchor="middle">executor 可动态增减（动态资源分配）；job 之间 executor 复用</text>
+
+  <!-- deploy mode timing -->
+  <rect x="40" y="242" width="480" height="150" rx="14" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="280" y="266" font-size="11" font-weight="700" fill="#1b2a4a" text-anchor="middle">client 模式：driver 在提交端</text>
+  <text x="60" y="290" font-size="9" fill="#5b7db1">· 提交端进程 = driver，交互式（spark-shell/notebook）</text>
+  <text x="60" y="310" font-size="9" fill="#5b7db1">· 提交端断开 → driver 死 → app 失败</text>
+  <text x="60" y="330" font-size="9" fill="#5b7db1">· 结果直接回提交端，便于交互</text>
+  <text x="60" y="352" font-size="8.5" fill="#8aa6cf">· 适合：调试、交互查询、短作业</text>
+  <text x="60" y="372" font-size="8.5" fill="#8aa6cf">· driver 与集群间网络往返多</text>
+
+  <rect x="540" y="242" width="480" height="150" rx="14" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="780" y="266" font-size="11" font-weight="700" fill="#12402a" text-anchor="middle">cluster 模式：driver 在集群内</text>
+  <text x="560" y="290" font-size="9" fill="#2f6f4f">· driver 跑在集群节点（YARN AM / K8s driver pod）</text>
+  <text x="560" y="310" font-size="9" fill="#2f6f4f">· 提交端可断开，driver 独立存活</text>
+  <text x="560" y="330" font-size="9" fill="#2f6f4f">· driver 与 executor 同集群，网络近</text>
+  <text x="560" y="352" font-size="8.5" fill="#4c8567">· 适合：生产长作业、批量调度</text>
+  <text x="560" y="372" font-size="8.5" fill="#4c8567">· Standalone 可配 driver.supervise 自动重启</text>
+
+  <rect x="40" y="408" width="980" height="70" rx="13" fill="#fdf9f0" stroke="#efe3cd"/>
+  <text x="60" y="432" font-size="11" font-weight="700" fill="#7a5a1e">执行时机的三个层次</text>
+  <text x="60" y="454" font-size="9.5" fill="#93762e">· driver 侧规划（构建 DAG/Catalyst 优化/切 stage/分派）→ executor 侧执行（跑 task/shuffle/缓存）→ 后台（动态伸缩/推测执行/checkpoint/block 清理）</text>
+  <text x="60" y="470" font-size="9" fill="#b08843">这与"双维模型"的横轴一致：同一能力域在 driver/executor/后台各有职责。</text>
+
+  <rect x="40" y="494" width="980" height="72" rx="12" fill="#f7f7f9" stroke="#e6e6ea"/>
+  <text x="60" y="518" font-size="11" font-weight="700" fill="#1d1d1f">一句话</text>
+  <text x="60" y="540" font-size="10" fill="#4b4b50">一个 app 的生命周期：SparkSubmit 提交 → driver 启动建 SparkContext → 申请 executor → 每个 action 触发一个 job→stage→task → app 结束释放。</text>
+  <text x="60" y="558" font-size="10" fill="#4b4b50">client/cluster 模式决定 driver 在提交端还是集群内（与 cluster manager 正交）；driver 存活即 app 存活，是单点。</text>
+</svg>

@@ -1,0 +1,96 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="720" viewBox="0 0 1060 720" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1060" height="720" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Part 物理格式：Wide vs Compact（写入时按体积自动选择）</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">MergeTreeData::choosePartFormat (MergeTreeData.cpp:4379)：bytes &lt; min_bytes_for_wide_part 或 rows &lt; min_rows_for_wide_part → Compact</text>
+
+  <!-- decision node -->
+  <rect x="380" y="72" width="300" height="70" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="530" y="98" font-size="12" font-weight="700" fill="#1b2a4a" text-anchor="middle">写入一个 Part：选格式</text>
+  <text x="530" y="118" font-size="9.5" fill="#5b7db1" text-anchor="middle">min_bytes_for_wide_part 默认 10MB</text>
+  <text x="530" y="132" font-size="9.5" fill="#5b7db1" text-anchor="middle">min_rows_for_wide_part 默认 0</text>
+
+  <text x="250" y="168" font-size="10" fill="#93762e" text-anchor="middle">大 Part（≥阈值）</text>
+  <text x="810" y="168" font-size="10" fill="#93762e" text-anchor="middle">小 Part（&lt;阈值）</text>
+
+  <!-- Wide -->
+  <rect x="40" y="186" width="470" height="420" rx="14" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="275" y="212" font-size="13" font-weight="700" fill="#5a3410" text-anchor="middle">Wide 格式 · 每列独立文件</text>
+  <text x="275" y="230" font-size="9.5" fill="#93762e" text-anchor="middle">列级 IO 友好 · 只读需要的列 · marks = .mrk2</text>
+
+  <g text-anchor="middle">
+    <!-- column streams -->
+    <rect x="64" y="250" width="130" height="120" rx="10" fill="#fdf6ea" stroke="#efdcb4"/>
+    <text x="129" y="272" font-size="10.5" font-weight="600" fill="#5a3410">列 id</text>
+    <rect x="80" y="284" width="98" height="24" rx="5" fill="#fff" stroke="#efdcb4"/><text x="129" y="300" font-size="9" fill="#5a3410">id.bin</text>
+    <rect x="80" y="312" width="98" height="24" rx="5" fill="#fff" stroke="#efdcb4"/><text x="129" y="328" font-size="9" fill="#5a3410">id.mrk2</text>
+    <text x="129" y="356" font-size="8.5" fill="#93762e">数据 + 标记</text>
+
+    <rect x="210" y="250" width="130" height="120" rx="10" fill="#fdf6ea" stroke="#efdcb4"/>
+    <text x="275" y="272" font-size="10.5" font-weight="600" fill="#5a3410">列 ts</text>
+    <rect x="226" y="284" width="98" height="24" rx="5" fill="#fff" stroke="#efdcb4"/><text x="275" y="300" font-size="9" fill="#5a3410">ts.bin</text>
+    <rect x="226" y="312" width="98" height="24" rx="5" fill="#fff" stroke="#efdcb4"/><text x="275" y="328" font-size="9" fill="#5a3410">ts.mrk2</text>
+    <text x="275" y="356" font-size="8.5" fill="#93762e">独立压缩块</text>
+
+    <rect x="356" y="250" width="130" height="120" rx="10" fill="#fdf6ea" stroke="#efdcb4"/>
+    <text x="421" y="272" font-size="10.5" font-weight="600" fill="#5a3410">列 val</text>
+    <rect x="372" y="284" width="98" height="24" rx="5" fill="#fff" stroke="#efdcb4"/><text x="421" y="300" font-size="9" fill="#5a3410">val.bin</text>
+    <rect x="372" y="312" width="98" height="24" rx="5" fill="#fff" stroke="#efdcb4"/><text x="421" y="328" font-size="9" fill="#5a3410">val.mrk2</text>
+    <text x="421" y="356" font-size="8.5" fill="#93762e">可单独 CODEC</text>
+  </g>
+  <!-- shared meta in wide -->
+  <rect x="64" y="388" width="422" height="90" rx="10" fill="#f3f7fc" stroke="#cfe0f2"/>
+  <text x="275" y="408" font-size="10" font-weight="600" fill="#274a78" text-anchor="middle">Part 级共享文件（两格式都有）</text>
+  <text x="84" y="430" font-size="9" fill="#5b7db1" text-anchor="start">· primary.idx　稀疏主键</text>
+  <text x="290" y="430" font-size="9" fill="#5b7db1" text-anchor="start">· columns.txt · count.txt</text>
+  <text x="84" y="450" font-size="9" fill="#5b7db1" text-anchor="start">· checksums.txt　校验</text>
+  <text x="290" y="450" font-size="9" fill="#5b7db1" text-anchor="start">· partition.dat · minmax_*.idx</text>
+  <text x="275" y="469" font-size="8.5" fill="#8aa6cf" text-anchor="middle">跳数索引 skp_idx_*.idx（若定义）</text>
+  <rect x="64" y="492" width="422" height="96" rx="10" fill="#f2fbf6" stroke="#cdeadb"/>
+  <text x="275" y="512" font-size="10" font-weight="600" fill="#12402a" text-anchor="middle">读一列 = 打开该列的 .bin + .mrk2</text>
+  <text x="275" y="532" font-size="9" fill="#2f6f4f" text-anchor="middle">SELECT val WHERE ... 只触碰 val/主键相关列</text>
+  <text x="275" y="552" font-size="9" fill="#2f6f4f" text-anchor="middle">→ 宽表大 Part 的典型形态</text>
+  <text x="275" y="572" font-size="8.5" fill="#4c8567" text-anchor="middle">代价：列多时文件/inode 多</text>
+
+  <!-- Compact -->
+  <rect x="550" y="186" width="470" height="420" rx="14" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="785" y="212" font-size="13" font-weight="700" fill="#5a3410" text-anchor="middle">Compact 格式 · 单文件拼接</text>
+  <text x="785" y="230" font-size="9.5" fill="#93762e" text-anchor="middle">省 inode/寻道 · 小 Part 首选 · marks = .mrk3</text>
+
+  <rect x="574" y="250" width="422" height="128" rx="10" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="785" y="272" font-size="10.5" font-weight="600" fill="#5a3410" text-anchor="middle">data.bin（所有列顺序拼接）</text>
+  <g text-anchor="middle">
+    <rect x="594" y="286" width="120" height="30" rx="5" fill="#fff" stroke="#efdcb4"/><text x="654" y="305" font-size="9" fill="#5a3410">id 块</text>
+    <rect x="722" y="286" width="120" height="30" rx="5" fill="#fff" stroke="#efdcb4"/><text x="782" y="305" font-size="9" fill="#5a3410">ts 块</text>
+    <rect x="850" y="286" width="126" height="30" rx="5" fill="#fff" stroke="#efdcb4"/><text x="913" y="305" font-size="9" fill="#5a3410">val 块</text>
+  </g>
+  <text x="785" y="340" font-size="9" fill="#93762e" text-anchor="middle">列在文件内一段接一段（同一 granule 的各列相邻）</text>
+  <rect x="594" y="350" width="382" height="20" rx="5" fill="#fff" stroke="#efdcb4"/><text x="785" y="364" font-size="8.5" fill="#5a3410" text-anchor="middle">data.mrk3　全列共用一份标记</text>
+
+  <rect x="574" y="392" width="422" height="86" rx="10" fill="#f3f7fc" stroke="#cfe0f2"/>
+  <text x="785" y="412" font-size="10" font-weight="600" fill="#274a78" text-anchor="middle">Part 级共享文件同 Wide</text>
+  <text x="785" y="432" font-size="9" fill="#5b7db1" text-anchor="middle">primary.idx · columns.txt · count.txt · checksums.txt</text>
+  <text x="785" y="452" font-size="9" fill="#5b7db1" text-anchor="middle">partition.dat · minmax_*.idx</text>
+  <text x="785" y="470" font-size="8.5" fill="#8aa6cf" text-anchor="middle">统一由 IMergeTreeDataPart 读写</text>
+
+  <rect x="574" y="492" width="422" height="96" rx="10" fill="#f2fbf6" stroke="#cdeadb"/>
+  <text x="785" y="512" font-size="10" font-weight="600" fill="#12402a" text-anchor="middle">读任意列 = 打开同一个 data.bin</text>
+  <text x="785" y="532" font-size="9" fill="#2f6f4f" text-anchor="middle">小 Part 常态：一次 INSERT 的少量行</text>
+  <text x="785" y="552" font-size="9" fill="#2f6f4f" text-anchor="middle">→ merge 变大后自动转 Wide</text>
+  <text x="785" y="572" font-size="8.5" fill="#4c8567" text-anchor="middle">优势：避免海量小文件</text>
+
+  <!-- arrows -->
+  <g stroke="#c7c7cc" stroke-width="1.5" fill="none">
+    <path d="M440,142 L440,164 L275,164 L275,186" marker-end="url(#ar)"/>
+    <path d="M620,142 L620,164 L785,164 L785,186" marker-end="url(#ar)"/>
+  </g>
+
+  <!-- bottom takeaway -->
+  <rect x="40" y="622" width="980" height="72" rx="12" fill="#f7f7f9" stroke="#e6e6ea"/>
+  <text x="60" y="646" font-size="11" font-weight="700" fill="#1d1d1f">一句话</text>
+  <text x="60" y="668" font-size="10" fill="#4b4b50">两格式对读写接口透明（都走 IMergeTreeDataPart）；差别只在物理布局：Wide 每列一文件利于大表列裁剪，</text>
+  <text x="60" y="685" font-size="10" fill="#4b4b50">Compact 单文件利于小 Part 减少碎文件。写入时按 10MB 阈值自动定，merge 让 Part 长大后由 Compact 转 Wide。</text>
+</svg>

@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="500" viewBox="0 0 1080 500" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="500" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">StarRocks Join 重排 · 三算法按表数分级</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">ReorderJoinRule.enumerate 按 inner/cross join 表数选算法;统计未知则退化为左深(所以要 ANALYZE)</text>
+
+  <!-- decision -->
+  <rect x="30" y="72" width="1020" height="54" rx="12" fill="#f4eefb" stroke="#d9c7ec"/>
+  <text x="46" y="94" font-size="10.5" font-weight="700" fill="#3d2a5a">入口:memoOptimize 判 join 数 &lt; cboMaxReorderNode(QueryOptimizer.java:966)→ ReorderJoinRule.enumerate(rule/join/ReorderJoinRule.java:257)</text>
+  <text x="46" y="114" font-size="8.8" fill="#7a5a95">统计未知 → 退化仅左深(:260);否则按 atomSize(表数)分级叠加算法</text>
+
+  <!-- three algorithms -->
+  <g text-anchor="middle">
+    <rect x="30" y="142" width="330" height="150" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+    <text x="195" y="166" font-size="11.5" font-weight="700" fill="#12402a">JoinReorderLeftDeep</text>
+    <text x="195" y="186" font-size="9" fill="#2f6f4f">左深树 · 总是启用(兜底)</text>
+    <rect x="46" y="198" width="298" height="34" rx="7" fill="#e6f7ee" stroke="#bfe0cd"/><text x="195" y="220" font-size="8.5" fill="#12402a">适用:任意表数 / 统计未知时唯一选择</text>
+    <text x="195" y="252" font-size="8.5" fill="#2f6f4f">最简单,不保证最优</text>
+    <text x="195" y="272" font-size="8" fill="#a1a1a6">rule/join/JoinReorderLeftDeep.java</text>
+
+    <rect x="375" y="142" width="330" height="150" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+    <text x="540" y="166" font-size="11.5" font-weight="700" fill="#1b2a4a">JoinReorderDP</text>
+    <text x="540" y="186" font-size="9" fill="#5b7db1">动态规划 · 小 Join 图最优</text>
+    <rect x="391" y="198" width="298" height="34" rx="7" fill="#f3f7fc" stroke="#cfe0f2"/><text x="540" y="220" font-size="8.3" fill="#274a78">atomSize ≤ 62 且 ≤ 阈值 且开 DP</text>
+    <text x="540" y="252" font-size="8.5" fill="#5b7db1">枚举最优,约 10 表内可行</text>
+    <text x="540" y="272" font-size="8" fill="#a1a1a6">rule/join/JoinReorderDP.java · :267</text>
+
+    <rect x="720" y="142" width="330" height="150" rx="12" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+    <text x="885" y="166" font-size="11.5" font-weight="700" fill="#5a3410">JoinReorderGreedy</text>
+    <text x="885" y="186" font-size="9" fill="#93762e">贪心 · 大 Join 图</text>
+    <rect x="736" y="198" width="298" height="34" rx="7" fill="#fdf6ea" stroke="#efdcb4"/><text x="885" y="220" font-size="8.3" fill="#5a3410">≤ cboMaxReorderNodeUseGreedy</text>
+    <text x="885" y="252" font-size="8.5" fill="#93762e">近似最优,表多时可控开销</text>
+    <text x="885" y="272" font-size="8" fill="#a1a1a6">rule/join/JoinReorderGreedy.java · :274</text>
+  </g>
+
+  <!-- rule rewrites -->
+  <rect x="30" y="308" width="500" height="110" rx="13" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="46" y="330" font-size="11" font-weight="700" fill="#1d1d1f">规则式 Join 改写(加进 Memo 让搜索探索)</text>
+  <text x="46" y="352" font-size="8.8" fill="#6e6e73">· JoinCommutativityRule(交换律)· JoinAssociativityRule(结合律)</text>
+  <text x="46" y="372" font-size="8.8" fill="#6e6e73">· JoinLeftAsscomRule · SemiReorderRule</text>
+  <text x="46" y="392" font-size="8.5" fill="#a1a1a6">rule/transformation/ · 大 join 数时不穷举,靠规则在 Cascades 里自然探索</text>
+  <text x="46" y="410" font-size="8.5" fill="#b1483a">图见 CBO 篇的 Memo 搜索</text>
+
+  <!-- note -->
+  <rect x="550" y="308" width="500" height="110" rx="13" fill="#fbeaea" stroke="#e7c3c3"/>
+  <text x="566" y="330" font-size="11" font-weight="700" fill="#4a1414">关键:没统计就没 CBO</text>
+  <text x="566" y="352" font-size="9" fill="#7a2a2a">· 统计未知 → 三算法只剩左深,代价估不准</text>
+  <text x="566" y="372" font-size="9" fill="#7a2a2a">· Join 顺序对性能影响巨大(差几个数量级)</text>
+  <text x="566" y="392" font-size="9" fill="#7a2a2a">· 定期 ANALYZE 是 Join 重排真正生效的前提</text>
+  <text x="566" y="410" font-size="8.5" fill="#7a2a2a">归属:统计在【元数据】;重排是本主线</text>
+
+  <!-- arrows down to note -->
+  <line x1="195" y1="292" x2="195" y2="308" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+</svg>

@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="540" viewBox="0 0 1080 540"
+     font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1080" height="540" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Kafka ISR 与高水位 HW · HW = ISR 中所有副本 LEO 的最小值</text>
+  <text x="30" y="50" font-size="12" fill="#a1a1a6">只有 offset ≤ HW 的消息对消费者可见；ISR 不足 min ISR 时 HW 不推进（Partition.scala:1010）</text>
+
+  <!-- offset axis illustration -->
+  <text x="60" y="82" font-size="12.5" font-weight="700" fill="#1d1d1f">各副本日志末端（LEO）与 HW / 可见边界</text>
+
+  <!-- Leader row -->
+  <text x="60" y="118" font-size="11.5" font-weight="600" fill="#1b2a4a">Leader</text>
+  <rect x="150" y="100" width="560" height="30" rx="6" fill="#eef3fb" stroke="#bcd0ec"/>
+  <rect x="150" y="100" width="420" height="30" rx="6" fill="#dfeafb" stroke="#bcd0ec"/>
+  <text x="360" y="120" font-size="10.5" fill="#274a78" text-anchor="middle">已复制（≤ HW，可见）</text>
+  <text x="640" y="120" font-size="10.5" fill="#5b7db1" text-anchor="middle">HW 之上</text>
+  <text x="720" y="120" font-size="10.5" fill="#5b7db1">LEO=100</text>
+
+  <!-- Follower A -->
+  <text x="60" y="158" font-size="11.5" font-weight="600" fill="#5a3410">Follower A</text>
+  <rect x="150" y="140" width="490" height="30" rx="6" fill="#fff7e6" stroke="#e8cf9a"/>
+  <rect x="150" y="140" width="420" height="30" rx="6" fill="#f3e6c8" stroke="#e8cf9a"/>
+  <text x="605" y="160" font-size="10.5" fill="#93762e">LEO=95</text>
+
+  <!-- Follower B (min) -->
+  <text x="60" y="198" font-size="11.5" font-weight="600" fill="#5a3410">Follower B</text>
+  <rect x="150" y="180" width="420" height="30" rx="6" fill="#fff7e6" stroke="#e8cf9a"/>
+  <rect x="150" y="180" width="420" height="30" rx="6" fill="#f3e6c8" stroke="#e8cf9a"/>
+  <text x="558" y="200" font-size="10.5" font-weight="600" fill="#8a5a1e" text-anchor="end">LEO=90（ISR 最小）</text>
+
+  <!-- HW line -->
+  <line x1="570" y1="92" x2="570" y2="222" stroke="#2f6f4f" stroke-width="2" stroke-dasharray="5 4"/>
+  <text x="570" y="238" font-size="11" font-weight="700" fill="#2f6f4f" text-anchor="middle">HW = min(LEO) = 90</text>
+  <!-- LEO line leader -->
+  <line x1="710" y1="92" x2="710" y2="132" stroke="#5b7db1" stroke-width="1.5" stroke-dasharray="4 3"/>
+
+  <!-- Definitions -->
+  <rect x="48" y="262" width="486" height="118" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="68" y="288" font-size="13" font-weight="700" fill="#1b2a4a">ISR = 当前跟上 Leader 的副本集（含 Leader）</text>
+  <text x="68" y="312" font-size="11" fill="#274a78">HW = ISR 中所有副本 LEO 的最小值</text>
+  <text x="68" y="333" font-size="11" fill="#274a78">= 已被 ISR 都复制、可安全暴露给消费者的边界</text>
+  <text x="68" y="356" font-size="11" fill="#274a78">maybeIncrementLeaderHW 取最小 LEO 作新 HW（:1028）</text>
+  <text x="68" y="374" font-size="10.5" fill="#5b7db1">只有 offset ≤ HW 的消息对消费者可见</text>
+
+  <rect x="546" y="262" width="486" height="118" rx="13" fill="#fbeaea" stroke="#e6b8b8" filter="url(#soft)"/>
+  <text x="566" y="288" font-size="13" font-weight="700" fill="#7a2b2b">HW 推进守卫</text>
+  <text x="566" y="312" font-size="11" fill="#a35555">ISR 不足 min ISR 时 HW 不推进</text>
+  <text x="566" y="333" font-size="11" fill="#a35555">if (isUnderMinIsr) return false（:1011）</text>
+  <text x="566" y="356" font-size="11" fill="#a35555">→ HW 之上的写虽落 Leader，但对消费者不可见</text>
+  <text x="566" y="374" font-size="10.5" fill="#a35555">这是"不丢"的代价：未被 ISR 复制的读不到</text>
+
+  <!-- shrink / expand -->
+  <rect x="48" y="398" width="486" height="120" rx="13" fill="#fbeaea" stroke="#e6b8b8" filter="url(#soft)"/>
+  <text x="68" y="424" font-size="13" font-weight="700" fill="#7a2b2b">ISR 收缩（maybeShrinkIsr，:1089）</text>
+  <text x="68" y="448" font-size="11" fill="#a35555">超 replica.lag.time.max.ms 没跟上的副本移出</text>
+  <text x="68" y="470" font-size="11" fill="#a35555">发 AlterPartition 请求（:1099）</text>
+  <text x="68" y="494" font-size="10.5" fill="#a35555">慢副本别拖住 HW（HW = ISR 最小 LEO）</text>
+
+  <rect x="546" y="398" width="486" height="120" rx="13" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="566" y="424" font-size="13" font-weight="700" fill="#12402a">ISR 扩张（maybeExpandIsr，:876）</text>
+  <text x="566" y="448" font-size="11" fill="#2f6f4f">追上的副本重新加入 ISR</text>
+  <text x="566" y="470" font-size="11" fill="#2f6f4f">isCaughtUp 判定（:1023）</text>
+  <text x="566" y="494" font-size="10.5" fill="#2f6f4f">重入后其 LEO 才重新参与 HW 计算</text>
+</svg>

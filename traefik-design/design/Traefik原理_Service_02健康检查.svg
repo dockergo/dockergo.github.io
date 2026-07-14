@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="440" viewBox="0 0 960 440"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="960" height="440" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">健康检查 · 主动探测（后台定时）+ 被动观测（在线统计）+ 状态向上传播</text>
+
+  <!-- active -->
+  <rect x="30" y="56" width="440" height="200" rx="12" fill="#eafaf1" stroke="#bce6cd" filter="url(#soft)"/>
+  <text x="50" y="80" font-size="11" font-weight="600" fill="#0f5132">主动健康检查（ServiceHealthChecker · healthcheck.go:53）</text>
+  <text x="50" y="104" font-size="9.5" fill="#3f8f66">· Launch() 起后台 goroutine 定时探测（healthcheck.go:134）</text>
+  <text x="50" y="124" font-size="9.5" fill="#3f8f66">· 默认 interval=30s、timeout=5s（http_config.go:17）</text>
+  <text x="50" y="144" font-size="9.5" fill="#3f8f66">· HTTP：GET path，比对期望 status（checkHealthHTTP:232）</text>
+  <text x="50" y="164" font-size="9.5" fill="#3f8f66">· gRPC：健康检查协议（checkHealthGRPC:297）</text>
+  <text x="50" y="184" font-size="9.5" fill="#3f8f66">· unhealthyInterval：不健康后可用更短间隔快速复检</text>
+  <rect x="50" y="200" width="180" height="40" rx="9" fill="#ffffff" stroke="#bce6cd"/>
+  <text x="140" y="224" font-size="9" fill="#0f5132" text-anchor="middle">健康 → 留在 LB 池</text>
+  <rect x="250" y="200" width="200" height="40" rx="9" fill="#fdecea" stroke="#f3c0b8"/>
+  <text x="350" y="224" font-size="9" fill="#8a2a1a" text-anchor="middle">失败 → SetStatus(down) 移出</text>
+
+  <!-- passive -->
+  <rect x="490" y="56" width="440" height="200" rx="12" fill="#fff7e6" stroke="#f0dcae" filter="url(#soft)"/>
+  <text x="510" y="80" font-size="11" font-weight="600" fill="#7a4d00">被动健康检查（PassiveServiceHealthChecker · healthcheck.go:359）</text>
+  <text x="510" y="104" font-size="9.5" fill="#9a7328">· WrapHandler 包在转发路径上，观测真实请求结果（:371）</text>
+  <text x="510" y="124" font-size="9.5" fill="#9a7328">· 在 failureWindow 内累计失败（默认 10s 窗口）</text>
+  <text x="510" y="144" font-size="9.5" fill="#9a7328">· 达 maxFailedAttempts（默认 1）即标记 unhealthy</text>
+  <text x="510" y="164" font-size="9.5" fill="#9a7328">· 窗口内不再选该后端，窗口过后恢复重试</text>
+  <text x="510" y="184" font-size="9.5" fill="#9a7328">· 无额外探测流量，靠"在线请求"判断</text>
+  <rect x="510" y="200" width="400" height="40" rx="9" fill="#ffffff" stroke="#f0dcae"/>
+  <text x="710" y="224" font-size="9" fill="#7a4d00" text-anchor="middle">PassiveServerHealthCheck：failureWindow=10s · maxFailedAttempts=1</text>
+
+  <!-- propagation -->
+  <rect x="30" y="280" width="900" height="140" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="50" y="304" font-size="11" font-weight="600" fill="#1b2a4a">状态向上传播（自愈的关键）</text>
+  <text x="50" y="328" font-size="9.5" fill="#5b7db1">· LB 的 SetStatus(child, up/down) 更新子后端状态（wrr.go:101）；RegisterStatusUpdater 注册回调（wrr.go:143）。</text>
+  <text x="50" y="348" font-size="9.5" fill="#5b7db1">· 若某 Service 全部后端 down，它向父级（weighted/failover）上报 down → 父级把它整体摘除。</text>
+  <text x="50" y="368" font-size="9.5" fill="#5b7db1">· 层层传播使 failover 能感知"主 Service 已不可用"从而切 fallback；weighted 能跳过全挂的子 Service。</text>
+  <text x="50" y="392" font-size="9" fill="#8fa9cf">· 主动+被动可叠加：主动定时兜底，被动实时快反应；两者都把状态汇入同一套 up/down 传播机制。</text>
+</svg>

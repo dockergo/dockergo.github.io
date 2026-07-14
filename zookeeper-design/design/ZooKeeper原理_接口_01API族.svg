@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="500" viewBox="0 0 960 500"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="960" height="500" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">客户端 API 族 · 按"写 / 读 / 订阅 / 管理"分组（读写走不同路径）</text>
+
+  <!-- 写 -->
+  <rect x="30" y="56" width="220" height="180" rx="14" fill="#fbeaea" stroke="#e7c3c3" filter="url(#soft)"/>
+  <text x="48" y="80" font-size="12" font-weight="600" fill="#7a2a2a">写（改数据 → 经 ZAB 全序）</text>
+  <rect x="46" y="92" width="188" height="26" rx="7" fill="#ffffff" stroke="#e7c3c3"/><text x="140" y="109" font-size="9" fill="#7a2a2a" text-anchor="middle">create（含 ephemeral/sequential）</text>
+  <rect x="46" y="124" width="188" height="26" rx="7" fill="#ffffff" stroke="#e7c3c3"/><text x="140" y="141" font-size="9" fill="#7a2a2a" text-anchor="middle">setData（带 version 做 CAS）</text>
+  <rect x="46" y="156" width="188" height="26" rx="7" fill="#ffffff" stroke="#e7c3c3"/><text x="140" y="173" font-size="9" fill="#7a2a2a" text-anchor="middle">delete（带 version）</text>
+  <rect x="46" y="188" width="188" height="26" rx="7" fill="#ffffff" stroke="#e7c3c3"/><text x="140" y="205" font-size="9" fill="#7a2a2a" text-anchor="middle">multi（多操作原子事务）</text>
+
+  <!-- 读 -->
+  <rect x="270" y="56" width="220" height="180" rx="14" fill="#eafaf1" stroke="#bce6cd" filter="url(#soft)"/>
+  <text x="288" y="80" font-size="12" font-weight="600" fill="#0f5132">读（直查本地内存树）</text>
+  <rect x="286" y="92" width="188" height="26" rx="7" fill="#ffffff" stroke="#bce6cd"/><text x="380" y="109" font-size="9" fill="#0f5132" text-anchor="middle">getData（+ 可挂 watch）</text>
+  <rect x="286" y="124" width="188" height="26" rx="7" fill="#ffffff" stroke="#bce6cd"/><text x="380" y="141" font-size="9" fill="#0f5132" text-anchor="middle">getChildren（+ watch）</text>
+  <rect x="286" y="156" width="188" height="26" rx="7" fill="#ffffff" stroke="#bce6cd"/><text x="380" y="173" font-size="9" fill="#0f5132" text-anchor="middle">exists（+ watch）</text>
+  <rect x="286" y="188" width="188" height="26" rx="7" fill="#ffffff" stroke="#bce6cd"/><text x="380" y="205" font-size="9" fill="#0f5132" text-anchor="middle">getACL · sync（强制追平）</text>
+
+  <!-- 订阅 -->
+  <rect x="510" y="56" width="200" height="180" rx="14" fill="#f4eefb" stroke="#d9c9ef" filter="url(#soft)"/>
+  <text x="528" y="80" font-size="12" font-weight="600" fill="#3c1361">订阅（watch）</text>
+  <rect x="526" y="92" width="168" height="26" rx="7" fill="#ffffff" stroke="#d9c9ef"/><text x="610" y="109" font-size="9" fill="#3c1361" text-anchor="middle">读时挂 watcher</text>
+  <rect x="526" y="124" width="168" height="26" rx="7" fill="#ffffff" stroke="#d9c9ef"/><text x="610" y="141" font-size="9" fill="#3c1361" text-anchor="middle">一次性触发即失效</text>
+  <rect x="526" y="156" width="168" height="26" rx="7" fill="#ffffff" stroke="#d9c9ef"/><text x="610" y="173" font-size="9" fill="#3c1361" text-anchor="middle">addWatch（持久/递归）</text>
+  <rect x="526" y="188" width="168" height="26" rx="7" fill="#ffffff" stroke="#d9c9ef"/><text x="610" y="205" font-size="9" fill="#3c1361" text-anchor="middle">removeWatches</text>
+
+  <!-- 管理 -->
+  <rect x="730" y="56" width="200" height="180" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="748" y="80" font-size="12" font-weight="600" fill="#1b2a4a">管理 / 连接</text>
+  <rect x="746" y="92" width="168" height="26" rx="7" fill="#ffffff" stroke="#bcd0ec"/><text x="830" y="109" font-size="9" fill="#1b2a4a" text-anchor="middle">setACL（改权限）</text>
+  <rect x="746" y="124" width="168" height="26" rx="7" fill="#ffffff" stroke="#bcd0ec"/><text x="830" y="141" font-size="9" fill="#1b2a4a" text-anchor="middle">addAuthInfo（认证）</text>
+  <rect x="746" y="156" width="168" height="26" rx="7" fill="#ffffff" stroke="#bcd0ec"/><text x="830" y="173" font-size="9" fill="#1b2a4a" text-anchor="middle">reconfig（成员变更）</text>
+  <rect x="746" y="188" width="168" height="26" rx="7" fill="#ffffff" stroke="#bcd0ec"/><text x="830" y="205" font-size="9" fill="#1b2a4a" text-anchor="middle">四字命令 / AdminServer</text>
+
+  <!-- 路径分流 -->
+  <rect x="30" y="264" width="900" height="80" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="48" y="288" font-size="12" font-weight="600" fill="#1d1d1f">路径分流：读写走两条不同链路</text>
+  <rect x="60" y="300" width="400" height="30" rx="8" fill="#fbeaea" stroke="#e7c3c3"/><text x="260" y="319" font-size="9" fill="#7a2a2a" text-anchor="middle">写 → 请求处理链 → ZAB 广播过半 → apply DataTree（全序、强一致）</text>
+  <rect x="500" y="300" width="400" height="30" rx="8" fill="#eafaf1" stroke="#bce6cd"/><text x="700" y="319" font-size="9" fill="#0f5132" text-anchor="middle">读 → 本地内存 DataTree 直接返回（不经共识、可扩展）</text>
+
+  <text x="30" y="372" font-size="10" fill="#494950">CLI：zkCli.sh（create/get/set/ls/delete/getAcl…）；编程 API：ZooKeeper 类（同步）+ 异步回调 + Curator 高层封装（锁/选主/缓存）。</text>
+  <text x="30" y="394" font-size="10" fill="#494950">multi：把多个 create/setData/delete/check 打包成一个原子事务（全成或全不成），是分布式协调常用的原语。</text>
+  <text x="30" y="416" font-size="9.5" fill="#86868b">对比 etcd Txn：ZK multi 是操作列表 + check 版本断言；etcd 是 If-Then-Else 比较分支。二者都为单次往返原子。</text>
+  <text x="30" y="452" font-size="9.5" fill="#86868b">核实：FinalRequestProcessor.java（case OpCode.*）；ZooDefs.java OpCode；DataTree.getData(:691)/getChildren(:724)。</text>
+</svg>

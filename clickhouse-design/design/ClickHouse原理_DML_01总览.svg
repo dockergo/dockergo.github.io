@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="600" viewBox="0 0 1060 600" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1060" height="600" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">写入生命周期：INSERT → 建临时 Part → 原子 rename 可见（无事务提交点）</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">InterpreterInsertQuery → MergeTreeSink::consume (MergeTreeSink.cpp:74) → renameTempPartAndAdd (:258)</text>
+
+  <g text-anchor="middle">
+    <rect x="40" y="86" width="150" height="66" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/><text x="115" y="112" font-size="11" font-weight="600" fill="#1b2a4a">INSERT 语句</text><text x="115" y="130" font-size="8.5" fill="#5b7db1">InterpreterInsertQuery</text><text x="115" y="144" font-size="8.5" fill="#5b7db1">建 Chain :485</text>
+    <rect x="228" y="86" width="150" height="66" rx="12" fill="#f3f7fc" stroke="#cfe0f2" filter="url(#soft)"/><text x="303" y="112" font-size="11" font-weight="600" fill="#274a78">MergeTreeSink</text><text x="303" y="130" font-size="8.5" fill="#5b7db1">consume(Chunk) :74</text><text x="303" y="144" font-size="8.5" fill="#5b7db1">切块</text>
+    <rect x="416" y="86" width="160" height="66" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/><text x="496" y="112" font-size="11" font-weight="600" fill="#12402a">writeTempPart</text><text x="496" y="130" font-size="8.5" fill="#2f6f4f">建临时 Part :220</text><text x="496" y="144" font-size="8.5" fill="#2f6f4f">tmp_insert_…</text>
+    <rect x="614" y="86" width="180" height="66" rx="12" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/><text x="704" y="108" font-size="11" font-weight="600" fill="#5a3410">renameTempPartAndAdd</text><text x="704" y="126" font-size="8.5" fill="#93762e">锁内原子加入活跃集</text><text x="704" y="140" font-size="8.5" fill="#93762e">:258</text>
+    <rect x="832" y="86" width="188" height="66" rx="12" fill="#f6f2fb" stroke="#d9c9ec" filter="url(#soft)"/><text x="926" y="108" font-size="11" font-weight="600" fill="#3d2a5a">此刻起可见</text><text x="926" y="126" font-size="8.5" fill="#7a5da5">transaction.commit :259</text><text x="926" y="140" font-size="8.5" fill="#7a5da5">= 可见性时间点</text>
+  </g>
+  <g stroke="#c7c7cc" stroke-width="1.5" fill="none">
+    <line x1="190" y1="119" x2="228" y2="119" marker-end="url(#ar)"/>
+    <line x1="378" y1="119" x2="416" y2="119" marker-end="url(#ar)"/>
+    <line x1="576" y1="119" x2="614" y2="119" marker-end="url(#ar)"/>
+    <line x1="794" y1="119" x2="832" y2="119" marker-end="url(#ar)"/>
+  </g>
+
+  <!-- no transaction callout -->
+  <rect x="40" y="186" width="480" height="180" rx="13" fill="#fbeef0" stroke="#f0cdd4"/>
+  <text x="280" y="210" font-size="12" font-weight="700" fill="#7a2230" text-anchor="middle">与 Doris 的根本差异：无事务</text>
+  <text x="60" y="234" font-size="9.5" fill="#a44">✗ 无 2PC（两阶段提交）</text>
+  <text x="60" y="254" font-size="9.5" fill="#a44">✗ 无事务提交点 / 无回滚</text>
+  <text x="60" y="274" font-size="9.5" fill="#a44">✗ 无 MVCC 版本可见性裁决</text>
+  <rect x="60" y="288" width="400" height="64" rx="9" fill="#fff5f6" stroke="#f0cdd4"/>
+  <text x="260" y="308" font-size="9.5" font-weight="600" fill="#7a2230" text-anchor="middle">✓ 可见性 = Part 原子 rename 到位</text>
+  <text x="260" y="326" font-size="8.5" fill="#a44" text-anchor="middle">rename 前完全不可见，rename 后全部可见</text>
+  <text x="260" y="342" font-size="8.5" fill="#a44" text-anchor="middle">一个 Part 是"全有或全无"的最小可见单位</text>
+
+  <!-- consistency model -->
+  <rect x="540" y="186" width="480" height="180" rx="13" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="780" y="210" font-size="12" font-weight="700" fill="#12402a" text-anchor="middle">那"重试安全"靠什么？</text>
+  <text x="560" y="234" font-size="9.5" fill="#2f6f4f">· 不是事务 → 而是块级 hash 幂等去重</text>
+  <text x="560" y="254" font-size="9.5" fill="#2f6f4f">· 复制表：block_id 写 Keeper /blocks</text>
+  <text x="560" y="274" font-size="9.5" fill="#2f6f4f">· 重发同一批 → znode 已存在 → 跳过</text>
+  <rect x="560" y="288" width="440" height="64" rx="9" fill="#f2fbf6" stroke="#cdeadb"/>
+  <text x="780" y="308" font-size="9.5" font-weight="600" fill="#12402a" text-anchor="middle">最终一致 + 幂等，而非 ACID</text>
+  <text x="780" y="326" font-size="8.5" fill="#2f6f4f" text-anchor="middle">网络抖动重发不会重复入库（详见幂等去重篇）</text>
+  <text x="780" y="342" font-size="8.5" fill="#4c8567" text-anchor="middle">多副本一致由后台异步对齐（复制主线）</text>
+
+  <rect x="40" y="384" width="980" height="90" rx="12" fill="#fdf9f0" stroke="#efe3cd"/>
+  <text x="60" y="408" font-size="11" font-weight="700" fill="#7a5a1e">写入模型的双刃剑</text>
+  <text x="60" y="430" font-size="10" fill="#93762e">✓ 优势：写入极简极快——直接落一个不可变文件，无 MemTable/WAL/flush 逻辑，无锁竞争</text>
+  <text x="60" y="450" font-size="10" fill="#93762e">✗ 代价：一次 INSERT ≥ 一个 Part；高频小批量 → 小 Part 爆炸 → 查询归并慢 + merge 压力大（解法见 async insert 篇）</text>
+  <text x="60" y="468" font-size="9" fill="#b08843">系统健康关键指标：单表 active parts 数量（system.parts）</text>
+
+  <rect x="40" y="490" width="980" height="88" rx="12" fill="#f7f7f9" stroke="#e6e6ea"/>
+  <text x="60" y="514" font-size="11" font-weight="700" fill="#1d1d1f">一句话</text>
+  <text x="60" y="536" font-size="10" fill="#4b4b50">写入生命周期 = "把 Block 建成临时 Part → 锁内原子 rename 加入活跃集"。可见性就是那个 rename 动作，</text>
+  <text x="60" y="553" font-size="10" fill="#4b4b50">没有事务提交点、没有回滚；"重试安全"由块 hash 幂等去重保证。理解这一点，就理解了 ClickHouse 写入的全部性格：</text>
+  <text x="60" y="570" font-size="10" fill="#4b4b50">快、简单、追加式，但要自己管好批大小与 Part 数量。</text>
+</svg>

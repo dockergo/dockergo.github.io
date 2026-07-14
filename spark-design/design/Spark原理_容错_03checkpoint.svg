@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="520" viewBox="0 0 1060 520" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs><filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+  <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker></defs>
+  <rect width="1060" height="520" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">checkpoint：物化到 HDFS，截断过长血缘</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">RDD.checkpoint()(:1686) · ReliableRDDCheckpointData(:34) · setCheckpointDir(SparkContext:2859) · localCheckpoint(:1722)</text>
+  <!-- long lineage -->
+  <text x="60" y="82" font-size="10" font-weight="700" fill="#7a2230">❌ 迭代算法：血缘越来越长</text>
+  <g text-anchor="middle" font-size="7.5">
+    <rect x="60" y="92" width="70" height="36" rx="6" fill="#fff" stroke="#f0cdd4"/><text x="95" y="114" fill="#a44">迭代1</text>
+    <rect x="150" y="92" width="70" height="36" rx="6" fill="#fff" stroke="#f0cdd4"/><text x="185" y="114" fill="#a44">迭代2</text>
+    <rect x="240" y="92" width="70" height="36" rx="6" fill="#fff" stroke="#f0cdd4"/><text x="275" y="114" fill="#a44">迭代3</text>
+    <text x="345" y="114" fill="#a44">......</text>
+    <rect x="380" y="92" width="70" height="36" rx="6" fill="#fff" stroke="#f0cdd4"/><text x="415" y="114" fill="#a44">迭代N</text>
+  </g>
+  <g stroke="#f0cdd4" stroke-width="1.2" fill="none"><line x1="130" y1="110" x2="150" y2="110" marker-end="url(#ar)"/><line x1="220" y1="110" x2="240" y2="110" marker-end="url(#ar)"/><line x1="310" y1="110" x2="330" y2="110" marker-end="url(#ar)"/></g>
+  <text x="470" y="114" font-size="8.5" fill="#7a2230">一次故障 → 重算回溯到源头，栈深、耗时巨大</text>
+  <!-- checkpoint cut -->
+  <text x="60" y="162" font-size="10" font-weight="700" fill="#12402a">✓ checkpoint 后：血缘从此截断</text>
+  <g text-anchor="middle" font-size="7.5">
+    <rect x="60" y="172" width="90" height="40" rx="7" fill="#f6f2fb" stroke="#d9c9ec"/><text x="105" y="190" fill="#3d2a5a" font-weight="600">checkpoint</text><text x="105" y="204" fill="#9a7cc4">HDFS 物化</text>
+    <text x="168" y="196" font-size="14" fill="#34c759">✂</text>
+    <rect x="190" y="172" width="70" height="40" rx="7" fill="#fff" stroke="#bfe0cd"/><text x="225" y="196" fill="#2f6f4f">迭代 K+1</text>
+    <rect x="280" y="172" width="70" height="40" rx="7" fill="#fff" stroke="#bfe0cd"/><text x="315" y="196" fill="#2f6f4f">迭代 K+2</text>
+  </g>
+  <g stroke="#bfe0cd" stroke-width="1.2" fill="none"><line x1="150" y1="192" x2="190" y2="192" marker-end="url(#ar)"/><line x1="260" y1="192" x2="280" y2="192" marker-end="url(#ar)"/></g>
+  <text x="380" y="196" font-size="8.5" fill="#12402a">重算只回到 checkpoint 读，不再回源头</text>
+  <!-- compare table -->
+  <rect x="40" y="236" width="480" height="180" rx="13" fill="#f3f7fc" stroke="#cfe0f2"/>
+  <text x="60" y="260" font-size="11" font-weight="700" fill="#274a78">checkpoint vs cache</text>
+  <text x="60" y="284" font-size="9.5" fill="#5b7db1">· cache/persist：加速，<tspan font-weight="600">血缘仍在</tspan>——cache 丢了能重算</text>
+  <text x="60" y="304" font-size="9.5" fill="#5b7db1">· checkpoint：<tspan font-weight="600">切断血缘</tspan>——写可靠存储(HDFS)，更可靠</text>
+  <text x="60" y="324" font-size="9.5" fill="#5b7db1">· cache 在内存/本地盘，节点挂即丢；checkpoint 在 HDFS，跨故障存活</text>
+  <text x="60" y="346" font-size="9" fill="#8aa6cf">· 常配合：先 cache（快）再 checkpoint（可靠），避免 checkpoint 重算</text>
+  <text x="60" y="368" font-size="9" fill="#8aa6cf">· 须 sc.setCheckpointDir 设目录（默认 None，没设报错）</text>
+  <text x="60" y="390" font-size="9" fill="#8aa6cf">· localCheckpoint：存本地更快，但牺牲容错（节点挂就没）</text>
+  <text x="60" y="408" font-size="8.5" fill="#a1a1a6">ReliableRDDCheckpointData:31 "restart on failure"</text>
+  <rect x="540" y="236" width="480" height="180" rx="13" fill="#fdf9f0" stroke="#efe3cd"/>
+  <text x="560" y="260" font-size="11" font-weight="700" fill="#7a5a1e">何时用 checkpoint</text>
+  <text x="560" y="284" font-size="9.5" fill="#93762e">· 迭代算法（ML/图计算）：几十上百轮，血缘超长必须截断</text>
+  <text x="560" y="304" font-size="9.5" fill="#93762e">· 血缘复杂且重算昂贵：宁可写一次盘换重算便宜</text>
+  <text x="560" y="324" font-size="9.5" fill="#93762e">· 跨作业复用且要抗故障：checkpoint 到 HDFS 持久</text>
+  <text x="560" y="346" font-size="9" fill="#b08843">· 代价：写 HDFS（慢）+ 触发一次额外计算物化</text>
+  <text x="560" y="366" font-size="9" fill="#b08843">· 所以别当 cache 用：只加速用 cache，截断血缘才 checkpoint</text>
+  <text x="560" y="388" font-size="9" fill="#b08843">· Structured Streaming 的 checkpoint 是另一套（保 exactly-once）</text>
+  <rect x="40" y="428" width="980" height="56" rx="12" fill="#f7f7f9" stroke="#e6e6ea"/>
+  <text x="60" y="452" font-size="11" font-weight="700" fill="#1d1d1f">一句话</text>
+  <text x="60" y="474" font-size="10" fill="#4b4b50">checkpoint 把 RDD 物化到 HDFS 并截断血缘，让重算不回溯到源头——迭代算法必备；与 cache（只加速、血缘仍在）互补。</text>
+</svg>

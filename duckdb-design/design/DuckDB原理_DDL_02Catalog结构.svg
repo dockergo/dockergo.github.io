@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="450" viewBox="0 0 1020 450"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1020" height="450" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">Catalog 结构 · 库 → schema → 按类型分组的 CatalogSet → 条目（支持 ATTACH 多库）</text>
+
+  <!-- DatabaseManager -->
+  <rect x="30" y="52" width="960" height="56" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="48" y="76" font-size="12" font-weight="600" fill="#1b2a4a">DatabaseManager · 管理所有 ATTACH 的库</text>
+  <text x="48" y="96" font-size="9.5" fill="#5b7db1">每个连接有默认库 + 可 ATTACH 多个；跨库引用用 `库.schema.对象` 三段名</text>
+
+  <!-- 库1 -->
+  <rect x="30" y="128" width="470" height="300" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="48" y="152" font-size="12" font-weight="600" fill="#1d1d1f">AttachedDatabase: main（单文件 a.duckdb）</text>
+  <rect x="48" y="164" width="434" height="36" rx="9" fill="#fff7e6" stroke="#f0dcae"/>
+  <text x="265" y="187" font-size="10.5" font-weight="600" fill="#7a4d00" text-anchor="middle">DuckCatalog（该库的目录根）</text>
+
+  <rect x="48" y="212" width="434" height="204" rx="10" fill="#f6f9fd" stroke="#cfe0f2"/>
+  <text x="64" y="234" font-size="10.5" font-weight="600" fill="#1b2a4a">SchemaCatalogEntry: main（默认 schema）</text>
+  <text x="64" y="252" font-size="9" fill="#5b7db1">每个 schema 内按对象类型各挂一个 CatalogSet：</text>
+
+  <rect x="64" y="262" width="196" height="40" rx="8" fill="#eafaf1" stroke="#bce6cd"/><text x="162" y="280" font-size="9.5" fill="#0f5132" text-anchor="middle">CatalogSet&lt;Table&gt;</text><text x="162" y="295" font-size="8.5" fill="#3f8f66" text-anchor="middle">sales, customers…</text>
+  <rect x="270" y="262" width="196" height="40" rx="8" fill="#eef3fb" stroke="#bcd0ec"/><text x="368" y="280" font-size="9.5" fill="#1b2a4a" text-anchor="middle">CatalogSet&lt;View&gt;</text><text x="368" y="295" font-size="8.5" fill="#5b7db1" text-anchor="middle">v_report…</text>
+  <rect x="64" y="310" width="196" height="40" rx="8" fill="#f4eefb" stroke="#d9c9ef"/><text x="162" y="328" font-size="9.5" fill="#3c1361" text-anchor="middle">CatalogSet&lt;Index&gt;</text><text x="162" y="343" font-size="8.5" fill="#7a5aa8" text-anchor="middle">ART 索引</text>
+  <rect x="270" y="310" width="196" height="40" rx="8" fill="#fff7e6" stroke="#f0dcae"/><text x="368" y="328" font-size="9.5" fill="#7a4d00" text-anchor="middle">CatalogSet&lt;Sequence&gt;</text><text x="368" y="343" font-size="8.5" fill="#9a7328" text-anchor="middle">seq_id…</text>
+  <rect x="64" y="358" width="402" height="46" rx="8" fill="#ffffff" stroke="#e2e2e7"/>
+  <text x="265" y="378" font-size="9.5" fill="#494950" text-anchor="middle">还有 Macro / Type / Trigger / Function 等各自的 CatalogSet</text>
+  <text x="265" y="394" font-size="8.5" fill="#86868b" text-anchor="middle">catalog/catalog_entry/*_catalog_entry.cpp</text>
+
+  <!-- 库2 -->
+  <rect x="520" y="128" width="470" height="300" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="538" y="152" font-size="12" font-weight="600" fill="#1d1d1f">AttachedDatabase: analytics（ATTACH b.duckdb）</text>
+  <rect x="538" y="164" width="434" height="36" rx="9" fill="#fff7e6" stroke="#f0dcae"/>
+  <text x="755" y="187" font-size="10.5" font-weight="600" fill="#7a4d00" text-anchor="middle">独立的 DuckCatalog</text>
+  <rect x="538" y="212" width="434" height="120" rx="10" fill="#f6f9fd" stroke="#cfe0f2"/>
+  <text x="755" y="250" font-size="10" fill="#5b7db1" text-anchor="middle">独立的 schema / 表 / 索引…</text>
+  <text x="755" y="272" font-size="10" fill="#5b7db1" text-anchor="middle">跨库查询：SELECT … FROM analytics.main.events</text>
+  <text x="755" y="294" font-size="9.5" fill="#5b7db1" text-anchor="middle">JOIN main.sales …</text>
+  <rect x="538" y="344" width="434" height="60" rx="10" fill="#eafaf1" stroke="#bce6cd"/>
+  <text x="755" y="368" font-size="10" font-weight="600" fill="#0f5132" text-anchor="middle">:memory: 也是一个 AttachedDatabase</text>
+  <text x="755" y="388" font-size="9" fill="#3f8f66" text-anchor="middle">无文件、纯内存 Catalog + 数据</text>
+
+  <line x1="265" y1="108" x2="265" y2="128" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="755" y1="108" x2="755" y2="128" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+</svg>

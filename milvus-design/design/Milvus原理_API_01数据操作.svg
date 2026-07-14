@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="520" viewBox="0 0 1080 520"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1080" height="520" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Milvus 数据操作 · insert / delete / upsert(追加日志语义)</text>
+  <text x="30" y="50" font-size="11" fill="#a1a1a6">所有写不原地改,而是往 streaming WAL 追加,异步落 binlog;段 id 由 streaming node 分配</text>
+
+  <!-- Proxy entry -->
+  <rect x="40" y="72" width="180" height="386" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="130" y="98" font-size="12" font-weight="600" fill="#1b2a4a" text-anchor="middle">Proxy</text>
+  <text x="130" y="118" font-size="9" fill="#5b7db1" text-anchor="middle">接入 · 建消息</text>
+  <text x="130" y="134" font-size="9" fill="#5b7db1" text-anchor="middle">按主键 hash 分</text>
+  <text x="130" y="150" font-size="9" fill="#5b7db1" text-anchor="middle">vchannel</text>
+  <text x="130" y="250" font-size="9.5" fill="#274a78" text-anchor="middle">assignChannels</text>
+  <text x="130" y="266" font-size="9.5" fill="#274a78" text-anchor="middle">ByPK</text>
+  <text x="130" y="410" font-size="9" fill="#a1a1a6" text-anchor="middle">返回 ts 用于</text>
+  <text x="130" y="426" font-size="9" fill="#a1a1a6" text-anchor="middle">session 一致性</text>
+
+  <!-- insert -->
+  <rect x="250" y="72" width="500" height="120" rx="13" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="270" y="96" font-size="12" font-weight="600" fill="#3d2a5a">insert(task_insert_streaming.go:28)</text>
+  <text x="270" y="118" font-size="9.5" fill="#3d2a5a">Proxy 建可变消息 → streaming.WAL().AppendMessages 写进日志</text>
+  <text x="270" y="138" font-size="9.5" fill="#3d2a5a">段 id 由 streaming node 分配(Proxy 侧传 0,:110)</text>
+  <text x="270" y="158" font-size="9.5" fill="#3d2a5a">消息按主键 hash 分到 vchannel(assignChannelsByPK)</text>
+  <text x="270" y="180" font-size="9" fill="#a1a1a6">向量 + 标量字段作为一条 InsertMsg 追加</text>
+
+  <!-- delete -->
+  <rect x="250" y="204" width="500" height="120" rx="13" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="270" y="228" font-size="12" font-weight="600" fill="#3d2a5a">delete(task_delete.go)</text>
+  <text x="270" y="250" font-size="9.5" fill="#3d2a5a">建 DeleteMsg,按 hash 重分到 vchannel</text>
+  <text x="270" y="270" font-size="9.5" fill="#3d2a5a">删除是写"删除标记"(delta),不立即从段移除</text>
+  <text x="270" y="292" font-size="9" fill="#a1a1a6">数据由 compaction 应用删除后才真正移除空间</text>
+  <text x="270" y="310" font-size="9" fill="#a1a1a6">误区:delete 立即腾空间 —— 实际是惰性回收</text>
+
+  <!-- upsert -->
+  <rect x="250" y="336" width="500" height="122" rx="13" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="270" y="360" font-size="12" font-weight="600" fill="#3d2a5a">upsert(task_upsert.go:191)= delete + insert</text>
+  <text x="270" y="382" font-size="9.5" fill="#3d2a5a">先删旧主键再插新版本</text>
+  <text x="270" y="402" font-size="9.5" fill="#3d2a5a">upsertMsg 同时持 DeleteMsg + InsertMsg</text>
+  <text x="270" y="424" font-size="9" fill="#a1a1a6">误区:upsert 是原地更新 —— 实际是 delete(标记)+ insert(新版本)</text>
+  <text x="270" y="442" font-size="9" fill="#a1a1a6">旧版本由 compaction 惰性回收;非必要用 insert 省双开销</text>
+
+  <!-- WAL destination -->
+  <rect x="810" y="72" width="230" height="250" rx="14" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="925" y="98" font-size="12" font-weight="600" fill="#5a3410" text-anchor="middle">streaming WAL</text>
+  <text x="925" y="120" font-size="9.5" fill="#93762e" text-anchor="middle">按 vchannel 分片的日志</text>
+  <text x="925" y="150" font-size="9.5" fill="#5a3410" text-anchor="middle">AppendMessages</text>
+  <text x="925" y="170" font-size="9" fill="#93762e" text-anchor="middle">写入的"真相"</text>
+  <text x="925" y="196" font-size="9.5" fill="#5a3410" text-anchor="middle">Pulsar / Kafka</text>
+  <text x="925" y="214" font-size="9.5" fill="#5a3410" text-anchor="middle">/ woodpecker 为底</text>
+  <line x1="835" y1="234" x2="1015" y2="234" stroke="#e8cf9a" stroke-width="1"/>
+  <text x="925" y="256" font-size="9" fill="#93762e" text-anchor="middle">streaming node 分配段 id</text>
+  <text x="925" y="276" font-size="9" fill="#93762e" text-anchor="middle">异步消费落 binlog</text>
+  <text x="925" y="300" font-size="9" fill="#a1a1a6" text-anchor="middle">类比 Kafka 分区日志</text>
+
+  <!-- append-log note -->
+  <rect x="810" y="336" width="230" height="122" rx="14" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="925" y="360" font-size="11" font-weight="600" fill="#1d1d1f" text-anchor="middle">追加日志语义</text>
+  <text x="925" y="384" font-size="9.5" fill="#3f3f45" text-anchor="middle">不原地改,只往 WAL 追加</text>
+  <text x="925" y="404" font-size="9.5" fill="#3f3f45" text-anchor="middle">异步落 binlog</text>
+  <text x="925" y="428" font-size="9" fill="#a1a1a6" text-anchor="middle">误区:insert 立即可查</text>
+  <text x="925" y="446" font-size="9" fill="#a1a1a6" text-anchor="middle">需 flush + 建索引 + 一致性约束</text>
+
+  <!-- connectors Proxy -> ops -->
+  <path d="M220,132 L250,132" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M220,264 L250,264" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M220,397 L250,397" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <!-- ops -> WAL -->
+  <path d="M750,132 L810,132" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M750,264 L780,264 L780,190 L810,190" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M750,397 L790,397 L790,210 L810,210" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+</svg>

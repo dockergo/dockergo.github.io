@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="500" viewBox="0 0 1000 500"
+     font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1000" height="500" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">quic-go HTTP/3 与 QPACK · 请求映射到流 + 头部压缩（外部库 quic-go/qpack）</text>
+  <text x="30" y="50" font-size="10" fill="#86868b">与 quiche 的差异：quic-go 把 QPACK 拆成独立模块 github.com/quic-go/qpack v0.6.0，仅静态表 + Huffman</text>
+
+  <!-- 请求映射 -->
+  <rect x="30" y="70" width="940" height="130" rx="14" fill="#f5faf6" stroke="#cfe6d5" filter="url(#soft)"/>
+  <text x="48" y="92" font-size="11.5" font-weight="600" fill="#2c5a3a">一个 HTTP 请求 → 一条 QUIC 双向流（headers.go / body.go）</text>
+  <rect x="48" y="106" width="270" height="76" rx="10" fill="#ffffff" stroke="#cfe6d5"/><text x="183" y="128" font-size="9" font-weight="600" fill="#2c5a3a" text-anchor="middle">HEADERS 帧（0x1）</text><text x="183" y="146" font-size="8" fill="#5aa06f" text-anchor="middle">:method :path :authority + 头字段</text><text x="183" y="164" font-size="8" fill="#5aa06f" text-anchor="middle">经 QPACK 编码为字节</text>
+  <rect x="332" y="106" width="270" height="76" rx="10" fill="#ffffff" stroke="#cfe6d5"/><text x="467" y="128" font-size="9" font-weight="600" fill="#2c5a3a" text-anchor="middle">DATA 帧（0x0）</text><text x="467" y="146" font-size="8" fill="#5aa06f" text-anchor="middle">请求/响应体</text><text x="467" y="164" font-size="8" fill="#5aa06f" text-anchor="middle">可多帧流式传输</text>
+  <rect x="616" y="106" width="336" height="76" rx="10" fill="#ffffff" stroke="#cfe6d5"/><text x="784" y="128" font-size="9" font-weight="600" fill="#2c5a3a" text-anchor="middle">流生命周期</text><text x="784" y="146" font-size="8" fill="#5aa06f" text-anchor="middle">HEADERS → DATA... → (可选 trailer)</text><text x="784" y="164" font-size="8" fill="#5aa06f" text-anchor="middle">写完关流；流间独立无队头阻塞</text>
+
+  <!-- QPACK -->
+  <rect x="30" y="216" width="940" height="180" rx="14" fill="#f4eefb" stroke="#d9c9ef" filter="url(#soft)"/>
+  <text x="48" y="238" font-size="11.5" font-weight="600" fill="#3c1361">QPACK 头部压缩（github.com/quic-go/qpack · headers.go:17 引用）</text>
+  <rect x="48" y="252" width="290" height="126" rx="10" fill="#ffffff" stroke="#d9c9ef"/><text x="193" y="274" font-size="9.5" font-weight="600" fill="#3c1361" text-anchor="middle">静态表</text><text x="193" y="294" font-size="8" fill="#7a52a8" text-anchor="middle">RFC 9204 预定义的</text><text x="193" y="310" font-size="8" fill="#7a52a8" text-anchor="middle">常见头字段索引表</text><text x="193" y="330" font-size="8" fill="#7a52a8" text-anchor="middle">如 :method GET / :status 200</text><text x="193" y="350" font-size="8" fill="#7a52a8" text-anchor="middle">命中 → 只传一个索引号</text>
+  <rect x="352" y="252" width="290" height="126" rx="10" fill="#ffffff" stroke="#d9c9ef"/><text x="497" y="274" font-size="9.5" font-weight="600" fill="#3c1361" text-anchor="middle">Huffman 编码</text><text x="497" y="294" font-size="8" fill="#7a52a8" text-anchor="middle">未命中静态表的字面值</text><text x="497" y="310" font-size="8" fill="#7a52a8" text-anchor="middle">用 Huffman 压缩字符</text><text x="497" y="330" font-size="8" fill="#7a52a8" text-anchor="middle">进一步省字节</text><text x="497" y="350" font-size="8" fill="#7a52a8" text-anchor="middle">parseHeaders(:54) 解码</text>
+  <rect x="656" y="252" width="296" height="126" rx="10" fill="#fbeaea" stroke="#e7c3c3"/><text x="804" y="274" font-size="9.5" font-weight="600" fill="#7a2a2a" text-anchor="middle">动态表（容量 0）</text><text x="804" y="294" font-size="8" fill="#a05555" text-anchor="middle">quic-go/qpack 未实现动态表</text><text x="804" y="310" font-size="8" fill="#a05555" text-anchor="middle">= 声明动态表容量为 0</text><text x="804" y="330" font-size="8" fill="#a05555" text-anchor="middle">好处：无跨流依赖，</text><text x="804" y="350" font-size="8" fill="#a05555" text-anchor="middle">天然免 QPACK 队头阻塞</text>
+
+  <!-- 对比 -->
+  <rect x="30" y="412" width="940" height="70" rx="12" fill="#f6f6f8" stroke="#e2e2e7"/>
+  <text x="48" y="434" font-size="9.5" fill="#494950"><tspan font-weight="600" fill="#1d1d1f">对比 quiche：</tspan>quiche 的 QPACK 含完整动态表 + blocking manager 抗队头阻塞；quic-go 走「不用动态表」的简化路线</text>
+  <text x="48" y="454" font-size="8.5" fill="#86868b">权衡：动态表能进一步压缩重复头，但引入编/解码流的跨流依赖与阻塞管理复杂度；quic-go 选简单与鲁棒</text>
+  <text x="48" y="472" font-size="8.5" fill="#86868b">SETTINGS 帧协商 QPACK 参数（如 max table capacity），双方据此决定是否启用动态表</text>
+
+  <path d="M318,144 L332,144" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M183,200 L183,216" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+</svg>

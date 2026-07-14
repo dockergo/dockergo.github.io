@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="510" viewBox="0 0 1080 510" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="510" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Kafka KRaft · Raft 共识（KafkaRaftClient 标准 Raft）</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">prepareAppend 追加 BatchAccumulator 暂不复制,schedulePreparedAppend 放行;onBecomeLeader 选举;元数据日志与数据日志同构</text>
+
+  <!-- two-phase append -->
+  <rect x="30" y="72" width="640" height="200" rx="14" fill="#f3f7fc" stroke="#dbe7f5"/>
+  <text x="46" y="96" font-size="11" font-weight="700" fill="#1b2a4a">两段式追加（prepare / schedule 分离）· KafkaRaftClient.java</text>
+
+  <rect x="48" y="110" width="296" height="146" rx="11" fill="#ffffff" stroke="#cfe0f2" filter="url(#soft)"/>
+  <text x="196" y="134" font-size="10.5" font-weight="700" fill="#274a78" text-anchor="middle">① prepareAppend（:3702）</text>
+  <text x="196" y="156" font-size="8.8" fill="#5b7db1" text-anchor="middle">记录追加到 Leader 的</text>
+  <text x="196" y="172" font-size="8.8" fill="#5b7db1" text-anchor="middle">BatchAccumulator</text>
+  <rect x="64" y="184" width="264" height="30" rx="7" fill="#fff7e6" stroke="#e8cf9a"/>
+  <text x="196" y="203" font-size="8.6" fill="#5a3410" text-anchor="middle">暂不复制(仅暂存,等放行)</text>
+  <text x="196" y="234" font-size="8.4" fill="#5b7db1" text-anchor="middle">让控制器先 replay 进内存再决定复制</text>
+
+  <rect x="374" y="110" width="278" height="146" rx="11" fill="#ffffff" stroke="#cfe0f2" filter="url(#soft)"/>
+  <text x="513" y="134" font-size="10.5" font-weight="700" fill="#274a78" text-anchor="middle">② schedulePreparedAppend（:3735）</text>
+  <text x="513" y="156" font-size="8.8" fill="#5b7db1" text-anchor="middle">调 accumulator().allowDrain()</text>
+  <rect x="390" y="168" width="246" height="30" rx="7" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="513" y="187" font-size="8.6" fill="#12402a" text-anchor="middle">放行复制到 Follower</text>
+  <text x="513" y="216" font-size="8.8" fill="#5b7db1" text-anchor="middle">多数派确认 → commit</text>
+  <text x="513" y="234" font-size="8.8" fill="#5b7db1" text-anchor="middle">提交后触发 Listener handleCommit</text>
+
+  <path d="M344,183 L374,183" stroke="#c7c7cc" stroke-width="1.6" fill="none" marker-end="url(#ar)"/>
+
+  <!-- election -->
+  <rect x="690" y="72" width="360" height="200" rx="14" fill="#f3f7fc" stroke="#dbe7f5"/>
+  <text x="706" y="96" font-size="11" font-weight="700" fill="#1b2a4a">选举与角色回调</text>
+
+  <rect x="708" y="110" width="324" height="44" rx="9" fill="#ffffff" stroke="#cfe0f2"/>
+  <text x="870" y="130" font-size="9.4" font-weight="600" fill="#274a78" text-anchor="middle">onBecomeLeader（:649）</text>
+  <text x="870" y="146" font-size="8.4" fill="#5b7db1" text-anchor="middle">quorum.transitionToLeader + 写 epoch 起始记录</text>
+
+  <rect x="708" y="162" width="324" height="44" rx="9" fill="#ffffff" stroke="#cfe0f2"/>
+  <text x="870" y="182" font-size="9.4" font-weight="600" fill="#274a78" text-anchor="middle">maybeFireLeaderChange（:474）</text>
+  <text x="870" y="198" font-size="8.4" fill="#5b7db1" text-anchor="middle">通知监听者 leader 变更</text>
+
+  <rect x="708" y="214" width="324" height="46" rx="9" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="870" y="233" font-size="9" font-weight="600" fill="#1b2a4a" text-anchor="middle">QuorumController 作为 RaftClient.Listener</text>
+  <text x="870" y="250" font-size="8.3" fill="#5b7db1" text-anchor="middle">handleCommit 推进/replay · handleLeaderChange claim/resign</text>
+
+  <!-- metadata log = cluster_metadata -->
+  <rect x="30" y="292" width="1020" height="118" rx="14" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="46" y="316" font-size="11.5" font-weight="700" fill="#5a3410">元数据日志 = __cluster_metadata 单分区 topic（CLUSTER_METADATA_TOPIC_PARTITION · Topic.java:30）</text>
+  <text x="46" y="336" font-size="9" fill="#93762e">由控制器 quorum 复制 —— 与普通数据 topic 用同一套 Raft / 日志机制(追加、复制、快照)</text>
+
+  <g font-size="8.6" text-anchor="middle">
+    <rect x="46" y="350" width="150" height="46" rx="8" fill="#fdf6ea" stroke="#efdcb4"/><text x="121" y="370" font-weight="600" fill="#5a3410">追加(append)</text><text x="121" y="386" fill="#93762e">Leader 顺序写</text>
+    <rect x="212" y="350" width="150" height="46" rx="8" fill="#fdf6ea" stroke="#efdcb4"/><text x="287" y="370" font-weight="600" fill="#5a3410">复制(replicate)</text><text x="287" y="386" fill="#93762e">Follower 多数派</text>
+    <rect x="378" y="350" width="150" height="46" rx="8" fill="#fdf6ea" stroke="#efdcb4"/><text x="453" y="370" font-weight="600" fill="#5a3410">快照(snapshot)</text><text x="453" y="386" fill="#93762e">压缩历史记录</text>
+    <rect x="560" y="350" width="474" height="46" rx="8" fill="#f3f7fc" stroke="#cfe0f2"/><text x="797" y="370" font-weight="600" fill="#274a78">洞察:元数据即日志(metadata as log)</text><text x="797" y="386" fill="#5b7db1">与数据日志同构 → 复用成熟的日志/复制机制,架构更简</text>
+  </g>
+
+  <text x="30" y="440" font-size="8.8" fill="#a1a1a6">prepare 与 schedule 分离的意义:控制器可在"记录暂存 Leader、尚未复制"的窗口内先 replay 进内存(带 MVCC 快照),确认无误后再放行复制 —— 先写后应用</text>
+  <text x="30" y="462" font-size="8.8" fill="#a1a1a6">误区:并非每个 Broker 都参与 Raft 选举 —— 只有 controller 角色的节点组成 quorum 投票(见角色篇)</text>
+</svg>

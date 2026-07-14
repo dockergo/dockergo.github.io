@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="536" viewBox="0 0 1080 536" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="536" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Flink 原理 · 屏障对齐（对齐 vs 非对齐 vs 超时）</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">SingleCheckpointBarrierHandler.processBarrier 计数;EXACTLY_ONCE 需对齐,AT_LEAST_ONCE 跳过</text>
+
+  <!-- Aligned -->
+  <rect x="40" y="66" width="325" height="230" rx="13" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="56" y="88" font-size="11" font-weight="700" fill="#12402a">对齐检查点（aligned）</text>
+  <text x="56" y="105" font-size="8.2" fill="#2f6f4f">等所有通道屏障,先到的阻塞缓冲</text>
+  <!-- two input channels -->
+  <g font-size="7.6" text-anchor="middle">
+    <rect x="56" y="116" width="130" height="26" rx="6" fill="#fff" stroke="#bfe0cd"/><text x="121" y="132" fill="#12402a">通道1 屏障已到</text>
+    <rect x="56" y="148" width="130" height="26" rx="6" fill="#fbeaea" stroke="#e7c3c3"/><text x="121" y="164" fill="#7a2a2a">通道1 后续数据被阻塞缓冲</text>
+    <rect x="200" y="116" width="150" height="26" rx="6" fill="#fdf6ea" stroke="#efdcb4"/><text x="275" y="132" fill="#5a3410">通道2 屏障未到(慢)</text>
+    <rect x="200" y="148" width="150" height="26" rx="6" fill="#fff" stroke="#bfe0cd"/><text x="275" y="164" fill="#12402a">继续等其屏障</text>
+  </g>
+  <rect x="56" y="184" width="294" height="30" rx="7" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="203" y="203" font-size="8.4" font-weight="600" text-anchor="middle" fill="#12402a">两通道屏障都到 → 干净一致切面快照</text>
+  <text x="56" y="234" font-size="8.4" font-weight="700" fill="#12402a">✓ 精确一次(exactly-once)</text>
+  <text x="56" y="252" font-size="8" fill="#2f6f4f">代价:慢通道拖累对齐延迟</text>
+  <text x="56" y="270" font-size="8" fill="#2f6f4f">稳态无反压时最省(快照体积最小)</text>
+  <text x="56" y="288" font-size="7.6" fill="#2f6f4f">allBarriersReceivedFuture 完成</text>
+
+  <!-- Unaligned -->
+  <rect x="378" y="66" width="325" height="230" rx="13" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="394" y="88" font-size="11" font-weight="700" fill="#5a3410">非对齐检查点（unaligned）</text>
+  <text x="394" y="105" font-size="8.2" fill="#93762e">不等对齐,连在途数据一起快照</text>
+  <g font-size="7.6" text-anchor="middle">
+    <rect x="394" y="116" width="130" height="26" rx="6" fill="#fff" stroke="#e8cf9a"/><text x="459" y="132" fill="#5a3410">通道1 屏障已到</text>
+    <rect x="394" y="148" width="130" height="26" rx="6" fill="#fdf6ea" stroke="#efdcb4"/><text x="459" y="164" fill="#5a3410">在途数据一起快照</text>
+    <rect x="538" y="116" width="150" height="26" rx="6" fill="#fdf6ea" stroke="#efdcb4"/><text x="613" y="132" fill="#5a3410">通道2 屏障未到</text>
+    <rect x="538" y="148" width="150" height="26" rx="6" fill="#fdf6ea" stroke="#efdcb4"/><text x="613" y="164" fill="#5a3410">越过屏障的数据也存</text>
+  </g>
+  <rect x="394" y="184" width="294" height="30" rx="7" fill="#fff7e6" stroke="#e8cf9a"/>
+  <text x="541" y="203" font-size="8.4" font-weight="600" text-anchor="middle" fill="#5a3410">屏障立即转发,不阻塞 → 低延迟</text>
+  <text x="394" y="234" font-size="8.4" font-weight="700" fill="#5a3410">✓ 低延迟 · 抗反压</text>
+  <text x="394" y="252" font-size="8" fill="#93762e">代价:快照更大、恢复更慢</text>
+  <text x="394" y="270" font-size="8" fill="#93762e">反压严重时优选</text>
+  <text x="394" y="288" font-size="7.6" fill="#93762e">仍是精确一次(存下在途数据)</text>
+
+  <!-- Timeout -->
+  <rect x="716" y="66" width="324" height="230" rx="13" fill="#f3f7fc" stroke="#cfe0f2" filter="url(#soft)"/>
+  <text x="732" y="88" font-size="11" font-weight="700" fill="#274a78">对齐超时（alignedWithTimeout）</text>
+  <text x="732" y="105" font-size="8.2" fill="#5b7db1">先对齐,超时未完成则切非对齐</text>
+  <g font-size="7.8">
+    <rect x="732" y="116" width="292" height="30" rx="7" fill="#eafaf1" stroke="#bfe0cd"/><text x="746" y="135" fill="#12402a">阶段1:先按对齐等屏障(省体积)</text>
+    <rect x="732" y="152" width="292" height="30" rx="7" fill="#fbeaea" stroke="#e7c3c3"/><text x="746" y="171" fill="#7a2a2a">超 NO_ALIGNED_CHECKPOINT_TIME_OUT</text>
+    <rect x="732" y="188" width="292" height="30" rx="7" fill="#fff7e6" stroke="#e8cf9a"/><text x="746" y="207" fill="#5a3410">阶段2:切非对齐(保证进度)</text>
+  </g>
+  <text x="732" y="240" font-size="8.4" font-weight="700" fill="#274a78">✓ 两全折中</text>
+  <text x="732" y="258" font-size="8" fill="#5b7db1">正常走对齐,反压时自动降级</text>
+  <text x="732" y="276" font-size="8" fill="#5b7db1">CheckpointOptions.java 控制</text>
+
+  <!-- mode mapping -->
+  <rect x="40" y="312" width="1000" height="76" rx="13" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="56" y="334" font-size="10.5" font-weight="700" fill="#1d1d1f">CheckpointingMode 决定要不要对齐</text>
+  <g font-size="8.8">
+    <rect x="56" y="344" width="480" height="34" rx="8" fill="#eafaf1" stroke="#bfe0cd"/><text x="72" y="360" font-weight="600" fill="#12402a">EXACTLY_ONCE</text><text x="72" y="374" font-size="8" fill="#2f6f4f">需对齐(或非对齐存在途数据)→ 一致快照</text>
+    <rect x="560" y="344" width="480" height="34" rx="8" fill="#fbeaea" stroke="#e7c3c3"/><text x="576" y="360" font-weight="600" fill="#4a1414">AT_LEAST_ONCE</text><text x="576" y="374" font-size="8" fill="#7a2a2a">跳过对齐(更快,但故障可能重复处理)</text>
+  </g>
+
+  <!-- bottom banner -->
+  <rect x="40" y="402" width="1000" height="42" rx="12" fill="#f0f0f4" stroke="#d2d2d7"/>
+  <text x="540" y="428" font-size="9.5" font-weight="700" text-anchor="middle" fill="#48484a">误区破除:非对齐不总更好——它低延迟抗反压,但快照更大恢复更慢;稳态无反压时对齐更省</text>
+
+  <text x="40" y="466" font-size="8.4" fill="#6e6e73">对齐发生在【任务执行】的输入处理:SingleCheckpointBarrierHandler 计数各通道屏障,到齐则触发本算子快照。</text>
+  <text x="40" y="484" font-size="8.4" fill="#6e6e73">选择依据:反压严重、追求低延迟检查点 → 非对齐/对齐超时;追求最小快照体积 → 对齐。</text>
+</svg>

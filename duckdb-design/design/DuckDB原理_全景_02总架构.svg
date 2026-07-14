@@ -1,0 +1,109 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="700" viewBox="0 0 1020 700"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1020" height="700" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">DuckDB 总架构 · 进程内嵌入式：从 SQL 到结果的单机全链路</text>
+
+  <!-- 接入层 -->
+  <rect x="30" y="50" width="960" height="82" rx="14" fill="#f4eefb" stroke="#d9c9ef" filter="url(#soft)"/>
+  <text x="48" y="74" font-size="12.5" font-weight="600" fill="#3c1361">① 接入层 · 作为库链接进宿主进程</text>
+  <rect x="48" y="86" width="150" height="34" rx="9" fill="#ffffff" stroke="#d9c9ef"/><text x="123" y="108" font-size="11" fill="#3c1361" text-anchor="middle">CLI / C·C++ API</text>
+  <rect x="210" y="86" width="150" height="34" rx="9" fill="#ffffff" stroke="#d9c9ef"/><text x="285" y="108" font-size="11" fill="#3c1361" text-anchor="middle">Python / R / Node</text>
+  <rect x="372" y="86" width="150" height="34" rx="9" fill="#ffffff" stroke="#d9c9ef"/><text x="447" y="108" font-size="11" fill="#3c1361" text-anchor="middle">JDBC / ODBC / WASM</text>
+  <rect x="540" y="86" width="200" height="34" rx="9" fill="#eef3fb" stroke="#bcd0ec"/><text x="640" y="108" font-size="11" fill="#1b2a4a" text-anchor="middle">Connection → ClientContext</text>
+  <text x="770" y="100" font-size="10.5" fill="#7a5aa8">无网络 · 无守护进程</text>
+  <text x="770" y="116" font-size="10.5" fill="#7a5aa8">数据在宿主内存 / 单文件</text>
+
+  <!-- 处理层 -->
+  <rect x="30" y="148" width="960" height="150" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="48" y="172" font-size="12.5" font-weight="600" fill="#1d1d1f">② 处理层 · 编译一条 SQL（client_context.cpp）</text>
+
+  <rect x="48" y="188" width="130" height="86" rx="11" fill="#f4eefb" stroke="#d9c9ef"/>
+  <text x="113" y="222" font-size="11.5" font-weight="600" fill="#3c1361" text-anchor="middle">Parser</text>
+  <text x="113" y="242" font-size="10" fill="#7a5aa8" text-anchor="middle">Postgres 派生</text>
+  <text x="113" y="256" font-size="10" fill="#7a5aa8" text-anchor="middle">SQL → AST</text>
+
+  <rect x="196" y="188" width="130" height="86" rx="11" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="261" y="222" font-size="11.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">Binder</text>
+  <text x="261" y="242" font-size="10" fill="#5b7db1" text-anchor="middle">名称/类型绑定</text>
+  <text x="261" y="256" font-size="10" fill="#5b7db1" text-anchor="middle">AST → 逻辑算子</text>
+
+  <rect x="344" y="188" width="150" height="86" rx="11" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="419" y="222" font-size="11.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">Optimizer</text>
+  <text x="419" y="242" font-size="10" fill="#5b7db1" text-anchor="middle">~30 pass RBO/CBO</text>
+  <text x="419" y="256" font-size="10" fill="#5b7db1" text-anchor="middle">逻辑 → 逻辑</text>
+
+  <rect x="512" y="188" width="160" height="86" rx="11" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="592" y="222" font-size="11.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">PhysicalPlanGenerator</text>
+  <text x="592" y="242" font-size="10" fill="#5b7db1" text-anchor="middle">逻辑 → 物理算子</text>
+  <text x="592" y="256" font-size="10" fill="#5b7db1" text-anchor="middle">选 Join/聚合算法</text>
+
+  <rect x="690" y="188" width="284" height="86" rx="11" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="832" y="216" font-size="11.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">Executor · 构建 Pipeline</text>
+  <text x="832" y="238" font-size="10" fill="#5b7db1" text-anchor="middle">MetaPipeline → Pipeline → Event</text>
+  <text x="832" y="254" font-size="10" fill="#5b7db1" text-anchor="middle">交 TaskScheduler 线程池并行</text>
+
+  <line x1="178" y1="231" x2="196" y2="231" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="326" y1="231" x2="344" y2="231" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="494" y1="231" x2="512" y2="231" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="672" y1="231" x2="690" y2="231" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+
+  <!-- 执行层 -->
+  <rect x="30" y="314" width="620" height="164" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="48" y="338" font-size="12.5" font-weight="600" fill="#1d1d1f">③ 向量化执行层 · push-based</text>
+  <rect x="48" y="352" width="280" height="52" rx="11" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="188" y="374" font-size="11" font-weight="600" fill="#1b2a4a" text-anchor="middle">Operator：Sink / Source / Execute</text>
+  <text x="188" y="392" font-size="10" fill="#5b7db1" text-anchor="middle">数据单位 = DataChunk（列向量批 2048）</text>
+  <rect x="344" y="352" width="288" height="52" rx="11" fill="#eafaf1" stroke="#bce6cd"/>
+  <text x="488" y="374" font-size="11" font-weight="600" fill="#0f5132" text-anchor="middle">morsel 并行 · TaskScheduler 线程池</text>
+  <text x="488" y="392" font-size="10" fill="#3f8f66" text-anchor="middle">源按 morsel 切分 → 多线程抢占推进</text>
+  <rect x="48" y="414" width="584" height="50" rx="11" fill="#f6f6f8" stroke="#e2e2e7"/>
+  <text x="340" y="443" font-size="10.5" fill="#6a6a70" text-anchor="middle">表达式向量化求值 · Hash 聚合/Join · 排序 · 窗口 —— 全部在列批上批量执行</text>
+
+  <!-- 事务层 -->
+  <rect x="668" y="314" width="322" height="164" rx="14" fill="#fbeaea" stroke="#f0cccc" filter="url(#soft)"/>
+  <text x="686" y="338" font-size="12.5" font-weight="600" fill="#7d1f1f">④ 事务层 · MVCC</text>
+  <rect x="686" y="352" width="286" height="44" rx="10" fill="#ffffff" stroke="#f0cccc"/>
+  <text x="829" y="379" font-size="10.8" fill="#7d1f1f" text-anchor="middle">DuckTransactionManager · 快照隔离</text>
+  <rect x="686" y="404" width="286" height="44" rx="10" fill="#ffffff" stroke="#f0cccc"/>
+  <text x="829" y="431" font-size="10.8" fill="#7d1f1f" text-anchor="middle">UndoBuffer 版本链 · 乐观并发</text>
+  <text x="829" y="466" font-size="10" fill="#b06a6a" text-anchor="middle">读走快照，写记 undo，提交定 commit_id</text>
+
+  <!-- 存储层 -->
+  <rect x="30" y="494" width="960" height="182" rx="14" fill="#fff7e6" stroke="#f0dcae" filter="url(#soft)"/>
+  <text x="48" y="518" font-size="12.5" font-weight="600" fill="#7a4d00">⑤ 存储层 · 自管单文件（storage_manager / block_manager）</text>
+
+  <rect x="48" y="532" width="300" height="128" rx="11" fill="#ffffff" stroke="#f0dcae"/>
+  <text x="198" y="554" font-size="11" font-weight="600" fill="#7a4d00" text-anchor="middle">逻辑数据组织</text>
+  <text x="198" y="576" font-size="10.5" fill="#9a7328" text-anchor="middle">DataTable → RowGroupCollection</text>
+  <text x="198" y="596" font-size="10.5" fill="#9a7328" text-anchor="middle">→ RowGroup(122880 行)</text>
+  <text x="198" y="616" font-size="10.5" fill="#9a7328" text-anchor="middle">→ ColumnData → ColumnSegment</text>
+  <text x="198" y="636" font-size="10.5" fill="#9a7328" text-anchor="middle">列级压缩 · ART 索引</text>
+
+  <rect x="364" y="532" width="300" height="128" rx="11" fill="#ffffff" stroke="#f0dcae"/>
+  <text x="514" y="554" font-size="11" font-weight="600" fill="#7a4d00" text-anchor="middle">物理块与缓存</text>
+  <text x="514" y="576" font-size="10.5" fill="#9a7328" text-anchor="middle">SingleFileBlockManager</text>
+  <text x="514" y="596" font-size="10.5" fill="#9a7328" text-anchor="middle">Block 分配 256KB（默认）</text>
+  <text x="514" y="616" font-size="10.5" fill="#9a7328" text-anchor="middle">BufferManager / BufferPool</text>
+  <text x="514" y="636" font-size="10.5" fill="#9a7328" text-anchor="middle">按需换入 · 内存压力驱逐</text>
+
+  <rect x="680" y="532" width="294" height="128" rx="11" fill="#ffffff" stroke="#f0dcae"/>
+  <text x="827" y="554" font-size="11" font-weight="600" fill="#7a4d00" text-anchor="middle">持久化与恢复</text>
+  <text x="827" y="576" font-size="10.5" fill="#9a7328" text-anchor="middle">WAL 先写 · Checkpoint 合并</text>
+  <text x="827" y="596" font-size="10.5" fill="#9a7328" text-anchor="middle">Catalog + 数据 同一单文件</text>
+  <text x="827" y="616" font-size="10.5" fill="#9a7328" text-anchor="middle">重启回放 WAL 恢复</text>
+  <text x="827" y="636" font-size="10.5" fill="#9a7328" text-anchor="middle">:memory: 模式则全在内存</text>
+
+  <line x1="510" y1="132" x2="510" y2="148" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+  <line x1="340" y1="298" x2="340" y2="314" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+  <line x1="340" y1="478" x2="340" y2="494" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+  <text x="356" y="308" font-size="9.5" fill="#86868b">执行</text>
+  <text x="356" y="490" font-size="9.5" fill="#86868b">读/写数据</text>
+</svg>

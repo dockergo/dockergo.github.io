@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="940" height="520" viewBox="0 0 940 520" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+    <marker id="arR" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b15b5b"/>
+    </marker>
+  </defs>
+  <rect width="940" height="520" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">逃逸分析算法 · location 图 + deref 权重</text>
+
+  <!-- left: build graph (blue) -->
+  <rect x="30" y="50" width="470" height="330" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="46" y="74" font-size="12.5" font-weight="600" fill="#1b2a4a">① 建图 · escape.Batch (escape.go:138)</text>
+  <text x="46" y="92" font-size="10" fill="#5b7db1">变量/表达式 → location 节点；batch 持 allLocs + heapLoc (escape.go:91)</text>
+
+  <!-- location nodes -->
+  <rect x="60" y="112" width="120" height="46" rx="10" fill="#ffffff" stroke="#cfe0f2"/>
+  <text x="120" y="132" font-size="11" font-weight="600" fill="#1b2a4a" text-anchor="middle">x</text>
+  <text x="120" y="148" font-size="9.5" fill="#5b7db1" text-anchor="middle">location</text>
+
+  <rect x="60" y="216" width="120" height="46" rx="10" fill="#ffffff" stroke="#cfe0f2"/>
+  <text x="120" y="236" font-size="11" font-weight="600" fill="#1b2a4a" text-anchor="middle">p</text>
+  <text x="120" y="252" font-size="9.5" fill="#5b7db1" text-anchor="middle">location</text>
+
+  <rect x="340" y="112" width="140" height="46" rx="10" fill="#fdf6ec" stroke="#f0dcaf"/>
+  <text x="410" y="132" font-size="11" font-weight="600" fill="#6b4e16" text-anchor="middle">heapLoc</text>
+  <text x="410" y="148" font-size="9.5" fill="#a9822f" text-anchor="middle">堆位置（已知逃逸根）</text>
+
+  <rect x="340" y="216" width="140" height="46" rx="10" fill="#ffffff" stroke="#cfe0f2"/>
+  <text x="410" y="236" font-size="11" font-weight="600" fill="#1b2a4a" text-anchor="middle">返回值 / 参数</text>
+  <text x="410" y="252" font-size="9.5" fill="#5b7db1" text-anchor="middle">sink</text>
+
+  <!-- weighted edges -->
+  <line x1="180" y1="228" x2="338" y2="135" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <text x="255" y="176" font-size="10" font-weight="600" fill="#7a1f1f" text-anchor="middle">p = &amp;x</text>
+  <text x="255" y="192" font-size="9.5" fill="#8e8e93" text-anchor="middle">权重 −1（address-of）</text>
+
+  <line x1="180" y1="135" x2="338" y2="135" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <text x="255" y="128" font-size="9.5" fill="#8e8e93" text-anchor="middle">赋值边</text>
+
+  <line x1="180" y1="239" x2="338" y2="239" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <text x="255" y="232" font-size="10" font-weight="600" fill="#3d2a5a" text-anchor="middle">*p</text>
+  <text x="255" y="212" font-size="9.5" fill="#8e8e93" text-anchor="middle">权重 +1（deref）</text>
+
+  <!-- weight formula -->
+  <rect x="60" y="292" width="420" height="72" rx="11" fill="#f5f0fb" stroke="#ddcdf0"/>
+  <text x="76" y="314" font-size="11" font-weight="600" fill="#3d2a5a">边权 = deref 数 − address-of 数</text>
+  <text x="76" y="334" font-size="10" fill="#7d5bb1">&amp;x 减一层（取址）、*p 加一层（解引用）</text>
+  <text x="76" y="352" font-size="10" fill="#7d5bb1">权重编码"指针间接层数"，决定能否传播逃逸</text>
+
+  <!-- right: solve (green/red) -->
+  <rect x="516" y="50" width="394" height="330" rx="13" fill="#eef7f0" stroke="#bfe0c8" filter="url(#soft)"/>
+  <text x="532" y="74" font-size="12.5" font-weight="600" fill="#1d4a2b">② 求解 · walkAll (solve.go:19)</text>
+  <text x="532" y="92" font-size="10" fill="#4a8c60">从堆位置 / 返回值反向传播</text>
+
+  <rect x="536" y="108" width="358" height="58" rx="10" fill="#fbeeee" stroke="#f0c4c4"/>
+  <text x="552" y="130" font-size="11" font-weight="600" fill="#7a1f1f">反向传播（BFS over location 图）</text>
+  <text x="552" y="150" font-size="10" fill="#b15b5b">若 location 有到 heapLoc 的路径且权重满足条件</text>
+
+  <line x1="715" y1="166" x2="715" y2="186" stroke="#b15b5b" stroke-width="1.6" marker-end="url(#arR)"/>
+
+  <rect x="536" y="188" width="358" height="52" rx="10" fill="#fbeeee" stroke="#f0c4c4"/>
+  <text x="715" y="210" font-size="11.5" font-weight="600" fill="#7a1f1f" text-anchor="middle">标记 attrEscapes</text>
+  <text x="715" y="228" font-size="10" fill="#b15b5b" text-anchor="middle">"escapes to heap" → 该值上堆</text>
+
+  <rect x="536" y="256" width="358" height="104" rx="10" fill="#ffffff" stroke="#bfe0c8"/>
+  <text x="552" y="278" font-size="11" font-weight="600" fill="#1d4a2b">③ 跨函数摘要 · 参数标签</text>
+  <text x="552" y="298" font-size="10" fill="#4a8c60">b.paramTag (escape.go:293)：记录"第 i 个参数</text>
+  <text x="552" y="316" font-size="10" fill="#4a8c60">是否让实参逃逸"，供调用方复用免重分析</text>
+  <text x="552" y="338" font-size="10" fill="#4a8c60">相互递归的函数放一批（batch）同解，处理调用环</text>
+
+  <!-- bottom summary -->
+  <rect x="30" y="396" width="880" height="46" rx="12" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="46" y="424" font-size="10.5" fill="#3a3a3c">流程：AST → location 节点 → 建带权有向边（deref−addressof）→ 从 heapLoc 反向传播标 attrEscapes → 存参数标签跨函数复用。</text>
+
+  <rect x="30" y="456" width="880" height="46" rx="12" fill="#f6f6f7" stroke="#e2e2e7"/>
+  <text x="46" y="484" font-size="10.5" fill="#6e6e73">锚点：escape.Batch escape.go:138 · batch/heapLoc escape.go:91 · walkAll solve.go:19 · paramTag escape.go:293</text>
+</svg>

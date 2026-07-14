@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="490" viewBox="0 0 1000 490" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1000" height="490" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">近似 LRU 与 LFU：都靠采样，复用 redisObject 的 24 位 lru 字段（evict.c）</text>
+  <text x="30" y="49" font-size="10.5" fill="#a1a1a6">Redis 不维护全局 LRU 链表（太贵），改用随机采样 + 淘汰池</text>
+
+  <!-- approximate LRU -->
+  <rect x="30" y="76" width="460" height="200" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="50" y="100" font-size="12" font-weight="700" fill="#1b2a4a">近似 LRU（采样，非精确）</text>
+  <g text-anchor="middle" font-size="9.5">
+    <rect x="50" y="114" width="120" height="44" rx="7" fill="#fff" stroke="#cfe0f2"/><text x="110" y="132" fill="#1b2a4a">随机采 5 个键</text><text x="110" y="147" fill="#5b7db1" font-size="8.5">maxmemory-samples</text>
+    <rect x="196" y="114" width="150" height="44" rx="7" fill="#fff" stroke="#cfe0f2"/><text x="271" y="132" fill="#1b2a4a">放入淘汰池</text><text x="271" y="147" fill="#5b7db1" font-size="8.5">EVPOOL_SIZE=16，按空闲时间排序</text>
+    <rect x="372" y="114" width="100" height="44" rx="7" fill="#fdeef2" stroke="#f6c9d6"/><text x="422" y="132" fill="#c02a56">淘汰最久</text><text x="422" y="147" fill="#c02a56" font-size="8.5">未用的</text>
+  </g>
+  <line x1="170" y1="136" x2="194" y2="136" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="346" y1="136" x2="370" y2="136" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <text x="260" y="186" font-size="9.5" fill="#5b7db1" text-anchor="middle">samples 越大 → 越接近真实 LRU，但越耗 CPU</text>
+  <text x="260" y="208" font-size="9.5" fill="#1b2a4a" text-anchor="middle">lru 字段 = 24 位 LRU 时钟（分辨率 1000ms）</text>
+  <text x="260" y="230" font-size="9" fill="#8ba7cc" text-anchor="middle">estimateObjectIdleTime = 当前时钟 − obj.lru</text>
+  <text x="260" y="256" font-size="9" fill="#8ba7cc" text-anchor="middle">默认 samples=5；调到 10 精度显著提升</text>
+
+  <!-- LFU -->
+  <rect x="510" y="76" width="460" height="200" rx="12" fill="#eafaf1" stroke="#b8e6cd" filter="url(#soft)"/>
+  <text x="530" y="100" font-size="12" font-weight="700" fill="#1c6b45">LFU：8 位计数 + 概率对数增长</text>
+  <text x="530" y="122" font-size="9.5" fill="#1c6b45">同一 24 位 lru 字段拆两半用：</text>
+
+  <!-- 24-bit split -->
+  <rect x="530" y="134" width="270" height="40" rx="6" fill="#fff" stroke="#b8e6cd"/>
+  <text x="620" y="158" font-size="9.5" font-weight="600" fill="#1c6b45" text-anchor="middle">高 16 bit：上次递减时间(分钟)</text>
+  <rect x="800" y="134" width="150" height="40" rx="6" fill="#fdf3e5" stroke="#f0d9b5"/>
+  <text x="875" y="158" font-size="9.5" font-weight="600" fill="#7a5a1e" text-anchor="middle">低 8 bit：计数</text>
+  <text x="740" y="190" font-size="8.5" fill="#a1a1a6" text-anchor="middle">共 24 bit = redisObject.lru</text>
+
+  <g font-size="9.5" fill="#2f7a56">
+    <text x="530" y="214">· 增长（LFULogIncr）：p = 1/((counter−5)×log-factor+1)</text>
+    <text x="530" y="232">  访问越频繁越难涨 → 8 bit 覆盖极大访问量不溢出</text>
+    <text x="530" y="250">· 衰减（LFUDecrAndReturn）：按 lfu-decay-time 递减</text>
+    <text x="530" y="268">  → 历史热点会冷却，不会永久霸榜</text>
+  </g>
+
+  <!-- comparison LRU vs LFU -->
+  <text x="40" y="312" font-size="11" font-weight="700" fill="#1d1d1f">LRU vs LFU：何时用哪个</text>
+  <rect x="30" y="326" width="460" height="150" rx="10" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="50" y="350" font-size="10.5" font-weight="600" fill="#1b2a4a">LRU（最近最少使用）</text>
+  <text x="50" y="372" font-size="9.5" fill="#5b7db1">按"最后访问时间"淘汰</text>
+  <text x="50" y="392" font-size="9.5" fill="#5b7db1">问题：偶发全表扫描会污染 —— 一次遍历</text>
+  <text x="50" y="410" font-size="9.5" fill="#5b7db1">把冷数据全"刷新"成最近访问，挤掉真热点</text>
+  <text x="50" y="434" font-size="9.5" fill="#1b2a4a">适合：访问有明显时间局部性的场景</text>
+  <text x="50" y="456" font-size="9" fill="#8ba7cc">allkeys-lru / volatile-lru</text>
+
+  <rect x="510" y="326" width="460" height="150" rx="10" fill="#eafaf1" stroke="#b8e6cd"/>
+  <text x="530" y="350" font-size="10.5" font-weight="600" fill="#1c6b45">LFU（最不经常使用）</text>
+  <text x="530" y="372" font-size="9.5" fill="#2f7a56">按"访问频率"淘汰（带衰减）</text>
+  <text x="530" y="392" font-size="9.5" fill="#2f7a56">优势：偶发扫描的键频率低，很快被淘汰</text>
+  <text x="530" y="410" font-size="9.5" fill="#2f7a56">→ 不污染真热点，更适合缓存</text>
+  <text x="530" y="434" font-size="9.5" fill="#1c6b45">适合：有稳定热点、怕扫描污染的缓存</text>
+  <text x="530" y="456" font-size="9" fill="#5cb88a">allkeys-lfu / volatile-lfu（4.0+）</text>
+</svg>

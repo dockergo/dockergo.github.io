@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="600" viewBox="0 0 1080 600" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="600" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">RocksDB KV API 全景 · 写 / 读 / 批 / 组织四类</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">嵌入式 C++ API(另有 Java/C 绑定);每个调用由 WriteOptions/ReadOptions 调节,底层归到写/读路径</text>
+
+  <!-- 写 -->
+  <rect x="30" y="70" width="510" height="200" rx="13" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="46" y="92" font-size="11.5" font-weight="700" fill="#1b2a4a">写（本质都是往 WriteBatch 追加一条记录）</text>
+  <g font-size="8.8">
+    <rect x="46" y="104" width="238" height="34" rx="7" fill="#f3f7fc" stroke="#cfe0f2"/><text x="60" y="118" font-weight="600" fill="#274a78">Put(key,value)</text><text x="60" y="132" fill="#5b7db1">写入或覆盖(写新版本,不改旧)</text>
+    <rect x="294" y="104" width="234" height="34" rx="7" fill="#f3f7fc" stroke="#cfe0f2"/><text x="308" y="118" font-weight="600" fill="#274a78">Delete(key)</text><text x="308" y="132" fill="#5b7db1">写墓碑 tombstone,不立即释放</text>
+    <rect x="46" y="144" width="238" height="34" rx="7" fill="#f3f7fc" stroke="#cfe0f2"/><text x="60" y="158" font-weight="600" fill="#274a78">SingleDelete(key)</text><text x="60" y="172" fill="#5b7db1">承诺只 Put 过一次,删除更省</text>
+    <rect x="294" y="144" width="234" height="34" rx="7" fill="#f3f7fc" stroke="#cfe0f2"/><text x="308" y="158" font-weight="600" fill="#274a78">DeleteRange(begin,end)</text><text x="308" y="172" fill="#5b7db1">范围墓碑,一次删一段</text>
+    <rect x="46" y="184" width="238" height="34" rx="7" fill="#eafaf1" stroke="#bfe0cd"/><text x="60" y="198" font-weight="600" fill="#12402a">Merge(key,operand)</text><text x="60" y="212" fill="#2f6f4f">追加操作数,读时合并(见 Merge 篇)</text>
+    <rect x="294" y="184" width="234" height="34" rx="7" fill="#f4eefb" stroke="#d9c7ec"/><text x="308" y="198" font-weight="600" fill="#3d2a5a">Write(WriteBatch)</text><text x="308" y="212" fill="#5a3d78">整批原子提交(见 WriteBatch 篇)</text>
+  </g>
+  <rect x="46" y="228" width="482" height="30" rx="7" fill="#fff" stroke="#bcd0ec"/><text x="60" y="247" font-size="8.5" fill="#1b2a4a">WriteOptions:sync(是否 fsync WAL)· disableWAL —— 全部走【写入路径】WriteThread→WAL→MemTable</text>
+
+  <!-- 读 -->
+  <rect x="558" y="70" width="492" height="200" rx="13" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="574" y="92" font-size="11.5" font-weight="700" fill="#12402a">读（跨内存与多层 SST 归并）</text>
+  <g font-size="8.8">
+    <rect x="574" y="104" width="460" height="40" rx="7" fill="#f5faf6" stroke="#cfe6d5"/><text x="588" y="120" font-weight="600" fill="#2c5a3a">Get(key) → value</text><text x="588" y="136" fill="#2f6f4f">点查:活跃 MemTable → immutable → 逐层 SST(布隆短路)</text>
+    <rect x="574" y="150" width="460" height="40" rx="7" fill="#f5faf6" stroke="#cfe6d5"/><text x="588" y="166" font-weight="600" fill="#2c5a3a">MultiGet(keys) → values</text><text x="588" y="182" fill="#2f6f4f">批量点查:共享 SuperVersion,可并行读文件、批量查布隆</text>
+    <rect x="574" y="196" width="460" height="40" rx="7" fill="#f5faf6" stroke="#cfe6d5"/><text x="588" y="212" font-weight="600" fill="#2c5a3a">NewIterator() → Seek/Next/Prev</text><text x="588" y="228" fill="#2f6f4f">有序范围扫描:MergingIterator 多路归并(见 Iterator 篇)</text>
+  </g>
+  <rect x="574" y="242" width="460" height="18" rx="6" fill="#fff" stroke="#cfe6d5"/><text x="588" y="255" font-size="8" fill="#2f6f4f">ReadOptions:snapshot(一致视图)· fill_cache · total_order_seek · prefix_same_as_start</text>
+
+  <!-- 批与原子 -->
+  <rect x="30" y="286" width="510" height="128" rx="13" fill="#f4eefb" stroke="#d9c7ec"/>
+  <text x="46" y="308" font-size="11.5" font-weight="700" fill="#3d2a5a">批与原子 · WriteBatch</text>
+  <text x="46" y="330" font-size="9" fill="#5a3d78">把多个 Put/Delete/Merge 攒成一个原子单元,DB::Write 一次提交</text>
+  <text x="46" y="348" font-size="9" fill="#5a3d78">批内所有写共享一个 SequenceNumber 基准 → 要么全可见要么全不可见</text>
+  <text x="46" y="366" font-size="9" fill="#5a3d78">单条 Put/Delete 其实是"单元素 WriteBatch + Write"的语法糖</text>
+  <text x="46" y="386" font-size="9" fill="#5a3d78">事务层(悲观/乐观)也构建在 WriteBatch 之上</text>
+  <text x="46" y="406" font-size="8.5" fill="#7a5a95">内部:紧凑二进制记录序列(类型 + CF id + key + value)</text>
+
+  <!-- 组织与视图 -->
+  <rect x="558" y="286" width="492" height="128" rx="13" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="574" y="308" font-size="11.5" font-weight="700" fill="#12402a">组织与视图</text>
+  <g font-size="8.8">
+    <rect x="574" y="320" width="460" height="28" rx="7" fill="#f5faf6" stroke="#cfe6d5"/><text x="588" y="338" fill="#2c5a3a"><tspan font-weight="600">ColumnFamily</tspan> 独立键空间,共享 WAL 各自成树(见 CF 篇)</text>
+    <rect x="574" y="352" width="460" height="28" rx="7" fill="#f5faf6" stroke="#cfe6d5"/><text x="588" y="370" fill="#2c5a3a"><tspan font-weight="600">Snapshot</tspan> GetSnapshot() 钉住 seq 做一致读(见事务篇)</text>
+    <rect x="574" y="384" width="460" height="24" rx="7" fill="#f5faf6" stroke="#cfe6d5"/><text x="588" y="400" fill="#2c5a3a"><tspan font-weight="600">Options</tspan> DB/CF/Write/Read 四层配置(见拓展表)</text>
+  </g>
+
+  <!-- flow to paths -->
+  <rect x="30" y="430" width="1020" height="150" rx="13" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="46" y="452" font-size="11" font-weight="700" fill="#1d1d1f">API 调用如何落到支撑主线</text>
+  <g font-size="8.8" text-anchor="middle">
+    <rect x="46" y="464" width="230" height="44" rx="8" fill="#eef3fb" stroke="#bcd0ec"/><text x="161" y="482" font-weight="600" fill="#1b2a4a">写类 API</text><text x="161" y="498" fill="#5b7db1">→【写入路径】→ WAL + MemTable</text>
+    <rect x="296" y="464" width="230" height="44" rx="8" fill="#f5faf6" stroke="#cfe6d5"/><text x="411" y="482" font-weight="600" fill="#2c5a3a">读类 API</text><text x="411" y="498" fill="#2f6f4f">→【读取路径】→ 归并 + 布隆 + 缓存</text>
+    <rect x="546" y="464" width="230" height="44" rx="8" fill="#faf4fb" stroke="#e2d2ee"/><text x="661" y="482" font-weight="600" fill="#5a3d78">Snapshot/事务</text><text x="661" y="498" fill="#7a5a95">→【事务与快照】→ seq/MVCC</text>
+    <rect x="796" y="464" width="238" height="44" rx="8" fill="#fff7e6" stroke="#e8cf9a"/><text x="915" y="482" font-weight="600" fill="#5a3410">Options 调优</text><text x="915" y="498" fill="#93762e">→ 各支撑主线的"调优要点"</text>
+  </g>
+  <text x="46" y="536" font-size="9" fill="#6e6e73">归属:本篇只讲 API 语义与形态;写怎么落盘在【写入路径】、读怎么归并在【读取路径】、批的原子性底层在【WAL 与恢复】+【版本】。</text>
+  <text x="46" y="556" font-size="9" fill="#b1483a">关键:无 SQL、无网络——RocksDB 是嵌入宿主进程的库,并发控制与分布式复制由宿主负责。</text>
+  <text x="46" y="574" font-size="8.5" fill="#a1a1a6">贯穿示例:Put("k","v1") → Put("k","v2") → Delete("k") 会在库内留三个版本,读按 seq 见最新,旧版靠 Compaction 回收。</text>
+</svg>

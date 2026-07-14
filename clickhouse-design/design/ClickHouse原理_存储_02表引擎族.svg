@@ -1,0 +1,122 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="760" viewBox="0 0 1060 760" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1060" height="760" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">MergeTree 表引擎族：合并语义只在 merge 时生效（MergingParams::Mode）</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">MergeTreeData.h:404 一个枚举区分全族；每种模式对应 Processors/Merges/Algorithms 里一个 *SortedAlgorithm</text>
+
+  <!-- base -->
+  <rect x="360" y="72" width="340" height="66" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="530" y="98" font-size="13" font-weight="700" fill="#1b2a4a" text-anchor="middle">MergeTree（基底）</text>
+  <text x="530" y="118" font-size="9.5" fill="#5b7db1" text-anchor="middle">按 ORDER BY 排序 · 稀疏主键 · 不去重 · 只追加不可变 Part</text>
+  <text x="530" y="132" font-size="9" fill="#8aa6cf" text-anchor="middle">MergingParams::Mode = Ordinary(0)</text>
+
+  <!-- variants grid: 6 cards -->
+  <g text-anchor="middle">
+    <!-- Replacing -->
+    <rect x="40" y="200" width="235" height="130" rx="12" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+    <text x="157" y="223" font-size="12" font-weight="700" fill="#5a3410">ReplacingMergeTree</text>
+    <text x="157" y="240" font-size="9" fill="#93762e">Mode = Replacing(5)</text>
+    <text x="157" y="262" font-size="9.5" fill="#5a3410">merge 时：同排序键只留</text>
+    <text x="157" y="276" font-size="9.5" fill="#5a3410">最后一行（可按 version 列）</text>
+    <text x="157" y="298" font-size="9" fill="#93762e">用途：去重 / 最新态</text>
+    <text x="157" y="314" font-size="8.5" fill="#b08843">ReplacingSortedAlgorithm</text>
+
+    <!-- Summing -->
+    <rect x="290" y="200" width="235" height="130" rx="12" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+    <text x="407" y="223" font-size="12" font-weight="700" fill="#5a3410">SummingMergeTree</text>
+    <text x="407" y="240" font-size="9" fill="#93762e">Mode = Summing(2)</text>
+    <text x="407" y="262" font-size="9.5" fill="#5a3410">merge 时：同键的数值列</text>
+    <text x="407" y="276" font-size="9.5" fill="#5a3410">求和合并为一行</text>
+    <text x="407" y="298" font-size="9" fill="#93762e">用途：预聚合累加</text>
+    <text x="407" y="314" font-size="8.5" fill="#b08843">SummingSortedAlgorithm</text>
+
+    <!-- Aggregating -->
+    <rect x="540" y="200" width="235" height="130" rx="12" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+    <text x="657" y="223" font-size="12" font-weight="700" fill="#5a3410">AggregatingMergeTree</text>
+    <text x="657" y="240" font-size="9" fill="#93762e">Mode = Aggregating(3)</text>
+    <text x="657" y="262" font-size="9.5" fill="#5a3410">merge 时：按聚合函数 state</text>
+    <text x="657" y="276" font-size="9.5" fill="#5a3410">合并（配 -State/-Merge）</text>
+    <text x="657" y="298" font-size="9" fill="#93762e">用途：物化视图预聚合</text>
+    <text x="657" y="314" font-size="8.5" fill="#b08843">AggregatingSortedAlgorithm</text>
+
+    <!-- Collapsing -->
+    <rect x="790" y="200" width="230" height="130" rx="12" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+    <text x="905" y="223" font-size="11.5" font-weight="700" fill="#5a3410">CollapsingMergeTree</text>
+    <text x="905" y="240" font-size="9" fill="#93762e">Mode = Collapsing(1)</text>
+    <text x="905" y="262" font-size="9.5" fill="#5a3410">merge 时：sign=+1/-1</text>
+    <text x="905" y="276" font-size="9.5" fill="#5a3410">成对抵消（折叠）</text>
+    <text x="905" y="298" font-size="9" fill="#93762e">用途：可撤销的累计</text>
+    <text x="905" y="314" font-size="8.5" fill="#b08843">CollapsingSortedAlgorithm</text>
+
+    <!-- Versioned Collapsing -->
+    <rect x="290" y="352" width="235" height="118" rx="12" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+    <text x="407" y="375" font-size="11" font-weight="700" fill="#5a3410">VersionedCollapsingMergeTree</text>
+    <text x="407" y="392" font-size="9" fill="#93762e">Mode = VersionedCollapsing(7)</text>
+    <text x="407" y="414" font-size="9.5" fill="#5a3410">带 version 的折叠</text>
+    <text x="407" y="428" font-size="9.5" fill="#5a3410">乱序写入也能正确抵消</text>
+    <text x="407" y="450" font-size="8.5" fill="#b08843">VersionedCollapsingAlgorithm</text>
+
+    <!-- Graphite -->
+    <rect x="540" y="352" width="235" height="118" rx="12" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+    <text x="657" y="375" font-size="12" font-weight="700" fill="#5a3410">GraphiteMergeTree</text>
+    <text x="657" y="392" font-size="9" fill="#93762e">Mode = Graphite(6)</text>
+    <text x="657" y="414" font-size="9.5" fill="#5a3410">按时间粒度对历史数据</text>
+    <text x="657" y="428" font-size="9.5" fill="#5a3410">降采样（rollup）</text>
+    <text x="657" y="450" font-size="8.5" fill="#b08843">GraphiteRollupSortedAlgorithm</text>
+  </g>
+
+  <!-- Replicated overlay note -->
+  <rect x="40" y="352" width="235" height="118" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="157" y="375" font-size="11.5" font-weight="700" fill="#12402a" text-anchor="middle">Replicated* 前缀</text>
+  <text x="157" y="396" font-size="9.5" fill="#2f6f4f" text-anchor="middle">正交叠加：任一变体加</text>
+  <text x="157" y="410" font-size="9.5" fill="#2f6f4f" text-anchor="middle">Replicated 前缀即多副本</text>
+  <text x="157" y="430" font-size="9" fill="#4c8567" text-anchor="middle">复制经 Keeper 协调</text>
+  <text x="157" y="450" font-size="8.5" fill="#4c8567" text-anchor="middle">见「复制与一致性」主线</text>
+
+  <!-- Coalescing (25.x new) -->
+  <rect x="790" y="352" width="230" height="118" rx="12" fill="#f6f2fb" stroke="#d9c9ec" filter="url(#soft)"/>
+  <text x="905" y="375" font-size="11.5" font-weight="700" fill="#3d2a5a" text-anchor="middle">CoalescingMergeTree</text>
+  <text x="905" y="392" font-size="9" fill="#7a5da5" text-anchor="middle">Mode = Coalescing(8) · 新增</text>
+  <text x="905" y="414" font-size="9.5" fill="#3d2a5a" text-anchor="middle">merge 时同键取每列</text>
+  <text x="905" y="428" font-size="9.5" fill="#3d2a5a" text-anchor="middle">最后一个非 NULL 值</text>
+  <text x="905" y="450" font-size="8.5" fill="#9a7cc4" text-anchor="middle">用途：列级 upsert</text>
+
+  <!-- FINAL caveat band -->
+  <rect x="40" y="502" width="980" height="220" rx="14" fill="#fbeef0" stroke="#f0cdd4"/>
+  <text x="60" y="526" font-size="12.5" font-weight="700" fill="#7a2230">关键认知：合并语义 ≠ 实时生效</text>
+  <g text-anchor="middle">
+    <rect x="70" y="546" width="270" height="150" rx="11" fill="#fff" stroke="#f0cdd4"/>
+    <text x="205" y="568" font-size="10.5" font-weight="600" fill="#7a2230">写入直后（未 merge）</text>
+    <rect x="90" y="582" width="230" height="24" rx="6" fill="#fdf6ea" stroke="#efdcb4"/><text x="205" y="598" font-size="9" fill="#5a3410">(k1, v=10)　Part A</text>
+    <rect x="90" y="612" width="230" height="24" rx="6" fill="#fdf6ea" stroke="#efdcb4"/><text x="205" y="628" font-size="9" fill="#5a3410">(k1, v=20)　Part B</text>
+    <text x="205" y="662" font-size="9.5" fill="#7a2230">普通 SELECT 看到两行！</text>
+    <text x="205" y="680" font-size="8.5" fill="#b08843">重复/待聚合行原样可见</text>
+
+    <rect x="395" y="546" width="270" height="150" rx="11" fill="#fff" stroke="#f0cdd4"/>
+    <text x="530" y="568" font-size="10.5" font-weight="600" fill="#12402a">后台 merge 之后</text>
+    <rect x="415" y="596" width="230" height="26" rx="6" fill="#eafaf1" stroke="#bfe0cd"/><text x="530" y="613" font-size="9" fill="#12402a">(k1, v=20)　合并为一行</text>
+    <text x="530" y="648" font-size="9.5" fill="#2f6f4f">Replacing → 留最新</text>
+    <text x="530" y="666" font-size="8.5" fill="#4c8567">但 merge 时机不确定</text>
+    <text x="530" y="683" font-size="8.5" fill="#4c8567">→ 不能依赖它保证正确</text>
+
+    <rect x="720" y="546" width="280" height="150" rx="11" fill="#fff" stroke="#f0cdd4"/>
+    <text x="860" y="568" font-size="10.5" font-weight="600" fill="#1b2a4a">要即时正确 → 付代价</text>
+    <text x="860" y="592" font-size="9.5" fill="#1b2a4a">① SELECT ... FINAL</text>
+    <text x="860" y="608" font-size="8.5" fill="#5b7db1">读时现场归并（addMergingFinal）</text>
+    <text x="860" y="628" font-size="9.5" fill="#1b2a4a">② GROUP BY 显式聚合</text>
+    <text x="860" y="644" font-size="8.5" fill="#5b7db1">SummingMT 也可用 sum() 兜底</text>
+    <text x="860" y="666" font-size="9.5" fill="#1b2a4a">③ argMax(...) 手动选最新</text>
+    <text x="860" y="684" font-size="8.5" fill="#5b7db1">避免 FINAL 全表归并开销</text>
+  </g>
+
+  <!-- arrows base -> variants -->
+  <g stroke="#c7c7cc" stroke-width="1.4" fill="none">
+    <path d="M530,138 L530,168 L157,168 L157,200" marker-end="url(#ar)"/>
+    <path d="M530,138 L530,168 L407,168 L407,200" marker-end="url(#ar)"/>
+    <path d="M530,138 L530,168 L657,168 L657,200" marker-end="url(#ar)"/>
+    <path d="M530,138 L530,168 L905,168 L905,200" marker-end="url(#ar)"/>
+  </g>
+</svg>

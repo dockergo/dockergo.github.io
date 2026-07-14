@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="536" viewBox="0 0 1080 536"
+     font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1080" height="536" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Neo4j 运行时:interpreted / slotted + 模式匹配</text>
+  <text x="30" y="50" font-size="11.5" fill="#a1a1a6">community 两个运行时(pipelined 是企业版,不在此树);MATCH 模式编译成 Expand 算子</text>
+
+  <!-- two runtimes header -->
+  <text x="40" y="82" font-size="12" font-weight="600" fill="#6e6e73">① 两个运行时(community)</text>
+
+  <!-- interpreted -->
+  <rect x="40" y="94" width="480" height="150" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="60" y="120" font-size="12.5" font-weight="700" fill="#1b2a4a">interpreted(pipes · 火山/迭代器模型)</text>
+  <text x="60" y="142" font-size="10" fill="#274a78">算子是 Pipe,产 ClosingIterator[CypherRow]</text>
+  <rect x="60" y="154" width="440" height="30" rx="8" fill="#ffffff" stroke="#bcd0ec"/>
+  <text x="70" y="173" font-size="9.5" fill="#274a78">逐算子拉取:上游 next() 驱动下游 —— 经典火山迭代器</text>
+  <text x="60" y="206" font-size="10" fill="#5b7db1">便于理解但慢;行用 map 表示</text>
+  <text x="60" y="228" font-size="8.5" fill="#a1a1a6">ExpandAllPipe.scala:45</text>
+
+  <!-- slotted (default) -->
+  <rect x="560" y="94" width="480" height="150" rx="14" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="580" y="120" font-size="12.5" font-weight="700" fill="#12402a">slotted(default · 寄存器式行)</text>
+  <rect x="946" y="100" width="82" height="22" rx="7" fill="#d6f0e1" stroke="#bfe0cd"/>
+  <text x="987" y="115" font-size="10" font-weight="600" fill="#12402a" text-anchor="middle">默认</text>
+  <text x="580" y="142" font-size="10" fill="#2f6f4f">PhysicalPlanner 分配 slot(槽位)</text>
+  <rect x="580" y="154" width="440" height="30" rx="8" fill="#ffffff" stroke="#bfe0cd"/>
+  <text x="590" y="173" font-size="9.5" fill="#2f6f4f">行用槽位而非 map,更省内存、更快;SlotAllocation.allocateSlots</text>
+  <text x="580" y="206" font-size="10" fill="#2f6f4f">连 interpreted 选项都映射到 slotted</text>
+  <text x="580" y="228" font-size="8.5" fill="#2f6f4f">PhysicalPlanner.scala:41 · CommunityRuntimeFactory.scala:50</text>
+
+  <!-- pattern match -->
+  <text x="40" y="278" font-size="12" font-weight="600" fill="#6e6e73">② 模式匹配 = Expand 算子</text>
+
+  <!-- pattern input -->
+  <rect x="40" y="290" width="250" height="70" rx="13" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="165" y="318" font-size="12" font-weight="700" fill="#3d2a5a" text-anchor="middle">MATCH (a)-[:REL]-&gt;(b)</text>
+  <text x="165" y="340" font-size="9.5" fill="#8b7aa8" text-anchor="middle">声明的图模式</text>
+
+  <!-- Expand logical -->
+  <rect x="330" y="290" width="340" height="70" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="500" y="314" font-size="12" font-weight="700" fill="#1b2a4a" text-anchor="middle">Expand 逻辑算子</text>
+  <rect x="346" y="324" width="150" height="28" rx="7" fill="#ffffff" stroke="#bcd0ec"/>
+  <text x="421" y="342" font-size="9.5" fill="#1b2a4a" text-anchor="middle">ExpandAll:给 a 展开</text>
+  <rect x="506" y="324" width="150" height="28" rx="7" fill="#ffffff" stroke="#bcd0ec"/>
+  <text x="581" y="342" font-size="9.5" fill="#1b2a4a" text-anchor="middle">ExpandInto:给 a,b 找关系</text>
+
+  <!-- ExpandAllPipe runtime -->
+  <rect x="710" y="290" width="330" height="70" rx="13" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="875" y="314" font-size="12" font-weight="700" fill="#12402a" text-anchor="middle">运行时 ExpandAllPipe</text>
+  <text x="730" y="335" font-size="9.5" fill="#2f6f4f">对每行读 from 节点</text>
+  <text x="730" y="351" font-size="9.5" fill="#2f6f4f">getRelationshipsForIds 遍历关系链</text>
+
+  <path d="M290,325 L330,325" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="292" y="318" font-size="8.5" fill="#a1a1a6">编译</text>
+  <path d="M670,325 L710,325" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="672" y="318" font-size="8.5" fill="#a1a1a6">运行</text>
+
+  <!-- link to storage -->
+  <rect x="40" y="382" width="1000" height="122" rx="14" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="60" y="410" font-size="13" font-weight="700" fill="#5a3410">这一步就是顺着记录指针走 —— 免索引邻接(见记录存储篇)</text>
+  <text x="60" y="434" font-size="10.5" fill="#93762e">ExpandAllPipe 对每一行:读起点节点 → getRelationshipsForIds 遍历该节点的关系链 → 每条关系产一行带终点(b)。</text>
+
+  <rect x="60" y="446" width="300" height="46" rx="9" fill="#ffffff" stroke="#e8cf9a"/>
+  <text x="210" y="466" font-size="10" font-weight="600" fill="#5a3410" text-anchor="middle">读起点节点 from</text>
+  <text x="210" y="482" font-size="8.5" fill="#93762e" text-anchor="middle">Kernel API 游标</text>
+  <rect x="380" y="446" width="300" height="46" rx="9" fill="#ffffff" stroke="#e8cf9a"/>
+  <text x="530" y="466" font-size="10" font-weight="600" fill="#5a3410" text-anchor="middle">顺关系链遍历</text>
+  <text x="530" y="482" font-size="8.5" fill="#93762e" text-anchor="middle">免索引邻接,跟指针走</text>
+  <rect x="700" y="446" width="300" height="46" rx="9" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="850" y="466" font-size="10" font-weight="600" fill="#12402a" text-anchor="middle">每条关系产一行带终点</text>
+  <text x="850" y="482" font-size="8.5" fill="#2f6f4f" text-anchor="middle">边遍历边产结果(流式)</text>
+  <path d="M360,469 L380,469" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M680,469 L700,469" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="1024" y="410" font-size="8.5" fill="#93762e" text-anchor="end">LogicalPlan.scala:2716 · ExpandAllPipe.scala:53</text>
+</svg>

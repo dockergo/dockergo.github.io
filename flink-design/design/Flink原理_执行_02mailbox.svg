@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="520" viewBox="0 0 1080 520"
+     font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1080" height="520" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Flink 执行 · mailbox 单线程模型</text>
+  <text x="30" y="50" font-size="11" fill="#a1a1a6">MailboxProcessor 在一个线程上交替执行默认动作与 mailbox 信件 → 算子无需加锁</text>
+
+  <!-- mailbox 线程容器 -->
+  <rect x="40" y="76" width="640" height="418" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="62" y="104" font-size="13" font-weight="700" fill="#1b2a4a">MailboxProcessor(单一线程循环)</text>
+  <text x="62" y="125" font-size="10" fill="#5b7db1">StreamTask 用 this::processInput 作默认动作构造它</text>
+
+  <!-- 默认动作 -->
+  <rect x="62" y="142" width="290" height="150" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="82" y="168" font-size="12" font-weight="600" fill="#12402a">默认动作 MailboxDefaultAction</text>
+  <text x="82" y="190" font-size="10.5" fill="#2f6f4f">= StreamTask.processInput</text>
+  <rect x="82" y="204" width="250" height="34" rx="8" fill="#ffffff" stroke="#ececf1"/>
+  <text x="207" y="226" font-size="10.5" fill="#12402a" text-anchor="middle">处理记录 record₁</text>
+  <rect x="82" y="246" width="250" height="34" rx="8" fill="#ffffff" stroke="#ececf1"/>
+  <text x="207" y="268" font-size="10.5" fill="#12402a" text-anchor="middle">处理记录 record₂ …</text>
+
+  <!-- 交替箭头 -->
+  <path d="M 356,217 L 386,217" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M 386,240 L 356,240" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="352" y="205" font-size="9" fill="#a1a1a6">交替</text>
+
+  <!-- mailbox 信件队列 -->
+  <rect x="390" y="142" width="268" height="150" rx="12" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="410" y="168" font-size="12" font-weight="600" fill="#3d2a5a">mailbox 信件(控制动作)</text>
+  <text x="410" y="189" font-size="10" fill="#7a5c9e">在处理记录的间隙插队执行</text>
+  <rect x="410" y="202" width="228" height="34" rx="8" fill="#ffffff" stroke="#ececf1"/>
+  <text x="524" y="224" font-size="10.5" fill="#3d2a5a" text-anchor="middle">检查点屏障</text>
+  <rect x="410" y="246" width="228" height="34" rx="8" fill="#ffffff" stroke="#ececf1"/>
+  <text x="524" y="268" font-size="10.5" fill="#3d2a5a" text-anchor="middle">定时器 / 其他控制动作</text>
+
+  <!-- TaskMailboxImpl -->
+  <rect x="62" y="308" width="596" height="90" rx="12" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="82" y="335" font-size="12" font-weight="600" fill="#1b2a4a">TaskMailboxImpl — 强制单线程不变量</text>
+  <text x="82" y="359" font-size="10.5" fill="#5b7db1">绑定 taskMailboxThread · checkIsMailboxThread() 守护所有 put / take</text>
+  <text x="82" y="381" font-size="10.5" fill="#5b7db1">记录处理 / 状态读写 / 检查点快照 / 定时器触发全在同一线程串行</text>
+
+  <!-- 结论条 -->
+  <rect x="62" y="412" width="596" height="66" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="82" y="440" font-size="12" font-weight="600" fill="#12402a">→ 这就是算子无需加锁的原因</text>
+  <text x="82" y="463" font-size="10.5" fill="#2f6f4f">无并发访问,故不必自己加锁</text>
+
+  <!-- 右侧要点 -->
+  <rect x="700" y="76" width="340" height="418" rx="14" fill="#f5faf6" stroke="#cfe6d5" filter="url(#soft)"/>
+  <text x="722" y="104" font-size="13" font-weight="700" fill="#2c5a3a">工程要点 &amp; 误区</text>
+
+  <rect x="722" y="122" width="296" height="80" rx="10" fill="#ffffff" stroke="#ececf1"/>
+  <text x="738" y="146" font-size="11" font-weight="600" fill="#2c5a3a">检查点不在另一线程打断</text>
+  <text x="738" y="168" font-size="9.5" fill="#2f6f4f">屏障作为 mailbox 信件在记录间隙执行</text>
+  <text x="738" y="188" font-size="9.5" fill="#2f6f4f">(同线程);异步的只是写盘</text>
+
+  <rect x="722" y="214" width="296" height="80" rx="10" fill="#ffffff" stroke="#ececf1"/>
+  <text x="738" y="238" font-size="11" font-weight="600" fill="#2c5a3a">阻塞算子 = 整条链停</text>
+  <text x="738" y="260" font-size="9.5" fill="#2f6f4f">阻塞 mailbox 线程会卡死单线程</text>
+  <text x="738" y="280" font-size="9.5" fill="#2f6f4f">外部 IO 必须用 AsyncFunction</text>
+
+  <rect x="722" y="306" width="296" height="80" rx="10" fill="#ffffff" stroke="#ececf1"/>
+  <text x="738" y="330" font-size="11" font-weight="600" fill="#2c5a3a">一条算子链一个 mailbox 线程</text>
+  <text x="738" y="352" font-size="9.5" fill="#2f6f4f">并行靠多个子任务(多 slot)</text>
+  <text x="738" y="372" font-size="9.5" fill="#2f6f4f">不是链内多线程</text>
+
+  <rect x="722" y="398" width="296" height="80" rx="10" fill="#ffffff" stroke="#ececf1"/>
+  <text x="738" y="422" font-size="11" font-weight="600" fill="#2c5a3a">背压定位</text>
+  <text x="738" y="444" font-size="9.5" fill="#2f6f4f">mailbox 线程忙 = 背压向上游传导</text>
+  <text x="738" y="464" font-size="9.5" fill="#2f6f4f">用 Flink UI 背压指标定位慢算子</text>
+</svg>

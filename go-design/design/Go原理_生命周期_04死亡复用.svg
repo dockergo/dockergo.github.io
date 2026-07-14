@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="440" viewBox="0 0 900 440" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+    <marker id="arG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#7ab48f"/>
+    </marker>
+  </defs>
+  <rect width="900" height="440" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">goroutine 死亡与复用 · goexit0 转 _Gdead → gfput 放回 gFree 池</text>
+  <text x="30" y="48" font-size="11" fill="#6e6e73">G 结构与栈是池化复用的 —— 频繁创建销毁（如每请求一个 G）却开销低的根本原因</text>
+
+  <!-- step 1: f returns -->
+  <rect x="30" y="74" width="250" height="76" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="46" y="98" font-size="12.5" font-weight="600" fill="#1b2a4a">① f 返回</text>
+  <text x="46" y="119" font-size="10.5" fill="#5b7db1">跳到 gobuf.pc 预设的返回地址</text>
+  <text x="46" y="137" font-size="10.5" fill="#5b7db1">→ 自动进入 goexit1（诞生时预埋）</text>
+
+  <line x1="280" y1="112" x2="320" y2="112" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- step 2: goexit1 -> mcall(goexit0) -->
+  <rect x="322" y="74" width="288" height="76" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="338" y="98" font-size="12.5" font-weight="600" fill="#1b2a4a">② goexit1 → mcall(goexit0)</text>
+  <text x="338" y="119" font-size="10.5" fill="#5b7db1">切到 g0 栈执行 goexit0 · proc.go:4506</text>
+  <text x="338" y="137" font-size="10.5" fill="#5b7db1">先跑完剩余 defer（正常路径已在 deferreturn 跑完）</text>
+
+  <line x1="466" y1="150" x2="466" y2="178" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- step 3: -> _Gdead + clear (red/neutral - dead) -->
+  <rect x="30" y="180" width="580" height="86" rx="12" fill="#fbeeee" stroke="#f0c4c4" filter="url(#soft)"/>
+  <text x="46" y="203" font-size="12.5" font-weight="600" fill="#7a1f1f">③ G 从 _Grunning 转 _Gdead（casgstatus）· 清空字段</text>
+  <text x="46" y="224" font-size="10.5" fill="#b15b5b">清 栈引用 / _panic / _defer / locals，重置为可复用的干净状态</text>
+  <text x="46" y="243" font-size="10.5" fill="#b15b5b">此时 G 已「逻辑死亡」，但结构与栈内存并不真正释放</text>
+  <text x="46" y="260" font-size="9.5" fill="#b15b5b">runtime.NumGoroutine() 不再计入 gFree 里的 _Gdead</text>
+
+  <line x1="320" y1="266" x2="320" y2="294" stroke="#7ab48f" stroke-width="1.6" marker-end="url(#arG)"/>
+  <text x="338" y="284" font-size="9.5" fill="#4a8c60">gfput 放回</text>
+
+  <!-- step 4: gfput -> gFree pool (green - 复用) -->
+  <rect x="30" y="296" width="580" height="118" rx="12" fill="#eef7f0" stroke="#bfe0c8" filter="url(#soft)"/>
+  <text x="46" y="319" font-size="12.5" font-weight="600" fill="#1d4a2b">④ gfput · 放回 P 的 gFree 空闲池（连同栈）</text>
+  <text x="46" y="340" font-size="10.5" fill="#4a8c60">供下次 newproc 快速 gfget 取用（见诞生图）</text>
+  <!-- pool slots -->
+  <rect x="46" y="352" width="120" height="46" rx="8" fill="#dcefe0" stroke="#a9d3b6"/>
+  <text x="106" y="373" font-size="10" font-weight="600" fill="#1d4a2b" text-anchor="middle">_Gdead G</text>
+  <text x="106" y="389" font-size="9" fill="#4a8c60" text-anchor="middle">+ 保留的栈</text>
+  <rect x="176" y="352" width="120" height="46" rx="8" fill="#dcefe0" stroke="#a9d3b6"/>
+  <text x="236" y="373" font-size="10" font-weight="600" fill="#1d4a2b" text-anchor="middle">_Gdead G</text>
+  <text x="236" y="389" font-size="9" fill="#4a8c60" text-anchor="middle">+ 保留的栈</text>
+  <rect x="306" y="352" width="120" height="46" rx="8" fill="#dcefe0" stroke="#a9d3b6"/>
+  <text x="366" y="373" font-size="10" font-weight="600" fill="#1d4a2b" text-anchor="middle">_Gdead G</text>
+  <text x="366" y="389" font-size="9" fill="#4a8c60" text-anchor="middle">+ 保留的栈</text>
+  <text x="490" y="379" font-size="10" fill="#4a8c60" text-anchor="middle">… P.gFree</text>
+
+  <!-- step 5: M -> schedule (right, blue) -->
+  <rect x="640" y="74" width="230" height="192" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="656" y="98" font-size="12.5" font-weight="600" fill="#1b2a4a">⑤ M 回 schedule</text>
+  <text x="656" y="120" font-size="10.5" fill="#5b7db1">G 死后 M 并不退出，</text>
+  <text x="656" y="137" font-size="10.5" fill="#5b7db1">回调度循环继续找活跑，</text>
+  <text x="656" y="154" font-size="10.5" fill="#5b7db1">选下一个 _Grunnable 的 G。</text>
+  <line x1="656" y1="172" x2="854" y2="172" stroke="#bcd0ec" stroke-width="1"/>
+  <text x="656" y="194" font-size="10" fill="#5b7db1">main goroutine（goid=1）</text>
+  <text x="656" y="211" font-size="10" fill="#5b7db1">返回则整个程序退出，</text>
+  <text x="656" y="228" font-size="10" fill="#5b7db1">不等其他 goroutine —— 需</text>
+  <text x="656" y="245" font-size="10" fill="#5b7db1">显式 WaitGroup / chan 等待。</text>
+
+  <!-- rule (right bottom, purple) -->
+  <rect x="640" y="296" width="230" height="118" rx="12" fill="#f5f0fb" stroke="#ddcdf0" filter="url(#soft)"/>
+  <text x="656" y="319" font-size="11.5" font-weight="600" fill="#3d2a5a">池化复用 · 廉价的本质</text>
+  <text x="656" y="341" font-size="10" fill="#7d5bb1">创建/销毁多数是「取还</text>
+  <text x="656" y="358" font-size="10" fill="#7d5bb1">池化对象」，而非真正的</text>
+  <text x="656" y="375" font-size="10" fill="#7d5bb1">分配/释放。</text>
+  <text x="656" y="397" font-size="10" fill="#7d5bb1">配合初始 2KB 栈，goroutine</text>
+  <text x="656" y="410" font-size="9.5" fill="#7d5bb1" font-weight="600">廉价到可百万并发。</text>
+</svg>

@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="540" viewBox="0 0 920 540" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="920" height="540" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">mallocgc 分发 · tiny / 小对象 / 大对象 三路径</text>
+
+  <!-- entry (blue coordinator) -->
+  <rect x="330" y="56" width="260" height="60" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="460" y="82" font-size="12.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">mallocgc(size, typ, needzero)</text>
+  <text x="460" y="101" font-size="10" fill="#5b7db1" text-anchor="middle">统一分配入口 · malloc.go:1067</text>
+
+  <!-- decision diamond region -->
+  <text x="460" y="140" font-size="10.5" fill="#8e8e93" text-anchor="middle">按 size 与是否含指针分派 ↓</text>
+
+  <!-- three fan-out lines from entry -->
+  <line x1="400" y1="116" x2="180" y2="176" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <line x1="460" y1="116" x2="460" y2="176" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <line x1="520" y1="116" x2="740" y2="176" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- Path 1: tiny (green) -->
+  <rect x="40" y="180" width="272" height="300" rx="13" fill="#eef7f0" stroke="#bfe0c8" filter="url(#soft)"/>
+  <text x="56" y="204" font-size="12.5" font-weight="600" fill="#1d4a2b">① tiny 分配器</text>
+  <rect x="56" y="216" width="240" height="30" rx="8" fill="#ffffff" stroke="#bfe0c8"/>
+  <text x="176" y="235" font-size="10.5" font-weight="600" fill="#1d4a2b" text-anchor="middle">size &lt; 16B 且 无指针</text>
+  <text x="56" y="268" font-size="10.5" fill="#4a8c60">多个微小对象合并进同一个</text>
+  <text x="56" y="285" font-size="10.5" fill="#4a8c60">16B 块，共享一个槽。</text>
+  <!-- tiny block viz -->
+  <rect x="56" y="298" width="240" height="40" rx="8" fill="#ffffff" stroke="#bfe0c8"/>
+  <rect x="62" y="306" width="52" height="24" rx="4" fill="#eef7f0" stroke="#bfe0c8"/>
+  <rect x="118" y="306" width="40" height="24" rx="4" fill="#eef7f0" stroke="#bfe0c8"/>
+  <rect x="162" y="306" width="60" height="24" rx="4" fill="#eef7f0" stroke="#bfe0c8"/>
+  <rect x="226" y="306" width="64" height="24" rx="4" fill="#f6f6f7" stroke="#e2e2e7"/>
+  <text x="258" y="322" font-size="8.5" fill="#8e8e93" text-anchor="middle">余量</text>
+  <text x="56" y="360" font-size="10.5" fill="#4a8c60">tiny 偏移满了才取新块。</text>
+  <rect x="56" y="374" width="240" height="26" rx="8" fill="#ffffff" stroke="#bfe0c8"/>
+  <text x="176" y="391" font-size="10.5" font-weight="600" fill="#1d4a2b" text-anchor="middle">无锁（走 mcache）</text>
+  <text x="56" y="422" font-size="9.5" fill="#7fb894">典型：小字符串、[]byte 头</text>
+  <text x="56" y="440" font-size="9.5" fill="#7fb894">省空间又免频繁分配</text>
+  <text x="56" y="466" font-size="9.5" fill="#a3c9b0">malloc.go:1208</text>
+
+  <!-- Path 2: small (blue) -->
+  <rect x="324" y="180" width="272" height="300" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="340" y="204" font-size="12.5" font-weight="600" fill="#1b2a4a">② 小对象</text>
+  <rect x="340" y="216" width="240" height="30" rx="8" fill="#ffffff" stroke="#bcd0ec"/>
+  <text x="460" y="235" font-size="10.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">16B ~ 32KB</text>
+  <text x="340" y="268" font-size="10.5" fill="#5b7db1">向上取整到 size class，</text>
+  <text x="340" y="285" font-size="10.5" fill="#5b7db1">走三级供给：</text>
+  <rect x="340" y="296" width="240" height="26" rx="7" fill="#ffffff" stroke="#bcd0ec"/>
+  <text x="460" y="313" font-size="10" fill="#1b2a4a" text-anchor="middle">mcache → mcentral → mheap</text>
+  <text x="340" y="342" font-size="10.5" fill="#5b7db1">scan / noscan 分开取 span：</text>
+  <rect x="340" y="352" width="116" height="30" rx="7" fill="#eef7f0" stroke="#bfe0c8"/>
+  <text x="398" y="371" font-size="10" fill="#1d4a2b" text-anchor="middle">含指针 → scan</text>
+  <rect x="464" y="352" width="116" height="30" rx="7" fill="#ffffff" stroke="#bcd0ec"/>
+  <text x="522" y="371" font-size="10" fill="#1b2a4a" text-anchor="middle">无指针 → noscan</text>
+  <rect x="340" y="392" width="240" height="26" rx="8" fill="#ffffff" stroke="#bcd0ec"/>
+  <text x="460" y="409" font-size="10.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">mcache 命中即无锁</text>
+  <text x="340" y="440" font-size="9.5" fill="#8fabd4">绝大多数分配走这条路</text>
+  <text x="340" y="466" font-size="9.5" fill="#8fabd4">最常见的快路径</text>
+
+  <!-- Path 3: large (amber) -->
+  <rect x="608" y="180" width="272" height="300" rx="13" fill="#fdf6ec" stroke="#f0dcaf" filter="url(#soft)"/>
+  <text x="624" y="204" font-size="12.5" font-weight="600" fill="#6b4e16">③ 大对象</text>
+  <rect x="624" y="216" width="240" height="30" rx="8" fill="#ffffff" stroke="#f0dcaf"/>
+  <text x="744" y="235" font-size="10.5" font-weight="600" fill="#6b4e16" text-anchor="middle">size &gt; 32KB</text>
+  <text x="624" y="268" font-size="10.5" fill="#a9822f">绕过 mcache / mcentral，</text>
+  <text x="624" y="285" font-size="10.5" fill="#a9822f">直接找 mheap 分配</text>
+  <text x="624" y="302" font-size="10.5" fill="#a9822f">一个专属 span。</text>
+  <rect x="624" y="316" width="240" height="40" rx="8" fill="#ffffff" stroke="#f0dcaf"/>
+  <text x="744" y="334" font-size="10.5" font-weight="600" fill="#6b4e16" text-anchor="middle">mheap.alloc(专属 span)</text>
+  <text x="744" y="349" font-size="9" fill="#a9822f" text-anchor="middle">按页数直接切，独占整个 span</text>
+  <rect x="624" y="366" width="240" height="26" rx="8" fill="#fbeeee" stroke="#f0c4c4"/>
+  <text x="744" y="383" font-size="10.5" font-weight="600" fill="#7a1f1f" text-anchor="middle">持堆锁</text>
+  <text x="624" y="414" font-size="9.5" fill="#c6a45f">典型：大切片、大 map buckets</text>
+  <text x="624" y="432" font-size="9.5" fill="#c6a45f">无 class 复用，独立回收</text>
+  <text x="624" y="466" font-size="9.5" fill="#c6a45f">malloc.go:1693</text>
+
+  <!-- bottom convergence to GC assist note -->
+  <rect x="40" y="498" width="840" height="30" rx="9" fill="#f5f0fb" stroke="#ddcdf0"/>
+  <text x="460" y="517" font-size="10.5" fill="#7d5bb1" text-anchor="middle">三路径都在返回前做 GC 辅助标记（gcAssistAlloc）与触发检查——分配即「代扣」GC 债务</text>
+</svg>

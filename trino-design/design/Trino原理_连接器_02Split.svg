@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="600" viewBox="0 0 1080 600" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="600" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Trino Split 生命周期 · 一次扫描如何变成并行任务</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">连接器产 split → 引擎分批拉 → 放置到节点 → 源 pipeline 一 split 一 Driver</text>
+
+  <!-- pipeline stages -->
+  <rect x="30" y="76" width="240" height="120" rx="12" fill="#fff7e6" stroke="#e8cf9a"/>
+  <text x="150" y="100" text-anchor="middle" font-size="10.5" font-weight="700" fill="#5a3410">① 连接器产 split</text>
+  <text x="46" y="122" font-size="8.8" fill="#93762e">ConnectorSplitManager.getSplits</text>
+  <text x="46" y="140" font-size="8.8" fill="#93762e">→ ConnectorSplitSource</text>
+  <text x="46" y="158" font-size="8.8" fill="#93762e">可异步、可分批产出</text>
+  <text x="46" y="176" font-size="8.8" fill="#93762e">粒度由连接器定(文件/分区/段)</text>
+
+  <rect x="300" y="76" width="240" height="120" rx="12" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="420" y="100" text-anchor="middle" font-size="10.5" font-weight="700" fill="#2c5a3a">② 引擎分批拉</text>
+  <text x="316" y="122" font-size="8.8" fill="#2f6f4f">SourcePartitionedScheduler</text>
+  <text x="316" y="140" font-size="8.8" fill="#2f6f4f">getNextBatch(splitBatchSize)</text>
+  <text x="316" y="158" font-size="8.8" fill="#2f6f4f">拉一批,分配一批,再拉</text>
+  <text x="316" y="176" font-size="8.8" fill="#2f6f4f">背压：队列满则等</text>
+
+  <rect x="570" y="76" width="240" height="120" rx="12" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="690" y="100" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1b2a4a">③ 放置到节点</text>
+  <text x="586" y="122" font-size="8.8" fill="#5b7db1">SplitPlacementPolicy</text>
+  <text x="586" y="140" font-size="8.8" fill="#5b7db1">→ NodeScheduler / NodeSelector</text>
+  <text x="586" y="158" font-size="8.8" fill="#5b7db1">Uniform：选最闲节点</text>
+  <text x="586" y="176" font-size="8.8" fill="#5b7db1">TopologyAware：机架感知</text>
+
+  <rect x="840" y="76" width="210" height="120" rx="12" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="945" y="100" text-anchor="middle" font-size="10.5" font-weight="700" fill="#12402a">④ 一 split 一 Driver</text>
+  <text x="856" y="122" font-size="8.8" fill="#2f6f4f">源 pipeline：每 split 起</text>
+  <text x="856" y="140" font-size="8.8" fill="#2f6f4f">一个 Driver 实例</text>
+  <text x="856" y="158" font-size="8.8" fill="#2f6f4f">TableScanOperator 读该 split</text>
+  <text x="856" y="176" font-size="8.8" fill="#2f6f4f">→ ConnectorPageSource</text>
+
+  <line x1="270" y1="136" x2="300" y2="136" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <line x1="540" y1="136" x2="570" y2="136" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <line x1="810" y1="136" x2="840" y2="136" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- Split structure -->
+  <rect x="30" y="216" width="510" height="150" rx="13" fill="#f3f7fc" stroke="#cfe0f2"/>
+  <text x="46" y="238" font-size="11" font-weight="700" fill="#274a78">Split 的结构（引擎不解析内部）</text>
+  <rect x="50" y="252" width="220" height="60" rx="9" fill="#eef3fb" stroke="#bcd0ec"/><text x="160" y="274" text-anchor="middle" font-size="9.5" font-weight="600" fill="#1b2a4a">CatalogHandle</text><text x="160" y="292" text-anchor="middle" font-size="8" fill="#5b7db1">哪个 catalog（路由用）</text>
+  <rect x="290" y="252" width="230" height="60" rx="9" fill="#fff7e6" stroke="#e8cf9a"/><text x="405" y="274" text-anchor="middle" font-size="9.5" font-weight="600" fill="#5a3410">ConnectorSplit</text><text x="405" y="292" text-anchor="middle" font-size="8" fill="#93762e">连接器私有(文件路径/偏移/分区)</text>
+  <text x="46" y="332" font-size="8.5" fill="#5b7db1">连接器声明：isRemotelyAccessible()（能否任意节点读）· getSplitWeight()（负载权重,供均衡）</text>
+  <text x="46" y="350" font-size="8.5" fill="#5b7db1">引擎只当句柄传递,读时交回连接器的 PageSource 解析</text>
+
+  <!-- key facts -->
+  <rect x="560" y="216" width="490" height="150" rx="13" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="576" y="238" font-size="11" font-weight="700" fill="#1d1d1f">放置策略要点</text>
+  <text x="576" y="260" font-size="8.8" fill="#6e6e73">· UniformNodeSelector：按 SplitsBalancingPolicy(STAGE/NODE) 选最少排队的节点</text>
+  <text x="576" y="278" font-size="8.8" fill="#6e6e73">· 亲和：优先选 split 偏好地址(数据本地性)所在节点(optimizedLocalScheduling)</text>
+  <text x="576" y="296" font-size="8.8" fill="#6e6e73">· 限流：max-splits-per-node(默认 256)、每 task pending split 队列上限</text>
+  <text x="576" y="314" font-size="8.8" fill="#6e6e73">· TopologyAware：按 NetworkLocation 逐层(机架→…)分配,减跨机架传输</text>
+  <text x="576" y="336" font-size="8.8" fill="#6e6e73">· ConsistentHashingAddressProvider：一致性哈希做 split→节点亲和</text>
+  <text x="576" y="356" font-size="8.5" fill="#b1483a">483 已移除 Lifespan/grouped execution（split 无 lifespan 字段）</text>
+
+  <!-- empty split trick + task count -->
+  <rect x="30" y="388" width="1020" height="196" rx="13" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="46" y="410" font-size="11" font-weight="700" fill="#2c5a3a">task 数由谁定 + 边界情况</text>
+  <g font-size="8.8">
+    <rect x="46" y="424" width="320" height="70" rx="9" fill="#fff" stroke="#cfe6d5"/><text x="60" y="444" font-weight="600" fill="#2c5a3a">SourcePartitionedScheduler</text><text x="60" y="462" fill="#2f6f4f">SOURCE_DISTRIBUTION 叶子 stage</text><text x="60" y="478" fill="#2f6f4f">task 数随 split 数 + 节点数动态增长</text>
+    <rect x="376" y="424" width="320" height="70" rx="9" fill="#fff" stroke="#cfe6d5"/><text x="390" y="444" font-weight="600" fill="#2c5a3a">FixedCountScheduler</text><text x="390" y="462" fill="#2f6f4f">全 remote source stage</text><text x="390" y="478" fill="#2f6f4f">task 数 = NodePartitionMap 大小(固定)</text>
+    <rect x="706" y="424" width="320" height="70" rx="9" fill="#fff" stroke="#cfe6d5"/><text x="720" y="444" font-weight="600" fill="#2c5a3a">ScaledWriterScheduler</text><text x="720" y="462" fill="#2f6f4f">写入 stage</text><text x="720" y="478" fill="#2f6f4f">随数据量动态加 writer task</text>
+  </g>
+  <text x="46" y="516" font-size="8.8" fill="#6e6e73">· "空 split"技巧：即使 source 无 split,也发一个 EmptySplit,让 driver 照常实例化(不然 pipeline 起不来)</text>
+  <text x="46" y="534" font-size="8.8" fill="#6e6e73">· 归属：split 生成 = 本主线(连接器);split 放置 = 调度与资源。二者边界清晰,别归错</text>
+  <text x="46" y="556" font-size="8.8" fill="#6e6e73">· split 粒度直接决定并行度上限：太粗→并行不足,太细→调度开销大。连接器需权衡(如按文件块大小切)</text>
+  <text x="46" y="576" font-size="8.5" fill="#2f6f4f">· 一个 split 读出多个 Page（split 是"一段数据",Page 是"一批行"）——层级别混</text>
+</svg>

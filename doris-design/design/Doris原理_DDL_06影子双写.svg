@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="380" viewBox="0 0 1000 380" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs><filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter><marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker></defs>
+  <rect width="1000" height="380" fill="#fbfbfd"/>
+  <text x="40" y="30" font-size="14" font-weight="600" fill="#1d1d1f">重量 Schema Change：影子索引 + 分水岭双写 + 原子翻牌（在线不停服）</text>
+  <!-- state machine -->
+  <g text-anchor="middle" font-size="11.5">
+    <rect x="40" y="52" width="180" height="38" rx="10" fill="#eef3fb" stroke="#bcd0ec"/><text x="130" y="76" fill="#1b2a4a">待执行 · 建影子</text>
+    <rect x="270" y="52" width="180" height="38" rx="10" fill="#fff7e6" stroke="#e8cf9a"/><text x="360" y="76" fill="#5a3410">等事务（分水岭）</text>
+    <rect x="500" y="52" width="180" height="38" rx="10" fill="#fff7e6" stroke="#e8cf9a"/><text x="590" y="76" fill="#5a3410">执行中 · 转换+双写</text>
+    <rect x="730" y="52" width="180" height="38" rx="10" fill="#eafaf1" stroke="#bfe0cd"/><text x="820" y="76" fill="#12402a">完成 · 原子翻牌</text>
+  </g>
+  <g stroke="#c7c7cc" stroke-width="1.4" fill="none"><line x1="220" y1="71" x2="270" y2="71" marker-end="url(#ar)"/><line x1="450" y1="71" x2="500" y2="71" marker-end="url(#ar)"/><line x1="680" y1="71" x2="730" y2="71" marker-end="url(#ar)"/></g>
+
+  <!-- lanes -->
+  <rect x="40" y="130" width="400" height="86" rx="13" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="60" y="156" font-size="13" font-weight="600" fill="#1b2a4a">原索引 Tablet（对外服务）</text>
+  <text x="60" y="178" font-size="11" fill="#5b7db1">用户读写不中断，状态始终 NORMAL</text>
+  <text x="60" y="198" font-size="11" fill="#5b7db1">分水岭位点前的数据 = 转换来源</text>
+
+  <rect x="560" y="130" width="400" height="86" rx="13" fill="#ffffff" stroke="#d0d0d5" stroke-dasharray="4 3"/>
+  <text x="580" y="156" font-size="13" font-weight="600" fill="#5a3410">影子索引 Tablet（新 schema · 不可见）</text>
+  <text x="580" y="178" font-size="11" fill="#93762e">BE 逐 Rowset 转换：直接转 / 重排序转</text>
+  <text x="580" y="198" font-size="11" fill="#93762e">副本健康达标后转正</text>
+
+  <path d="M440,160 L560,160" stroke="#c7c7cc" stroke-width="1.6" fill="none" marker-end="url(#ar)"/>
+  <text x="500" y="152" font-size="10" fill="#a1a1a6" text-anchor="middle">转换（位点前）</text>
+
+  <!-- double write -->
+  <rect x="360" y="262" width="280" height="44" rx="12" fill="#f4eefb" stroke="#e2d3f3" filter="url(#soft)"/><text x="500" y="290" font-size="12.5" font-weight="600" fill="#42246b" text-anchor="middle">分水岭位点后的新导入</text>
+  <g stroke="#c7c7cc" stroke-width="1.5" fill="none" stroke-dasharray="5 3">
+    <path d="M420,262 L420,216" marker-end="url(#ar)"/>
+    <path d="M600,262 L740,262 L740,216" marker-end="url(#ar)"/>
+  </g>
+  <text x="500" y="330" font-size="11" fill="#6e6e73" text-anchor="middle">双写：同时写 原索引 + 影子索引 → 转换完成瞬间无缝切换</text>
+  <text x="500" y="352" font-size="11" fill="#6e6e73" text-anchor="middle">翻牌：影子转正替换原索引；多数副本转换失败则整体取消回滚</text>
+</svg>

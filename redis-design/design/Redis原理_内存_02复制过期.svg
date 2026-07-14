@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="440" viewBox="0 0 1000 440" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1000" height="440" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">复制下的过期：判定去中心，删除中心化（db.c:2983-2986, 2863）</text>
+  <text x="30" y="49" font-size="10.5" fill="#a1a1a6">从库不独立删过期键，避免主从按各自时钟过期导致数据分歧</text>
+
+  <!-- master -->
+  <rect x="60" y="80" width="360" height="280" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="240" y="106" font-size="12" font-weight="700" fill="#1b2a4a" text-anchor="middle">主库 Master</text>
+  <text x="240" y="128" font-size="9.5" fill="#5b7db1" text-anchor="middle">过期删除的唯一发起者</text>
+
+  <g text-anchor="middle" font-size="9.5">
+    <rect x="90" y="146" width="300" height="40" rx="8" fill="#fff" stroke="#cfe0f2"/><text x="240" y="164" fill="#1b2a4a">惰性 / 定期发现 key 过期</text><text x="240" y="178" fill="#5b7db1" font-size="8.5">expireIfNeeded / activeExpireCycle</text>
+    <rect x="90" y="198" width="300" height="40" rx="8" fill="#fdeef2" stroke="#f6c9d6"/><text x="240" y="216" fill="#c02a56">删除 key + propagateDeletion</text><text x="240" y="230" fill="#c02a56" font-size="8.5">强制 replication_allowed=1</text>
+    <rect x="90" y="250" width="140" height="40" rx="8" fill="#eafaf1" stroke="#b8e6cd"/><text x="160" y="268" fill="#1c6b45">→ AOF</text><text x="160" y="282" fill="#3a9b6e" font-size="8.5">写 DEL/UNLINK</text>
+    <rect x="250" y="250" width="140" height="40" rx="8" fill="#f6f0fb" stroke="#dcc6ee"/><text x="320" y="268" fill="#5a2a82">→ 复制流</text><text x="320" y="282" fill="#8a5cae" font-size="8.5">发 DEL/UNLINK</text>
+  </g>
+  <text x="240" y="322" font-size="9" fill="#5b7db1" text-anchor="middle">lazyfree-lazy-expire=yes → 发 UNLINK（异步释放）</text>
+  <text x="240" y="342" font-size="9" fill="#5b7db1" text-anchor="middle">否则发 DEL（同步）</text>
+
+  <!-- replication arrow -->
+  <line x1="420" y1="270" x2="560" y2="270" stroke="#8b6cff" stroke-width="1.8" marker-end="url(#ar)"/>
+  <text x="490" y="262" font-size="9.5" fill="#5a2a82" text-anchor="middle">复制流</text>
+  <text x="490" y="286" font-size="8.5" fill="#8a5cae" text-anchor="middle">DEL user:1</text>
+
+  <!-- replica -->
+  <rect x="580" y="80" width="360" height="280" rx="12" fill="#fdf9f0" stroke="#efe3cd" filter="url(#soft)"/>
+  <text x="760" y="106" font-size="12" font-weight="700" fill="#7a5a1e" text-anchor="middle">从库 Replica</text>
+  <text x="760" y="128" font-size="9.5" fill="#b08535" text-anchor="middle">只判定不删除，等主库指令</text>
+
+  <g text-anchor="middle" font-size="9.5">
+    <rect x="610" y="146" width="300" height="44" rx="8" fill="#fff" stroke="#efe3cd"/><text x="760" y="165" fill="#7a5a1e">客户端读逻辑已过期的 key</text><text x="760" y="180" fill="#b08535" font-size="8.5">expireIfNeeded 返回 KEY_EXPIRED</text>
+    <rect x="610" y="202" width="300" height="44" rx="8" fill="#eef3fb" stroke="#bcd0ec"/><text x="760" y="221" fill="#1b2a4a">读取视为不存在（返回 nil）</text><text x="760" y="236" fill="#5b7db1" font-size="8.5">但 key 仍留在内存，不删</text>
+    <rect x="610" y="258" width="300" height="44" rx="8" fill="#eafaf1" stroke="#b8e6cd"/><text x="760" y="277" fill="#1c6b45">收到主库 DEL → 此刻才真正删除</text><text x="760" y="292" fill="#3a9b6e" font-size="8.5">与主库删除时刻对齐</text>
+  </g>
+  <text x="760" y="330" font-size="9" fill="#b08535" text-anchor="middle">若从库自行删 → 主从可能因时钟差/负载差而分歧</text>
+
+  <rect x="30" y="378" width="940" height="46" rx="8" fill="#f7f7f9" stroke="#ececef"/>
+  <text x="50" y="400" font-size="10" fill="#4a4a4f">一句话：过期的"判定"每个节点独立（读时按逻辑过期返回空），过期的"删除"只由主库发起并经复制流/AOF 传播。</text>
+  <text x="50" y="418" font-size="9.5" fill="#86868b">工程注意：直连从库读，可能读到主库已逻辑过期但删除指令尚未到达的 key —— 读取按过期处理返回 nil，语义仍正确。</text>
+</svg>

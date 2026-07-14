@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="560" viewBox="0 0 1080 560" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="560" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">RocksDB 事务 · 悲观锁 / 乐观检测 / 2PC（可选层）</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">TransactionDB 构建在 WriteBatch+Snapshot 之上,提供隔离与冲突处理;默认 DB 只有单次 Write 原子性</text>
+
+  <!-- pessimistic -->
+  <rect x="30" y="70" width="500" height="200" rx="13" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="46" y="92" font-size="11" font-weight="700" fill="#1b2a4a">悲观事务 PessimisticTransaction</text>
+  <rect x="46" y="104" width="470" height="40" rx="8" fill="#f3f7fc" stroke="#cfe0f2"/><text x="60" y="124" font-size="8.8" font-weight="600" fill="#274a78">写前加行锁(point lock)</text><text x="60" y="138" font-size="8.3" fill="#5b7db1">锁管理器维护 key→事务;冲突则等待/超时</text>
+  <rect x="46" y="152" width="470" height="40" rx="8" fill="#f3f7fc" stroke="#cfe0f2"/><text x="60" y="172" font-size="8.8" font-weight="600" fill="#274a78">Commit 时释放锁 + 落 WriteBatch</text><text x="60" y="186" font-size="8.3" fill="#5b7db1">冲突在加锁时就挡住(先到先得)</text>
+  <rect x="46" y="200" width="470" height="60" rx="8" fill="#eafaf1" stroke="#bfe0cd"/><text x="60" y="220" font-size="8.8" font-weight="600" fill="#12402a">适合:高冲突场景</text><text x="60" y="238" font-size="8.3" fill="#2f6f4f">· 冲突多时避免大量重试</text><text x="60" y="254" font-size="8.3" fill="#2f6f4f">· TransactionDB;可选 range lock</text>
+
+  <!-- optimistic -->
+  <rect x="550" y="70" width="500" height="200" rx="13" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="566" y="92" font-size="11" font-weight="700" fill="#12402a">乐观事务 OptimisticTransaction</text>
+  <rect x="566" y="104" width="470" height="40" rx="8" fill="#f5faf6" stroke="#cfe6d5"/><text x="580" y="124" font-size="8.8" font-weight="600" fill="#2c5a3a">不加锁,写缓存进 WriteBatch</text><text x="580" y="138" font-size="8.3" fill="#2f6f4f">事务内改动先攒着,不碰 DB</text>
+  <rect x="566" y="152" width="470" height="40" rx="8" fill="#f5faf6" stroke="#cfe6d5"/><text x="580" y="172" font-size="8.8" font-weight="600" fill="#2c5a3a">Commit 时冲突检测</text><text x="580" y="186" font-size="8.3" fill="#2f6f4f">检查读/写过的 key 自事务起有没被改(比 seq)</text>
+  <rect x="566" y="200" width="470" height="60" rx="8" fill="#fff7e6" stroke="#e8cf9a"/><text x="580" y="220" font-size="8.8" font-weight="600" fill="#5a3410">适合:低冲突场景</text><text x="580" y="238" font-size="8.3" fill="#93762e">· 冲突则整体失败,应用重试</text><text x="580" y="254" font-size="8.3" fill="#93762e">· 无锁开销;高冲突时重试反而慢</text>
+
+  <!-- 2PC -->
+  <rect x="30" y="286" width="1020" height="150" rx="13" fill="#faf4fb" stroke="#e2d2ee"/>
+  <text x="46" y="308" font-size="11" font-weight="700" fill="#5a3d78">2PC(两阶段提交)· 跨系统协调</text>
+  <g font-size="8.8" text-anchor="middle">
+    <rect x="46" y="320" width="300" height="60" rx="8" fill="#fff" stroke="#e2d2ee"/><text x="196" y="342" font-weight="600" fill="#5a3d78">① Prepare</text><text x="196" y="360" fill="#7a5a95">WriteBatch 写 WAL(带 prepare 标记)</text><text x="196" y="374" fill="#7a5a95">但不落 MemTable(未可见)</text>
+    <rect x="386" y="320" width="300" height="60" rx="8" fill="#fff" stroke="#e2d2ee"/><text x="536" y="342" font-weight="600" fill="#5a3d78">② Commit</text><text x="536" y="360" fill="#7a5a95">写 commit 标记 + 落 MemTable</text><text x="536" y="374" fill="#7a5a95">此时才可见</text>
+    <rect x="726" y="320" width="308" height="60" rx="8" fill="#eafaf1" stroke="#bfe0cd"/><text x="880" y="342" font-weight="600" fill="#12402a">用途</text><text x="880" y="360" fill="#2f6f4f">跨系统协调:如 MyRocks 与 binlog</text><text x="880" y="374" fill="#2f6f4f">崩溃恢复:prepared 未 commit → 回滚</text>
+  </g>
+  <line x1="346" y1="350" x2="386" y2="350" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <text x="46" y="404" font-size="8.5" fill="#7a5a95">· WritePrepared / WriteUnprepared:不同的 2PC 内部策略(prepare 阶段数据可见性与内存占用的权衡)</text>
+  <text x="46" y="422" font-size="8.5" fill="#7a5a95">· 恢复时:WAL 里 prepared 但无 commit 标记的事务会被回滚(见 WAL 恢复)</text>
+
+  <!-- notes -->
+  <rect x="30" y="452" width="1020" height="86" rx="13" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="46" y="474" font-size="11" font-weight="700" fill="#1d1d1f">要点</text>
+  <text x="46" y="496" font-size="9" fill="#6e6e73">· 事务层是可选的(TransactionDB / OptimisticTransactionDB);默认 DB 只提供单次 Write 的原子性(WriteBatch),无隔离/加锁/冲突检测</text>
+  <text x="46" y="514" font-size="9" fill="#6e6e73">· 悲观 vs 乐观 = 加锁挡冲突 vs 提交时检测冲突;高冲突用悲观(少重试)、低冲突用乐观(无锁开销)</text>
+  <text x="46" y="532" font-size="8.5" fill="#b1483a">· 归属:事务底层是【接触面】WriteBatch + 本主线 Snapshot;2PC 的 prepare 标记写在【WAL】;隔离靠【事务】MVCC 的 seq</text>
+</svg>

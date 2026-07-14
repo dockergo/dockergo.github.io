@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="450" viewBox="0 0 1020 450"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1020" height="450" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">形态 · define-by-run 动态图 vs 静态图，torch.compile 兼得两者</text>
+
+  <!-- eager 动态图 -->
+  <rect x="30" y="52" width="470" height="230" rx="14" fill="#eafaf1" stroke="#bce6cd" filter="url(#soft)"/>
+  <text x="48" y="76" font-size="12.5" font-weight="600" fill="#0f5132">eager 动态图（PyTorch 默认，define-by-run）</text>
+  <text x="48" y="98" font-size="9.5" fill="#3f8f66">Python 每执行一个算子就立刻算、顺带记一个反向图节点</text>
+  <rect x="48" y="112" width="200" height="40" rx="9" fill="#ffffff" stroke="#bce6cd"/><text x="148" y="137" font-size="9" fill="#0f5132" text-anchor="middle">y = x @ W  → 立即算 + 记 grad_fn</text>
+  <rect x="48" y="160" width="200" height="40" rx="9" fill="#ffffff" stroke="#bce6cd"/><text x="148" y="185" font-size="9" fill="#0f5132" text-anchor="middle">z = y.relu() → 立即算 + 记 grad_fn</text>
+  <rect x="268" y="112" width="204" height="88" rx="9" fill="#f6f6f8" stroke="#e2e2e7"/><text x="370" y="134" font-size="9.5" font-weight="600" fill="#494950" text-anchor="middle">图随代码"跑"出来</text><text x="370" y="154" font-size="8.5" fill="#6a6a70" text-anchor="middle">可用 if/for/print 任意控制流</text><text x="370" y="172" font-size="8.5" fill="#6a6a70" text-anchor="middle">好调试、Python 化</text><text x="370" y="188" font-size="8.5" fill="#6a6a70" text-anchor="middle">图用完即弃、下次重建</text>
+  <text x="48" y="224" font-size="9.5" fill="#3f8f66">优点：直观、灵活、易调试（可断点、可打印中间张量）</text>
+  <text x="48" y="244" font-size="9.5" fill="#b06a6a">缺点：逐算子派发有开销、无跨算子融合优化</text>
+  <text x="48" y="268" font-size="9" fill="#5aa06f">对照 TF1 静态图：先定义整图再喂数据，快但难调试不灵活</text>
+
+  <!-- torch.compile -->
+  <rect x="520" y="52" width="470" height="230" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="538" y="76" font-size="12.5" font-weight="600" fill="#1b2a4a">torch.compile：在 eager 里"就地"编译加速</text>
+  <text x="538" y="98" font-size="9.5" fill="#5b7db1">保留 eager 写法，运行时把热点区抓成图再编译</text>
+  <rect x="538" y="112" width="434" height="40" rx="9" fill="#ffffff" stroke="#bcd0ec"/><text x="755" y="132" font-size="9" fill="#1b2a4a" text-anchor="middle">Dynamo：抓 Python 字节码成 FX 图</text><text x="755" y="146" font-size="8" fill="#5b7db1" text-anchor="middle">遇不能抓的就 graph break 回退 eager</text>
+  <rect x="538" y="160" width="434" height="40" rx="9" fill="#ffffff" stroke="#bcd0ec"/><text x="755" y="180" font-size="9" fill="#1b2a4a" text-anchor="middle">Inductor：融合算子生成 Triton/C++ kernel</text><text x="755" y="194" font-size="8" fill="#5b7db1" text-anchor="middle">减少派发/访存、跨算子融合</text>
+  <text x="538" y="224" font-size="9.5" fill="#5b7db1">既要 eager 的灵活，又要图编译的性能——</text>
+  <text x="538" y="244" font-size="9.5" fill="#5b7db1">加一行 @torch.compile 即可，其余代码不变</text>
+  <text x="538" y="268" font-size="9" fill="#8fa9cf">详见"编译栈"能力域</text>
+
+  <line x1="500" y1="167" x2="520" y2="167" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+  <text x="502" y="159" font-size="8" fill="#86868b">加速</text>
+
+  <!-- 底部 -->
+  <rect x="30" y="300" width="960" height="134" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="48" y="324" font-size="12.5" font-weight="600" fill="#1d1d1f">为什么 define-by-run 是 PyTorch 的灵魂</text>
+  <text x="48" y="348" font-size="10.5" fill="#494950">• <tspan font-weight="600">图 = 副产物</tspan>：不需要用户先声明计算图；正常写 Python，autograd 在算子执行时顺手把反向图连起来。</text>
+  <text x="48" y="370" font-size="10.5" fill="#494950">• <tspan font-weight="600">控制流自由</tspan>：模型里可用普通 if/for/递归，图按实际执行路径生成——研究友好。</text>
+  <text x="48" y="392" font-size="10.5" fill="#494950">• <tspan font-weight="600">代价是性能</tspan>：逐算子 Python↔C++ 派发有开销；torch.compile 用"抓图 + 编译"补上，而不牺牲写法。</text>
+  <text x="48" y="416" font-size="10" fill="#86868b">这条"动态优先、编译加速可选"的路线，是 PyTorch 与静态图框架的根本分野。</text>
+</svg>

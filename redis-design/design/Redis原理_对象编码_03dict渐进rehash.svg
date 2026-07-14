@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="540" viewBox="0 0 1000 540" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1000" height="540" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">dict 渐进式 rehash：扩容不停顿，迁移摊到每次操作</text>
+  <text x="30" y="49" font-size="10.5" fill="#a1a1a6">两张表 ht[0]/ht[1] + rehashidx 进度标记；load ≥4 强制扩容（dict.c:405-431, dict.h:162-178）</text>
+
+  <!-- phase 1: normal -->
+  <text x="40" y="82" font-size="11" font-weight="700" fill="#1b2a4a">① 平时：只用 ht[0]，rehashidx = -1</text>
+  <rect x="60" y="94" width="240" height="90" rx="10" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="180" y="114" font-size="10" font-weight="600" fill="#1b2a4a" text-anchor="middle">ht[0]（size=4）</text>
+  <g font-size="9" text-anchor="middle">
+    <rect x="72" y="124" width="50" height="24" rx="5" fill="#fff" stroke="#cfe0f2"/><text x="97" y="140" fill="#5b7db1">bucket0</text>
+    <rect x="128" y="124" width="50" height="24" rx="5" fill="#fff" stroke="#cfe0f2"/><text x="153" y="140" fill="#5b7db1">bucket1</text>
+    <rect x="184" y="124" width="50" height="24" rx="5" fill="#fff" stroke="#cfe0f2"/><text x="209" y="140" fill="#5b7db1">bucket2</text>
+    <rect x="240" y="124" width="50" height="24" rx="5" fill="#fff" stroke="#cfe0f2"/><text x="265" y="140" fill="#5b7db1">bucket3</text>
+  </g>
+  <text x="180" y="172" font-size="9" fill="#5b7db1" text-anchor="middle">元素/桶 ≥ 4 → 触发扩容</text>
+
+  <!-- phase 2: rehashing -->
+  <text x="40" y="224" font-size="11" font-weight="700" fill="#7a5a1e">② rehash 中：ht[1] 已分配，rehashidx 逐桶推进</text>
+  <rect x="60" y="236" width="240" height="110" rx="10" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="180" y="256" font-size="10" font-weight="600" fill="#1b2a4a" text-anchor="middle">ht[0]（迁移源）</text>
+  <g font-size="9" text-anchor="middle">
+    <rect x="72" y="266" width="50" height="24" rx="5" fill="#e8e8ea" stroke="#cfe0f2"/><text x="97" y="282" fill="#a1a1a6">已迁空</text>
+    <rect x="128" y="266" width="50" height="24" rx="5" fill="#e8e8ea" stroke="#cfe0f2"/><text x="153" y="282" fill="#a1a1a6">已迁空</text>
+    <rect x="184" y="266" width="50" height="24" rx="5" fill="#fdf3e5" stroke="#f0d9b5"/><text x="209" y="282" fill="#7a5a1e">迁移中</text>
+    <rect x="240" y="266" width="50" height="24" rx="5" fill="#fff" stroke="#cfe0f2"/><text x="265" y="282" fill="#5b7db1">待迁</text>
+  </g>
+  <text x="209" y="312" font-size="8.5" fill="#7a5a1e" text-anchor="middle">↑ rehashidx=2</text>
+  <text x="180" y="334" font-size="9" fill="#5b7db1" text-anchor="middle">每次操作迁移 n 个非空桶（最多扫 n×10 空桶）</text>
+
+  <rect x="360" y="236" width="240" height="110" rx="10" fill="#eafaf1" stroke="#b8e6cd" filter="url(#soft)"/>
+  <text x="480" y="256" font-size="10" font-weight="600" fill="#1c6b45" text-anchor="middle">ht[1]（迁移目标 size=8）</text>
+  <g font-size="9" text-anchor="middle">
+    <rect x="372" y="266" width="44" height="24" rx="5" fill="#fff" stroke="#b8e6cd"/><text x="394" y="282" fill="#1c6b45">b0</text>
+    <rect x="420" y="266" width="44" height="24" rx="5" fill="#fff" stroke="#b8e6cd"/><text x="442" y="282" fill="#1c6b45">b1</text>
+    <rect x="468" y="266" width="44" height="24" rx="5" fill="#fff" stroke="#b8e6cd"/><text x="490" y="282" fill="#1c6b45">b2</text>
+    <rect x="516" y="266" width="44" height="24" rx="5" fill="#fff" stroke="#b8e6cd"/><text x="538" y="282" fill="#1c6b45">…</text>
+  </g>
+  <text x="480" y="326" font-size="9" fill="#1c6b45" text-anchor="middle">迁完两表交换、rehashidx=-1</text>
+  <line x1="300" y1="290" x2="358" y2="290" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+  <text x="329" y="284" font-size="8" fill="#a1a1a6" text-anchor="middle">rehash 一步</text>
+
+  <!-- lookup during rehash -->
+  <rect x="640" y="236" width="320" height="110" rx="10" fill="#fdf9f0" stroke="#efe3cd"/>
+  <text x="660" y="258" font-size="10.5" font-weight="600" fill="#7a5a1e">rehash 期间的查找</text>
+  <text x="660" y="278" font-size="9.5" fill="#7a5a1e">· 查/删：先查 ht[0]，未命中再查 ht[1]</text>
+  <text x="660" y="296" font-size="9.5" fill="#7a5a1e">· 新增：一律写入 ht[1]（ht[0] 只减不增）</text>
+  <text x="660" y="314" font-size="9.5" fill="#7a5a1e">· 保证 ht[0] 元素单调减少 → 终将迁空</text>
+  <text x="660" y="332" font-size="9.5" fill="#7a5a1e">· serverCron 也会推进 rehash（无操作时）</text>
+
+  <!-- dictScan reverse-binary -->
+  <text x="40" y="384" font-size="11" font-weight="700" fill="#5a2a82">③ dictScan 反向二进制游标：扩缩容中不漏键（SCAN 命令的基础）</text>
+  <rect x="60" y="398" width="900" height="86" rx="10" fill="#f6f0fb" stroke="#dcc6ee"/>
+  <text x="80" y="422" font-size="10" fill="#5a2a82">游标高位递增（reverse-binary increment，dict.c:1579-1586）：v |= ~mask; v = rev(v); v++; v = rev(v)</text>
+  <text x="80" y="444" font-size="10" fill="#5a2a82">效果：即使两次 SCAN 之间发生 rehash / 扩缩容，已存在全程的键<tspan font-weight="600">保证不漏</tspan>（可能少量重复，但不遗漏）</text>
+  <text x="80" y="466" font-size="10" fill="#8a5cae">对比普通顺序游标：一旦扩容桶数变化，顺序游标会跳过或重复大片桶 → 漏键。反向二进制从高位进位天然兼容 2 倍扩缩</text>
+
+  <rect x="60" y="500" width="900" height="28" rx="8" fill="#f7f7f9" stroke="#ececef"/>
+  <text x="510" y="518" font-size="10" fill="#4a4a4f" text-anchor="middle">一句话：渐进 rehash 把"一次性大停顿"摊成"每次操作多做一点点"，让 Redis 单线程也能平滑扩容大字典</text>
+</svg>

@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="540" viewBox="0 0 1080 540" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="540" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">StarRocks Morsel 驱动并行 · 运行期抢任务自动均衡</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">并行不是编译期切死,而是运行期抢 morsel:快的 Driver 多拿,自动负载均衡,避免数据倾斜长尾</text>
+
+  <!-- FE scan ranges -->
+  <rect x="30" y="66" width="1020" height="52" rx="12" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="46" y="88" font-size="11" font-weight="700" fill="#3d2a5a">FE 下发扫描范围 TScanRange</text>
+  <text x="46" y="106" font-size="9.3" fill="#5a3d78">ScanMorsel::build_scan_morsels(scan_morsel.h:132) 把扫描范围转成一批 morsel(扫描任务的最小单元)</text>
+  <text x="1034" y="97" font-size="9" fill="#5a3d78" text-anchor="end">morsel = 一段可独立扫描的数据片</text>
+
+  <line x1="540" y1="118" x2="540" y2="140" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="556" y="133" font-size="9" fill="#a1a1a6">切分为 morsel</text>
+
+  <!-- MorselQueue container -->
+  <rect x="30" y="140" width="1020" height="182" rx="13" fill="#f6f8fc" stroke="#e6ecf4"/>
+  <text x="46" y="162" font-size="11.5" font-weight="700" fill="#1d1d1f">MorselQueue 运行期并行任务源 · exec_primitive/pipeline/scan/morsel_queue.h:33 (FIXED / DYNAMIC / SPLIT …)</text>
+
+  <!-- Shared factory -->
+  <rect x="50" y="176" width="490" height="130" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="66" y="198" font-size="10.5" font-weight="700" fill="#12402a">SharedMorselQueueFactory · 共享一队</text>
+  <text x="66" y="215" font-size="8.8" fill="#2f6f4f">所有 Driver 抢同一队列:谁快谁多拿 → 自动均衡</text>
+  <g text-anchor="middle" font-size="8.5">
+    <rect x="66" y="226" width="86" height="24" rx="6" fill="#fff" stroke="#bfe0cd"/><text x="109" y="242" fill="#12402a">morsel</text>
+    <rect x="160" y="226" width="86" height="24" rx="6" fill="#fff" stroke="#bfe0cd"/><text x="203" y="242" fill="#12402a">morsel</text>
+    <rect x="254" y="226" width="86" height="24" rx="6" fill="#fff" stroke="#bfe0cd"/><text x="297" y="242" fill="#12402a">morsel</text>
+    <rect x="348" y="226" width="86" height="24" rx="6" fill="#fff" stroke="#bfe0cd"/><text x="391" y="242" fill="#12402a">morsel</text>
+    <rect x="442" y="226" width="82" height="24" rx="6" fill="#fff" stroke="#bfe0cd"/><text x="483" y="242" fill="#12402a">…</text>
+  </g>
+  <g font-size="8.5" text-anchor="middle">
+    <rect x="66" y="266" width="130" height="28" rx="7" fill="#fdf6ea" stroke="#efdcb4"/><text x="131" y="284" fill="#5a3410">Driver#0 抢 3 个(快)</text>
+    <rect x="206" y="266" width="130" height="28" rx="7" fill="#fdf6ea" stroke="#efdcb4"/><text x="271" y="284" fill="#5a3410">Driver#1 抢 1 个(慢)</text>
+    <rect x="346" y="266" width="178" height="28" rx="7" fill="#fdf6ea" stroke="#efdcb4"/><text x="435" y="284" fill="#5a3410">Driver#N … 按快慢分</text>
+  </g>
+
+  <!-- Individual factory -->
+  <rect x="558" y="176" width="472" height="130" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="574" y="198" font-size="10.5" font-weight="700" fill="#1b2a4a">IndividualMorselQueueFactory · 每 Driver 一队</text>
+  <text x="574" y="215" font-size="8.8" fill="#5b7db1">预先分好,各 Driver 扫各自的一队(需绑定分区场景)</text>
+  <g text-anchor="middle" font-size="8.5">
+    <rect x="574" y="228" width="140" height="64" rx="8" fill="#fff" stroke="#bcd0ec"/><text x="644" y="248" fill="#1b2a4a">Driver#0 队</text><text x="644" y="266" font-size="8" fill="#5b7db1">morsel · morsel</text><text x="644" y="282" font-size="8" fill="#5b7db1">morsel</text>
+    <rect x="724" y="228" width="140" height="64" rx="8" fill="#fff" stroke="#bcd0ec"/><text x="794" y="248" fill="#1b2a4a">Driver#1 队</text><text x="794" y="266" font-size="8" fill="#5b7db1">morsel · morsel</text><text x="794" y="282" font-size="8" fill="#5b7db1">morsel</text>
+    <rect x="874" y="228" width="140" height="64" rx="8" fill="#fff" stroke="#bcd0ec"/><text x="944" y="248" fill="#1b2a4a">Driver#N 队</text><text x="944" y="266" font-size="8" fill="#5b7db1">morsel · …</text><text x="944" y="282" font-size="8" fill="#5b7db1">morsel</text>
+  </g>
+
+  <!-- big tablet split -->
+  <line x1="290" y1="322" x2="290" y2="352" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="306" y="342" font-size="9" fill="#a1a1a6">大 Tablet 还能内部切</text>
+  <rect x="30" y="352" width="640" height="112" rx="12" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="46" y="374" font-size="11" font-weight="700" fill="#5a3410">大 Tablet 内部 split 并行 · storage/query/split_morsel_queue.h:32</text>
+  <text x="46" y="392" font-size="9.3" fill="#93762e">单个大 Tablet 按 rowid 范围再切成多个子 morsel,让多个 Driver 并扫同一 Tablet</text>
+  <g text-anchor="middle" font-size="9">
+    <rect x="46" y="404" width="300" height="48" rx="9" fill="#fdf6ea" stroke="#efdcb4"/><text x="196" y="424" font-weight="600" fill="#5a3410">PhysicalSplitMorselQueue</text><text x="196" y="441" font-size="8.3" fill="#93762e">按物理 rowid 段切(明细/主键表)</text>
+    <rect x="356" y="404" width="298" height="48" rx="9" fill="#fdf6ea" stroke="#efdcb4"/><text x="505" y="424" font-weight="600" fill="#5a3410">LogicalSplitMorselQueue</text><text x="505" y="441" font-size="8.3" fill="#93762e">按逻辑 rowid 段切(聚合/主键短路)</text>
+  </g>
+
+  <!-- DOP card -->
+  <rect x="686" y="352" width="364" height="112" rx="12" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="702" y="374" font-size="11" font-weight="700" fill="#3d2a5a">DOP = pipeline_dop · fragment_executor.cpp:317</text>
+  <text x="702" y="393" font-size="9.3" fill="#5a3d78">_calc_dop:FE 传的 dop &gt; 0 则用</text>
+  <text x="702" y="411" font-size="9.3" fill="#5a3d78">否则默认 max(1, max_executor_threads / 2)</text>
+  <text x="702" y="429" font-size="9.3" fill="#5a3d78">ScanOperator 并发发 _io_tasks_per_scan_operator</text>
+  <text x="702" y="447" font-size="9.3" fill="#5a3d78">个 IO 任务拉 morsel(scan_operator.cpp:251)</text>
+
+  <!-- balance note -->
+  <rect x="30" y="482" width="1020" height="42" rx="11" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="540" y="508" font-size="10" font-weight="600" text-anchor="middle" fill="#12402a">运行期抢任务:快 Driver 多拿 morsel,慢的少拿 → 数据倾斜下自动负载均衡,无需编译期精确切分</text>
+</svg>

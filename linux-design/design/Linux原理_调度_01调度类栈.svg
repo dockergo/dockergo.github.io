@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="840" height="420" viewBox="0 0 840 420" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+    <marker id="arg" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#5aa06a"/></marker>
+  </defs>
+  <rect width="840" height="420" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">调度类栈：__schedule 按固定优先级从高到低逐类挑选，首个非空类胜出</text>
+
+  <!-- 下探主箭头 -->
+  <path d="M44,72 L44,364" stroke="#c7c7cc" stroke-width="1.8" fill="none" marker-end="url(#ar)"/>
+  <text x="30" y="220" font-size="10" fill="#a1a1a6" text-anchor="middle" transform="rotate(-90 30 220)">优先级递减 · for_class_range(highest→lowest)</text>
+
+  <!-- 5 类卡 -->
+  <g>
+    <rect x="66" y="66" width="236" height="50" rx="10" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/><text x="84" y="88" font-size="12" font-weight="600" fill="#1b2a4a">stop</text><text x="84" y="105" font-size="9.5" fill="#5b7db1">迁移/停机等内部最高优先</text>
+    <rect x="66" y="128" width="236" height="50" rx="10" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/><text x="84" y="150" font-size="12" font-weight="600" fill="#1b2a4a">dl（deadline）</text><text x="84" y="167" font-size="9.5" fill="#5b7db1">EDF 硬实时，有截止期保证</text>
+    <rect x="66" y="190" width="236" height="50" rx="10" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/><text x="84" y="212" font-size="12" font-weight="600" fill="#1b2a4a">rt（FIFO/RR）</text><text x="84" y="229" font-size="9.5" fill="#5b7db1">固定优先级实时</text>
+    <rect x="66" y="252" width="236" height="50" rx="10" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/><text x="84" y="274" font-size="12" font-weight="600" fill="#12402a">fair（EEVDF）★</text><text x="84" y="291" font-size="9.5" fill="#2f6f4f">普通任务的家（绝大多数）</text>
+    <rect x="66" y="314" width="236" height="50" rx="10" fill="#f2f2f4" stroke="#e2e2e6" filter="url(#soft)"/><text x="84" y="336" font-size="12" font-weight="600" fill="#3a3a3c">idle</text><text x="84" y="353" font-size="9.5" fill="#6e6e73">都空时兜底运行</text>
+  </g>
+
+  <!-- 各类判定注 -->
+  <g font-size="9.5" fill="#8a8a8e">
+    <text x="316" y="95">有可运行任务? 通常空 → 下探</text>
+    <text x="316" y="157">有 deadline 任务才命中</text>
+    <text x="316" y="219">有实时任务才命中</text>
+    <text x="316" y="283" fill="#2f6f4f" font-weight="600">命中 → EEVDF 选具体任务（见 EEVDF 图）</text>
+    <text x="316" y="345">前面都空才轮到</text>
+  </g>
+
+  <!-- fair 命中 → 结论(绿) -->
+  <path d="M302,277 L560,277" stroke="#5aa06a" stroke-width="1.8" fill="none" marker-end="url(#arg)"/>
+
+  <!-- 结论卡 -->
+  <rect x="562" y="238" width="256" height="86" rx="12" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="690" y="264" font-size="11.5" font-weight="600" fill="#1d1d1f" text-anchor="middle">首个非空类胜出</text>
+  <text x="690" y="286" font-size="10" fill="#6e6e73" text-anchor="middle">pick_next_task 返回其任务 next</text>
+  <text x="690" y="304" font-size="10" fill="#6e6e73" text-anchor="middle">→ context_switch 切换过去</text>
+
+  <text x="420" y="398" font-size="10" fill="#a1a1a6" text-anchor="middle">源码 7.1.3：DEFINE_SCHED_CLASS(stop/dl/rt/fair/idle) · linker section 排序 · __schedule@core.c:7023</text>
+</svg>

@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="560" viewBox="0 0 1080 560" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="560" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">RocksDB 读取全景 · 由新到旧查找,找到即停（DBImpl::GetImpl）</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">Get("k") 依次查:活跃 MemTable → immutable → 逐层 SST(布隆短路),按 seq 取最新可见版本,遇墓碑=不存在</text>
+
+  <!-- vertical search order -->
+  <g font-size="8.8" text-anchor="middle">
+    <rect x="330" y="72" width="420" height="42" rx="9" fill="#f4eefb" stroke="#d9c7ec"/><text x="540" y="90" font-weight="700" fill="#3d2a5a">Get("k", ReadOptions)</text><text x="540" y="106" fill="#5a3d78">在一个 SuperVersion 快照下进行</text>
+    <rect x="330" y="126" width="420" height="40" rx="9" fill="#eafaf1" stroke="#bfe0cd"/><text x="540" y="144" font-weight="600" fill="#12402a">① 活跃 MemTable(最新写)</text><text x="540" y="159" fill="#2f6f4f">命中且是最新可见版本 → 返回;是墓碑 → 返回 NotFound</text>
+    <rect x="330" y="178" width="420" height="40" rx="9" fill="#eef3fb" stroke="#bcd0ec"/><text x="540" y="196" font-weight="600" fill="#1b2a4a">② immutable MemTable × N</text><text x="540" y="211" fill="#5b7db1">待 flush 的只读跳表,逐个查</text>
+    <rect x="330" y="230" width="420" height="46" rx="9" fill="#fdf6ea" stroke="#efdcb4"/><text x="540" y="248" font-weight="600" fill="#5a3410">③ L0 SST(可重叠)</text><text x="540" y="263" fill="#93762e">查每个可能命中的文件(先布隆短路),按 seq 由新到旧</text>
+    <rect x="330" y="288" width="420" height="46" rx="9" fill="#fdf6ea" stroke="#efdcb4"/><text x="540" y="306" font-weight="600" fill="#5a3410">④ L1..Ln SST(层内非重叠有序)</text><text x="540" y="321" fill="#93762e">每层二分定位至多一个文件,布隆短路后读 data block</text>
+  </g>
+  <line x1="540" y1="114" x2="540" y2="126" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="540" y1="166" x2="540" y2="178" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="540" y1="218" x2="540" y2="230" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="540" y1="276" x2="540" y2="288" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <text x="770" y="200" font-size="8.5" fill="#a1a1a6">↓ 由新到旧</text>
+  <text x="770" y="216" font-size="8.5" fill="#a1a1a6">任一步找到</text>
+  <text x="770" y="232" font-size="8.5" fill="#a1a1a6">可见版本即停</text>
+
+  <!-- left annotations -->
+  <rect x="30" y="126" width="280" height="208" rx="12" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="46" y="148" font-size="10" font-weight="700" fill="#1d1d1f">为什么由新到旧</text>
+  <text x="46" y="170" font-size="8.5" fill="#6e6e73">· 同一 key 多版本按 seq 分散</text>
+  <text x="46" y="188" font-size="8.5" fill="#6e6e73">· 新版本在更"上"层(MemTable/L0)</text>
+  <text x="46" y="206" font-size="8.5" fill="#6e6e73">· 先命中的就是最新,找到即停</text>
+  <text x="46" y="228" font-size="8.5" fill="#6e6e73">· 省去查更老层的开销</text>
+  <text x="46" y="252" font-size="10" font-weight="700" fill="#b1483a">墓碑语义</text>
+  <text x="46" y="274" font-size="8.5" fill="#4b4b50">· 命中墓碑(Delete/SingleDelete)</text>
+  <text x="46" y="292" font-size="8.5" fill="#4b4b50">  → 立即返回 NotFound</text>
+  <text x="46" y="310" font-size="8.5" fill="#4b4b50">· 不再查更老层(旧值被删覆盖)</text>
+
+  <!-- right: cost -->
+  <rect x="770" y="126" width="280" height="208" rx="12" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="786" y="148" font-size="10" font-weight="700" fill="#2c5a3a">读放大与优化</text>
+  <text x="786" y="170" font-size="8.5" fill="#2f6f4f">· 最坏要查所有层,但…</text>
+  <text x="786" y="188" font-size="8.5" fill="#2f6f4f">· 布隆过滤器跳掉不含 key 的文件</text>
+  <text x="786" y="206" font-size="8.5" fill="#2f6f4f">· block cache 免重复磁盘读</text>
+  <text x="786" y="224" font-size="8.5" fill="#2f6f4f">· L1+ 每层至多一个文件</text>
+  <text x="786" y="248" font-size="8.5" fill="#2f6f4f">→ 典型点查:几次布隆判断</text>
+  <text x="786" y="266" font-size="8.5" fill="#2f6f4f">  + 1~2 次 data block 读</text>
+  <text x="786" y="290" font-size="8.5" fill="#93762e">MultiGet:多 key 共享 SuperVersion,</text>
+  <text x="786" y="308" font-size="8.5" fill="#93762e">批量查布隆、并行读文件</text>
+
+  <!-- bottom notes -->
+  <rect x="30" y="350" width="1020" height="192" rx="13" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="46" y="372" font-size="11" font-weight="700" fill="#1d1d1f">要点</text>
+  <text x="46" y="394" font-size="9" fill="#6e6e73">· 读是写的镜像代价:写把活儿推给后台(Compaction),读把活儿留给自己(跨多来源查找)——LSM 的核心权衡</text>
+  <text x="46" y="412" font-size="9" fill="#6e6e73">· L0 特殊:文件间 key 可重叠(刚从各 MemTable flush 下来),故要查每个相交文件;L1+ 经 Compaction 整理成层内非重叠,故二分至多一个</text>
+  <text x="46" y="430" font-size="9" fill="#6e6e73">· 这解释了为什么 L0 文件多会拖慢读(要查很多个)→ 写停顿的 level0 触发阈值正是为此(见写入路径写停顿篇)</text>
+  <text x="46" y="448" font-size="9" fill="#6e6e73">· Version::Get 走层结构:FileMetaData 记录每文件 [smallest,largest] key,二分定位命中哪个文件</text>
+  <text x="46" y="470" font-size="9" fill="#b1483a">· 归属:SST 内部导航在【SST 存储格式】;缓存命中在【缓存】;层结构/SuperVersion 在【版本】;seq 快照在【事务与快照】</text>
+  <text x="46" y="492" font-size="8.5" fill="#a1a1a6">贯穿示例:Put("k","v1")@seq5 → Delete("k")@seq9,读快照 seq10 时:先在 MemTable 命中 seq9 墓碑 → NotFound(不再查含 seq5 的 SST)</text>
+  <text x="46" y="512" font-size="8.5" fill="#a1a1a6">而读快照 seq7 时:seq9 墓碑 &gt; 7 不可见,跳过,继续查到 seq5 的 "v1" → 返回 v1(这就是 MVCC)</text>
+  <text x="46" y="530" font-size="8.5" fill="#6e6e73">MultiGet 比逐个 Get 快:一次抓 SuperVersion、批量布隆、IO 合并。</text>
+</svg>

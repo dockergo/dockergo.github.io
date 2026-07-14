@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="540" viewBox="0 0 1060 540" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1060" height="540" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Settings 体系：层级覆盖（服务器 → Profile → 会话 → 查询）+ 约束</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">Settings（查询级, Settings.cpp）+ ServerSettings（服务器级, ServerSettings.cpp）· Constraints 限 min/max/只读</text>
+
+  <!-- override chain -->
+  <g text-anchor="middle">
+    <rect x="60" y="86" width="200" height="70" rx="12" fill="#fdf9f0" stroke="#efe3cd" filter="url(#soft)"/><text x="160" y="112" font-size="10.5" font-weight="700" fill="#7a5a1e">① 服务器默认</text><text x="160" y="132" font-size="8.5" fill="#93762e">ServerSettings + 内置默认</text><text x="160" y="148" font-size="8" fill="#b08843">config.xml</text>
+    <rect x="300" y="86" width="200" height="70" rx="12" fill="#f6f2fb" stroke="#d9c9ec" filter="url(#soft)"/><text x="400" y="112" font-size="10.5" font-weight="700" fill="#3d2a5a">② SettingsProfile</text><text x="400" y="132" font-size="8.5" fill="#7a5da5">赋给 User/Role</text><text x="400" y="148" font-size="8" fill="#9a7cc4">DCL 定义</text>
+    <rect x="540" y="86" width="200" height="70" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/><text x="640" y="112" font-size="10.5" font-weight="700" fill="#1b2a4a">③ 会话</text><text x="640" y="132" font-size="8.5" fill="#5b7db1">SET setting = …</text><text x="640" y="148" font-size="8" fill="#8aa6cf">本连接内生效</text>
+    <rect x="780" y="86" width="200" height="70" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/><text x="880" y="112" font-size="10.5" font-weight="700" fill="#12402a">④ 查询</text><text x="880" y="132" font-size="8.5" fill="#2f6f4f">SELECT … SETTINGS …</text><text x="880" y="148" font-size="8" fill="#4c8567">优先级最高</text>
+  </g>
+  <g stroke="#c7c7cc" stroke-width="1.5" fill="none">
+    <line x1="260" y1="121" x2="300" y2="121" marker-end="url(#ar)"/>
+    <line x1="500" y1="121" x2="540" y2="121" marker-end="url(#ar)"/>
+    <line x1="740" y1="121" x2="780" y2="121" marker-end="url(#ar)"/>
+  </g>
+  <text x="530" y="176" font-size="8.5" fill="#8a8a8f" text-anchor="middle">后者覆盖前者（越靠右越具体、优先级越高）· 但受 Constraints 约束</text>
+
+  <!-- two kinds -->
+  <rect x="40" y="196" width="480" height="150" rx="13" fill="#f3f7fc" stroke="#cfe0f2"/>
+  <text x="280" y="220" font-size="11" font-weight="700" fill="#274a78" text-anchor="middle">两类设置</text>
+  <rect x="60" y="234" width="440" height="46" rx="8" fill="#fff" stroke="#cfe0f2"/>
+  <text x="280" y="254" font-size="9.5" font-weight="600" fill="#274a78" text-anchor="middle">Settings（查询级, Settings.cpp）</text>
+  <text x="280" y="270" font-size="8.5" fill="#5b7db1" text-anchor="middle">max_memory_usage(默认0,:3720) · max_threads · join_algorithm</text>
+  <rect x="60" y="288" width="440" height="46" rx="8" fill="#fff" stroke="#cfe0f2"/>
+  <text x="280" y="308" font-size="9.5" font-weight="600" fill="#274a78" text-anchor="middle">ServerSettings（服务器级, ServerSettings.cpp）</text>
+  <text x="280" y="324" font-size="8.5" fill="#5b7db1" text-anchor="middle">max_server_memory_usage(:340) · max_concurrent_queries(:474)</text>
+
+  <!-- constraints -->
+  <rect x="540" y="196" width="480" height="150" rx="13" fill="#fbeef0" stroke="#f0cdd4"/>
+  <text x="780" y="220" font-size="11" font-weight="700" fill="#7a2230" text-anchor="middle">Constraints：约束设置的取值</text>
+  <text x="560" y="244" font-size="9.5" fill="#a44">· min_value / max_value：限定范围（超出报错或夹取）</text>
+  <text x="560" y="264" font-size="9.5" fill="#a44">· WRITABLE / CONST：可写 or 只读锁定</text>
+  <text x="560" y="284" font-size="9.5" fill="#a44">· 防用户改坏关键设置</text>
+  <rect x="560" y="298" width="440" height="36" rx="8" fill="#fff5f6" stroke="#f0cdd4"/>
+  <text x="780" y="320" font-size="8.5" fill="#7a2230" text-anchor="middle">例：锁 max_memory_usage 只读 → 用户无法调大绕过内存保护</text>
+
+  <rect x="40" y="362" width="980" height="76" rx="13" fill="#fdf9f0" stroke="#efe3cd"/>
+  <text x="60" y="386" font-size="11" font-weight="700" fill="#7a5a1e">与 DCL 的关系</text>
+  <text x="60" y="408" font-size="9.5" fill="#93762e">· SettingsProfile 与 Constraints 作为 DCL 实体定义（赋给 User/Role），见「DCL·配额约束」篇</text>
+  <text x="60" y="426" font-size="9.5" fill="#93762e">· 本主线视角：Settings 是资源管控的"总旋钮"，内存/并发/超时等限制都是 Settings 的取值</text>
+
+  <rect x="40" y="454" width="980" height="72" rx="12" fill="#f7f7f9" stroke="#e6e6ea"/>
+  <text x="60" y="478" font-size="11" font-weight="700" fill="#1d1d1f">一句话</text>
+  <text x="60" y="500" font-size="10" fill="#4b4b50">Settings 是行为总开关，分查询级（Settings）与服务器级（ServerSettings），按"服务器→Profile→会话→查询"层级覆盖</text>
+  <text x="60" y="517" font-size="10" fill="#4b4b50">（后者优先）；Constraints 限定取值范围或锁只读，防用户改坏关键设置——资源管控的限制多以 Settings 形式落地。</text>
+</svg>

@@ -1,0 +1,120 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="500" viewBox="0 0 1000 500" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1000" height="500" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">内存回收：空闲水位触发 kswapd/直接回收 · LRU 双链选牺牲页 · 干净丢弃/脏页回写/匿名换出</text>
+
+  <!-- 左：水位 -->
+  <rect x="28" y="54" width="258" height="418" rx="13" fill="#fbfbfd" stroke="#ececf1"/>
+  <text x="46" y="76" font-size="11.5" font-weight="600" fill="#1d1d1f">空闲页水位与触发</text>
+
+  <rect x="60" y="96" width="52" height="52" fill="#eafaf1" stroke="#bfe0cd"/>
+  <rect x="60" y="148" width="52" height="76" fill="#ffffff" stroke="#ececf1"/>
+  <rect x="60" y="224" width="52" height="78" fill="#fff7e6" stroke="#e8cf9a"/>
+  <rect x="60" y="302" width="52" height="120" fill="#fbeaea" stroke="#e7c3c3"/>
+  <text x="86" y="90" font-size="8.5" fill="#6e6e73" text-anchor="middle">空闲多</text>
+  <text x="86" y="438" font-size="8.5" fill="#6e6e73" text-anchor="middle">空闲少</text>
+
+  <g stroke-width="1.4">
+    <line x1="60" y1="148" x2="150" y2="148" stroke="#2f6f4f"/>
+    <line x1="60" y1="224" x2="150" y2="224" stroke="#93762e"/>
+    <line x1="60" y1="302" x2="150" y2="302" stroke="#7a2a2a"/>
+  </g>
+  <text x="120" y="145" font-size="9.5" font-weight="600" fill="#12402a">WMARK_HIGH</text>
+  <text x="120" y="221" font-size="9.5" font-weight="600" fill="#5a3410">WMARK_LOW</text>
+  <text x="120" y="299" font-size="9.5" font-weight="600" fill="#4a1414">WMARK_MIN</text>
+
+  <text x="122" y="190" font-size="9" fill="#6e6e73">正常</text>
+  <text x="122" y="262" font-size="9" fill="#93762e">跌破 LOW</text>
+  <text x="122" y="276" font-size="9" fill="#93762e">→ 唤醒 kswapd</text>
+  <text x="122" y="352" font-size="9" fill="#7a2a2a">跌破 MIN</text>
+  <text x="122" y="366" font-size="9" fill="#7a2a2a">→ 直接回收</text>
+
+  <text x="46" y="448" font-size="8.5" fill="#a1a1a6">水位高度由 min_free_kbytes 决定</text>
+  <text x="46" y="462" font-size="8.5" fill="#a1a1a6">（page_alloc.c:268，sqrt(lowmem*16)）</text>
+
+  <!-- 中：两条路径 -->
+  <rect x="300" y="54" width="300" height="418" rx="13" fill="#fbfbfd" stroke="#ececf1"/>
+  <text x="318" y="76" font-size="11.5" font-weight="600" fill="#1d1d1f">两条回收路径</text>
+
+  <rect x="316" y="96" width="270" height="98" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="451" y="116" font-size="10.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">后台回收 kswapd（vmscan.c:7438）</text>
+  <text x="332" y="137" font-size="9.5" fill="#5b7db1">· wakeup_kswapd 唤醒（:7519）</text>
+  <text x="332" y="155" font-size="9.5" fill="#5b7db1">· balance_pgdat 回收到 HIGH（:7108）</text>
+  <text x="332" y="173" font-size="9.5" fill="#5b7db1">· pgdat_balanced 判定（:6914）</text>
+  <text x="332" y="188" font-size="9.5" fill="#5b7db1">· 异步，不阻塞申请者</text>
+
+  <rect x="316" y="216" width="270" height="82" rx="11" fill="#fbeaea" stroke="#e7c3c3" filter="url(#soft)"/>
+  <text x="451" y="236" font-size="10.5" font-weight="600" fill="#4a1414" text-anchor="middle">直接回收 try_to_free_pages（:6720）</text>
+  <text x="332" y="257" font-size="9.5" fill="#7a2a2a">· 申请进程在分配路径里自己回收</text>
+  <text x="332" y="275" font-size="9.5" fill="#7a2a2a">· 同步阻塞，产生延迟毛刺</text>
+  <text x="332" y="291" font-size="9.5" fill="#7a2a2a">· kswapd 来不及时兜底</text>
+
+  <rect x="316" y="322" width="270" height="72" rx="11" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="451" y="344" font-size="10.5" font-weight="600" fill="#1d1d1f" text-anchor="middle">shrink_node → shrink_lruvec</text>
+  <text x="451" y="362" font-size="9.5" fill="#6e6e73" text-anchor="middle">vmscan.c:5920</text>
+  <text x="451" y="380" font-size="9.5" fill="#6e6e73" text-anchor="middle">按比例扫描各 LRU 链</text>
+
+  <g stroke="#c7c7cc" stroke-width="1.5" fill="none">
+    <path d="M451,194 L451,322" marker-end="url(#ar)"/>
+    <path d="M451,298 L451,322" marker-end="url(#ar)"/>
+  </g>
+  <!-- 水位到路径 -->
+  <g stroke="#c7c7cc" stroke-width="1.4" fill="none">
+    <path d="M150,224 L232,224 L232,140 L316,140" marker-end="url(#ar)"/>
+    <path d="M150,302 L216,302 L216,256 L316,256" marker-end="url(#ar)"/>
+  </g>
+
+  <!-- 右：LRU -->
+  <rect x="614" y="54" width="358" height="418" rx="13" fill="#fbfbfd" stroke="#ececf1"/>
+  <text x="632" y="76" font-size="11.5" font-weight="600" fill="#1d1d1f">LRU 双链选牺牲页 → 处置</text>
+
+  <rect x="632" y="94" width="160" height="42" rx="9" fill="#f4eefb" stroke="#d9c7ec"/><text x="712" y="112" font-size="10" font-weight="600" fill="#3d2a5a" text-anchor="middle">ACTIVE_ANON</text><text x="712" y="127" font-size="8.5" fill="#6e6e73" text-anchor="middle">热匿名页</text>
+  <rect x="800" y="94" width="160" height="42" rx="9" fill="#fdf6ea" stroke="#efdcb4"/><text x="880" y="112" font-size="10" font-weight="600" fill="#5a3410" text-anchor="middle">ACTIVE_FILE</text><text x="880" y="127" font-size="8.5" fill="#93762e" text-anchor="middle">热文件页</text>
+  <rect x="632" y="152" width="160" height="42" rx="9" fill="#f4eefb" stroke="#d9c7ec"/><text x="712" y="170" font-size="10" font-weight="600" fill="#3d2a5a" text-anchor="middle">INACTIVE_ANON</text><text x="712" y="185" font-size="8.5" fill="#6e6e73" text-anchor="middle">冷匿名页</text>
+  <rect x="800" y="152" width="160" height="42" rx="9" fill="#fdf6ea" stroke="#efdcb4"/><text x="880" y="170" font-size="10" font-weight="600" fill="#5a3410" text-anchor="middle">INACTIVE_FILE</text><text x="880" y="185" font-size="8.5" fill="#93762e" text-anchor="middle">冷文件页</text>
+
+  <g stroke="#c7c7cc" stroke-width="1.4" fill="none">
+    <path d="M712,136 L712,152" marker-end="url(#ar)"/>
+    <path d="M880,136 L880,152" marker-end="url(#ar)"/>
+  </g>
+  <text x="620" y="148" font-size="8" fill="#a1a1a6">老化</text>
+
+  <rect x="632" y="214" width="328" height="42" rx="10" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="796" y="234" font-size="10.5" font-weight="600" fill="#1d1d1f" text-anchor="middle">shrink_folio_list（vmscan.c:1058）</text>
+  <text x="796" y="249" font-size="9" fill="#6e6e73" text-anchor="middle">扫描 inactive 链尾部候选页</text>
+  <g stroke="#c7c7cc" stroke-width="1.4" fill="none">
+    <path d="M712,194 L712,214" marker-end="url(#ar)"/>
+    <path d="M880,194 L880,214" marker-end="url(#ar)"/>
+  </g>
+
+  <rect x="632" y="286" width="104" height="72" rx="10" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="684" y="308" font-size="10" font-weight="600" fill="#12402a" text-anchor="middle">干净文件页</text>
+  <text x="684" y="326" font-size="9" fill="#2f6f4f" text-anchor="middle">直接丢弃</text>
+  <text x="684" y="342" font-size="8.5" fill="#2f6f4f" text-anchor="middle">（可从盘重读）</text>
+
+  <rect x="744" y="286" width="104" height="72" rx="10" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="796" y="308" font-size="10" font-weight="600" fill="#5a3410" text-anchor="middle">脏页</text>
+  <text x="796" y="326" font-size="9" fill="#93762e" text-anchor="middle">先回写落盘</text>
+  <text x="796" y="342" font-size="8.5" fill="#93762e" text-anchor="middle">再回收</text>
+
+  <rect x="856" y="286" width="104" height="72" rx="10" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="908" y="308" font-size="10" font-weight="600" fill="#1b2a4a" text-anchor="middle">匿名页</text>
+  <text x="908" y="326" font-size="9" fill="#5b7db1" text-anchor="middle">换出 swap</text>
+  <text x="908" y="342" font-size="8.5" fill="#5b7db1" text-anchor="middle">无处重读</text>
+
+  <g stroke="#c7c7cc" stroke-width="1.4" fill="none">
+    <path d="M700,256 L684,256 L684,286" marker-end="url(#ar)"/>
+    <path d="M796,256 L796,286" marker-end="url(#ar)"/>
+    <path d="M892,256 L908,256 L908,286" marker-end="url(#ar)"/>
+  </g>
+
+  <text x="632" y="386" font-size="9" fill="#a1a1a6">vm_swappiness=60（vmscan.c:201）调节：</text>
+  <text x="632" y="402" font-size="9" fill="#a1a1a6">越低越倾向回收文件页而非换出匿名页；</text>
+  <text x="632" y="418" font-size="9" fill="#a1a1a6">越高越愿换出匿名页保留文件缓存。</text>
+
+  <!-- 中→右 -->
+  <path d="M586,358 L600,358 L600,235 L632,235" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+</svg>

@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="340" viewBox="0 0 1000 340" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs><filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter><marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker></defs>
+  <rect width="1000" height="340" fill="#fbfbfd"/>
+  <text x="40" y="30" font-size="14" font-weight="600" fill="#1d1d1f">冷热分层（Storage Policy）：按年龄把冷数据下沉对象存储，热数据留本地</text>
+  <!-- timeline -->
+  <rect x="40" y="70" width="300" height="120" rx="14" fill="#fbeaea" stroke="#e7c3c3" filter="url(#soft)"/>
+  <text x="190" y="98" font-size="13" font-weight="600" fill="#4a1414" text-anchor="middle">热数据（近期）</text>
+  <text x="190" y="124" font-size="11" fill="#a05252" text-anchor="middle">BE 本地盘（多副本）</text>
+  <text x="190" y="146" font-size="11" fill="#a05252" text-anchor="middle">低延迟、高频访问</text>
+  <text x="190" y="170" font-size="10.5" fill="#a05252" text-anchor="middle">Rowset 按 key 有序 + 本地索引</text>
+
+  <rect x="660" y="70" width="300" height="120" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="810" y="98" font-size="13" font-weight="600" fill="#1b2a4a" text-anchor="middle">冷数据（历史）</text>
+  <text x="810" y="124" font-size="11" fill="#5b7db1" text-anchor="middle">对象存储 / HDFS（单副本 + 远端冗余）</text>
+  <text x="810" y="146" font-size="11" fill="#5b7db1" text-anchor="middle">省本地盘、成本低</text>
+  <text x="810" y="170" font-size="10.5" fill="#5b7db1" text-anchor="middle">远端读 + 本地 File Cache 兜延迟</text>
+
+  <rect x="390" y="96" width="220" height="68" rx="13" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="500" y="122" font-size="12.5" font-weight="600" fill="#5a3410" text-anchor="middle">Storage Policy</text>
+  <text x="500" y="142" font-size="10" fill="#93762e" text-anchor="middle">cooldown_datetime / _ttl</text>
+  <text x="500" y="157" font-size="10" fill="#93762e" text-anchor="middle">到期由后台任务搬迁</text>
+
+  <path d="M340,130 L390,130" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M610,130 L660,130" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="500" y="185" font-size="9.5" fill="#a1a1a6" text-anchor="middle">冷却搬迁（cooldown）</text>
+
+  <rect x="40" y="230" width="920" height="66" rx="12" fill="#fafafb" stroke="#ececf1"/>
+  <text x="500" y="256" font-size="11.5" fill="#6e6e73" text-anchor="middle">正交、可叠加：冷热分层是"数据生命周期策略"，可叠加在存算一体或存算分离之上。</text>
+  <text x="500" y="278" font-size="11.5" fill="#6e6e73" text-anchor="middle">查询跨冷热透明：优化/执行逻辑不变，仅存储位置与读延迟不同。</text>
+</svg>

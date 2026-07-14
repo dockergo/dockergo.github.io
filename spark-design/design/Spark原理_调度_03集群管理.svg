@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="560" viewBox="0 0 1060 560" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs><filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+  <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker></defs>
+  <rect width="1060" height="560" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">cluster manager：SchedulerBackend 桥接，ExternalClusterManager SPI 接入</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">SchedulerBackend(:29) · CoarseGrainedSchedulerBackend DriverEndpoint 管注册/makeOffers/LaunchTask · SPI(:25)</text>
+  <rect x="360" y="72" width="340" height="60" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="530" y="94" font-size="11" font-weight="700" fill="#1b2a4a" text-anchor="middle">SchedulerBackend（调度器 ↔ 集群桥）</text>
+  <text x="530" y="112" font-size="8.5" fill="#5b7db1" text-anchor="middle">CoarseGrainedSchedulerBackend.DriverEndpoint</text>
+  <text x="530" y="126" font-size="8" fill="#8aa6cf" text-anchor="middle">RegisterExecutor / makeOffers / LaunchTask</text>
+  <g text-anchor="middle">
+    <rect x="40" y="164" width="310" height="150" rx="13" fill="#eef3fb" stroke="#bcd0ec"/>
+    <text x="195" y="188" font-size="11" font-weight="700" fill="#1b2a4a">Standalone</text>
+    <text x="195" y="210" font-size="8.5" fill="#5b7db1">Spark 自带 Master/Worker</text>
+    <text x="195" y="230" font-size="8.5" fill="#5b7db1">Master 分配 Worker 上 executor</text>
+    <text x="195" y="252" font-size="8" fill="#8aa6cf">deploy/master/Master.scala:49</text>
+    <text x="195" y="270" font-size="8" fill="#8aa6cf">deploy/worker/Worker.scala:52</text>
+    <text x="195" y="294" font-size="8" fill="#8aa6cf">StandaloneSchedulerBackend</text>
+    <rect x="375" y="164" width="310" height="150" rx="13" fill="#fff7e6" stroke="#e8cf9a"/>
+    <text x="530" y="188" font-size="11" font-weight="700" fill="#5a3410">YARN</text>
+    <text x="530" y="210" font-size="8.5" fill="#93762e">向 ResourceManager 申请</text>
+    <text x="530" y="230" font-size="8.5" fill="#93762e">ApplicationMaster 申 container</text>
+    <text x="530" y="252" font-size="8" fill="#b08843">NodeManager 起 executor</text>
+    <text x="530" y="270" font-size="8" fill="#b08843">resource-managers/yarn/</text>
+    <text x="530" y="294" font-size="8" fill="#b08843">YarnClusterManager:26</text>
+    <rect x="710" y="164" width="310" height="150" rx="13" fill="#eafaf1" stroke="#bfe0cd"/>
+    <text x="865" y="188" font-size="11" font-weight="700" fill="#12402a">Kubernetes</text>
+    <text x="865" y="210" font-size="8.5" fill="#2f6f4f">向 K8s API 调度 pod</text>
+    <text x="865" y="230" font-size="8.5" fill="#2f6f4f">executor = pod</text>
+    <text x="865" y="252" font-size="8" fill="#4c8567">resource-managers/kubernetes/</text>
+    <text x="865" y="270" font-size="8" fill="#4c8567">KubernetesClusterManager:35</text>
+    <text x="865" y="294" font-size="8" fill="#4c8567">云原生弹性</text>
+  </g>
+  <g stroke="#c7c7cc" stroke-width="1.3" fill="none"><path d="M470,132 L195,164" marker-end="url(#ar)"/><line x1="530" y1="132" x2="530" y2="164" marker-end="url(#ar)"/><path d="M590,132 L865,164" marker-end="url(#ar)"/></g>
+  <rect x="40" y="330" width="980" height="76" rx="13" fill="#f6f2fb" stroke="#d9c9ec"/>
+  <text x="60" y="354" font-size="11" font-weight="700" fill="#3d2a5a">ExternalClusterManager SPI（ExternalClusterManager.scala:25）</text>
+  <text x="60" y="376" font-size="9.5" fill="#7a5da5">· canCreate / createTaskScheduler / createSchedulerBackend——统一插件接口，新 manager 实现它即可接入</text>
+  <text x="60" y="394" font-size="9" fill="#9a7cc4">· 于是同一套 DAGScheduler/TaskScheduler 逻辑跑在任意 manager 上，只有资源协商方式不同</text>
+  <rect x="40" y="416" width="980" height="90" rx="12" fill="#f7f7f9" stroke="#e6e6ea"/>
+  <text x="60" y="440" font-size="11" font-weight="700" fill="#1d1d1f">一句话</text>
+  <text x="60" y="462" font-size="10" fill="#4b4b50">SchedulerBackend 桥接调度器与 cluster manager：DriverEndpoint 处理 executor 注册、makeOffers（给资源挑 task）、LaunchTask。</text>
+  <text x="60" y="480" font-size="10" fill="#4b4b50">Standalone/YARN/K8s 经 ExternalClusterManager SPI 接入——同一套调度逻辑，只换"executor 怎么起、资源怎么协商"。</text>
+  <text x="60" y="498" font-size="9" fill="#8a8a8f">物理布局对比见全景·物理部署图。</text>
+</svg>

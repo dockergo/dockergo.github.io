@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="680" viewBox="0 0 1100 680" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1100" height="680" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Trino CBO · Join 重排（子集 DP）+ 分布决策</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">两处代价驱动的规则,都受 CostComparator 按 CPU/内存/网络加权比较；不是 DPhyp/超图</text>
+
+  <!-- ReorderJoins -->
+  <rect x="30" y="70" width="1040" height="280" rx="13" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="46" y="92" font-size="11.5" font-weight="700" fill="#1b2a4a">① ReorderJoins（Join 顺序）· 仅 join_reordering_strategy=AUTOMATIC · 只跑一次</text>
+
+  <rect x="46" y="104" width="240" height="76" rx="9" fill="#f3f7fc" stroke="#cfe0f2" filter="url(#soft)"/><text x="166" y="126" text-anchor="middle" font-size="10" font-weight="600" fill="#274a78">压平成 MultiJoinNode</text><text x="166" y="146" text-anchor="middle" font-size="8.5" fill="#5b7db1">把可重排的 INNER Join 树</text><text x="166" y="162" text-anchor="middle" font-size="8.5" fill="#5b7db1">收集成 sources 集合(受 max_reordered_joins)</text>
+  <rect x="310" y="104" width="330" height="76" rx="9" fill="#f5faf6" stroke="#cfe6d5" filter="url(#soft)"/><text x="475" y="126" text-anchor="middle" font-size="10" font-weight="600" fill="#2c5a3a">JoinEnumerator：记忆化 DP</text><text x="475" y="146" text-anchor="middle" font-size="8.5" fill="#2f6f4f">generatePartitions：穷举"分两半"的所有方式</text><text x="475" y="162" text-anchor="middle" font-size="8.5" fill="#2f6f4f">自底向上 DP · memo 缓存每个子集最优</text>
+  <rect x="664" y="104" width="384" height="76" rx="9" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/><text x="856" y="126" text-anchor="middle" font-size="10" font-weight="600" fill="#12402a">按 CostComparator 取最小</text><text x="856" y="146" text-anchor="middle" font-size="8.5" fill="#2f6f4f">每候选：costProvider.getCost + statsProvider.getStats</text><text x="856" y="162" text-anchor="middle" font-size="8.5" fill="#2f6f4f">同时枚举分布 + 左右顺序(flipChildren)</text>
+  <line x1="286" y1="142" x2="310" y2="142" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="640" y1="142" x2="664" y2="142" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+
+  <rect x="46" y="194" width="1002" height="60" rx="9" fill="#fff" stroke="#bcd0ec"/>
+  <text x="60" y="215" font-size="9.5" font-weight="700" fill="#1b2a4a">子集 DP 示意（3 表 A/B/C）</text>
+  <text x="60" y="234" font-size="8.8" fill="#5b7db1">{A,B,C} 的最优 = min over 所有二分：({A}×{B,C}), ({B}×{A,C}), ({C}×{A,B}), ({A,B}×{C})…；{A,B}/{B,C} 等子集结果被 memo 复用</text>
+  <text x="60" y="248" font-size="8.8" fill="#b1483a">这是经典的连通子集 DP 枚举,不是 DPhyp/超图——别写成 DPhyp</text>
+
+  <rect x="46" y="264" width="1002" height="72" rx="9" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="60" y="285" font-size="9.5" font-weight="700" fill="#1d1d1f">CostComparator：加权比较</text>
+  <text x="60" y="304" font-size="8.8" fill="#6e6e73">代价 = cpuCost×cpuWeight + maxMemory×memoryWeight + networkCost×networkWeight（权重来自 OptimizerConfig）</text>
+  <text x="60" y="322" font-size="8.8" fill="#6e6e73">统计来自连接器 TableStatistics（行数/NDV/null 率/值域）→ 逐算子传播（StatsCalculator 规则族）；代价可缓存进 Memo 组</text>
+
+  <!-- DetermineJoinDistributionType -->
+  <rect x="30" y="366" width="1040" height="200" rx="13" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="46" y="388" font-size="11.5" font-weight="700" fill="#2c5a3a">② DetermineJoinDistributionType（Join 分布）· 必须在 AddExchanges 之前</text>
+
+  <rect x="46" y="400" width="490" height="150" rx="10" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="62" y="421" font-size="10" font-weight="700" fill="#1b2a4a">PARTITIONED（重分区）</text>
+  <text x="62" y="440" font-size="8.8" fill="#5b7db1">双边按 Join key 各自 hash 重分区(REPARTITION)</text>
+  <text x="62" y="456" font-size="8.8" fill="#5b7db1">→ 每 worker 只处理自己那份 key</text>
+  <text x="62" y="472" font-size="8.8" fill="#5b7db1">适合：两侧都大</text>
+  <rect x="62" y="484" width="458" height="52" rx="8" fill="#fff" stroke="#bcd0ec"/><text x="76" y="503" font-size="8.5" fill="#1b2a4a">代价：两侧都要网络重分区 + 内存各持一份分区</text><text x="76" y="520" font-size="8.5" fill="#5b7db1">RIGHT/FULL Join 必须 PARTITIONED（mustPartition）</text>
+
+  <rect x="556" y="400" width="492" height="150" rx="10" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="572" y="421" font-size="10" font-weight="700" fill="#12402a">REPLICATED（广播）</text>
+  <text x="572" y="440" font-size="8.8" fill="#2f6f4f">小表整份广播(REPLICATE)到每个 worker</text>
+  <text x="572" y="456" font-size="8.8" fill="#2f6f4f">→ 大表不动,本地 Join</text>
+  <text x="572" y="472" font-size="8.8" fill="#2f6f4f">适合：一侧足够小(≤ join_max_broadcast_table_size)</text>
+  <rect x="572" y="484" width="460" height="52" rx="8" fill="#fff" stroke="#bfe0cd"/><text x="586" y="503" font-size="8.5" fill="#12402a">代价：广播小表的网络 × worker 数 + 每 worker 存整份小表</text><text x="586" y="520" font-size="8.5" fill="#2f6f4f">AUTOMATIC：枚举两者取代价小;不可估则回退按大小启发式(8× 阈值)</text>
+
+  <rect x="30" y="578" width="1040" height="86" rx="11" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="46" y="600" font-size="10" font-weight="700" fill="#1d1d1f">开关</text>
+  <text x="46" y="620" font-size="9" fill="#6e6e73">join_reordering_strategy = AUTOMATIC / ELIMINATE_CROSS_JOINS / NONE　·　join_distribution_type = AUTOMATIC / BROADCAST / PARTITIONED</text>
+  <text x="46" y="638" font-size="9" fill="#6e6e73">join_max_broadcast_table_size：广播上限阈值　·　分布决定后续插入哪种 ExchangeNode（见分布式化篇）</text>
+  <text x="46" y="656" font-size="9" fill="#b1483a">FTE 下还有 AdaptivePlanner 用 stage 间实际统计做运行期再优化（AdaptiveReorderPartitionedJoin）——仅 FTE 路径,非通用</text>
+</svg>

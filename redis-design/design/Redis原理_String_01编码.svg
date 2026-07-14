@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="420" viewBox="0 0 1000 420" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1000" height="420" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">String 三种编码：int / embstr / raw（object.c:337）</text>
+  <text x="30" y="49" font-size="10.5" fill="#a1a1a6">按内容与长度自动选；二进制安全，最大 512MB</text>
+
+  <!-- int -->
+  <rect x="30" y="72" width="300" height="150" rx="12" fill="#f6f0fb" stroke="#dcc6ee" filter="url(#soft)"/>
+  <text x="50" y="96" font-size="12" font-weight="700" fill="#5a2a82">int</text>
+  <text x="50" y="118" font-size="9.5" fill="#8a5cae">值可解析为长整数（≤20 字符）</text>
+  <rect x="50" y="130" width="260" height="34" rx="6" fill="#fff" stroke="#dcc6ee"/>
+  <text x="180" y="151" font-size="10" fill="#5a2a82" text-anchor="middle">SET n 12345 → 直接存整数</text>
+  <text x="50" y="184" font-size="9" fill="#8a5cae">· INCR/DECR 直接算术运算</text>
+  <text x="50" y="202" font-size="9" fill="#8a5cae">· 0–9999 用共享对象（全库复用免分配）</text>
+
+  <!-- embstr -->
+  <rect x="350" y="72" width="300" height="150" rx="12" fill="#eafaf1" stroke="#b8e6cd" filter="url(#soft)"/>
+  <text x="370" y="96" font-size="12" font-weight="700" fill="#1c6b45">embstr（≤44 字节）</text>
+  <text x="370" y="118" font-size="9.5" fill="#3a9b6e">对象头 + sds 一次性连续分配</text>
+  <g font-size="8.5" text-anchor="middle">
+    <rect x="370" y="130" width="120" height="34" rx="6" fill="#fff" stroke="#b8e6cd"/><text x="430" y="151" fill="#1c6b45">redisObject 头</text>
+    <rect x="494" y="130" width="140" height="34" rx="6" fill="#fff" stroke="#b8e6cd"/><text x="564" y="151" fill="#1c6b45">sds "hello world"</text>
+  </g>
+  <text x="370" y="184" font-size="9" fill="#3a9b6e">· 一次分配/释放，缓存友好</text>
+  <text x="370" y="202" font-size="9" fill="#3a9b6e">· 贴合 jemalloc 64 字节 arena · 视为只读</text>
+
+  <!-- raw -->
+  <rect x="670" y="72" width="300" height="150" rx="12" fill="#fdf3e5" stroke="#f0d9b5" filter="url(#soft)"/>
+  <text x="690" y="96" font-size="12" font-weight="700" fill="#7a5a1e">raw（&gt;44 字节）</text>
+  <text x="690" y="118" font-size="9.5" fill="#b08535">对象头与 sds 分两次分配</text>
+  <g font-size="8.5" text-anchor="middle">
+    <rect x="690" y="130" width="110" height="34" rx="6" fill="#fff" stroke="#f0d9b5"/><text x="745" y="151" fill="#7a5a1e">redisObject 头</text>
+    <rect x="810" y="130" width="30" height="34" rx="6" fill="#fff" stroke="#f0d9b5"/><text x="825" y="151" fill="#7a5a1e">*</text>
+    <rect x="850" y="130" width="100" height="34" rx="6" fill="#fff" stroke="#f0d9b5"/><text x="900" y="151" fill="#7a5a1e">独立 sds</text>
+  </g>
+  <text x="690" y="184" font-size="9" fill="#b08535">· sds 可独立扩容（APPEND 等）</text>
+  <text x="690" y="202" font-size="9" fill="#b08535">· 长文本 / 二进制大对象</text>
+
+  <!-- transition -->
+  <text x="40" y="258" font-size="11" font-weight="700" fill="#1d1d1f">编码选择与转换</text>
+  <g text-anchor="middle" font-size="9.5">
+    <rect x="60" y="272" width="200" height="46" rx="8" fill="#fff" stroke="#dcc6ee"/><text x="160" y="291" fill="#5a2a82">可解析为整数?</text><text x="160" y="307" fill="#8a5cae" font-size="8.5">是 → int</text>
+    <rect x="300" y="272" width="200" height="46" rx="8" fill="#fff" stroke="#b8e6cd"/><text x="400" y="291" fill="#1c6b45">长度 ≤ 44?</text><text x="400" y="307" fill="#3a9b6e" font-size="8.5">是 → embstr</text>
+    <rect x="540" y="272" width="200" height="46" rx="8" fill="#fff" stroke="#f0d9b5"/><text x="640" y="291" fill="#7a5a1e">否 → raw</text><text x="640" y="307" fill="#b08535" font-size="8.5">&gt;44 字节</text>
+    <rect x="780" y="272" width="180" height="46" rx="8" fill="#fdeef2" stroke="#f6c9d6"/><text x="870" y="291" fill="#c02a56">APPEND/SETRANGE</text><text x="870" y="307" fill="#88304a" font-size="8.5">embstr → raw</text>
+  </g>
+  <line x1="260" y1="295" x2="298" y2="295" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="500" y1="295" x2="538" y2="295" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="740" y1="295" x2="778" y2="295" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+
+  <rect x="40" y="338" width="920" height="64" rx="10" fill="#f7f7f9" stroke="#ececef"/>
+  <text x="60" y="362" font-size="10.5" font-weight="600" fill="#1d1d1f">为何分三档</text>
+  <text x="60" y="384" font-size="10" fill="#4a4a4f">int 省内存又能直接算；embstr 一次分配对短串最优；raw 支持长串与原地扩容 —— 用最小代价装不同规模</text>
+</svg>

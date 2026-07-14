@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="460" viewBox="0 0 1000 460" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1000" height="460" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">RESP 协议：多路复用文本协议（processMultibulkBuffer，networking.c:3219）</text>
+  <text x="30" y="49" font-size="10.5" fill="#a1a1a6">默认 RESP2（config.c:3341）；multibulk 是客户端下发命令的标准形式</text>
+
+  <!-- multibulk example -->
+  <text x="40" y="86" font-size="11" font-weight="700" fill="#1b2a4a">multibulk 请求：SET user:1 alice</text>
+  <rect x="40" y="98" width="420" height="200" rx="10" fill="#0d1117" stroke="#30363d"/>
+  <g font-family="'SF Mono',monospace" font-size="12" fill="#c9d1d9">
+    <text x="60" y="124">*3<tspan fill="#8b949e">\r\n</tspan>　　<tspan fill="#7ee787" font-size="9">← 3 个参数</tspan></text>
+    <text x="60" y="148">$3<tspan fill="#8b949e">\r\n</tspan>　　<tspan fill="#7ee787" font-size="9">← 第1参数长度3</tspan></text>
+    <text x="60" y="172">SET<tspan fill="#8b949e">\r\n</tspan></text>
+    <text x="60" y="196">$6<tspan fill="#8b949e">\r\n</tspan>　　<tspan fill="#7ee787" font-size="9">← 第2参数长度6</tspan></text>
+    <text x="60" y="220">user:1<tspan fill="#8b949e">\r\n</tspan></text>
+    <text x="60" y="244">$5<tspan fill="#8b949e">\r\n</tspan>　　<tspan fill="#7ee787" font-size="9">← 第3参数长度5</tspan></text>
+    <text x="60" y="268">alice<tspan fill="#8b949e">\r\n</tspan></text>
+  </g>
+  <text x="250" y="290" font-size="8.5" fill="#a1a1a6" text-anchor="middle">*&lt;count&gt; 后跟每个 $&lt;len&gt;&lt;data&gt;</text>
+
+  <!-- parse result -->
+  <line x1="460" y1="198" x2="510" y2="198" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+  <text x="485" y="190" font-size="8" fill="#a1a1a6" text-anchor="middle">解析</text>
+  <rect x="520" y="150" width="200" height="96" rx="10" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="620" y="172" font-size="10.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">argc = 3</text>
+  <g font-size="9.5" fill="#5b7db1">
+    <text x="540" y="194">argv[0] = "SET"</text>
+    <text x="540" y="214">argv[1] = "user:1"</text>
+    <text x="540" y="234">argv[2] = "alice"</text>
+  </g>
+
+  <!-- resp2 vs resp3 -->
+  <rect x="750" y="98" width="220" height="200" rx="10" fill="#fdf9f0" stroke="#efe3cd"/>
+  <text x="770" y="122" font-size="10.5" font-weight="600" fill="#7a5a1e">RESP2 vs RESP3</text>
+  <text x="770" y="146" font-size="9.5" fill="#7a5a1e">c-&gt;resp = 2 或 3</text>
+  <text x="770" y="166" font-size="9" fill="#b08535">RESP2（默认）：</text>
+  <text x="770" y="184" font-size="9" fill="#b08535">  +简单串 -错误 :整数</text>
+  <text x="770" y="200" font-size="9" fill="#b08535">  $批量串 *数组</text>
+  <text x="770" y="222" font-size="9" fill="#b08535">RESP3（HELLO 3 升级）：</text>
+  <text x="770" y="240" font-size="9" fill="#b08535">  新增 Map/Set/Double/</text>
+  <text x="770" y="256" font-size="9" fill="#b08535">  Big number/Push 等</text>
+  <text x="770" y="280" font-size="8.5" fill="#c79a4e">Push 类型支持客户端缓存失效通知</text>
+
+  <!-- inline note + command flags -->
+  <rect x="40" y="316" width="440" height="120" rx="10" fill="#f6f0fb" stroke="#dcc6ee"/>
+  <text x="60" y="340" font-size="10.5" font-weight="600" fill="#5a2a82">两种请求格式</text>
+  <text x="60" y="362" font-size="9.5" fill="#5a2a82">· multibulk：*/$ 结构，客户端库生成，标准形式</text>
+  <text x="60" y="382" font-size="9.5" fill="#5a2a82">· inline：空格分隔纯文本（telnet 手敲），上限 64KB</text>
+  <text x="60" y="404" font-size="9" fill="#8a5cae">首字节 '*' → multibulk；否则 inline</text>
+  <text x="60" y="424" font-size="9" fill="#8a5cae">未认证时 multibulk 拒绝 &gt;10 个参数（防滥用）</text>
+
+  <rect x="500" y="316" width="470" height="120" rx="10" fill="#eafaf1" stroke="#b8e6cd"/>
+  <text x="520" y="340" font-size="10.5" font-weight="600" fill="#1c6b45">命令表与 flags（commands.def → redisCommandTable）</text>
+  <text x="520" y="362" font-size="9.5" fill="#1c6b45">lookupCommand 用命令名在 commands dict 查 redisCommand</text>
+  <text x="520" y="384" font-size="9.5" fill="#2f7a56">每条命令带 flags：CMD_WRITE / READONLY / DENYOOM /</text>
+  <text x="520" y="402" font-size="9.5" fill="#2f7a56">ADMIN / PUBSUB / NOSCRIPT… + arity（参数个数校验）</text>
+  <text x="520" y="424" font-size="9" fill="#5cb88a">processCommand 据 flags 决定：内存不足拒 denyoom、只读副本拒 write</text>
+</svg>

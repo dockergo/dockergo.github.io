@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="380" viewBox="0 0 1000 380" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs><filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter><marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker></defs>
+  <rect width="1000" height="380" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">湖仓查询：Multi-Catalog 联邦，外表经连接器旁路存储引擎、纳入同一优化与执行</text>
+
+  <!-- catalogs -->
+  <rect x="30" y="56" width="200" height="150" rx="13" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="130" y="80" font-size="12.5" font-weight="600" fill="#1d1d1f" text-anchor="middle">Multi-Catalog</text>
+  <rect x="46" y="92" width="168" height="24" rx="6" fill="#ecf5ee" stroke="#c2ddc9"/><text x="130" y="108" font-size="10" fill="#2c5a3a" text-anchor="middle">Internal（内表·自管）</text>
+  <rect x="46" y="122" width="168" height="24" rx="6" fill="#eef3fb" stroke="#bcd0ec"/><text x="130" y="138" font-size="10" fill="#1b2a4a" text-anchor="middle">Hive / Iceberg / Hudi / Paimon</text>
+  <rect x="46" y="152" width="168" height="24" rx="6" fill="#eef3fb" stroke="#bcd0ec"/><text x="130" y="168" font-size="10" fill="#1b2a4a" text-anchor="middle">JDBC / Elasticsearch</text>
+  <text x="130" y="194" font-size="9.5" fill="#86868b" text-anchor="middle">按 Catalog 切换数据源</text>
+
+  <!-- FE -->
+  <rect x="290" y="56" width="230" height="150" rx="13" fill="#f3f7fc" stroke="#cfe0f2" filter="url(#soft)"/>
+  <text x="405" y="80" font-size="12.5" font-weight="600" fill="#274a78" text-anchor="middle">FE · 外部元数据 + 规划</text>
+  <text x="405" y="104" font-size="10.5" fill="#5b7db1" text-anchor="middle">External Catalog 元数据</text>
+  <text x="405" y="124" font-size="10.5" fill="#5b7db1" text-anchor="middle">Meta Cache（减远端目录访问）</text>
+  <text x="405" y="144" font-size="10.5" fill="#5b7db1" text-anchor="middle">FileScanNode 切分 → File Splits</text>
+  <text x="405" y="168" font-size="10.5" fill="#5b7db1" text-anchor="middle">纳入同一 Nereids 优化</text>
+
+  <!-- BE -->
+  <rect x="580" y="56" width="230" height="150" rx="13" fill="#f5faf6" stroke="#cfe6d5" filter="url(#soft)"/>
+  <text x="695" y="80" font-size="12.5" font-weight="600" fill="#12402a" text-anchor="middle">BE · FileScan 读取</text>
+  <text x="695" y="104" font-size="10.5" fill="#2f6f4f" text-anchor="middle">Parquet / ORC / Text 读取</text>
+  <text x="695" y="124" font-size="10.5" fill="#2f6f4f" text-anchor="middle">谓词 + MinMax/字典 下推</text>
+  <text x="695" y="144" font-size="10.5" fill="#2f6f4f" text-anchor="middle">File Cache 缓存远端块</text>
+  <text x="695" y="168" font-size="10.5" fill="#2f6f4f" text-anchor="middle">同一 Pipeline 执行</text>
+
+  <!-- remote storage -->
+  <rect x="860" y="86" width="110" height="90" rx="12" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/><text x="915" y="126" font-size="11.5" font-weight="600" fill="#5a3410" text-anchor="middle">对象存储</text><text x="915" y="146" font-size="9.5" fill="#93762e" text-anchor="middle">/ HDFS 文件</text>
+
+  <g stroke="#c7c7cc" stroke-width="1.5" fill="none">
+    <line x1="230" y1="131" x2="290" y2="131" marker-end="url(#ar)"/>
+    <line x1="520" y1="131" x2="580" y2="131" marker-end="url(#ar)"/>
+    <line x1="810" y1="131" x2="860" y2="131" marker-end="url(#ar)"/>
+  </g>
+
+  <!-- contrast -->
+  <rect x="30" y="234" width="940" height="118" rx="13" fill="#fafafb" stroke="#ececf1"/>
+  <text x="48" y="258" font-size="12.5" font-weight="600" fill="#1d1d1f">外表 vs 内表（关键差异）</text>
+  <g font-size="10.5" fill="#6e6e73">
+    <text x="48" y="282">· 数据不由 Doris 存储引擎组织：无 Tablet/Rowset/MoW，经连接器旁路存储引擎</text>
+    <text x="48" y="304">· 跳过能力弱：无自建索引，仅靠文件格式自身 MinMax/Footer/字典；统计弱、裁剪受限</text>
+    <text x="48" y="326">· 延迟靠 Meta Cache（元数据）+ File Cache（数据块）弥补；更依赖 Runtime Filter 运行时裁行</text>
+  </g>
+</svg>

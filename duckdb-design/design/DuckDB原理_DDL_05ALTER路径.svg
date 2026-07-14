@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="420" viewBox="0 0 1020 420"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1020" height="420" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">ALTER TABLE 路径 · 改元数据 vs 改数据，代价差很多（alter_table_info.hpp:74-78）</text>
+
+  <rect x="410" y="50" width="200" height="44" rx="11" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="510" y="70" font-size="11" font-weight="600" fill="#1b2a4a" text-anchor="middle">ALTER TABLE</text>
+  <text x="510" y="86" font-size="9" fill="#5b7db1" text-anchor="middle">按 AlterType 分派</text>
+
+  <!-- 轻量：仅改元数据 -->
+  <rect x="30" y="130" width="470" height="120" rx="12" fill="#eafaf1" stroke="#bce6cd"/>
+  <text x="48" y="154" font-size="12" font-weight="600" fill="#0f5132">轻量 · 仅改 Catalog 元数据（快）</text>
+  <rect x="48" y="168" width="210" height="34" rx="8" fill="#ffffff" stroke="#bce6cd"/><text x="153" y="190" font-size="9.5" fill="#0f5132" text-anchor="middle">RENAME_TABLE / RENAME_COLUMN</text>
+  <rect x="266" y="168" width="216" height="34" rx="8" fill="#ffffff" stroke="#bce6cd"/><text x="374" y="190" font-size="9.5" fill="#0f5132" text-anchor="middle">ADD_COLUMN（带默认/可空）</text>
+  <text x="48" y="224" font-size="9.5" fill="#3f8f66">改名只动目录条目；加列多数情况下不重写既有数据（新列惰性/默认值填充）。</text>
+  <text x="48" y="242" font-size="9.5" fill="#3f8f66">生成新版本 CatalogEntry，事务提交即生效。</text>
+
+  <!-- 重量：需改数据 -->
+  <rect x="520" y="130" width="470" height="120" rx="12" fill="#fbeaea" stroke="#f0cccc"/>
+  <text x="538" y="154" font-size="12" font-weight="600" fill="#7d1f1f">重量 · 需触碰列数据（慢）</text>
+  <rect x="538" y="168" width="210" height="34" rx="8" fill="#ffffff" stroke="#f0cccc"/><text x="643" y="190" font-size="9.5" fill="#7d1f1f" text-anchor="middle">ALTER_COLUMN_TYPE（改类型）</text>
+  <rect x="756" y="168" width="216" height="34" rx="8" fill="#ffffff" stroke="#f0cccc"/><text x="864" y="190" font-size="9.5" fill="#7d1f1f" text-anchor="middle">REMOVE_COLUMN / SET DEFAULT 重算</text>
+  <text x="538" y="224" font-size="9.5" fill="#b06a6a">改类型要按新类型转换/重写该列数据；删列要清理列存段。</text>
+  <text x="538" y="242" font-size="9.5" fill="#b06a6a">依赖该列的视图/索引先经 DependencyManager 校验。</text>
+
+  <!-- 共同 -->
+  <rect x="30" y="286" width="960" height="60" rx="12" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="510" y="310" font-size="11" font-weight="600" fill="#1d1d1f" text-anchor="middle">两类都：生成新版本 CatalogEntry → 查依赖 → 事务内提交 → 写 WAL（可回滚）</text>
+  <text x="510" y="332" font-size="9.5" fill="#6a6a70" text-anchor="middle">因 DDL 事务性，ALTER 失败不会留下半改状态。</text>
+
+  <rect x="30" y="360" width="960" height="44" rx="10" fill="#f6f6f8" stroke="#e2e2e7"/>
+  <text x="510" y="386" font-size="10" fill="#494950" text-anchor="middle">经验：大表改列类型/删列代价高，规划期尽量一次定好 schema；加列通常便宜，可放心演进。</text>
+
+  <line x1="470" y1="94" x2="200" y2="130" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="550" y1="94" x2="820" y2="130" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+</svg>

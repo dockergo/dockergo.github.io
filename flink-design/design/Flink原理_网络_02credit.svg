@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="540" viewBox="0 0 1080 540"
+     font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1080" height="540" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Flink 网络 · credit-based 流控：背压不阻塞 TCP</text>
+  <text x="30" y="50" font-size="11" fill="#a1a1a6">下游有多少空闲缓冲就给上游多少 credit,上游只在有 credit 时才发 — 没 credit 就不发,而非阻塞连接</text>
+
+  <!-- 上游 -->
+  <rect x="40" y="80" width="360" height="240" rx="14" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="62" y="108" font-size="13" font-weight="700" fill="#5a3410">上游(生产端)</text>
+  <rect x="62" y="124" width="316" height="80" rx="10" fill="#ffffff" stroke="#ececf1"/>
+  <text x="78" y="148" font-size="11" font-weight="600" fill="#5a3410">PartitionRequestServerHandler</text>
+  <text x="78" y="170" font-size="10" fill="#93762e">收 credit 后,只在有 credit 时才发数据</text>
+  <text x="78" y="191" font-size="10" fill="#93762e">有 credit → 发缓冲;credit 用尽 → 停发</text>
+  <rect x="62" y="216" width="316" height="88" rx="10" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="78" y="240" font-size="11" font-weight="600" fill="#5a3410">onSenderBacklog</text>
+  <text x="78" y="262" font-size="10" fill="#93762e">上游告知积压 backlog</text>
+  <text x="78" y="284" font-size="10" fill="#93762e">便于下游预留缓冲</text>
+
+  <!-- 下游 -->
+  <rect x="680" y="80" width="360" height="240" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="702" y="108" font-size="13" font-weight="700" fill="#1b2a4a">下游(消费端 RemoteInputChannel)</text>
+  <rect x="702" y="124" width="316" height="80" rx="10" fill="#ffffff" stroke="#ececf1"/>
+  <text x="718" y="148" font-size="11" font-weight="600" fill="#1b2a4a">unannouncedCredit(累积)</text>
+  <text x="718" y="170" font-size="10" fill="#5b7db1">缓冲空出 → 累积 credit</text>
+  <text x="718" y="191" font-size="10" fill="#5b7db1">代表"我还能收多少个缓冲"</text>
+  <rect x="702" y="216" width="316" height="88" rx="10" fill="#f3f7fc" stroke="#cfe0f2"/>
+  <text x="718" y="240" font-size="11" font-weight="600" fill="#274a78">notifyCreditAvailable → AddCredit</text>
+  <text x="718" y="262" font-size="10" fill="#5b7db1">经 Netty 发 AddCredit 消息告上游</text>
+  <text x="718" y="284" font-size="10" fill="#5b7db1">(NettyPartitionRequestClient)</text>
+
+  <!-- 两条主连线：数据 & credit -->
+  <path d="M 400,168 L 680,168" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="470" y="158" font-size="10" fill="#a1a1a6">① 有 credit 才发数据缓冲 →</text>
+  <path d="M 680,258 L 400,258" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="470" y="278" font-size="10" fill="#a1a1a6">← ② AddCredit(下游宣告可收多少)</text>
+
+  <!-- 背压逐级传导 -->
+  <rect x="40" y="344" width="1000" height="96" rx="14" fill="#fbeaea" stroke="#e7c3c3" filter="url(#soft)"/>
+  <text x="62" y="372" font-size="13" font-weight="700" fill="#4a1414">背压逐级向上传导</text>
+  <text x="62" y="396" font-size="10.5" fill="#7a2a2a">下游忙 → 缓冲不空 → 不给 credit → 上游没 credit 不发 → 上游缓冲也满 → 再向它的上游不给 credit</text>
+  <text x="62" y="418" font-size="10.5" fill="#7a2a2a">背压是"没 credit 就不发",逐级回压,不是靠阻塞连接</text>
+
+  <!-- 为什么不阻塞 TCP -->
+  <rect x="40" y="456" width="1000" height="66" rx="14" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="62" y="483" font-size="12" font-weight="600" fill="#12402a">为什么不阻塞 TCP</text>
+  <text x="62" y="506" font-size="10.5" fill="#2f6f4f">传统"下游慢就阻塞 TCP 连接"会误伤同连接复用的其他子任务流;credit 让背压精准作用于单个逻辑通道,不误伤同连接其他流</text>
+</svg>

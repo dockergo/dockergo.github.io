@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="940" height="330" viewBox="0 0 940 330" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs><filter id="s" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter><marker id="a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker></defs>
+  <rect width="940" height="330" fill="#fbfbfd"/>
+  <text x="30" y="32" font-size="14" font-weight="600" fill="#1d1d1f">写事务 2PC 状态机：数据何时落盘、何时可见</text>
+  <g text-anchor="middle">
+    <rect x="26" y="66" width="180" height="62" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#s)"/><text x="116" y="90" font-size="13" font-weight="600" fill="#1b2a4a">PREPARE</text><text x="116" y="110" font-size="9.5" fill="#5b7db1">事务登记 · 分配 txn_id</text>
+    <rect x="256" y="66" width="196" height="62" rx="12" fill="#fff7e6" stroke="#e8cf9a" filter="url(#s)"/><text x="354" y="90" font-size="13" font-weight="600" fill="#5a3410">PRECOMMITTED</text><text x="354" y="110" font-size="9.5" fill="#93762e">2PC 预提交 · 落盘不可见</text>
+    <rect x="502" y="66" width="180" height="62" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#s)"/><text x="592" y="90" font-size="13" font-weight="600" fill="#1b2a4a">COMMITTED</text><text x="592" y="110" font-size="9.5" fill="#5b7db1">记元数据 · quorum 校验 · 仍不可见</text>
+    <rect x="732" y="66" width="180" height="62" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#s)"/><text x="822" y="90" font-size="13" font-weight="600" fill="#12402a">VISIBLE</text><text x="822" y="110" font-size="9.5" fill="#2f6f4f">Publish · 对查询可见</text>
+    <rect x="360" y="212" width="200" height="52" rx="12" fill="#fbeaea" stroke="#e7c3c3" filter="url(#s)"/><text x="460" y="234" font-size="13" font-weight="600" fill="#4a1414">ABORTED</text><text x="460" y="252" font-size="9.5" fill="#a05252">失败 / 超时 · 整体回滚</text>
+  </g>
+  <g stroke="#c7c7cc" stroke-width="1.4" fill="none">
+    <line x1="206" y1="97" x2="256" y2="97" marker-end="url(#a)"/>
+    <line x1="452" y1="97" x2="502" y2="97" marker-end="url(#a)"/>
+    <line x1="682" y1="97" x2="732" y2="97" marker-end="url(#a)"/>
+    <path d="M116,128 L116,155 L592,155 L592,128" marker-end="url(#a)"/>
+    <path d="M70,128 L70,238 L360,238" marker-end="url(#a)"/>
+    <path d="M354,128 L354,180 L460,180 L460,210" marker-end="url(#a)"/>
+  </g>
+  <g font-size="10" fill="#a1a1a6" text-anchor="middle">
+    <text x="231" y="88">2PC 预提交</text><text x="477" y="88">外部触发提交</text><text x="707" y="88">Publish Version</text>
+    <text x="354" y="148">普通导入直接提交</text><text x="150" y="230">失败/超时</text><text x="410" y="172">回滚</text>
+  </g>
+  <rect x="26" y="284" width="886" height="34" rx="10" fill="#fff9f0" stroke="#eddcbf"/>
+  <text x="469" y="305" font-size="11.5" fill="#7a5a1e" text-anchor="middle">Commit ≠ Visible：COMMITTED 只记元数据；Publish Version 才翻牌可见（主键表此时计算 Delete Bitmap）</text>
+</svg>

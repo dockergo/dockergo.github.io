@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="540" viewBox="0 0 1040 540" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+  </defs>
+  <rect width="1040" height="540" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Trino Page/Block 列式内存模型 · sealed 三型编码</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">Page = N 个 Block(列) × M 行;Block 是 sealed interface,只允许三种实现</text>
+
+  <!-- Page structure -->
+  <rect x="30" y="72" width="600" height="220" rx="13" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="46" y="94" font-size="11" font-weight="700" fill="#1b2a4a">Page = 列式批（算子间流动的基本单位）</text>
+  <g text-anchor="middle" font-size="8.5">
+    <rect x="50" y="110" width="120" height="150" rx="9" fill="#f3f7fc" stroke="#cfe0f2"/><text x="110" y="130" font-size="9.5" font-weight="600" fill="#274a78">Block 0</text><text x="110" y="148" fill="#5b7db1">列 name</text>
+    <rect x="62" y="158" width="96" height="18" rx="3" fill="#eef3fb" stroke="#bcd0ec"/><text x="110" y="171" fill="#5b7db1">"EU"</text>
+    <rect x="62" y="180" width="96" height="18" rx="3" fill="#eef3fb" stroke="#bcd0ec"/><text x="110" y="193" fill="#5b7db1">"US"</text>
+    <rect x="62" y="202" width="96" height="18" rx="3" fill="#eef3fb" stroke="#bcd0ec"/><text x="110" y="215" fill="#5b7db1">…</text>
+    <text x="110" y="248" fill="#5b7db1">M 行(positions)</text>
+
+    <rect x="184" y="110" width="120" height="150" rx="9" fill="#f3f7fc" stroke="#cfe0f2"/><text x="244" y="130" font-size="9.5" font-weight="600" fill="#274a78">Block 1</text><text x="244" y="148" fill="#5b7db1">列 price</text>
+    <rect x="196" y="158" width="96" height="18" rx="3" fill="#eef3fb" stroke="#bcd0ec"/><text x="244" y="171" fill="#5b7db1">100</text>
+    <rect x="196" y="180" width="96" height="18" rx="3" fill="#eef3fb" stroke="#bcd0ec"/><text x="244" y="193" fill="#5b7db1">250</text>
+    <rect x="196" y="202" width="96" height="18" rx="3" fill="#eef3fb" stroke="#bcd0ec"/><text x="244" y="215" fill="#5b7db1">…</text>
+
+    <rect x="318" y="110" width="120" height="150" rx="9" fill="#f3f7fc" stroke="#cfe0f2"/><text x="378" y="130" font-size="9.5" font-weight="600" fill="#274a78">Block 2 …</text>
+    <text x="378" y="190" fill="#5b7db1">列 cust_id</text>
+
+    <rect x="452" y="110" width="160" height="150" rx="9" fill="#fff" stroke="#bcd0ec"/><text x="532" y="130" font-size="9" font-weight="600" fill="#1b2a4a">Page 元信息</text><text x="532" y="152" font-size="8" fill="#5b7db1">channelCount=列数</text><text x="532" y="170" font-size="8" fill="#5b7db1">positionCount=行数</text><text x="532" y="188" font-size="8" fill="#5b7db1">sizeInBytes(懒算)</text><text x="532" y="206" font-size="8" fill="#5b7db1">所有 Block 行数一致</text><text x="532" y="230" font-size="8" fill="#93762e">reshaping 多返回视图,不拷行</text>
+  </g>
+
+  <!-- Block sealed -->
+  <rect x="650" y="72" width="360" height="220" rx="13" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="666" y="94" font-size="11" font-weight="700" fill="#2c5a3a">Block: sealed interface（三型）</text>
+  <rect x="666" y="108" width="328" height="48" rx="8" fill="#fff" stroke="#cfe6d5"/><text x="680" y="128" font-size="9" font-weight="600" fill="#2c5a3a">ValueBlock</text><text x="680" y="145" font-size="8.5" fill="#2f6f4f">物理值存储（真正的数据）</text>
+  <rect x="666" y="164" width="328" height="48" rx="8" fill="#fff" stroke="#cfe6d5"/><text x="680" y="184" font-size="9" font-weight="600" fill="#2c5a3a">DictionaryBlock</text><text x="680" y="201" font-size="8.5" fill="#2f6f4f">字典编码：id 数组 + 字典(低基数列省内存)</text>
+  <rect x="666" y="220" width="328" height="48" rx="8" fill="#fff" stroke="#cfe6d5"/><text x="680" y="240" font-size="9" font-weight="600" fill="#2c5a3a">RunLengthEncodedBlock</text><text x="680" y="257" font-size="8.5" fill="#2f6f4f">游程编码：单值 × N（常量列省内存）</text>
+  <text x="666" y="286" font-size="8" fill="#93762e">编码块经 getUnderlyingValueBlock() 解引用到 ValueBlock</text>
+
+  <!-- why + size -->
+  <rect x="30" y="312" width="490" height="210" rx="13" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="46" y="334" font-size="11" font-weight="700" fill="#1d1d1f">列式的好处</text>
+  <text x="46" y="356" font-size="9" fill="#6e6e73">· 向量化：一列连续存储,SIMD 友好,循环开销摊薄</text>
+  <text x="46" y="374" font-size="9" fill="#6e6e73">· 免解压直算：字典/RLE 块可直接在编码上算(如按 id 分组)</text>
+  <text x="46" y="392" font-size="9" fill="#6e6e73">· 零拷贝 reshaping：getRegion/getPositions 返回视图,共享底层 Block</text>
+  <text x="46" y="410" font-size="9" fill="#6e6e73">· 按需物化：只读查询用到的列(投影下推 → 只建那些 Block)</text>
+  <rect x="46" y="424" width="458" height="82" rx="9" fill="#fbfbfd" stroke="#ececf1"/>
+  <text x="60" y="444" font-size="9" font-weight="700" fill="#2c5a3a">与连接器的衔接</text>
+  <text x="60" y="463" font-size="8.5" fill="#4b4b50">ConnectorPageSource 读外部源(Parquet/ORC/行)→ 组装成 Page</text>
+  <text x="60" y="480" font-size="8.5" fill="#4b4b50">列存源(Parquet/ORC)天然对齐;行存源(JDBC)需转列</text>
+  <text x="60" y="498" font-size="8.5" fill="#4b4b50">→ 进入引擎后统一是 Page,算子不关心源格式</text>
+
+  <!-- size caveat -->
+  <rect x="540" y="312" width="470" height="210" rx="13" fill="#faf4fb" stroke="#e2d2ee"/>
+  <text x="556" y="334" font-size="11" font-weight="700" fill="#b1483a">Page 大小：按字节界定（高频误区）</text>
+  <text x="556" y="356" font-size="9" fill="#7a5a95">· DEFAULT_MAX_PAGE_SIZE_IN_BYTES ≈ 1 MB —— Page 攒到约 1MB 就吐</text>
+  <text x="556" y="374" font-size="9" fill="#7a5a95">· PageProcessor.MAX_BATCH_SIZE = 8192 positions —— 投影处理批上限</text>
+  <text x="556" y="392" font-size="9" fill="#7a5a95">· "每页 1024 行"是错的说法(1024 只是别处哈希批常量)</text>
+  <rect x="556" y="406" width="438" height="100" rx="9" fill="#fff" stroke="#e2d2ee"/>
+  <text x="570" y="426" font-size="9" font-weight="700" fill="#5a3d78">正确表述</text>
+  <text x="570" y="446" font-size="8.5" fill="#7a5a95">"Page 是 ≈1MB 的列式批,含 N 列 Block × 几千行"</text>
+  <text x="570" y="464" font-size="8.5" fill="#7a5a95">行数随列宽浮动：窄表一页可几万行,宽表可能只几百行</text>
+  <text x="570" y="482" font-size="8.5" fill="#7a5a95">字节界定让内存占用可控,与列宽解耦</text>
+  <text x="570" y="500" font-size="8" fill="#93762e">retainedSizeInBytes 是内存追踪的热路径调用</text>
+</svg>

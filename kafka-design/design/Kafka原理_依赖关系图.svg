@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="520" viewBox="0 0 1080 520" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="520" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Kafka 原理 · 能力域依赖关系图</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">实线 = 数据流 / 调用;虚线 = 状态约束;贯穿层 offset(位点) + HW(高水位) 横切存储 / 复制 / 消费</text>
+
+  <!-- KRaft top -->
+  <rect x="366" y="70" width="348" height="56" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="540" y="94" font-size="11.5" font-weight="700" fill="#1b2a4a" text-anchor="middle">KRaft 元数据（灵魂）</text>
+  <text x="540" y="113" font-size="8.6" fill="#5b7db1" text-anchor="middle">topic / 分区 / leader / 配置 · 经 __cluster_metadata 传播</text>
+
+  <!-- API row -->
+  <rect x="60" y="176" width="300" height="64" rx="12" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="210" y="202" font-size="12" font-weight="700" fill="#3d2a5a" text-anchor="middle">生产/消费 API（接触面）</text>
+  <text x="210" y="222" font-size="8.6" fill="#8a6db0" text-anchor="middle">produce send 攒批 · consume poll 拉取提交位点</text>
+
+  <!-- consumer group right -->
+  <rect x="720" y="176" width="300" height="64" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="870" y="202" font-size="12" font-weight="700" fill="#12402a" text-anchor="middle">消费者组与协调</text>
+  <text x="870" y="222" font-size="8.6" fill="#2f6f4f" text-anchor="middle">GroupCoordinator · rebalance · 位点管理</text>
+
+  <!-- log storage center -->
+  <rect x="366" y="290" width="348" height="66" rx="12" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="540" y="316" font-size="12" font-weight="700" fill="#5a3410" text-anchor="middle">日志存储（核心）</text>
+  <text x="540" y="336" font-size="8.6" fill="#93762e" text-anchor="middle">Partition → Log → Segment 追加日志 + 稀疏索引 + 零拷贝</text>
+
+  <!-- replica ISR left -->
+  <rect x="60" y="290" width="272" height="66" rx="12" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="196" y="316" font-size="12" font-weight="700" fill="#5a3410" text-anchor="middle">副本与 ISR</text>
+  <text x="196" y="336" font-size="8.6" fill="#93762e" text-anchor="middle">Leader/Follower 复制 · min.insync</text>
+
+  <!-- network right of log -->
+  <rect x="748" y="290" width="272" height="66" rx="12" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="884" y="316" font-size="12" font-weight="700" fill="#1d1d1f" text-anchor="middle">网络与请求处理</text>
+  <text x="884" y="336" font-size="8.6" fill="#6e6e73" text-anchor="middle">SocketServer · KafkaApis · purgatory</text>
+
+  <!-- txn bottom -->
+  <rect x="366" y="392" width="348" height="52" rx="12" fill="#fbeaea" stroke="#e7c3c3" filter="url(#soft)"/>
+  <text x="540" y="414" font-size="11.5" font-weight="700" fill="#4a1414" text-anchor="middle">事务与幂等</text>
+  <text x="540" y="432" font-size="8.6" fill="#7a2a2a" text-anchor="middle">幂等(PID+seq) + 事务(commit/abort 标记) = EOS</text>
+
+  <!-- edges: KRaft -> everyone (dashed state constraint) -->
+  <path d="M420,126 L420,150 L210,150 L210,176" stroke="#c9b6de" stroke-width="1.3" stroke-dasharray="5 4" fill="none" marker-end="url(#ar)"/>
+  <path d="M660,126 L660,150 L870,150 L870,176" stroke="#c9b6de" stroke-width="1.3" stroke-dasharray="5 4" fill="none" marker-end="url(#ar)"/>
+  <path d="M540,126 L540,160 L540,290" stroke="#c9b6de" stroke-width="1.3" stroke-dasharray="5 4" fill="none" marker-end="url(#ar)"/>
+  <text x="548" y="180" font-size="8" fill="#a1a1a6">元数据约束(虚线)</text>
+
+  <!-- API -> log (solid data flow: produce 追加, consume 读) -->
+  <path d="M300,240 L300,323 L366,323" stroke="#c7c7cc" stroke-width="1.6" fill="none" marker-end="url(#ar)"/>
+  <text x="306" y="278" font-size="8" fill="#a1a1a6">追加/读取</text>
+
+  <!-- API -> consumer group (solid) -->
+  <path d="M360,208 L720,208" stroke="#c7c7cc" stroke-width="1.6" fill="none" marker-end="url(#ar)"/>
+  <text x="500" y="200" font-size="8" fill="#a1a1a6">rebalance / 提交位点</text>
+
+  <!-- consumer group -> log (solid, 位点存 __consumer_offsets) -->
+  <path d="M870,240 L870,270 L714,323" stroke="#c7c7cc" stroke-width="1.6" fill="none" marker-end="url(#ar)"/>
+  <text x="756" y="266" font-size="8" fill="#a1a1a6">位点存 __consumer_offsets</text>
+
+  <!-- log -> replica (solid: Leader 日志被 Follower 复制) -->
+  <path d="M366,323 L332,323" stroke="#c7c7cc" stroke-width="1.6" fill="none" marker-end="url(#ar)"/>
+  <!-- replica -> log constraint (dashed HW) -->
+  <path d="M196,356 L196,374 L520,374 L520,392" stroke="#c9b6de" stroke-width="1.3" stroke-dasharray="5 4" fill="none"/>
+
+  <!-- network <-> log (solid: fetch/produce 走网络) -->
+  <path d="M748,323 L714,323" stroke="#c7c7cc" stroke-width="1.6" fill="none" marker-end="url(#ar)"/>
+
+  <!-- txn to log (solid write marker); txn depends replica acks=all -->
+  <path d="M540,392 L540,356" stroke="#c7c7cc" stroke-width="1.6" fill="none" marker-end="url(#ar)"/>
+  <text x="548" y="380" font-size="8" fill="#a1a1a6">写 commit/abort 标记(控制记录)</text>
+
+  <!-- pervasive layer -->
+  <rect x="30" y="458" width="1020" height="42" rx="12" fill="#f0f0f4" stroke="#d2d2d7"/>
+  <text x="540" y="484" font-size="10" font-weight="700" text-anchor="middle" fill="#48484a">贯穿层 · offset(位点) + HW(高水位) — offset 是日志地址(存储/复制/消费共用),HW 是已复制到 ISR 的可见边界,横切三域</text>
+</svg>

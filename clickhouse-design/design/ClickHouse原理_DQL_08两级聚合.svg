@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="580" viewBox="0 0 1060 580" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1060" height="580" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">两级聚合：部分聚合（每线程）→ 合并；大基数切 two-level 哈希表</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">Aggregator · AggregatingTransform（部分）+ MergingAggregatedTransform（合并）· 阈值 group_by_two_level_threshold=100000 (:962)</text>
+
+  <!-- phase 1 partial -->
+  <rect x="40" y="72" width="480" height="220" rx="13" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="280" y="96" font-size="12" font-weight="700" fill="#12402a" text-anchor="middle">第一阶段：部分聚合（并行，每线程一份）</text>
+  <g text-anchor="middle" font-size="8">
+    <rect x="60" y="112" width="130" height="40" rx="7" fill="#fff" stroke="#bfe0cd"/><text x="125" y="130" font-weight="600" fill="#12402a">线程 1</text><text x="125" y="144" fill="#2f6f4f">扫一批行</text>
+    <rect x="205" y="112" width="130" height="40" rx="7" fill="#fff" stroke="#bfe0cd"/><text x="270" y="130" font-weight="600" fill="#12402a">线程 2</text><text x="270" y="144" fill="#2f6f4f">扫一批行</text>
+    <rect x="350" y="112" width="150" height="40" rx="7" fill="#fff" stroke="#bfe0cd"/><text x="425" y="130" font-weight="600" fill="#12402a">线程 3 …</text><text x="425" y="144" fill="#2f6f4f">各自局部哈希表</text>
+  </g>
+  <g text-anchor="middle" font-size="8">
+    <rect x="60" y="170" width="130" height="46" rx="7" fill="#f2fbf6" stroke="#cdeadb"/><text x="125" y="190" font-weight="600" fill="#12402a">局部 {k→agg}</text><text x="125" y="205" fill="#2f6f4f">线程私有</text>
+    <rect x="205" y="170" width="130" height="46" rx="7" fill="#f2fbf6" stroke="#cdeadb"/><text x="270" y="190" font-weight="600" fill="#12402a">局部 {k→agg}</text><text x="270" y="205" fill="#2f6f4f">无锁竞争</text>
+    <rect x="350" y="170" width="150" height="46" rx="7" fill="#f2fbf6" stroke="#cdeadb"/><text x="425" y="190" font-weight="600" fill="#12402a">局部 {k→agg}</text><text x="425" y="205" fill="#2f6f4f">AggregatingTransform</text>
+  </g>
+  <g stroke="#9ccbb0" stroke-width="1.3" fill="none">
+    <line x1="125" y1="152" x2="125" y2="170" marker-end="url(#ar)"/>
+    <line x1="270" y1="152" x2="270" y2="170" marker-end="url(#ar)"/>
+    <line x1="425" y1="152" x2="425" y2="170" marker-end="url(#ar)"/>
+  </g>
+  <text x="280" y="244" font-size="8.5" fill="#4c8567" text-anchor="middle">共享 ManyAggregatedData（AggregatingTransform.h:71）</text>
+  <text x="280" y="262" font-size="8.5" fill="#4c8567" text-anchor="middle">每线程独立聚合，避免全局锁</text>
+  <text x="280" y="280" font-size="8" fill="#8aa6cf" text-anchor="middle">→ 这是"两阶段"的第一阶段</text>
+
+  <!-- phase 2 merge -->
+  <rect x="540" y="72" width="480" height="220" rx="13" fill="#f3f7fc" stroke="#cfe0f2"/>
+  <text x="780" y="96" font-size="12" font-weight="700" fill="#274a78" text-anchor="middle">第二阶段：合并（MergingAggregatedTransform）</text>
+  <g text-anchor="middle" font-size="8">
+    <rect x="560" y="112" width="120" height="40" rx="7" fill="#eef3fb" stroke="#bcd0ec"/><text x="620" y="136" fill="#1b2a4a">局部结果 1</text>
+    <rect x="690" y="112" width="120" height="40" rx="7" fill="#eef3fb" stroke="#bcd0ec"/><text x="750" y="136" fill="#1b2a4a">局部结果 2</text>
+    <rect x="820" y="112" width="120" height="40" rx="7" fill="#eef3fb" stroke="#bcd0ec"/><text x="880" y="136" fill="#1b2a4a">局部结果 3</text>
+  </g>
+  <rect x="620" y="180" width="320" height="46" rx="9" fill="#e9f1fb" stroke="#c4d8f0"/>
+  <text x="780" y="200" font-size="9.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">合并同 key 的部分聚合 state</text>
+  <text x="780" y="216" font-size="8" fill="#5b7db1" text-anchor="middle">得到全局 {k → 最终 agg}</text>
+  <g stroke="#c7c7cc" stroke-width="1.3" fill="none">
+    <path d="M620,152 L720,180" marker-end="url(#ar)"/>
+    <line x1="750" y1="152" x2="770" y2="180" marker-end="url(#ar)"/>
+    <path d="M880,152 L840,180" marker-end="url(#ar)"/>
+  </g>
+  <text x="780" y="252" font-size="8.5" fill="#8aa6cf" text-anchor="middle">分布式下：各 shard 先部分聚合，发起节点合并</text>
+  <text x="780" y="270" font-size="8.5" fill="#8aa6cf" text-anchor="middle">= 大幅减少跨节点传输的数据量</text>
+
+  <!-- two-level -->
+  <rect x="40" y="312" width="980" height="140" rx="13" fill="#fdf9f0" stroke="#efe3cd"/>
+  <text x="60" y="336" font-size="11.5" font-weight="700" fill="#7a5a1e">大基数优化：切换 two-level 哈希表</text>
+  <text x="60" y="358" font-size="9.5" fill="#93762e">· 触发阈值：基数 &gt; group_by_two_level_threshold=100000 行（:962），或字节 &gt; ..._bytes=50000000（50MB, :965）</text>
+  <text x="60" y="378" font-size="9.5" fill="#93762e">· convertToTwoLevel（Aggregator.cpp:1732）：把单个大哈希表按 key 高位拆成多个桶</text>
+  <g text-anchor="middle" font-size="8">
+    <rect x="60" y="392" width="200" height="44" rx="8" fill="#fbeef0" stroke="#f0cdd4"/><text x="160" y="410" font-weight="600" fill="#7a2230">单级（小基数）</text><text x="160" y="426" fill="#a44">一个大哈希表 → 合并成瓶颈</text>
+    <text x="300" y="418" font-size="14" fill="#c7c7cc">→</text>
+    <rect x="340" y="392" width="300" height="44" rx="8" fill="#f2fbf6" stroke="#cdeadb"/><text x="490" y="410" font-weight="600" fill="#12402a">two-level（大基数）</text><text x="490" y="426" fill="#2f6f4f">按桶拆分 → 合并阶段可并行</text>
+    <rect x="670" y="392" width="330" height="44" rx="8" fill="#fff" stroke="#efdcb4"/><text x="835" y="410" font-weight="600" fill="#5a3410">收益</text><text x="835" y="426" fill="#93762e">避免单大表成瓶颈，合并可并行 → 大 GROUP BY 更快</text>
+  </g>
+
+  <rect x="40" y="468" width="980" height="94" rx="12" fill="#f7f7f9" stroke="#e6e6ea"/>
+  <text x="60" y="492" font-size="11" font-weight="700" fill="#1d1d1f">一句话</text>
+  <text x="60" y="514" font-size="10" fill="#4b4b50">GROUP BY 走两阶段：每线程先做无锁的部分聚合（局部哈希表），再合并成全局结果——分布式下各 shard 先聚合</text>
+  <text x="60" y="531" font-size="10" fill="#4b4b50">再汇总，极大减少传输量。当基数超过 10 万行/50MB，切 two-level 哈希表按桶拆分，让合并阶段也能并行。</text>
+  <text x="60" y="552" font-size="9" fill="#8a8a8f">受 max_memory_usage 约束，超限会 spill 或报错（见「资源与负载」）。</text>
+</svg>

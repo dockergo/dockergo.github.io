@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="580" viewBox="0 0 1000 580"
+     font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1000" height="580" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">quic-go 事件循环 · 三类 goroutine 用 channel + select 协作（这就是 batteries-included 的心脏）</text>
+  <text x="30" y="50" font-size="10" fill="#86868b">对照 quiche：quiche 库不碰 socket/时钟、由应用编排循环；quic-go 反过来 —— 自己拥有 socket、自己开 goroutine 跑循环</text>
+
+  <!-- socket -->
+  <rect x="30" y="70" width="180" height="440" rx="12" fill="#f5f5f7" stroke="#d2d2d7" filter="url(#soft)"/>
+  <text x="120" y="94" font-size="11" font-weight="600" fill="#1d1d1f" text-anchor="middle">net.PacketConn</text>
+  <text x="120" y="112" font-size="8.5" fill="#6e6e73" text-anchor="middle">真实 UDP socket</text>
+  <text x="120" y="128" font-size="8.5" fill="#6e6e73" text-anchor="middle">Transport 独占拥有</text>
+  <rect x="48" y="150" width="144" height="40" rx="8" fill="#ffffff" stroke="#d2d2d7"/><text x="120" y="167" font-size="8.5" fill="#1d1d1f" text-anchor="middle">ReadPacket()</text><text x="120" y="182" font-size="8" fill="#86868b" text-anchor="middle">收 UDP 数据报</text>
+  <rect x="48" y="410" width="144" height="40" rx="8" fill="#ffffff" stroke="#d2d2d7"/><text x="120" y="427" font-size="8.5" fill="#1d1d1f" text-anchor="middle">WriteTo()</text><text x="120" y="442" font-size="8" fill="#86868b" text-anchor="middle">发 UDP 数据报</text>
+
+  <!-- goroutine 1: listen -->
+  <rect x="250" y="90" width="300" height="120" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="268" y="112" font-size="11" font-weight="600" fill="#1b2a4a">goroutine ① Transport.listen()</text>
+  <text x="268" y="130" font-size="8.5" fill="#5b7db1">transport.go:527 —— 单条读循环，服务多连接</text>
+  <rect x="268" y="140" width="264" height="26" rx="7" fill="#ffffff" stroke="#bcd0ec"/><text x="400" y="157" font-size="8.5" fill="#1b2a4a" text-anchor="middle">packetHandlerMap.Get(:767) 按 CID demux</text>
+  <rect x="268" y="172" width="264" height="26" rx="7" fill="#ffffff" stroke="#bcd0ec"/><text x="400" y="189" font-size="8.5" fill="#1b2a4a" text-anchor="middle">conn.handlePacket() 投递到目标连接队列</text>
+
+  <!-- goroutine 2: run loop (center, tall) -->
+  <rect x="250" y="228" width="480" height="230" rx="12" fill="#eafaf1" stroke="#bce6cd" filter="url(#soft)"/>
+  <text x="268" y="250" font-size="11" font-weight="600" fill="#0f5132">goroutine ② Conn.run() —— 每连接一个（connection.go:563）</text>
+  <text x="268" y="268" font-size="8.5" fill="#3f8f66">协议状态机的唯一持有者：所有连接状态只在此 goroutine 内改，天然免锁</text>
+  <rect x="268" y="280" width="444" height="120" rx="9" fill="#ffffff" stroke="#bce6cd"/>
+  <text x="284" y="300" font-size="9" font-weight="600" fill="#0f5132">for { select { … } }  (:656)</text>
+  <text x="300" y="320" font-size="8.5" fill="#12402a">case &lt;-c.closeChan：关闭连接、退出循环</text>
+  <text x="300" y="337" font-size="8.5" fill="#12402a">case &lt;-c.timer.C：定时器到期（重传/PTO/idle/ACK/pacing）</text>
+  <text x="300" y="354" font-size="8.5" fill="#12402a">case &lt;-c.sendingScheduled：有数据待发 → triggerSending(:2448)</text>
+  <text x="300" y="371" font-size="8.5" fill="#12402a">case &lt;-c.notifyReceivedPacket：有新包 → handlePackets(:1002)</text>
+  <text x="300" y="388" font-size="8.5" fill="#12402a">case &lt;-sendQueueAvailable：发送队列腾空、可继续发</text>
+  <text x="268" y="422" font-size="8.5" fill="#3f8f66">用户 goroutine 调 Stream.Write/OpenStream 时，只往 channel 送信号，真正的发包在 run() 内完成</text>
+  <text x="268" y="440" font-size="8.5" fill="#3f8f66">收包在 ① goroutine 入队，run() 被 notifyReceivedPacket 唤醒后取出处理 —— 跨 goroutine 只经 channel</text>
+
+  <!-- goroutine 3: sendQueue -->
+  <rect x="250" y="476" width="480" height="80" rx="12" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="268" y="498" font-size="11" font-weight="600" fill="#5a3410">goroutine ③ sendQueue.Run()（send_queue.go:77）</text>
+  <text x="268" y="516" font-size="8.5" fill="#93762e">run() 把组好的包交给 sendQueue，此 goroutine 异步执行 WriteTo，避免写 socket 阻塞状态机</text>
+  <text x="268" y="534" font-size="8.5" fill="#93762e">WouldBlock()/Available() 用 channel 背压：socket 写满时回压到 run()，不丢包不忙等</text>
+
+  <!-- 右侧：用户 goroutine -->
+  <rect x="770" y="228" width="200" height="230" rx="12" fill="#f4eefb" stroke="#d9c9ef" filter="url(#soft)"/>
+  <text x="870" y="250" font-size="10.5" font-weight="600" fill="#3c1361" text-anchor="middle">用户 goroutine</text>
+  <rect x="786" y="266" width="168" height="40" rx="8" fill="#ffffff" stroke="#d9c9ef"/><text x="870" y="283" font-size="8.5" fill="#3c1361" text-anchor="middle">Stream.Write([]byte)</text><text x="870" y="298" font-size="8" fill="#7a52a8" text-anchor="middle">→ scheduleSending</text>
+  <rect x="786" y="316" width="168" height="40" rx="8" fill="#ffffff" stroke="#d9c9ef"/><text x="870" y="333" font-size="8.5" fill="#3c1361" text-anchor="middle">Stream.Read([]byte)</text><text x="870" y="348" font-size="8" fill="#7a52a8" text-anchor="middle">阻塞等 channel</text>
+  <rect x="786" y="366" width="168" height="40" rx="8" fill="#ffffff" stroke="#d9c9ef"/><text x="870" y="383" font-size="8.5" fill="#3c1361" text-anchor="middle">AcceptStream(ctx)</text><text x="870" y="398" font-size="8" fill="#7a52a8" text-anchor="middle">阻塞取新流</text>
+  <text x="870" y="428" font-size="8" fill="#7a52a8" text-anchor="middle">标准 io.Reader/Writer</text>
+  <text x="870" y="444" font-size="8" fill="#7a52a8" text-anchor="middle">语义，天然融入 Go</text>
+
+  <!-- 连线 -->
+  <path d="M192,170 L250,150" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M400,210 L400,228" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M490,458 L490,476" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M250,516 L120,450" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M786,300 L732,330" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+</svg>

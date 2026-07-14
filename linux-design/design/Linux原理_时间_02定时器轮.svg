@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="470" viewBox="0 0 1000 470" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1000" height="470" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">低精度定时器轮 timer wheel：每 CPU 分级轮，按到期远近分层，粒度越高越粗、无级联</text>
+  <text x="350" y="56" font-size="10.5" fill="#6e6e73">每 CPU timer_base（timer.c:250）· LVL_DEPTH=9 级（HZ&gt;100，timer.c:173）· 每级 LVL_SIZE=64 桶（timer.c:167）· 第 n 级粒度 = 8ⁿ tick</text>
+
+  <!-- left: new timer -->
+  <rect x="40" y="150" width="250" height="96" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="165" y="174" font-size="11.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">新到期定时器</text>
+  <text x="58" y="196" font-size="9.5" fill="#5b7db1">add_timer(expires)</text>
+  <text x="58" y="218" font-size="10" fill="#5b7db1">· 按到期时间远近选定层级</text>
+  <text x="58" y="238" font-size="10" fill="#5b7db1">· calc_index() 定位到具体桶</text>
+
+  <line x1="290" y1="198" x2="346" y2="198" stroke="#c7c7cc" stroke-width="1.6" fill="none" marker-end="url(#ar)"/>
+  <text x="298" y="190" font-size="9" fill="#a1a1a6">按 expires 选层</text>
+
+  <!-- level bars (HZ=1000) -->
+  <!-- L0 highlighted green -->
+  <rect x="350" y="70" width="560" height="30" rx="9" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="366" y="90" font-size="10.5" font-weight="600" fill="#12402a">L0</text>
+  <text x="410" y="90" font-size="10" fill="#2f6f4f">粒度 1 ms</text>
+  <text x="560" y="90" font-size="10" fill="#2f6f4f">范围 0 – 63 ms</text>
+  <text x="760" y="90" font-size="9.5" fill="#2f6f4f">← 唯一 HZ 精确层（短超时依赖）</text>
+
+  <rect x="350" y="103" width="560" height="30" rx="9" fill="#fff7e6" stroke="#e8cf9a"/>
+  <text x="366" y="123" font-size="10.5" font-weight="600" fill="#5a3410">L1</text>
+  <text x="410" y="123" font-size="10" fill="#93762e">粒度 8 ms</text>
+  <text x="560" y="123" font-size="10" fill="#93762e">范围 64 – 511 ms</text>
+
+  <rect x="350" y="136" width="560" height="30" rx="9" fill="#fff7e6" stroke="#e8cf9a"/>
+  <text x="366" y="156" font-size="10.5" font-weight="600" fill="#5a3410">L2</text>
+  <text x="410" y="156" font-size="10" fill="#93762e">粒度 64 ms</text>
+  <text x="560" y="156" font-size="10" fill="#93762e">范围 512 ms – ~4 s</text>
+
+  <rect x="350" y="169" width="560" height="30" rx="9" fill="#fff7e6" stroke="#e8cf9a"/>
+  <text x="366" y="189" font-size="10.5" font-weight="600" fill="#5a3410">L3</text>
+  <text x="410" y="189" font-size="10" fill="#93762e">粒度 512 ms</text>
+  <text x="560" y="189" font-size="10" fill="#93762e">范围 ~4 s – ~32 s</text>
+
+  <rect x="350" y="202" width="560" height="30" rx="9" fill="#fff7e6" stroke="#e8cf9a"/>
+  <text x="366" y="222" font-size="10.5" font-weight="600" fill="#5a3410">L4</text>
+  <text x="410" y="222" font-size="10" fill="#93762e">粒度 ~4 s</text>
+  <text x="560" y="222" font-size="10" fill="#93762e">范围 ~32 s – ~4 m</text>
+
+  <rect x="350" y="235" width="560" height="30" rx="9" fill="#fff7e6" stroke="#e8cf9a"/>
+  <text x="366" y="255" font-size="10.5" font-weight="600" fill="#5a3410">L5</text>
+  <text x="410" y="255" font-size="10" fill="#93762e">粒度 ~32 s</text>
+  <text x="560" y="255" font-size="10" fill="#93762e">范围 ~4 m – ~34 m</text>
+
+  <rect x="350" y="268" width="560" height="30" rx="9" fill="#fff7e6" stroke="#e8cf9a"/>
+  <text x="366" y="288" font-size="10.5" font-weight="600" fill="#5a3410">L6</text>
+  <text x="410" y="288" font-size="10" fill="#93762e">粒度 ~4 m</text>
+  <text x="560" y="288" font-size="10" fill="#93762e">范围 ~34 m – ~4 h</text>
+
+  <rect x="350" y="301" width="560" height="30" rx="9" fill="#fff7e6" stroke="#e8cf9a"/>
+  <text x="366" y="321" font-size="10.5" font-weight="600" fill="#5a3410">L7</text>
+  <text x="410" y="321" font-size="10" fill="#93762e">粒度 ~34 m</text>
+  <text x="560" y="321" font-size="10" fill="#93762e">范围 ~4 h – ~1 d</text>
+
+  <rect x="350" y="334" width="560" height="30" rx="9" fill="#fff7e6" stroke="#e8cf9a"/>
+  <text x="366" y="354" font-size="10.5" font-weight="600" fill="#5a3410">L8</text>
+  <text x="410" y="354" font-size="10" fill="#93762e">粒度 ~4 h</text>
+  <text x="560" y="354" font-size="10" fill="#93762e">范围 ~1 d – ~12 d</text>
+
+  <text x="922" y="215" font-size="9.5" fill="#a1a1a6" transform="rotate(90 922 215)" text-anchor="middle">层越高 · 粒度越粗</text>
+
+  <!-- notes -->
+  <text x="40" y="392" font-size="10" fill="#6e6e73">· 无级联（cascade-free）：高层以粗粒度隐式批处理，永不把定时器往低层搬（timer.c:76 起）——旧内核的 recascading 已取消</text>
+  <text x="40" y="414" font-size="10" fill="#6e6e73">· 超最高层容量的定时器 → 钳到 WHEEL_TIMEOUT_MAX 强制到期（timer.c:181）</text>
+  <text x="40" y="436" font-size="10" fill="#6e6e73">· 到期扫描在软中断：__run_timers（timer.c:2344）· open_softirq(TIMER_SOFTIRQ, run_timer_softirq)（timer.c:2579）</text>
+  <text x="40" y="458" font-size="10" fill="#6e6e73">· 设计假设：绝大多数超时会在到期前被取消，真到期已属异常，稍晚无碍 → 用分级粒度换掉级联开销</text>
+</svg>

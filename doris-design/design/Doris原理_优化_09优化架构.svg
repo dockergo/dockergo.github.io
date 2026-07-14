@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1050" viewBox="0 0 1200 1050" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1200" height="1050" fill="#fbfbfd"/>
+  <text x="30" y="34" font-size="15" font-weight="700" fill="#1d1d1f">9 类优化主轴在 FE 规划 / BE 执行 / Storage / 写入主线上的落点</text>
+
+  <!-- request -->
+  <rect x="510" y="48" width="180" height="40" rx="12" fill="#fbeaea" stroke="#e7c3c3" filter="url(#soft)"/><text x="600" y="73" font-size="13" font-weight="600" fill="#4a1414" text-anchor="middle">SQL / Insert / Load 请求</text>
+
+  <!-- ===== FE 规划期 ===== -->
+  <rect x="30" y="108" width="740" height="188" rx="16" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="48" y="132" font-size="13.5" font-weight="600" fill="#274a78">FE 规划期 · Nereids Planner / Coordinator</text>
+  <g font-size="10.5">
+    <rect x="46" y="144" width="228" height="64" rx="10" fill="#f4eefb" stroke="#e2d3f3"/><text x="60" y="164" font-weight="600" fill="#42246b">① 规划开销</text><text x="60" y="182" fill="#7a5aa0">Catalog Cache · Stats</text><text x="60" y="198" fill="#7a5aa0">Plan / Prepared Cache</text>
+    <rect x="286" y="144" width="228" height="64" rx="10" fill="#f4eefb" stroke="#e2d3f3"/><text x="300" y="164" font-weight="600" fill="#42246b">② 扫描对象数</text><text x="300" y="182" fill="#7a5aa0">分区/Tablet/文件裁剪</text><text x="300" y="198" fill="#7a5aa0">Partition/Bucket/File Prune</text>
+    <rect x="526" y="144" width="228" height="64" rx="10" fill="#f4eefb" stroke="#e2d3f3"/><text x="540" y="164" font-weight="600" fill="#42246b">⑤ 流入行数（静态）</text><text x="540" y="182" fill="#7a5aa0">谓词下推 / 推导</text><text x="540" y="198" fill="#7a5aa0">Predicate Pushdown/Infer</text>
+    <rect x="46" y="216" width="228" height="64" rx="10" fill="#f4eefb" stroke="#e2d3f3"/><text x="60" y="236" font-weight="600" fill="#42246b">⑥ 网络 Shuffle（决策）</text><text x="60" y="254" fill="#7a5aa0">分布方式选择</text><text x="60" y="270" fill="#7a5aa0">Colocate/Bucket/Shuffle/Bcast</text>
+    <rect x="286" y="216" width="228" height="64" rx="10" fill="#f4eefb" stroke="#e2d3f3"/><text x="300" y="236" font-weight="600" fill="#42246b">⑦ 算子计算（计划）</text><text x="300" y="254" fill="#7a5aa0">Join Reorder</text><text x="300" y="270" fill="#7a5aa0">聚合 / TopN 下推</text>
+    <rect x="526" y="216" width="228" height="64" rx="10" fill="#f4eefb" stroke="#e2d3f3"/><text x="540" y="236" font-weight="600" fill="#42246b">⑧ 重复计算（规划）</text><text x="540" y="254" fill="#7a5aa0">MV 透明改写</text><text x="540" y="270" fill="#7a5aa0">Plan / Prepared Plan</text>
+  </g>
+
+  <!-- ===== 写入主线 ===== -->
+  <rect x="790" y="108" width="380" height="392" rx="16" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="808" y="132" font-size="13.5" font-weight="600" fill="#4a1414">写入主线 · Insert / Stream / Broker Load</text>
+  <g font-size="10.5" text-anchor="middle">
+    <rect x="808" y="144" width="344" height="42" rx="10" fill="#fbeaea" stroke="#e7c3c3"/><text x="980" y="162" font-weight="600" fill="#4a1414">FE 写入计划</text><text x="980" y="178" fill="#a05252">Sink · Tablet 路由 · 并行度</text>
+    <rect x="808" y="196" width="344" height="42" rx="10" fill="#fbeaea" stroke="#e7c3c3"/><text x="980" y="214" font-weight="600" fill="#4a1414">BE 写入入口</text><text x="980" y="230" fill="#a05252">tablet_writer_open / add_block</text>
+    <rect x="808" y="248" width="344" height="42" rx="10" fill="#fbeaea" stroke="#e7c3c3"/><text x="980" y="266" font-weight="600" fill="#4a1414">Load Channel</text><text x="980" y="282" fill="#a05252">LoadChannelMgr / TabletsChannel</text>
+    <rect x="808" y="300" width="344" height="42" rx="10" fill="#fbeaea" stroke="#e7c3c3"/><text x="980" y="318" font-weight="600" fill="#4a1414">MemTable / Segment Writer</text><text x="980" y="334" fill="#a05252">排序·聚合·编码·压缩·建索引</text>
+    <rect x="808" y="360" width="344" height="60" rx="10" fill="#f4eefb" stroke="#e2d3f3"/><text x="980" y="382" font-weight="600" fill="#42246b">⑨ 写入与维护</text><text x="980" y="400" fill="#7a5aa0">Rowset/Segment · Compaction · 版本管理</text>
+  </g>
+  <g stroke="#c7c7cc" stroke-width="1.4" fill="none">
+    <line x1="980" y1="186" x2="980" y2="196" marker-end="url(#ar)"/><line x1="980" y1="238" x2="980" y2="248" marker-end="url(#ar)"/><line x1="980" y1="290" x2="980" y2="300" marker-end="url(#ar)"/><line x1="980" y1="342" x2="980" y2="360" marker-end="url(#ar)"/>
+  </g>
+
+  <!-- ===== BE 执行期 ===== -->
+  <rect x="30" y="318" width="740" height="248" rx="16" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="48" y="342" font-size="13.5" font-weight="600" fill="#12402a">BE 执行期 · Pipeline / Operators</text>
+  <g font-size="10.5" text-anchor="middle" fill="#12402a">
+    <rect x="46" y="352" width="110" height="30" rx="8" fill="#eafaf1" stroke="#bfe0cd"/><text x="101" y="371">Scan</text>
+    <rect x="164" y="352" width="110" height="30" rx="8" fill="#eafaf1" stroke="#bfe0cd"/><text x="219" y="371">Join</text>
+    <rect x="282" y="352" width="110" height="30" rx="8" fill="#eafaf1" stroke="#bfe0cd"/><text x="337" y="371">Aggregate</text>
+    <rect x="400" y="352" width="110" height="30" rx="8" fill="#eafaf1" stroke="#bfe0cd"/><text x="455" y="371">Sort/TopN</text>
+    <rect x="518" y="352" width="110" height="30" rx="8" fill="#eafaf1" stroke="#bfe0cd"/><text x="573" y="371">Exchange</text>
+    <rect x="636" y="352" width="110" height="30" rx="8" fill="#eafaf1" stroke="#bfe0cd"/><text x="691" y="371">Result</text>
+  </g>
+  <g font-size="10.5">
+    <rect x="46" y="394" width="228" height="66" rx="10" fill="#f4eefb" stroke="#e2d3f3"/><text x="60" y="414" font-weight="600" fill="#42246b">③ 存储读取</text><text x="60" y="432" fill="#7a5aa0">调索引跳数据</text><text x="60" y="450" fill="#7a5aa0">ZoneMap/Bloom/倒排/PageIndex</text>
+    <rect x="286" y="394" width="228" height="66" rx="10" fill="#f4eefb" stroke="#e2d3f3"/><text x="300" y="414" font-weight="600" fill="#42246b">④ 读列 / 字节</text><text x="300" y="432" fill="#7a5aa0">延迟物化 · 字典过滤</text><text x="300" y="450" fill="#7a5aa0">Column Pruning · Lazy Mat.</text>
+    <rect x="526" y="394" width="228" height="66" rx="10" fill="#f4eefb" stroke="#e2d3f3"/><text x="540" y="414" font-weight="600" fill="#42246b">⑤ 流入行数（动态）</text><text x="540" y="432" fill="#7a5aa0">RF 生成/消费</text><text x="540" y="450" fill="#7a5aa0">Join Build→Probe · TopN Filter</text>
+    <rect x="46" y="470" width="228" height="66" rx="10" fill="#f4eefb" stroke="#e2d3f3"/><text x="60" y="490" font-weight="600" fill="#42246b">⑥ 网络 Shuffle（执行）</text><text x="60" y="508" fill="#7a5aa0">Shuffle 交换</text><text x="60" y="526" fill="#7a5aa0">Local Exchange 减跨节点</text>
+    <rect x="286" y="470" width="228" height="66" rx="10" fill="#f4eefb" stroke="#e2d3f3"/><text x="300" y="490" font-weight="600" fill="#42246b">⑦ 算子计算</text><text x="300" y="508" fill="#7a5aa0">Hash Table · 两阶段聚合</text><text x="300" y="526" fill="#7a5aa0">局部 TopN · Spill 兜底</text>
+    <rect x="526" y="470" width="228" height="66" rx="10" fill="#f4eefb" stroke="#e2d3f3"/><text x="540" y="490" font-weight="600" fill="#42246b">⑧ 重复计算（执行）</text><text x="540" y="508" fill="#7a5aa0">Query Cache</text><text x="540" y="526" fill="#7a5aa0">Data Cache</text>
+  </g>
+
+  <!-- ===== Storage ===== -->
+  <rect x="30" y="588" width="1140" height="184" rx="16" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="48" y="612" font-size="13.5" font-weight="600" fill="#7a5a1e">Storage 存储引擎 · Tablet / Rowset / Segment</text>
+  <g font-size="10.5" text-anchor="middle" fill="#5a3b12">
+    <rect x="46" y="624" width="176" height="46" rx="9" fill="#fdf6ea" stroke="#efdcb4"/><text x="134" y="644" font-weight="600">Tablet</text><text x="134" y="660" font-size="9.5">分区/分桶/副本</text>
+    <rect x="230" y="624" width="176" height="46" rx="9" fill="#fdf6ea" stroke="#efdcb4"/><text x="318" y="644" font-weight="600">Rowset</text><text x="318" y="660" font-size="9.5">版本化数据集合</text>
+    <rect x="414" y="624" width="176" height="46" rx="9" fill="#fdf6ea" stroke="#efdcb4"/><text x="502" y="644" font-weight="600">Segment</text><text x="502" y="660" font-size="9.5">列存/编码/压缩</text>
+    <rect x="598" y="624" width="176" height="46" rx="9" fill="#fdf6ea" stroke="#efdcb4"/><text x="686" y="644" font-weight="600">Index &amp; Statistics</text><text x="686" y="660" font-size="9.5">ZoneMap/Bloom/倒排/字典</text>
+    <rect x="782" y="624" width="176" height="46" rx="9" fill="#fdf6ea" stroke="#efdcb4"/><text x="870" y="644" font-weight="600">Version &amp; Delete</text><text x="870" y="660" font-size="9.5">VersionGraph/Delete Bitmap</text>
+    <rect x="966" y="624" width="170" height="46" rx="9" fill="#fdf6ea" stroke="#efdcb4"/><text x="1051" y="644" font-weight="600">Compaction</text><text x="1051" y="660" font-size="9.5">合并 Rowset · 降读放大</text>
+  </g>
+  <g font-size="10.5">
+    <rect x="300" y="684" width="300" height="42" rx="9" fill="#f4eefb" stroke="#e2d3f3"/><text x="450" y="702" font-weight="600" fill="#42246b" text-anchor="middle">③ 索引/统计跳过（落点）</text><text x="450" y="718" fill="#7a5aa0" text-anchor="middle">Footer / Page Index / SARG</text>
+    <rect x="620" y="684" width="300" height="42" rx="9" fill="#f4eefb" stroke="#e2d3f3"/><text x="770" y="702" font-weight="600" fill="#42246b" text-anchor="middle">⑧ 重复计算（Storage）</text><text x="770" y="718" fill="#7a5aa0" text-anchor="middle">Footer Cache · 数据块缓存</text>
+  </g>
+
+  <!-- result -->
+  <rect x="510" y="800" width="180" height="40" rx="12" fill="#fbeaea" stroke="#e7c3c3" filter="url(#soft)"/><text x="600" y="825" font-size="13" font-weight="600" fill="#4a1414" text-anchor="middle">结果返回客户端</text>
+
+  <!-- main arrows -->
+  <g stroke="#c7c7cc" stroke-width="1.8" fill="none">
+    <path d="M540,88 L400,88 L400,108" marker-end="url(#ar)"/>
+    <path d="M690,68 L980,68 L980,108" marker-end="url(#ar)"/>
+    <line x1="400" y1="296" x2="400" y2="318" marker-end="url(#ar)"/>
+    <path d="M400,566 L400,578 L360,588" marker-end="url(#ar)"/>
+    <path d="M980,500 L980,540 L900,588" marker-end="url(#ar)"/>
+    <path d="M600,772 L600,800" marker-end="url(#ar)"/>
+  </g>
+  <g font-size="10" fill="#a1a1a6"><text x="410" y="308">下发 Fragment</text><text x="1000" y="560">写入落盘</text></g>
+
+  <!-- legend -->
+  <rect x="30" y="864" width="1140" height="162" rx="14" fill="#fafafb" stroke="#ececf1"/>
+  <text x="48" y="888" font-size="13" font-weight="600" fill="#1d1d1f">9 类优化主轴（一条主轴可落在多层）</text>
+  <g font-size="11" fill="#42246b">
+    <text x="48" y="914">① 规划开销：省 FE 规划/元数据/统计/复用计划</text>
+    <text x="430" y="914">② 扫描对象数：分区/Tablet/文件裁剪，少扫对象</text>
+    <text x="820" y="914">③ 存储单元读取：索引/统计跳过整段数据</text>
+    <text x="48" y="940">④ 读取列/字节：列裁剪·延迟物化·字典过滤·少解码</text>
+    <text x="430" y="940">⑤ 流入算子行数：谓词下推(静态) + RF/TopN(动态)</text>
+    <text x="820" y="940">⑥ 网络 Shuffle：分布方式选择 + Local Exchange</text>
+    <text x="48" y="966">⑦ 算子计算状态：Join Reorder·两阶段聚合·TopN</text>
+    <text x="430" y="966">⑧ 重复计算：Plan/MV/Query/Data/Footer 各级缓存</text>
+    <text x="820" y="966">⑨ 写入与维护：Load/Rowset/Segment/Compaction/版本</text>
+    <text x="48" y="998" fill="#6e6e73" font-size="10.5">口诀：FE 少派任务、选对路径 · BE 少算少传少等 · Storage 少读快读可跳过 · 写入攒批降维护成本</text>
+  </g>
+</svg>

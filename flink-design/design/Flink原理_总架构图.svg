@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="800" viewBox="0 0 1080 800" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="800" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Flink 核心原理 · 总架构图（位置即语义）</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">流优先统一计算引擎:多 API 汇入统一执行管线,mailbox 单线程执行,credit 网络交换,分布式快照容错</text>
+
+  <!-- API layer -->
+  <rect x="30" y="64" width="1020" height="66" rx="13" fill="#f4eefb" stroke="#d9c7ec"/>
+  <text x="46" y="84" font-size="11" font-weight="700" fill="#5a3d78">编程 API 接触面（多 API,非 SQL 语句族）</text>
+  <g text-anchor="middle" font-size="8.8">
+    <rect x="46" y="94" width="490" height="30" rx="8" fill="#faf4fb" stroke="#e2d2ee"/><text x="291" y="113" fill="#5a3d78">DataStream API(命令式:map/keyBy/window,含 V2 FLIP-409)</text>
+    <rect x="546" y="94" width="488" height="30" rx="8" fill="#faf4fb" stroke="#e2d2ee"/><text x="790" y="113" fill="#5a3d78">Table / SQL API(声明式:Calcite planner)</text>
+  </g>
+
+  <!-- graph transform -->
+  <rect x="30" y="144" width="1020" height="88" rx="14" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="46" y="166" font-size="11" font-weight="700" fill="#1b2a4a">图变换(编译):两 API 汇入同一管线</text>
+  <g text-anchor="middle" font-size="8.8">
+    <rect x="46" y="178" width="310" height="44" rx="8" fill="#f3f7fc" stroke="#cfe0f2"/><text x="201" y="198" font-weight="600" fill="#274a78">StreamGraph(逻辑 DAG)</text><text x="201" y="214" fill="#5b7db1">一节点一算子</text>
+    <rect x="386" y="178" width="310" height="44" rx="8" fill="#f3f7fc" stroke="#cfe0f2"/><text x="541" y="198" font-weight="600" fill="#274a78">JobGraph(算子链化)</text><text x="541" y="214" fill="#5b7db1">forward+同slot 合并成 JobVertex</text>
+    <rect x="726" y="178" width="308" height="44" rx="8" fill="#f3f7fc" stroke="#cfe0f2"/><text x="880" y="198" font-weight="600" fill="#274a78">ExecutionGraph(并行展开)</text><text x="880" y="214" fill="#5b7db1">JobVertex → N 个子任务</text>
+  </g>
+  <line x1="356" y1="200" x2="386" y2="200" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="696" y1="200" x2="726" y2="200" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+
+  <!-- JobManager -->
+  <rect x="30" y="246" width="1020" height="90" rx="14" fill="#e6f7ee" stroke="#bfe0cd"/>
+  <text x="46" y="268" font-size="11" font-weight="700" fill="#12402a">JobManager（调度与协调 · 不处理数据）</text>
+  <g text-anchor="middle" font-size="8.5">
+    <rect x="46" y="280" width="320" height="46" rx="8" fill="#eafaf1" stroke="#bfe0cd"/><text x="206" y="300" font-weight="600" fill="#12402a">JobMaster(单作业领导)</text><text x="206" y="316" fill="#2f6f4f">持 SchedulerNG,调度子任务</text>
+    <rect x="376" y="280" width="320" height="46" rx="8" fill="#eafaf1" stroke="#bfe0cd"/><text x="536" y="300" font-weight="600" fill="#12402a">ResourceManager + SlotManager</text><text x="536" y="316" fill="#2f6f4f">集群资源,分配 slot</text>
+    <rect x="706" y="280" width="328" height="46" rx="8" fill="#e6f7ee" stroke="#bfe0cd"/><text x="870" y="300" font-weight="600" fill="#12402a">CheckpointCoordinator</text><text x="870" y="316" fill="#2f6f4f">定时触发分布式快照(容错灵魂)</text>
+  </g>
+
+  <!-- TaskManager -->
+  <rect x="30" y="350" width="1020" height="220" rx="16" fill="#fff7e6" stroke="#e8cf9a"/>
+  <text x="46" y="372" font-size="11" font-weight="700" fill="#5a3410">TaskManager / TaskExecutor（执行数据 · MPP 多节点并行 · slot 为资源单位）</text>
+  <!-- slot with operator chain + mailbox -->
+  <rect x="46" y="384" width="470" height="112" rx="10" fill="#fef2e0" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="60" y="404" font-size="9.5" font-weight="600" fill="#5a3410">Slot(slot sharing:一条流水线共享)</text>
+  <text x="60" y="422" font-size="8.3" fill="#93762e">算子链 · mailbox 单线程(记录/检查点/定时器串行,免加锁)</text>
+  <g text-anchor="middle" font-size="8">
+    <rect x="60" y="432" width="130" height="30" rx="6" fill="#fff" stroke="#e8cf9a"/><text x="125" y="451" fill="#5a3410">source→map(链)</text>
+    <rect x="200" y="432" width="130" height="30" rx="6" fill="#fff" stroke="#e8cf9a"/><text x="265" y="451" fill="#5a3410">keyBy 断链</text>
+    <rect x="340" y="432" width="160" height="30" rx="6" fill="#fff" stroke="#e8cf9a"/><text x="420" y="451" fill="#5a3410">window→sink</text>
+  </g>
+  <text x="60" y="482" font-size="8" fill="#93762e">读写状态 backend · 收检查点屏障做异步快照</text>
+
+  <rect x="536" y="384" width="498" height="112" rx="10" fill="#fef2e0" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="550" y="404" font-size="9.5" font-weight="600" fill="#5a3410">网络与数据交换(链间跨子任务)</text>
+  <g text-anchor="middle" font-size="8">
+    <rect x="550" y="416" width="230" height="34" rx="6" fill="#fff" stroke="#e8cf9a"/><text x="665" y="431" fill="#5a3410">ResultPartition(生产)</text><text x="665" y="444" fill="#93762e">→ InputGate(消费)</text>
+    <rect x="790" y="416" width="230" height="34" rx="6" fill="#fff" stroke="#e8cf9a"/><text x="905" y="431" fill="#5a3410">credit-based 流控</text><text x="905" y="444" fill="#93762e">背压不阻塞 TCP</text>
+  </g>
+  <text x="550" y="472" font-size="8" fill="#93762e">keyed 分区按 key-group 确定性映射 · 屏障随数据流传播</text>
+
+  <!-- state backend row -->
+  <rect x="46" y="506" width="988" height="52" rx="9" fill="#fff" stroke="#e8cf9a"/>
+  <text x="60" y="526" font-size="9.5" font-weight="600" fill="#5a3410">状态管理 State Backend · keyed/operator state · 按 key-group 分片(rescale 基础)</text>
+  <text x="60" y="544" font-size="8" fill="#93762e">HashMapStateBackend(堆内,小状态低延迟) vs EmbeddedRocksDBStateBackend(盘,大状态+增量检查点)</text>
+
+  <!-- external -->
+  <rect x="30" y="574" width="1020" height="62" rx="12" fill="#f4f2ee" stroke="#e3ddd2" stroke-dasharray="6 4"/>
+  <text x="46" y="594" font-size="10.5" font-weight="700" fill="#6e6357">外部系统(非 Flink · Flink 不管持久存储)</text>
+  <g text-anchor="middle" font-size="8.3">
+    <rect x="46" y="604" width="315" height="26" rx="7" fill="#fbf6ef" stroke="#e6d8c4"/><text x="203" y="621" fill="#5a3410">Source:Kafka / 文件 / CDC</text>
+    <rect x="371" y="604" width="315" height="26" rx="7" fill="#fbf6ef" stroke="#e6d8c4"/><text x="528" y="621" fill="#5a3410">状态/检查点存储:HDFS / S3 / RocksDB 本地</text>
+    <rect x="696" y="604" width="338" height="26" rx="7" fill="#fbf6ef" stroke="#e6d8c4"/><text x="865" y="621" fill="#5a3410">Sink:Kafka / DB / 湖仓</text>
+  </g>
+
+  <!-- flow arrows -->
+  <line x1="540" y1="130" x2="540" y2="144" stroke="#86868b" stroke-width="1.6" marker-end="url(#ar)"/>
+  <line x1="540" y1="232" x2="540" y2="246" stroke="#86868b" stroke-width="1.6" marker-end="url(#ar)"/>
+  <line x1="540" y1="336" x2="540" y2="350" stroke="#86868b" stroke-width="1.6" marker-end="url(#ar)"/>
+  <line x1="540" y1="570" x2="540" y2="574" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+
+  <!-- semantics + pervasive -->
+  <rect x="30" y="648" width="1020" height="56" rx="12" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="46" y="670" font-size="11" font-weight="700" fill="#1d1d1f">位置即语义</text>
+  <text x="46" y="690" font-size="8.8" fill="#6e6e73">上=多 API 接触面;上中=图变换编译;中=JobManager 调度;下中=TaskManager 执行(mailbox+网络+状态);下=外部系统。JM 只调度,数据全在 TM。</text>
+
+  <rect x="30" y="716" width="1020" height="46" rx="12" fill="#f0f0f4" stroke="#d2d2d7"/>
+  <text x="540" y="743" font-size="10" font-weight="700" text-anchor="middle" fill="#48484a">贯穿层 · CheckpointBarrier —— 随数据流注入,对齐后触发各算子异步快照,横切执行/状态/网络(精确一次的根基)</text>
+</svg>

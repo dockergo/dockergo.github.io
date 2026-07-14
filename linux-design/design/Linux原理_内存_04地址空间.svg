@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="520" viewBox="0 0 1060 520" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1060" height="520" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">地址空间与 VMA：mm_struct 用一棵 maple tree（mm_mt）按地址有序挂管所有 vm_area_struct</text>
+
+  <!-- 左：用户地址空间布局 -->
+  <rect x="28" y="54" width="272" height="452" rx="13" fill="#f5faf6" stroke="#e2ece5"/>
+  <text x="46" y="76" font-size="11.5" font-weight="600" fill="#2c5a3a">用户虚拟地址空间布局（高 → 低）</text>
+
+  <rect x="44" y="90" width="240" height="44" rx="9" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="164" y="108" font-size="10" font-weight="600" fill="#12402a" text-anchor="middle">栈 stack ↓（匿名 VMA）</text>
+  <text x="164" y="124" font-size="8.5" fill="#2f6f4f" text-anchor="middle">向低地址增长，最高端</text>
+
+  <rect x="44" y="144" width="240" height="44" rx="9" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="164" y="162" font-size="10" font-weight="600" fill="#3d2a5a" text-anchor="middle">mmap 区 / 共享库</text>
+  <text x="164" y="178" font-size="8.5" fill="#6a4e93" text-anchor="middle">mmap_base 起（文件/匿名映射）</text>
+
+  <rect x="44" y="198" width="240" height="44" rx="9" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="164" y="216" font-size="10" font-weight="600" fill="#12402a" text-anchor="middle">堆 heap ↑（匿名 VMA）</text>
+  <text x="164" y="232" font-size="8.5" fill="#2f6f4f" text-anchor="middle">start_brk → brk，向高地址增长</text>
+
+  <rect x="44" y="252" width="240" height="44" rx="9" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="164" y="270" font-size="10" font-weight="600" fill="#5a3410" text-anchor="middle">数据 data / bss（可写）</text>
+  <text x="164" y="286" font-size="8.5" fill="#93762e" text-anchor="middle">start_data → end_data</text>
+
+  <rect x="44" y="306" width="240" height="44" rx="9" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+  <text x="164" y="324" font-size="10" font-weight="600" fill="#5a3410" text-anchor="middle">代码 text（只读可执行）</text>
+  <text x="164" y="340" font-size="8.5" fill="#93762e" text-anchor="middle">start_code → end_code，最低端</text>
+
+  <text x="46" y="372" font-size="9" fill="#6e6e73">每段连续、权限一致 = 一个 vm_area_struct</text>
+  <text x="46" y="390" font-size="9" fill="#6e6e73">vm_flags 决定该段 R / W / X 与共享/私有</text>
+  <text x="46" y="408" font-size="9" fill="#a1a1a6">段间空洞不占 VMA；访问空洞 → SIGSEGV</text>
+  <text x="46" y="426" font-size="9" fill="#a1a1a6">映射到物理页靠多级页表 pgd→p4d→pud</text>
+  <text x="46" y="444" font-size="9" fill="#a1a1a6">→pmd→pte；PTE 首次访问才填 → 缺页</text>
+
+  <!-- 中：mm_struct -->
+  <text x="338" y="76" font-size="11.5" font-weight="600" fill="#2b3a55">进程地址空间描述符</text>
+  <rect x="322" y="88" width="300" height="230" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="338" y="112" font-size="11" font-weight="600" fill="#1b2a4a">mm_struct（mm_types.h:1172）· 每进程一个</text>
+  <text x="338" y="140" font-size="9.5" fill="#33507d">mm_mt · maple tree 挂全部 VMA（:1189）</text>
+  <text x="338" y="164" font-size="9.5" fill="#33507d">pgd · 多级页表根 pgd→…→pte（:1199）</text>
+  <text x="338" y="188" font-size="9.5" fill="#33507d">map_count · 当前 VMA 个数（:1228）</text>
+  <text x="338" y="212" font-size="9.5" fill="#33507d">mmap_base · mmap 区基址（:1191）</text>
+  <text x="338" y="236" font-size="9.5" fill="#33507d">start/end_code、start/end_data（:1308）</text>
+  <text x="338" y="260" font-size="9.5" fill="#33507d">start_brk / brk、start_stack（:1309）</text>
+  <text x="338" y="284" font-size="9.5" fill="#33507d">mmap_lock · 读写信号量保护 VMA 树（:1245）</text>
+  <text x="338" y="306" font-size="8.5" fill="#8aa0c4">段边界字段记录各区间；VMA 本体挂在 mm_mt 上</text>
+
+  <text x="338" y="352" font-size="9" fill="#6e6e73">maple tree 是 B 树式区间容器，6.1 起取代</text>
+  <text x="338" y="370" font-size="9" fill="#6e6e73">旧红黑树：缓存更友好、支持无锁 RCU 查找。</text>
+  <text x="338" y="388" font-size="9" fill="#a1a1a6">按 vm_start 有序，查找/插入/遍历 O(log n)。</text>
+
+  <!-- 右：maple tree + VMA -->
+  <text x="662" y="76" font-size="11.5" font-weight="600" fill="#2b3a55">VMA 的组织与结构</text>
+  <rect x="646" y="88" width="388" height="112" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="662" y="110" font-size="11" font-weight="600" fill="#1b2a4a">maple tree mm_mt（按 vm_start 有序的叶）</text>
+  <rect x="662" y="122" width="112" height="42" rx="9" fill="#ffffff" stroke="#ececf1"/>
+  <text x="718" y="140" font-size="9.5" font-weight="600" fill="#1d1d1f" text-anchor="middle">text VMA</text>
+  <text x="718" y="155" font-size="8" fill="#6e6e73" text-anchor="middle">低地址</text>
+  <rect x="784" y="122" width="112" height="42" rx="9" fill="#ffffff" stroke="#ececf1"/>
+  <text x="840" y="140" font-size="9.5" font-weight="600" fill="#1d1d1f" text-anchor="middle">heap VMA</text>
+  <text x="840" y="155" font-size="8" fill="#6e6e73" text-anchor="middle">…</text>
+  <rect x="906" y="122" width="112" height="42" rx="9" fill="#ffffff" stroke="#ececf1"/>
+  <text x="962" y="140" font-size="9.5" font-weight="600" fill="#1d1d1f" text-anchor="middle">stack VMA</text>
+  <text x="962" y="155" font-size="8" fill="#6e6e73" text-anchor="middle">高地址</text>
+  <text x="662" y="185" font-size="8.5" fill="#8aa0c4">给定地址 → find_vma() 沿树定位所属 VMA</text>
+
+  <rect x="646" y="216" width="388" height="278" rx="13" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="662" y="238" font-size="11" font-weight="600" fill="#12402a">vm_area_struct（mm_types.h:932）· 一段等权区间</text>
+  <text x="662" y="266" font-size="9.5" fill="#2f6f4f">vm_start / vm_end · 半开区间 [start, end)（:938）</text>
+  <text x="662" y="292" font-size="9.5" fill="#2f6f4f">vm_mm · 回指所属 mm_struct（:948）</text>
+  <text x="662" y="318" font-size="9.5" fill="#2f6f4f">vm_flags · R/W/X + 共享/私有（:958）</text>
+  <text x="662" y="344" font-size="9.5" fill="#2f6f4f">vm_page_prot · 落到 PTE 的权限位（:949）</text>
+  <text x="662" y="370" font-size="9.5" fill="#2f6f4f">vm_ops · 操作表；文件映射填 -&gt;fault（:990）</text>
+  <text x="662" y="396" font-size="9.5" fill="#2f6f4f">vm_file / vm_pgoff · 映射的文件与页偏移（:995/:993）</text>
+  <text x="662" y="422" font-size="9.5" fill="#2f6f4f">anon_vma · 匿名页反向映射链（:987）</text>
+  <text x="662" y="452" font-size="9" fill="#5c8a6f">缺页时 handle_mm_fault 据 vm_ops/vm_flags 决定</text>
+  <text x="662" y="470" font-size="9" fill="#5c8a6f">走匿名页还是文件 -&gt;fault → 详见「缺页处理链路」。</text>
+
+  <!-- 连线 -->
+  <g stroke="#c7c7cc" stroke-width="1.6" fill="none">
+    <path d="M300,220 L322,203" marker-end="url(#ar)"/>
+    <path d="M622,134 L646,134" marker-end="url(#ar)"/>
+    <path d="M840,200 L840,216" marker-end="url(#ar)"/>
+  </g>
+  <text x="300" y="240" font-size="8.5" fill="#a1a1a6">每段登记为 VMA</text>
+  <text x="850" y="212" font-size="8.5" fill="#a1a1a6">每个叶 = 一个 VMA</text>
+</svg>

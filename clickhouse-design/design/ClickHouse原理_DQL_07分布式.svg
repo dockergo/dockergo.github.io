@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="600" viewBox="0 0 1060 600" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1060" height="600" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">分布式 SELECT：Distributed 散射汇聚（非 MPP shuffle）与 parallel replicas</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">StorageDistributed::read (:961) → ClusterProxy::executeQuery (:1033) → ReadFromRemote → RemoteQueryExecutor</text>
+
+  <!-- Distributed scatter/gather -->
+  <rect x="40" y="72" width="620" height="300" rx="14" fill="#f3f7fc" stroke="#cfe0f2"/>
+  <text x="350" y="96" font-size="12" font-weight="700" fill="#274a78" text-anchor="middle">① Distributed 表：scatter / gather</text>
+
+  <rect x="270" y="110" width="160" height="46" rx="10" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="350" y="130" font-size="10" font-weight="600" fill="#1b2a4a" text-anchor="middle">发起节点（initiator）</text>
+  <text x="350" y="146" font-size="8" fill="#5b7db1" text-anchor="middle">查 Distributed 表 → 改写子查询</text>
+
+  <g text-anchor="middle" font-size="8">
+    <rect x="70" y="220" width="150" height="70" rx="10" fill="#fdf6ea" stroke="#efdcb4"/><text x="145" y="242" font-size="9" font-weight="600" fill="#5a3410">Shard 1</text><text x="145" y="260" fill="#93762e">在本地表跑子查询</text><text x="145" y="276" fill="#93762e">独立算出部分结果</text>
+    <rect x="275" y="220" width="150" height="70" rx="10" fill="#fdf6ea" stroke="#efdcb4"/><text x="350" y="242" font-size="9" font-weight="600" fill="#5a3410">Shard 2</text><text x="350" y="260" fill="#93762e">独立算</text><text x="350" y="276" fill="#93762e">互不通信</text>
+    <rect x="480" y="220" width="150" height="70" rx="10" fill="#fdf6ea" stroke="#efdcb4"/><text x="555" y="242" font-size="9" font-weight="600" fill="#5a3410">Shard 3</text><text x="555" y="260" fill="#93762e">独立算</text><text x="555" y="276" fill="#93762e">ReadFromRemote</text>
+  </g>
+  <!-- scatter arrows -->
+  <g stroke="#c7c7cc" stroke-width="1.4" fill="none">
+    <path d="M300,156 L145,220" marker-end="url(#ar)"/>
+    <path d="M350,156 L350,220" marker-end="url(#ar)"/>
+    <path d="M400,156 L555,220" marker-end="url(#ar)"/>
+  </g>
+  <text x="150" y="180" font-size="8" fill="#8aa6cf">散射 scatter →</text>
+  <!-- gather -->
+  <rect x="230" y="316" width="240" height="42" rx="9" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="350" y="336" font-size="9.5" font-weight="600" fill="#12402a" text-anchor="middle">发起节点汇聚 gather</text>
+  <text x="350" y="351" font-size="8" fill="#2f6f4f" text-anchor="middle">合并各 shard 部分结果 → 顶层聚合/排序</text>
+  <g stroke="#9ccbb0" stroke-width="1.3" fill="none">
+    <path d="M145,290 L300,316" marker-end="url(#ar)"/>
+    <path d="M350,290 L350,316" marker-end="url(#ar)"/>
+    <path d="M555,290 L400,316" marker-end="url(#ar)"/>
+  </g>
+
+  <!-- vs MPP -->
+  <rect x="680" y="72" width="340" height="300" rx="14" fill="#fbeef0" stroke="#f0cdd4"/>
+  <text x="850" y="96" font-size="12" font-weight="700" fill="#7a2230" text-anchor="middle">与 Doris MPP 的关键区别</text>
+  <rect x="700" y="112" width="300" height="110" rx="10" fill="#fff5f6" stroke="#f0cdd4"/>
+  <text x="850" y="132" font-size="9.5" font-weight="600" fill="#7a2230" text-anchor="middle">Doris：fragment 间 shuffle</text>
+  <text x="720" y="152" font-size="8.5" fill="#a44">· 计划切成多个 fragment</text>
+  <text x="720" y="170" font-size="8.5" fill="#a44">· fragment 间用 Exchange 重分布数据</text>
+  <text x="720" y="188" font-size="8.5" fill="#a44">· 如 shuffle join：按 key 重分布两表</text>
+  <text x="720" y="206" font-size="8.5" fill="#a44">· 节点间有中间数据交换</text>
+  <rect x="700" y="230" width="300" height="126" rx="10" fill="#fff" stroke="#f0cdd4"/>
+  <text x="850" y="250" font-size="9.5" font-weight="600" fill="#12402a" text-anchor="middle">ClickHouse：shard 独立 + 顶层汇聚</text>
+  <text x="720" y="270" font-size="8.5" fill="#5a3410">· 每 shard 独立算完自己那份</text>
+  <text x="720" y="288" font-size="8.5" fill="#5a3410">· 只在发起节点做最终汇聚</text>
+  <text x="720" y="306" font-size="8.5" fill="#5a3410">· 无 shard 间数据 shuffle</text>
+  <text x="720" y="326" font-size="8.5" fill="#7a2230">· 跨 shard 大 join 需 GLOBAL join</text>
+  <text x="720" y="344" font-size="8" fill="#a44">（把右表广播到各 shard，避免重分布）</text>
+
+  <!-- parallel replicas -->
+  <rect x="40" y="392" width="980" height="100" rx="13" fill="#f6f2fb" stroke="#d9c9ec"/>
+  <text x="60" y="416" font-size="11.5" font-weight="700" fill="#3d2a5a">② parallel replicas（BETA · enable_parallel_replicas, Settings.cpp:6422）</text>
+  <text x="60" y="438" font-size="9.5" fill="#7a5da5">· 与 Distributed 正交：Distributed 是"跨 shard 分数据"，parallel replicas 是"同一 shard 内多副本分扫描工作"</text>
+  <text x="60" y="456" font-size="9.5" fill="#7a5da5">· 把单分片的大扫描切成多段，分给该分片的多个副本并行读 → 提升单分片吞吐（副本不再只是冗余备份）</text>
+  <text x="60" y="476" font-size="9" fill="#9a7cc4">· buildQueryPlanForParallelReplicas（Planner.cpp:1611）· 适合副本多、单 shard 数据大的场景</text>
+
+  <rect x="40" y="508" width="980" height="72" rx="12" fill="#f7f7f9" stroke="#e6e6ea"/>
+  <text x="60" y="532" font-size="11" font-weight="700" fill="#1d1d1f">一句话</text>
+  <text x="60" y="554" font-size="10" fill="#4b4b50">ClickHouse 的分布式是"散射汇聚"：各 shard 在本地独立算完、发起节点汇聚，没有 Doris 式的 fragment 间 shuffle——</text>
+  <text x="60" y="571" font-size="10" fill="#4b4b50">所以跨 shard 大 join 要用 GLOBAL join 广播右表。parallel replicas 则正交地让同 shard 多副本分担单分片大扫描。</text>
+</svg>

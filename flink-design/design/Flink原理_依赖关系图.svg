@@ -1,0 +1,96 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="540" viewBox="0 0 1080 540" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+    <marker id="arg" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#8facc9"/></marker>
+  </defs>
+  <rect width="1080" height="540" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Flink 原理 · 能力域依赖关系图</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">实线=数据流/调用,虚线=状态约束;贯穿层 CheckpointBarrier 横切执行/状态/网络</text>
+
+  <!-- legend -->
+  <g font-size="8.4">
+    <line x1="760" y1="40" x2="792" y2="40" stroke="#c7c7cc" stroke-width="1.6" marker-end="url(#ar)"/><text x="798" y="43" fill="#6e6e73">实线 数据流/调用</text>
+    <line x1="900" y1="40" x2="932" y2="40" stroke="#8facc9" stroke-width="1.4" stroke-dasharray="5 3" marker-end="url(#arg)"/><text x="938" y="43" fill="#6e6e73">虚线 状态约束</text>
+  </g>
+
+  <!-- 接触面 -->
+  <rect x="40" y="72" width="200" height="60" rx="12" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="140" y="98" font-size="11" font-weight="700" text-anchor="middle" fill="#3d2a5a">接触面(多 API)</text>
+  <text x="140" y="116" font-size="8.2" text-anchor="middle" fill="#7a5aa8">DataStream / Table-SQL</text>
+
+  <!-- 图变换 -->
+  <rect x="300" y="72" width="200" height="60" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="400" y="98" font-size="11" font-weight="700" text-anchor="middle" fill="#1b2a4a">图变换(编译)</text>
+  <text x="400" y="116" font-size="8.2" text-anchor="middle" fill="#5b7db1">StreamGraph→Job→Exec</text>
+
+  <!-- 调度与部署 -->
+  <rect x="560" y="72" width="200" height="60" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="660" y="98" font-size="11" font-weight="700" text-anchor="middle" fill="#1b2a4a">调度与部署</text>
+  <text x="660" y="116" font-size="8.2" text-anchor="middle" fill="#5b7db1">JM/TM/slot 分配</text>
+
+  <!-- 任务执行 -->
+  <rect x="820" y="72" width="200" height="60" rx="12" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="920" y="98" font-size="11" font-weight="700" text-anchor="middle" fill="#5a3410">任务执行</text>
+  <text x="920" y="116" font-size="8.2" text-anchor="middle" fill="#93762e">mailbox 单线程算子链</text>
+
+  <!-- flow arrows top row -->
+  <line x1="240" y1="102" x2="300" y2="102" stroke="#c7c7cc" stroke-width="1.6" marker-end="url(#ar)"/>
+  <line x1="500" y1="102" x2="560" y2="102" stroke="#c7c7cc" stroke-width="1.6" marker-end="url(#ar)"/>
+  <line x1="760" y1="102" x2="820" y2="102" stroke="#c7c7cc" stroke-width="1.6" marker-end="url(#ar)"/>
+
+  <!-- bottom row domains -->
+  <!-- 网络与数据交换 -->
+  <rect x="820" y="230" width="200" height="60" rx="12" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="920" y="256" font-size="11" font-weight="700" text-anchor="middle" fill="#5a3410">网络与数据交换</text>
+  <text x="920" y="274" font-size="8.2" text-anchor="middle" fill="#93762e">ResultPartition/InputGate</text>
+
+  <!-- 状态管理 -->
+  <rect x="560" y="230" width="200" height="60" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="660" y="256" font-size="11" font-weight="700" text-anchor="middle" fill="#1b2a4a">状态管理</text>
+  <text x="660" y="274" font-size="8.2" text-anchor="middle" fill="#5b7db1">keyed/operator state</text>
+
+  <!-- 时间与窗口 -->
+  <rect x="300" y="230" width="200" height="60" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="400" y="256" font-size="11" font-weight="700" text-anchor="middle" fill="#1b2a4a">时间与窗口</text>
+  <text x="400" y="274" font-size="8.2" text-anchor="middle" fill="#5b7db1">水位线/窗口触发</text>
+
+  <!-- 检查点容错 (soul) -->
+  <rect x="40" y="230" width="200" height="60" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="140" y="256" font-size="11" font-weight="700" text-anchor="middle" fill="#12402a">检查点容错(灵魂)</text>
+  <text x="140" y="274" font-size="8.2" text-anchor="middle" fill="#2f6f4f">异步屏障快照</text>
+
+  <!-- 任务执行 -> 网络 (data/call solid) -->
+  <line x1="920" y1="132" x2="920" y2="230" stroke="#c7c7cc" stroke-width="1.6" marker-end="url(#ar)"/>
+  <text x="930" y="185" font-size="7.8" fill="#93762e">链间跨子任务数据</text>
+
+  <!-- 任务执行 -> 状态 (dashed state constraint) -->
+  <line x1="850" y1="132" x2="720" y2="230" stroke="#8facc9" stroke-width="1.4" stroke-dasharray="5 3" marker-end="url(#arg)"/>
+  <text x="742" y="176" font-size="7.8" fill="#5b7db1">算子读写状态</text>
+
+  <!-- 时间与窗口 -> 状态 (dashed) -->
+  <line x1="500" y1="260" x2="560" y2="260" stroke="#8facc9" stroke-width="1.4" stroke-dasharray="5 3" marker-end="url(#arg)"/>
+  <text x="512" y="252" font-size="7.6" fill="#5b7db1">窗口暂存</text>
+
+  <!-- 任务执行 -> 时间窗口 (call) -->
+  <line x1="820" y1="118" x2="470" y2="230" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+  <text x="600" y="150" font-size="7.8" fill="#93762e">watermark 驱动触发</text>
+
+  <!-- 检查点 -> 状态 (call, snapshot) -->
+  <line x1="240" y1="255" x2="560" y2="255" stroke="#c7c7cc" stroke-width="1.6" marker-end="url(#ar)"/>
+  <text x="330" y="248" font-size="7.8" fill="#2f6f4f">快照/恢复状态</text>
+
+  <!-- pervasive layer: CheckpointBarrier crosscut -->
+  <rect x="40" y="322" width="980" height="90" rx="14" fill="#f0f0f4" stroke="#d2d2d7" stroke-dasharray="7 4"/>
+  <text x="56" y="346" font-size="11" font-weight="700" fill="#48484a">贯穿层 · CheckpointBarrier（横切执行 / 状态 / 网络）</text>
+  <text x="56" y="364" font-size="8.6" fill="#6e6e73">屏障随数据流注入,对齐后触发各算子快照——它不属单一能力域,而是穿过三层的一条竖切面。</text>
+  <g text-anchor="middle" font-size="8.4">
+    <rect x="56" y="374" width="300" height="30" rx="8" fill="#fbeaea" stroke="#e7c3c3"/><text x="206" y="393" fill="#4a1414">网络:屏障作为特殊记录随数据传播</text>
+    <rect x="390" y="374" width="300" height="30" rx="8" fill="#fbeaea" stroke="#e7c3c3"/><text x="540" y="393" fill="#4a1414">执行:mailbox 对齐屏障、触发快照</text>
+    <rect x="724" y="374" width="290" height="30" rx="8" fill="#fbeaea" stroke="#e7c3c3"/><text x="869" y="393" fill="#4a1414">状态:异步快照 backend 内容</text>
+  </g>
+
+  <!-- bottom banner -->
+  <rect x="40" y="424" width="980" height="46" rx="12" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="530" y="451" font-size="9.5" font-weight="700" text-anchor="middle" fill="#48484a">数据流沿实线前进,状态约束沿虚线绑定;检查点屏障是横切三层的贯穿脊柱,支撑精确一次</text>
+</svg>

@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="560" viewBox="0 0 1060 560" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1060" height="560" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">内存追踪与 OOM 保护：MemoryTracker 三级上限（两级都要设）</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">MemoryTracker (h:60) 层级累加 · max_memory_usage(默认0,:3720) · max_server_memory_usage(ServerSettings.cpp:340)</text>
+
+  <!-- hierarchy -->
+  <g text-anchor="middle">
+    <rect x="360" y="80" width="340" height="56" rx="12" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/><text x="530" y="102" font-size="11" font-weight="700" fill="#5a3410">全局 total_memory_tracker</text><text x="530" y="122" font-size="8.5" fill="#93762e">max_server_memory_usage（服务器上限，最后防线）</text>
+    <rect x="300" y="156" width="460" height="50" rx="11" fill="#f6f2fb" stroke="#d9c9ec" filter="url(#soft)"/><text x="530" y="176" font-size="10.5" font-weight="600" fill="#3d2a5a">用户级 tracker</text><text x="530" y="194" font-size="8.5" fill="#7a5da5">max_memory_usage_for_user</text>
+    <rect x="240" y="226" width="240" height="50" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/><text x="360" y="246" font-size="10" font-weight="600" fill="#1b2a4a">查询 A tracker</text><text x="360" y="264" font-size="8" fill="#5b7db1">max_memory_usage</text>
+    <rect x="580" y="226" width="240" height="50" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/><text x="700" y="246" font-size="10" font-weight="600" fill="#1b2a4a">查询 B tracker</text><text x="700" y="264" font-size="8" fill="#5b7db1">max_memory_usage</text>
+  </g>
+  <g stroke="#c7c7cc" stroke-width="1.4" fill="none">
+    <line x1="360" y1="226" x2="470" y2="206" marker-end="url(#ar)"/>
+    <line x1="700" y1="226" x2="590" y2="206" marker-end="url(#ar)"/>
+    <line x1="530" y1="156" x2="530" y2="136" marker-end="url(#ar)"/>
+  </g>
+  <text x="530" y="300" font-size="8.5" fill="#8a8a8f" text-anchor="middle">每次分配向上逐级累加 · 任一级超限即抛 MEMORY_LIMIT_EXCEEDED</text>
+
+  <!-- two limits both needed -->
+  <rect x="40" y="320" width="480" height="150" rx="13" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="280" y="344" font-size="11" font-weight="700" fill="#12402a" text-anchor="middle">超单查询限 → spill 续命</text>
+  <text x="60" y="368" font-size="9.5" fill="#2f6f4f">· 单查询超 max_memory_usage</text>
+  <text x="60" y="388" font-size="9.5" fill="#2f6f4f">· 聚合(two-level)/排序(外部)/join(Grace)</text>
+  <text x="60" y="408" font-size="9.5" fill="#2f6f4f">　把中间状态落盘</text>
+  <text x="60" y="430" font-size="9" fill="#4c8567">· 用磁盘 IO 换"不 OOM、查询继续"</text>
+  <text x="60" y="452" font-size="8.5" fill="#8aa6cf">阈值：max_bytes_before_external_group_by/sort</text>
+
+  <rect x="540" y="320" width="480" height="150" rx="13" fill="#fbeef0" stroke="#f0cdd4"/>
+  <text x="780" y="344" font-size="11" font-weight="700" fill="#7a2230" text-anchor="middle">超服务器限 → 拒绝分配（最后防线）</text>
+  <text x="560" y="368" font-size="9.5" fill="#a44">· 所有查询内存累加超 max_server_memory_usage</text>
+  <text x="560" y="388" font-size="9.5" fill="#a44">· 拒绝新分配，防止打爆机器 OOM</text>
+  <text x="560" y="408" font-size="9.5" fill="#7a2230">· 只设单查询限不够！</text>
+  <text x="560" y="428" font-size="9" fill="#a44">　多个大查询并发仍能加起来爆服务器</text>
+  <text x="560" y="452" font-size="8.5" fill="#7a2230">→ 两级上限都必须设</text>
+
+  <rect x="40" y="486" width="980" height="60" rx="12" fill="#f7f7f9" stroke="#e6e6ea"/>
+  <text x="60" y="510" font-size="11" font-weight="700" fill="#1d1d1f">一句话</text>
+  <text x="60" y="532" font-size="10" fill="#4b4b50">MemoryTracker 三级层级累加（查询→用户→全局），超单查询限时聚合/排序/join spill 落盘续命，超服务器限时拒绝分配防 OOM。关键：max_memory_usage 与 max_server_memory_usage 两级都要设。</text>
+</svg>

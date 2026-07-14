@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="440" viewBox="0 0 1020 440"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1020" height="440" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">DQL 生命周期总览 · 一条 SELECT 在 backend 内的五段流水线（tcop/postgres.c）</text>
+
+  <!-- 贯穿示例 -->
+  <rect x="30" y="48" width="960" height="44" rx="11" fill="#f6f6f8" stroke="#e2e2e7"/>
+  <text x="46" y="66" font-size="10.5" font-weight="600" fill="#1d1d1f">贯穿示例</text>
+  <text x="46" y="84" font-size="10" fill="#494950" font-family="monospace">SELECT u.name, count(o.id) FROM users u JOIN orders o ON o.user_id=u.id WHERE u.city='NYC' GROUP BY u.name ORDER BY 2 DESC LIMIT 10;</text>
+
+  <!-- 五段 -->
+  <rect x="30" y="108" width="960" height="130" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="48" y="132" font-size="12.5" font-weight="600" fill="#1d1d1f">exec_simple_query（:1030）单 backend 内顺序执行</text>
+  <rect x="48" y="148" width="170" height="76" rx="10" fill="#f4eefb" stroke="#d9c9ef"/><text x="133" y="172" font-size="10.5" font-weight="600" fill="#3c1361" text-anchor="middle">① Parser</text><text x="133" y="192" font-size="8.5" fill="#7a5aa8" text-anchor="middle">SQL → raw parse tree</text><text x="133" y="208" font-size="8.5" fill="#7a5aa8" text-anchor="middle">纯语法 :617</text>
+  <rect x="236" y="148" width="180" height="76" rx="10" fill="#eef3fb" stroke="#bcd0ec"/><text x="326" y="172" font-size="10.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">② Analyze</text><text x="326" y="192" font-size="8.5" fill="#5b7db1" text-anchor="middle">名称/类型绑定→query tree</text><text x="326" y="208" font-size="8.5" fill="#5b7db1" text-anchor="middle">查系统目录 :1213</text>
+  <rect x="434" y="148" width="170" height="76" rx="10" fill="#eef3fb" stroke="#bcd0ec"/><text x="519" y="172" font-size="10.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">③ Rewrite</text><text x="519" y="192" font-size="8.5" fill="#5b7db1" text-anchor="middle">视图/规则展开</text><text x="519" y="208" font-size="8.5" fill="#5b7db1" text-anchor="middle">RLS 注入</text>
+  <rect x="622" y="148" width="180" height="76" rx="10" fill="#f4eefb" stroke="#d9c9ef"/><text x="712" y="172" font-size="10.5" font-weight="600" fill="#3c1361" text-anchor="middle">④ Plan / Optimize</text><text x="712" y="192" font-size="8.5" fill="#7a5aa8" text-anchor="middle">CBO 选最省代价计划</text><text x="712" y="208" font-size="8.5" fill="#7a5aa8" text-anchor="middle">→plan tree :1216</text>
+  <rect x="820" y="148" width="152" height="76" rx="10" fill="#eafaf1" stroke="#bce6cd"/><text x="896" y="172" font-size="10.5" font-weight="600" fill="#0f5132" text-anchor="middle">⑤ Execute</text><text x="896" y="192" font-size="8.5" fill="#3f8f66" text-anchor="middle">Portal 逐行拉取</text><text x="896" y="208" font-size="8.5" fill="#3f8f66" text-anchor="middle">PortalRun :1297</text>
+  <line x1="218" y1="186" x2="236" y2="186" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="416" y1="186" x2="434" y2="186" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="604" y1="186" x2="622" y2="186" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="802" y1="186" x2="820" y2="186" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+
+  <!-- 计划树形态 -->
+  <rect x="30" y="254" width="500" height="180" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="48" y="278" font-size="12" font-weight="600" fill="#1d1d1f">本例的物理计划树（自顶向下拉、自底向上流）</text>
+  <rect x="180" y="292" width="180" height="26" rx="7" fill="#eafaf1" stroke="#bce6cd"/><text x="270" y="310" font-size="9" fill="#0f5132" text-anchor="middle">Limit (10)</text>
+  <rect x="180" y="324" width="180" height="26" rx="7" fill="#eafaf1" stroke="#bce6cd"/><text x="270" y="342" font-size="9" fill="#0f5132" text-anchor="middle">Sort (count desc)</text>
+  <rect x="180" y="356" width="180" height="26" rx="7" fill="#eafaf1" stroke="#bce6cd"/><text x="270" y="374" font-size="9" fill="#0f5132" text-anchor="middle">HashAggregate (group by name)</text>
+  <rect x="120" y="388" width="140" height="26" rx="7" fill="#eef3fb" stroke="#bcd0ec"/><text x="190" y="406" font-size="9" fill="#1b2a4a" text-anchor="middle">Hash Join (user_id)</text>
+  <rect x="280" y="388" width="240" height="26" rx="7" fill="#fff7e6" stroke="#f0dcae"/><text x="400" y="406" font-size="9" fill="#7a4d00" text-anchor="middle">IndexScan users (city='NYC') / SeqScan orders</text>
+  <line x1="270" y1="318" x2="270" y2="324" stroke="#c7c7cc" stroke-width="1.1" marker-end="url(#ar)"/>
+  <line x1="270" y1="350" x2="270" y2="356" stroke="#c7c7cc" stroke-width="1.1" marker-end="url(#ar)"/>
+  <line x1="270" y1="382" x2="190" y2="388" stroke="#c7c7cc" stroke-width="1.1" marker-end="url(#ar)"/>
+
+  <!-- 说明 -->
+  <rect x="550" y="254" width="440" height="180" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="568" y="278" font-size="12" font-weight="600" fill="#1b2a4a">要点</text>
+  <text x="568" y="302" font-size="10" fill="#5b7db1">• 前四段是编译（纯 CPU），第五段才真正读数据。</text>
+  <text x="568" y="324" font-size="10" fill="#5b7db1">• 计划可被 prepared statement 缓存复用（省编译）。</text>
+  <text x="568" y="346" font-size="10" fill="#5b7db1">• 执行是 volcano：顶层 node 反复 ExecProcNode</text>
+  <text x="568" y="362" font-size="10" fill="#5b7db1">  向下要一行，数据自底向上逐行流。</text>
+  <text x="568" y="386" font-size="10" fill="#5b7db1">• EXPLAIN 看计划树、EXPLAIN ANALYZE 看实际行数/耗时。</text>
+  <text x="568" y="410" font-size="9" fill="#8fa9cf">优化器与执行引擎详见对应支撑主线。</text>
+</svg>

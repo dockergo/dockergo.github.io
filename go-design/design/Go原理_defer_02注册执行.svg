@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="520" viewBox="0 0 920 520" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="920" height="520" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">defer 注册与执行 · _defer 结构 / LIFO 头插 / deferreturn 逆序</text>
+
+  <!-- _defer struct card (amber = storage) -->
+  <rect x="30" y="48" width="256" height="256" rx="13" fill="#fdf6ec" stroke="#f0dcaf" filter="url(#soft)"/>
+  <text x="46" y="74" font-size="13" font-weight="600" fill="#6b4e16">_defer 结构</text>
+  <text x="46" y="92" font-size="10" fill="#a9822f">runtime2.go:1154 · 堆或栈上</text>
+
+  <rect x="46" y="104" width="224" height="30" rx="7" fill="#ffffff" stroke="#f0dcaf"/>
+  <text x="56" y="123" font-size="10.5" fill="#3a3a3c"><tspan font-weight="600">fn</tspan> · 延迟函数（open-coded 时可 nil）</text>
+  <rect x="46" y="140" width="224" height="30" rx="7" fill="#ffffff" stroke="#f0dcaf"/>
+  <text x="56" y="159" font-size="10.5" fill="#3a3a3c"><tspan font-weight="600">sp</tspan> · 注册点栈指针（匹配栈帧）</text>
+  <rect x="46" y="176" width="224" height="30" rx="7" fill="#ffffff" stroke="#f0dcaf"/>
+  <text x="56" y="195" font-size="10.5" fill="#3a3a3c"><tspan font-weight="600">pc</tspan> · 返回地址</text>
+  <rect x="46" y="212" width="224" height="30" rx="7" fill="#ffffff" stroke="#f0dcaf"/>
+  <text x="56" y="231" font-size="10.5" fill="#3a3a3c"><tspan font-weight="600">link</tspan> · 指向链上下一个 _defer</text>
+  <rect x="46" y="248" width="224" height="30" rx="7" fill="#ffffff" stroke="#f0dcaf"/>
+  <text x="56" y="267" font-size="10.5" fill="#3a3a3c"><tspan font-weight="600">heap</tspan> · 是否堆分配</text>
+  <text x="46" y="294" font-size="9.5" fill="#a9822f">参数在注册时求值并拷贝进记录</text>
+
+  <!-- registration source order card (neutral) -->
+  <rect x="314" y="48" width="264" height="256" rx="13" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="330" y="74" font-size="13" font-weight="600" fill="#1d1d1f">① 注册顺序（源码书写）</text>
+  <text x="330" y="92" font-size="10" fill="#6e6e73">deferproc 头插 g._defer · panic.go:353</text>
+
+  <rect x="330" y="106" width="232" height="34" rx="8" fill="#f6f6f7" stroke="#e2e2e7"/>
+  <text x="342" y="127" font-size="11" fill="#3a3a3c">defer A()<tspan font-size="9.5" fill="#8e8e93">   ← 第 1 个注册</tspan></text>
+  <rect x="330" y="148" width="232" height="34" rx="8" fill="#f6f6f7" stroke="#e2e2e7"/>
+  <text x="342" y="169" font-size="11" fill="#3a3a3c">defer B()<tspan font-size="9.5" fill="#8e8e93">   ← 第 2 个注册</tspan></text>
+  <rect x="330" y="190" width="232" height="34" rx="8" fill="#f6f6f7" stroke="#e2e2e7"/>
+  <text x="342" y="211" font-size="11" fill="#3a3a3c">defer C()<tspan font-size="9.5" fill="#8e8e93">   ← 第 3 个注册</tspan></text>
+
+  <rect x="330" y="238" width="232" height="52" rx="8" fill="#f5f0fb" stroke="#ddcdf0"/>
+  <text x="342" y="259" font-size="10.5" font-weight="600" fill="#3d2a5a">头插：新 defer 永远接在链头</text>
+  <text x="342" y="277" font-size="10" fill="#7d5bb1">于是链顺序与书写顺序相反</text>
+
+  <!-- g._defer chain card (blue = coordination) -->
+  <rect x="606" y="48" width="284" height="256" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="622" y="74" font-size="13" font-weight="600" fill="#1b2a4a">g._defer 链（头插后）</text>
+  <text x="622" y="92" font-size="10" fill="#5b7db1">head 指向最后注册的 defer</text>
+
+  <text x="622" y="118" font-size="10" fill="#5b7db1">g._defer →</text>
+  <rect x="700" y="106" width="130" height="30" rx="7" fill="#ffffff" stroke="#bcd0ec"/>
+  <text x="765" y="125" font-size="11" fill="#1b2a4a" text-anchor="middle">C（链头）</text>
+  <line x1="765" y1="136" x2="765" y2="150" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <rect x="700" y="150" width="130" height="30" rx="7" fill="#ffffff" stroke="#bcd0ec"/>
+  <text x="765" y="169" font-size="11" fill="#1b2a4a" text-anchor="middle">B</text>
+  <line x1="765" y1="180" x2="765" y2="194" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <rect x="700" y="194" width="130" height="30" rx="7" fill="#ffffff" stroke="#bcd0ec"/>
+  <text x="765" y="213" font-size="11" fill="#1b2a4a" text-anchor="middle">A</text>
+  <line x1="765" y1="224" x2="765" y2="238" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <text x="765" y="252" font-size="10.5" fill="#5b7db1" text-anchor="middle">nil（链尾）</text>
+  <text x="622" y="286" font-size="9.5" fill="#5b7db1">link 逐级串联 · 属于本 goroutine</text>
+
+  <!-- deferreturn execution row (green = success flow) -->
+  <rect x="30" y="330" width="860" height="166" rx="13" fill="#eef7f0" stroke="#bfe0c8" filter="url(#soft)"/>
+  <text x="46" y="356" font-size="13" font-weight="600" fill="#1d4a2b">② 执行顺序 · 函数正常返回时 deferreturn 逆序驱动（LIFO：后进先出）</text>
+  <text x="46" y="374" font-size="10" fill="#4a8c60">panic.go:658 · deferreturn 沿链头向尾遍历、sp 匹配本函数注册的 defer，逐个跑完再真正返回</text>
+
+  <rect x="60" y="392" width="200" height="72" rx="11" fill="#ffffff" stroke="#bfe0c8"/>
+  <text x="160" y="422" font-size="12" font-weight="600" fill="#1d4a2b" text-anchor="middle">跑 C()</text>
+  <text x="160" y="442" font-size="10" fill="#4a8c60" text-anchor="middle">最先执行（最后注册）</text>
+
+  <line x1="266" y1="428" x2="316" y2="428" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <rect x="322" y="392" width="200" height="72" rx="11" fill="#ffffff" stroke="#bfe0c8"/>
+  <text x="422" y="422" font-size="12" font-weight="600" fill="#1d4a2b" text-anchor="middle">跑 B()</text>
+  <text x="422" y="442" font-size="10" fill="#4a8c60" text-anchor="middle">沿 link 到下一个</text>
+
+  <line x1="528" y1="428" x2="578" y2="428" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <rect x="584" y="392" width="200" height="72" rx="11" fill="#ffffff" stroke="#bfe0c8"/>
+  <text x="684" y="422" font-size="12" font-weight="600" fill="#1d4a2b" text-anchor="middle">跑 A()</text>
+  <text x="684" y="442" font-size="10" fill="#4a8c60" text-anchor="middle">最后执行（最先注册）</text>
+
+  <line x1="790" y1="428" x2="838" y2="428" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <text x="828" y="482" font-size="10" fill="#4a8c60" text-anchor="end">链跑空 → 函数真正 return</text>
+</svg>

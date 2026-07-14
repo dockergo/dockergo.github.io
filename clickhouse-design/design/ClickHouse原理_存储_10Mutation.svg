@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="760" viewBox="0 0 1060 760" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1060" height="760" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Mutation 与轻量 DELETE：三种"改数据"的代价梯度</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">MutateTask (MutateTask.h:23) 整 Part 重写 · InterpreterDeleteQuery 轻量删除 → _row_exists 掩码 · PatchParts 读期叠加</text>
+
+  <!-- three columns by cost -->
+  <!-- Mutation heavy -->
+  <rect x="30" y="72" width="320" height="480" rx="14" fill="#fbeef0" stroke="#f0cdd4" filter="url(#soft)"/>
+  <text x="190" y="98" font-size="13" font-weight="700" fill="#7a2230" text-anchor="middle">① Mutation（重）</text>
+  <text x="190" y="116" font-size="9" fill="#a44" text-anchor="middle">ALTER TABLE … UPDATE / DELETE</text>
+  <text x="190" y="132" font-size="8.5" fill="#a44" text-anchor="middle">MutationsInterpreter.h:43</text>
+
+  <g text-anchor="middle">
+    <rect x="52" y="146" width="276" height="40" rx="8" fill="#fff" stroke="#f0cdd4"/><text x="190" y="164" font-size="9.5" fill="#7a2230">读整个旧 Part（所有列所有行）</text><text x="190" y="178" font-size="8" fill="#a44">即使只改一列一行</text>
+    <rect x="52" y="196" width="276" height="40" rx="8" fill="#fff" stroke="#f0cdd4"/><text x="190" y="214" font-size="9.5" fill="#7a2230">应用变更表达式</text><text x="190" y="228" font-size="8" fill="#a44">MutateTask 编译成读取管线</text>
+    <rect x="52" y="246" width="276" height="40" rx="8" fill="#fff" stroke="#f0cdd4"/><text x="190" y="264" font-size="9.5" fill="#7a2230">写一个全新 Part（整份）</text><text x="190" y="278" font-size="8" fill="#a44">末段 mutation 版本号 +1</text>
+    <rect x="52" y="296" width="276" height="36" rx="8" fill="#fff" stroke="#f0cdd4"/><text x="190" y="318" font-size="9.5" fill="#7a2230">旧 Part → outdated 待 GC</text>
+  </g>
+  <rect x="52" y="346" width="276" height="86" rx="9" fill="#fff5f6" stroke="#f0cdd4"/>
+  <text x="190" y="366" font-size="9.5" font-weight="600" fill="#7a2230" text-anchor="middle">代价</text>
+  <text x="190" y="384" font-size="8.5" fill="#a44" text-anchor="middle">整 Part 重写 = 重 IO</text>
+  <text x="190" y="400" font-size="8.5" fill="#a44" text-anchor="middle">异步执行，不阻塞查询</text>
+  <text x="190" y="416" font-size="8.5" fill="#a44" text-anchor="middle">高频使用会拖垮后台</text>
+  <rect x="52" y="444" width="276" height="94" rx="9" fill="#f7f7f9" stroke="#e6e6ea"/>
+  <text x="190" y="464" font-size="9.5" font-weight="600" fill="#4b4b50" text-anchor="middle">监控与同步</text>
+  <text x="190" y="482" font-size="8.5" fill="#6b6b70" text-anchor="middle">进度看 system.mutations</text>
+  <text x="190" y="498" font-size="8.5" fill="#6b6b70" text-anchor="middle">mutations_sync 控制是否等待</text>
+  <text x="190" y="516" font-size="8.5" fill="#6b6b70" text-anchor="middle">适用：偶发批量订正</text>
+  <text x="190" y="532" font-size="8" fill="#9a9a9f" text-anchor="middle">不适合 OLTP 式频繁更新</text>
+
+  <!-- lightweight delete -->
+  <rect x="370" y="72" width="320" height="480" rx="14" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="530" y="98" font-size="13" font-weight="700" fill="#5a3410" text-anchor="middle">② 轻量 DELETE（中）</text>
+  <text x="530" y="116" font-size="9" fill="#93762e" text-anchor="middle">DELETE FROM … WHERE …</text>
+  <text x="530" y="132" font-size="8.5" fill="#93762e" text-anchor="middle">InterpreterDeleteQuery.cpp</text>
+
+  <g text-anchor="middle">
+    <rect x="392" y="146" width="276" height="52" rx="8" fill="#fff" stroke="#e8cf9a"/><text x="530" y="166" font-size="9.5" fill="#5a3410">改写为置隐藏掩码列</text><text x="530" y="182" font-size="9" fill="#93762e">_row_exists = 0（:147/:172）</text><text x="530" y="194" font-size="7.5" fill="#b08843">MergeTreeVirtualColumns.cpp:22</text>
+    <rect x="392" y="208" width="276" height="52" rx="8" fill="#fff" stroke="#e8cf9a"/><text x="530" y="228" font-size="9.5" fill="#5a3410">不立刻重写数据</text><text x="530" y="244" font-size="8.5" fill="#93762e">只标记"这些行不存在了"</text><text x="530" y="256" font-size="8" fill="#b08843">比 Mutation 轻得多</text>
+    <rect x="392" y="270" width="276" height="52" rx="8" fill="#fff" stroke="#e8cf9a"/><text x="530" y="290" font-size="9.5" fill="#5a3410">读时跳过 _row_exists=0 的行</text><text x="530" y="306" font-size="8.5" fill="#93762e">对用户"已删除"</text><text x="530" y="318" font-size="8" fill="#b08843">但物理数据还在</text>
+    <rect x="392" y="332" width="276" height="52" rx="8" fill="#fff" stroke="#e8cf9a"/><text x="530" y="352" font-size="9.5" fill="#5a3410">物理清除延后到后续 merge</text><text x="530" y="368" font-size="8.5" fill="#93762e">merge 时真正剔除被删行</text><text x="530" y="380" font-size="8" fill="#b08843">空间在 merge 后才回收</text>
+  </g>
+  <rect x="392" y="396" width="276" height="60" rx="9" fill="#fffdf5" stroke="#e8cf9a"/>
+  <text x="530" y="416" font-size="9.5" font-weight="600" fill="#5a3410" text-anchor="middle">代价</text>
+  <text x="530" y="434" font-size="8.5" fill="#93762e" text-anchor="middle">写入极轻（只写掩码），读时略增</text>
+  <text x="530" y="450" font-size="8.5" fill="#93762e" text-anchor="middle">lightweight_deletes_sync 默认 2（Settings.cpp:4002）</text>
+  <rect x="392" y="468" width="276" height="70" rx="9" fill="#f7f7f9" stroke="#e6e6ea"/>
+  <text x="530" y="488" font-size="9.5" font-weight="600" fill="#4b4b50" text-anchor="middle">适用</text>
+  <text x="530" y="506" font-size="8.5" fill="#6b6b70" text-anchor="middle">按条件删一批行的常规场景</text>
+  <text x="530" y="522" font-size="8.5" fill="#6b6b70" text-anchor="middle">比 ALTER DELETE 快，是默认推荐</text>
+
+  <!-- patch parts -->
+  <rect x="710" y="72" width="320" height="480" rx="14" fill="#f6f2fb" stroke="#d9c9ec" filter="url(#soft)"/>
+  <text x="870" y="98" font-size="13" font-weight="700" fill="#3d2a5a" text-anchor="middle">③ PatchParts（读期叠加）</text>
+  <text x="870" y="116" font-size="9" fill="#7a5da5" text-anchor="middle">src/Storages/MergeTree/PatchParts/</text>
+  <text x="870" y="132" font-size="8.5" fill="#9a7cc4" text-anchor="middle">较新的"补丁式"更新机制</text>
+
+  <g text-anchor="middle">
+    <rect x="732" y="146" width="276" height="52" rx="8" fill="#fff" stroke="#d9c9ec"/><text x="870" y="166" font-size="9.5" fill="#3d2a5a">变更写成轻量补丁 Part</text><text x="870" y="182" font-size="8.5" fill="#7a5da5">只含被改的列/行</text><text x="870" y="194" font-size="8" fill="#9a7cc4">不重写原 Part</text>
+    <rect x="732" y="208" width="276" height="52" rx="8" fill="#fff" stroke="#d9c9ec"/><text x="870" y="228" font-size="9.5" fill="#3d2a5a">查询时 applyPatches 现场叠加</text><text x="870" y="244" font-size="8.5" fill="#7a5da5">原 Part + 补丁 → 最新值</text><text x="870" y="256" font-size="8" fill="#9a7cc4">on-the-fly / patch-on-read</text>
+    <rect x="732" y="270" width="276" height="52" rx="8" fill="#fff" stroke="#d9c9ec"/><text x="870" y="290" font-size="9.5" fill="#3d2a5a">避免整 Part 重写</text><text x="870" y="306" font-size="8.5" fill="#7a5da5">写快、读时付叠加代价</text><text x="870" y="318" font-size="8" fill="#9a7cc4">补丁多时读变慢 → 后台合并</text>
+  </g>
+  <rect x="732" y="332" width="276" height="70" rx="9" fill="#faf7fd" stroke="#d9c9ec"/>
+  <text x="870" y="352" font-size="9.5" font-weight="600" fill="#3d2a5a" text-anchor="middle">开关</text>
+  <text x="870" y="370" font-size="8.5" fill="#7a5da5" text-anchor="middle">apply_mutations_on_fly 默认 false</text>
+  <text x="870" y="386" font-size="8" fill="#9a7cc4" text-anchor="middle">Settings.cpp:4784</text>
+  <rect x="732" y="412" width="276" height="126" rx="9" fill="#f7f7f9" stroke="#e6e6ea"/>
+  <text x="870" y="432" font-size="9.5" font-weight="600" fill="#4b4b50" text-anchor="middle">定位</text>
+  <text x="870" y="452" font-size="8.5" fill="#6b6b70" text-anchor="middle">在"整 Part 重写"与"读时叠加"</text>
+  <text x="870" y="468" font-size="8.5" fill="#6b6b70" text-anchor="middle">之间取折中：把更新代价</text>
+  <text x="870" y="484" font-size="8.5" fill="#6b6b70" text-anchor="middle">从写侧转到读侧</text>
+  <text x="870" y="508" font-size="8.5" fill="#6b6b70" text-anchor="middle">适用：需要较频繁更新</text>
+  <text x="870" y="524" font-size="8" fill="#9a9a9f" text-anchor="middle">又不想每次重写整 Part</text>
+
+  <!-- cost gradient bar -->
+  <rect x="30" y="574" width="1000" height="60" rx="12" fill="#f3f7fc" stroke="#cfe0f2"/>
+  <text x="60" y="596" font-size="11" font-weight="700" fill="#274a78">写代价梯度（从重到轻）</text>
+  <text x="60" y="618" font-size="9.5" fill="#5b7db1">Mutation（整 Part 重写，最重）　＞　PatchParts（写补丁，读叠加）　＞　轻量 DELETE（只写掩码，最轻）</text>
+  <text x="700" y="618" font-size="9.5" fill="#8aa6cf">共同点：都不原地改，都靠 merge 最终清理</text>
+
+  <rect x="30" y="646" width="1000" height="88" rx="12" fill="#f7f7f9" stroke="#e6e6ea"/>
+  <text x="50" y="670" font-size="11" font-weight="700" fill="#1d1d1f">一句话</text>
+  <text x="50" y="692" font-size="10" fill="#4b4b50">ClickHouse 的"更新/删除"都不是原地操作：Mutation 整 Part 重写（重、偶发订正）、轻量 DELETE 打 _row_exists 掩码</text>
+  <text x="50" y="709" font-size="10" fill="#4b4b50">（轻、常规删行）、PatchParts 写补丁读时叠加（折中、较频繁更新）。真正的物理清理都推迟到后台 merge——</text>
+  <text x="50" y="726" font-size="10" fill="#4b4b50">所以 ClickHouse 适合"追加为主、偶尔订正"，而非 OLTP 式高频行级更新。</text>
+</svg>

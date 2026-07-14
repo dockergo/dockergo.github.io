@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="400" viewBox="0 0 1000 400" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+  </defs>
+  <rect width="1000" height="400" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">Bitmap 位图：String 当位数组用（SETBIT/GETBIT/BITCOUNT）</text>
+  <text x="30" y="49" font-size="10.5" fill="#a1a1a6">底层仍是 raw String 字节数组，每字节 8 位 → 极省内存表示海量布尔状态</text>
+
+  <!-- bit array visualization -->
+  <text x="40" y="86" font-size="11" font-weight="700" fill="#7a5a1e">一个 String = 连续字节 = 连续位</text>
+  <g font-family="'SF Mono',monospace" font-size="10" text-anchor="middle">
+    <text x="130" y="106" font-size="9" fill="#86868b">byte 0</text>
+    <rect x="60" y="112" width="140" height="34" rx="5" fill="#fdf3e5" stroke="#f0d9b5"/>
+    <text x="80" y="134" fill="#7a5a1e">0</text><text x="97" y="134" fill="#1c6b45" font-weight="700">1</text><text x="114" y="134" fill="#7a5a1e">0</text><text x="131" y="134" fill="#7a5a1e">0</text><text x="148" y="134" fill="#1c6b45" font-weight="700">1</text><text x="165" y="134" fill="#7a5a1e">0</text><text x="182" y="134" fill="#7a5a1e">0</text>
+    <text x="270" y="106" font-size="9" fill="#86868b">byte 1</text>
+    <rect x="210" y="112" width="140" height="34" rx="5" fill="#fdf3e5" stroke="#f0d9b5"/>
+    <text x="230" y="134" fill="#1c6b45" font-weight="700">1</text><text x="247" y="134" fill="#7a5a1e">0</text><text x="264" y="134" fill="#7a5a1e">0</text><text x="281" y="134" fill="#7a5a1e">0</text><text x="298" y="134" fill="#7a5a1e">0</text><text x="315" y="134" fill="#7a5a1e">0</text><text x="332" y="134" fill="#1c6b45" font-weight="700">1</text>
+    <text x="410" y="106" font-size="9" fill="#86868b">byte 2 …</text>
+    <rect x="360" y="112" width="140" height="34" rx="5" fill="#fdf3e5" stroke="#f0d9b5"/>
+    <text x="425" y="134" fill="#86868b">…</text>
+  </g>
+  <text x="60" y="168" font-size="9" fill="#b08535">SETBIT key 1 1 → 把第 1 位设为 1（GETBIT 读，BITCOUNT 数 1 的个数）</text>
+
+  <!-- use cases -->
+  <text x="40" y="204" font-size="11" font-weight="700" fill="#1d1d1f">典型场景</text>
+  <g font-size="9.5">
+    <rect x="40" y="218" width="290" height="90" rx="10" fill="#eef3fb" stroke="#bcd0ec"/>
+    <text x="60" y="240" font-weight="600" fill="#1b2a4a">用户签到</text>
+    <text x="60" y="260" fill="#5b7db1">每天一位：SETBIT sign:2026 dayOfYear 1</text>
+    <text x="60" y="278" fill="#5b7db1">BITCOUNT 数总签到天数</text>
+    <text x="60" y="298" fill="#8ba7cc" font-size="8.5">365 天只需 ~46 字节/用户</text>
+
+    <rect x="350" y="218" width="290" height="90" rx="10" fill="#eafaf1" stroke="#b8e6cd"/>
+    <text x="370" y="240" font-weight="600" fill="#1c6b45">活跃用户统计</text>
+    <text x="370" y="260" fill="#3a9b6e">每用户一位：SETBIT active:20260715 uid 1</text>
+    <text x="370" y="278" fill="#3a9b6e">BITOP AND/OR 算多日交并集</text>
+    <text x="370" y="298" fill="#5cb88a" font-size="8.5">1 亿用户 ≈ 12MB</text>
+
+    <rect x="660" y="218" width="300" height="90" rx="10" fill="#f6f0fb" stroke="#dcc6ee"/>
+    <text x="680" y="240" font-weight="600" fill="#5a2a82">权限位 / 布隆过滤器基座</text>
+    <text x="680" y="260" fill="#8a5cae">每种权限一位，一个 String 表示全部</text>
+    <text x="680" y="278" fill="#8a5cae">BITPOS 找第一个 0/1 的位置</text>
+    <text x="680" y="298" fill="#a884c8" font-size="8.5">位运算在服务端就地完成</text>
+  </g>
+
+  <rect x="40" y="326" width="920" height="60" rx="10" fill="#f7f7f9" stroke="#ececef"/>
+  <text x="60" y="350" font-size="10.5" font-weight="600" fill="#1d1d1f">为何省内存</text>
+  <text x="60" y="372" font-size="10" fill="#4a4a4f">1 个布尔状态传统要 1 字节甚至一个对象；Bitmap 只用 1 位 —— 海量布尔场景省 8~数十倍内存，且 BITCOUNT/BITOP 在服务端批量算</text>
+</svg>

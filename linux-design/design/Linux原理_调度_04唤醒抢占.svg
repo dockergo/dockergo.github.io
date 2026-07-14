@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="468" viewBox="0 0 1000 468" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1000" height="468" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">唤醒与抢占：唤醒入队 → 判是否抢占 → 置 need_resched 标志（不立即切，到抢占点才走 __schedule）</text>
+
+  <!-- Band1: 调用链 -->
+  <rect x="28" y="64" width="176" height="112" rx="12" fill="#fbeaea" stroke="#e7c3c3" filter="url(#soft)"/>
+  <text x="116" y="90" font-size="11.5" font-weight="600" fill="#4a1414" text-anchor="middle">唤醒源</text>
+  <text x="44" y="118" font-size="10" fill="#7a2a2a">· IO 完成 / 锁释放</text>
+  <text x="44" y="142" font-size="10" fill="#7a2a2a">· 定时器 / 信号</text>
+  <text x="44" y="166" font-size="10" fill="#7a2a2a">· 显式 wake_up</text>
+
+  <rect x="228" y="64" width="232" height="112" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="344" y="90" font-size="11.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">try_to_wake_up</text>
+  <text x="244" y="110" font-size="9.5" fill="#5b7db1">core.c:4152</text>
+  <text x="244" y="136" font-size="10" fill="#5b7db1">· 置回 TASK_RUNNING</text>
+  <text x="244" y="160" font-size="10" fill="#5b7db1">· 选目标 CPU、入 rq 队</text>
+
+  <rect x="484" y="64" width="232" height="112" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="600" y="90" font-size="11.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">wakeup_preempt</text>
+  <text x="500" y="110" font-size="9.5" fill="#5b7db1">core.c:2243</text>
+  <text x="500" y="136" font-size="10" fill="#5b7db1">· 新任务 vs 当前 donor</text>
+  <text x="500" y="160" font-size="10" fill="#5b7db1">· 更高类 / 更该跑 → 抢占</text>
+
+  <rect x="740" y="64" width="232" height="112" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="856" y="90" font-size="11.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">resched_curr</text>
+  <text x="756" y="110" font-size="9.5" fill="#5b7db1">core.c:1212</text>
+  <text x="756" y="136" font-size="10" fill="#5b7db1">· set TIF_NEED_RESCHED</text>
+  <text x="756" y="160" font-size="10" font-weight="600" fill="#7a2a2a">· 只打标，不立即切换</text>
+
+  <g stroke="#c7c7cc" stroke-width="1.6" fill="none">
+    <line x1="204" y1="120" x2="228" y2="120" marker-end="url(#ar)"/>
+    <line x1="460" y1="120" x2="484" y2="120" marker-end="url(#ar)"/>
+    <line x1="716" y1="120" x2="740" y2="120" marker-end="url(#ar)"/>
+  </g>
+
+  <!-- Band2: 延迟切换时间线 -->
+  <rect x="28" y="196" width="944" height="140" rx="13" fill="#fbfbfd" stroke="#ececf1"/>
+  <text x="46" y="220" font-size="11.5" font-weight="600" fill="#1d1d1f">关键：need_resched 只是一个标志——置位后当前任务继续跑，到最近抢占点才切换</text>
+
+  <rect x="60" y="246" width="252" height="60" rx="11" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="186" y="270" font-size="11" font-weight="600" fill="#5a3410" text-anchor="middle">① 置位 need_resched</text>
+  <text x="186" y="290" font-size="9" fill="#93762e" text-anchor="middle">set TIF_NEED_RESCHED（本地）</text>
+
+  <rect x="388" y="246" width="252" height="60" rx="11" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="514" y="270" font-size="11" font-weight="600" fill="#3f2a63" text-anchor="middle">② 到达最近抢占点</text>
+  <text x="514" y="290" font-size="9" fill="#6b4b96" text-anchor="middle">中断/syscall 返回 · preempt_enable</text>
+
+  <rect x="716" y="246" width="256" height="60" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="844" y="270" font-size="11" font-weight="600" fill="#1b2a4a" text-anchor="middle">③ __schedule 真正切换</text>
+  <text x="844" y="290" font-size="9" fill="#5b7db1" text-anchor="middle">core.c:7023 → context_switch</text>
+
+  <g stroke="#c7c7cc" stroke-width="1.6" fill="none">
+    <line x1="312" y1="276" x2="388" y2="276" marker-end="url(#ar)"/>
+    <line x1="640" y1="276" x2="716" y2="276" marker-end="url(#ar)"/>
+  </g>
+  <text x="350" y="324" font-size="9.5" fill="#a05411" text-anchor="middle">延迟窗口：当前任务继续运行</text>
+
+  <!-- Band3: 机制要点 -->
+  <rect x="28" y="352" width="944" height="100" rx="13" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="46" y="376" font-size="11.5" font-weight="600" fill="#1d1d1f">机制要点（__resched_curr, core.c:1170）</text>
+  <text x="46" y="400" font-size="10.5" fill="#3a3a3c">· 本地 CPU：set_ti_thread_flag + set_preempt_need_resched（:1191）</text>
+  <text x="46" y="422" font-size="10.5" fill="#3a3a3c">· 远程 CPU：set_nr_and_not_polling → smp_send_reschedule 发 IPI 促其重调度（:1198）</text>
+  <text x="46" y="444" font-size="10.5" fill="#3a3a3c">· idle 例外：lazy 标志立即升级为 TIF_NEED_RESCHED，无需等抢占点（:1182）</text>
+</svg>

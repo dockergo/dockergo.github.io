@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="420" viewBox="0 0 960 420"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+  </defs>
+  <rect width="960" height="420" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">zxid：64 位事务 id = epoch（高 32）| counter（低 32）—— 一切顺序的锚</text>
+
+  <!-- 位图 -->
+  <rect x="120" y="64" width="360" height="60" rx="10" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="300" y="90" font-size="12" font-weight="600" fill="#1b2a4a" text-anchor="middle">epoch（高 32 位）</text>
+  <text x="300" y="110" font-size="9" fill="#5b7db1" text-anchor="middle">第几任 leader（选举纪元）</text>
+
+  <rect x="480" y="64" width="360" height="60" rx="10" fill="#fff7e6" stroke="#f0dcae" filter="url(#soft)"/>
+  <text x="660" y="90" font-size="12" font-weight="600" fill="#7a4d00" text-anchor="middle">counter（低 32 位）</text>
+  <text x="660" y="110" font-size="9" fill="#9a7328" text-anchor="middle">该任内递增的事务序号</text>
+
+  <text x="120" y="150" font-size="9" fill="#86868b">makeZxid(epoch, counter) = (epoch &lt;&lt; 32) | (counter &amp; 0xffffffffL)　—　util/ZxidUtils.java:29</text>
+  <text x="120" y="168" font-size="9" fill="#86868b">getEpochFromZxid = zxid &gt;&gt; 32（:23）　getCounterFromZxid = zxid &amp; 0xffffffffL（:26）</text>
+
+  <!-- 用途 -->
+  <rect x="30" y="196" width="290" height="190" rx="14" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="46" y="220" font-size="11" font-weight="600" fill="#2c5a3a">换主 → epoch+1</text>
+  <text x="46" y="244" font-size="9.5" fill="#2f6f4f">新 leader 上任把 epoch 加 1、</text>
+  <text x="46" y="262" font-size="9.5" fill="#2f6f4f">counter 归零。旧 leader 复活发</text>
+  <text x="46" y="280" font-size="9.5" fill="#2f6f4f">低 epoch 包 → 直接被拒（防脑裂）。</text>
+  <text x="46" y="308" font-size="9.5" fill="#2f6f4f">counter 低 32 位耗尽（全 1）→</text>
+  <text x="46" y="326" font-size="9.5" fill="#2f6f4f">强制重新选举、进新 epoch</text>
+  <text x="46" y="344" font-size="8.5" fill="#86868b">Leader.propose 检查 rollover :1305</text>
+
+  <rect x="336" y="196" width="290" height="190" rx="14" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="352" y="220" font-size="11" font-weight="600" fill="#1b2a4a">全序由 zxid 统一</text>
+  <text x="352" y="244" font-size="9.5" fill="#5b7db1">· 选举：比谁 zxid 大（数据最新）</text>
+  <text x="352" y="264" font-size="9.5" fill="#5b7db1">· 广播：Proposal 按 zxid 递增分配</text>
+  <text x="352" y="284" font-size="9.5" fill="#5b7db1">· 提交：按 zxid 顺序 Commit</text>
+  <text x="352" y="304" font-size="9.5" fill="#5b7db1">· 恢复：按 zxid 决定 DIFF/TRUNC</text>
+  <text x="352" y="324" font-size="9.5" fill="#5b7db1">· 快照/日志：文件名带 zxid</text>
+  <text x="352" y="352" font-size="8.5" fill="#86868b">一个数字定义"发生在...之前"的偏序</text>
+
+  <rect x="642" y="196" width="288" height="190" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="658" y="220" font-size="11" font-weight="600" fill="#1d1d1f">stat 里的多个 zxid</text>
+  <text x="658" y="244" font-size="9.5" fill="#494950">· czxid：创建该 znode 的 zxid</text>
+  <text x="658" y="264" font-size="9.5" fill="#494950">· mzxid：最后修改数据的 zxid</text>
+  <text x="658" y="284" font-size="9.5" fill="#494950">· pzxid：最后修改子列表的 zxid</text>
+  <text x="658" y="312" font-size="9.5" fill="#494950">version/cversion/aversion 用于</text>
+  <text x="658" y="330" font-size="9.5" fill="#494950">setData/delete 的 CAS 乐观并发</text>
+  <text x="658" y="360" font-size="8.5" fill="#86868b">StatPersisted · DataNode.stat:60</text>
+</svg>

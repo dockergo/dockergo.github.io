@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="330" viewBox="0 0 1000 330" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs><filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter><marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker></defs>
+  <rect width="1000" height="330" fill="#fbfbfd"/>
+  <text x="40" y="30" font-size="14" font-weight="600" fill="#1d1d1f">部署形态与文件缓存：存算分离下用本地 File Cache（LRU）兜远端延迟</text>
+  <g text-anchor="middle" font-size="10.5">
+    <rect x="40" y="60" width="300" height="60" rx="12" fill="#eafaf1" stroke="#bfe0cd"/><text x="190" y="84" font-size="12.5" font-weight="600" fill="#12402a">存算一体</text><text x="190" y="104" fill="#2f6f4f">本地盘（多副本）· 本地最快</text>
+    <rect x="350" y="60" width="300" height="60" rx="12" fill="#fdf6ea" stroke="#efdcb4"/><text x="500" y="84" font-size="12.5" font-weight="600" fill="#7a5a1e">冷热分层</text><text x="500" y="104" fill="#93762e">热=本地 · 冷=对象存储（可叠加）</text>
+    <rect x="660" y="60" width="300" height="60" rx="12" fill="#eef3fb" stroke="#bcd0ec"/><text x="810" y="84" font-size="12.5" font-weight="600" fill="#1b2a4a">存算分离</text><text x="810" y="104" fill="#5b7db1">共享存储 · 本地盘仅缓存</text>
+  </g>
+  <!-- file cache mechanism -->
+  <rect x="120" y="160" width="220" height="56" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/><text x="230" y="184" font-size="12.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">无状态 BE（计算）</text><text x="230" y="202" font-size="10" fill="#5b7db1" text-anchor="middle">读数据块</text>
+  <rect x="400" y="160" width="200" height="56" rx="12" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/><text x="500" y="184" font-size="12.5" font-weight="600" fill="#5a3410" text-anchor="middle">本地 File Cache（LRU）</text><text x="500" y="202" font-size="10" fill="#93762e" text-anchor="middle">热块留本地盘</text>
+  <rect x="660" y="160" width="240" height="56" rx="12" fill="#ecf5ee" stroke="#c2ddc9" filter="url(#soft)"/><text x="780" y="184" font-size="12.5" font-weight="600" fill="#2c5a3a" text-anchor="middle">共享存储（对象存储/HDFS）</text><text x="780" y="202" font-size="10" fill="#4e7a5c" text-anchor="middle">持久化 Segment + 索引</text>
+  <g stroke="#c7c7cc" stroke-width="1.5" fill="none">
+    <line x1="340" y1="188" x2="400" y2="188" marker-end="url(#ar)"/>
+    <line x1="600" y1="188" x2="660" y2="188" marker-end="url(#ar)"/>
+  </g>
+  <text x="370" y="152" font-size="9.5" fill="#12402a" text-anchor="middle">命中 → 接近本地</text>
+  <text x="630" y="152" font-size="9.5" fill="#a05252" text-anchor="middle">未命中 → 远端读</text>
+  <rect x="40" y="248" width="920" height="56" rx="12" fill="#fafafb" stroke="#ececf1"/>
+  <text x="500" y="274" font-size="11.5" fill="#6e6e73" text-anchor="middle">计算无状态 → 分钟级扩缩、不搬数据；缓存命中时延迟≈存算一体，未命中才略高。</text>
+  <text x="500" y="294" font-size="11.5" fill="#6e6e73" text-anchor="middle">读写内核与数据组织结构在三种形态下一致，仅"数据放哪、谁弹性"不同。</text>
+</svg>

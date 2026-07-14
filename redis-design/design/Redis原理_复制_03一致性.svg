@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="470" viewBox="0 0 1000 470" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1000" height="470" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">异步复制与一致性：写不等 ACK（高吞吐 vs 主库宕机丢写）</text>
+  <text x="30" y="49" font-size="10.5" fill="#a1a1a6">replicationFeedSlaves 执行后传播;WAIT / min-replicas 提供按需收紧（replication.c:631,4756）</text>
+
+  <!-- async default flow -->
+  <text x="40" y="86" font-size="11" font-weight="700" fill="#1c6b45">默认：异步（写命令不等从库确认即返回）</text>
+  <g text-anchor="middle" font-size="9.5">
+    <rect x="60" y="98" width="110" height="46" rx="8" fill="#eef3fb" stroke="#bcd0ec"/><text x="115" y="119" fill="#1b2a4a">客户端 SET</text><text x="115" y="134" fill="#5b7db1" font-size="8.5">写命令</text>
+    <rect x="210" y="98" width="130" height="46" rx="8" fill="#eafaf1" stroke="#b8e6cd"/><text x="275" y="119" fill="#1c6b45">主库 call() 执行</text><text x="275" y="134" fill="#3a9b6e" font-size="8.5">改内存</text>
+    <rect x="380" y="98" width="130" height="46" rx="8" fill="#eafaf1" stroke="#b8e6cd"/><text x="445" y="119" fill="#1c6b45">立即回 +OK</text><text x="445" y="134" fill="#3a9b6e" font-size="8.5">不等从库</text>
+    <rect x="600" y="98" width="150" height="46" rx="8" fill="#f6f0fb" stroke="#dcc6ee"/><text x="675" y="119" fill="#5a2a82">异步发往从库</text><text x="675" y="134" fill="#8a5cae" font-size="8.5">稍后到达</text>
+  </g>
+  <line x1="170" y1="121" x2="208" y2="121" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="340" y1="121" x2="378" y2="121" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="510" y1="121" x2="598" y2="121" stroke="#8b6cff" stroke-width="1.4" stroke-dasharray="4 3" marker-end="url(#ar)"/>
+  <text x="555" y="112" font-size="8" fill="#a1a1a6" text-anchor="middle">↓ 与回复并行</text>
+  <text x="780" y="125" font-size="9" fill="#8a5cae">主从有秒级延迟</text>
+
+  <!-- risk -->
+  <rect x="60" y="164" width="880" height="56" rx="9" fill="#fdeef2" stroke="#f6c9d6"/>
+  <text x="80" y="186" font-size="10.5" font-weight="600" fill="#c02a56">风险：主库回复 +OK 后、命令传播到从库前，主库宕机 → 这条已确认的写丢失</text>
+  <text x="80" y="208" font-size="9.5" fill="#88304a">这是异步复制的固有取舍：换来高吞吐（主库不被从库网络拖慢），但牺牲了"写即持久到多副本"的强保证</text>
+
+  <!-- WAIT -->
+  <rect x="40" y="240" width="450" height="130" rx="10" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="60" y="264" font-size="11" font-weight="600" fill="#1b2a4a">按需强化① WAIT numreplicas timeout</text>
+  <text x="60" y="286" font-size="9.5" fill="#5b7db1">写完后调 WAIT 2 1000</text>
+  <text x="60" y="304" font-size="9.5" fill="#5b7db1">→ 阻塞直到 2 个从库确认了当前 offset</text>
+  <text x="60" y="322" font-size="9.5" fill="#5b7db1">→ 或 1000ms 超时返回实际确认数</text>
+  <text x="60" y="344" font-size="9" fill="#8ba7cc">提供"这条写已到 N 个副本"的确认，非默认</text>
+  <text x="60" y="362" font-size="9" fill="#8ba7cc">注意:WAIT 不回滚，只是等待，仍非事务强一致</text>
+
+  <!-- min-replicas -->
+  <rect x="510" y="240" width="450" height="130" rx="10" fill="#eafaf1" stroke="#b8e6cd"/>
+  <text x="530" y="264" font-size="11" font-weight="600" fill="#1c6b45">按需强化② min-replicas-to-write</text>
+  <text x="530" y="286" font-size="9.5" fill="#2f7a56">min-replicas-to-write = 2</text>
+  <text x="530" y="304" font-size="9.5" fill="#2f7a56">min-replicas-max-lag = 10（秒）</text>
+  <text x="530" y="322" font-size="9.5" fill="#2f7a56">→ 健康（延迟&lt;10s）从库 &lt; 2 时，主库拒绝写入</text>
+  <text x="530" y="344" font-size="9" fill="#5cb88a">server.c:4668 rejectCommand(noreplicaserr)</text>
+  <text x="530" y="362" font-size="9" fill="#5cb88a">牺牲可用性换数据安全（CAP 的取舍）</text>
+
+  <!-- cascade note -->
+  <rect x="30" y="386" width="940" height="70" rx="8" fill="#f7f7f9" stroke="#ececef"/>
+  <text x="50" y="410" font-size="10.5" font-weight="600" fill="#1d1d1f">级联复制</text>
+  <text x="50" y="432" font-size="10" fill="#4a4a4f">子从库（从库的从库）直接转发上游主库的命令流，不重新生成 —— 保持全链路 replid / offset 一致</text>
+  <text x="50" y="450" font-size="9" fill="#86868b">用途：减轻主库的复制扇出压力（主库只发给一级从库，一级再发给二级）</text>
+</svg>

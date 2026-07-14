@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="780" viewBox="0 0 1080 780" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="780" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Neo4j 核心原理 · 总架构图（位置即语义）</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">原生图数据库:Cypher 声明式查询 → 成本规划 → 游标运行时读图 → 免索引邻接遍历 → 定长记录经页缓存分页;锁基并发 + WAL 恢复</text>
+
+  <!-- Cypher API -->
+  <rect x="30" y="64" width="1020" height="46" rx="13" fill="#f4eefb" stroke="#d9c7ec"/>
+  <text x="46" y="92" font-size="11" fill="#3d2a5a"><tspan font-weight="700">Cypher 查询语言接触面</tspan>　MATCH / CREATE / MERGE　—— 声明式图模式匹配(ASCII-art)</text>
+
+  <!-- query engine -->
+  <rect x="30" y="124" width="1020" height="120" rx="14" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="46" y="146" font-size="12" font-weight="700" fill="#1b2a4a">查询规划与执行(Cypher 编译器 + 运行时)</text>
+  <g text-anchor="middle" font-size="8.5">
+    <rect x="46" y="158" width="235" height="72" rx="9" fill="#f3f7fc" stroke="#cfe0f2" filter="url(#soft)"/><text x="163" y="180" font-weight="600" fill="#274a78">解析 + 语义分析</text><text x="163" y="198" fill="#5b7db1">ANTLR parser → AST</text><text x="163" y="214" fill="#5b7db1">改写/语义多趟</text>
+    <rect x="291" y="158" width="235" height="72" rx="9" fill="#f3f7fc" stroke="#cfe0f2" filter="url(#soft)"/><text x="408" y="180" font-weight="600" fill="#274a78">成本规划器</text><text x="408" y="198" fill="#5b7db1">IDP join 排序 + 成本模型</text><text x="408" y="214" fill="#5b7db1">索引 leaf planner 选起点</text>
+    <rect x="536" y="158" width="235" height="72" rx="9" fill="#f3f7fc" stroke="#cfe0f2" filter="url(#soft)"/><text x="653" y="180" font-weight="600" fill="#274a78">运行时(slotted 默认)</text><text x="653" y="198" fill="#5b7db1">Expand 算子模式匹配</text><text x="653" y="214" fill="#5b7db1">pipelined 是企业版</text>
+    <rect x="781" y="158" width="253" height="72" rx="9" fill="#e7f0fb" stroke="#b9d2ef" filter="url(#soft)"/><text x="907" y="180" font-weight="600" fill="#1b2a4a">Kernel API 游标</text><text x="907" y="198" fill="#5b7db1">nodeCursor/relCursor/propCursor</text><text x="907" y="214" fill="#5b7db1">流式读图统一接口</text>
+  </g>
+
+  <!-- index + traversal -->
+  <rect x="30" y="258" width="500" height="90" rx="14" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="46" y="280" font-size="11" font-weight="700" fill="#12402a">索引与遍历</text>
+  <text x="46" y="300" font-size="8.5" fill="#2f6f4f">· schema 索引(RANGE/TEXT/POINT/FULLTEXT/VECTOR)找遍历起点</text>
+  <text x="46" y="318" font-size="8.5" fill="#2f6f4f">· LOOKUP token 索引:按 label 找节点(GBP-tree)</text>
+  <text x="46" y="336" font-size="8.5" fill="#2f6f4f">· 找到起点后 → 免索引邻接遍历(不查关系索引)</text>
+
+  <rect x="550" y="258" width="500" height="90" rx="14" fill="#fdf4f3" stroke="#ecc6c1"/>
+  <text x="566" y="280" font-size="11" font-weight="700" fill="#7a2016">锁与并发(Forseti · 锁基非 MVCC)</text>
+  <text x="566" y="300" font-size="8.5" fill="#a5453a">· Forseti 锁管理 + dreadlocks 死锁检测(O(1))</text>
+  <text x="566" y="318" font-size="8.5" fill="#a5453a">· ResourceType 分粒度(NODE/REL/LABEL…)+ 锁序防死锁</text>
+  <text x="566" y="336" font-size="8.5" fill="#a5453a">· 写加写锁串行化,读不加读锁(community 无 MVCC)</text>
+
+  <!-- record storage (core) -->
+  <rect x="30" y="362" width="1020" height="150" rx="16" fill="#fff7e6" stroke="#e8cf9a"/>
+  <text x="46" y="384" font-size="12" font-weight="700" fill="#5a3410">记录存储（核心 · 免索引邻接）</text>
+  <g text-anchor="middle" font-size="8.3">
+    <rect x="46" y="396" width="315" height="102" rx="9" fill="#fef2e0" stroke="#e8cf9a" filter="url(#soft)"/><text x="203" y="418" font-weight="600" fill="#5a3410">NodeRecord(15B)</text><text x="203" y="436" fill="#93762e">nextRel → 第一条关系 id</text><text x="203" y="452" fill="#93762e">nextProp → 第一个属性</text><rect x="60" y="462" width="287" height="26" rx="5" fill="#fff"/><text x="203" y="479" fill="#93762e">labels(5B)+ dense flag</text>
+    <rect x="371" y="396" width="315" height="102" rx="9" fill="#fef2e0" stroke="#e8cf9a" filter="url(#soft)"/><text x="528" y="418" font-weight="600" fill="#5a3410">RelationshipRecord(34B)</text><text x="528" y="436" fill="#93762e">两端节点 + 类型</text><text x="528" y="452" fill="#93762e">四链指针(两条双向链表)</text><rect x="385" y="462" width="287" height="26" rx="5" fill="#fff"/><text x="528" y="479" fill="#93762e">遍历跟指针 · 免索引邻接</text>
+    <rect x="696" y="396" width="338" height="102" rx="9" fill="#fef2e0" stroke="#e8cf9a" filter="url(#soft)"/><text x="865" y="418" font-weight="600" fill="#5a3410">PropertyRecord(41B)</text><text x="865" y="436" fill="#93762e">属性链(32B payload)</text><text x="865" y="452" fill="#93762e">小值内联 / 长值溢出 dynamic</text><rect x="710" y="462" width="310" height="26" rx="5" fill="#fff"/><text x="865" y="479" fill="#93762e">record id = 文件偏移(O(1) 定位)</text>
+  </g>
+
+  <!-- page cache -->
+  <rect x="30" y="526" width="1020" height="56" rx="14" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="46" y="548" font-size="11" font-weight="700" fill="#12402a">页缓存 MuninnPageCache（堆外分页 · 所有记录访问的内存底座）</text>
+  <text x="46" y="568" font-size="8.8" fill="#2f6f4f">store 文件映射成 PagedFile,PageCursor 定位页内偏移读写;页错误从盘加载,后台 eviction 淘汰冷页(脏页先刷),避 JVM 堆 GC</text>
+
+  <!-- WAL -->
+  <rect x="30" y="596" width="1020" height="56" rx="14" fill="#faf4fb" stroke="#e2d2ee"/>
+  <text x="46" y="618" font-size="11" font-weight="700" fill="#5a3d78">事务与恢复(WAL 预写日志)</text>
+  <text x="46" y="638" font-size="8.8" fill="#7a5a95">事务变更攒 TxState → 提交转 Command 写 WAL(顺序追加,提交即持久)→ 应用到 store;检查点 detached 截断日志,崩溃从最后检查点后重放恢复</text>
+
+  <!-- flow arrows -->
+  <line x1="540" y1="110" x2="540" y2="124" stroke="#86868b" stroke-width="1.6" marker-end="url(#ar)"/>
+  <line x1="540" y1="244" x2="540" y2="258" stroke="#86868b" stroke-width="1.4" marker-end="url(#ar)"/>
+  <line x1="540" y1="348" x2="540" y2="362" stroke="#86868b" stroke-width="1.6" marker-end="url(#ar)"/>
+  <line x1="540" y1="512" x2="540" y2="526" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+
+  <!-- semantics + pervasive -->
+  <rect x="30" y="666" width="1020" height="52" rx="12" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="46" y="688" font-size="11" font-weight="700" fill="#1d1d1f">位置即语义</text>
+  <text x="46" y="708" font-size="8.8" fill="#6e6e73">上=Cypher 接触面;上中=查询规划/执行(游标);中=索引找起点 + 锁并发;下中=记录存储(免索引邻接,核心);底=页缓存(内存底座)+ WAL(持久)。</text>
+
+  <rect x="30" y="732" width="1020" height="42" rx="12" fill="#f0f0f4" stroke="#d2d2d7"/>
+  <text x="540" y="758" font-size="10" font-weight="700" text-anchor="middle" fill="#48484a">贯穿层 · record id —— id = 文件偏移的寻址键,节点/关系/属性靠 id 相互指向,遍历就是顺着 id 指针走,横切存储/遍历/索引</text>
+</svg>

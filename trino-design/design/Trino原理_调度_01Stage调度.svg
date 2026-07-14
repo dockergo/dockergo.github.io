@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="560" viewBox="0 0 1040 560" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1040" height="560" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Trino Stage 调度 · 按 PartitioningHandle 选调度器</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">DistributedStagesScheduler 循环驱动每 stage 的 schedule();task 数由调度器类型定</text>
+
+  <rect x="30" y="72" width="980" height="70" rx="12" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="46" y="96" font-size="11" font-weight="700" fill="#1b2a4a">PipelinedQueryScheduler.createStageScheduler(fragment) → 按 PartitioningHandle 分派</text>
+  <text x="46" y="118" font-size="9" fill="#5b7db1">循环：stageSchedulers.forEach(start) → 每轮 schedule() → 据 ScheduleResult.isFinished/getBlocked/getBlockedReason 决定继续或等待</text>
+  <text x="46" y="134" font-size="8.5" fill="#5b7db1">BlockedReason：WRITER_SCALING / SPLIT_QUEUES_FULL / WAITING_FOR_SOURCE —— 调度器不阻塞,靠 future 驱动</text>
+
+  <g font-size="8.8">
+    <rect x="30" y="158" width="240" height="150" rx="11" fill="#fff7e6" stroke="#e8cf9a"/><text x="150" y="180" text-anchor="middle" font-size="10" font-weight="700" fill="#5a3410">SourcePartitionedScheduler</text><text x="46" y="202" fill="#93762e">触发：SOURCE_DISTRIBUTION 单源</text><text x="46" y="220" fill="#93762e">getNextBatch 拉 split 批</text><text x="46" y="238" fill="#93762e">computeAssignments 放置</text><text x="46" y="256" fill="#93762e">assignSplits 分给 task</text><text x="46" y="278" font-weight="600" fill="#5a3410">task 数：随 split+节点动态增长</text><text x="46" y="296" fill="#93762e">空 source 也发 EmptySplit</text>
+
+    <rect x="284" y="158" width="240" height="150" rx="11" fill="#eef3fb" stroke="#bcd0ec"/><text x="404" y="180" text-anchor="middle" font-size="10" font-weight="700" fill="#1b2a4a">FixedCountScheduler</text><text x="300" y="202" fill="#5b7db1">触发：全 remote source stage</text><text x="300" y="220" fill="#5b7db1">(无 split source)</text><text x="300" y="238" fill="#5b7db1">一节点一 task,单次调度完成</text><text x="300" y="278" font-weight="600" fill="#1b2a4a">task 数：= NodePartitionMap 大小</text><text x="300" y="296" fill="#5b7db1">固定,不随数据变</text>
+
+    <rect x="538" y="158" width="240" height="150" rx="11" fill="#f5faf6" stroke="#cfe6d5"/><text x="658" y="180" text-anchor="middle" font-size="10" font-weight="700" fill="#2c5a3a">ScaledWriterScheduler</text><text x="554" y="202" fill="#2f6f4f">触发：SCALED_WRITER_* 写 stage</text><text x="554" y="220" fill="#2f6f4f">源输出 buffer 满(>0.5)时</text><text x="554" y="238" fill="#2f6f4f">且写吞吐足够 → 加 writer</text><text x="554" y="278" font-weight="600" fill="#2c5a3a">task 数：随数据量增长</text><text x="554" y="296" fill="#2f6f4f">上限 maxWriterNodeCount</text>
+
+    <rect x="792" y="158" width="218" height="150" rx="11" fill="#f3f7fc" stroke="#cfe0f2"/><text x="901" y="180" text-anchor="middle" font-size="10" font-weight="700" fill="#274a78">FixedSourcePartitioned</text><text x="808" y="202" fill="#5b7db1">触发：本地源 + remote 混合</text><text x="808" y="220" fill="#5b7db1">固定节点集 + 桶到节点映射</text><text x="808" y="238" fill="#5b7db1">包多个 SourceScheduler</text><text x="808" y="278" font-weight="600" fill="#274a78">task 数：固定节点集</text>
+  </g>
+
+  <rect x="30" y="324" width="980" height="100" rx="12" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="46" y="346" font-size="11" font-weight="700" fill="#2c5a3a">协调器/工作器 stage 分治（PipelinedQueryScheduler）</text>
+  <text x="46" y="368" font-size="9" fill="#2f6f4f">· CoordinatorStagesScheduler：根 stage（SINGLE / COORDINATOR_ONLY）在 coordinator 跑（如最终 Output、DDL）</text>
+  <text x="46" y="386" font-size="9" fill="#2f6f4f">· DistributedStagesScheduler：worker 上的分布式 stage,建 StageScheduler per stage 并循环推进</text>
+  <text x="46" y="404" font-size="9" fill="#2f6f4f">· StageManager：广度遍历 SubPlan,每 fragment 建一个 SqlStage（stage id = fragment id）,父子边镜像 SubPlan 边</text>
+
+  <rect x="30" y="440" width="980" height="100" rx="12" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="46" y="462" font-size="11" font-weight="700" fill="#1d1d1f">FTE 路径（RetryPolicy=TASK）</text>
+  <text x="46" y="484" font-size="9" fill="#6e6e73">EventDrivenFaultTolerantQueryScheduler：事件驱动,同样 1 fragment:1 stage,但 task 可按分区独立重试</text>
+  <text x="46" y="502" font-size="9" fill="#6e6e73">用 EventDrivenTaskSource 产 task 描述,BinPackingNodeAllocatorService 做内存感知的节点分配（见容错执行篇）</text>
+  <text x="46" y="522" font-size="9" fill="#b1483a">归属：split 生成属连接器;本篇只管"哪个调度器、起几个 task、放哪个节点"</text>
+</svg>

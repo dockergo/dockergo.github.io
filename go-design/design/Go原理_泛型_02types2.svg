@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="500" viewBox="0 0 900 500" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+    <marker id="arR" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b15b5b"/>
+    </marker>
+  </defs>
+  <rect width="900" height="500" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">types2 泛型 · 推断与实例化检查</text>
+
+  <!-- context bar (blue) -->
+  <rect x="30" y="50" width="840" height="48" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="46" y="70" font-size="12" font-weight="600" fill="#1b2a4a">前端 types2 · 保证泛型语义正确性（属【编译前端】相位）</text>
+  <text x="46" y="88" font-size="10" fill="#5b7db1">类型安全通过后，才交给后端决定怎么生成代码</text>
+
+  <!-- three phases flow -->
+  <!-- infer (purple) -->
+  <rect x="30" y="118" width="270" height="192" rx="13" fill="#f5f0fb" stroke="#ddcdf0" filter="url(#soft)"/>
+  <text x="46" y="142" font-size="12" font-weight="600" fill="#3d2a5a">① 类型推断 infer</text>
+  <text x="46" y="160" font-size="10" fill="#7d5bb1">infer.go</text>
+  <rect x="46" y="172" width="238" height="60" rx="9" fill="#ffffff" stroke="#ddcdf0"/>
+  <text x="60" y="194" font-size="10.5" fill="#3a3a3c" font-family="'SF Mono','Menlo',monospace">Map(nums, f)</text>
+  <text x="60" y="214" font-size="10" fill="#7d5bb1">从实参 / 约束反推</text>
+  <text x="60" y="224" font-size="9" fill="#7d5bb1"> </text>
+  <text x="46" y="256" font-size="10" fill="#7d5bb1">未显式给出的类型参数</text>
+  <text x="46" y="276" font-size="10.5" font-weight="600" fill="#3d2a5a">推出 T = int</text>
+  <text x="46" y="296" font-size="10" fill="#7d5bb1">用统一算法解类型方程</text>
+
+  <line x1="300" y1="214" x2="336" y2="214" stroke="#c7c7cc" stroke-width="1.6" marker-end="url(#ar)"/>
+
+  <!-- instantiate (purple) -->
+  <rect x="338" y="118" width="270" height="192" rx="13" fill="#f5f0fb" stroke="#ddcdf0" filter="url(#soft)"/>
+  <text x="354" y="142" font-size="12" font-weight="600" fill="#3d2a5a">② 实例化 instantiate</text>
+  <text x="354" y="160" font-size="10" fill="#7d5bb1">instantiate.go</text>
+  <rect x="354" y="172" width="238" height="60" rx="9" fill="#ffffff" stroke="#ddcdf0"/>
+  <text x="368" y="194" font-size="10.5" fill="#3a3a3c">类型参数 → 具体 / 形状类型</text>
+  <text x="368" y="214" font-size="10" fill="#7d5bb1">替换后逐一检查</text>
+  <text x="354" y="256" font-size="10" fill="#7d5bb1">检查是否满足约束</text>
+  <text x="354" y="276" font-size="10.5" font-weight="600" fill="#3d2a5a">如 comparable → 可比较</text>
+  <text x="354" y="296" font-size="10" fill="#7d5bb1">不满足约束即编译报错</text>
+
+  <line x1="608" y1="214" x2="644" y2="214" stroke="#c7c7cc" stroke-width="1.6" marker-end="url(#ar)"/>
+
+  <!-- monomorph (red) -->
+  <rect x="646" y="118" width="224" height="192" rx="13" fill="#fbeeee" stroke="#f0c4c4" filter="url(#soft)"/>
+  <text x="662" y="142" font-size="12" font-weight="600" fill="#7a1f1f">③ monomorph 安全检查</text>
+  <text x="662" y="160" font-size="10" fill="#b15b5b">check.go:464（实现 mono.go）</text>
+  <rect x="662" y="172" width="192" height="60" rx="9" fill="#ffffff" stroke="#f0c4c4"/>
+  <text x="676" y="192" font-size="10" fill="#3a3a3c">检测非法递归实例化</text>
+  <text x="676" y="212" font-size="10" fill="#b15b5b">避免实例化不终止</text>
+  <text x="662" y="256" font-size="10" fill="#b15b5b">编译器必须拒绝，</text>
+  <text x="662" y="276" font-size="10" fill="#b15b5b">否则无限生成新实例</text>
+
+  <!-- illegal recursion example (red) -->
+  <rect x="30" y="330" width="840" height="90" rx="13" fill="#fbeeee" stroke="#f0c4c4" filter="url(#soft)"/>
+  <text x="46" y="354" font-size="12" font-weight="600" fill="#7a1f1f">非法递归实例化示例（monomorph 拒绝）</text>
+  <rect x="46" y="366" width="300" height="40" rx="8" fill="#ffffff" stroke="#f0c4c4"/>
+  <text x="60" y="391" font-size="11" fill="#3a3a3c" font-family="'SF Mono','Menlo',monospace">func F[T]() { F[*T]() }</text>
+  <line x1="358" y1="386" x2="402" y2="386" stroke="#b15b5b" stroke-width="1.6" marker-end="url(#arR)"/>
+  <text x="420" y="382" font-size="10.5" fill="#7a1f1f">每次调用类型深一层：</text>
+  <text x="420" y="401" font-size="10.5" fill="#b15b5b" font-family="'SF Mono','Menlo',monospace">F[*T] → F[**T] → F[***T] → …  无限生成，编译器拒绝</text>
+
+  <!-- summary bar -->
+  <rect x="30" y="440" width="840" height="44" rx="12" fill="#f6f6f7" stroke="#e2e2e7"/>
+  <text x="46" y="467" font-size="10.5" fill="#6e6e73">锚点：monomorph check.go:464（实现 mono.go） · 推断 infer.go · 实例化 instantiate.go</text>
+</svg>

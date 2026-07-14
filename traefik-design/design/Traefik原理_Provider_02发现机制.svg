@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="420" viewBox="0 0 960 420"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="960" height="420" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">发现机制对照 · 各 Provider 如何把「外部真源」翻译成 dynamic.Configuration</text>
+
+  <!-- 4 columns -->
+  <rect x="30" y="60" width="215" height="300" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="137" y="84" font-size="11" font-weight="600" fill="#1b2a4a" text-anchor="middle">Docker / Swarm</text>
+  <text x="137" y="112" font-size="9" fill="#5b7db1" text-anchor="middle">真源：容器 + labels</text>
+  <text x="137" y="132" font-size="9" fill="#5b7db1" text-anchor="middle">watch：Docker events API</text>
+  <text x="137" y="156" font-size="8.5" fill="#6e6e73" text-anchor="middle">traefik.http.routers.</text>
+  <text x="137" y="172" font-size="8.5" fill="#6e6e73" text-anchor="middle">  app.rule=Host(`x`)</text>
+  <text x="137" y="188" font-size="8.5" fill="#6e6e73" text-anchor="middle">traefik.http.services.</text>
+  <text x="137" y="204" font-size="8.5" fill="#6e6e73" text-anchor="middle">  app.loadbalancer.server.port</text>
+  <text x="137" y="234" font-size="9" fill="#5b7db1" text-anchor="middle">容器起停 → 秒级增删路由</text>
+  <text x="137" y="336" font-size="8" fill="#8fa9cf" text-anchor="middle">provider/docker/</text>
+
+  <rect x="255" y="60" width="215" height="300" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="362" y="84" font-size="11" font-weight="600" fill="#1b2a4a" text-anchor="middle">Kubernetes</text>
+  <text x="362" y="112" font-size="9" fill="#5b7db1" text-anchor="middle">真源：API Server 资源</text>
+  <text x="362" y="132" font-size="9" fill="#5b7db1" text-anchor="middle">watch：informer/list-watch</text>
+  <text x="362" y="158" font-size="8.5" fill="#6e6e73" text-anchor="middle">IngressRoute CRD（原生）</text>
+  <text x="362" y="176" font-size="8.5" fill="#6e6e73" text-anchor="middle">Ingress（标准）</text>
+  <text x="362" y="194" font-size="8.5" fill="#6e6e73" text-anchor="middle">Gateway API</text>
+  <text x="362" y="212" font-size="8.5" fill="#6e6e73" text-anchor="middle">Knative</text>
+  <text x="362" y="240" font-size="9" fill="#5b7db1" text-anchor="middle">资源变更 → reconcile 重推</text>
+  <text x="362" y="336" font-size="8" fill="#8fa9cf" text-anchor="middle">provider/kubernetes/</text>
+
+  <rect x="480" y="60" width="215" height="300" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="587" y="84" font-size="11" font-weight="600" fill="#1b2a4a" text-anchor="middle">File</text>
+  <text x="587" y="112" font-size="9" fill="#5b7db1" text-anchor="middle">真源：yml/toml 文件/目录</text>
+  <text x="587" y="132" font-size="9" fill="#5b7db1" text-anchor="middle">watch：fsnotify（可选）</text>
+  <text x="587" y="158" font-size="8.5" fill="#6e6e73" text-anchor="middle">http.routers / services</text>
+  <text x="587" y="176" font-size="8.5" fill="#6e6e73" text-anchor="middle">直接写 dynamic 结构</text>
+  <text x="587" y="194" font-size="8.5" fill="#6e6e73" text-anchor="middle">支持 Go template</text>
+  <text x="587" y="222" font-size="9" fill="#5b7db1" text-anchor="middle">文件保存 → 立即热加载</text>
+  <text x="587" y="252" font-size="8.5" fill="#8a8a8e" text-anchor="middle">watch=false 则只读一次</text>
+  <text x="587" y="336" font-size="8" fill="#8fa9cf" text-anchor="middle">provider/file/file.go:55</text>
+
+  <rect x="705" y="60" width="225" height="300" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="817" y="84" font-size="11" font-weight="600" fill="#1b2a4a" text-anchor="middle">KV / Catalog</text>
+  <text x="817" y="112" font-size="9" fill="#5b7db1" text-anchor="middle">真源：Consul/Etcd/ZK/Redis</text>
+  <text x="817" y="132" font-size="9" fill="#5b7db1" text-anchor="middle">watch：KV 前缀 watch</text>
+  <text x="817" y="158" font-size="8.5" fill="#6e6e73" text-anchor="middle">traefik/http/routers/…</text>
+  <text x="817" y="176" font-size="8.5" fill="#6e6e73" text-anchor="middle">键路径映射结构字段</text>
+  <text x="817" y="200" font-size="8.5" fill="#6e6e73" text-anchor="middle">ConsulCatalog：读服务注册</text>
+  <text x="817" y="218" font-size="8.5" fill="#6e6e73" text-anchor="middle">Nomad/ECS：读任务/任务定义</text>
+  <text x="817" y="246" font-size="9" fill="#5b7db1" text-anchor="middle">注册变更 → 重推配置</text>
+  <text x="817" y="336" font-size="8" fill="#8fa9cf" text-anchor="middle">provider/kv · consulcatalog</text>
+
+  <!-- unify arrow -->
+  <text x="480" y="392" font-size="10.5" font-weight="600" fill="#0f5132" text-anchor="middle">殊途同归：都产出统一的 dynamic.Configuration，交给同一条聚合 + 热加载通道</text>
+</svg>

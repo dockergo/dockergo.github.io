@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="420" viewBox="0 0 1020 420"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1020" height="420" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">FSDP · 分片省显存：模型太大放不下单卡时（torch/distributed/）</text>
+
+  <!-- DDP vs FSDP -->
+  <rect x="30" y="56" width="470" height="150" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="48" y="80" font-size="12.5" font-weight="600" fill="#1b2a4a">DDP：每卡存整份模型</text>
+  <text x="48" y="104" font-size="9.5" fill="#5b7db1">参数 + 梯度 + 优化器状态各卡都全份</text>
+  <text x="48" y="124" font-size="9.5" fill="#5b7db1">显存 = 单卡模型大小（不随卡数降）</text>
+  <rect x="48" y="140" width="434" height="50" rx="9" fill="#ffffff" stroke="#bcd0ec"/><text x="265" y="162" font-size="9" fill="#1b2a4a" text-anchor="middle">适合：模型能放进单卡，靠多卡加数据吞吐</text><text x="265" y="180" font-size="8.5" fill="#5b7db1" text-anchor="middle">瓶颈：大模型放不下</text>
+
+  <rect x="520" y="56" width="470" height="150" rx="14" fill="#eafaf1" stroke="#bce6cd" filter="url(#soft)"/>
+  <text x="538" y="80" font-size="12.5" font-weight="600" fill="#0f5132">FSDP：参数/梯度/优化器状态分片</text>
+  <text x="538" y="104" font-size="9.5" fill="#3f8f66">每卡只常驻自己那一份分片</text>
+  <text x="538" y="124" font-size="9.5" fill="#3f8f66">显存 ≈ 单卡模型 / 卡数（大幅降）</text>
+  <rect x="538" y="140" width="434" height="50" rx="9" fill="#ffffff" stroke="#bce6cd"/><text x="755" y="162" font-size="9" fill="#0f5132" text-anchor="middle">适合：单卡放不下的大模型</text><text x="755" y="180" font-size="8.5" fill="#3f8f66" text-anchor="middle">代价：更多通信</text>
+
+  <!-- FSDP 机制 -->
+  <rect x="30" y="222" width="960" height="184" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="48" y="246" font-size="12.5" font-weight="600" fill="#1d1d1f">FSDP 怎么在"分片"下算：用时临时聚齐、用完扔</text>
+  <rect x="48" y="262" width="220" height="80" rx="10" fill="#eef3fb" stroke="#bcd0ec"/><text x="158" y="286" font-size="9.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">① 前向到某层前</text><text x="158" y="306" font-size="8.5" fill="#5b7db1" text-anchor="middle">all-gather 聚齐该层完整参数</text><text x="158" y="324" font-size="8.5" fill="#5b7db1" text-anchor="middle">算完立即释放非本片部分</text>
+  <rect x="284" y="262" width="220" height="80" rx="10" fill="#fbeaea" stroke="#f0cccc"/><text x="394" y="286" font-size="9.5" font-weight="600" fill="#7d1f1f" text-anchor="middle">② 反向同理</text><text x="394" y="306" font-size="8.5" fill="#b06a6a" text-anchor="middle">临时聚齐算梯度</text><text x="394" y="324" font-size="8.5" fill="#b06a6a" text-anchor="middle">reduce-scatter 分回各片</text>
+  <rect x="520" y="262" width="220" height="80" rx="10" fill="#eafaf1" stroke="#bce6cd"/><text x="630" y="286" font-size="9.5" font-weight="600" fill="#0f5132" text-anchor="middle">③ 优化器只更本片</text><text x="630" y="306" font-size="8.5" fill="#3f8f66" text-anchor="middle">状态也分片存</text><text x="630" y="324" font-size="8.5" fill="#3f8f66" text-anchor="middle">显存进一步省</text>
+  <rect x="756" y="262" width="214" height="80" rx="10" fill="#fff7e6" stroke="#f0dcae"/><text x="863" y="286" font-size="9.5" font-weight="600" fill="#7a4d00" text-anchor="middle">核心权衡</text><text x="863" y="306" font-size="8.5" fill="#9a7328" text-anchor="middle">用通信换显存</text><text x="863" y="324" font-size="8.5" fill="#9a7328" text-anchor="middle">聚齐/散回可 overlap 藏延迟</text>
+  <line x1="268" y1="302" x2="284" y2="302" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="504" y1="302" x2="520" y2="302" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <text x="48" y="378" font-size="9.5" fill="#86868b">一句话：DDP 复制、FSDP 分片；"任意时刻只完整拥有正在算的那层"是 FSDP 省显存的关键。张量并行/流水并行是另两种正交切法。</text>
+  <text x="48" y="398" font-size="9" fill="#86868b">数据并行(DDP/FSDP) × 张量并行 × 流水并行 = 大模型训练的并行三维度。</text>
+</svg>

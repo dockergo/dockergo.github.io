@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="560" viewBox="0 0 900 560" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+  </defs>
+  <rect width="900" height="560" fill="#fbfbfd"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="#1d1d1f">双维模型：能力域 × 执行时机</text>
+  <text x="30" y="54" font-size="11.5" fill="#86868b">把每条主线归位——横看它服务哪个能力层，纵看它在前台（宿主调用/RPC 入站）还是后台（单线程 run 循环 + 定时器）触发</text>
+
+  <!-- 列头 -->
+  <rect x="250" y="72" width="300" height="40" rx="9" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="400" y="97" text-anchor="middle" font-size="12.5" font-weight="600" fill="#1b2a4a">前台 · 同步（宿主线程 / RPC 入站）</text>
+  <rect x="562" y="72" width="308" height="40" rx="9" fill="#f5faf6" stroke="#c9e6cf"/>
+  <text x="716" y="97" text-anchor="middle" font-size="12.5" font-weight="600" fill="#1f5130">后台 · 异步（run 单线程循环 + timer）</text>
+
+  <!-- 行 -->
+  <g font-size="11">
+    <!-- 接口 -->
+    <rect x="30" y="124" width="208" height="70" rx="9" fill="#f7f7f9" stroke="#e2e2e7"/>
+    <text x="46" y="152" font-size="12" font-weight="600" fill="#1d1d1f">接口层</text>
+    <text x="46" y="172" font-size="10.5" fill="#86868b">编程 API + 5 注入接口</text>
+    <rect x="250" y="124" width="300" height="70" rx="9" fill="#ffffff" stroke="#cfe0f2"/>
+    <text x="400" y="150" text-anchor="middle" fill="#2b3a5a">Apply / AddVoter / Snapshot 提交请求</text>
+    <text x="400" y="170" text-anchor="middle" fill="#5b7db1">阻塞在 Future 上等待被 apply</text>
+    <rect x="562" y="124" width="308" height="70" rx="9" fill="#ffffff" stroke="#c9e6cf"/>
+    <text x="716" y="150" text-anchor="middle" fill="#1f5130">FSM.Apply / Snapshot / Restore 回调</text>
+    <text x="716" y="170" text-anchor="middle" fill="#4f9d69">由 runFSM 线程串行调用</text>
+
+    <!-- 传输/选举 -->
+    <rect x="30" y="206" width="208" height="70" rx="9" fill="#f7f7f9" stroke="#e2e2e7"/>
+    <text x="46" y="234" font-size="12" font-weight="600" fill="#1d1d1f">共识核心</text>
+    <text x="46" y="254" font-size="10.5" fill="#86868b">选举 / 复制 / 提交</text>
+    <rect x="250" y="206" width="300" height="70" rx="9" fill="#ffffff" stroke="#cfe0f2"/>
+    <text x="400" y="232" text-anchor="middle" fill="#2b3a5a">appendEntries / requestVote 入站处理</text>
+    <text x="400" y="252" text-anchor="middle" fill="#5b7db1">收 RPC 即时应答（processRPC）</text>
+    <rect x="562" y="206" width="308" height="70" rx="9" fill="#ffffff" stroke="#c9e6cf"/>
+    <text x="716" y="232" text-anchor="middle" fill="#1f5130">Leader 心跳 / 日志复制 / 选举超时</text>
+    <text x="716" y="252" text-anchor="middle" fill="#4f9d69">replicate 协程 + 随机超时触发</text>
+
+    <!-- 持久/快照 -->
+    <rect x="30" y="288" width="208" height="70" rx="9" fill="#f7f7f9" stroke="#e2e2e7"/>
+    <text x="46" y="316" font-size="12" font-weight="600" fill="#1d1d1f">状态与存储</text>
+    <text x="46" y="336" font-size="10.5" fill="#86868b">持久状态 / 快照 / 成员</text>
+    <rect x="250" y="288" width="300" height="70" rx="9" fill="#ffffff" stroke="#cfe0f2"/>
+    <text x="400" y="314" text-anchor="middle" fill="#2b3a5a">投票/任期持久化（先落盘再改内存）</text>
+    <text x="400" y="334" text-anchor="middle" fill="#5b7db1">setCurrentTerm / persistVote</text>
+    <rect x="562" y="288" width="308" height="70" rx="9" fill="#ffffff" stroke="#c9e6cf"/>
+    <text x="716" y="314" text-anchor="middle" fill="#1f5130">runSnapshots：阈值触发快照 + 压缩日志</text>
+    <text x="716" y="334" text-anchor="middle" fill="#4f9d69">SnapshotInterval 周期检查</text>
+
+    <!-- 可靠性 -->
+    <rect x="30" y="370" width="208" height="70" rx="9" fill="#f7f7f9" stroke="#e2e2e7"/>
+    <text x="46" y="398" font-size="12" font-weight="600" fill="#1d1d1f">可靠性</text>
+    <text x="46" y="418" font-size="10.5" fill="#86868b">lease / quorum / prevote</text>
+    <rect x="250" y="370" width="300" height="70" rx="9" fill="#ffffff" stroke="#cfe0f2"/>
+    <text x="400" y="396" text-anchor="middle" fill="#2b3a5a">VerifyLeader 线性读前哨</text>
+    <text x="400" y="416" text-anchor="middle" fill="#5b7db1">向多数派确认仍是 Leader</text>
+    <rect x="562" y="370" width="308" height="70" rx="9" fill="#ffffff" stroke="#c9e6cf"/>
+    <text x="716" y="396" text-anchor="middle" fill="#1f5130">Leader Lease 检查 → 失联退位</text>
+    <text x="716" y="416" text-anchor="middle" fill="#4f9d69">leaderLoop 每 LeaseTimeout 自检</text>
+  </g>
+
+  <rect x="30" y="464" width="840" height="66" rx="11" fill="#fbf7ef" stroke="#efe2c8" filter="url(#soft)"/>
+  <text x="50" y="488" font-size="12" font-weight="600" fill="#8a6d1f">贯穿铁律</text>
+  <text x="50" y="508" font-size="11" fill="#a1885a">「改数据必须走日志复制到多数派、只读或元操作走本地」——所有写（Apply/成员/快照标记）都经 run 单线程串行提交；</text>
+  <text x="50" y="524" font-size="11" fill="#a1885a">真实 IO（磁盘、网络、时钟外的存储）全部委托给宿主实现的 5 个接口，本库只持有协议状态机。</text>
+</svg>
