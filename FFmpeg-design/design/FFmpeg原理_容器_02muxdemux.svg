@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="520" viewBox="0 0 1080 520" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="520" fill="#fbfbfd"/>
+
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">FFmpeg demuxer / muxer —— 拆容器与封容器</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">demuxer 从容器读出压缩 AVPacket；muxer 把 AVPacket 交织写回容器，按 pts 交替保音画同步</text>
+
+  <!-- demuxer row blue -->
+  <text x="30" y="86" font-size="12.5" font-weight="700" fill="#1b2a4a">demuxer · 拆（读入端）</text>
+
+  <rect x="30" y="100" width="150" height="80" rx="12" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="105" y="130" font-size="11.5" font-weight="600" text-anchor="middle" fill="#5a3410">容器文件</text>
+  <text x="105" y="150" font-size="9" text-anchor="middle" fill="#93762e">in.mp4 / in.mkv</text>
+  <text x="105" y="167" font-size="9" text-anchor="middle" fill="#93762e">多流交织字节</text>
+
+  <rect x="240" y="100" width="200" height="80" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="340" y="128" font-size="11.5" font-weight="600" text-anchor="middle" fill="#1b2a4a">avformat_open_input</text>
+  <text x="340" y="150" font-size="9" text-anchor="middle" fill="#5b7db1">打开文件</text>
+  <text x="340" y="167" font-size="9" text-anchor="middle" fill="#5b7db1">识别格式 FFInputFormat</text>
+
+  <rect x="500" y="100" width="200" height="80" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="600" y="128" font-size="11.5" font-weight="600" text-anchor="middle" fill="#1b2a4a">av_read_frame</text>
+  <text x="600" y="150" font-size="9" text-anchor="middle" fill="#5b7db1">逐个读出压缩包</text>
+  <text x="600" y="167" font-size="9" text-anchor="middle" fill="#5b7db1">循环读到文件尾</text>
+
+  <rect x="760" y="100" width="290" height="80" rx="12" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="905" y="128" font-size="11.5" font-weight="600" text-anchor="middle" fill="#3d2a5a">AVPacket（压缩）</text>
+  <text x="905" y="150" font-size="9" text-anchor="middle" fill="#7a5aa0">带 stream_index / pts / dts</text>
+  <text x="905" y="167" font-size="9" text-anchor="middle" fill="#7a5aa0">送往 decode 段</text>
+
+  <path d="M180,140 L240,140" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M440,140 L500,140" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M700,140 L760,140" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <!-- muxer row -->
+  <text x="30" y="240" font-size="12.5" font-weight="700" fill="#12402a">muxer · 封（写出端）</text>
+
+  <rect x="30" y="254" width="290" height="80" rx="12" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="175" y="282" font-size="11.5" font-weight="600" text-anchor="middle" fill="#3d2a5a">AVPacket（压缩）</text>
+  <text x="175" y="304" font-size="9" text-anchor="middle" fill="#7a5aa0">来自 encode 段</text>
+  <text x="175" y="321" font-size="9" text-anchor="middle" fill="#7a5aa0">音视频各成流</text>
+
+  <rect x="380" y="254" width="190" height="80" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="475" y="282" font-size="10.5" font-weight="600" text-anchor="middle" fill="#12402a">avformat_write_header</text>
+  <text x="475" y="304" font-size="9" text-anchor="middle" fill="#2f6f4f">写容器头</text>
+  <text x="475" y="321" font-size="9" text-anchor="middle" fill="#2f6f4f">流参数 / 元数据</text>
+
+  <rect x="610" y="254" width="220" height="80" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="720" y="282" font-size="10" font-weight="600" text-anchor="middle" fill="#12402a">av_interleaved_write_frame</text>
+  <text x="720" y="304" font-size="9" text-anchor="middle" fill="#2f6f4f">交织写入 AVPacket</text>
+  <text x="720" y="321" font-size="9" text-anchor="middle" fill="#2f6f4f">按 pts 交替音视频</text>
+
+  <rect x="870" y="254" width="180" height="80" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="960" y="282" font-size="11" font-weight="600" text-anchor="middle" fill="#12402a">av_write_trailer</text>
+  <text x="960" y="304" font-size="9" text-anchor="middle" fill="#2f6f4f">写尾 / 索引</text>
+  <text x="960" y="321" font-size="9" text-anchor="middle" fill="#2f6f4f">→ 容器文件</text>
+
+  <path d="M320,294 L380,294" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M570,294 L610,294" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M830,294 L870,294" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <!-- interleave explainer -->
+  <rect x="30" y="366" width="1020" height="104" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="50" y="392" font-size="12" font-weight="600" fill="#1b2a4a">交织（interleave）· 按时间戳交替写音视频包</text>
+  <text x="50" y="414" font-size="9.5" fill="#5b7db1">播放器顺序读文件；若视频包全在前、音频全在后，播放时要来回 seek。交织让顺序读就能同步取到当前时刻的音视频。</text>
+
+  <rect x="50" y="428" width="470" height="28" rx="7" fill="#fbeaea" stroke="#e6b8b8"/>
+  <text x="70" y="446" font-size="9.5" fill="#7a2a2a">未交织：</text>
+  <text x="122" y="446" font-size="10" font-weight="600" fill="#7a2a2a">V V V V … A A A A</text>
+  <text x="300" y="446" font-size="9" fill="#a05a5a">播放需来回 seek</text>
+
+  <rect x="560" y="428" width="470" height="28" rx="7" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="580" y="446" font-size="9.5" fill="#12402a">交织：</text>
+  <text x="624" y="446" font-size="10" font-weight="600" fill="#12402a">V A V A V A …（按 pts）</text>
+  <text x="820" y="446" font-size="9" fill="#2f6f4f">顺序读即音画同步 · 流式播放</text>
+
+  <text x="30" y="504" font-size="9.5" fill="#86868b">源码基准 FFmpeg(1588bce) · libavformat/ · demux.c av_read_frame · mux.c av_interleaved_write_frame</text>
+</svg>

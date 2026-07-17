@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="520" viewBox="0 0 1080 520" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="520" fill="#fbfbfd"/>
+
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">vLLM 随机采样整形 —— temperature 调陡峭 + top_k / top_p 截断长尾，再 softmax 按概率抽</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">位置即语义：从左到右一条整形流水线 · 先调整体随机度 → 再砍不合理长尾 → 归一化 → 抽样 · 在多样性与合理性间取平衡</text>
+
+  <!-- pipeline band : green -->
+  <rect x="30" y="78" width="1020" height="180" rx="13" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="50" y="104" font-size="12.5" font-weight="600" fill="#12402a">随机采样前整形分布 —— 一条从 logits 到 token 的流水线</text>
+
+  <rect x="50" y="120" width="180" height="120" rx="9" fill="#ffffff" stroke="#bfe0cd"/>
+  <text x="140" y="144" font-size="10.5" font-weight="600" text-anchor="middle" fill="#12402a">temperature</text>
+  <text x="140" y="164" font-size="8" text-anchor="middle" fill="#2f6f4f">应用于 :277</text>
+  <text x="140" y="182" font-size="8" text-anchor="middle" fill="#2f6f4f">logits 除以温度</text>
+  <text x="140" y="199" font-size="8" text-anchor="middle" fill="#2f6f4f">&lt;1 变陡（更确定）</text>
+  <text x="140" y="215" font-size="8" text-anchor="middle" fill="#2f6f4f">&gt;1 变平（更随机）</text>
+  <text x="140" y="232" font-size="8" text-anchor="middle" fill="#4a8a63">=0 退化为贪心</text>
+
+  <rect x="270" y="120" width="180" height="120" rx="9" fill="#ffffff" stroke="#bfe0cd"/>
+  <text x="360" y="144" font-size="10.5" font-weight="600" text-anchor="middle" fill="#12402a">top_k</text>
+  <text x="360" y="168" font-size="8.5" text-anchor="middle" fill="#2f6f4f">只保留分数前 k 的候选</text>
+  <text x="360" y="186" font-size="8.5" text-anchor="middle" fill="#2f6f4f">其余置 -inf</text>
+  <text x="360" y="212" font-size="8" text-anchor="middle" fill="#4a8a63">固定保留前 k 个</text>
+
+  <rect x="490" y="120" width="180" height="120" rx="9" fill="#ffffff" stroke="#bfe0cd"/>
+  <text x="580" y="144" font-size="10.5" font-weight="600" text-anchor="middle" fill="#12402a">top_p 核采样</text>
+  <text x="580" y="168" font-size="8.5" text-anchor="middle" fill="#2f6f4f">按概率累加到 p 的</text>
+  <text x="580" y="186" font-size="8.5" text-anchor="middle" fill="#2f6f4f">最小候选集</text>
+  <text x="580" y="212" font-size="8" text-anchor="middle" fill="#4a8a63">动态截断长尾</text>
+
+  <rect x="710" y="120" width="150" height="120" rx="9" fill="#ffffff" stroke="#bfe0cd"/>
+  <text x="785" y="144" font-size="10.5" font-weight="600" text-anchor="middle" fill="#12402a">softmax</text>
+  <text x="785" y="170" font-size="8.5" text-anchor="middle" fill="#2f6f4f">整形后归一化</text>
+  <text x="785" y="188" font-size="8.5" text-anchor="middle" fill="#2f6f4f">成概率分布</text>
+
+  <rect x="900" y="120" width="130" height="120" rx="9" fill="#fff7e6" stroke="#e8cf9a"/>
+  <text x="965" y="144" font-size="10.5" font-weight="600" text-anchor="middle" fill="#5a3410">抽样</text>
+  <text x="965" y="170" font-size="8.5" text-anchor="middle" fill="#93762e">按概率随机</text>
+  <text x="965" y="188" font-size="8.5" text-anchor="middle" fill="#93762e">抽一个 token</text>
+
+  <path d="M230,180 L270,180" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M450,180 L490,180" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M670,180 L710,180" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M860,180 L900,180" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <!-- implementation : blue -->
+  <rect x="30" y="282" width="500" height="120" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="50" y="308" font-size="12" font-weight="600" fill="#1b2a4a">实现 · topk_topp_sampler.py</text>
+  <text x="50" y="332" font-size="9" fill="#5b7db1">apply_top_k_top_p（:135）执行截断，</text>
+  <text x="50" y="350" font-size="9" fill="#5b7db1">CUDA 版 forward_cuda（:147）</text>
+  <text x="50" y="368" font-size="9" fill="#5b7db1">原生版 forward_native（:123）。</text>
+  <text x="50" y="390" font-size="8.5" fill="#7a9dcb">top_k 固定保留前 k；top_p 按累积概率动态截断——可组合</text>
+
+  <!-- why : amber -->
+  <rect x="550" y="282" width="500" height="120" rx="12" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="570" y="308" font-size="12" font-weight="600" fill="#5a3410">为什么先整形再抽</text>
+  <text x="570" y="332" font-size="9" fill="#93762e">原始 logits 长尾里有大量低概率词，直接按</text>
+  <text x="570" y="350" font-size="9" fill="#93762e">全分布抽会偶尔蹦出离谱词。</text>
+  <text x="570" y="368" font-size="9" fill="#93762e">temperature 调整体随机度、top_k/top_p 砍长尾。</text>
+  <text x="570" y="390" font-size="8.5" fill="#b1974e">在"多样性"与"合理性"间取平衡——控制生成质量的核心旋钮</text>
+
+  <text x="30" y="440" font-size="10" font-weight="600" fill="#1d1d1f">调优：确定性 temperature=0 走贪心；创意任务 temperature~0.7-1 + top_p~0.9；要随机又要复现用固定种子</text>
+  <text x="30" y="480" font-size="9" fill="#a1a1a6">源码基准 vLLM(git 7aab6e2 · v1-only) · temperature 应用 sampler.py:277 · apply_top_k_top_p topk_topp_sampler.py:135 · forward_cuda:147 / forward_native:123</text>
+</svg>

@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="500" viewBox="0 0 1080 500" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="500" fill="#fbfbfd"/>
+
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">六库职责边界 —— FFmpeg 不是一大块,而是六个 libav* 库各司其职</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">职责正交:容器格式(封装)与编解码(压缩算法)独立演进 · 滤镜/缩放/重采样是可选处理 · 分库让用户按需链接、各库独立维护</text>
+
+  <!-- libavutil 横跨底座(白/中性,最底) -->
+  <rect x="30" y="368" width="1020" height="104" rx="13" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="52" y="396" font-size="13" font-weight="700" fill="#1d1d1f">libavutil</text>
+  <text x="52" y="416" font-size="9.5" fill="#6e6e73">公共基础(最底层) · 所有库依赖它</text>
+  <text x="52" y="440" font-size="10" fill="#1d1d1f">AVFrame · AVBufferRef 引用计数 · AVDictionary · 数学 / 日志 / 错误码</text>
+  <text x="52" y="460" font-size="9" fill="#86868b">是理解全部的前提:AVFrame 与引用计数的数据模型都在这里</text>
+
+  <!-- 上排四库 -->
+  <!-- libavcodec (绿=编解码) -->
+  <rect x="30" y="84" width="243" height="264" rx="13" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="52" y="112" font-size="13" font-weight="700" fill="#12402a">libavcodec</text>
+  <text x="52" y="132" font-size="9.5" fill="#2f6f4f">编解码</text>
+  <text x="52" y="162" font-size="10" fill="#12402a">编码器 / 解码器</text>
+  <text x="52" y="184" font-size="9.5" fill="#2f6f4f">AVCodecContext</text>
+  <text x="52" y="204" font-size="9.5" fill="#2f6f4f">AVPacket</text>
+  <text x="52" y="224" font-size="9.5" fill="#2f6f4f">send / receive API</text>
+  <text x="52" y="256" font-size="9" fill="#4a8a63">把压缩字节</text>
+  <text x="52" y="273" font-size="9" fill="#4a8a63">与原始帧互转</text>
+
+  <!-- libavformat (琥珀=容器/数据) -->
+  <rect x="289" y="84" width="243" height="264" rx="13" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="311" y="112" font-size="13" font-weight="700" fill="#5a3410">libavformat</text>
+  <text x="311" y="132" font-size="9.5" fill="#93762e">容器</text>
+  <text x="311" y="162" font-size="10" fill="#5a3410">muxer / demuxer</text>
+  <text x="311" y="184" font-size="9.5" fill="#93762e">AVFormatContext</text>
+  <text x="311" y="204" font-size="9.5" fill="#93762e">AVStream</text>
+  <text x="311" y="224" font-size="9.5" fill="#93762e">读写 mp4 / mkv / ts…</text>
+  <text x="311" y="256" font-size="9" fill="#93762e">同一 H.264 可封</text>
+  <text x="311" y="273" font-size="9" fill="#93762e">mp4 / mkv / ts</text>
+
+  <!-- libavfilter (蓝=处理/逻辑) -->
+  <rect x="548" y="84" width="243" height="264" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="570" y="112" font-size="13" font-weight="700" fill="#1b2a4a">libavfilter</text>
+  <text x="570" y="132" font-size="9.5" fill="#5b7db1">滤镜</text>
+  <text x="570" y="162" font-size="10" fill="#1b2a4a">AVFilterGraph</text>
+  <text x="570" y="184" font-size="9.5" fill="#5b7db1">scale / crop / overlay</text>
+  <text x="570" y="204" font-size="9.5" fill="#5b7db1">buffersrc / buffersink</text>
+  <text x="570" y="224" font-size="9.5" fill="#5b7db1">链接成图处理帧</text>
+  <text x="570" y="256" font-size="9" fill="#8aa4c8">只处理原始帧</text>
+  <text x="570" y="273" font-size="9" fill="#8aa4c8">(AVFrame)</text>
+
+  <!-- sw* 两库合并区(淡蓝变体) -->
+  <rect x="807" y="84" width="243" height="264" rx="13" fill="#f3f7fc" stroke="#cfe0f2" filter="url(#soft)"/>
+  <text x="829" y="112" font-size="13" font-weight="700" fill="#274a78">libswscale</text>
+  <text x="829" y="132" font-size="9.5" fill="#5b7db1">图像缩放 / 像素格式转换</text>
+  <text x="829" y="156" font-size="9.5" fill="#5b7db1">YUV ↔ RGB · 分辨率缩放</text>
+  <line x1="829" y1="176" x2="1028" y2="176" stroke="#e4e4ea" stroke-width="1"/>
+  <text x="829" y="204" font-size="13" font-weight="700" fill="#274a78">libswresample</text>
+  <text x="829" y="224" font-size="9.5" fill="#5b7db1">音频重采样</text>
+  <text x="829" y="248" font-size="9.5" fill="#5b7db1">采样格式 / 声道布局转换</text>
+  <text x="829" y="280" font-size="9" fill="#8aa4c8">两个可选的信号转换库</text>
+
+  <!-- util 承托关系提示 -->
+  <path d="M151,348 L151,366" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M410,348 L410,366" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M669,348 L669,366" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M928,348 L928,366" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <text x="30" y="492" font-size="9" fill="#a1a1a6">源码基准 FFmpeg(1588bce) · 六库:util(公共基础,最底)/codec(编解码)/format(容器)/filter(滤镜)/swscale(缩放)/swresample(重采样)</text>
+</svg>

@@ -336,12 +336,15 @@ html:not([data-theme="light"]) .arch-img{filter:invert(.9) hue-rotate(180deg) sa
   background:var(--c-panel);color:var(--c-ink2);cursor:pointer;font-size:16px;flex:none}
 .theme-toggle:hover{color:var(--c-ink)}
 .hgroup{display:inline-flex;align-items:center;gap:12px}
+.homelink{display:inline-flex;align-items:center;margin-right:10px;text-decoration:none;color:var(--c-ink2)}
+.homelink:hover{color:var(--c-brand)}
+.homeico{display:inline-flex}
 .back-portal{display:inline-flex;align-items:center;padding:7px 14px;border-radius:9px;border:1px solid var(--c-line);background:var(--c-panel);color:var(--c-ink2);font-size:12.5px;font-weight:500;text-decoration:none;flex:none}
 .back-portal:hover{border-color:var(--c-brand);color:var(--c-brand)}
 </style></head><body>
 <header>
-  <span class="brand">Redis 原理<span class="dim">内存数据结构存储图谱</span></span>
-  <span class="hgroup"><a class="back-portal" href="../index.html" title="返回导航主页">← 返回导航主页</a>
+  <a class="homelink" href="../index.html" title="返回导航主页"><span class="homeico" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg></span></a><span class="brand">Redis 原理<span class="dim">内存数据结构存储图谱</span></span>
+  <span class="hgroup">
   <button class="theme-toggle" id="tt" aria-label="切换主题">☾</button></span>
 </header>
 <nav class="crumb" id="crumb">

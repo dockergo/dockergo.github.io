@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="520" viewBox="0 0 1080 520" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="520" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">vLLM 能力域依赖关系图 —— 实线=数据流,虚线=约束</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">贯穿层:KV 缓存块是中心资源——几乎所有能力域围绕"分配/读写/复用/按块数决策"它运作</text>
+
+  <!-- 接触面 -->
+  <rect x="390" y="74" width="300" height="44" rx="11" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="540" y="94" font-size="11" font-weight="600" text-anchor="middle" fill="#4a2c6f">接触面:LLM 类 / OpenAI server</text>
+  <text x="540" y="110" font-size="8.5" text-anchor="middle" fill="#7a5aa0">提交 prompt + SamplingParams</text>
+
+  <!-- EngineCore (中央驱动) -->
+  <rect x="370" y="146" width="340" height="64" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="540" y="170" font-size="11.5" font-weight="600" text-anchor="middle" fill="#12402a">EngineCore · step() busy loop</text>
+  <text x="540" y="190" font-size="9" text-anchor="middle" fill="#2f6f4f">调度 → 前向 → 采样回填,反复 step(独立进程)</text>
+
+  <!-- 连续批处理调度 (左) -->
+  <rect x="55" y="150" width="250" height="72" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="180" y="174" font-size="10.5" font-weight="600" text-anchor="middle" fill="#1b2a4a">连续批处理调度</text>
+  <text x="180" y="193" font-size="8.5" text-anchor="middle" fill="#5b7db1">每步重组批 · token 预算</text>
+  <text x="180" y="209" font-size="8.5" text-anchor="middle" fill="#5b7db1">按可用块数选批/抢占</text>
+
+  <!-- 采样 (右) -->
+  <rect x="775" y="150" width="250" height="72" rx="11" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="900" y="174" font-size="10.5" font-weight="600" text-anchor="middle" fill="#5a3410">采样</text>
+  <text x="900" y="193" font-size="8.5" text-anchor="middle" fill="#93762e">logits→token</text>
+  <text x="900" y="209" font-size="8.5" text-anchor="middle" fill="#93762e">temperature/top_p/top_k</text>
+
+  <!-- PagedAttention (中央核心) -->
+  <rect x="340" y="248" width="400" height="70" rx="12" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="540" y="272" font-size="11.5" font-weight="600" text-anchor="middle" fill="#5a3410">PagedAttention:分块 KV 算注意力</text>
+  <text x="540" y="292" font-size="9" text-anchor="middle" fill="#93762e">按块表 gather 物理块 K/V → softmax</text>
+  <text x="540" y="308" font-size="8.5" text-anchor="middle" fill="#b1974e">FlashAttention 后端 · 前向时读写 KV 块</text>
+
+  <!-- 分布式并行 (右下) -->
+  <rect x="775" y="248" width="250" height="70" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="900" y="272" font-size="10.5" font-weight="600" text-anchor="middle" fill="#1b2a4a">分布式并行(TP/PP)</text>
+  <text x="900" y="291" font-size="8.5" text-anchor="middle" fill="#5b7db1">TP 切层内 all-reduce</text>
+  <text x="900" y="307" font-size="8.5" text-anchor="middle" fill="#5b7db1">每卡存自己那份 KV</text>
+
+  <!-- 贯穿层: KV 块 (底部中央) -->
+  <rect x="300" y="352" width="480" height="72" rx="12" fill="#fbeaea" stroke="#e6b8b8" filter="url(#soft)"/>
+  <text x="540" y="376" font-size="11.5" font-weight="600" text-anchor="middle" fill="#7a2a2a">KV 缓存块（贯穿层 · 中心资源）</text>
+  <text x="540" y="396" font-size="9" text-anchor="middle" fill="#a05a5a">块管理:BlockPool 分配/回收 + 引用计数 + hash 前缀复用</text>
+  <text x="540" y="412" font-size="8.5" text-anchor="middle" fill="#c07a7a">PagedAttn 读写它 · 调度按可用块数决策 · 并行下每卡一份</text>
+
+  <!-- 箭头 -->
+  <path d="M540,118 L540,146" stroke="#c7c7cc" stroke-width="1.6" fill="none" marker-end="url(#ar)"/>
+  <path d="M370,182 L305,186" stroke="#c7c7cc" stroke-width="1.4" fill="none" marker-end="url(#ar)"/>
+  <path d="M710,182 L775,186" stroke="#c7c7cc" stroke-width="1.4" fill="none" marker-end="url(#ar)"/>
+  <path d="M540,210 L540,248" stroke="#c7c7cc" stroke-width="1.6" fill="none" marker-end="url(#ar)"/>
+  <!-- PagedAttn ↔ KV块 (虚线约束) -->
+  <path d="M540,318 L540,352" stroke="#e6b8b8" stroke-width="1.4" stroke-dasharray="4 3" fill="none" marker-end="url(#ar)"/>
+  <!-- 调度→KV块(按块数) 虚线 -->
+  <path d="M180,222 L300,388" stroke="#e6b8b8" stroke-width="1.3" stroke-dasharray="4 3" fill="none" marker-end="url(#ar)"/>
+  <!-- 并行→KV块 虚线 -->
+  <path d="M900,318 L780,388" stroke="#e6b8b8" stroke-width="1.3" stroke-dasharray="4 3" fill="none" marker-end="url(#ar)"/>
+
+  <text x="30" y="452" font-size="9.5" fill="#6e6e73">数据流:接触面提 prompt → EngineCore 循环(调度选批 → 前向经 PagedAttention → 采样出 token)→ 流式返回</text>
+  <text x="30" y="474" font-size="9.5" fill="#6e6e73">约束(虚线):所有能力域围绕 KV 缓存块——PagedAttn 读写、块管理分配回收、调度按可用块数选批/抢占、并行每卡一份</text>
+  <text x="30" y="500" font-size="9" fill="#a1a1a6">灵魂:PagedAttention 分块 KV + 连续批处理 = 高吞吐两块基石 · 源码基准 vLLM(git 7aab6e2 · v1-only)</text>
+</svg>

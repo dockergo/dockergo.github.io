@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="540" viewBox="0 0 1080 540" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="540" fill="#fbfbfd"/>
+
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">FFmpeg hwaccel —— 硬件加速：编解码走 GPU</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">libavutil/hwcontext.h · 软解 4K/8K 吃满 CPU；GPU 有专用编解码单元，快且省 CPU，代价是显存 + 格式受限</text>
+
+  <!-- 两个 context -->
+  <rect x="30" y="76" width="510" height="120" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="50" y="102" font-size="12" font-weight="600" fill="#1b2a4a">AVHWDeviceContext · GPU 设备上下文</text>
+  <rect x="50" y="118" width="110" height="30" rx="7" fill="#ffffff" stroke="#bcd0ec"/><text x="105" y="138" font-size="10" font-weight="600" text-anchor="middle" fill="#1b2a4a">cuda</text>
+  <rect x="172" y="118" width="110" height="30" rx="7" fill="#ffffff" stroke="#bcd0ec"/><text x="227" y="138" font-size="10" font-weight="600" text-anchor="middle" fill="#1b2a4a">vaapi</text>
+  <rect x="294" y="118" width="140" height="30" rx="7" fill="#ffffff" stroke="#bcd0ec"/><text x="364" y="138" font-size="10" font-weight="600" text-anchor="middle" fill="#1b2a4a">videotoolbox</text>
+  <rect x="446" y="118" width="72" height="30" rx="7" fill="#ffffff" stroke="#bcd0ec"/><text x="482" y="138" font-size="10" font-weight="600" text-anchor="middle" fill="#1b2a4a">qsv</text>
+  <text x="50" y="176" font-size="9.5" fill="#5b7db1">按硬件选：NVIDIA→cuda、Intel→qsv/vaapi、Mac→videotoolbox</text>
+
+  <rect x="560" y="76" width="490" height="120" rx="13" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="580" y="102" font-size="12" font-weight="600" fill="#5a3410">AVHWFramesContext · 显存帧池</text>
+  <text x="580" y="126" font-size="9.5" fill="#93762e">GPU 显存里的帧池</text>
+  <text x="580" y="146" font-size="9.5" fill="#93762e">硬件解码的帧留在显存</text>
+  <text x="580" y="166" font-size="9.5" fill="#93762e">AVFrame 的 data 指显存，不下载到内存</text>
+  <text x="580" y="186" font-size="9" fill="#a88a4e">省 PCIe 带宽</text>
+
+  <!-- 全 GPU 链路 -->
+  <text x="30" y="230" font-size="12" font-weight="700" fill="#1d1d1f">全 GPU 链路 · 帧一直留显存，只最终结果下载</text>
+
+  <rect x="30" y="244" width="180" height="76" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="120" y="274" font-size="11" font-weight="600" text-anchor="middle" fill="#12402a">GPU 解码</text>
+  <text x="120" y="296" font-size="9" text-anchor="middle" fill="#2f6f4f">NVDEC 解 H.264/H.265</text>
+  <text x="120" y="313" font-size="8.5" text-anchor="middle" fill="#4a8a63">帧入显存</text>
+
+  <rect x="270" y="244" width="180" height="76" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="360" y="274" font-size="11" font-weight="600" text-anchor="middle" fill="#12402a">GPU 滤镜</text>
+  <text x="360" y="296" font-size="9" text-anchor="middle" fill="#2f6f4f">GPU scale 等</text>
+  <text x="360" y="313" font-size="8.5" text-anchor="middle" fill="#4a8a63">帧留显存</text>
+
+  <rect x="510" y="244" width="180" height="76" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="600" y="274" font-size="11" font-weight="600" text-anchor="middle" fill="#12402a">GPU 编码</text>
+  <text x="600" y="296" font-size="9" text-anchor="middle" fill="#2f6f4f">NVENC / QSV</text>
+  <text x="600" y="313" font-size="8.5" text-anchor="middle" fill="#4a8a63">显存帧直接编码</text>
+
+  <rect x="750" y="244" width="300" height="76" rx="12" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="900" y="274" font-size="11" font-weight="600" text-anchor="middle" fill="#5a3410">显存 ← 全程留驻 → 显存</text>
+  <text x="900" y="296" font-size="9" text-anchor="middle" fill="#93762e">不逐帧下载到内存再上传</text>
+  <text x="900" y="313" font-size="8.5" text-anchor="middle" fill="#a88a4e">省 PCIe 带宽，大幅提速</text>
+
+  <path d="M210,282 L270,282" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M450,282 L510,282" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M690,282 L750,282" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <!-- transfer -->
+  <rect x="30" y="352" width="1020" height="100" rx="13" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="50" y="378" font-size="12" font-weight="600" fill="#3d2a5a">av_hwframe_transfer_data · 显存 ↔ 内存搬帧</text>
+  <rect x="50" y="394" width="200" height="42" rx="9" fill="#fff7e6" stroke="#e8cf9a"/><text x="150" y="420" font-size="10.5" font-weight="600" text-anchor="middle" fill="#5a3410">显存（GPU）</text>
+  <rect x="470" y="394" width="200" height="42" rx="9" fill="#ffffff" stroke="#d9c7ec"/><text x="570" y="420" font-size="10.5" font-weight="600" text-anchor="middle" fill="#3d2a5a">内存（CPU）</text>
+  <path d="M250,409 L470,409" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M470,424 L250,424" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="360" y="404" font-size="9" text-anchor="middle" fill="#a1a1a6">download</text>
+  <text x="700" y="418" font-size="9.5" fill="#7a5aa0">需 CPU 处理某帧时才下载；频繁搬帧有开销，中间下载可能不如软解</text>
+
+  <text x="30" y="486" font-size="12" font-weight="700" fill="#1d1d1f">一句话</text>
+  <text x="30" y="508" font-size="9.5" fill="#86868b">GPU 专用单元（NVDEC/NVENC）快且省 CPU；硬解帧留显存，全 GPU 链路只最终下载省 PCIe；受硬件/格式/编码器限制 · FFmpeg(1588bce) · hwcontext.h</text>
+</svg>

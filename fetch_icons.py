@@ -41,6 +41,13 @@ SLUG = {
     # 已知 simple-icons 无收录 → 显式置空,直接走首字母 tile,省一次联网探测:
     "iceberg": "", "hudi": "", "orc": "", "starrocks": "",
     "zookeeper": "", "raft": "", "gorm": "",
+    # 注:上面 7 个 simple-icons 无收录。其中 3 个方形 brandmark 已手工从官方源取真 logo
+    # 存入各 design/icon.svg(本抓取器不覆盖已存在文件,故手工 logo 安全):
+    #   orc       ← vectorlogo.zone/logos/apache_orc(64×64 方形)
+    #   zookeeper ← vectorlogo.zone/logos/apache_zookeeper(近方形)
+    #   starrocks ← StarRocks/starrocks: docs/docusaurus/static/img/logo.svg(54×62)
+    # 另 4 个是宽版 wordmark / banner / 无 logo,在 34px 方 tile 里会糊成细条,
+    # 故保留精修首字母 tile(iceberg/gorm/hudi 宽标;raft 协议无 logo)。
 }
 
 

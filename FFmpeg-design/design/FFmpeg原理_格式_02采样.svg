@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="520" viewBox="0 0 1080 520" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="520" fill="#fbfbfd"/>
+
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">FFmpeg AVSampleFormat —— 音频采样怎么存</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">libavutil/samplefmt.h · 位深/类型、planar（后缀 P）vs 交织，配声道布局 + 采样率</text>
+
+  <!-- 位深/类型 -->
+  <text x="30" y="86" font-size="12" font-weight="700" fill="#1d1d1f">位深 / 类型（精度与范围）</text>
+  <rect x="30" y="98" width="245" height="72" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="152" y="128" font-size="12.5" font-weight="600" text-anchor="middle" fill="#12402a">S16</text>
+  <text x="152" y="150" font-size="9.5" text-anchor="middle" fill="#2f6f4f">16 位整数</text>
+  <rect x="285" y="98" width="245" height="72" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="407" y="128" font-size="12.5" font-weight="600" text-anchor="middle" fill="#12402a">S32</text>
+  <text x="407" y="150" font-size="9.5" text-anchor="middle" fill="#2f6f4f">32 位整数</text>
+  <rect x="540" y="98" width="245" height="72" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="662" y="128" font-size="12.5" font-weight="600" text-anchor="middle" fill="#12402a">FLT</text>
+  <text x="662" y="150" font-size="9.5" text-anchor="middle" fill="#2f6f4f">32 位浮点</text>
+  <rect x="795" y="98" width="255" height="72" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="922" y="128" font-size="12.5" font-weight="600" text-anchor="middle" fill="#12402a">DBL</text>
+  <text x="922" y="150" font-size="9.5" text-anchor="middle" fill="#2f6f4f">64 位浮点</text>
+
+  <!-- planar vs interleaved -->
+  <text x="30" y="204" font-size="12" font-weight="700" fill="#1d1d1f">平面（planar，后缀 P）vs 交织（interleaved）</text>
+  <rect x="30" y="216" width="510" height="128" rx="12" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="50" y="242" font-size="11.5" font-weight="600" fill="#5a3410">interleaved · S16</text>
+  <text x="50" y="262" font-size="9.5" fill="#93762e">左右声道 LRLRLR 存一块</text>
+  <rect x="50" y="276" width="470" height="30" rx="7" fill="#ffffff" stroke="#e8cf9a"/>
+  <text x="285" y="296" font-size="10.5" font-weight="600" text-anchor="middle" fill="#5a3410">L R  L R  L R  L R  …  → data[0]</text>
+  <text x="50" y="328" font-size="9" fill="#a88a4e">播放 / 硬件常要（按时间连续）</text>
+
+  <rect x="560" y="216" width="490" height="128" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="580" y="242" font-size="11.5" font-weight="600" fill="#1b2a4a">planar · S16P</text>
+  <text x="580" y="262" font-size="9.5" fill="#5b7db1">左声道一块、右声道一块</text>
+  <rect x="580" y="276" width="220" height="30" rx="7" fill="#ffffff" stroke="#bcd0ec"/><text x="690" y="296" font-size="10" font-weight="600" text-anchor="middle" fill="#1b2a4a">L L L L → data[0]</text>
+  <rect x="810" y="276" width="220" height="30" rx="7" fill="#ffffff" stroke="#bcd0ec"/><text x="920" y="296" font-size="10" font-weight="600" text-anchor="middle" fill="#1b2a4a">R R R R → data[1]</text>
+  <text x="580" y="328" font-size="9" fill="#8aa4c8">编码 / 处理常要（各声道独立处理）</text>
+
+  <!-- 声道布局 + 采样率 -->
+  <text x="30" y="378" font-size="12" font-weight="700" fill="#1d1d1f">配合：声道布局 + 采样率</text>
+  <rect x="30" y="390" width="510" height="88" rx="12" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="50" y="416" font-size="11.5" font-weight="600" fill="#3d2a5a">声道布局</text>
+  <rect x="50" y="430" width="140" height="36" rx="8" fill="#ffffff" stroke="#d9c7ec"/><text x="120" y="453" font-size="10.5" font-weight="600" text-anchor="middle" fill="#3d2a5a">单声道</text>
+  <rect x="202" y="430" width="140" height="36" rx="8" fill="#ffffff" stroke="#d9c7ec"/><text x="272" y="453" font-size="10.5" font-weight="600" text-anchor="middle" fill="#3d2a5a">立体声</text>
+  <rect x="354" y="430" width="166" height="36" rx="8" fill="#ffffff" stroke="#d9c7ec"/><text x="437" y="453" font-size="10.5" font-weight="600" text-anchor="middle" fill="#3d2a5a">5.1 环绕</text>
+
+  <rect x="560" y="390" width="490" height="88" rx="12" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="580" y="416" font-size="11.5" font-weight="600" fill="#3d2a5a">采样率</text>
+  <rect x="580" y="430" width="215" height="36" rx="8" fill="#ffffff" stroke="#d9c7ec"/><text x="687" y="453" font-size="10.5" font-weight="600" text-anchor="middle" fill="#3d2a5a">44100 Hz（CD）</text>
+  <rect x="807" y="430" width="223" height="36" rx="8" fill="#ffffff" stroke="#d9c7ec"/><text x="918" y="453" font-size="10.5" font-weight="600" text-anchor="middle" fill="#3d2a5a">48000 Hz（视频）</text>
+
+  <text x="30" y="504" font-size="9.5" fill="#86868b">为什么分平面/交织：编码器/处理常要平面（各声道独立），播放/硬件常要交织；swresample 转换 · 源码基准 FFmpeg(1588bce) · libavutil/samplefmt.h</text>
+</svg>

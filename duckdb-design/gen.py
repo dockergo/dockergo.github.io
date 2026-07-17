@@ -19,7 +19,7 @@ import argparse
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
-_ap = argparse.ArgumentParser(description="生成 DuckDB 引擎交互式核心原理图谱（离线自包含 HTML）")
+_ap = argparse.ArgumentParser(description="生成 DuckDB 交互式核心原理图谱（离线自包含 HTML）")
 _ap.add_argument("--design-dir", default=None, help="手绘 SVG + prose 文档目录（默认：脚本同级 ./design）")
 _ap.add_argument("--out", default=None, help="输出 HTML 路径（默认：脚本同级 index.html）")
 _args, _ = _ap.parse_known_args()
@@ -40,52 +40,90 @@ _DESIGN_DIR = _first_dir(
 OUT = _args.out or os.environ.get("DUCKDB_DESIGN_OUT") or os.path.join(HERE, "index.html")
 
 # ===================================================================== #
-# 一、主线注册表 —— 唯一需随引擎调整的数据块
-#     原型 A（嵌入式单机 SQL 存算）：全景 + 4 接口主线 + 8 支撑能力域。
-#     每条主线声明：md 文件名、分组、图标、短标题、一句话副标。
-#     SVG 序、prose 均从 md 自动解析。
+# 一、主线注册表 —— 唯一需随项目调整的数据块
+#     新家族（DuckDB · 进程内嵌入式分析库）：元模式 = 接口 × 能力域 × 时机。
+#     全景 + 4 接触面主线（SQL 四类）+ 8 支撑能力域。
 # ===================================================================== #
 MAINLINES = [
     ("DuckDB原理_全景主线框架", "pano", "◇", "全景主线框架",
-     "原型 A 嵌入式单机 SQL 存算：双维模型 · 总架构 · 嵌入形态 · 依赖矩阵 · 三条贯穿声明"),
+     "进程内嵌入式：链接进宿主进程共享地址空间 · 单文件/纯内存持久化 · 从 SQL 到结果的单机全链路"),
 
-    ("DuckDB原理_DDL数据定义", "iface", "⇲", "DDL 数据定义",
-     "定义对象：CatalogSet 增删改 · 事务性 DDL · 依赖管理 · ALTER 轻/重两路"),
-    ("DuckDB原理_DML数据写入", "iface", "⇥", "DML 数据写入",
-     "写入：事务本地存储 → 提交并入 → WAL → checkpoint · MVCC 版本"),
-    ("DuckDB原理_DQL数据查询", "iface", "◷", "DQL 数据查询",
-     "查询：Parser→Binder→Optimizer→物理计划→push 向量化流水线 · morsel 并行"),
-    ("DuckDB原理_DCL数据控制", "iface", "⛚", "DCL 数据控制",
-     "控制：无多用户 GRANT · 访问模式 + 配置安全闸门 + SECRET 密钥"),
+    ("DuckDB原理_DDL数据定义", "iface", "▤", "DDL 数据定义",
+     "定义对象的接口：Binder 定位库/schema → CatalogSet 建删改版本条目 → 依赖校验 → 事务提交写 WAL"),
+    ("DuckDB原理_DML数据写入", "iface", "✎", "DML 数据写入",
+     "改数据的接口：事务本地存储 → COMMIT 并入全局表 → WAL 持久 → 后台 Checkpoint 合并"),
+    ("DuckDB原理_DQL数据查询", "iface", "▦", "DQL 数据查询",
+     "读数据的接口：ClientContext 内 Parser→Binder→Optimizer→物理计划→Executor · push 向量化 morsel 并行"),
+    ("DuckDB原理_DCL数据控制", "iface", "⛨", "DCL 数据控制",
+     "控制访问与行为：访问模式 READ_ONLY/WRITE · 配置与安全闸门 · SECRET 密钥管理（嵌入式无多用户 GRANT）"),
 
-    ("DuckDB原理_支撑_存储引擎", "support", "▤", "存储引擎",
-     "单文件列存：RowGroup · ColumnSegment · 按段压缩 · ART 索引"),
-    ("DuckDB原理_支撑_执行引擎", "support", "⚡", "向量化执行引擎",
-     "DataChunk 列批 · 多 Vector 布局 · 统一格式 · push 流水线"),
-    ("DuckDB原理_支撑_优化技术", "support", "✲", "优化技术",
-     "~30 pass · 基数估计 CBO · DP/贪心 Join 定序 · 统计传播"),
-    ("DuckDB原理_支撑_事务与MVCC", "support", "⛨", "事务与 MVCC",
-     "快照隔离 · 乐观并发 · UndoBuffer 版本链 · 三时间戳"),
-    ("DuckDB原理_支撑_元数据与Catalog", "support", "◫", "元数据与 Catalog",
-     "内存目录 · checkpoint 序列化单文件 · 名称解析 search_path"),
-    ("DuckDB原理_支撑_内存与Buffer管理", "support", "▦", "内存与 Buffer 管理",
-     "Block 换入换出 · 驱逐 · larger-than-memory 外存溢写"),
-    ("DuckDB原理_支撑_扩展机制", "support", "✦", "扩展机制",
-     "INSTALL/LOAD · 能力注册进 Catalog · 替换扫描直查文件"),
-    ("DuckDB原理_支撑_后台任务", "support", "◐", "后台任务",
-     "横切执行时机：checkpoint · WAL 回放 · 驱逐 · 版本清理"),
+    ("DuckDB原理_支撑_存储引擎", "support", "◫", "存储引擎",
+     "自管单文件列存：DataTable→RowGroup→ColumnSegment · 256KB 块 + 列级压缩 + ART 索引"),
+    ("DuckDB原理_支撑_执行引擎", "support", "⚙", "执行引擎",
+     "向量化执行侧：DataChunk 列批 + 多种 Vector 布局 + push-based 流水线，DQL 的执行底盘"),
+    ("DuckDB原理_支撑_优化技术", "support", "◉", "优化技术",
+     "规划侧：编译链中段顺序跑 ~30 个 pass，用统计与代价在规划期把要处理的数据变少"),
+    ("DuckDB原理_支撑_事务与MVCC", "support", "◐", "事务与 MVCC",
+     "快照隔离 + 乐观并发 + UndoBuffer 版本链的经典 MVCC，DML/DDL 正确性底座"),
+    ("DuckDB原理_支撑_元数据与Catalog", "support", "▥", "元数据与 Catalog",
+     "管理 schema/表/视图/函数的定义与依赖 · 内存态 + checkpoint 序列化进单文件 · 名称解析与绑定"),
+    ("DuckDB原理_支撑_内存与Buffer管理", "support", "▧", "内存与 Buffer 管理",
+     "BufferManager/BufferPool 把 256KB 块按需换入 · 内存压力驱逐 · 阻塞算子超预算溢写临时文件"),
+    ("DuckDB原理_支撑_扩展机制", "support", "⧉", "扩展机制",
+     "可插拔能力：INSTALL/LOAD 把格式/协议/函数注册进 Catalog · 替换扫描直接 FROM 文件/对象"),
+    ("DuckDB原理_支撑_后台任务", "support", "↻", "后台任务",
+     "横切执行时机（后台/异步）：Checkpoint · WAL 回放 · Buffer 驱逐/溢写清理 · 旧版本清理"),
 ]
 
 CAT_ORDER = [
     ("pano", "全景框架 · 先读这一篇"),
-    ("iface", "接口主线 · 用户下发（DDL / DML / DQL / DCL）"),
+    ("iface", "接触面主线 · SQL 四类"),
     ("support", "支撑主线 · 引擎内部（8 条能力域）"),
 ]
 
-BRAND_TITLE = "DuckDB 原理"
-BRAND_SUB = "DuckDB 核心原理 · 交互式图谱"
-HOME_DESC = ("DuckDB 核心原理设计文档库的离线交互图谱——原型 A（嵌入式单机 SQL 存算引擎）。"
-             "13 条主线、45 张手绘原理图，全部回主线源码核实。点任意主线进入逐图走查。")
+# ===================================================================== #
+# 一·b、项目总架构图 = 唯一导航底图 —— 热区注册表（决定"点击下钻"）
+#   产出准则（用户明确要求）：项目页统一用【项目总架构图】(ARCH_SVG_NAME) 做导航，
+#   在图上叠透明热区，每个语义模块 = 一个可点区域 → 下钻对应主线。
+#   坐标系 = 该总架构 SVG 的 viewBox（ARCH_W×ARCH_H），生成期换算成百分比定位。
+#   两条覆盖铁律：① 图上每个模块都有热区 ② 每条主线都被某热区覆盖（未覆盖者自动兜底成 chip）。
+# ===================================================================== #
+PANO_NAME = "DuckDB原理_全景主线框架"
+ARCH_W, ARCH_H = 1020, 700  # 必须与 ARCH_SVG_NAME 的 viewBox 一致
+# (x, y, w, h, 主线name) —— 坐标直接抄 SVG <rect>（root 坐标，无 group transform）
+ARCH_HOTSPOTS = [
+    # 标题条 → 全景总览
+    (0, 0, 1020, 44, "DuckDB原理_全景主线框架"),
+    # ① 接入层 · 作为库链接进宿主进程 → 进程内嵌入式定位（全景）
+    (30, 50, 960, 82, "DuckDB原理_全景主线框架"),
+    # ② 处理层 · 编译一条 SQL —— 逐子框映射到对应主线
+    (48, 188, 130, 86, "DuckDB原理_DQL数据查询"),           # Parser
+    (196, 188, 130, 86, "DuckDB原理_支撑_元数据与Catalog"),  # Binder（名称/类型绑定）
+    (344, 188, 150, 86, "DuckDB原理_支撑_优化技术"),         # Optimizer
+    (512, 188, 160, 86, "DuckDB原理_DQL数据查询"),           # PhysicalPlanGenerator（DQL 骨架·物理计划）
+    (690, 188, 284, 86, "DuckDB原理_支撑_执行引擎"),         # Executor · 构建 Pipeline
+    # ③ 向量化执行层 · push-based（整块面板）
+    (30, 314, 620, 164, "DuckDB原理_支撑_执行引擎"),
+    # ④ 事务层 · MVCC（整块面板）
+    (668, 314, 322, 164, "DuckDB原理_支撑_事务与MVCC"),
+    # ⑤ 存储层 · 自管单文件 —— 三子框分映射
+    (48, 532, 300, 128, "DuckDB原理_支撑_存储引擎"),          # 逻辑数据组织 DataTable→RowGroup→Segment
+    (364, 532, 300, 128, "DuckDB原理_支撑_内存与Buffer管理"),  # 物理块与缓存 BufferManager/BufferPool
+    (680, 532, 294, 128, "DuckDB原理_支撑_后台任务"),         # 持久化与恢复 WAL/Checkpoint/回放
+]
+# 未在总架构图上单独描绘的主线 → 底部 chip 兜底（DDL/DML/DCL/扩展机制 无独立框）
+ARCH_ALWAYS_CHIP = [
+    "DuckDB原理_DDL数据定义",
+    "DuckDB原理_DML数据写入",
+    "DuckDB原理_DCL数据控制",
+    "DuckDB原理_支撑_扩展机制",
+]
+
+BRAND_TITLE = "一切知识皆索引"
+BRAND_SUB = "DuckDB"
+HOME_DESC = ("DuckDB 核心原理设计文档库的离线交互图谱——进程内嵌入式分析数据库（像 SQLite 一样链接进宿主进程，"
+             "但为列式向量化 OLAP 而生：单文件或纯内存持久化，查询在宿主线程内零网络序列化完成）。"
+             "13 条主线、46 张手绘原理图，全部回 duckdb/duckdb 源码核实。点击项目总架构图任意模块即可下钻到对应主线。")
 ARCH_SVG_NAME = "DuckDB原理_全景_02总架构.svg"
 
 # ===================================================================== #
@@ -167,7 +205,7 @@ def parse_doc(fname):
 
     # 深化/拓展/补充 章节里的对比表
     tables = []
-    for m in re.finditer(r"##\s*((?:深化|拓展|补充|二)[^\n]*)\n(.*?)(?=\n##|\Z)", t, re.S):
+    for m in re.finditer(r"##\s*((?:深化|拓展|补充)[^\n]*)\n(.*?)(?=\n##|\Z)", t, re.S):
         cap = re.sub(r"^[·\s]*(深化|拓展|补充)\s*·?\s*", "", m.group(1)).strip()
         parsed = _parse_md_table(m.group(2))
         if parsed:
@@ -199,50 +237,45 @@ def esc(s):
     return html.escape(s or "")
 
 
-def build_cards():
-    parts = []
-    for cat, label in CAT_ORDER:
-        group = [m for m in MAINLINES if m[1] == cat]
-        if not group:
+def build_archnav():
+    """首页唯一导航：项目总架构图 (ARCH_SVG_NAME) 底图 + 透明热区叠加。
+    每个语义模块 = 一个 .arch-hot 区域，点击下钻对应主线；未覆盖主线兜底成 chip。"""
+    meta = {name: (ico, ctitle, sub) for name, _c, ico, ctitle, sub in MAINLINES}
+    if not _ARCH_SVG:
+        return '<p style="color:var(--c-ink2)">（缺项目总架构图 %s）</p>' % esc(ARCH_SVG_NAME)
+    hots = []
+    for (x, y, w, h, mid) in ARCH_HOTSPOTS:
+        if mid not in meta:
+            print("  ⚠ 热区指向不存在的主线:", mid)
             continue
-        parts.append('<div class="cat-sec">%s</div>' % esc(label))
-        cells = []
-        for name, _cat, ico, ctitle, sub in group:
-            n = len(DOCS[name]["walk"])
-            cells.append(
-                '<button class="tcard" data-mid="{mid}">'
-                '<span class="tcard-ico">{ico}</span>'
-                '<span class="tcard-body">'
-                '<span class="tcard-title">{title}</span>'
-                '<span class="tcard-desc">{sub}</span>'
-                '<span class="tcard-meta">{n} 张原理图 →</span>'
-                '</span></button>'.format(
-                    mid=esc(name), ico=esc(ico), title=esc(ctitle),
-                    sub=esc(sub), n=n))
-        parts.append('<div class="tcards">' + "\n".join(cells) + "</div>")
-    return "\n".join(parts)
+        _ico, title, _s = meta[mid]
+        hots.append(
+            '<button class="arch-hot" data-mid="{mid}" aria-label="{title}"'
+            ' style="left:{l:.3f}%;top:{t:.3f}%;width:{w:.3f}%;height:{ht:.3f}%">'
+            '<span class="ah-tag">{ico} {title}</span></button>'.format(
+                mid=esc(mid), title=esc(title), ico=esc(_ico),
+                l=x / ARCH_W * 100, t=y / ARCH_H * 100,
+                w=w / ARCH_W * 100, ht=h / ARCH_H * 100))
+    covered = {mid for (*_r, mid) in ARCH_HOTSPOTS}
+    chip_names = [n for (n, *_r) in MAINLINES if n not in covered] + \
+                 [n for n in ARCH_ALWAYS_CHIP if n not in covered]
+    chips = ""
+    if chip_names:
+        seen, items = set(), []
+        for n in chip_names:
+            if n in seen or n not in meta:
+                continue
+            seen.add(n)
+            ico, title, _s = meta[n]
+            items.append('<button class="arch-chip" data-mid="{mid}">{ico} {title}</button>'
+                         .format(mid=esc(n), ico=esc(ico), title=esc(title)))
+        chips = ('<div class="arch-chips" aria-label="未在架构图上单独描绘的主线">%s</div>'
+                 % "".join(items))
+    return (
+        '<div class="arch-wrap">'
+        '<img alt="DuckDB 项目总架构图" src="data:image/svg+xml;base64,%s"/>'
+        '%s</div>%s' % (_ARCH_SVG, "".join(hots), chips))
 
-
-def build_tree():
-    parts = ['<div class="tree">']
-    for cat, label in CAT_ORDER:
-        group = [m for m in MAINLINES if m[1] == cat]
-        if not group:
-            continue
-        parts.append('<div class="tree-cat">%s</div>' % esc(label))
-        for name, _c, ico, ctitle, _sub in group:
-            leaves = "".join(
-                '<button class="tree-leaf" data-mid="{mid}" data-idx="{i}">{ico2} {sec}</button>'.format(
-                    mid=esc(name), i=i, ico2="▸", sec=esc(sec))
-                for i, (sec, _a, _s) in enumerate(DOCS[name]["walk"]))
-            parts.append(
-                '<div class="tree-node"><button class="tree-head" data-mid="{mid}">'
-                '<span>{ico} {title}</span><span class="tree-n">{n}</span></button>'
-                '<div class="tree-leaves">{leaves}</div></div>'.format(
-                    mid=esc(name), ico=esc(ico), title=esc(ctitle),
-                    n=len(DOCS[name]["walk"]), leaves=leaves))
-    parts.append("</div>")
-    return "\n".join(parts)
 
 
 def build_panes():
@@ -328,8 +361,7 @@ a{color:inherit;text-decoration:none}
 header{position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:14px;
   padding:12px 22px;background:color-mix(in srgb,var(--c-bg) 82%,transparent);
   backdrop-filter:saturate(160%) blur(14px);border-bottom:1px solid var(--c-border)}
-.logo{display:flex;align-items:center;gap:9px;cursor:pointer;font-weight:700;font-size:15px}
-.logo{text-decoration:none;color:inherit}
+.logo{display:flex;align-items:center;gap:9px;cursor:pointer;font-weight:700;font-size:15px;text-decoration:none;color:inherit}
 .logo:hover .homeico{color:var(--c-brand)}
 .homeico{display:inline-flex;color:var(--c-ink2);transition:color .15s}
 .logo .dot{width:11px;height:11px;border-radius:3px;background:linear-gradient(135deg,var(--c-brand),var(--c-amber))}
@@ -339,42 +371,19 @@ header{position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:14px
   border-radius:9px;padding:6px 12px;cursor:pointer;font-size:12.5px;transition:.15s}
 .hbtn:hover{color:var(--c-ink);border-color:var(--c-edge)}
 .wrap{max-width:1180px;margin:0 auto;padding:30px 22px 80px}
-.hero{padding:26px 0 10px}
-.hero h1{font-size:30px;font-weight:800;letter-spacing:-.5px;
-  background:linear-gradient(120deg,var(--c-ink),var(--c-ink2));-webkit-background-clip:text;background-clip:text;color:transparent}
-.hero p{margin-top:10px;color:var(--c-ink2);max-width:760px;font-size:13.5px}
-.nav-seg{display:inline-flex;margin:22px 0 6px;background:var(--c-card2);border:1px solid var(--c-border);border-radius:11px;padding:3px}
-.nav-seg button{border:0;background:transparent;color:var(--c-ink2);padding:7px 15px;border-radius:8px;cursor:pointer;font-size:12.5px;transition:.15s}
-.nav-seg button.on{background:var(--c-card);color:var(--c-ink);box-shadow:0 1px 3px var(--c-shadow)}
-.nav-mode{display:none;margin-top:16px}
-.nav-mode.on{display:block}
-.cat-sec{font-size:12px;font-weight:700;color:var(--c-ink3);text-transform:uppercase;letter-spacing:.6px;margin:26px 0 12px}
-.tcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(268px,1fr));gap:13px}
-.tcard{display:flex;gap:12px;text-align:left;cursor:pointer;padding:15px 16px;
-  background:var(--c-card);border:1px solid var(--c-border);border-radius:14px;transition:.16s;color:inherit;align-items:flex-start}
-.tcard:hover{border-color:var(--c-brand);transform:translateY(-2px);box-shadow:0 8px 24px var(--c-shadow)}
-.tcard-ico{font-size:20px;line-height:1.2;width:26px;flex:none;text-align:center}
-.tcard-body{display:flex;flex-direction:column;gap:4px;min-width:0}
-.tcard-title{font-weight:700;font-size:14.5px}
-.tcard-desc{color:var(--c-ink2);font-size:11.8px;line-height:1.5}
-.tcard-meta{color:var(--c-brand);font-size:11px;font-weight:600;margin-top:2px}
-.arch-wrap{position:relative;background:var(--c-card);border:1px solid var(--c-border);border-radius:16px;padding:14px;overflow:hidden}
+.navmap-hint{color:var(--c-ink3);font-size:12px;margin:18px 2px 0;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.navmap-hint b{color:var(--c-brand);font-weight:700}
+.arch-wrap{position:relative;margin-top:12px;background:var(--c-card);border:1px solid var(--c-border);border-radius:16px;padding:14px;overflow:hidden}
 .arch-wrap img{width:100%;display:block;border-radius:8px}
 html:not([data-theme="light"]) .arch-wrap img{filter:invert(.92) hue-rotate(180deg) saturate(.85)}
+.arch-hot{position:absolute;border:0;background:transparent;cursor:pointer;padding:0;border-radius:6px;transition:.12s;z-index:2}
+.arch-hot:hover,.arch-hot:focus-visible{background:color-mix(in srgb,var(--c-brand) 14%,transparent);outline:2px solid var(--c-brand);outline-offset:-1px}
+.arch-hot:focus{outline:2px solid var(--c-brand)}
+.ah-tag{display:none;position:absolute;left:3px;top:3px;white-space:nowrap;background:var(--c-brand);color:#fff;font-size:11px;font-weight:600;padding:3px 8px;border-radius:6px;box-shadow:0 3px 10px var(--c-shadow);pointer-events:none;z-index:3}
+.arch-hot:hover .ah-tag,.arch-hot:focus-visible .ah-tag{display:block}
 .arch-chips{display:flex;flex-wrap:wrap;gap:9px;margin-top:14px}
-.arch-chip{border:1px solid var(--c-border);background:var(--c-card2);border-radius:9px;padding:7px 12px;cursor:pointer;font-size:12px;transition:.15s}
+.arch-chip{border:1px solid var(--c-border);background:var(--c-card2);border-radius:9px;padding:7px 12px;cursor:pointer;font-size:12px;transition:.15s;color:inherit}
 .arch-chip:hover{border-color:var(--c-brand);color:var(--c-brand)}
-.tree-cat{font-size:12px;font-weight:700;color:var(--c-ink3);text-transform:uppercase;letter-spacing:.6px;margin:20px 0 8px}
-.tree-node{margin-bottom:6px}
-.tree-head{width:100%;display:flex;justify-content:space-between;align-items:center;cursor:pointer;
-  background:var(--c-card);border:1px solid var(--c-border);border-radius:10px;padding:11px 14px;color:inherit;font-size:13.5px;font-weight:600}
-.tree-head:hover{border-color:var(--c-edge)}
-.tree-n{color:var(--c-ink3);font-size:11px;font-weight:500}
-.tree-leaves{display:none;padding:6px 0 6px 14px}
-.tree-node.open .tree-leaves{display:block}
-.tree-leaf{display:block;width:100%;text-align:left;cursor:pointer;background:transparent;border:0;
-  color:var(--c-ink2);padding:6px 10px;border-radius:7px;font-size:12.5px}
-.tree-leaf:hover{background:var(--c-card2);color:var(--c-ink)}
 .pane{display:none}
 .pane.on{display:block}
 .pane-head{display:flex;align-items:center;gap:12px;margin:6px 0 16px}
@@ -464,15 +473,17 @@ APP_JS = r"""
       t.classList.toggle('on', +t.dataset.idx===idx);});
   }
   document.addEventListener('click',function(e){
-    var c=e.target.closest('.tcard'); if(c){openMain(c.dataset.mid,0);return;}
+    var ah=e.target.closest('.arch-hot'); if(ah){openMain(ah.dataset.mid,0);return;}
     var ac=e.target.closest('.arch-chip'); if(ac){openMain(ac.dataset.mid,0);return;}
     var wt=e.target.closest('.walk-tab'); if(wt){selFig(wt.dataset.mid,+wt.dataset.idx);return;}
-    var tl=e.target.closest('.tree-leaf'); if(tl){openMain(tl.dataset.mid,+tl.dataset.idx);return;}
-    var th=e.target.closest('.tree-head'); if(th){th.parentElement.classList.toggle('open');return;}
-    // logo now portal link
-    var bk=e.target.closest('#back'); if(bk){showHome();return;}
+    // logo is now a link to portal (../index.html); no JS intercept
+    var bk=e.target.closest('#back2'); if(bk){showHome();return;}
   });
-    showHome();
+  document.addEventListener('keydown',function(e){
+    if(e.key!=='Enter'&&e.key!==' ')return;
+    var ah=e.target.closest('.arch-hot,.arch-chip'); if(ah){e.preventDefault();openMain(ah.dataset.mid,0);}
+  });
+  showHome();
   function done(){var lo=document.getElementById('lo');if(lo){lo.classList.add('hide');setTimeout(function(){if(lo&&lo.parentNode)lo.parentNode.removeChild(lo);},500);}}
   requestAnimationFrame(function(){requestAnimationFrame(function(){setTimeout(done,120);});});
   setTimeout(done,4000);
@@ -481,18 +492,12 @@ APP_JS = r"""
 
 
 def build_html():
-    if _ARCH_SVG:
-        chips = "".join(
-            '<button class="arch-chip" data-mid="{mid}">{ico} {title}</button>'.format(
-                mid=esc(n), ico=esc(ico), title=esc(t))
-            for (n, _c, ico, t, _s) in MAINLINES)
-        arch_section = (
-            '<div class="nav-mode on" data-mode="arch">'
-            '<div class="arch-wrap"><img alt="DuckDB 总架构图" '
-            'src="data:image/svg+xml;base64,%s"/></div>'
-            '<div class="arch-chips">%s</div></div>' % (_ARCH_SVG, chips))
-    else:
-        arch_section = '<div class="nav-mode on" data-mode="arch"><p>（缺总架构图）</p></div>'
+    archnav = build_archnav()
+    # 导航一致性校验：每条主线要么被某热区覆盖、要么进兜底 chip，否则在架构图入口失联
+    covered = {mid for (*_r, mid) in ARCH_HOTSPOTS} | set(ARCH_ALWAYS_CHIP)
+    unmapped = [n for (n, *_r) in MAINLINES if n not in covered]
+    if unmapped:
+        print("  ⚠ 架构图上失联的主线(既无热区又无 chip):", unmapped)
 
     total_svg = len(_on_disk)
     return """<!DOCTYPE html>
@@ -500,38 +505,36 @@ def build_html():
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>{brand} · DuckDB 核心原理图谱</title>
+<title>{sub} · 原理图谱</title>
 <style>{css}</style>
 </head>
 <body>
 <div id="lo" role="status" aria-live="polite">
   <div class="lo-logo"></div>
-  <div class="lo-t">{brand}</div>
-  <div class="lo-s">{sub} · 正在装载 {n} 张原理图</div>
+  <div class="lo-t">{sub}</div>
+  <div class="lo-s">正在装载 {n} 张原理图</div>
   <div class="lo-bar"><i></i></div>
   <div class="lo-s" style="font-size:11px;opacity:.7">短暂空白属正常装载，非内容缺失</div>
 </div>
 <header>
-  <a class="logo" id="logo" href="../index.html" title="返回导航主页"><span class="homeico" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg></span><span>{brand}</span><span class="sub">{sub}</span></a>
+  <a class="logo" id="logo" href="../index.html" title="返回导航主页"><span class="homeico" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg></span></a>
   <div class="spacer"></div>
-  <button class="hbtn" id="back">← 返回首页</button>
   <button class="hbtn" id="themeBtn">☾ 深色</button>
 </header>
 <div class="wrap">
   <div id="home">
-    {arch}
-    </div>
+    {archnav}
+  </div>
   <div id="panes" style="display:none">
-    <button class="hbtn back on" id="back2" onclick="document.getElementById('back').click()">← 返回全部主线</button>
+    <button class="hbtn back on" id="back2" onclick="showHome()">← 返回全部主线</button>
     {panes}
   </div>
 </div>
 <script>{js}</script>
 </body>
 </html>""".format(
-        brand=esc(BRAND_TITLE), sub=esc(BRAND_SUB), home_desc=esc(HOME_DESC), n=total_svg,
-        css=CSS, cards=build_cards(), arch=arch_section, tree=build_tree(),
-        panes=build_panes(), js=APP_JS)
+        sub=esc(BRAND_SUB), n=total_svg,
+        css=CSS, archnav=archnav, panes=build_panes(), js=APP_JS)
 
 
 if __name__ == "__main__":

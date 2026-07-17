@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="500" viewBox="0 0 1080 500" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="500" fill="#fbfbfd"/>
+
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">滤镜图在管线中的位置 —— 插在 decode 之后、encode 之前</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">滤镜只处理原始帧(AVFrame),不碰压缩包(AVPacket) · 缩放/裁剪需要解码后的图像,压缩数据无法直接处理 —— 故必在 decode 之后</text>
+
+  <!-- 顶部管线主干 y=88 h=118 -->
+  <!-- demux (琥珀) -->
+  <rect x="30" y="88" width="150" height="118" rx="12" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="105" y="132" font-size="11" font-weight="600" text-anchor="middle" fill="#5a3410">demux</text>
+  <text x="105" y="154" font-size="9" text-anchor="middle" fill="#93762e">拆容器</text>
+  <text x="105" y="178" font-size="8.5" text-anchor="middle" fill="#93762e">出 AVPacket</text>
+
+  <!-- decode (绿) -->
+  <rect x="214" y="88" width="150" height="118" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="289" y="132" font-size="11" font-weight="600" text-anchor="middle" fill="#12402a">decode</text>
+  <text x="289" y="154" font-size="9" text-anchor="middle" fill="#2f6f4f">解码</text>
+  <text x="289" y="178" font-size="8.5" text-anchor="middle" fill="#2f6f4f">出 AVFrame</text>
+
+  <!-- 滤镜图 (蓝, 强调) -->
+  <rect x="398" y="88" width="284" height="118" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="540" y="118" font-size="11.5" font-weight="700" text-anchor="middle" fill="#1b2a4a">滤镜图（AVFilterGraph · 可选）</text>
+  <rect x="416" y="132" width="72" height="40" rx="8" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="452" y="157" font-size="8.5" text-anchor="middle" fill="#12402a">buffersrc</text>
+  <rect x="498" y="132" width="52" height="40" rx="8" fill="#ffffff" stroke="#bcd0ec"/>
+  <text x="524" y="157" font-size="8.5" text-anchor="middle" fill="#1b2a4a">scale</text>
+  <rect x="558" y="132" width="46" height="40" rx="8" fill="#ffffff" stroke="#bcd0ec"/>
+  <text x="581" y="157" font-size="8.5" text-anchor="middle" fill="#1b2a4a">crop</text>
+  <rect x="612" y="132" width="56" height="40" rx="8" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="640" y="157" font-size="8" text-anchor="middle" fill="#12402a">buffersink</text>
+  <path d="M488,152 L496,152" stroke="#c7c7cc" stroke-width="1.2" fill="none" marker-end="url(#ar)"/>
+  <path d="M550,152 L556,152" stroke="#c7c7cc" stroke-width="1.2" fill="none" marker-end="url(#ar)"/>
+  <path d="M604,152 L610,152" stroke="#c7c7cc" stroke-width="1.2" fill="none" marker-end="url(#ar)"/>
+  <text x="540" y="192" font-size="8.5" text-anchor="middle" fill="#5b7db1">进出都是 AVFrame · 只在原始帧上变换</text>
+
+  <!-- encode (绿) -->
+  <rect x="716" y="88" width="150" height="118" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="791" y="132" font-size="11" font-weight="600" text-anchor="middle" fill="#12402a">encode</text>
+  <text x="791" y="154" font-size="9" text-anchor="middle" fill="#2f6f4f">编码</text>
+  <text x="791" y="178" font-size="8.5" text-anchor="middle" fill="#2f6f4f">出 AVPacket</text>
+
+  <!-- mux (琥珀) -->
+  <rect x="900" y="88" width="150" height="118" rx="12" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="975" y="132" font-size="11" font-weight="600" text-anchor="middle" fill="#5a3410">mux</text>
+  <text x="975" y="154" font-size="9" text-anchor="middle" fill="#93762e">封容器</text>
+  <text x="975" y="178" font-size="8.5" text-anchor="middle" fill="#93762e">写文件</text>
+
+  <!-- 管线箭头 + 数据态标注 -->
+  <path d="M180,147 L212,147" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="196" y="139" font-size="8" text-anchor="middle" fill="#93762e">packet</text>
+  <path d="M364,147 L396,147" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="380" y="139" font-size="8" text-anchor="middle" fill="#2f6f4f">frame</text>
+  <path d="M682,147 L714,147" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="698" y="139" font-size="8" text-anchor="middle" fill="#2f6f4f">frame</text>
+  <path d="M866,147 L898,147" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="882" y="139" font-size="8" text-anchor="middle" fill="#93762e">packet</text>
+
+  <!-- 数据态区间标注:压缩态 / 原始态 / 压缩态 -->
+  <rect x="30" y="222" width="334" height="26" rx="7" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="197" y="240" font-size="9" text-anchor="middle" fill="#5a3410">压缩态 AVPacket 区间(demux～decode 前)</text>
+  <rect x="398" y="222" width="284" height="26" rx="7" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="540" y="240" font-size="9" text-anchor="middle" fill="#12402a">原始态 AVFrame 区间(滤镜作用域)</text>
+  <rect x="716" y="222" width="334" height="26" rx="7" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="883" y="240" font-size="9" text-anchor="middle" fill="#5a3410">压缩态 AVPacket 区间(encode 后～mux)</text>
+
+  <!-- 底部:为什么在中间 + 有无滤镜对比 -->
+  <rect x="30" y="272" width="500" height="180" rx="13" fill="#f5faf6" stroke="#cfe6d5" filter="url(#soft)"/>
+  <text x="52" y="300" font-size="12" font-weight="600" fill="#2c5a3a">为什么必在 decode 之后、encode 之前</text>
+  <text x="52" y="326" font-size="9.5" fill="#2c5a3a">滤镜处理的是原始像素/采样(缩放/裁剪需要</text>
+  <text x="52" y="344" font-size="9.5" fill="#2c5a3a">解码后的图像);压缩数据无法直接处理。</text>
+  <text x="52" y="368" font-size="9.5" fill="#2c5a3a">故滤镜图必然:</text>
+  <text x="66" y="390" font-size="9.5" fill="#2c5a3a">· 在 decode 之后(得到原始帧)</text>
+  <text x="66" y="410" font-size="9.5" fill="#2c5a3a">· 在 encode 之前(帧被重新压缩)</text>
+  <text x="52" y="438" font-size="9" fill="#4a8a63">纯 remux 不解码,自然无法用滤镜。</text>
+
+  <rect x="546" y="272" width="504" height="180" rx="13" fill="#ffffff" stroke="#e4e4ea" filter="url(#soft)"/>
+  <text x="568" y="300" font-size="12" font-weight="600" fill="#1d1d1f">有无滤镜两种路径</text>
+  <text x="568" y="326" font-size="10" font-weight="600" fill="#1b2a4a">有滤镜:</text>
+  <text x="568" y="346" font-size="9.5" fill="#5b7db1">decode 出 AVFrame → buffersrc</text>
+  <text x="568" y="364" font-size="9.5" fill="#5b7db1">→ [scale → crop → overlay] → buffersink → 编码</text>
+  <text x="568" y="392" font-size="10" font-weight="600" fill="#12402a">无滤镜:</text>
+  <text x="568" y="412" font-size="9.5" fill="#2f6f4f">decode 的帧直接送 encode(跳过图)</text>
+  <text x="568" y="438" font-size="9" fill="#86868b">滤镜是可选处理段;是否插图看命令是否带 -vf/-filter_complex</text>
+
+  <text x="30" y="484" font-size="9" fill="#a1a1a6">源码基准 FFmpeg(1588bce) · 滤镜图夹在 decode↔encode 之间,只作用于原始 AVFrame,压缩 AVPacket 不入图</text>
+</svg>

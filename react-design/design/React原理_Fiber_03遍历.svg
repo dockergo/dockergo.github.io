@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="540" viewBox="0 0 1080 540" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+    <marker id="arC" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#5b7db1"/></marker>
+    <marker id="arG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#4a8a63"/></marker>
+    <marker id="arP" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#9a7ac0"/></marker>
+  </defs>
+  <rect width="1080" height="540" fill="#fbfbfd"/>
+
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Fiber 树链接与遍历 —— child / sibling / return 三指针（不是数组子节点），深度优先可中断</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">performUnitOfWork 用 child/sibling/return 走：beginWork 下探到 child，无 child 则 completeWork 上溯经 sibling/return · ReactInternalTypes.js:126</text>
+
+  <!-- 左侧：树结构 + 三种链接 -->
+  <!-- 图例 -->
+  <rect x="30" y="80" width="620" height="30" rx="9" fill="#ffffff" stroke="#ececf1"/>
+  <line x1="46" y1="95" x2="86" y2="95" stroke="#5b7db1" stroke-width="1.8" marker-end="url(#arC)"/>
+  <text x="94" y="99" font-size="9.5" fill="#274a78">child 下探（第一个子）</text>
+  <line x1="248" y1="95" x2="288" y2="95" stroke="#4a8a63" stroke-width="1.8" marker-end="url(#arG)"/>
+  <text x="296" y="99" font-size="9.5" fill="#1a5c3a">sibling 横向（下一兄弟）</text>
+  <line x1="470" y1="95" x2="510" y2="95" stroke="#9a7ac0" stroke-width="1.8" stroke-dasharray="4 3" marker-end="url(#arP)"/>
+  <text x="518" y="99" font-size="9.5" fill="#5a3a86">return 上溯（父）</text>
+
+  <!-- 树节点 -->
+  <!-- Root -->
+  <rect x="270" y="128" width="110" height="36" rx="10" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="325" y="151" font-size="10.5" text-anchor="middle" fill="#1b2a4a">Root ①</text>
+  <!-- A -->
+  <rect x="130" y="210" width="110" height="36" rx="10" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="185" y="233" font-size="10.5" text-anchor="middle" fill="#1b2a4a">A ②</text>
+  <!-- B -->
+  <rect x="410" y="210" width="110" height="36" rx="10" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="465" y="233" font-size="10.5" text-anchor="middle" fill="#1b2a4a">B ⑤</text>
+  <!-- A1 -->
+  <rect x="60" y="296" width="110" height="36" rx="10" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="115" y="319" font-size="10.5" text-anchor="middle" fill="#12402a">A1 ③</text>
+  <!-- A2 -->
+  <rect x="200" y="296" width="110" height="36" rx="10" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="255" y="319" font-size="10.5" text-anchor="middle" fill="#12402a">A2 ④</text>
+  <!-- B1 -->
+  <rect x="410" y="296" width="110" height="36" rx="10" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="465" y="319" font-size="10.5" text-anchor="middle" fill="#12402a">B1 ⑥</text>
+
+  <!-- child 链接 (blue) -->
+  <path d="M300,164 L185,210" stroke="#5b7db1" stroke-width="1.7" fill="none" marker-end="url(#arC)"/>
+  <path d="M170,246 L115,296" stroke="#5b7db1" stroke-width="1.7" fill="none" marker-end="url(#arC)"/>
+  <path d="M450,246 L465,296" stroke="#5b7db1" stroke-width="1.7" fill="none" marker-end="url(#arC)"/>
+  <!-- sibling 链接 (green) -->
+  <path d="M240,228 L410,228" stroke="#4a8a63" stroke-width="1.7" fill="none" marker-end="url(#arG)"/>
+  <path d="M170,314 L200,314" stroke="#4a8a63" stroke-width="1.7" fill="none" marker-end="url(#arG)"/>
+  <!-- return 链接 (purple dashed) 示意一条 -->
+  <path d="M210,296 L295,246" stroke="#9a7ac0" stroke-width="1.4" stroke-dasharray="4 3" fill="none" marker-end="url(#arP)"/>
+  <text x="286" y="286" font-size="8" fill="#9a7ac0">return</text>
+
+  <text x="30" y="370" font-size="9" fill="#86868b">遍历顺序 ①→⑥：深度优先——有 child 先下探，无 child 则沿 sibling/return 上溯，每步是一个可中断的工作单元</text>
+
+  <!-- 右侧：遍历循环说明 -->
+  <!-- beginWork 下探 (blue) -->
+  <rect x="672" y="128" width="378" height="80" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="692" y="153" font-size="11.5" font-weight="600" fill="#1b2a4a">beginWork · 下探</text>
+  <text x="692" y="175" font-size="9.5" fill="#4a6da3">跑组件 / 建子 Fiber，沿 child 向下</text>
+  <text x="692" y="194" font-size="9.5" fill="#5b7db1">按 tag 分派不同处理（见下）</text>
+
+  <!-- completeWork 上溯 (green) -->
+  <rect x="672" y="220" width="378" height="80" rx="13" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="692" y="245" font-size="11.5" font-weight="600" fill="#12402a">completeWork · 上溯</text>
+  <text x="692" y="267" font-size="9.5" fill="#2f6f4f">无 child 时，经 sibling / return 回溯</text>
+  <text x="692" y="286" font-size="9.5" fill="#4a8a63">收集副作用（详见 render 与提交篇）</text>
+
+  <!-- 可中断 (amber) -->
+  <rect x="672" y="312" width="378" height="70" rx="13" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="692" y="337" font-size="11.5" font-weight="600" fill="#5a3410">可中断的 workLoop</text>
+  <text x="692" y="358" font-size="9.5" fill="#93762e">每个工作单元后可让出，高优先级更新可打断</text>
+  <text x="692" y="375" font-size="9.5" fill="#b08a3a">非一口气递归到底——并发渲染的基础</text>
+
+  <path d="M861,208 L861,220" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M861,300 L861,312" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <!-- WorkTag 分派带 (purple) -->
+  <rect x="30" y="392" width="1020" height="70" rx="13" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="50" y="417" font-size="11.5" font-weight="600" fill="#3d2a5a">WorkTag 分派 · ReactWorkTags.js:44 —— beginWork / completeWork 用一个 switch 按 tag 分类处理</text>
+  <text x="50" y="439" font-size="9.5" fill="#6a4a93">FunctionComponent / ClassComponent / HostRoot（根）/ HostComponent（DOM 元素）/ HostText / Fragment / SuspenseComponent / OffscreenComponent …</text>
+  <text x="50" y="457" font-size="9.5" fill="#9a7ac0">函数组件要跑 Hooks、DOM 元素要建/改真实节点——tag 让统一遍历、分类处理</text>
+
+  <!-- 底部一句话 -->
+  <rect x="30" y="474" width="1020" height="48" rx="12" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="50" y="498" font-size="10" font-weight="600" fill="#1d1d1f">为什么 tag 分派</text>
+  <text x="50" y="516" font-size="9.5" fill="#6e6e73">不同节点处理不同；tag 让 beginWork/completeWork 用一个 switch 分派——统一遍历、分类处理。FiberNode 构造 ReactFiber.js:134 初始化全字段。</text>
+</svg>

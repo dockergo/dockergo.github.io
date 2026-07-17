@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="500" viewBox="0 0 1080 500" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="500" fill="#fbfbfd"/>
+
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">React Suspense · 等异步时挂起 —— 组件等数据时显示 fallback，数据到了重试</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">异步数据（fetch / 懒加载组件）到达前组件无法渲染真实内容；Suspense 统一「挂起→显示 fallback→数据到了重试」，声明式处理加载态</text>
+
+  <!-- 四步主干 y=82 h=118 -->
+  <!-- ① 抛 wakeable amber -->
+  <rect x="30" y="82" width="230" height="118" rx="12" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="145" y="106" font-size="11.5" font-weight="600" text-anchor="middle" fill="#5a3410">① 组件抛 wakeable</text>
+  <text x="145" y="130" font-size="9" text-anchor="middle" fill="#93762e">组件抛出一个 promise</text>
+  <text x="145" y="148" font-size="9" text-anchor="middle" fill="#93762e">（或 use(promise) 未 resolve）</text>
+  <text x="145" y="168" font-size="9" text-anchor="middle" fill="#93762e">渲染中断</text>
+  <text x="145" y="188" font-size="8.5" text-anchor="middle" fill="#b1974e">wakeable = 可唤醒对象</text>
+  <!-- ② throwException 捕获 red -->
+  <rect x="280" y="82" width="230" height="118" rx="12" fill="#fbeaea" stroke="#e6b8b8" filter="url(#soft)"/>
+  <text x="395" y="106" font-size="11.5" font-weight="600" text-anchor="middle" fill="#7a2a2a">② throwException 捕获</text>
+  <text x="395" y="130" font-size="9" text-anchor="middle" fill="#a05a5a">ReactFiberThrow.js</text>
+  <text x="395" y="148" font-size="9" text-anchor="middle" fill="#a05a5a">识别抛出的 wakeable</text>
+  <text x="395" y="168" font-size="9" text-anchor="middle" fill="#a05a5a">attachPingListener</text>
+  <text x="395" y="188" font-size="8.5" text-anchor="middle" fill="#c07a7a">(root, wakeable, renderLanes) :482</text>
+  <!-- ③ 显示 fallback blue -->
+  <rect x="530" y="82" width="230" height="118" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="645" y="106" font-size="11.5" font-weight="600" text-anchor="middle" fill="#1b2a4a">③ 显示 fallback</text>
+  <text x="645" y="130" font-size="9" text-anchor="middle" fill="#5b7db1">renderDidSuspend-</text>
+  <text x="645" y="146" font-size="9" text-anchor="middle" fill="#5b7db1">DelayIfPossible :417</text>
+  <text x="645" y="166" font-size="9" text-anchor="middle" fill="#5b7db1">标记本次渲染挂起</text>
+  <text x="645" y="186" font-size="8.5" text-anchor="middle" fill="#8aa4c8">显示最近 &lt;Suspense fallback&gt;</text>
+  <!-- ④ RetryLanes 重试 green -->
+  <rect x="780" y="82" width="270" height="118" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="915" y="106" font-size="11.5" font-weight="600" text-anchor="middle" fill="#12402a">④ resolve → RetryLanes 重试</text>
+  <text x="915" y="130" font-size="9" text-anchor="middle" fill="#2f6f4f">promise resolve 后触发 ping</text>
+  <text x="915" y="150" font-size="9" text-anchor="middle" fill="#2f6f4f">用 RetryLanes 重试渲染</text>
+  <text x="915" y="170" font-size="9" text-anchor="middle" fill="#2f6f4f">ReactFiberLane.js:94</text>
+  <text x="915" y="190" font-size="8.5" text-anchor="middle" fill="#4a8a63">重渲染真实内容替换 fallback</text>
+  <!-- 主干箭头 -->
+  <path d="M260,141 L280,141" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M510,141 L530,141" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M760,141 L780,141" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <!-- ping 回环箭头: resolve 触发 ping 回到重试(概念闭环) -->
+  <path d="M915,200 L915,224 L395,224 L395,200" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="655" y="220" font-size="9" text-anchor="middle" fill="#a1a1a6">promise resolve 触发 ping listener → 重新调度渲染</text>
+
+  <!-- 为什么 Suspense purple -->
+  <rect x="30" y="250" width="500" height="150" rx="12" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="48" y="274" font-size="12" font-weight="600" fill="#4a2c6f">为什么 Suspense</text>
+  <text x="48" y="298" font-size="9.5" fill="#7a5aa0">异步数据到达前，组件无法渲染真实内容</text>
+  <text x="48" y="320" font-size="9.5" fill="#7a5aa0">统一「挂起 → 显示 fallback → 数据到了重试」模式</text>
+  <text x="48" y="342" font-size="9.5" fill="#7a5aa0">声明式处理加载态，不用每处手写 isLoading 判断</text>
+  <text x="48" y="366" font-size="9" fill="#9a7ac0">边界粒度：太粗整页 fallback、太细闪烁</text>
+  <text x="48" y="386" font-size="9" fill="#9a7ac0">按数据加载单元划分 &lt;Suspense&gt; 边界</text>
+
+  <!-- 常见误区 blue -->
+  <rect x="550" y="250" width="500" height="150" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="568" y="274" font-size="12" font-weight="600" fill="#1b2a4a">常见误区</text>
+  <text x="568" y="298" font-size="9.5" fill="#5b7db1">误区：Suspense 只用于代码分割</text>
+  <text x="568" y="318" font-size="9" fill="#8aa4c8">也用于数据获取（抛 promise / use()），统一挂起模式</text>
+  <text x="568" y="344" font-size="9.5" fill="#5b7db1">RetryLanes 属【Lanes 与调度】</text>
+  <text x="568" y="364" font-size="9" fill="#8aa4c8">挂起重试用专门的重试车道（ReactFiberLane.js:94 4 条）</text>
+  <text x="568" y="388" font-size="9" fill="#8aa4c8">与普通更新车道分离，重试不干扰待处理更新</text>
+
+  <text x="30" y="434" font-size="9" fill="#a1a1a6">源码基准 React(git 7023f50 · v19.3) · ReactFiberThrow.js attachPingListener:482 / renderDidSuspendDelayIfPossible:417 · ReactFiberLane.js RetryLanes:94</text>
+</svg>

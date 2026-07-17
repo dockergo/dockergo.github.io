@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="540" viewBox="0 0 1080 540" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="540" fill="#fbfbfd"/>
+
+  <!-- 标题 -->
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">vLLM 连续批处理 —— Scheduler.schedule() 每步重组批,完成即出、随到随入,GPU 每步满载</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">每步先续跑 running 再按预算补 waiting;不等"整批做完" · 对比静态批:短请求做完 GPU 空转等长请求</text>
+
+  <!-- ① schedule() 每步流程 (green) -->
+  <rect x="30" y="70" width="1020" height="134" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="50" y="94" font-size="12.5" font-weight="600" fill="#12402a">Scheduler.schedule() (sched/scheduler.py:417) · 每一步(step)重新组批</text>
+
+  <!-- 步骤1 续跑 running -->
+  <rect x="50" y="108" width="300" height="80" rx="9" fill="#ffffff" stroke="#bfe0cd"/>
+  <text x="200" y="132" font-size="11" font-weight="600" text-anchor="middle" fill="#12402a">① 先续跑 running (:461)</text>
+  <text x="200" y="152" font-size="9" text-anchor="middle" fill="#2f6f4f">running(:185) 里的请求继续解码</text>
+  <text x="200" y="168" font-size="9" text-anchor="middle" fill="#4a8a63">完成(stop/max_tokens)即出队</text>
+
+  <!-- 步骤2 补 waiting -->
+  <rect x="390" y="108" width="300" height="80" rx="9" fill="#ffffff" stroke="#bfe0cd"/>
+  <text x="540" y="132" font-size="11" font-weight="600" text-anchor="middle" fill="#12402a">② 再补 waiting (:657)</text>
+  <text x="540" y="152" font-size="9" text-anchor="middle" fill="#2f6f4f">还有预算就从 waiting(:182) 补新请求</text>
+  <text x="540" y="168" font-size="9" text-anchor="middle" fill="#4a8a63">新到的进 waiting,随时可被补入</text>
+
+  <!-- 步骤3 交前向 -->
+  <rect x="730" y="108" width="300" height="80" rx="9" fill="#ffffff" stroke="#bfe0cd"/>
+  <text x="880" y="132" font-size="11" font-weight="600" text-anchor="middle" fill="#12402a">③ 组好批 → 前向一步</text>
+  <text x="880" y="152" font-size="9" text-anchor="middle" fill="#2f6f4f">GPU 始终处理当前所有活跃请求</text>
+  <text x="880" y="168" font-size="9" text-anchor="middle" fill="#4a8a63">每步都是一个新组合</text>
+
+  <path d="M350,148 L390,148" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M690,148 L730,148" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <!-- loop back -->
+  <path d="M880,188 L880,196 L200,196 L200,188" stroke="#bfe0cd" stroke-width="1.3" fill="none" marker-end="url(#ar)"/>
+  <text x="540" y="200" font-size="8.5" text-anchor="middle" fill="#4a8a63">下一步再重组</text>
+
+  <!-- ② 对比:静态批 vs 连续批 -->
+  <text x="30" y="234" font-size="12" font-weight="700" fill="#1d1d1f">静态批 vs 连续批(4 请求,生成长度不同)</text>
+
+  <!-- 静态批 (red = 低效) -->
+  <rect x="30" y="248" width="500" height="180" rx="12" fill="#fbeaea" stroke="#e6b8b8" filter="url(#soft)"/>
+  <text x="50" y="272" font-size="11" font-weight="600" fill="#7a2a2a">朴素静态批 · 等整批全部完成才收下批</text>
+  <!-- 四条泳道 -->
+  <rect x="50" y="286" width="300" height="18" rx="4" fill="#e88" opacity="0.55"/>
+  <text x="360" y="299" font-size="8.5" fill="#7a2a2a">R1 短,早完</text>
+  <rect x="50" y="310" width="180" height="18" rx="4" fill="#e88" opacity="0.55"/>
+  <rect x="230" y="310" width="120" height="18" rx="4" fill="#f0cccc"/>
+  <text x="360" y="323" font-size="8.5" fill="#a05a5a">R2 更短,空转等</text>
+  <rect x="50" y="334" width="460" height="18" rx="4" fill="#e88" opacity="0.55"/>
+  <text x="50" y="366" font-size="9" fill="#7a2a2a">R3 最长,决定整批时长</text>
+  <rect x="50" y="376" width="240" height="18" rx="4" fill="#e88" opacity="0.55"/>
+  <rect x="290" y="376" width="220" height="18" rx="4" fill="#f0cccc"/>
+  <text x="50" y="416" font-size="9" fill="#a05a5a">浅色=GPU 空转:短请求做完只能干等最长的,利用率低</text>
+
+  <!-- 连续批 (green = 满载) -->
+  <rect x="550" y="248" width="500" height="180" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="570" y="272" font-size="11" font-weight="600" fill="#12402a">vLLM 连续批 · 完成即出,等待即入,每步满载</text>
+  <rect x="570" y="286" width="300" height="18" rx="4" fill="#7fc79e"/>
+  <rect x="872" y="286" width="158" height="18" rx="4" fill="#bfe0cd"/>
+  <text x="570" y="317" font-size="8.5" fill="#2f6f4f">R1 完成 → 空位立刻被 R5 填补</text>
+  <rect x="570" y="322" width="180" height="18" rx="4" fill="#7fc79e"/>
+  <rect x="752" y="322" width="278" height="18" rx="4" fill="#bfe0cd"/>
+  <text x="570" y="353" font-size="8.5" fill="#2f6f4f">R2 完成 → R6 补入</text>
+  <rect x="570" y="358" width="460" height="18" rx="4" fill="#7fc79e"/>
+  <rect x="570" y="376" width="240" height="18" rx="4" fill="#7fc79e"/>
+  <rect x="812" y="376" width="218" height="18" rx="4" fill="#bfe0cd"/>
+  <text x="570" y="416" font-size="9" fill="#4a8a63">深绿=活跃占满 · 浅绿=新补入请求,GPU 每步都装满活跃请求</text>
+
+  <!-- 底注 -->
+  <text x="30" y="466" font-size="9.5" fill="#6e6e73">为什么连续组批:静态批短请求做完 GPU 空转等长请求,利用率低;连续批让完成的位置立刻被新请求填补,同硬件吞吐大幅提升。</text>
+  <text x="30" y="520" font-size="9" fill="#a1a1a6">误区:一批请求一起开始一起结束。实为每步重组、随到随入、完成即出,不是静态批 · 按【块管理】可用块数决策 · vLLM(git 7aab6e2, v1)</text>
+</svg>

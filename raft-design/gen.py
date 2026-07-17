@@ -86,6 +86,8 @@ PANO_NAME = "Raft原理_全景主线框架"
 ARCH_W, ARCH_H = 1040, 740  # 必须与 ARCH_SVG_NAME 的 viewBox 一致
 # (x, y, w, h, 主线name) —— 一个模块可拆多行热区，一条主线可被多个区域指向
 ARCH_HOTSPOTS = [
+    # 标题条 → 全景总览
+    (0, 0, 1040, 48, "Raft原理_全景主线框架"),
     # ① 宿主进程层 + 编程 API band → 接口主线
     (40, 52, 960, 46, "Raft原理_接口_编程API与接口注入"),   # 宿主进程（注入六件套）
     (40, 122, 960, 70, "Raft原理_接口_编程API与接口注入"),  # 编程 API band
@@ -107,10 +109,10 @@ ARCH_HOTSPOTS = [
     (550, 632, 450, 60, "Raft原理_支撑_Transport与RPC"),    # 网络 RPC
 ]
 # 没有独立架构区域、需底部 chip 兜底的主线（全景框架无独立模块 → chip）
-ARCH_ALWAYS_CHIP = ["Raft原理_全景主线框架"]
+ARCH_ALWAYS_CHIP = []
 
 BRAND_TITLE = "HashiCorp raft 核心原理"
-BRAND_SUB = "HashiCorp raft 核心原理 · 交互式图谱"
+BRAND_SUB = "HashiCorp raft"
 HOME_DESC = ("HashiCorp raft 核心原理设计文档库的离线交互图谱——家族 6 分布式协调/共识（可嵌入的 Raft 共识算法库 · Go · 驱动 Consul/Nomad/Vault）。"
              "10 条主线、13 张手绘原理图，全部回本地源码核实。点击项目总架构图任意模块即可下钻到对应主线。")
 ARCH_SVG_NAME = "Raft原理_全景_02总架构.svg"
@@ -466,7 +468,7 @@ APP_JS = r"""
     var ac=e.target.closest('.arch-chip'); if(ac){openMain(ac.dataset.mid,0);return;}
     var wt=e.target.closest('.walk-tab'); if(wt){selFig(wt.dataset.mid,+wt.dataset.idx);return;}
     // logo is now a link to portal (../index.html); no JS intercept
-    var bk=e.target.closest('#back'); if(bk){showHome();return;}
+    var bk=e.target.closest('#back2'); if(bk){showHome();return;}
   });
   document.addEventListener('keydown',function(e){
     if(e.key!=='Enter'&&e.key!==' ')return;
@@ -506,18 +508,16 @@ def build_html():
   <div class="lo-s" style="font-size:11px;opacity:.7">短暂空白属正常装载，非内容缺失</div>
 </div>
 <header>
-  <a class="logo" id="logo" href="../index.html" title="返回导航主页"><span class="homeico" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg></span><span>{sub}</span></a>
+  <a class="logo" id="logo" href="../index.html" title="返回导航主页"><span class="homeico" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg></span></a>
   <div class="spacer"></div>
-  <button class="hbtn" id="back">← 返回首页</button>
   <button class="hbtn" id="themeBtn">☾ 深色</button>
 </header>
 <div class="wrap">
   <div id="home">
-    <div class="navmap-hint"><b>▶ 项目总架构 · 导航图</b> · 点击图上任意模块区域下钻到对应主线（逐图走查）</div>
     {archnav}
   </div>
   <div id="panes" style="display:none">
-    <button class="hbtn back on" id="back2" onclick="document.getElementById('back').click()">← 返回全部主线</button>
+    <button class="hbtn back on" id="back2" onclick="showHome()">← 返回全部主线</button>
     {panes}
   </div>
 </div>

@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="520" viewBox="0 0 1080 520" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+  </defs>
+  <rect width="1080" height="520" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">React 双维模型 —— 能力域 × 执行时机</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">纵轴:接触面(可见)vs 支撑侧(内部)· 横轴:render 可中断 vs commit 同步(单线程可中断切片,非多线程)</text>
+
+  <!-- 能力域轴 (左侧标签) -->
+  <text x="40" y="92" font-size="12" font-weight="700" fill="#1d1d1f">能力域（自上而下：接触面 → 支撑侧）</text>
+
+  <!-- 接触面 purple -->
+  <rect x="40" y="104" width="1000" height="70" rx="12" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="60" y="128" font-size="11.5" font-weight="600" fill="#4a2c6f">接触面（用户/开发者可见）</text>
+  <text x="60" y="150" font-size="9.5" fill="#7a5aa0">组件与 JSX（声明式描述 UI）· Hooks API（useState/useEffect… 在函数组件里用状态与副作用）</text>
+  <text x="60" y="167" font-size="9" fill="#9a7ac0">你声明"状态→UI 长啥样",不手动操作 DOM</text>
+
+  <!-- 支撑侧 white -->
+  <rect x="40" y="186" width="1000" height="120" rx="12" fill="#ffffff" stroke="#e4e4ea" filter="url(#soft)"/>
+  <text x="60" y="210" font-size="11.5" font-weight="600" fill="#1d1d1f">支撑侧（框架内部机制）</text>
+  <text x="60" y="232" font-size="9.5" fill="#6e6e73">Fiber 架构（树 + 双缓冲）· 协调与 Diff · render 与提交（双阶段）· Hooks（memoizedState 链表）</text>
+  <text x="60" y="252" font-size="9.5" fill="#6e6e73">Lanes 与优先级调度（31 位掩码）· 并发特性（时间切片/过渡/Suspense）· 事件系统（委托 + 优先级映射）</text>
+  <text x="60" y="278" font-size="9" fill="#86868b">贯穿层：Fiber 树(current↔workInProgress 双缓冲)——协调 diff、render 遍历、commit 交换指针都在它上面</text>
+
+  <!-- 执行时机轴 -->
+  <text x="40" y="344" font-size="12" font-weight="700" fill="#1d1d1f">执行时机（渲染的两阶段）</text>
+  <rect x="40" y="356" width="490" height="118" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="60" y="380" font-size="11.5" font-weight="600" fill="#1b2a4a">render 阶段（可中断 · 无副作用）</text>
+  <text x="60" y="402" font-size="9.5" fill="#5b7db1">beginWork 向下 → completeWork 向上构 workInProgress 树</text>
+  <text x="60" y="422" font-size="9.5" fill="#5b7db1">每处理一个 Fiber 检查 shouldYield(5ms 切片)</text>
+  <text x="60" y="442" font-size="9.5" fill="#5b7db1">高优先级更新可打断 → 丢弃重来(无副作用故安全)</text>
+  <text x="60" y="463" font-size="9" fill="#8aa4c8">对应能力域:Fiber/协调/Lanes/并发</text>
+
+  <rect x="550" y="356" width="490" height="118" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="570" y="380" font-size="11.5" font-weight="600" fill="#12402a">commit 阶段（同步 · 不可中断）</text>
+  <text x="570" y="402" font-size="9.5" fill="#2f6f4f">三子阶段:before mutation → mutation(改 DOM) → layout</text>
+  <text x="570" y="422" font-size="9.5" fill="#2f6f4f">据 flags 应用最小 DOM 变更 + 交换 current 指针</text>
+  <text x="570" y="442" font-size="9.5" fill="#2f6f4f">一口气完成 → 避免 UI 撕裂(中途不可见部分更新)</text>
+  <text x="570" y="463" font-size="9" fill="#4a8a63">对应能力域:render 与提交(commit 侧)/事件绑定</text>
+
+  <text x="30" y="502" font-size="9" fill="#a1a1a6">要点:render 可中断/可丢弃(无副作用),commit 同步一次性(有副作用)· 并发=单线程时间切片让路,非多线程 · 源码基准 React(git 7023f50 · v19.3)</text>
+</svg>

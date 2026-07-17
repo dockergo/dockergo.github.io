@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="500" viewBox="0 0 1080 500" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+  </defs>
+  <rect width="1080" height="500" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">vLLM 接触面 × 能力域 依赖矩阵 —— 每种场景依赖哪些内部机制</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">✓ = 该场景依赖该能力域;生成=EngineCore+调度+PagedAttn+采样,长上下文=块管理,前缀复用=前缀缓存,大模型=并行</text>
+
+  <!-- 列头 (能力域) -->
+  <g font-size="9" font-weight="600" fill="#1d1d1f" text-anchor="middle">
+    <text x="366" y="92">PagedAttn</text>
+    <text x="470" y="92">块管理</text>
+    <text x="566" y="92">连续批处理</text>
+    <text x="678" y="92">EngineCore</text>
+    <text x="786" y="92">采样</text>
+    <text x="890" y="92">TP/PP并行</text>
+  </g>
+  <line x1="320" y1="100" x2="940" y2="100" stroke="#e4e4ea" stroke-width="1"/>
+
+  <!-- 行 -->
+  <g>
+    <rect x="30" y="110" width="280" height="40" rx="8" fill="#f4eefb" stroke="#d9c7ec"/>
+    <text x="48" y="135" font-size="10" font-weight="600" fill="#4a2c6f">单请求生成 token</text>
+    <rect x="30" y="158" width="280" height="40" rx="8" fill="#eef3fb" stroke="#bcd0ec"/>
+    <text x="48" y="183" font-size="10" font-weight="600" fill="#1b2a4a">高并发在线服务</text>
+    <rect x="30" y="206" width="280" height="40" rx="8" fill="#eafaf1" stroke="#bfe0cd"/>
+    <text x="48" y="231" font-size="10" font-weight="600" fill="#12402a">长上下文(长 prompt)</text>
+    <rect x="30" y="254" width="280" height="40" rx="8" fill="#fff7e6" stroke="#e8cf9a"/>
+    <text x="48" y="279" font-size="10" font-weight="600" fill="#5a3410">共享前缀(system prompt)</text>
+    <rect x="30" y="302" width="280" height="40" rx="8" fill="#fbeaea" stroke="#e6b8b8"/>
+    <text x="48" y="327" font-size="10" font-weight="600" fill="#7a2a2a">超大模型(单卡放不下)</text>
+    <rect x="30" y="350" width="280" height="40" rx="8" fill="#f4eefb" stroke="#d9c7ec"/>
+    <text x="48" y="375" font-size="10" font-weight="600" fill="#4a2c6f">显存吃紧(高负载)</text>
+  </g>
+
+  <!-- ✓ 列 x: PagedAttn366 块管理470 连续批处理566 EngineCore678 采样786 并行890 -->
+  <g font-size="13" font-weight="700" fill="#2f6f4f" text-anchor="middle">
+    <!-- 单请求生成(135): PagedAttn 块管理 EngineCore 采样 -->
+    <text x="366" y="135">✓</text><text x="470" y="135">✓</text><text x="678" y="135">✓</text><text x="786" y="135">✓</text>
+    <!-- 高并发(183): 全部前五 -->
+    <text x="366" y="183">✓</text><text x="470" y="183">✓</text><text x="566" y="183">✓</text><text x="678" y="183">✓</text><text x="786" y="183">✓</text>
+    <!-- 长上下文(231): PagedAttn 块管理 连续批处理(chunked prefill) -->
+    <text x="366" y="231">✓</text><text x="470" y="231">✓</text><text x="566" y="231">✓</text>
+    <!-- 共享前缀(279): 块管理(前缀缓存) PagedAttn -->
+    <text x="366" y="279">✓</text><text x="470" y="279">✓</text>
+    <!-- 超大模型(327): 并行 PagedAttn -->
+    <text x="366" y="327">✓</text><text x="890" y="327">✓</text>
+    <!-- 显存吃紧(375): 块管理 连续批处理(抢占) -->
+    <text x="470" y="375">✓</text><text x="566" y="375">✓</text>
+  </g>
+
+  <text x="30" y="418" font-size="9.5" fill="#6e6e73">读法:任何生成都经 PagedAttention(算注意力)+ EngineCore(循环)+ 采样;并发靠连续批处理;长/前缀靠块管理;大模型靠 TP/PP</text>
+  <text x="30" y="440" font-size="9.5" fill="#6e6e73">关键:PagedAttention(分块 KV)+ 连续批处理(GPU 满载)是两大灵魂——显存吃紧时块管理 + 重算式抢占兜底</text>
+  <text x="30" y="476" font-size="9" fill="#a1a1a6">源码基准 vLLM(git 7aab6e2 · v1-only)· KV 缓存复用 + GPU 满载的能力域协作矩阵</text>
+</svg>

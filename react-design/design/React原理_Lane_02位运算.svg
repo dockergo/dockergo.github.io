@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="520" viewBox="0 0 1080 520" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="520" fill="#fbfbfd"/>
+
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">React Lane · 位运算 —— 合并 / 取最高 / 判包含都是一条位操作</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">Lane 的核心操作都是位运算（ReactFiberLane.js）· 极快：一个整数即完成优先级的合并、取最高、判交集</text>
+
+  <!-- ① mergeLanes blue -->
+  <rect x="30" y="70" width="500" height="176" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="48" y="94" font-size="12" font-weight="600" fill="#1b2a4a">① mergeLanes(a, b) = a | b　（:792）</text>
+  <text x="48" y="114" font-size="9.5" fill="#5b7db1">合并两组车道 —— 累积待处理更新</text>
+  <!-- 位示意 a -->
+  <text x="48" y="140" font-size="9" fill="#5b7db1">a</text>
+  <rect x="70" y="128" width="22" height="18" rx="3" fill="#eef3fb" stroke="#bcd0ec"/>
+  <rect x="94" y="128" width="22" height="18" rx="3" fill="#1b2a4a"/>
+  <rect x="118" y="128" width="22" height="18" rx="3" fill="#eef3fb" stroke="#bcd0ec"/>
+  <rect x="142" y="128" width="22" height="18" rx="3" fill="#eef3fb" stroke="#bcd0ec"/>
+  <!-- 位示意 b -->
+  <text x="48" y="168" font-size="9" fill="#5b7db1">b</text>
+  <rect x="70" y="156" width="22" height="18" rx="3" fill="#eef3fb" stroke="#bcd0ec"/>
+  <rect x="94" y="156" width="22" height="18" rx="3" fill="#eef3fb" stroke="#bcd0ec"/>
+  <rect x="118" y="156" width="22" height="18" rx="3" fill="#eef3fb" stroke="#bcd0ec"/>
+  <rect x="142" y="156" width="22" height="18" rx="3" fill="#1b2a4a"/>
+  <text x="180" y="152" font-size="13" font-weight="600" fill="#5b7db1">| →</text>
+  <!-- 结果 a|b -->
+  <text x="220" y="152" font-size="9" fill="#5b7db1">a|b</text>
+  <rect x="250" y="142" width="22" height="18" rx="3" fill="#eef3fb" stroke="#bcd0ec"/>
+  <rect x="274" y="142" width="22" height="18" rx="3" fill="#1b2a4a"/>
+  <rect x="298" y="142" width="22" height="18" rx="3" fill="#eef3fb" stroke="#bcd0ec"/>
+  <rect x="322" y="142" width="22" height="18" rx="3" fill="#1b2a4a"/>
+  <text x="360" y="155" font-size="9" fill="#8aa4c8">两组置位取并集</text>
+  <text x="48" y="200" font-size="9" fill="#8aa4c8">markRootUpdated(root, lane) = root.pendingLanes |= lane（:825）</text>
+  <text x="48" y="220" font-size="9" fill="#8aa4c8">更新时把 lane 记进 root 的待处理集合 pendingLanes</text>
+  <text x="48" y="238" font-size="9" fill="#8aa4c8">pendingLanes 是位掩码（一个整数），不是队列 / 列表</text>
+
+  <!-- ② getHighestPriorityLane green -->
+  <rect x="550" y="70" width="500" height="176" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="568" y="94" font-size="12" font-weight="600" fill="#12402a">② getHighestPriorityLane(lanes) = lanes &amp; -lanes　（:756）</text>
+  <text x="568" y="114" font-size="9.5" fill="#2f6f4f">隔离最低位（数值最小 = 优先级最高）</text>
+  <text x="568" y="140" font-size="9" fill="#2f6f4f">lanes</text>
+  <rect x="606" y="128" width="22" height="18" rx="3" fill="#eafaf1" stroke="#bfe0cd"/>
+  <rect x="630" y="128" width="22" height="18" rx="3" fill="#12402a"/>
+  <rect x="654" y="128" width="22" height="18" rx="3" fill="#eafaf1" stroke="#bfe0cd"/>
+  <rect x="678" y="128" width="22" height="18" rx="3" fill="#12402a"/>
+  <text x="716" y="141" font-size="12" font-weight="600" fill="#2f6f4f">&amp; -lanes →</text>
+  <rect x="820" y="128" width="22" height="18" rx="3" fill="#eafaf1" stroke="#bfe0cd"/>
+  <rect x="844" y="128" width="22" height="18" rx="3" fill="#eafaf1" stroke="#bfe0cd"/>
+  <rect x="868" y="128" width="22" height="18" rx="3" fill="#eafaf1" stroke="#bfe0cd"/>
+  <rect x="892" y="128" width="22" height="18" rx="3" fill="#12402a"/>
+  <text x="930" y="141" font-size="9" fill="#4a8a63">仅剩最低位</text>
+  <text x="568" y="176" font-size="9" fill="#4a8a63">补码下 -lanes = 取反加一，lanes &amp; -lanes 恰好隔离最低置位</text>
+  <text x="568" y="196" font-size="9" fill="#4a8a63">lane 位越低优先级越高（SyncLane 在低位）</text>
+  <text x="568" y="216" font-size="9" fill="#4a8a63">→ 这一条位运算就取到最急的车道</text>
+  <text x="568" y="236" font-size="9" fill="#4a8a63">误区：不是比数值大小，是隔离最低置位位</text>
+
+  <!-- ③ includesSomeLane amber -->
+  <rect x="30" y="266" width="500" height="150" rx="12" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="48" y="290" font-size="12" font-weight="600" fill="#5a3410">③ includesSomeLane(a, b) = (a &amp; b) !== NoLanes　（:784）</text>
+  <text x="48" y="310" font-size="9.5" fill="#93762e">判两组车道有无交集（相与非空即有交）</text>
+  <text x="48" y="336" font-size="9" fill="#93762e">a</text>
+  <rect x="70" y="324" width="22" height="18" rx="3" fill="#5a3410"/>
+  <rect x="94" y="324" width="22" height="18" rx="3" fill="#fff7e6" stroke="#e8cf9a"/>
+  <rect x="118" y="324" width="22" height="18" rx="3" fill="#5a3410"/>
+  <text x="48" y="364" font-size="9" fill="#93762e">b</text>
+  <rect x="70" y="352" width="22" height="18" rx="3" fill="#5a3410"/>
+  <rect x="94" y="352" width="22" height="18" rx="3" fill="#fff7e6" stroke="#e8cf9a"/>
+  <rect x="118" y="352" width="22" height="18" rx="3" fill="#fff7e6" stroke="#e8cf9a"/>
+  <text x="160" y="350" font-size="12" font-weight="600" fill="#93762e">&amp; →</text>
+  <rect x="196" y="338" width="22" height="18" rx="3" fill="#5a3410"/>
+  <rect x="220" y="338" width="22" height="18" rx="3" fill="#fff7e6" stroke="#e8cf9a"/>
+  <rect x="244" y="338" width="22" height="18" rx="3" fill="#fff7e6" stroke="#e8cf9a"/>
+  <text x="282" y="351" font-size="9" fill="#b1974e">交集非空 → true</text>
+  <text x="48" y="398" font-size="9" fill="#b1974e">用于判 renderLanes 是否含某优先级、是否需重渲染</text>
+
+  <!-- 为什么位运算 red -->
+  <rect x="550" y="266" width="500" height="150" rx="12" fill="#fbeaea" stroke="#e6b8b8" filter="url(#soft)"/>
+  <text x="568" y="290" font-size="12" font-weight="600" fill="#7a2a2a">为什么全用位运算</text>
+  <text x="568" y="314" font-size="9.5" fill="#a05a5a">优先级要能「合并多个」「快速取最高」「快速判包含」</text>
+  <text x="568" y="336" font-size="9.5" fill="#a05a5a">位运算（或合并 / 与判交 / &amp; -lanes 取最低位）极快</text>
+  <text x="568" y="358" font-size="9.5" fill="#a05a5a">一个 31 位整数表达任意优先级组合，无需数组遍历</text>
+  <text x="568" y="382" font-size="9" fill="#c07a7a">误区：Lane 是数字大小比优先级 —— 实为位掩码</text>
+  <text x="568" y="402" font-size="9" fill="#c07a7a">误区：pendingLanes 是队列 —— 实为一个整数位掩码</text>
+
+  <text x="30" y="450" font-size="9" fill="#a1a1a6">源码基准 React(git 7023f50 · v19.3) · ReactFiberLane.js：mergeLanes:792 · getHighestPriorityLane:756 · includesSomeLane:784 · markRootUpdated:825</text>
+</svg>

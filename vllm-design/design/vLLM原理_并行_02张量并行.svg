@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="520" viewBox="0 0 1080 520" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="520" fill="#fbfbfd"/>
+
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">vLLM 张量并行 · Column 配 Row —— 切列 all-gather 后接切行 all-reduce，中间免通信</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">位置即语义：左 Column 切列 → 中间激活天然切分免通信 → 右 Row 切行 → 边界通信一次 · 成对设计最小化跨卡通信</text>
+
+  <!-- Column Parallel : green -->
+  <rect x="30" y="80" width="440" height="228" rx="13" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="50" y="106" font-size="12.5" font-weight="600" fill="#12402a">ColumnParallelLinear（:397）· 权重按列切</text>
+  <text x="50" y="126" font-size="9" fill="#2f6f4f">典型：QKV / MLP 上投影 · 每卡算部分输出</text>
+
+  <rect x="50" y="140" width="195" height="70" rx="9" fill="#ffffff" stroke="#bfe0cd"/>
+  <text x="147" y="164" font-size="9.5" font-weight="600" text-anchor="middle" fill="#12402a">GPU 0 · 权重列片 0</text>
+  <text x="147" y="184" font-size="8" text-anchor="middle" fill="#2f6f4f">算部分输出</text>
+  <text x="147" y="200" font-size="8" text-anchor="middle" fill="#2f6f4f">（输出的一部分列）</text>
+  <rect x="255" y="140" width="195" height="70" rx="9" fill="#ffffff" stroke="#bfe0cd"/>
+  <text x="352" y="164" font-size="9.5" font-weight="600" text-anchor="middle" fill="#12402a">GPU 1 · 权重列片 1</text>
+  <text x="352" y="184" font-size="8" text-anchor="middle" fill="#2f6f4f">算部分输出</text>
+  <text x="352" y="200" font-size="8" text-anchor="middle" fill="#2f6f4f">（输出的另一部分列）</text>
+
+  <rect x="50" y="224" width="400" height="66" rx="9" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="250" y="248" font-size="10" font-weight="600" text-anchor="middle" fill="#1b2a4a">forward 末尾 all-gather（:562）</text>
+  <text x="250" y="268" font-size="8.5" text-anchor="middle" fill="#5b7db1">拼回完整输出（可选，若下游是 Row 则免）</text>
+  <text x="250" y="282" font-size="8" text-anchor="middle" fill="#7a9dcb">原语 all_gather · communication_op.py:17</text>
+
+  <!-- middle : no comm -->
+  <rect x="490" y="80" width="120" height="228" rx="13" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+  <text x="550" y="150" font-size="10" font-weight="600" text-anchor="middle" fill="#5a3410">中间激活</text>
+  <text x="550" y="176" font-size="8" text-anchor="middle" fill="#93762e">天然按同样</text>
+  <text x="550" y="192" font-size="8" text-anchor="middle" fill="#93762e">方式切分</text>
+  <text x="550" y="222" font-size="9" font-weight="600" text-anchor="middle" fill="#5a3410">免通信</text>
+  <text x="550" y="244" font-size="8" text-anchor="middle" fill="#93762e">无需 all-gather</text>
+
+  <path d="M470,194 L490,194" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M610,194 L630,194" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <!-- Row Parallel : blue -->
+  <rect x="630" y="80" width="420" height="228" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="650" y="106" font-size="12.5" font-weight="600" fill="#1b2a4a">RowParallelLinear（:1537）· 权重按行切</text>
+  <text x="650" y="126" font-size="9" fill="#5b7db1">典型：输出 / 下投影 · 每卡算部分和</text>
+
+  <rect x="650" y="140" width="185" height="70" rx="9" fill="#ffffff" stroke="#bcd0ec"/>
+  <text x="742" y="164" font-size="9.5" font-weight="600" text-anchor="middle" fill="#1b2a4a">GPU 0 · 权重行片 0</text>
+  <text x="742" y="184" font-size="8" text-anchor="middle" fill="#5b7db1">算部分和</text>
+  <text x="742" y="200" font-size="8" text-anchor="middle" fill="#5b7db1">（partial sum）</text>
+  <rect x="845" y="140" width="185" height="70" rx="9" fill="#ffffff" stroke="#bcd0ec"/>
+  <text x="937" y="164" font-size="9.5" font-weight="600" text-anchor="middle" fill="#1b2a4a">GPU 1 · 权重行片 1</text>
+  <text x="937" y="184" font-size="8" text-anchor="middle" fill="#5b7db1">算部分和</text>
+  <text x="937" y="200" font-size="8" text-anchor="middle" fill="#5b7db1">（partial sum）</text>
+
+  <rect x="650" y="224" width="380" height="66" rx="9" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="840" y="248" font-size="10" font-weight="600" text-anchor="middle" fill="#12402a">forward 末尾 all-reduce（:1691）</text>
+  <text x="840" y="268" font-size="8.5" text-anchor="middle" fill="#2f6f4f">各卡部分和求和，得完整结果</text>
+  <text x="840" y="282" font-size="8" text-anchor="middle" fill="#4a8a63">原语 all_reduce · communication_op.py:12</text>
+
+  <!-- why paired -->
+  <rect x="30" y="332" width="1020" height="108" rx="12" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="50" y="358" font-size="12" font-weight="600" fill="#5a3410">为什么 Column 配 Row · 把通信降到每对 Linear 一次</text>
+  <text x="50" y="382" font-size="9.5" fill="#93762e">一个 Column（输出切列）后接一个 Row（输入切行），中间的激活天然按同样方式切分、无需通信；</text>
+  <text x="50" y="402" font-size="9.5" fill="#93762e">只在 Row 末尾 all-reduce 一次合并。成对设计把 TP 通信降到每对 Linear 一次，而非每步都通信。</text>
+  <text x="50" y="422" font-size="9" fill="#b1974e">误区：Column / Row 顺序有讲究，不能随便用；Column 切列 all-gather 配 Row 切行 all-reduce，中间免通信</text>
+
+  <text x="30" y="486" font-size="9" fill="#a1a1a6">源码基准 vLLM(git 7aab6e2 · v1-only) · vllm/model_executor/layers/linear.py · ColumnParallelLinear:397 all-gather:562 · RowParallelLinear:1537 all-reduce:1691 · communication_op.py:12/17</text>
+</svg>

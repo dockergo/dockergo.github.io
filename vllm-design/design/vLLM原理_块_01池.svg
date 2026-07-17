@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="520" viewBox="0 0 1080 520" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="520" fill="#fbfbfd"/>
+
+  <!-- 标题 -->
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">vLLM 块池 —— BlockPool 按显存建固定块池,空闲队列 O(1) 取还兼 LRU 驱逐序</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">KVCacheManager 协调块需求 → BlockPool 分配/回收 KV 块 · 回收进队尾、分配取队头,队列序即驱逐序</text>
+
+  <!-- ① KVCacheManager 协调层 (blue) -->
+  <rect x="30" y="68" width="1020" height="58" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="50" y="93" font-size="12.5" font-weight="600" fill="#1b2a4a">KVCacheManager · 更高层:协调请求的块需求 (kv_cache_manager.py:114)</text>
+  <text x="50" y="114" font-size="10" fill="#5b7db1">get_computed_blocks(:207) 先查已算好的可复用块 → 命中则复用,未命中向 BlockPool 要新块</text>
+
+  <!-- 连线 KVCacheManager → BlockPool -->
+  <path d="M540,126 L540,156" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <!-- ② BlockPool (amber) -->
+  <rect x="30" y="156" width="1020" height="122" rx="12" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="50" y="180" font-size="12.5" font-weight="600" fill="#5a3410">BlockPool · 启动时按可用显存算出总块数,建固定块池 (block_pool.py:143)</text>
+  <!-- 分配 -->
+  <rect x="50" y="194" width="480" height="68" rx="9" fill="#ffffff" stroke="#e8cf9a"/>
+  <text x="290" y="218" font-size="11" font-weight="600" text-anchor="middle" fill="#5a3410">get_new_blocks (:647) · 分配</text>
+  <text x="290" y="238" font-size="9" text-anchor="middle" fill="#93762e">请求需 KV 空间时分配新块</text>
+  <text x="290" y="254" font-size="9" text-anchor="middle" fill="#93762e">从空闲队列 队头 取出</text>
+  <!-- 回收 -->
+  <rect x="550" y="194" width="480" height="68" rx="9" fill="#ffffff" stroke="#e8cf9a"/>
+  <text x="790" y="218" font-size="11" font-weight="600" text-anchor="middle" fill="#5a3410">free_block_queue (:181) · 空闲队列</text>
+  <text x="790" y="238" font-size="9" text-anchor="middle" fill="#93762e">回收的块进队,分配从队头取</text>
+  <text x="790" y="254" font-size="9" text-anchor="middle" fill="#93762e">队列顺序 = 驱逐顺序 (LRU 式)</text>
+
+  <!-- 连线 BlockPool → 空闲队列 -->
+  <path d="M540,278 L540,296" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <!-- ③ 空闲块队列可视 (green container) -->
+  <rect x="30" y="296" width="1020" height="152" rx="12" fill="#f5faf6" stroke="#cfe6d5" filter="url(#soft)"/>
+  <text x="50" y="320" font-size="11" font-weight="600" fill="#2c5a3a">空闲块队列 free_block_queue · 回收进队尾 · 分配取队头 · 双向链表</text>
+
+  <!-- 队头/队尾 标注 -->
+  <text x="72" y="342" font-size="9" fill="#2f6f4f">队头 HEAD · get_new_blocks 分配取出</text>
+  <text x="1002" y="342" font-size="9" text-anchor="end" fill="#2f6f4f">队尾 TAIL · free 归零后进队</text>
+  <!-- 取出(向上) / 进队(向下) 箭头 -->
+  <path d="M124,360 L124,346" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M950,346 L950,358" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <!-- 8 块单元 -->
+  <g>
+    <rect x="72" y="360" width="104" height="44" rx="7" fill="#eafaf1" stroke="#bfe0cd"/>
+    <text x="124" y="387" font-size="9.5" text-anchor="middle" fill="#12402a">free blk</text>
+    <rect x="190" y="360" width="104" height="44" rx="7" fill="#eafaf1" stroke="#bfe0cd"/>
+    <text x="242" y="387" font-size="9.5" text-anchor="middle" fill="#12402a">free blk</text>
+    <rect x="308" y="360" width="104" height="44" rx="7" fill="#eafaf1" stroke="#bfe0cd"/>
+    <text x="360" y="387" font-size="9.5" text-anchor="middle" fill="#12402a">free blk</text>
+    <rect x="426" y="360" width="104" height="44" rx="7" fill="#eafaf1" stroke="#bfe0cd"/>
+    <text x="478" y="387" font-size="9.5" text-anchor="middle" fill="#12402a">free blk</text>
+    <rect x="544" y="360" width="104" height="44" rx="7" fill="#eafaf1" stroke="#bfe0cd"/>
+    <text x="596" y="387" font-size="9.5" text-anchor="middle" fill="#12402a">free blk</text>
+    <rect x="662" y="360" width="104" height="44" rx="7" fill="#eafaf1" stroke="#bfe0cd"/>
+    <text x="714" y="387" font-size="9.5" text-anchor="middle" fill="#12402a">free blk</text>
+    <rect x="780" y="360" width="104" height="44" rx="7" fill="#eafaf1" stroke="#bfe0cd"/>
+    <text x="832" y="387" font-size="9.5" text-anchor="middle" fill="#12402a">free blk</text>
+    <rect x="898" y="360" width="104" height="44" rx="7" fill="#eafaf1" stroke="#bfe0cd"/>
+    <text x="950" y="387" font-size="9.5" text-anchor="middle" fill="#12402a">刚回收</text>
+  </g>
+  <!-- LRU 方向注 -->
+  <text x="540" y="430" font-size="9.5" text-anchor="middle" fill="#5b7d68">队列顺序 = LRU 驱逐序:队头最久未用、需空间时先被复用;热前缀块靠队尾留存</text>
+
+  <!-- 底注 -->
+  <text x="30" y="500" font-size="9" fill="#a1a1a6">为什么用池 + 空闲队列:块频繁分配/回收,固定池 + 空闲队列 O(1) 取还,避免反复向 GPU 申请显存;队列兼驱逐序,前缀旧块按 LRU 淘汰 · vLLM(git 7aab6e2, v1)</text>
+</svg>

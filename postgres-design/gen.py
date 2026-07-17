@@ -41,51 +41,92 @@ OUT = _args.out or os.environ.get("POSTGRES_DESIGN_OUT") or os.path.join(HERE, "
 
 # ===================================================================== #
 # 一、主线注册表 —— 唯一需随项目调整的数据块
-#     原型 A（客户端-服务器 RDBMS）：全景 + 4 接口主线 + 8 支撑能力域。
-#     每条主线声明：md 文件名、分组、图标、短标题、一句话副标。
-#     SVG 序、prose 均从 md 自动解析。
+#     新家族（PostgreSQL）：元模式 = 接口 × 能力域 × 时机。
+#     全景 + 4 接触面主线（SQL 四类：DDL/DML/DQL/DCL）+ 8 支撑能力域。
 # ===================================================================== #
 MAINLINES = [
     ("Postgres原理_全景主线框架", "pano", "◇", "全景主线框架",
-     "原型 A 客户端-服务器 RDBMS：双维模型 · postmaster 总架构 · 部署形态 · 依赖矩阵 · 三条贯穿声明"),
+     "postmaster + per-connection backend 进程 + 共享内存 + 自管存储：双维模型 · 总架构 · 三条贯穿声明"),
 
-    ("Postgres原理_DDL数据定义", "iface", "⇲", "DDL 数据定义",
-     "定义对象 = 改系统目录表行 · 事务性 DDL · pg_class/pg_depend · 锁保护"),
-    ("Postgres原理_DML数据写入", "iface", "⇥", "DML 数据写入",
-     "ModifyTable → heap 写造 MVCC 版本 · HOT 优化 · 索引 + WAL"),
-    ("Postgres原理_DQL数据查询", "iface", "◷", "DQL 数据查询",
-     "Parse→Analyze→Rewrite→Plan(CBO)→Execute · volcano pull · 扫描/Join 选择"),
-    ("Postgres原理_DCL数据控制", "iface", "⛚", "DCL 数据控制",
-     "四道关卡：pg_hba 认证 → 角色 → GRANT/ACL → 行级安全 RLS"),
+    ("Postgres原理_DDL数据定义", "iface", "⚙", "DDL 数据定义",
+     "CREATE/ALTER/DROP · 写系统目录 pg_catalog · 事务性 DDL(可回滚)"),
+    ("Postgres原理_DML数据写入", "iface", "✎", "DML 数据写入",
+     "INSERT/UPDATE/DELETE · heap 追加 + 旧版本标记 · 走 WAL 先写日志"),
+    ("Postgres原理_DQL数据查询", "iface", "▦", "DQL 数据查询",
+     "SELECT · Parser→Analyzer→Planner→Executor 流水线 · 快照可见性判定"),
+    ("Postgres原理_DCL数据控制", "iface", "◐", "DCL 数据控制",
+     "GRANT/REVOKE · 角色与权限 · row-level security"),
 
-    ("Postgres原理_支撑_进程与内存架构", "support", "◉", "进程与内存架构",
-     "灵魂：postmaster fork 每连接 backend · 共享内存 · 辅助进程"),
-    ("Postgres原理_支撑_存储引擎", "support", "▤", "存储引擎",
-     "行存 heap · 8KB page · tuple(xmin/xmax) · TOAST · FSM/VM"),
-    ("Postgres原理_支撑_索引方法", "support", "⬡", "索引方法",
-     "统一 AM 抽象 · btree/gin/gist/brin/hash/spgist · 选型"),
-    ("Postgres原理_支撑_查询优化器", "support", "✲", "查询优化器",
-     "CBO 代价模型 · Join 定序 DP+GEQO · pg_statistic 统计"),
-    ("Postgres原理_支撑_执行引擎", "support", "⚡", "执行引擎",
-     "volcano/pull · EState/PlanState · 并行查询 Gather · JIT"),
+    ("Postgres原理_支撑_进程与内存架构", "support", "▤", "进程与内存架构",
+     "核心：postmaster 每连接 fork 一 backend + 辅助进程 · shared_buffers/WAL buffers/锁表 共享内存"),
+    ("Postgres原理_支撑_存储引擎", "support", "◫", "存储引擎",
+     "heap 行存 + 8KB page · TOAST 大字段 · shared_buffers 缓冲池 · 自管 PGDATA"),
+    ("Postgres原理_支撑_索引方法", "support", "▦", "索引方法",
+     "B-tree/Hash/GiST/GIN/BRIN · 可扩展 access method · 索引扫描 vs 顺序扫描"),
+    ("Postgres原理_支撑_查询优化器", "support", "◐", "查询优化器",
+     "灵魂：基于代价的 Planner · 统计信息 + 选择率 · Join 顺序/方法枚举 · 生成计划树"),
+    ("Postgres原理_支撑_执行引擎", "support", "⚙", "执行引擎",
+     "火山模型 Portal · 计划节点树逐行拉取 · 各种扫描/连接/聚合算子"),
     ("Postgres原理_支撑_事务与MVCC", "support", "⛨", "事务与 MVCC",
-     "灵魂：快照 xmin/xmax · 隔离级别 · VACUUM 回收死元组"),
-    ("Postgres原理_支撑_并发控制与锁", "support", "◫", "并发控制与锁",
-     "heavyweight/LWLock/spinlock 三级 · 死锁检测"),
-    ("Postgres原理_支撑_WAL与恢复复制", "support", "◐", "WAL 与恢复复制",
-     "先写日志 · checkpoint · 崩溃恢复 · 流复制/PITR"),
+     "每行 xmin/xmax 多版本 · 快照隔离 · CLOG 事务状态 · VACUUM 回收死元组"),
+    ("Postgres原理_支撑_并发控制与锁", "support", "◉", "并发控制与锁",
+     "表/行/咨询锁 · ProcArray 快照 · 死锁检测 · 轻量锁 LWLock 保护共享内存"),
+    ("Postgres原理_支撑_WAL与恢复复制", "support", "⛨", "WAL 与恢复/复制",
+     "预写日志 WAL · checkpoint · crash recovery 重放 · 流复制/物理逻辑复制"),
 ]
 
 CAT_ORDER = [
     ("pano", "全景框架 · 先读这一篇"),
-    ("iface", "接口主线 · 用户下发（DDL / DML / DQL / DCL）"),
+    ("iface", "接触面主线 · SQL 四类"),
     ("support", "支撑主线 · 引擎内部（8 条能力域）"),
 ]
 
+# ===================================================================== #
+# 一·b、项目总架构图 = 唯一导航底图 —— 热区注册表（决定"点击下钻"）
+#   产出准则（用户明确要求）：项目页统一用【项目总架构图】(ARCH_SVG_NAME) 做导航，
+#   在图上叠透明热区，每个语义模块 = 一个可点区域 → 下钻对应主线。
+#   坐标系 = 该总架构 SVG 的 viewBox（ARCH_W×ARCH_H），生成期换算成百分比定位。
+#   两条覆盖铁律：① 图上每个模块都有热区 ② 每条主线都被某热区覆盖（未覆盖者自动兜底成 chip）。
+# ===================================================================== #
+PANO_NAME = "Postgres原理_全景主线框架"
+ARCH_W, ARCH_H = 1020, 680  # 必须与 ARCH_SVG_NAME 的 viewBox 一致
+# (x, y, w, h, 主线name) —— 坐标取自总架构 SVG 的真实 rect（viewBox 1020×680）
+ARCH_HOTSPOTS = [
+    # 标题条 → 全景总览
+    (0, 0, 1020, 44, "Postgres原理_全景主线框架"),
+    # 客户端连接条 → DCL（认证/角色/权限从连接入口起）
+    (30, 50, 960, 56, "Postgres原理_DCL数据控制"),
+    # 进程层：postmaster / backend / 辅助进程
+    (30, 122, 300, 150, "Postgres原理_支撑_进程与内存架构"),
+    (350, 122, 380, 150, "Postgres原理_支撑_进程与内存架构"),
+    (750, 122, 240, 150, "Postgres原理_支撑_WAL与恢复复制"),   # 辅助进程(checkpointer/walwriter/archiver)
+    # 查询流水线：Parser/Analyzer → DQL；Planner → 优化器；Executor → 执行引擎
+    (48, 328, 120, 52, "Postgres原理_DQL数据查询"),
+    (184, 328, 140, 52, "Postgres原理_DQL数据查询"),
+    (340, 328, 140, 52, "Postgres原理_支撑_查询优化器"),
+    (496, 328, 216, 52, "Postgres原理_支撑_执行引擎"),
+    # 共享内存：shared_buffers → 存储；WAL buffers → WAL；锁表/快照 → 并发锁
+    (768, 324, 204, 26, "Postgres原理_支撑_存储引擎"),
+    (768, 356, 204, 26, "Postgres原理_支撑_WAL与恢复复制"),
+    (768, 388, 204, 26, "Postgres原理_支撑_并发控制与锁"),
+    # 存储层：数据文件 → 存储；WAL → WAL；系统目录 → 索引方法(pg_catalog/access method)
+    (48, 494, 300, 146, "Postgres原理_支撑_存储引擎"),
+    (364, 494, 300, 146, "Postgres原理_支撑_WAL与恢复复制"),
+    (680, 494, 290, 146, "Postgres原理_支撑_索引方法"),
+]
+# 未被上面热区覆盖的主线（DDL/DML 是 SQL 写动作、事务与MVCC 贯穿多处，图上无独立区域）
+# 由 build_archnav 自动兜底成底部 chip —— 故此处显式清单留空。
+ARCH_ALWAYS_CHIP = [
+    "Postgres原理_DDL数据定义",
+    "Postgres原理_DML数据写入",
+    "Postgres原理_支撑_事务与MVCC",
+]
+
 BRAND_TITLE = "一切知识皆索引"
-BRAND_SUB = "PostgreSQL 核心原理 · 交互式图谱"
-HOME_DESC = ("PostgreSQL 核心原理设计文档库的离线交互图谱——原型 A（客户端-服务器进程级行存 OLTP 关系库）。"
-             "13 条主线、30 张手绘原理图，全部回官方源码核实。点任意主线进入逐图走查。")
+BRAND_SUB = "PostgreSQL"
+HOME_DESC = ("PostgreSQL 核心原理设计文档库的离线交互图谱——经典关系型数据库："
+             "postmaster 每连接 fork 一 backend 进程 + 共享内存 + 自管 PGDATA 存储 + WAL + MVCC。"
+             "13 条主线、手绘原理图，全部回 postgres 源码核实。点击项目总架构图任意模块即可下钻到对应主线。")
 ARCH_SVG_NAME = "Postgres原理_全景_02总架构.svg"
 
 # ===================================================================== #
@@ -199,50 +240,45 @@ def esc(s):
     return html.escape(s or "")
 
 
-def build_cards():
-    parts = []
-    for cat, label in CAT_ORDER:
-        group = [m for m in MAINLINES if m[1] == cat]
-        if not group:
+def build_archnav():
+    """首页唯一导航：项目总架构图 (ARCH_SVG_NAME) 底图 + 透明热区叠加。
+    每个语义模块 = 一个 .arch-hot 区域，点击下钻对应主线；未覆盖主线兜底成 chip。"""
+    meta = {name: (ico, ctitle, sub) for name, _c, ico, ctitle, sub in MAINLINES}
+    if not _ARCH_SVG:
+        return '<p style="color:var(--c-ink2)">（缺项目总架构图 %s）</p>' % esc(ARCH_SVG_NAME)
+    hots = []
+    for (x, y, w, h, mid) in ARCH_HOTSPOTS:
+        if mid not in meta:
+            print("  ⚠ 热区指向不存在的主线:", mid)
             continue
-        parts.append('<div class="cat-sec">%s</div>' % esc(label))
-        cells = []
-        for name, _cat, ico, ctitle, sub in group:
-            n = len(DOCS[name]["walk"])
-            cells.append(
-                '<button class="tcard" data-mid="{mid}">'
-                '<span class="tcard-ico">{ico}</span>'
-                '<span class="tcard-body">'
-                '<span class="tcard-title">{title}</span>'
-                '<span class="tcard-desc">{sub}</span>'
-                '<span class="tcard-meta">{n} 张原理图 →</span>'
-                '</span></button>'.format(
-                    mid=esc(name), ico=esc(ico), title=esc(ctitle),
-                    sub=esc(sub), n=n))
-        parts.append('<div class="tcards">' + "\n".join(cells) + "</div>")
-    return "\n".join(parts)
+        _ico, title, _s = meta[mid]
+        hots.append(
+            '<button class="arch-hot" data-mid="{mid}" aria-label="{title}"'
+            ' style="left:{l:.3f}%;top:{t:.3f}%;width:{w:.3f}%;height:{ht:.3f}%">'
+            '<span class="ah-tag">{ico} {title}</span></button>'.format(
+                mid=esc(mid), title=esc(title), ico=esc(_ico),
+                l=x / ARCH_W * 100, t=y / ARCH_H * 100,
+                w=w / ARCH_W * 100, ht=h / ARCH_H * 100))
+    covered = {mid for (*_r, mid) in ARCH_HOTSPOTS}
+    chip_names = [n for (n, *_r) in MAINLINES if n not in covered] + \
+                 [n for n in ARCH_ALWAYS_CHIP if n not in covered]
+    chips = ""
+    if chip_names:
+        seen, items = set(), []
+        for n in chip_names:
+            if n in seen or n not in meta:
+                continue
+            seen.add(n)
+            ico, title, _s = meta[n]
+            items.append('<button class="arch-chip" data-mid="{mid}">{ico} {title}</button>'
+                         .format(mid=esc(n), ico=esc(ico), title=esc(title)))
+        chips = ('<div class="arch-chips" aria-label="未在架构图上单独描绘的主线">%s</div>'
+                 % "".join(items))
+    return (
+        '<div class="arch-wrap">'
+        '<img alt="PostgreSQL 项目总架构图" src="data:image/svg+xml;base64,%s"/>'
+        '%s</div>%s' % (_ARCH_SVG, "".join(hots), chips))
 
-
-def build_tree():
-    parts = ['<div class="tree">']
-    for cat, label in CAT_ORDER:
-        group = [m for m in MAINLINES if m[1] == cat]
-        if not group:
-            continue
-        parts.append('<div class="tree-cat">%s</div>' % esc(label))
-        for name, _c, ico, ctitle, _sub in group:
-            leaves = "".join(
-                '<button class="tree-leaf" data-mid="{mid}" data-idx="{i}">{ico2} {sec}</button>'.format(
-                    mid=esc(name), i=i, ico2="▸", sec=esc(sec))
-                for i, (sec, _a, _s) in enumerate(DOCS[name]["walk"]))
-            parts.append(
-                '<div class="tree-node"><button class="tree-head" data-mid="{mid}">'
-                '<span>{ico} {title}</span><span class="tree-n">{n}</span></button>'
-                '<div class="tree-leaves">{leaves}</div></div>'.format(
-                    mid=esc(name), ico=esc(ico), title=esc(ctitle),
-                    n=len(DOCS[name]["walk"]), leaves=leaves))
-    parts.append("</div>")
-    return "\n".join(parts)
 
 
 def build_panes():
@@ -328,8 +364,7 @@ a{color:inherit;text-decoration:none}
 header{position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:14px;
   padding:12px 22px;background:color-mix(in srgb,var(--c-bg) 82%,transparent);
   backdrop-filter:saturate(160%) blur(14px);border-bottom:1px solid var(--c-border)}
-.logo{display:flex;align-items:center;gap:9px;cursor:pointer;font-weight:700;font-size:15px}
-.logo{text-decoration:none;color:inherit}
+.logo{display:flex;align-items:center;gap:9px;cursor:pointer;font-weight:700;font-size:15px;text-decoration:none;color:inherit}
 .logo:hover .homeico{color:var(--c-brand)}
 .homeico{display:inline-flex;color:var(--c-ink2);transition:color .15s}
 .logo .dot{width:11px;height:11px;border-radius:3px;background:linear-gradient(135deg,var(--c-brand),var(--c-amber))}
@@ -339,42 +374,19 @@ header{position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:14px
   border-radius:9px;padding:6px 12px;cursor:pointer;font-size:12.5px;transition:.15s}
 .hbtn:hover{color:var(--c-ink);border-color:var(--c-edge)}
 .wrap{max-width:1180px;margin:0 auto;padding:30px 22px 80px}
-.hero{padding:26px 0 10px}
-.hero h1{font-size:30px;font-weight:800;letter-spacing:-.5px;
-  background:linear-gradient(120deg,var(--c-ink),var(--c-ink2));-webkit-background-clip:text;background-clip:text;color:transparent}
-.hero p{margin-top:10px;color:var(--c-ink2);max-width:760px;font-size:13.5px}
-.nav-seg{display:inline-flex;margin:22px 0 6px;background:var(--c-card2);border:1px solid var(--c-border);border-radius:11px;padding:3px}
-.nav-seg button{border:0;background:transparent;color:var(--c-ink2);padding:7px 15px;border-radius:8px;cursor:pointer;font-size:12.5px;transition:.15s}
-.nav-seg button.on{background:var(--c-card);color:var(--c-ink);box-shadow:0 1px 3px var(--c-shadow)}
-.nav-mode{display:none;margin-top:16px}
-.nav-mode.on{display:block}
-.cat-sec{font-size:12px;font-weight:700;color:var(--c-ink3);text-transform:uppercase;letter-spacing:.6px;margin:26px 0 12px}
-.tcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(268px,1fr));gap:13px}
-.tcard{display:flex;gap:12px;text-align:left;cursor:pointer;padding:15px 16px;
-  background:var(--c-card);border:1px solid var(--c-border);border-radius:14px;transition:.16s;color:inherit;align-items:flex-start}
-.tcard:hover{border-color:var(--c-brand);transform:translateY(-2px);box-shadow:0 8px 24px var(--c-shadow)}
-.tcard-ico{font-size:20px;line-height:1.2;width:26px;flex:none;text-align:center}
-.tcard-body{display:flex;flex-direction:column;gap:4px;min-width:0}
-.tcard-title{font-weight:700;font-size:14.5px}
-.tcard-desc{color:var(--c-ink2);font-size:11.8px;line-height:1.5}
-.tcard-meta{color:var(--c-brand);font-size:11px;font-weight:600;margin-top:2px}
-.arch-wrap{position:relative;background:var(--c-card);border:1px solid var(--c-border);border-radius:16px;padding:14px;overflow:hidden}
+.navmap-hint{color:var(--c-ink3);font-size:12px;margin:18px 2px 0;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.navmap-hint b{color:var(--c-brand);font-weight:700}
+.arch-wrap{position:relative;margin-top:12px;background:var(--c-card);border:1px solid var(--c-border);border-radius:16px;padding:14px;overflow:hidden}
 .arch-wrap img{width:100%;display:block;border-radius:8px}
 html:not([data-theme="light"]) .arch-wrap img{filter:invert(.92) hue-rotate(180deg) saturate(.85)}
+.arch-hot{position:absolute;border:0;background:transparent;cursor:pointer;padding:0;border-radius:6px;transition:.12s;z-index:2}
+.arch-hot:hover,.arch-hot:focus-visible{background:color-mix(in srgb,var(--c-brand) 14%,transparent);outline:2px solid var(--c-brand);outline-offset:-1px}
+.arch-hot:focus{outline:2px solid var(--c-brand)}
+.ah-tag{display:none;position:absolute;left:3px;top:3px;white-space:nowrap;background:var(--c-brand);color:#fff;font-size:11px;font-weight:600;padding:3px 8px;border-radius:6px;box-shadow:0 3px 10px var(--c-shadow);pointer-events:none;z-index:3}
+.arch-hot:hover .ah-tag,.arch-hot:focus-visible .ah-tag{display:block}
 .arch-chips{display:flex;flex-wrap:wrap;gap:9px;margin-top:14px}
-.arch-chip{border:1px solid var(--c-border);background:var(--c-card2);border-radius:9px;padding:7px 12px;cursor:pointer;font-size:12px;transition:.15s}
+.arch-chip{border:1px solid var(--c-border);background:var(--c-card2);border-radius:9px;padding:7px 12px;cursor:pointer;font-size:12px;transition:.15s;color:inherit}
 .arch-chip:hover{border-color:var(--c-brand);color:var(--c-brand)}
-.tree-cat{font-size:12px;font-weight:700;color:var(--c-ink3);text-transform:uppercase;letter-spacing:.6px;margin:20px 0 8px}
-.tree-node{margin-bottom:6px}
-.tree-head{width:100%;display:flex;justify-content:space-between;align-items:center;cursor:pointer;
-  background:var(--c-card);border:1px solid var(--c-border);border-radius:10px;padding:11px 14px;color:inherit;font-size:13.5px;font-weight:600}
-.tree-head:hover{border-color:var(--c-edge)}
-.tree-n{color:var(--c-ink3);font-size:11px;font-weight:500}
-.tree-leaves{display:none;padding:6px 0 6px 14px}
-.tree-node.open .tree-leaves{display:block}
-.tree-leaf{display:block;width:100%;text-align:left;cursor:pointer;background:transparent;border:0;
-  color:var(--c-ink2);padding:6px 10px;border-radius:7px;font-size:12.5px}
-.tree-leaf:hover{background:var(--c-card2);color:var(--c-ink)}
 .pane{display:none}
 .pane.on{display:block}
 .pane-head{display:flex;align-items:center;gap:12px;margin:6px 0 16px}
@@ -464,20 +476,15 @@ APP_JS = r"""
       t.classList.toggle('on', +t.dataset.idx===idx);});
   }
   document.addEventListener('click',function(e){
-    var c=e.target.closest('.tcard'); if(c){openMain(c.dataset.mid,0);return;}
+    var ah=e.target.closest('.arch-hot'); if(ah){openMain(ah.dataset.mid,0);return;}
     var ac=e.target.closest('.arch-chip'); if(ac){openMain(ac.dataset.mid,0);return;}
     var wt=e.target.closest('.walk-tab'); if(wt){selFig(wt.dataset.mid,+wt.dataset.idx);return;}
-    var tl=e.target.closest('.tree-leaf'); if(tl){openMain(tl.dataset.mid,+tl.dataset.idx);return;}
-    var th=e.target.closest('.tree-head'); if(th){th.parentElement.classList.toggle('open');return;}
-    // logo now portal link
-    var bk=e.target.closest('#back'); if(bk){showHome();return;}
+    // logo is now a link to portal (../index.html); no JS intercept
+    var bk=e.target.closest('#back2'); if(bk){showHome();return;}
   });
-  document.querySelectorAll('.nav-seg button').forEach(function(b){
-    b.onclick=function(){
-      document.querySelectorAll('.nav-seg button').forEach(function(x){x.classList.remove('on')});
-      b.classList.add('on');
-      document.querySelectorAll('.nav-mode').forEach(function(m){m.classList.toggle('on',m.dataset.mode===b.dataset.mode)});
-    };
+  document.addEventListener('keydown',function(e){
+    if(e.key!=='Enter'&&e.key!==' ')return;
+    var ah=e.target.closest('.arch-hot,.arch-chip'); if(ah){e.preventDefault();openMain(ah.dataset.mid,0);}
   });
   showHome();
   function done(){var lo=document.getElementById('lo');if(lo){lo.classList.add('hide');setTimeout(function(){if(lo&&lo.parentNode)lo.parentNode.removeChild(lo);},500);}}
@@ -488,18 +495,12 @@ APP_JS = r"""
 
 
 def build_html():
-    if _ARCH_SVG:
-        chips = "".join(
-            '<button class="arch-chip" data-mid="{mid}">{ico} {title}</button>'.format(
-                mid=esc(n), ico=esc(ico), title=esc(t))
-            for (n, _c, ico, t, _s) in MAINLINES)
-        arch_section = (
-            '<div class="nav-mode" data-mode="arch">'
-            '<div class="arch-wrap"><img alt="PostgreSQL 总架构图" '
-            'src="data:image/svg+xml;base64,%s"/></div>'
-            '<div class="arch-chips">%s</div></div>' % (_ARCH_SVG, chips))
-    else:
-        arch_section = '<div class="nav-mode" data-mode="arch"><p>（缺总架构图）</p></div>'
+    archnav = build_archnav()
+    # 导航一致性校验：每条主线要么被某热区覆盖、要么进兜底 chip，否则在架构图入口失联
+    covered = {mid for (*_r, mid) in ARCH_HOTSPOTS} | set(ARCH_ALWAYS_CHIP)
+    unmapped = [n for (n, *_r) in MAINLINES if n not in covered]
+    if unmapped:
+        print("  ⚠ 架构图上失联的主线(既无热区又无 chip):", unmapped)
 
     total_svg = len(_on_disk)
     return """<!DOCTYPE html>
@@ -507,49 +508,36 @@ def build_html():
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>{brand} · PostgreSQL 核心原理图谱</title>
+<title>{sub} · 原理图谱</title>
 <style>{css}</style>
 </head>
 <body>
 <div id="lo" role="status" aria-live="polite">
   <div class="lo-logo"></div>
-  <div class="lo-t">{brand}</div>
-  <div class="lo-s">{sub} · 正在装载 {n} 张原理图</div>
+  <div class="lo-t">{sub}</div>
+  <div class="lo-s">正在装载 {n} 张原理图</div>
   <div class="lo-bar"><i></i></div>
   <div class="lo-s" style="font-size:11px;opacity:.7">短暂空白属正常装载，非内容缺失</div>
 </div>
 <header>
-  <a class="logo" id="logo" href="../index.html" title="返回导航主页"><span class="homeico" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg></span><span>{brand}</span><span class="sub">{sub}</span></a>
+  <a class="logo" id="logo" href="../index.html" title="返回导航主页"><span class="homeico" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg></span></a>
   <div class="spacer"></div>
-  <button class="hbtn" id="back">← 返回首页</button>
   <button class="hbtn" id="themeBtn">☾ 深色</button>
 </header>
 <div class="wrap">
   <div id="home">
-    <div class="hero">
-      <h1>{brand}</h1>
-      <p>{home_desc}</p>
-    </div>
-    <div class="nav-seg">
-      <button data-mode="cards" class="on">主题卡片</button>
-      <button data-mode="arch">架构导航</button>
-      <button data-mode="tree">目录树</button>
-    </div>
-    <div class="nav-mode on" data-mode="cards">{cards}</div>
-    {arch}
-    <div class="nav-mode" data-mode="tree">{tree}</div>
+    {archnav}
   </div>
   <div id="panes" style="display:none">
-    <button class="hbtn back on" id="back2" onclick="document.getElementById('back').click()">← 返回全部主线</button>
+    <button class="hbtn back on" id="back2" onclick="showHome()">← 返回全部主线</button>
     {panes}
   </div>
 </div>
 <script>{js}</script>
 </body>
 </html>""".format(
-        brand=esc(BRAND_TITLE), sub=esc(BRAND_SUB), home_desc=esc(HOME_DESC), n=total_svg,
-        css=CSS, cards=build_cards(), arch=arch_section, tree=build_tree(),
-        panes=build_panes(), js=APP_JS)
+        sub=esc(BRAND_SUB), n=total_svg,
+        css=CSS, archnav=archnav, panes=build_panes(), js=APP_JS)
 
 
 if __name__ == "__main__":

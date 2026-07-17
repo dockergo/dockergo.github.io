@@ -85,35 +85,33 @@ CAT_ORDER = [
 #   两条覆盖铁律：① 图上每个模块都有热区 ② 每条主线都被某热区覆盖（未覆盖者自动兜底成 chip）。
 # ===================================================================== #
 PANO_NAME = "Gorm原理_全景主线框架"
-ARCH_W, ARCH_H = 1040, 760  # 必须与 ARCH_SVG_NAME 的 viewBox 一致
-# (x, y, w, h, 主线name) —— 一个模块可拆多行热区，一条主线可被多个区域指向
+ARCH_W, ARCH_H = 1080, 820  # 必须与 ARCH_SVG_NAME 的 viewBox 一致
+# (x, y, w, h, 主线name) —— 坐标取自总架构 SVG 的真实 rect（viewBox 1080×820）
 ARCH_HOTSPOTS = [
-    # 顶栏项目定位 → 全景总览
-    (30, 44, 980, 42, "Gorm原理_全景主线框架"),
-    # ① 应用层 · 两接触面（标题行左右拆 + 两个 API 盒）
-    (30, 96, 490, 36, "Gorm原理_接触面_链式查询API"),
-    (522, 96, 488, 36, "Gorm原理_接触面_模型定义"),
-    (48, 132, 450, 28, "Gorm原理_接触面_链式查询API"),   # 链式查询 API 盒
-    (522, 132, 470, 28, "Gorm原理_接触面_模型定义"),      # 模型定义盒
+    # 顶栏标题 → 全景总览
+    (0, 0, 1080, 58, "Gorm原理_全景主线框架"),
+    # ① 应用层接触面（链式 API 盒 / 模型定义盒）
+    (48, 158, 484, 28, "Gorm原理_接触面_链式查询API"),
+    (548, 158, 502, 28, "Gorm原理_接触面_模型定义"),
     # ② DB / Statement 层
-    (30, 186, 980, 56, "Gorm原理_支撑_Statement与链式构建"),
-    # ③ callbacks 引擎（灵魂）
-    (30, 256, 980, 98, "Gorm原理_支撑_callbacks回调链"),
+    (30, 206, 1020, 56, "Gorm原理_支撑_Statement与链式构建"),
+    # ③ callbacks 生命周期回调链引擎（灵魂）
+    (30, 274, 1020, 98, "Gorm原理_支撑_callbacks回调链"),
     # ④a schema 反射 / ④b clause 构建
-    (30, 368, 480, 84, "Gorm原理_支撑_schema反射"),
-    (530, 368, 480, 84, "Gorm原理_支撑_clause_SQL构建"),
-    # ⑤ 关联 / ⑥ 事务 / ⑦ Migrator
-    (30, 468, 310, 84, "Gorm原理_支撑_关联与Preload"),
-    (365, 468, 310, 84, "Gorm原理_支撑_事务与会话"),
-    (700, 468, 310, 84, "Gorm原理_支撑_Migrator自动迁移"),
+    (30, 386, 502, 84, "Gorm原理_支撑_schema反射"),
+    (548, 386, 502, 84, "Gorm原理_支撑_clause_SQL构建"),
+    # ⑤ 关联&Preload / ⑥ 事务&会话 / ⑦ Migrator
+    (30, 486, 326, 84, "Gorm原理_支撑_关联与Preload"),
+    (372, 486, 326, 84, "Gorm原理_支撑_事务与会话"),
+    (714, 486, 336, 84, "Gorm原理_支撑_Migrator自动迁移"),
     # ⑧ Dialector + ConnPool + Logger
-    (30, 568, 980, 72, "Gorm原理_支撑_方言连接池与日志"),
+    (30, 586, 1020, 72, "Gorm原理_支撑_方言连接池与日志"),
 ]
 # 没有独立架构区域、需底部 chip 兜底的主线（本项目 11 主线全部落在图上 → 空）
 ARCH_ALWAYS_CHIP = []
 
 BRAND_TITLE = "一切知识皆索引"
-BRAND_SUB = "GORM 核心原理 · 交互式图谱"
+BRAND_SUB = "GORM"
 HOME_DESC = ("GORM 核心原理设计文档库的离线交互图谱——新家族（Go 的 ORM / 数据映射库 · github.com/go-gorm/gorm · 链接进应用、struct↔SQL 表映射）。"
              "11 条主线、14 张手绘原理图，全部回本地源码核实。点击项目总架构图任意模块即可下钻到对应主线。")
 ARCH_SVG_NAME = "Gorm原理_全景_02总架构.svg"
@@ -469,7 +467,7 @@ APP_JS = r"""
     var ac=e.target.closest('.arch-chip'); if(ac){openMain(ac.dataset.mid,0);return;}
     var wt=e.target.closest('.walk-tab'); if(wt){selFig(wt.dataset.mid,+wt.dataset.idx);return;}
     // logo is now a link to portal (../index.html); no JS intercept
-    var bk=e.target.closest('#back'); if(bk){showHome();return;}
+    var bk=e.target.closest('#back2'); if(bk){showHome();return;}
   });
   document.addEventListener('keydown',function(e){
     if(e.key!=='Enter'&&e.key!==' ')return;
@@ -509,18 +507,16 @@ def build_html():
   <div class="lo-s" style="font-size:11px;opacity:.7">短暂空白属正常装载，非内容缺失</div>
 </div>
 <header>
-  <a class="logo" id="logo" href="../index.html" title="返回导航主页"><span class="homeico" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg></span><span>{sub}</span></a>
+  <a class="logo" id="logo" href="../index.html" title="返回导航主页"><span class="homeico" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg></span></a>
   <div class="spacer"></div>
-  <button class="hbtn" id="back">← 返回首页</button>
   <button class="hbtn" id="themeBtn">☾ 深色</button>
 </header>
 <div class="wrap">
   <div id="home">
-    <div class="navmap-hint"><b>▶ 项目总架构 · 导航图</b> · 点击图上任意模块区域下钻到对应主线（逐图走查）</div>
     {archnav}
   </div>
   <div id="panes" style="display:none">
-    <button class="hbtn back on" id="back2" onclick="document.getElementById('back').click()">← 返回全部主线</button>
+    <button class="hbtn back on" id="back2" onclick="showHome()">← 返回全部主线</button>
     {panes}
   </div>
 </div>

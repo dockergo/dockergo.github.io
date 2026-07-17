@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="540" viewBox="0 0 1080 540" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="540" fill="#fbfbfd"/>
+
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">FiberNode 结构 —— UI 树的工作单元：每个组件 / DOM 节点表示成一个 Fiber 对象</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">扁平对象（instance+fiber 字段合并绕 Flow bug）· ReactInternalTypes.js:89 · 构造 ReactFiber.js:134 · 让 render 可中断/恢复</text>
+
+  <!-- 中央 FiberNode 标签 -->
+  <rect x="440" y="72" width="200" height="30" rx="10" fill="#1d1d1f"/>
+  <text x="540" y="92" font-size="12" font-weight="600" text-anchor="middle" fill="#ffffff">Fiber 节点 · 四组字段</text>
+
+  <!-- 四组字段 卡片 -->
+  <!-- ① 身份/类型 (blue) -->
+  <rect x="30" y="120" width="500" height="176" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="50" y="146" font-size="12.5" font-weight="600" fill="#1b2a4a">① 身份 / 类型</text>
+  <text x="50" y="170" font-size="10" fill="#274a78"><tspan font-weight="600">tag</tspan> WorkTag :101 —— 节点种类（见下）</text>
+  <text x="50" y="192" font-size="10" fill="#274a78"><tspan font-weight="600">key</tspan> —— 列表协调身份</text>
+  <text x="50" y="214" font-size="10" fill="#274a78"><tspan font-weight="600">elementType</tspan> :108 —— 协调身份用</text>
+  <text x="50" y="236" font-size="10" fill="#274a78"><tspan font-weight="600">type</tspan> —— 'div' / 组件函数</text>
+  <text x="50" y="258" font-size="10" fill="#274a78"><tspan font-weight="600">stateNode</tspan> :114 —— DOM 节点 / 类实例 / root</text>
+  <text x="50" y="282" font-size="9" fill="#5b7db1">tag 让 beginWork / completeWork 用一个 switch 分派</text>
+
+  <!-- ② 树链接 (purple) -->
+  <rect x="550" y="120" width="500" height="176" rx="13" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="570" y="146" font-size="12.5" font-weight="600" fill="#3d2a5a">② 树链接（单链表树）</text>
+  <text x="570" y="172" font-size="10" fill="#5a3a86"><tspan font-weight="600">return</tspan> :126 —— 父 Fiber</text>
+  <text x="570" y="194" font-size="10" fill="#5a3a86"><tspan font-weight="600">child</tspan> :129 —— 第一个子</text>
+  <text x="570" y="216" font-size="10" fill="#5a3a86"><tspan font-weight="600">sibling</tspan> :130 —— 下一个兄弟</text>
+  <text x="570" y="238" font-size="10" fill="#5a3a86"><tspan font-weight="600">index</tspan> —— 在兄弟中的位置</text>
+  <text x="570" y="264" font-size="9" fill="#9a7ac0">不是数组子节点 —— child/sibling/return 三指针</text>
+  <text x="570" y="282" font-size="9" fill="#9a7ac0">构成可深度优先遍历、可暂停恢复的循环</text>
+
+  <!-- ③ 工作/状态 (green) -->
+  <rect x="30" y="316" width="500" height="176" rx="13" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="50" y="342" font-size="12.5" font-weight="600" fill="#12402a">③ 工作 / 状态</text>
+  <text x="50" y="366" font-size="10" fill="#1a5c3a"><tspan font-weight="600">pendingProps</tspan> —— 新一轮待处理 props</text>
+  <text x="50" y="388" font-size="10" fill="#1a5c3a"><tspan font-weight="600">memoizedProps</tspan> —— 上次已渲染 props</text>
+  <text x="50" y="410" font-size="10" fill="#1a5c3a"><tspan font-weight="600">updateQueue</tspan> —— 更新队列</text>
+  <text x="50" y="432" font-size="10" fill="#1a5c3a"><tspan font-weight="600">memoizedState</tspan> :150 —— 函数组件挂 Hooks 链表</text>
+  <text x="50" y="454" font-size="10" fill="#1a5c3a"><tspan font-weight="600">dependencies</tspan> —— context 订阅</text>
+  <text x="50" y="480" font-size="9" fill="#4a8a63">memoizedState 是 Hooks 的物理载体（见 Hooks 篇）</text>
+
+  <!-- ④ 副作用/调度 (amber) -->
+  <rect x="550" y="316" width="500" height="176" rx="13" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="570" y="342" font-size="12.5" font-weight="600" fill="#5a3410">④ 副作用 / 调度</text>
+  <text x="570" y="368" font-size="10" fill="#7a4e14"><tspan font-weight="600">flags</tspan> —— 本节点副作用标记</text>
+  <text x="570" y="390" font-size="10" fill="#7a4e14"><tspan font-weight="600">subtreeFlags</tspan> —— 子树聚合副作用</text>
+  <text x="570" y="412" font-size="10" fill="#7a4e14"><tspan font-weight="600">deletions</tspan> —— 待删除子节点</text>
+  <text x="570" y="434" font-size="10" fill="#7a4e14"><tspan font-weight="600">lanes / childLanes</tspan> —— 优先级车道</text>
+  <text x="570" y="462" font-size="9" fill="#b08a3a">lanes 字段由 Lanes 与调度篇使用</text>
+  <text x="570" y="480" font-size="9" fill="#b08a3a">profiler 字段初始化为 double 避 V8 shape 坑 :175</text>
+
+  <!-- 连接四组到中央 -->
+  <path d="M280,120 L280,112 L440,112 L440,102" stroke="#c7c7cc" stroke-width="1.5" fill="none"/>
+  <path d="M800,120 L800,112 L640,112 L640,102" stroke="#c7c7cc" stroke-width="1.5" fill="none"/>
+
+  <!-- 底部一句话 -->
+  <rect x="30" y="504" width="1020" height="26" rx="8" fill="#f2fbf6" stroke="#cfe6d5"/>
+  <text x="540" y="521" font-size="9.5" text-anchor="middle" fill="#2f6f4f">为什么 Fiber：传统 render 是递归（一旦开始不能停）；Fiber 把每节点做成对象+链接，render 变成可遍历、可暂停、可恢复的循环——并发渲染的基础</text>
+</svg>

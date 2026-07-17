@@ -106,7 +106,7 @@ ARCH_HOTSPOTS = [
 # 没有独立架构区域、需底部 chip 兜底的主线（本项目 10 主线全部落在图上 → 空）
 ARCH_ALWAYS_CHIP = []
 
-BRAND_SUB = "Apache Hudi 核心原理 · 交互式图谱"
+BRAND_SUB = "Apache Hudi"
 HOME_DESC = ("Apache Hudi 核心原理设计文档库的离线交互图谱——事务性数据湖表格式（与 Iceberg 同族，但 upsert 导向：以时间线为真相、"
              "靠索引把记录键路由到文件组做高效 upsert，COW/MOR 两种表类型）。"
              "10 条主线、30 张手绘原理图，回 apache/hudi 源码核实。点击项目总架构图任意模块即可下钻到对应主线。")
@@ -463,7 +463,7 @@ APP_JS = r"""
     var ac=e.target.closest('.arch-chip'); if(ac){openMain(ac.dataset.mid,0);return;}
     var wt=e.target.closest('.walk-tab'); if(wt){selFig(wt.dataset.mid,+wt.dataset.idx);return;}
     // logo is now a link to portal (../index.html); no JS intercept
-    var bk=e.target.closest('#back'); if(bk){showHome();return;}
+    var bk=e.target.closest('#back2'); if(bk){showHome();return;}
   });
   document.addEventListener('keydown',function(e){
     if(e.key!=='Enter'&&e.key!==' ')return;
@@ -503,18 +503,16 @@ def build_html():
   <div class="lo-s" style="font-size:11px;opacity:.7">短暂空白属正常装载，非内容缺失</div>
 </div>
 <header>
-  <a class="logo" id="logo" href="../index.html" title="返回导航主页"><span class="homeico" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg></span><span>{sub}</span></a>
+  <a class="logo" id="logo" href="../index.html" title="返回导航主页"><span class="homeico" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg></span></a>
   <div class="spacer"></div>
-  <button class="hbtn" id="back">← 返回首页</button>
   <button class="hbtn" id="themeBtn">☾ 深色</button>
 </header>
 <div class="wrap">
   <div id="home">
-    <div class="navmap-hint"><b>▶ 项目总架构 · 导航图</b> · 点击图上任意模块区域下钻到对应主线（逐图走查）</div>
     {archnav}
   </div>
   <div id="panes" style="display:none">
-    <button class="hbtn back on" id="back2" onclick="document.getElementById('back').click()">← 返回全部主线</button>
+    <button class="hbtn back on" id="back2" onclick="showHome()">← 返回全部主线</button>
     {panes}
   </div>
 </div>

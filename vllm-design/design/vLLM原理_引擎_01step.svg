@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="500" viewBox="0 0 1080 500" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="500" fill="#fbfbfd"/>
+
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">vLLM EngineCore · step() 执行循环 —— 一步 = 调度→前向→采样回填，busy loop 反复转</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">位置即语义：EngineCore 是引擎心脏 · step() 三段顺序执行 · 底部回环 = busy loop · 每步都是完整一轮生成</text>
+
+  <!-- green band : step() busy loop -->
+  <rect x="30" y="72" width="1020" height="160" rx="13" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="50" y="98" font-size="12.5" font-weight="600" fill="#12402a">EngineCore · step() busy loop —— <tspan font-weight="700">v1/engine/core.py:97</tspan> · step() :546（可拆独立进程，与前端异步通信）</text>
+
+  <rect x="50" y="114" width="290" height="90" rx="9" fill="#ffffff" stroke="#bfe0cd"/>
+  <text x="195" y="138" font-size="11" font-weight="600" text-anchor="middle" fill="#12402a">① schedule 调度选批</text>
+  <text x="195" y="159" font-size="8.5" text-anchor="middle" fill="#2f6f4f">连续批处理：随到随入、完成即出</text>
+  <text x="195" y="176" font-size="8.5" text-anchor="middle" fill="#2f6f4f">token 预算 + 分配 KV 块</text>
+  <text x="195" y="193" font-size="8.5" text-anchor="middle" fill="#4a8a63">每步在此边界重新组批</text>
+
+  <rect x="395" y="114" width="290" height="90" rx="9" fill="#ffffff" stroke="#bfe0cd"/>
+  <text x="540" y="138" font-size="11" font-weight="600" text-anchor="middle" fill="#12402a">② execute_model 前向</text>
+  <text x="540" y="159" font-size="8.5" text-anchor="middle" fill="#2f6f4f">交执行器跑模型前向</text>
+  <text x="540" y="176" font-size="8.5" text-anchor="middle" fill="#2f6f4f">ModelRunner + PagedAttention</text>
+  <text x="540" y="193" font-size="8.5" text-anchor="middle" fill="#4a8a63">读分块 KV，产出 logits</text>
+
+  <rect x="740" y="114" width="290" height="90" rx="9" fill="#ffffff" stroke="#bfe0cd"/>
+  <text x="885" y="138" font-size="11" font-weight="600" text-anchor="middle" fill="#12402a">③ update_from_output</text>
+  <text x="885" y="159" font-size="8.5" text-anchor="middle" fill="#2f6f4f">Sampler 采样 logits→token</text>
+  <text x="885" y="176" font-size="8.5" text-anchor="middle" fill="#2f6f4f">回填请求 · 判停止条件</text>
+  <text x="885" y="193" font-size="8.5" text-anchor="middle" fill="#4a8a63">完成的出队，未完成进下一步</text>
+
+  <path d="M340,159 L395,159" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M685,159 L740,159" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M885,204 L885,218 L195,218 L195,204" stroke="#bcd0ec" stroke-width="1.3" fill="none" marker-end="url(#ar)"/>
+  <text x="540" y="215" font-size="8.5" text-anchor="middle" fill="#4a8a63">busy loop：只要还有 running / waiting 请求就继续 step</text>
+
+  <!-- why step granularity -->
+  <rect x="30" y="252" width="500" height="120" rx="12" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="50" y="278" font-size="12" font-weight="600" fill="#5a3410">为什么以 step 为粒度</text>
+  <text x="50" y="302" font-size="9" fill="#93762e">连续批处理要求每步都能重组批、处理完成 / 新到</text>
+  <text x="50" y="320" font-size="9" fill="#93762e">的请求；把"一次前向"作为 step 单元，</text>
+  <text x="50" y="338" font-size="9" fill="#93762e">循环在每步边界重新调度。</text>
+  <text x="50" y="360" font-size="8.5" fill="#b1974e">粒度既让 GPU 满载，又让请求随时进出</text>
+
+  <rect x="550" y="252" width="500" height="120" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="570" y="278" font-size="12" font-weight="600" fill="#1b2a4a">每步 = 完整一轮"选批→前向→采样→回填"</text>
+  <text x="570" y="302" font-size="9" fill="#5b7db1">busy loop 反复 step 直到没请求，</text>
+  <text x="570" y="320" font-size="9" fill="#5b7db1">串起调度 / 执行 / 采样三环。</text>
+  <text x="570" y="338" font-size="9" fill="#5b7db1">是 vLLM 执行骨架的驱动器。</text>
+  <text x="570" y="360" font-size="8.5" fill="#7a9dcb">step 是所有"重组批/前缀命中/抢占"发生的边界</text>
+
+  <text x="30" y="440" font-size="10" font-weight="600" fill="#1d1d1f">一步三件事顺序执行：schedule → execute_model → update_from_output，交回循环再来一遍</text>
+  <text x="30" y="488" font-size="9" fill="#a1a1a6">源码基准 vLLM(git 7aab6e2 · v1-only) · vllm/v1/engine/core.py · EngineCore:97 · step():546 串起 schedule → execute_model → update_from_output</text>
+</svg>

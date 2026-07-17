@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="520" viewBox="0 0 1080 520" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="520" fill="#fbfbfd"/>
+
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">vLLM v1 进程拆分 —— EngineCore 独立进程跑 busy loop，经队列与前端异步通信避开 GIL</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">位置即语义：左前端进程处理 IO · 中队列异步传递 · 右 EngineCore 进程专心跑 GPU 循环 · 两进程解耦</text>
+
+  <!-- Frontend process : purple -->
+  <rect x="30" y="76" width="300" height="230" rx="13" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="50" y="102" font-size="12.5" font-weight="600" fill="#3d2a5a">前端进程 · 处理 IO</text>
+  <text x="50" y="123" font-size="9" fill="#7a5aa0">HTTP 解析 / JSON / tokenize / generate</text>
+  <rect x="50" y="138" width="260" height="66" rx="9" fill="#ffffff" stroke="#d9c7ec"/>
+  <text x="180" y="162" font-size="10" font-weight="600" text-anchor="middle" fill="#3d2a5a">塞请求 → input_queue</text>
+  <text x="180" y="182" font-size="8.5" text-anchor="middle" fill="#7a5aa0">前端把请求投入队列</text>
+  <text x="180" y="197" font-size="8.5" text-anchor="middle" fill="#7a5aa0">不等待、不阻塞</text>
+  <rect x="50" y="218" width="260" height="66" rx="9" fill="#ffffff" stroke="#d9c7ec"/>
+  <text x="180" y="242" font-size="10" font-weight="600" text-anchor="middle" fill="#3d2a5a">取结果 ← output_queue</text>
+  <text x="180" y="262" font-size="8.5" text-anchor="middle" fill="#7a5aa0">从队列拉回采样出的 token</text>
+  <text x="180" y="277" font-size="8.5" text-anchor="middle" fill="#7a5aa0">回给 HTTP 响应</text>
+
+  <!-- Queues : blue relay -->
+  <rect x="360" y="76" width="180" height="230" rx="13" fill="#f3f7fc" stroke="#cfe0f2" filter="url(#soft)"/>
+  <text x="450" y="102" font-size="11.5" font-weight="600" text-anchor="middle" fill="#274a78">通信队列</text>
+  <rect x="378" y="130" width="144" height="70" rx="9" fill="#ffffff" stroke="#cfe0f2"/>
+  <text x="450" y="156" font-size="10" font-weight="600" text-anchor="middle" fill="#274a78">input_queue</text>
+  <text x="450" y="175" font-size="8.5" text-anchor="middle" fill="#5b7db1">:982 收请求</text>
+  <text x="450" y="190" font-size="8.5" text-anchor="middle" fill="#5b7db1">_process_input_queue :1336</text>
+  <rect x="378" y="212" width="144" height="70" rx="9" fill="#ffffff" stroke="#cfe0f2"/>
+  <text x="450" y="238" font-size="10" font-weight="600" text-anchor="middle" fill="#274a78">output_queue</text>
+  <text x="450" y="257" font-size="8.5" text-anchor="middle" fill="#5b7db1">:983 发结果</text>
+  <text x="450" y="272" font-size="8.5" text-anchor="middle" fill="#5b7db1">异步跨进程传递</text>
+
+  <!-- EngineCore process : green -->
+  <rect x="570" y="76" width="480" height="230" rx="13" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="590" y="102" font-size="12.5" font-weight="600" fill="#12402a">EngineCoreProc · 独立进程（:963）</text>
+  <text x="590" y="123" font-size="9" fill="#2f6f4f">专心跑 GPU 循环，不被前端 IO 拖慢</text>
+  <rect x="590" y="138" width="440" height="66" rx="9" fill="#ffffff" stroke="#bfe0cd"/>
+  <text x="810" y="162" font-size="10.5" font-weight="600" text-anchor="middle" fill="#12402a">run_busy_loop（:1326）</text>
+  <text x="810" y="182" font-size="8.5" text-anchor="middle" fill="#2f6f4f">反复 step()：schedule → execute_model → update</text>
+  <text x="810" y="197" font-size="8.5" text-anchor="middle" fill="#4a8a63">从 input_queue 取请求，结果投 output_queue</text>
+  <rect x="590" y="218" width="440" height="66" rx="9" fill="#ffffff" stroke="#bfe0cd"/>
+  <text x="810" y="242" font-size="10.5" font-weight="600" text-anchor="middle" fill="#12402a">数据并行变体 DPEngineCoreProc（:1812）</text>
+  <text x="810" y="262" font-size="8.5" text-anchor="middle" fill="#2f6f4f">多个数据并行 rank 各跑一份 busy loop</text>
+  <text x="810" y="277" font-size="8.5" text-anchor="middle" fill="#4a8a63">同一进程模型，扩到数据并行</text>
+
+  <!-- arrows between -->
+  <path d="M310,171 L378,165" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M522,165 L590,171" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M590,251 L522,247" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M378,247 L310,251" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <!-- why split -->
+  <rect x="30" y="330" width="1020" height="118" rx="12" fill="#fbeaea" stroke="#e6b8b8" filter="url(#soft)"/>
+  <text x="50" y="356" font-size="12" font-weight="600" fill="#7a2a2a">为什么拆进程 · 避开 Python GIL</text>
+  <text x="50" y="380" font-size="9.5" fill="#a05a5a">Python 的 GIL 让 API 服务（HTTP 解析、JSON、tokenize）和 GPU 调度在同进程会互相阻塞。</text>
+  <text x="50" y="400" font-size="9.5" fill="#a05a5a">把 EngineCore 放独立进程专心跑 GPU 循环，前端进程处理 IO，经 input_queue / output_queue 异步通信。</text>
+  <text x="50" y="422" font-size="9" fill="#7a2a2a">效果：GPU 不被前端 IO 拖慢，吞吐更稳 · 前端塞队列取结果与 GPU 循环彻底解耦</text>
+
+  <text x="30" y="508" font-size="9" fill="#a1a1a6">源码基准 vLLM(git 7aab6e2 · v1-only) · EngineCoreProc:963 · run_busy_loop:1326 · input_queue:982 / output_queue:983 · _process_input_queue:1336 · DPEngineCoreProc:1812</text>
+</svg>

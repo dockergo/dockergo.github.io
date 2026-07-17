@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="500" viewBox="0 0 1080 500" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="500" fill="#fbfbfd"/>
+
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">React 过渡 · startTransition 标记非紧急 —— 更新降优先级走 TransitionLanes</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">某些更新用户要立即看到（输入字符），某些可以慢一点（重型列表）；startTransition 把后者降优先级，让紧急更新优先，避免重渲染阻塞交互</text>
+
+  <!-- startTransition 入口 purple -->
+  <rect x="30" y="70" width="500" height="150" rx="12" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="48" y="94" font-size="12" font-weight="600" fill="#4a2c6f">startTransition（ReactStartTransition.js:45）</text>
+  <text x="48" y="116" font-size="9.5" fill="#7a5aa0">startTransition(() =&gt; setState(...)) 里的更新标记「不急」</text>
+  <text x="48" y="138" font-size="9.5" fill="#7a5aa0">→ 这些更新走 TransitionLanes（低优先级车道）</text>
+  <text x="48" y="162" font-size="10" font-weight="600" fill="#4a2c6f">reconciler 侧</text>
+  <text x="48" y="184" font-size="9.5" fill="#7a5aa0">requestUpdateLane（ReactFiberWorkLoop.js:810）</text>
+  <text x="48" y="204" font-size="9.5" fill="#7a5aa0">对过渡调 requestTransitionLane（:850）返回过渡车道</text>
+
+  <!-- useTransition / isPending blue -->
+  <rect x="550" y="70" width="500" height="150" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="568" y="94" font-size="12" font-weight="600" fill="#1b2a4a">useTransition · isPending</text>
+  <text x="568" y="116" font-size="9.5" fill="#5b7db1">useTransition 给出 isPending 状态显示加载中</text>
+  <text x="568" y="138" font-size="9.5" fill="#5b7db1">useDeferredValue 延迟派生值 —— 同过渡思路</text>
+  <text x="568" y="162" font-size="10" font-weight="600" fill="#1b2a4a">常见误区</text>
+  <text x="568" y="184" font-size="9" fill="#8aa4c8">startTransition 不是让更新更快，是降优先级让别的先</text>
+  <text x="568" y="204" font-size="9" fill="#8aa4c8">被标记的更新可能更慢 / 被打断；目的是保紧急更新响应</text>
+
+  <!-- 典型场景 y=238 h=150 -->
+  <text x="30" y="256" font-size="12" font-weight="700" fill="#1d1d1f">典型场景 · 输入框 + 搜索结果列表</text>
+  <!-- 输入(急) red -->
+  <rect x="30" y="268" width="300" height="120" rx="12" fill="#fbeaea" stroke="#e6b8b8" filter="url(#soft)"/>
+  <text x="180" y="292" font-size="11.5" font-weight="600" text-anchor="middle" fill="#7a2a2a">输入框即时更新</text>
+  <text x="180" y="314" font-size="9.5" text-anchor="middle" fill="#a05a5a">高优先级 · SyncLane（急）</text>
+  <text x="180" y="334" font-size="9.5" text-anchor="middle" fill="#a05a5a">打字字符立即上屏</text>
+  <text x="180" y="356" font-size="9" text-anchor="middle" fill="#c07a7a">用户要立即反馈</text>
+  <text x="180" y="374" font-size="9" text-anchor="middle" fill="#c07a7a">不可被打断</text>
+  <!-- 列表(过渡) green -->
+  <rect x="480" y="268" width="300" height="120" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="630" y="292" font-size="11.5" font-weight="600" text-anchor="middle" fill="#12402a">搜索结果列表渲染</text>
+  <text x="630" y="314" font-size="9.5" text-anchor="middle" fill="#2f6f4f">过渡 · TransitionLanes（低）</text>
+  <text x="630" y="334" font-size="9.5" text-anchor="middle" fill="#2f6f4f">重型渲染，可延后</text>
+  <text x="630" y="356" font-size="9" text-anchor="middle" fill="#4a8a63">可被下次打字打断重来</text>
+  <text x="630" y="374" font-size="9" text-anchor="middle" fill="#4a8a63">不阻塞输入响应</text>
+  <!-- 打断箭头: 输入打断列表 -->
+  <path d="M480,328 L330,328" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="405" y="322" font-size="9" text-anchor="middle" fill="#a1a1a6">打字打断列表渲染</text>
+
+  <!-- 说明 amber -->
+  <rect x="800" y="268" width="250" height="120" rx="12" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="925" y="292" font-size="11" font-weight="600" text-anchor="middle" fill="#5a3410">效果</text>
+  <text x="925" y="316" font-size="9" text-anchor="middle" fill="#93762e">打字流畅</text>
+  <text x="925" y="336" font-size="9" text-anchor="middle" fill="#93762e">列表渲染让路</text>
+  <text x="925" y="356" font-size="9" text-anchor="middle" fill="#93762e">「响应优先」的</text>
+  <text x="925" y="374" font-size="9" text-anchor="middle" fill="#93762e">显式表达</text>
+
+  <text x="30" y="426" font-size="9" fill="#a1a1a6">源码基准 React(git 7023f50 · v19.3) · ReactStartTransition.js:45 · ReactFiberWorkLoop.js requestUpdateLane:810 / requestTransitionLane:850</text>
+</svg>

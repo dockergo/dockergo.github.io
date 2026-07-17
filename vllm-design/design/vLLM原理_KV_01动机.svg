@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="540" viewBox="0 0 1080 540" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="540" fill="#fbfbfd"/>
+
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">为什么分块 · 告别连续预留</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">自回归生成第 N token 要用前 N-1 token 的 KV 缓存 · 朴素连续预留 vs PagedAttention 固定块</text>
+
+  <!-- 朴素做法 (red 浪费) -->
+  <rect x="30" y="78" width="500" height="356" rx="14" fill="#fbeaea" stroke="#e7c3c3" filter="url(#soft)"/>
+  <text x="50" y="104" font-size="12.5" font-weight="600" fill="#7a2a2a">朴素:按 max_len 预留连续显存</text>
+  <text x="50" y="124" font-size="9.5" fill="#a05a5a">请求长度未知,为避免搬迁按最大长度预留一整段</text>
+
+  <!-- 三条预留条:已用+浪费 -->
+  <text x="50" y="152" font-size="9.5" fill="#7a2a2a">请求 A (短)</text>
+  <rect x="50" y="160" width="90" height="26" rx="4" fill="#e7a0a0" stroke="#d98a8a"/>
+  <rect x="140" y="160" width="330" height="26" rx="4" fill="#ffffff" stroke="#e7c3c3" stroke-dasharray="4 3"/>
+  <text x="305" y="177" font-size="9" text-anchor="middle" fill="#a05a5a">预留但空(内部碎片)</text>
+
+  <text x="50" y="206" font-size="9.5" fill="#7a2a2a">请求 B (中)</text>
+  <rect x="50" y="214" width="190" height="26" rx="4" fill="#e7a0a0" stroke="#d98a8a"/>
+  <rect x="240" y="214" width="230" height="26" rx="4" fill="#ffffff" stroke="#e7c3c3" stroke-dasharray="4 3"/>
+  <text x="355" y="231" font-size="9" text-anchor="middle" fill="#a05a5a">预留但空</text>
+
+  <text x="50" y="260" font-size="9.5" fill="#7a2a2a">请求 C (长)</text>
+  <rect x="50" y="268" width="300" height="26" rx="4" fill="#e7a0a0" stroke="#d98a8a"/>
+  <rect x="350" y="268" width="120" height="26" rx="4" fill="#ffffff" stroke="#e7c3c3" stroke-dasharray="4 3"/>
+  <text x="410" y="285" font-size="9" text-anchor="middle" fill="#a05a5a">预留但空</text>
+
+  <rect x="50" y="320" width="420" height="96" rx="9" fill="#ffffff" stroke="#e7c3c3"/>
+  <text x="66" y="346" font-size="10.5" font-weight="600" fill="#7a2a2a">实际利用率常只 ~20%</text>
+  <text x="66" y="368" font-size="9.5" fill="#a05a5a">短请求浪费大半(内部碎片)</text>
+  <text x="66" y="388" font-size="9.5" fill="#a05a5a">还要为并发峰值预留(外部碎片)</text>
+  <text x="66" y="407" font-size="9" fill="#c07a7a">■ 已用 KV　□ 预留浪费</text>
+
+  <!-- 箭头 -->
+  <path d="M530,256 L560,256" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <!-- PagedAttention (green 解法) -->
+  <rect x="560" y="78" width="490" height="356" rx="14" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="580" y="104" font-size="12.5" font-weight="600" fill="#12402a">PagedAttention:切固定大小块,按需分配</text>
+  <text x="580" y="124" font-size="9.5" fill="#2f6f4f">借鉴 OS 分页 · 生成到哪就分配到哪,不预留</text>
+
+  <!-- 固定块:紧凑无空洞 -->
+  <text x="580" y="152" font-size="9.5" fill="#12402a">物理显存(块交错存放)</text>
+  <rect x="580" y="160" width="40" height="26" rx="4" fill="#8fd6ac" stroke="#6cbf90"/>
+  <rect x="624" y="160" width="40" height="26" rx="4" fill="#a9dfc0" stroke="#6cbf90"/>
+  <rect x="668" y="160" width="40" height="26" rx="4" fill="#8fd6ac" stroke="#6cbf90"/>
+  <rect x="712" y="160" width="40" height="26" rx="4" fill="#c8ead6" stroke="#6cbf90"/>
+  <rect x="756" y="160" width="40" height="26" rx="4" fill="#a9dfc0" stroke="#6cbf90"/>
+  <rect x="800" y="160" width="40" height="26" rx="4" fill="#8fd6ac" stroke="#6cbf90"/>
+  <rect x="844" y="160" width="40" height="26" rx="4" fill="#c8ead6" stroke="#6cbf90"/>
+  <rect x="888" y="160" width="40" height="26" rx="4" fill="#a9dfc0" stroke="#6cbf90"/>
+  <text x="944" y="177" font-size="9" fill="#4a8a63">…按需增长</text>
+
+  <!-- block_size 卡 -->
+  <rect x="580" y="204" width="450" height="70" rx="9" fill="#ffffff" stroke="#bfe0cd"/>
+  <text x="596" y="230" font-size="11" font-weight="600" fill="#12402a">block_size = 每块存多少 token 的 KV</text>
+  <text x="596" y="252" font-size="9.5" fill="#2f6f4f">默认 DEFAULT_BLOCK_SIZE=16 (config/cache.py:47 / :49)</text>
+
+  <!-- 块表卡 -->
+  <rect x="580" y="286" width="450" height="60" rx="9" fill="#ffffff" stroke="#bfe0cd"/>
+  <text x="596" y="312" font-size="11" font-weight="600" fill="#12402a">块表 (block table):逻辑块号 → 物理块号</text>
+  <text x="596" y="332" font-size="9.5" fill="#2f6f4f">逻辑连续 · 物理分散 · 块可在请求间共享</text>
+
+  <text x="580" y="376" font-size="10" font-weight="600" fill="#12402a">利用率 ~20% → 接近 100%</text>
+  <text x="580" y="398" font-size="9.5" fill="#2f6f4f">同样显存能同时服务多得多的请求</text>
+  <text x="580" y="418" font-size="9.5" fill="#4a8a63">这是 vLLM 相对朴素推理最大的胜利。</text>
+
+  <!-- 底注 (amber insight) -->
+  <rect x="30" y="450" width="1020" height="66" rx="12" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="50" y="476" font-size="11" font-weight="600" fill="#5a3410">为什么这解决浪费</text>
+  <text x="50" y="500" font-size="9.5" fill="#93762e">分页把「连续大块」拆成「按需小块」,消除为峰值 / 最大长度预留的碎片;显存利用率倍增 → 吞吐倍增。</text>
+</svg>
