@@ -2427,6 +2427,9 @@ header{padding:16px 30px 14px;border-bottom:1px solid var(--c-line);display:flex
 .theme-toggle{width:38px;height:38px;border-radius:50%;border:1px solid var(--c-line);background:var(--c-panel);
   color:var(--c-ink2);cursor:pointer;display:grid;place-items:center;font-size:16px;transition:all .2s ease;flex-shrink:0}
 .theme-toggle:hover{border-color:var(--c-ink3);color:var(--c-ink);background:var(--c-hover)}
+.homeico{display:inline-flex;color:var(--c-ink2);transition:color .15s}
+.brand[href]{text-decoration:none;cursor:pointer}
+.brand[href]:hover .homeico{color:var(--c-brand)}
 .back-portal{display:inline-flex;align-items:center;margin-left:auto;margin-right:12px;padding:7px 14px;border-radius:9px;border:1px solid var(--c-line);background:var(--c-panel);color:var(--c-ink2);font-size:12.5px;font-weight:500;text-decoration:none;transition:all .15s}
 .back-portal:hover{border-color:var(--c-brand);color:var(--c-brand);background:var(--c-hover)}
 .theme-toggle .tt-ico{grid-area:1/1;transition:opacity .2s,transform .3s}
@@ -2847,10 +2850,9 @@ html:not([data-theme="light"]) .svg-walk-img{filter:invert(.9) hue-rotate(180deg
 </div>
 <div id="app">
   <header>
-    <div class="brand" id="brandHome" title="返回主题首页">
-      <div class="logo"></div>
-    </div>
-    <a class="back-portal" href="../index.html" title="返回导航主页">← 返回导航主页</a>
+    <a class="brand" id="brandHome" href="../index.html" title="返回导航主页">
+      <div class="logo"><span class="homeico" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg></span></div>
+    </a>
     <button class="theme-toggle" id="themeToggle" title="切换深色 / 浅色主题" aria-label="切换主题">
       <span class="tt-ico tt-moon">☾</span><span class="tt-ico tt-sun">☀</span>
     </button>

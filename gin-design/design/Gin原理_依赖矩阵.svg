@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="520" viewBox="0 0 1080 520" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs><filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+  <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker></defs>
+  <rect width="1080" height="520" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Gin 原理 · 依赖矩阵（接触面动作 × 能力域）</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">注册路由依赖 引擎路由树 + RouterGroup;处理请求依赖 Context 池 + 请求流程 + 中间件链 + 绑定 + 渲染</text>
+
+  <!-- column headers: 6 capability domains -->
+  <rect x="220" y="66" width="132" height="52" rx="9" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="286" y="88" font-size="9.5" font-weight="700" text-anchor="middle" fill="#1b2a4a">引擎与路由树</text>
+  <text x="286" y="104" font-size="8" text-anchor="middle" fill="#5b7db1">addRoute/getValue</text>
+  <rect x="356" y="66" width="132" height="52" rx="9" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="422" y="88" font-size="9.5" font-weight="700" text-anchor="middle" fill="#1b2a4a">RouterGroup</text>
+  <text x="422" y="104" font-size="8" text-anchor="middle" fill="#5b7db1">前缀/中间件继承</text>
+  <rect x="492" y="66" width="132" height="52" rx="9" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="558" y="88" font-size="9.5" font-weight="700" text-anchor="middle" fill="#12402a">Context 与对象池</text>
+  <text x="558" y="104" font-size="8" text-anchor="middle" fill="#2f6f4f">sync.Pool 复用</text>
+  <rect x="628" y="66" width="132" height="52" rx="9" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="694" y="88" font-size="9.5" font-weight="700" text-anchor="middle" fill="#1b2a4a">请求处理流程</text>
+  <text x="694" y="104" font-size="8" text-anchor="middle" fill="#5b7db1">ServeHTTP</text>
+  <rect x="764" y="66" width="132" height="52" rx="9" fill="#fff7e6" stroke="#e8cf9a"/>
+  <text x="830" y="88" font-size="9.5" font-weight="700" text-anchor="middle" fill="#5a3410">中间件链</text>
+  <text x="830" y="104" font-size="8" text-anchor="middle" fill="#93762e">c.Next() 推进</text>
+  <rect x="900" y="66" width="150" height="52" rx="9" fill="#f4eefb" stroke="#d9c7ec"/>
+  <text x="975" y="88" font-size="9.5" font-weight="700" text-anchor="middle" fill="#3d2a5a">绑定 + 渲染</text>
+  <text x="975" y="104" font-size="8" text-anchor="middle" fill="#8a6db3">输入 / 输出</text>
+
+  <!-- row: 注册路由 -->
+  <rect x="30" y="128" width="186" height="150" rx="11" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="46" y="152" font-size="12" font-weight="700" fill="#3d2a5a">注册路由</text>
+  <text x="46" y="170" font-size="8.5" fill="#8a6db3">GET/POST 声明</text>
+  <text x="46" y="185" font-size="8.5" fill="#8a6db3">path→handler</text>
+  <text x="46" y="200" font-size="8.5" fill="#8a6db3">启动时(注册期)</text>
+  <!-- cells row1 -->
+  <rect x="220" y="128" width="132" height="150" rx="9" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="286" y="196" font-size="10" font-weight="700" text-anchor="middle" fill="#1b2a4a">■ 强依赖</text>
+  <text x="286" y="214" font-size="8.2" text-anchor="middle" fill="#274a78">addRoute 插入树</text>
+  <text x="286" y="228" font-size="8.2" text-anchor="middle" fill="#274a78">算 maxParams</text>
+  <rect x="356" y="128" width="132" height="150" rx="9" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="422" y="196" font-size="10" font-weight="700" text-anchor="middle" fill="#1b2a4a">■ 强依赖</text>
+  <text x="422" y="214" font-size="8.2" text-anchor="middle" fill="#274a78">前缀 basePath</text>
+  <text x="422" y="228" font-size="8.2" text-anchor="middle" fill="#274a78">combineHandlers</text>
+  <rect x="492" y="128" width="132" height="150" rx="9" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="558" y="205" font-size="9" text-anchor="middle" fill="#a1a1a6">·</text>
+  <text x="558" y="214" font-size="8" text-anchor="middle" fill="#a1a1a6">仅定 maxParams 供池</text>
+  <rect x="628" y="128" width="132" height="150" rx="9" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="694" y="207" font-size="9" text-anchor="middle" fill="#a1a1a6">—</text>
+  <rect x="764" y="128" width="132" height="150" rx="9" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="830" y="200" font-size="9" text-anchor="middle" fill="#a1a1a6">· 组装链</text>
+  <text x="830" y="216" font-size="8" text-anchor="middle" fill="#a1a1a6">合 handlers 序列</text>
+  <rect x="900" y="128" width="150" height="150" rx="9" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="975" y="207" font-size="9" text-anchor="middle" fill="#a1a1a6">—</text>
+
+  <!-- row: 处理请求 -->
+  <rect x="30" y="288" width="186" height="180" rx="11" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="46" y="312" font-size="12" font-weight="700" fill="#12402a">处理请求</text>
+  <text x="46" y="330" font-size="8.5" fill="#2f6f4f">ServeHTTP 一次</text>
+  <text x="46" y="345" font-size="8.5" fill="#2f6f4f">请求生命周期</text>
+  <text x="46" y="360" font-size="8.5" fill="#2f6f4f">运行时(请求期)</text>
+  <!-- cells row2 -->
+  <rect x="220" y="288" width="132" height="180" rx="9" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="286" y="368" font-size="10" font-weight="700" text-anchor="middle" fill="#1b2a4a">■ 强依赖</text>
+  <text x="286" y="386" font-size="8.2" text-anchor="middle" fill="#274a78">getValue 匹配</text>
+  <text x="286" y="400" font-size="8.2" text-anchor="middle" fill="#274a78">提路径参数</text>
+  <rect x="356" y="288" width="132" height="180" rx="9" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="422" y="376" font-size="9" text-anchor="middle" fill="#a1a1a6">—</text>
+  <text x="422" y="392" font-size="8" text-anchor="middle" fill="#a1a1a6">组织仅注册期</text>
+  <rect x="492" y="288" width="132" height="180" rx="9" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="558" y="368" font-size="10" font-weight="700" text-anchor="middle" fill="#12402a">■ 强依赖</text>
+  <text x="558" y="386" font-size="8.2" text-anchor="middle" fill="#2f6f4f">pool.Get/Put</text>
+  <text x="558" y="400" font-size="8.2" text-anchor="middle" fill="#2f6f4f">reset 复用</text>
+  <rect x="628" y="288" width="132" height="180" rx="9" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="694" y="368" font-size="10" font-weight="700" text-anchor="middle" fill="#1b2a4a">■ 强依赖</text>
+  <text x="694" y="386" font-size="8.2" text-anchor="middle" fill="#274a78">串起全流程</text>
+  <text x="694" y="400" font-size="8.2" text-anchor="middle" fill="#274a78">池取→树查→还</text>
+  <rect x="764" y="288" width="132" height="180" rx="9" fill="#fff7e6" stroke="#e8cf9a"/>
+  <text x="830" y="368" font-size="10" font-weight="700" text-anchor="middle" fill="#5a3410">■ 强依赖</text>
+  <text x="830" y="386" font-size="8.2" text-anchor="middle" fill="#93762e">c.Next() 跑链</text>
+  <text x="830" y="400" font-size="8.2" text-anchor="middle" fill="#93762e">Abort 中断</text>
+  <rect x="900" y="288" width="150" height="180" rx="9" fill="#f4eefb" stroke="#d9c7ec"/>
+  <text x="975" y="368" font-size="10" font-weight="700" text-anchor="middle" fill="#3d2a5a">■ 强依赖</text>
+  <text x="975" y="386" font-size="8.2" text-anchor="middle" fill="#8a6db3">Bind 读输入</text>
+  <text x="975" y="400" font-size="8.2" text-anchor="middle" fill="#8a6db3">c.JSON 写输出</text>
+
+  <rect x="30" y="480" width="1020" height="30" rx="10" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="46" y="499" font-size="9" fill="#6e6e73">■ 强依赖　· 弱/间接　— 无依赖　·　注册路由=注册期动作(建树+组织),处理请求=请求期动作(池+流程+链+绑定渲染)</text>
+</svg>

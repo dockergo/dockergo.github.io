@@ -327,7 +327,9 @@ a{color:inherit;text-decoration:none}
 header{position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:14px;
   padding:12px 22px;background:color-mix(in srgb,var(--c-bg) 82%,transparent);
   backdrop-filter:saturate(160%) blur(14px);border-bottom:1px solid var(--c-border)}
-.logo{display:flex;align-items:center;gap:9px;cursor:pointer;font-weight:700;font-size:15px}
+.logo{display:flex;align-items:center;gap:9px;cursor:pointer;font-weight:700;font-size:15px;text-decoration:none;color:inherit}
+.logo:hover .homeico{color:var(--c-brand)}
+.homeico{display:inline-flex;color:var(--c-ink2);transition:color .15s}
 .logo .dot{width:11px;height:11px;border-radius:3px;background:linear-gradient(135deg,var(--c-brand),var(--c-amber))}
 .logo .sub{font-weight:500;color:var(--c-ink2);font-size:12px}
 .spacer{flex:1}
@@ -440,7 +442,7 @@ APP_JS = r"""
     var ah=e.target.closest('.arch-hot'); if(ah){openMain(ah.dataset.mid,0);return;}
     var ac=e.target.closest('.arch-chip'); if(ac){openMain(ac.dataset.mid,0);return;}
     var wt=e.target.closest('.walk-tab'); if(wt){selFig(wt.dataset.mid,+wt.dataset.idx);return;}
-    var lg=e.target.closest('#logo'); if(lg){showHome();return;}
+    // logo is now a link to portal (../index.html); no JS intercept
     var bk=e.target.closest('#back'); if(bk){showHome();return;}
   });
   document.addEventListener('keydown',function(e){
@@ -481,9 +483,8 @@ def build_html():
   <div class="lo-s" style="font-size:11px;opacity:.7">短暂空白属正常装载，非内容缺失</div>
 </div>
 <header>
-  <div class="logo" id="logo"><span class="dot"></span><span>{sub}</span></div>
+  <a class="logo" id="logo" href="../index.html" title="返回导航主页"><span class="homeico" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg></span><span>{sub}</span></a>
   <div class="spacer"></div>
-  <a class="hbtn" id="portal" href="../index.html" title="返回导航主页">← 返回导航主页</a>
   <button class="hbtn" id="back">← 返回首页</button>
   <button class="hbtn" id="themeBtn">☾ 深色</button>
 </header>

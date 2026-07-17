@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="510" viewBox="0 0 1080 510" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="510" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Rust trait 系统 · 接口与求解 —— 编译期定 impl,coherence 保全局唯一</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">trait = 接口/共享行为;rustc_trait_selection(lib.rs:1 "trait resolution method")编译期求解 impl</text>
+
+  <!-- 1 trait 求解 (purple) -->
+  <rect x="40" y="86" width="480" height="200" rx="14" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="62" y="112" font-size="12.5" font-weight="600" fill="#3d2a5a">① trait 求解 · 找 impl</text>
+  <text x="62" y="134" font-size="9.5" fill="#7c68a6">rustc_trait_selection</text>
+  <rect x="62" y="148" width="436" height="46" rx="8" fill="#ffffff" stroke="#d9c7ec"/>
+  <text x="80" y="168" font-size="9.5" font-weight="600" fill="#3d2a5a">老 solver:SelectionContext</text>
+  <text x="80" y="184" font-size="9" fill="#7c68a6">traits/select/mod.rs:102 · 给 T: Display 找 T 的 Display impl</text>
+  <rect x="62" y="202" width="436" height="46" rx="8" fill="#ffffff" stroke="#d9c7ec"/>
+  <text x="80" y="222" font-size="9.5" font-weight="600" fill="#3d2a5a">新 solver:rustc_next_trait_solver</text>
+  <text x="80" y="238" font-size="9" fill="#7c68a6">泛型于 interner</text>
+  <text x="62" y="270" font-size="10" fill="#3d2a5a">给约束 T: Trait,求解器解析到具体 impl</text>
+
+  <!-- 2 coherence / orphan (blue = logic constraint) -->
+  <rect x="540" y="86" width="500" height="200" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="562" y="112" font-size="12.5" font-weight="600" fill="#1b2a4a">② coherence(一致性)/ orphan 规则</text>
+  <text x="562" y="134" font-size="9.5" fill="#5b7db1">coherence.rs · orphan_check_trait_ref :57</text>
+  <rect x="562" y="148" width="220" height="46" rx="8" fill="#ffffff" stroke="#bcd0ec"/>
+  <text x="672" y="168" font-size="9.5" font-weight="600" text-anchor="middle" fill="#1b2a4a">InCrate::Local</text>
+  <text x="672" y="184" font-size="9" text-anchor="middle" fill="#5b7db1">本 crate (:12)</text>
+  <rect x="798" y="148" width="220" height="46" rx="8" fill="#ffffff" stroke="#bcd0ec"/>
+  <text x="908" y="168" font-size="9.5" font-weight="600" text-anchor="middle" fill="#1b2a4a">InCrate::Remote</text>
+  <text x="908" y="184" font-size="9" text-anchor="middle" fill="#5b7db1">外部 crate</text>
+  <text x="562" y="216" font-size="10" fill="#1b2a4a">同一类型同一 trait 只一个 impl,且 impl 要 local</text>
+  <text x="562" y="238" font-size="10" fill="#1b2a4a">防重复 / 冲突 impl</text>
+  <rect x="562" y="250" width="456" height="26" rx="8" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="790" y="267" font-size="9.5" text-anchor="middle" fill="#2c5a3a">全局唯一 impl → T: Trait 解析无歧义</text>
+
+  <!-- 3 interner (white) -->
+  <rect x="40" y="310" width="480" height="108" rx="14" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="62" y="336" font-size="12" font-weight="600" fill="#1d1d1f">③ interner 抽象</text>
+  <text x="62" y="360" font-size="9.5" fill="#6e6e73">rustc_type_ir 提供编译器无关的类型 IR</text>
+  <text x="62" y="382" font-size="10" fill="#1d1d1f">让 solver 泛型化(老/新 solver 共用)</text>
+  <text x="62" y="404" font-size="9" fill="#a1a1a6">类型 IR 抽象,solver 不绑定具体表示</text>
+
+  <!-- why coherence (green) -->
+  <rect x="540" y="310" width="500" height="108" rx="14" fill="#f5faf6" stroke="#cfe6d5" filter="url(#soft)"/>
+  <text x="562" y="336" font-size="12" font-weight="600" fill="#2c5a3a">为什么 coherence / orphan</text>
+  <text x="562" y="360" font-size="10" fill="#2c5a3a">全局唯一 impl 保证 T: Trait 解析无歧义</text>
+  <text x="562" y="382" font-size="10" fill="#2c5a3a">orphan:impl 的 trait 或类型至少一个是本 crate</text>
+  <text x="562" y="404" font-size="9" fill="#a1a1a6">防两个 crate 给同类型同 trait 各写 impl 冲突</text>
+
+  <text x="30" y="452" font-size="9.5" fill="#a1a1a6">trait 求解用类型信息来自类型推断;impl 的方法体经借用检查;单态化把泛型展开成具体代码(见 02单态化)</text>
+  <text x="30" y="476" font-size="9" fill="#a1a1a6">求解产物:每个 T: Trait 定到唯一 impl,为单态化/分发做准备 · 源码基准 Rust 1.99.0</text>
+</svg>

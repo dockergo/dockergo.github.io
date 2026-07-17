@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="500" viewBox="0 0 1080 500" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs><filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+  <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker></defs>
+  <rect width="1080" height="500" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Gin 中间件注册 · Use 与 combineHandlers（执行序 = 注册序）</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">Use 把中间件 append 到 group.Handlers；combineHandlers 新建切片、group 中间件在前 + 路由 handler 在后；先 Use 的先跑（洋葱外层）</text>
+
+  <!-- 左：Use -->
+  <rect x="30" y="70" width="300" height="150" rx="13" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="46" y="94" font-size="12" font-weight="600" fill="#5a3410">Use()（routergroup.go:65）</text>
+  <text x="46" y="120" font-size="10" fill="#93762e">group.Handlers = append(</text>
+  <text x="62" y="138" font-size="10" fill="#93762e">group.Handlers, middleware...)</text>
+  <text x="46" y="162" font-size="9.5" fill="#93762e">中间件 append 到 group 的 Handlers</text>
+  <text x="46" y="182" font-size="9.5" fill="#93762e">返回 IRoutes（可链式调用）</text>
+  <text x="46" y="204" font-size="9" fill="#a1a1a6">全局中间件用 engine.Use（根组）</text>
+
+  <!-- 中：combineHandlers -->
+  <rect x="360" y="70" width="330" height="150" rx="13" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="376" y="94" font-size="12" font-weight="600" fill="#3d2a5a">combineHandlers（routergroup.go:241）</text>
+  <text x="376" y="120" font-size="9.5" fill="#8a6db3">mergedHandlers := 新建切片</text>
+  <text x="376" y="140" font-size="9.5" fill="#8a6db3">copy(mergedHandlers, group.Handlers)</text>
+  <text x="376" y="160" font-size="9.5" fill="#8a6db3">copy(尾部, handlers)</text>
+  <text x="376" y="184" font-size="9.5" fill="#8a6db3">group 中间件在前 + 路由 handler 在后</text>
+  <text x="376" y="204" font-size="9" fill="#a1a1a6">子组前置父 group.Handlers → 继承父中间件</text>
+
+  <!-- 右：分组继承 -->
+  <rect x="720" y="70" width="330" height="150" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="736" y="94" font-size="12" font-weight="600" fill="#1b2a4a">分组继承</text>
+  <text x="736" y="120" font-size="9.5" fill="#274a78">子 RouterGroup 的 combineHandlers</text>
+  <text x="736" y="140" font-size="9.5" fill="#274a78">前置父 group.Handlers</text>
+  <text x="736" y="162" font-size="9.5" fill="#274a78">→ 子路由继承父中间件</text>
+  <text x="736" y="184" font-size="9.5" fill="#274a78">嵌套 group 从外到内</text>
+  <text x="736" y="204" font-size="9" fill="#a1a1a6">见 RouterGroup 篇</text>
+
+  <!-- 执行序主轴 -->
+  <text x="30" y="262" font-size="12" font-weight="600" fill="#1d1d1f">执行序 = 注册序 = [全局中间件 … 组中间件 … 路由 handler]（洋葱：先 Use 的外层先跑）</text>
+  <rect x="30" y="278" width="230" height="90" rx="12" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="145" y="308" font-size="11" font-weight="600" text-anchor="middle" fill="#5a3410">① 全局中间件</text>
+  <text x="145" y="330" font-size="9.5" text-anchor="middle" fill="#93762e">engine.Use</text>
+  <text x="145" y="350" font-size="9" text-anchor="middle" fill="#93762e">Recovery / Logger 最外</text>
+
+  <rect x="300" y="278" width="230" height="90" rx="12" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+  <text x="415" y="308" font-size="11" font-weight="600" text-anchor="middle" fill="#5a3410">② 组中间件</text>
+  <text x="415" y="330" font-size="9.5" text-anchor="middle" fill="#93762e">group.Use（如 /api 鉴权）</text>
+  <text x="415" y="350" font-size="9" text-anchor="middle" fill="#93762e">组内路由共享</text>
+
+  <rect x="570" y="278" width="230" height="90" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="685" y="308" font-size="11" font-weight="600" text-anchor="middle" fill="#12402a">③ 路由 handler</text>
+  <text x="685" y="330" font-size="9.5" text-anchor="middle" fill="#2f6f4f">业务逻辑</text>
+  <text x="685" y="350" font-size="9" text-anchor="middle" fill="#2f6f4f">链最内层</text>
+
+  <rect x="840" y="278" width="210" height="90" rx="12" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="945" y="304" font-size="10.5" font-weight="600" text-anchor="middle" fill="#1d1d1f">合成 HandlersChain</text>
+  <text x="945" y="326" font-size="9" text-anchor="middle" fill="#6e6e73">[全局…组…handler]</text>
+  <text x="945" y="346" font-size="9" text-anchor="middle" fill="#6e6e73">c.Next() 依次推进</text>
+
+  <path d="M260,323 L280,323 L280,323 L298,323" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M530,323 L550,323 L550,323 L568,323" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M800,323 L820,323 L820,323 L838,323" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <rect x="30" y="392" width="1020" height="76" rx="12" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="46" y="414" font-size="11" font-weight="600" fill="#1d1d1f">执行顺序 = 注册顺序（洋葱模型）</text>
+  <text x="46" y="435" font-size="9.5" fill="#6e6e73">先 Use 的先跑（洋葱外层）；嵌套 group 从外到内；鉴权/日志等横切中间件在外层，业务 handler 在最内。</text>
+  <text x="46" y="455" font-size="9.5" fill="#6e6e73">Recovery/Logger 要最外层才能兜住内层的 panic 与耗时统计。</text>
+</svg>

@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="548" viewBox="0 0 1080 548" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs><filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+  <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker></defs>
+  <rect width="1080" height="548" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Gin 原理 · 引擎 ② radix 树 node 与匹配</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">node（tree.go:99）indices 首字节索引 + nType;getValue 按公共前缀走,遇 wildcard 压 skippedNode 回溯,O(路径长)</text>
+
+  <!-- node 结构 -->
+  <rect x="30" y="72" width="470" height="200" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="46" y="94" font-size="11.5" font-weight="700" fill="#1b2a4a">node 结构（tree.go:99）</text>
+  <text x="46" y="118" font-size="9.5" fill="#274a78"><tspan font-weight="600">path</tspan>　本节点路径片段（压缩前缀）</text>
+  <text x="46" y="138" font-size="9.5" fill="#274a78"><tspan font-weight="600">indices string</tspan>　子节点首字节索引</text>
+  <text x="46" y="158" font-size="9.5" fill="#274a78"><tspan font-weight="600">nType</tspan>　static / root / param / catchAll</text>
+  <text x="46" y="178" font-size="9.5" fill="#274a78"><tspan font-weight="600">children []*node</tspan>　子节点</text>
+  <text x="46" y="198" font-size="9.5" fill="#274a78"><tspan font-weight="600">handlers HandlersChain</tspan>　命中执行链</text>
+  <text x="46" y="218" font-size="9.5" fill="#274a78"><tspan font-weight="600">wildChild</tspan> · <tspan font-weight="600">fullPath</tspan> · <tspan font-weight="600">priority uint32</tspan></text>
+  <text x="46" y="242" font-size="8.5" fill="#a1a1a6">indices 首字节索引让分支选择近 O(1)</text>
+  <text x="46" y="260" font-size="8.5" fill="#a1a1a6">:name → nType param、*name → catchAll（findWildcard tree.go:371）</text>
+
+  <!-- 匹配 getValue -->
+  <rect x="520" y="72" width="530" height="200" rx="13" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="536" y="94" font-size="11.5" font-weight="700" fill="#12402a">getValue 匹配（tree.go:418）· O(路径长)</text>
+  <text x="536" y="118" font-size="9.5" fill="#2f6f4f">按公共前缀 + 单字节 indices 逐节点走</text>
+  <text x="536" y="138" font-size="9.5" fill="#2f6f4f">遇 wildcard 子节点 → 压 <tspan font-weight="600">skippedNode</tspan> 供回溯</text>
+  <text x="536" y="158" font-size="9.5" fill="#2f6f4f">匹配复杂度 O(路径长)——与路由总数无关</text>
+  <!-- 树示意 -->
+  <rect x="546" y="176" width="120" height="30" rx="8" fill="#ffffff" stroke="#bfe0cd"/>
+  <text x="606" y="196" font-size="9" text-anchor="middle" fill="#12402a">root "/"</text>
+  <rect x="546" y="222" width="120" height="30" rx="8" fill="#ffffff" stroke="#bfe0cd"/>
+  <text x="606" y="242" font-size="9" text-anchor="middle" fill="#12402a">static "user/"</text>
+  <rect x="700" y="222" width="120" height="30" rx="8" fill="#f4eefb" stroke="#d9c7ec"/>
+  <text x="760" y="242" font-size="9" text-anchor="middle" fill="#3d2a5a">param :id</text>
+  <rect x="854" y="222" width="140" height="30" rx="8" fill="#fff7e6" stroke="#e8cf9a"/>
+  <text x="924" y="242" font-size="9" text-anchor="middle" fill="#5a3410">catchAll *filepath</text>
+  <path d="M606,206 L606,222" stroke="#c7c7cc" stroke-width="1.3" fill="none" marker-end="url(#ar)"/>
+  <path d="M666,191 L760,191 L760,222" stroke="#c7c7cc" stroke-width="1.3" fill="none" marker-end="url(#ar)"/>
+  <path d="M666,196 L840,196 L924,196 L924,222" stroke="#c7c7cc" stroke-width="1.3" fill="none" marker-end="url(#ar)"/>
+
+  <!-- 优先级 -->
+  <rect x="30" y="292" width="510" height="132" rx="13" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="46" y="314" font-size="11.5" font-weight="700" fill="#5a3410">优先级自适应 incrementChildPrio（tree.go:111）</text>
+  <text x="46" y="338" font-size="9.5" fill="#93762e">按 priority 重排 children——热路由（高频命中）前移</text>
+  <text x="46" y="360" font-size="9.5" fill="#93762e">命中时 priority++,children 中前排</text>
+  <text x="46" y="382" font-size="9" fill="#93762e">无需手动调优,自动把常走的分支排前面</text>
+  <text x="46" y="404" font-size="8.5" fill="#a1a1a6">热路由先查 → 平均匹配更快</text>
+
+  <!-- 为什么 radix -->
+  <rect x="560" y="292" width="490" height="132" rx="13" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="576" y="314" font-size="11.5" font-weight="700" fill="#3d2a5a">为什么 radix（压缩前缀树）</text>
+  <text x="576" y="338" font-size="9.5" fill="#8a6db3">共享公共前缀 → 内存省 + 匹配快</text>
+  <text x="576" y="360" font-size="9.5" fill="#8a6db3">O(路径长)匹配（与路由数无关）</text>
+  <text x="576" y="382" font-size="9.5" fill="#8a6db3">indices 首字节索引让分支近 O(1)</text>
+  <text x="576" y="404" font-size="9" fill="#a1a1a6">比正则 / 线性遍历路由快得多</text>
+
+  <rect x="30" y="444" width="1020" height="30" rx="10" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="46" y="463" font-size="9" fill="#6e6e73">panic 强制"每段一个 wildcard、名非空";误区：路由越多越慢（实为 O(路径长)与总数无关）</text>
+</svg>

@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="540" viewBox="0 0 1080 540" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs><filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+  <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker></defs>
+  <rect width="1080" height="540" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Gin 原理 · 能力域依赖关系图</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">实线=调用/数据流,虚线=约束;贯穿层 Context 对象池横切请求流程/中间件/绑定/渲染——每请求取一个 Context 贯穿始终</text>
+
+  <!-- 接触面 top -->
+  <rect x="390" y="70" width="300" height="56" rx="13" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="540" y="94" font-size="12" font-weight="700" text-anchor="middle" fill="#3d2a5a">接触面 · 路由注册 + Context API</text>
+  <text x="540" y="112" font-size="8.5" text-anchor="middle" fill="#8a6db3">r.GET 注册 · c.Param/Bind/JSON 读写（开发者入口）</text>
+
+  <!-- 请求处理流程 (mid, orchestrator) -->
+  <rect x="360" y="162" width="360" height="56" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="540" y="186" font-size="12" font-weight="700" text-anchor="middle" fill="#1b2a4a">请求处理流程 · ServeHTTP</text>
+  <text x="540" y="204" font-size="8.5" text-anchor="middle" fill="#274a78">池取 → 树查 → 跑链 → 绑定 → 渲染 → 池还（编排者）</text>
+
+  <!-- 引擎路由树 left -->
+  <rect x="40" y="266" width="230" height="86" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="155" y="290" font-size="11" font-weight="700" text-anchor="middle" fill="#1b2a4a">引擎与路由树 radix</text>
+  <text x="155" y="309" font-size="8.5" text-anchor="middle" fill="#274a78">每 method 一棵 · getValue</text>
+  <text x="155" y="325" font-size="8.5" text-anchor="middle" fill="#274a78">O(路径长)匹配 + 提参数</text>
+  <text x="155" y="343" font-size="8" text-anchor="middle" fill="#a1a1a6">gin.go · tree.go</text>
+
+  <!-- 中间件链 -->
+  <rect x="290" y="266" width="230" height="86" rx="13" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="405" y="290" font-size="11" font-weight="700" text-anchor="middle" fill="#5a3410">中间件链（洋葱）</text>
+  <text x="405" y="309" font-size="8.5" text-anchor="middle" fill="#93762e">HandlersChain + c.Next()</text>
+  <text x="405" y="325" font-size="8.5" text-anchor="middle" fill="#93762e">int8 index 推进 · Abort=63</text>
+  <text x="405" y="343" font-size="8" text-anchor="middle" fill="#a1a1a6">context.go:198</text>
+
+  <!-- 绑定 -->
+  <rect x="540" y="266" width="230" height="86" rx="13" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="655" y="290" font-size="11" font-weight="700" text-anchor="middle" fill="#3d2a5a">绑定（输入）</text>
+  <text x="655" y="309" font-size="8.5" text-anchor="middle" fill="#8a6db3">按 Content-Type 自动选</text>
+  <text x="655" y="325" font-size="8.5" text-anchor="middle" fill="#8a6db3">JSON/form/query→struct</text>
+  <text x="655" y="343" font-size="8" text-anchor="middle" fill="#a1a1a6">binding/</text>
+
+  <!-- 渲染 -->
+  <rect x="790" y="266" width="230" height="86" rx="13" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="905" y="290" font-size="11" font-weight="700" text-anchor="middle" fill="#3d2a5a">渲染（输出）</text>
+  <text x="905" y="309" font-size="8.5" text-anchor="middle" fill="#8a6db3">c.JSON/XML/HTML/String</text>
+  <text x="905" y="325" font-size="8.5" text-anchor="middle" fill="#8a6db3">设 Content-Type + 序列化</text>
+  <text x="905" y="343" font-size="8" text-anchor="middle" fill="#a1a1a6">render/</text>
+
+  <!-- RouterGroup constraint -->
+  <rect x="790" y="162" width="230" height="56" rx="13" fill="#eef3fb" stroke="#bcd0ec" stroke-dasharray="5 3"/>
+  <text x="905" y="184" font-size="11" font-weight="700" text-anchor="middle" fill="#1b2a4a">RouterGroup</text>
+  <text x="905" y="202" font-size="8.5" text-anchor="middle" fill="#274a78">前缀共享 + 中间件继承（组织约束）</text>
+
+  <!-- 贯穿层 Context 对象池 -->
+  <rect x="40" y="392" width="980" height="66" rx="14" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="530" y="416" font-size="12" font-weight="700" text-anchor="middle" fill="#12402a">贯穿层 · Context 与对象池（sync.Pool 复用 · reset [:0] 复用 backing array）</text>
+  <text x="530" y="436" font-size="9" text-anchor="middle" fill="#2f6f4f">横切请求流程 / 中间件链 / 绑定 / 渲染——每请求从池取一个 Context 承载状态贯穿始终,结束还池,低分配</text>
+  <text x="530" y="452" font-size="8" text-anchor="middle" fill="#a1a1a6">context.go:61 · gin.go:229</text>
+
+  <!-- connectors solid -->
+  <path d="M540,126 L540,162" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M420,218 L420,240 L155,240 L155,266" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M480,218 L480,250 L405,250 L405,266" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M600,218 L600,250 L655,250 L655,266" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M660,218 L660,242 L905,242 L905,266" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <!-- RouterGroup dashed constraint to 接触面 -->
+  <path d="M790,190 L690,190" stroke="#c7c7cc" stroke-width="1.4" stroke-dasharray="5 3" fill="none" marker-end="url(#ar)"/>
+  <!-- 贯穿层 crosscut dashed up to 4 domains -->
+  <path d="M155,392 L155,352" stroke="#bfe0cd" stroke-width="1.6" stroke-dasharray="4 3" fill="none" marker-end="url(#ar)"/>
+  <path d="M405,392 L405,352" stroke="#bfe0cd" stroke-width="1.6" stroke-dasharray="4 3" fill="none" marker-end="url(#ar)"/>
+  <path d="M655,392 L655,352" stroke="#bfe0cd" stroke-width="1.6" stroke-dasharray="4 3" fill="none" marker-end="url(#ar)"/>
+  <path d="M905,392 L905,352" stroke="#bfe0cd" stroke-width="1.6" stroke-dasharray="4 3" fill="none" marker-end="url(#ar)"/>
+
+  <rect x="40" y="480" width="980" height="30" rx="10" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="56" y="499" font-size="9" fill="#6e6e73">—— 实线=调用/数据流　- - 绿虚线=Context 池横切贯穿　- - 灰虚线=约束(RouterGroup 组织接触面注册)</text>
+</svg>

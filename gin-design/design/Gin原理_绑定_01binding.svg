@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="530" viewBox="0 0 1080 530" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs><filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+  <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker></defs>
+  <rect width="1080" height="530" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Gin binding · 按 Content-Type 自动选解析器 + validator 校验</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">开发者不用手判 Content-Type，c.Bind 按请求头自动选解析器——JSON 请求绑 JSON、表单绑 form，统一 API</text>
+
+  <!-- Binding 接口 -->
+  <rect x="30" y="70" width="300" height="118" rx="13" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="46" y="94" font-size="12" font-weight="600" fill="#3d2a5a">Binding 接口（binding.go:32）</text>
+  <text x="46" y="118" font-size="10" fill="#8a6db3">Name() string</text>
+  <text x="46" y="138" font-size="10" fill="#8a6db3">Bind(*http.Request, any) error</text>
+  <text x="46" y="162" font-size="9.5" fill="#8a6db3">扩展 BindingBody（BindBody）</text>
+  <text x="46" y="180" font-size="9.5" fill="#8a6db3">BindingUri</text>
+
+  <!-- binding.Default -->
+  <rect x="360" y="70" width="380" height="118" rx="13" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="376" y="94" font-size="12" font-weight="600" fill="#3d2a5a">binding.Default(method, contentType)（:95）</text>
+  <text x="376" y="118" font-size="9.5" fill="#8a6db3">GET → Form</text>
+  <text x="376" y="138" font-size="9.5" fill="#8a6db3">否则按 Content-Type：json→JSON · xml→XML</text>
+  <text x="376" y="158" font-size="9.5" fill="#8a6db3">protobuf / msgpack / yaml / multipart 各对应</text>
+  <text x="376" y="178" font-size="9.5" fill="#8a6db3">默认（含 x-www-form-urlencoded）→ Form</text>
+
+  <!-- validator -->
+  <rect x="770" y="70" width="280" height="118" rx="13" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="786" y="94" font-size="12" font-weight="600" fill="#12402a">validator/v10</text>
+  <text x="786" y="116" font-size="9" fill="#2f6f4f">default_validator.go:13</text>
+  <text x="786" y="136" font-size="9.5" fill="#2f6f4f">StructValidator 默认实现</text>
+  <text x="786" y="156" font-size="9.5" fill="#2f6f4f">sync.Once 懒建</text>
+  <text x="786" y="176" font-size="9.5" fill="#2f6f4f">绑后按 struct tag 校验</text>
+
+  <line x1="330" y1="129" x2="358" y2="129" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <line x1="740" y1="129" x2="768" y2="129" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- 两族对比 -->
+  <text x="30" y="228" font-size="12" font-weight="600" fill="#1d1d1f">两族绑定 API</text>
+  <rect x="30" y="242" width="500" height="150" rx="13" fill="#fbeaea" stroke="#e7c3c3" filter="url(#soft)"/>
+  <text x="46" y="266" font-size="12" font-weight="600" fill="#4a1414">c.Bind*  →  MustBindWith</text>
+  <text x="46" y="292" font-size="10" fill="#7a2a2a">出错自动 AbortWithError（400 / 413）</text>
+  <text x="46" y="312" font-size="10" fill="#7a2a2a">并写响应（框架自动处理错误）</text>
+  <text x="46" y="336" font-size="9.5" fill="#7a2a2a">400 = 解析/校验失败　413 = body 过大</text>
+  <text x="46" y="360" font-size="9.5" fill="#7a2a2a">要框架自动 400 用 Bind</text>
+  <text x="46" y="382" font-size="9" fill="#a1a1a6">按请求头自动选解析器，不用手判 Content-Type</text>
+
+  <rect x="550" y="242" width="500" height="150" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="566" y="266" font-size="12" font-weight="600" fill="#1b2a4a">c.ShouldBind*  →  ShouldBindWith</text>
+  <text x="566" y="292" font-size="10" fill="#274a78">只返 error，不写响应（context.go:942）</text>
+  <text x="566" y="312" font-size="10" fill="#274a78">由你决定错误响应</text>
+  <text x="566" y="336" font-size="9.5" fill="#5b7db1">要自定义错误响应用 ShouldBind</text>
+  <text x="566" y="360" font-size="9.5" fill="#5b7db1">ShouldBindBodyWith 缓存 body 可多次绑</text>
+  <text x="566" y="382" font-size="9" fill="#a1a1a6">如先试 JSON 再试 XML</text>
+
+  <rect x="30" y="412" width="1020" height="96" rx="12" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="46" y="434" font-size="11" font-weight="600" fill="#1d1d1f">流程：请求 body → binding.Default 选解析器 → 解析到 struct → validator/v10 按 tag 校验 → 强类型输入</text>
+  <text x="46" y="456" font-size="9.5" fill="#6e6e73">struct 字段加 binding:"required,email" 等 tag，绑定时自动校验；JSON 编码器可换 sonic/go-json（build tag）提速。</text>
+  <text x="46" y="478" font-size="9.5" fill="#6e6e73">误区：Bind 和 ShouldBind 一样 —— Bind 出错自动 AbortWithError 写响应，ShouldBind 只返 error 不写。</text>
+  <text x="46" y="498" font-size="9.5" fill="#6e6e73">误区：body 只能绑一次 —— ShouldBindBodyWith 缓存 body 可多次绑。</text>
+</svg>

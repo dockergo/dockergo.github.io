@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="530" viewBox="0 0 1080 530" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="530" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Rust NLL · 非词法生命周期 —— 借用只活到最后一次使用</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">rustc_borrowck/src/nll.rs:1 "NLL borrow checker 入口";按实际使用算生命周期,比词法宽松、少误报</text>
+
+  <!-- 词法 (red, over-conservative) -->
+  <rect x="40" y="82" width="500" height="150" rx="14" fill="#fbeaea" stroke="#e7c3c3" filter="url(#soft)"/>
+  <text x="62" y="108" font-size="12.5" font-weight="600" fill="#4a1414">旧:词法生命周期(过于保守)</text>
+  <text x="62" y="132" font-size="10" fill="#7a2a2a">借用活到作用域 } 结束</text>
+  <rect x="62" y="146" width="456" height="40" rx="8" fill="#ffffff" stroke="#e7c3c3"/>
+  <text x="76" y="164" font-size="9.5" fill="#4a1414">let r = &amp;x; use(r); x.modify();</text>
+  <text x="76" y="179" font-size="9" fill="#7a2a2a">r 用完但作用域没完 → 误报冲突</text>
+  <text x="62" y="208" font-size="10" fill="#7a2a2a">明明安全却不编译 —— 误报太多</text>
+
+  <!-- NLL (green, precise) -->
+  <rect x="560" y="82" width="480" height="150" rx="14" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="582" y="108" font-size="12.5" font-weight="600" fill="#12402a">NLL:借用只活到最后一次使用</text>
+  <text x="582" y="132" font-size="10" fill="#2f6f4f">上例 r 最后用后即释放</text>
+  <rect x="582" y="146" width="436" height="40" rx="8" fill="#ffffff" stroke="#bfe0cd"/>
+  <text x="596" y="164" font-size="9.5" fill="#12402a">let r = &amp;x; use(r); x.modify();  // OK</text>
+  <text x="596" y="179" font-size="9" fill="#2f6f4f">r 用完释放,x.modify() 合法</text>
+  <text x="582" y="208" font-size="10" fill="#2f6f4f">按实际使用精确判断 —— 少误报、更符合直觉</text>
+
+  <path d="M540,157 L560,157" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <!-- pipeline: compute_regions → RegionInferenceContext → solve -->
+  <rect x="40" y="256" width="300" height="140" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="62" y="282" font-size="12" font-weight="600" fill="#1b2a4a">① compute_regions()</text>
+  <text x="62" y="304" font-size="9.5" fill="#5b7db1">rustc_borrowck/src/nll.rs:113</text>
+  <text x="62" y="328" font-size="10" fill="#1b2a4a">建 RegionInferenceContext</text>
+  <text x="62" y="348" font-size="9.5" fill="#5b7db1">nll.rs:147</text>
+  <text x="62" y="372" font-size="9" fill="#a1a1a6">NLL 借用检查主上下文</text>
+
+  <rect x="390" y="256" width="300" height="140" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="412" y="282" font-size="12" font-weight="600" fill="#1b2a4a">② 区域推断 solve</text>
+  <text x="412" y="304" font-size="9.5" fill="#5b7db1">region_infer/mod.rs:483</text>
+  <text x="412" y="328" font-size="10" fill="#1b2a4a">基于约束 / SCC</text>
+  <text x="412" y="348" font-size="10" fill="#1b2a4a">propagate_constraints() :490</text>
+  <text x="412" y="372" font-size="9" fill="#a1a1a6">把"借用活多久"求解成区域,验不冲突</text>
+
+  <rect x="740" y="256" width="300" height="140" rx="14" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="762" y="282" font-size="12" font-weight="600" fill="#3d2a5a">③ Polonius(下一代,更精确)</text>
+  <text x="762" y="304" font-size="9.5" fill="#7c68a6">polonius/mod.rs</text>
+  <text x="762" y="328" font-size="10" fill="#3d2a5a">建模成图可达性</text>
+  <text x="762" y="348" font-size="10" fill="#3d2a5a">loan 传播 = 可达性</text>
+  <text x="762" y="372" font-size="9" fill="#7c68a6">-Zpolonius=next 算 loan liveness</text>
+
+  <path d="M340,326 L390,326" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M690,326 L740,326" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <text x="30" y="432" font-size="9.5" fill="#a1a1a6">为什么 NLL:词法生命周期误报太多(明明安全却不编译);NLL 按实际使用精确判断,少误报、更符合直觉</text>
+  <text x="30" y="456" font-size="9.5" fill="#a1a1a6">误区:生命周期按作用域算(词法) —— NLL 按实际最后使用算,借用用完即释放</text>
+  <text x="30" y="480" font-size="9" fill="#a1a1a6">Polonius(polonius/mod.rs)更精确:把借用检查建模成图可达性(loan 传播=可达性) · 源码基准 Rust 1.99.0</text>
+</svg>

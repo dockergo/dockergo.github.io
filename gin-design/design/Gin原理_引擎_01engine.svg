@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="540" viewBox="0 0 1080 540" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs><filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+  <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker></defs>
+  <rect width="1080" height="540" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Gin 原理 · 引擎 ① Engine 结构</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">Engine（gin.go:92）嵌 RouterGroup 故 engine.GET 继承;New 初始化根组 + trees 容量 9 + pool;实现 http.Handler</text>
+
+  <!-- Engine 外框 -->
+  <rect x="30" y="72" width="620" height="256" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="46" y="96" font-size="12.5" font-weight="700" fill="#1b2a4a">Engine（gin.go:92）· 实现 http.Handler</text>
+
+  <!-- 嵌入 RouterGroup -->
+  <rect x="48" y="108" width="584" height="60" rx="11" fill="#f4f2ee" stroke="#e3ddd2" stroke-dasharray="5 3"/>
+  <text x="64" y="130" font-size="10.5" font-weight="700" fill="#6e6357">嵌入 RouterGroup（:93，匿名字段）</text>
+  <text x="64" y="150" font-size="9" fill="#8a7f6f">故 engine.GET/POST/… 继承自 group——根组 basePath="/"、root:true</text>
+
+  <!-- 字段: trees -->
+  <rect x="48" y="180" width="185" height="132" rx="11" fill="#ffffff" stroke="#bcd0ec"/>
+  <text x="140" y="202" font-size="10.5" font-weight="700" text-anchor="middle" fill="#1b2a4a">trees methodTrees</text>
+  <text x="140" y="224" font-size="8.6" text-anchor="middle" fill="#5b7db1">每 method 一棵 radix 树</text>
+  <text x="140" y="240" font-size="8.6" text-anchor="middle" fill="#5b7db1">容量 9（HTTP method 数）</text>
+  <text x="140" y="256" font-size="8.6" text-anchor="middle" fill="#5b7db1">按 method 线性查（只 9 个）</text>
+  <text x="140" y="278" font-size="8.6" text-anchor="middle" fill="#5b7db1">选树后再走路径匹配</text>
+  <text x="140" y="298" font-size="8" text-anchor="middle" fill="#a1a1a6">tree.go:45</text>
+
+  <!-- 字段: maxParams -->
+  <rect x="243" y="180" width="185" height="132" rx="11" fill="#ffffff" stroke="#bcd0ec"/>
+  <text x="335" y="202" font-size="10.5" font-weight="700" text-anchor="middle" fill="#1b2a4a">maxParams uint16</text>
+  <text x="335" y="224" font-size="8.6" text-anchor="middle" fill="#5b7db1">maxSections uint16</text>
+  <text x="335" y="244" font-size="8.6" text-anchor="middle" fill="#5b7db1">注册期由 countParams</text>
+  <text x="335" y="260" font-size="8.6" text-anchor="middle" fill="#5b7db1">/ countSections 更新</text>
+  <text x="335" y="282" font-size="8.6" text-anchor="middle" fill="#5b7db1">供 Context 池预分配容量</text>
+  <text x="335" y="300" font-size="8" text-anchor="middle" fill="#a1a1a6">gin.go:183-186</text>
+
+  <!-- 字段: pool -->
+  <rect x="438" y="180" width="194" height="132" rx="11" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="535" y="202" font-size="10.5" font-weight="700" text-anchor="middle" fill="#12402a">pool sync.Pool</text>
+  <text x="535" y="224" font-size="8.6" text-anchor="middle" fill="#2f6f4f">复用 Context</text>
+  <text x="535" y="244" font-size="8.6" text-anchor="middle" fill="#2f6f4f">pool.New 装在 New() 里</text>
+  <text x="535" y="264" font-size="8.6" text-anchor="middle" fill="#2f6f4f">请求期 Get/Put 复用</text>
+  <text x="535" y="284" font-size="8.6" text-anchor="middle" fill="#2f6f4f">低分配的关键（见池篇）</text>
+  <text x="535" y="302" font-size="8" text-anchor="middle" fill="#a1a1a6">gin.go:229</text>
+
+  <!-- 构造 New / Default -->
+  <rect x="670" y="72" width="380" height="118" rx="13" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="686" y="94" font-size="11.5" font-weight="700" fill="#3d2a5a">New()（gin.go:202）初始化</text>
+  <text x="686" y="116" font-size="9.2" fill="#8a6db3">· 建根 RouterGroup{basePath:"/", root:true}</text>
+  <text x="686" y="136" font-size="9.2" fill="#8a6db3">· trees 容量 9 · engine.engine = engine</text>
+  <text x="686" y="156" font-size="9.2" fill="#8a6db3">· 装 pool.New（:229）</text>
+  <text x="686" y="178" font-size="8.5" fill="#a1a1a6">根组回指 engine,方法解析到 Engine</text>
+
+  <rect x="670" y="204" width="380" height="108" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="686" y="226" font-size="11.5" font-weight="700" fill="#1b2a4a">Default()（gin.go:236）</text>
+  <text x="686" y="250" font-size="9.5" fill="#274a78">= New() + Use(Logger(), Recovery())</text>
+  <text x="686" y="272" font-size="9" fill="#5b7db1">在 New 基础上默认挂日志 + panic 恢复中间件</text>
+  <text x="686" y="294" font-size="8.5" fill="#a1a1a6">生产常用 gin.Default() 开箱即用</text>
+
+  <!-- http.Handler 实现 -->
+  <rect x="30" y="352" width="1020" height="80" rx="14" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="540" y="376" font-size="12" font-weight="700" text-anchor="middle" fill="#12402a">Engine 实现 http.Handler（ServeHTTP）</text>
+  <text x="540" y="398" font-size="9.5" text-anchor="middle" fill="#2f6f4f">可无缝嵌入任何标准库 net/http 生态——用 net/http 的 Server,只加路由 + 中间件 + Context 层</text>
+  <text x="540" y="418" font-size="9" text-anchor="middle" fill="#a1a1a6">误区：Engine 自己实现 HTTP（实为薄封装 net/http）</text>
+
+  <path d="M650,150 L662,150 L662,232 L670,232" stroke="#c7c7cc" stroke-width="1.4" fill="none" marker-end="url(#ar)"/>
+  <path d="M340,328 L340,352" stroke="#c7c7cc" stroke-width="1.4" fill="none" marker-end="url(#ar)"/>
+
+  <rect x="30" y="450" width="1020" height="30" rx="10" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="46" y="469" font-size="9" fill="#6e6e73">Engine = 嵌 RouterGroup（继承注册方法）+ trees（每 method 一树）+ maxParams（供池）+ pool（复用 Context）</text>
+</svg>

@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="530" viewBox="0 0 1080 530" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs><filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+  <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker></defs>
+  <rect width="1080" height="530" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Gin 原理 · Context ③ reset 复用 backing array</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">reset（context.go:103）让复用的 Context 干净且零重分配——切片 [:0] 保留底层数组,下次 append 复用同块内存</text>
+
+  <!-- reset 各字段 -->
+  <rect x="30" y="72" width="640" height="230" rx="14" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="46" y="96" font-size="12" font-weight="700" fill="#12402a">reset()（context.go:103）逐字段清空</text>
+
+  <rect x="48" y="110" width="300" height="52" rx="10" fill="#ffffff" stroke="#bfe0cd"/>
+  <text x="64" y="132" font-size="9.6" fill="#2f6f4f"><tspan font-weight="600">Writer = &amp;c.writermem</tspan></text>
+  <text x="64" y="152" font-size="8.4" fill="#a1a1a6">Writer 重指向内嵌 writermem</text>
+
+  <rect x="360" y="110" width="298" height="52" rx="10" fill="#ffffff" stroke="#bfe0cd"/>
+  <text x="376" y="132" font-size="9.6" fill="#2f6f4f"><tspan font-weight="600">Params[:0]</tspan>　截断保留底层数组</text>
+  <text x="376" y="152" font-size="8.4" fill="#a1a1a6">*params / *skippedNodes 也 [:0]</text>
+
+  <rect x="48" y="172" width="300" height="52" rx="10" fill="#ffffff" stroke="#bfe0cd"/>
+  <text x="64" y="194" font-size="9.6" fill="#2f6f4f"><tspan font-weight="600">handlers = nil</tspan>　·　<tspan font-weight="600">index = -1</tspan></text>
+  <text x="64" y="214" font-size="8.4" fill="#a1a1a6">index=-1 配合 Next 先 ++（见右侧）</text>
+
+  <rect x="360" y="172" width="298" height="52" rx="10" fill="#ffffff" stroke="#bfe0cd"/>
+  <text x="376" y="194" font-size="9.6" fill="#2f6f4f"><tspan font-weight="600">Keys = nil</tspan>　·　<tspan font-weight="600">Errors[:0]</tspan></text>
+  <text x="376" y="214" font-size="8.4" fill="#a1a1a6">Keys 置 nil、Errors 截断复用</text>
+
+  <text x="46" y="252" font-size="9.2" fill="#2f6f4f">切片 <tspan font-weight="600">[:0]</tspan> 只重置长度、保留 cap 和底层数组——下个请求填充时复用同一块内存</text>
+  <text x="46" y="274" font-size="9.2" fill="#2f6f4f">配合 sync.Pool 达到近零分配（reset 的 [:0] 是低分配的核心）</text>
+  <text x="46" y="294" font-size="8.5" fill="#a1a1a6">Writer 重指、handlers/Keys 置 nil,切片类 [:0] 保数组</text>
+
+  <!-- [:0] vs nil -->
+  <rect x="686" y="72" width="364" height="230" rx="14" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="702" y="96" font-size="12" font-weight="700" fill="#5a3410">为什么 [:0] 而非 nil</text>
+  <rect x="702" y="110" width="332" height="80" rx="10" fill="#fbeaea" stroke="#e7c3c3"/>
+  <text x="716" y="132" font-size="9.6" font-weight="600" fill="#4a1414">置 nil（重分配）</text>
+  <text x="716" y="152" font-size="8.8" fill="#7a2a2a">nil 切片下次 append 要重新</text>
+  <text x="716" y="170" font-size="8.8" fill="#7a2a2a">分配底层数组 → 有分配开销</text>
+  <rect x="702" y="200" width="332" height="80" rx="10" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="716" y="222" font-size="9.6" font-weight="600" fill="#12402a">[:0]（复用 backing array）</text>
+  <text x="716" y="242" font-size="8.8" fill="#2f6f4f">保留数组,下次 append 直接用</text>
+  <text x="716" y="260" font-size="8.8" fill="#2f6f4f">这是"复用 backing array"低分配核心</text>
+
+  <!-- index=-1 配合 Next -->
+  <rect x="30" y="322" width="1020" height="118" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="46" y="346" font-size="11.5" font-weight="700" fill="#1b2a4a">index = -1 配合 Next 先 ++</text>
+  <text x="46" y="370" font-size="9.5" fill="#274a78">Next() 先 c.index++ 再跑 handler——reset 设 index=-1,让第一个 handler（index 0）正确执行</text>
+  <text x="46" y="392" font-size="9.5" fill="#274a78">若 index=0 起,则 ++ 后从 1 开始,会漏掉第一个 handler</text>
+  <rect x="640" y="356" width="120" height="34" rx="8" fill="#ffffff" stroke="#bcd0ec"/>
+  <text x="700" y="378" font-size="9.5" font-weight="600" text-anchor="middle" fill="#1b2a4a">index = -1</text>
+  <rect x="800" y="356" width="120" height="34" rx="8" fill="#ffffff" stroke="#bcd0ec"/>
+  <text x="860" y="378" font-size="9.5" font-weight="600" text-anchor="middle" fill="#1b2a4a">++ → 0（首个）</text>
+  <path d="M760,373 L800,373" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="46" y="414" font-size="8.5" fill="#a1a1a6">误区：reset 用 nil 清空（切片类应用 [:0] 保数组）</text>
+
+  <!-- goroutine c.Copy -->
+  <rect x="30" y="458" width="1020" height="46" rx="12" fill="#fbeaea" stroke="#e7c3c3"/>
+  <text x="540" y="480" font-size="10.5" font-weight="700" text-anchor="middle" fill="#4a1414">goroutine 里须 c.Copy()</text>
+  <text x="540" y="497" font-size="9" text-anchor="middle" fill="#7a2a2a">请求完 Context 还池被复用;goroutine 里直接用 c 会读到别的请求数据,须 c.Copy() 深拷贝</text>
+</svg>

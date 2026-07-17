@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="540" viewBox="0 0 1080 540" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs><filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+  <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker></defs>
+  <rect width="1080" height="540" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Gin handleHTTPRequest · 路由匹配与执行（gin.go:690）</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">先 getValue 匹配定位 handlers 链（中间件+业务），再 c.Next() 从 index 0 依次跑——匹配是“找谁处理”，Next 是“依次处理”</text>
+
+  <!-- 步骤 1 算路径 -->
+  <rect x="30" y="72" width="300" height="96" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="46" y="96" font-size="12" font-weight="600" fill="#1b2a4a">① 算 rPath（:695）</text>
+  <text x="46" y="120" font-size="9.5" fill="#274a78">按 UseRawPath / RemoveExtraSlash</text>
+  <text x="46" y="138" font-size="9.5" fill="#274a78">处理路径</text>
+  <text x="46" y="158" font-size="9" fill="#a1a1a6">路径规范化影响匹配</text>
+
+  <!-- 步骤 2 选树 -->
+  <rect x="390" y="72" width="300" height="96" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="406" y="96" font-size="12" font-weight="600" fill="#1b2a4a">② 按 method 找树（:709）</text>
+  <text x="406" y="120" font-size="9.5" fill="#274a78">9 个 method 线性找树</text>
+  <text x="406" y="138" font-size="9.5" fill="#274a78">每 method 一棵 radix 树</text>
+  <text x="406" y="158" font-size="9" fill="#a1a1a6">GET/POST/PUT/DELETE…</text>
+
+  <!-- 步骤 3 getValue -->
+  <rect x="750" y="72" width="300" height="96" rx="13" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="766" y="96" font-size="12" font-weight="600" fill="#5a3410">③ root.getValue（:715）</text>
+  <text x="766" y="120" font-size="9" fill="#93762e">getValue(rPath, c.params,</text>
+  <text x="766" y="138" font-size="9" fill="#93762e">c.skippedNodes, unescape)</text>
+  <text x="766" y="158" font-size="9" fill="#93762e">radix 匹配</text>
+
+  <line x1="330" y1="120" x2="388" y2="120" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <line x1="690" y1="120" x2="748" y2="120" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- 判定菱形 -->
+  <path d="M900,168 L980,208 L900,248 L820,208 z" fill="#f7f7f9" stroke="#d2d2d7" filter="url(#soft)"/>
+  <text x="900" y="204" font-size="10.5" font-weight="600" text-anchor="middle" fill="#48484a">匹配到</text>
+  <text x="900" y="220" font-size="10.5" font-weight="600" text-anchor="middle" fill="#48484a">路由？</text>
+
+  <!-- 命中 -->
+  <rect x="600" y="286" width="450" height="150" rx="13" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="616" y="310" font-size="12" font-weight="600" fill="#12402a">命中（hit）</text>
+  <text x="616" y="334" font-size="9.8" fill="#2f6f4f">拷 value.params 进 c.Params</text>
+  <text x="616" y="354" font-size="9.8" fill="#2f6f4f">设 c.handlers / c.fullPath</text>
+  <text x="616" y="374" font-size="9.8" fill="#2f6f4f">c.Next() 跑中间件链（从 index 0）</text>
+  <text x="616" y="394" font-size="9.8" fill="#2f6f4f">writermem.WriteHeaderNow()（:716）</text>
+  <text x="616" y="420" font-size="9" fill="#2f6f4f">先匹配定位链，再 Next 依次跑——两步</text>
+
+  <!-- 未命中 -->
+  <rect x="30" y="286" width="450" height="150" rx="13" fill="#fbeaea" stroke="#e7c3c3" filter="url(#soft)"/>
+  <text x="46" y="310" font-size="12" font-weight="600" fill="#4a1414">未命中（miss，:727）</text>
+  <text x="46" y="334" font-size="9.8" fill="#7a2a2a">TSR 尾斜杠重定向 / RedirectFixedPath</text>
+  <text x="46" y="354" font-size="9.8" fill="#7a2a2a">405：HandleMethodNotAllowed</text>
+  <text x="46" y="374" font-size="9.8" fill="#7a2a2a">　　建 Allow 头 + allNoMethod</text>
+  <text x="46" y="394" font-size="9.8" fill="#7a2a2a">404：allNoRoute（NoRoute handler）</text>
+  <text x="46" y="420" font-size="9" fill="#7a2a2a">按配置可能先 TSR/405，才 404</text>
+
+  <path d="M840,232 L720,232 L720,286" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="726" y="264" font-size="9" fill="#2f6f4f">yes</text>
+  <path d="M840,208 L255,208 L255,286" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="262" y="264" font-size="9" fill="#7a2a2a">no</text>
+
+  <rect x="30" y="458" width="1020" height="60" rx="12" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="46" y="480" font-size="11" font-weight="600" fill="#1d1d1f">为什么先匹配后 Next</text>
+  <text x="46" y="500" font-size="9.5" fill="#6e6e73">radix 匹配定位到 handlers 链（中间件+业务），再 c.Next() 从 index 0 依次跑；HandleMethodNotAllowed 开启才返 405（否则 404）。</text>
+</svg>
