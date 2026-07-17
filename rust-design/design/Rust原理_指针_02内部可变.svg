@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="530" viewBox="0 0 1080 530" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="530" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Rust 内部可变 · UnsafeCell 是唯一根基 · Cell / RefCell 建其上</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">内部可变(interior mutability):通过 &amp;T（不可变引用）也能改内部 —— 绕过"&amp;mut 唯一"的编译期规则（受控,非破坏安全）</text>
+
+  <!-- UnsafeCell root (purple = 接口/根基原语) -->
+  <rect x="40" y="80" width="1000" height="120" rx="14" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="62" y="106" font-size="12.5" font-weight="600" fill="#3d2a5a">UnsafeCell&lt;T&gt; · 唯一的根基（编译器认可的唯一口子）</text>
+  <text x="62" y="126" font-size="9.5" fill="#3d2a5a">library/core/src/cell.rs:2323 · #[lang="unsafe_cell"]</text>
+  <rect x="62" y="140" width="470" height="48" rx="8" fill="#ffffff" stroke="#d9c7ec"/>
+  <text x="297" y="160" font-size="10" font-weight="600" text-anchor="middle" fill="#3d2a5a">impl !Sync for UnsafeCell（:2328）</text>
+  <text x="297" y="176" font-size="9" text-anchor="middle" fill="#3d2a5a">编译器认可的"可通过 &amp;T 改内容"的唯一原语</text>
+  <rect x="548" y="140" width="470" height="48" rx="8" fill="#f4eefb" stroke="#d9c7ec"/>
+  <text x="783" y="160" font-size="10" font-weight="600" text-anchor="middle" fill="#3d2a5a">所有内部可变类型都建在它上</text>
+  <text x="783" y="176" font-size="9" text-anchor="middle" fill="#3d2a5a">它的 !Sync 是这些类型 !Sync 的根源</text>
+
+  <!-- Cell (blue) -->
+  <rect x="40" y="224" width="490" height="150" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="62" y="250" font-size="12" font-weight="600" fill="#1b2a4a">Cell&lt;T&gt; · 值进出</text>
+  <text x="62" y="270" font-size="9" fill="#5b7db1">library/core/src/cell.rs:312</text>
+  <text x="62" y="292" font-size="10" fill="#1b2a4a">· get / set / replace —— 值进出,无引用借用</text>
+  <text x="62" y="314" font-size="10" fill="#1b2a4a">· 不给内部的引用,只整个值换出/换入</text>
+  <rect x="62" y="326" width="446" height="30" rx="8" fill="#ffffff" stroke="#cfe0f2"/>
+  <text x="285" y="345" font-size="9.5" font-weight="600" text-anchor="middle" fill="#1b2a4a">适合 Copy 小值</text>
+
+  <!-- RefCell (red = 运行时借用检查违反 panic) -->
+  <rect x="550" y="224" width="490" height="150" rx="14" fill="#fbeaea" stroke="#e7c3c3" filter="url(#soft)"/>
+  <text x="572" y="250" font-size="12" font-weight="600" fill="#4a1414">RefCell&lt;T&gt; · 运行时借用检查</text>
+  <text x="572" y="270" font-size="9" fill="#7a2a2a">library/core/src/cell.rs:849</text>
+  <text x="572" y="292" font-size="10" fill="#4a1414">· borrow() / borrow_mut() 运行时记借用状态</text>
+  <text x="572" y="314" font-size="10" fill="#4a1414">· 把编译期借用检查挪到运行时</text>
+  <rect x="572" y="326" width="446" height="30" rx="8" fill="#ffffff" stroke="#e7c3c3"/>
+  <text x="795" y="345" font-size="9.5" font-weight="600" text-anchor="middle" fill="#4a1414">违反（如同时两个 borrow_mut）则 panic</text>
+
+  <!-- connectors from root down to both -->
+  <path d="M290,200 L290,224" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M795,200 L795,224" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="540" y="216" font-size="9" text-anchor="middle" fill="#a1a1a6">建在 UnsafeCell 上</text>
+
+  <text x="30" y="404" font-size="9.5" fill="#a1a1a6">为什么 UnsafeCell 是根基:正常 &amp;T 不能改(编译期);UnsafeCell 是编译器唯一开的口子(!Sync),让"共享可变"可能 —— Cell/RefCell/Rc 都用它</text>
+  <text x="30" y="428" font-size="9" fill="#a1a1a6">Cell/RefCell 封装成安全 API —— 受控绕过,非破坏安全 · RefCell 慎用(违反运行时 panic) · 源码基准 Rust 1.99.0</text>
+</svg>

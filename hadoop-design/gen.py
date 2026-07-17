@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""quiche-design 交互式核心原理图谱生成器（自包含 · 离线 · 双主题）。
+"""hadoop-design 交互式核心原理图谱生成器（自包含 · 离线 · 双主题）。
 
 单向流水线：design/(md + 手绘 svg) → gen.py → index.html
 - design/ 是内容真源；本脚本只编译不创作。
@@ -8,7 +8,7 @@
 - 自包含：仅读同级 design/，默认写同级 index.html。
 
 用法：
-  cd quiche-design && python3 gen.py
+  cd hadoop-design && python3 gen.py
   python3 gen.py --design-dir <dir> --out <path>
 """
 import os
@@ -19,7 +19,7 @@ import argparse
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
-_ap = argparse.ArgumentParser(description="生成 quiche 交互式核心原理图谱（离线自包含 HTML）")
+_ap = argparse.ArgumentParser(description="生成 hadoop 交互式核心原理图谱（离线自包含 HTML）")
 _ap.add_argument("--design-dir", default=None, help="手绘 SVG + prose 文档目录（默认：脚本同级 ./design）")
 _ap.add_argument("--out", default=None, help="输出 HTML 路径（默认：脚本同级 index.html）")
 _args, _ = _ap.parse_known_args()
@@ -34,49 +34,49 @@ def _first_dir(*cands):
 
 _DESIGN_DIR = _first_dir(
     _args.design_dir,
-    os.environ.get("QUICHE_DESIGN_DIR"),
+    os.environ.get("HADOOP_DESIGN_DIR"),
     os.path.join(HERE, "design"),
 )
-OUT = _args.out or os.environ.get("QUICHE_DESIGN_OUT") or os.path.join(HERE, "index.html")
+OUT = _args.out or os.environ.get("HADOOP_DESIGN_OUT") or os.path.join(HERE, "index.html")
 
 # ===================================================================== #
 # 一、主线注册表 —— 唯一需随项目调整的数据块
-#     新家族（传输协议库 · QUIC/HTTP3 · Google QUICHE C++）：元模式 = 接口 × 能力域 × 时机。
+#     家族 4 分布式存储/文件系统（HDFS + YARN + MapReduce）：元模式 = 接触面 × 能力域 × 时机。
 #     全景 + 3 接口主线 + 8 支撑能力域。
 # ===================================================================== #
 MAINLINES = [
-    ("Quiche原理_全景主线框架", "pano", "◇", "全景主线框架",
-     "新家族传输协议库：双维模型 · 总架构 · IO 抽象 · 依赖矩阵 · 三条贯穿声明"),
+    ("Hadoop原理_全景主线框架", "pano", "◇", "全景主线框架",
+     "家族 4 分布式存储/文件系统：双维模型 · 总架构 · 读写数据流 · 依赖矩阵 · 三条贯穿声明"),
 
-    ("Quiche原理_接口_会话与连接", "iface", "⚙", "会话与连接",
-     "三层对象 QuicConnection/Session/Stream + Visitor 回调 · C++ OO 观察者风格"),
-    ("Quiche原理_接口_IO与事件驱动", "iface", "⇄", "IO 与事件驱动",
-     "灵魂：ProcessUdpPacket 入 / QuicPacketWriter 出 / QuicAlarm 时钟 · 应用编排循环"),
-    ("Quiche原理_接口_HTTP与流", "iface", "◷", "HTTP 与流",
-     "QuicSpdySession 承载 HTTP/2·HTTP/3 · 服务端 QuicDispatcher 按 CID 接客"),
+    ("Hadoop原理_接口_FileSystem与Shell", "iface", "⚙", "FileSystem API 与 fs shell",
+     "FileSystem 可插拔门面 · DistributedFileSystem 委托 DFSClient · fs shell 同路"),
+    ("Hadoop原理_接口_YARN应用提交", "iface", "⇄", "YARN 应用提交",
+     "YarnClient 提交 → RM 启动 AM 容器 → AM 自申请 Container · 资源仲裁与应用调度解耦"),
 
-    ("Quiche原理_支撑_包与帧编解码", "support", "▤", "包与帧编解码",
-     "QuicFramer 解析 / QuicPacketCreator 组装 · UDP→包→帧 · varint · coalesce"),
-    ("Quiche原理_支撑_TLS握手与加密", "support", "⛨", "TLS 握手与加密",
-     "灵魂：TLS 1.3 内嵌 · QuicCryptoStream · 三加密级 · AEAD · 1-RTT/0-RTT"),
-    ("Quiche原理_支撑_流与流量控制", "support", "▦", "流与流量控制",
-     "一连接多流无队头阻塞 · QuicFlowController 流级/连接级两级窗口"),
-    ("Quiche原理_支撑_丢包检测与恢复", "support", "◉", "丢包检测与恢复",
-     "单调包号 · QuicSentPacketManager · UberLossAlgorithm 判丢 · PTO · 重传新包号"),
-    ("Quiche原理_支撑_拥塞控制", "support", "⚡", "拥塞控制",
-     "可插拔 SendAlgorithmInterface · BBRv1/v2 + CUBIC · 用户态热切换 · pacing"),
-    ("Quiche原理_支撑_连接管理与迁移", "support", "◫", "连接管理与迁移",
-     "Connection ID 标识非四元组 · QuicConnectionIdManager · PATH_CHALLENGE 换网不断"),
-    ("Quiche原理_支撑_HTTP3与QPACK", "support", "✲", "HTTP/3 与 QPACK",
-     "请求映射到 QUIC 流 · 静/动表 + Huffman · blocking manager 抗队头阻塞"),
-    ("Quiche原理_支撑_可靠性与抗攻击", "support", "◐", "可靠性与抗攻击",
-     "QuicDispatcher 入口关卡 · 3× 放大限制 · Retry 地址验证 · 缓冲限流 · stateless reset"),
+    ("Hadoop原理_支撑_NameNode命名空间与元数据", "support", "◆", "NameNode 命名空间与元数据",
+     "灵魂：全内存 INode 树 · FsImage 快照 + EditLog 预写日志 · 检查点合并 · 先日志后内存"),
+    ("Hadoop原理_支撑_DataNode块存储", "support", "▤", "DataNode 块存储",
+     "只认块不认文件 · block + .meta 双文件 · FsDatasetImpl 多卷 volumeMap · 校验和自愈"),
+    ("Hadoop原理_支撑_块放置与复制策略", "support", "▦", "块放置与复制策略",
+     "一近两远跨两机架 · BlockPlacementPolicyDefault · RedundancyMonitor 期望态对账"),
+    ("Hadoop原理_支撑_Pipeline写数据流", "support", "◉", "Pipeline 写数据流",
+     "client→DN1→DN2→DN3 流水复制 · packet/ack 队列 · genStamp 故障重建管道"),
+    ("Hadoop原理_支撑_心跳与块汇报对账", "support", "⚡", "心跳与块汇报对账",
+     "灵魂：心跳 3s 保活+搭车回令 · 块汇报全量 6h+增量即时 · blocksMap 内存重建"),
+    ("Hadoop原理_支撑_HA高可用", "support", "⛨", "HA 高可用",
+     "Active/Standby + JournalNode 多数派 EditLog + ZKFC 选主切换 · epoch/fencing 防脑裂"),
+    ("Hadoop原理_支撑_YARN资源调度", "support", "◫", "YARN 资源调度",
+     "RM 仲裁/AM 调度/NM 执行三权分立 · Capacity/Fair 队列 · 数据本地性"),
+    ("Hadoop原理_支撑_MapReduce执行", "support", "✲", "MapReduce 执行",
+     "就近读块的 Map → 拉取归并的 Shuffle → 汇聚输出的 Reduce · MRAppMaster 是一种 AM"),
+    ("Hadoop原理_支撑_Balancer与Federation", "support", "◐", "Balancer 与 Federation",
+     "Balancer 均衡磁盘利用率(不改副本) · Federation/RBF 多 NameNode 拆命名空间"),
 ]
 
 CAT_ORDER = [
     ("pano", "全景框架 · 先读这一篇"),
-    ("iface", "接口主线 · 应用如何用（会话连接 / IO 事件 / HTTP 与流）"),
-    ("support", "支撑主线 · 协议内部（8 条能力域）"),
+    ("iface", "接触面主线 · 外部如何用（FileSystem API/Shell / YARN 提交）"),
+    ("support", "支撑主线 · 存储与计算内部（8 条能力域）"),
 ]
 
 # ===================================================================== #
@@ -86,44 +86,50 @@ CAT_ORDER = [
 #   坐标系 = 该总架构 SVG 的 viewBox（ARCH_W×ARCH_H），生成期换算成百分比定位。
 #   两条覆盖铁律：① 图上每个模块都有热区 ② 每条主线都被某热区覆盖（未覆盖者自动兜底成 chip）。
 # ===================================================================== #
-PANO_NAME = "Quiche原理_全景主线框架"
-ARCH_W, ARCH_H = 1020, 670  # 必须与 ARCH_SVG_NAME 的 viewBox 一致
+PANO_NAME = "Hadoop原理_全景主线框架"
+ARCH_W, ARCH_H = 1040, 780  # 必须与 ARCH_SVG_NAME 的 viewBox 一致
 # (x, y, w, h, 主线name) —— 一个模块可拆多行热区，一条主线可被多个区域指向
 ARCH_HOTSPOTS = [
-    # 顶部 powers 标题条 → 全景总览
-    (30, 44, 960, 46, "Quiche原理_全景主线框架"),
-    # ① 应用层（提供 IO 原语、用 Session/Stream API）
-    (30, 106, 960, 30, "Quiche原理_接口_会话与连接"),
-    (48, 140, 290, 26, "Quiche原理_接口_IO与事件驱动"),   # 收 UDP→ProcessUdpPacket
-    (350, 140, 290, 26, "Quiche原理_接口_IO与事件驱动"),  # 提供 Writer+AlarmFactory
-    (652, 140, 318, 26, "Quiche原理_接口_会话与连接"),    # 经 Session/Stream 读写 + Visitor
-    # ② QuicDispatcher（服务端接客 + 入口防护）——左右拆两块
-    (30, 188, 478, 60, "Quiche原理_接口_HTTP与流"),        # Dispatcher 接客/demux
-    (512, 188, 478, 60, "Quiche原理_支撑_可靠性与抗攻击"), # 入口关卡/抗攻击
-    # ③ QuicSession（左）
-    (30, 262, 470, 84, "Quiche原理_接口_会话与连接"),      # 标题 + GetOrCreateStream/WritevData
-    (30, 350, 470, 20, "Quiche原理_支撑_HTTP3与QPACK"),     # QuicSpdySession HTTP/3 语义
-    (30, 372, 470, 18, "Quiche原理_支撑_流与流量控制"),     # QuicStream 收发缓冲 + 流控
-    # ④ QuicConnection（右）
-    (520, 262, 470, 84, "Quiche原理_支撑_连接管理与迁移"),  # 状态机 + 收发包 inner boxes
-    (520, 350, 232, 20, "Quiche原理_支撑_丢包检测与恢复"),  # SentPacketManager（丢包）
-    (756, 350, 234, 20, "Quiche原理_支撑_拥塞控制"),        # SentPacketManager（拥塞）
-    (520, 372, 470, 18, "Quiche原理_接口_IO与事件驱动"),    # 定时器经 AlarmFactory
-    # ⑤ QuicFramer + 加密
-    (30, 410, 620, 30, "Quiche原理_支撑_包与帧编解码"),     # 标题条
-    (48, 444, 290, 76, "Quiche原理_支撑_包与帧编解码"),     # Framer/Creator
-    (354, 444, 296, 76, "Quiche原理_支撑_TLS握手与加密"),   # CryptoStream + AEAD
-    # ⑥ IO 抽象（Writer / AlarmFactory）
-    (670, 406, 320, 130, "Quiche原理_接口_IO与事件驱动"),
+    # 顶部说明条 → 全景总览
+    (30, 44, 980, 40, "Hadoop原理_全景主线框架"),
+    # 接触面 band
+    (40, 114, 232, 42, "Hadoop原理_接口_FileSystem与Shell"),   # FileSystem API
+    (284, 114, 232, 42, "Hadoop原理_接口_FileSystem与Shell"),  # fs shell
+    (528, 114, 232, 42, "Hadoop原理_接口_YARN应用提交"),        # YARN Client
+    (772, 114, 228, 42, "Hadoop原理_支撑_MapReduce执行"),       # MapReduce Job
+    # NameNode 盒子
+    (44, 202, 452, 28, "Hadoop原理_支撑_NameNode命名空间与元数据"),   # 标题
+    (60, 234, 420, 36, "Hadoop原理_支撑_NameNode命名空间与元数据"),   # 命名空间树
+    (60, 276, 420, 36, "Hadoop原理_支撑_NameNode命名空间与元数据"),   # FsImage+EditLog
+    (60, 318, 420, 48, "Hadoop原理_支撑_块放置与复制策略"),           # BlockManager
+    # HA 盒子
+    (512, 202, 484, 28, "Hadoop原理_支撑_HA高可用"),   # 标题
+    (528, 234, 452, 34, "Hadoop原理_支撑_HA高可用"),   # Standby
+    (528, 274, 452, 34, "Hadoop原理_支撑_HA高可用"),   # JournalNode
+    (528, 314, 452, 52, "Hadoop原理_支撑_HA高可用"),   # ZKFC
+    # 心跳/块汇报 strip
+    (44, 388, 952, 24, "Hadoop原理_支撑_心跳与块汇报对账"),
+    # DataNode / pipeline row
+    (44, 418, 476, 38, "Hadoop原理_支撑_DataNode块存储"),
+    (528, 418, 468, 38, "Hadoop原理_支撑_Pipeline写数据流"),
+    # ResourceManager
+    (60, 540, 420, 46, "Hadoop原理_支撑_YARN资源调度"),   # Scheduler
+    (60, 592, 420, 46, "Hadoop原理_支撑_YARN资源调度"),   # ApplicationsManager
+    # MapReduce on YARN
+    (512, 508, 484, 70, "Hadoop原理_支撑_MapReduce执行"),
+    # 运维 strip
+    (512, 586, 484, 52, "Hadoop原理_支撑_Balancer与Federation"),
+    # NodeManager row
+    (44, 676, 952, 72, "Hadoop原理_支撑_YARN资源调度"),
 ]
 # 没有独立架构区域、需底部 chip 兜底的主线（本项目 12 主线全部落在图上 → 空）
 ARCH_ALWAYS_CHIP = []
 
 BRAND_TITLE = "一切知识皆索引"
-BRAND_SUB = "Google QUICHE 核心原理 · 交互式图谱"
-HOME_DESC = ("Google QUICHE 核心原理设计文档库的离线交互图谱——新家族（QUIC + HTTP/3 传输协议库 · C++ · 驱动 Chromium/Envoy）。"
-             "12 条主线、15 张手绘原理图，全部回本地源码核实。点击项目总架构图任意模块即可下钻到对应主线。")
-ARCH_SVG_NAME = "Quiche原理_全景_02总架构.svg"
+BRAND_SUB = "Apache Hadoop 核心原理 · 交互式图谱"
+HOME_DESC = ("Apache Hadoop（HDFS + YARN + MapReduce）核心原理设计文档库的离线交互图谱——家族 4 分布式存储/文件系统。"
+             "12 条主线、25 张手绘原理图，全部回本地源码核实（commit 6f5d1374）。点击项目总架构图任意模块即可下钻到对应主线。")
+ARCH_SVG_NAME = "Hadoop原理_全景_02总架构.svg"
 
 # ===================================================================== #
 # 二、md 解析 —— 从每篇 design 文档抽取结构化内容
@@ -225,7 +231,8 @@ _all_refs = set()
 for d in DOCS.values():
     for _, _, svg in d["walk"]:
         _all_refs.add(svg)
-_on_disk = {f for f in os.listdir(_DESIGN_DIR) if f.endswith(".svg")}
+_on_disk = {f for f in os.listdir(_DESIGN_DIR)
+            if f.endswith(".svg") and f != "icon.svg"}  # icon.svg 是站点图标，非原理图
 _missing = _all_refs - _on_disk
 _orphan = _on_disk - _all_refs
 
@@ -272,7 +279,7 @@ def build_archnav():
                  % "".join(items))
     return (
         '<div class="arch-wrap">'
-        '<img alt="Google QUICHE 项目总架构图" src="data:image/svg+xml;base64,%s"/>'
+        '<img alt="Apache Hadoop 项目总架构图" src="data:image/svg+xml;base64,%s"/>'
         '%s</div>%s' % (_ARCH_SVG, "".join(hots), chips))
 
 
@@ -442,12 +449,12 @@ b{color:var(--c-ink);font-weight:700}
 APP_JS = r"""
 (function(){
   var root=document.documentElement;
-  var saved=localStorage.getItem('quiche-atlas-theme');
+  var saved=localStorage.getItem('hadoop-atlas-theme');
   if(saved) root.setAttribute('data-theme',saved);
   function toggleTheme(){
     var cur=root.getAttribute('data-theme')==='light'?'':'light';
     if(cur) root.setAttribute('data-theme',cur); else root.removeAttribute('data-theme');
-    localStorage.setItem('quiche-atlas-theme',cur);
+    localStorage.setItem('hadoop-atlas-theme',cur);
     var b=document.getElementById('themeBtn'); if(b) b.textContent=cur==='light'?'☀ 浅色':'☾ 深色';
   }
   var tb=document.getElementById('themeBtn');

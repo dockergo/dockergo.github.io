@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="520" viewBox="0 0 1080 520" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="520" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="700" fill="#1d1d1f">REST catalog · 把提交与并发收敛到服务端</text>
+  <text x="30" y="49" font-size="9.5" fill="#a1a1a6">客户端不直接碰对象存储做 CAS,而是把 commit 请求发给 REST 服务,服务端统一裁决 · RESTSessionCatalog</text>
+
+  <!-- old: client-side CAS -->
+  <rect x="30" y="72" width="500" height="180" rx="13" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="46" y="96" font-size="11" font-weight="700" fill="#5a3410">Hadoop/JDBC/Hive:客户端侧 CAS</text>
+  <g text-anchor="middle" font-size="8.6">
+    <rect x="50" y="112" width="130" height="34" rx="8" fill="#f4eefb" stroke="#d9c7ec"/><text x="115" y="133" fill="#3d2a5a">引擎 A</text>
+    <rect x="50" y="156" width="130" height="34" rx="8" fill="#f4eefb" stroke="#d9c7ec"/><text x="115" y="177" fill="#3d2a5a">引擎 B</text>
+  </g>
+  <rect x="330" y="132" width="170" height="44" rx="10" fill="#fbf3e4" stroke="#e6d3b0"/>
+  <text x="415" y="150" font-size="9" font-weight="700" text-anchor="middle" fill="#5a3410">存储 / 元存储</text>
+  <text x="415" y="167" font-size="7.6" text-anchor="middle" fill="#93762e">rename / 条件 UPDATE</text>
+  <line x1="180" y1="129" x2="330" y2="150" stroke="#b8b8bf" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="180" y1="173" x2="330" y2="158" stroke="#b8b8bf" stroke-width="1.3" marker-end="url(#ar)"/>
+  <text x="46" y="212" font-size="8.6" fill="#93762e">每个客户端各自做 CAS,依赖底层原子原语强弱</text>
+  <text x="46" y="230" font-size="8.6" fill="#93762e">协议/凭据/引擎版本耦合;S3 无原子 rename 时 Hadoop 弱</text>
+
+  <!-- new: REST server-side -->
+  <rect x="550" y="72" width="500" height="180" rx="13" fill="#e7f0fb" stroke="#b9d2ef"/>
+  <text x="566" y="96" font-size="11" font-weight="700" fill="#1b2a4a">REST:服务端侧 CAS</text>
+  <g text-anchor="middle" font-size="8.6">
+    <rect x="570" y="112" width="130" height="34" rx="8" fill="#f4eefb" stroke="#d9c7ec"/><text x="635" y="133" fill="#3d2a5a">引擎 A</text>
+    <rect x="570" y="156" width="130" height="34" rx="8" fill="#f4eefb" stroke="#d9c7ec"/><text x="635" y="177" fill="#3d2a5a">引擎 B</text>
+  </g>
+  <rect x="830" y="126" width="200" height="56" rx="10" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="930" y="148" font-size="9.5" font-weight="700" text-anchor="middle" fill="#1b2a4a">REST catalog 服务</text>
+  <text x="930" y="166" font-size="7.6" text-anchor="middle" fill="#5b7db1">统一 CAS + 鉴权 + 视图</text>
+  <line x1="700" y1="129" x2="830" y2="150" stroke="#b8b8bf" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="700" y1="173" x2="830" y2="158" stroke="#b8b8bf" stroke-width="1.3" marker-end="url(#ar)"/>
+  <text x="566" y="212" font-size="8.6" fill="#5b7db1">客户端发 commit 请求,服务端裁决冲突(返回冲突则客户端重试)</text>
+  <text x="566" y="230" font-size="8.6" fill="#5b7db1">引擎与后端解耦:换后端不动引擎;可托管、多引擎共享</text>
+
+  <!-- commit contract -->
+  <rect x="30" y="268" width="1020" height="90" rx="12" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="46" y="292" font-size="10.5" font-weight="700" fill="#12402a">统一提交契约(无论哪种 catalog):commit(base, metadata)</text>
+  <g text-anchor="middle" font-size="8.8">
+    <rect x="60" y="306" width="150" height="34" rx="8" fill="#e7f0fb" stroke="#b9d2ef"/><text x="135" y="327" fill="#1b2a4a">refresh 拿 base</text>
+    <rect x="250" y="306" width="150" height="34" rx="8" fill="#f5faf6" stroke="#cfe6d5"/><text x="325" y="327" fill="#12402a">apply 建 metadata</text>
+    <rect x="440" y="306" width="170" height="34" rx="8" fill="#f4eefb" stroke="#d9c7ec"/><text x="525" y="327" fill="#3d2a5a">校验 base==current</text>
+    <rect x="650" y="306" width="150" height="34" rx="8" fill="#e7f0fb" stroke="#b9d2ef"/><text x="725" y="327" fill="#1b2a4a">原子换指针</text>
+    <rect x="840" y="306" width="180" height="34" rx="8" fill="#f9ecec" stroke="#e8c9c9"/><text x="930" y="327" fill="#7a2230">冲突→重试/失败</text>
+  </g>
+  <line x1="210" y1="323" x2="250" y2="323" stroke="#b8b8bf" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="400" y1="323" x2="440" y2="323" stroke="#b8b8bf" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="610" y1="323" x2="650" y2="323" stroke="#b8b8bf" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="800" y1="323" x2="840" y2="323" stroke="#b8b8bf" stroke-width="1.2" marker-end="url(#ar)"/>
+
+  <rect x="30" y="374" width="1020" height="60" rx="12" fill="#f7f9fc" stroke="#e5ecf5"/>
+  <text x="46" y="398" font-size="10.5" font-weight="700" fill="#1b2a4a">REST 还带来什么</text>
+  <text x="46" y="419" font-size="9.3" fill="#5b7db1">集中鉴权/审计、服务端可做 multi-table 事务/视图/凭据下发(vended credentials)、隐藏后端差异 —— 客户端只认一个 HTTP 协议。</text>
+
+  <rect x="30" y="450" width="1020" height="56" rx="12" fill="#f0f0f4" stroke="#d2d2d7"/>
+  <text x="46" y="474" font-size="10" font-weight="700" fill="#48484a">选型要点</text>
+  <text x="46" y="494" font-size="9" fill="#6e6e73">生产多写并发/多引擎 → REST 或 Hive/JDBC(集中式);对象存储上避免纯 Hadoop catalog(无原子 rename → 提交不可靠)。</text>
+</svg>

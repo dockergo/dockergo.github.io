@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="530" viewBox="0 0 1080 530" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1080" height="530" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">ORC 接触面 · VectorizedRowBatch + ColumnVector 列式内存批</text>
+  <text x="30" y="50" font-size="12" fill="#a1a1a6">来自 Hive storage-api (非 ORC 树内);一批默认 1024 行一列,分摊调用开销 + 用满 SIMD</text>
+
+  <!-- batch container -->
+  <rect x="60" y="72" width="600" height="300" rx="14" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="80" y="97" font-size="13" font-weight="600" fill="#3d2a5a">VectorizedRowBatch (struct root, createRowBatch :539)</text>
+  <text x="80" y="116" font-size="9.5" fill="#8a72b0">每子一个 ColumnVector;非 struct 单列 &#183; 默认 DEFAULT_SIZE = 1024 行</text>
+
+  <!-- column vectors -->
+  <rect x="80" y="130" width="180" height="70" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="170" y="155" font-size="10.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">LongColumnVector</text>
+  <text x="170" y="175" font-size="9" fill="#5b7db1" text-anchor="middle">整数 / bool / date</text>
+  <text x="170" y="191" font-size="8.5" fill="#5b7db1" text-anchor="middle">long[] vector</text>
+
+  <rect x="270" y="130" width="180" height="70" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="360" y="155" font-size="10.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">BytesColumnVector</text>
+  <text x="360" y="175" font-size="9" fill="#5b7db1" text-anchor="middle">字符串 / binary</text>
+  <text x="360" y="191" font-size="8.5" fill="#5b7db1" text-anchor="middle">byte[][] + start/length</text>
+
+  <rect x="460" y="130" width="180" height="70" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="550" y="155" font-size="10.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">DoubleColumnVector</text>
+  <text x="550" y="175" font-size="9" fill="#5b7db1" text-anchor="middle">浮点</text>
+  <text x="550" y="191" font-size="8.5" fill="#5b7db1" text-anchor="middle">double[] vector</text>
+
+  <rect x="80" y="212" width="180" height="70" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="170" y="237" font-size="10.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">DecimalColumnVector</text>
+  <text x="170" y="257" font-size="9" fill="#5b7db1" text-anchor="middle">decimal</text>
+  <text x="170" y="273" font-size="8.5" fill="#5b7db1" text-anchor="middle">precision / scale</text>
+
+  <rect x="270" y="212" width="370" height="70" rx="11" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="455" y="237" font-size="10.5" font-weight="600" fill="#3d2a5a" text-anchor="middle">List / Map / StructColumnVector (复合)</text>
+  <text x="455" y="257" font-size="9" fill="#8a72b0" text-anchor="middle">递归含子 ColumnVector</text>
+  <text x="455" y="273" font-size="8.5" fill="#8a72b0" text-anchor="middle">镜像类型树的复合节点</text>
+
+  <!-- present null -->
+  <rect x="80" y="296" width="560" height="60" rx="11" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="360" y="320" font-size="10.5" font-weight="600" fill="#1d1d1f" text-anchor="middle">每 ColumnVector 有 isNull[] + noNulls 标志</text>
+  <text x="360" y="340" font-size="9.5" fill="#6e6e73" text-anchor="middle">TreeReader.nextVector 填批时先应用 PRESENT null stream (TreeReaderFactory.java:405)</text>
+
+  <!-- right: fill flow + why -->
+  <rect x="700" y="72" width="320" height="140" rx="12" fill="#f5faf6" stroke="#cfe6d5" filter="url(#soft)"/>
+  <text x="860" y="98" font-size="12" font-weight="600" fill="#2c5a3a" text-anchor="middle">读端填批</text>
+  <text x="860" y="124" font-size="10" fill="#2f6f4f" text-anchor="middle">TreeReader.nextVector(</text>
+  <text x="860" y="144" font-size="10" fill="#2f6f4f" text-anchor="middle">ColumnVector, isNull, size)</text>
+  <text x="860" y="168" font-size="9.5" fill="#2f6f4f" text-anchor="middle">① 先应用 PRESENT null stream</text>
+  <text x="860" y="188" font-size="9.5" fill="#2f6f4f" text-anchor="middle">② 再解码填该列的值</text>
+
+  <rect x="700" y="228" width="320" height="144" rx="12" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="860" y="254" font-size="12" font-weight="600" fill="#1d1d1f" text-anchor="middle">为何向量批</text>
+  <text x="860" y="280" font-size="10" fill="#6e6e73" text-anchor="middle">一次处理一批 (默认 1024 行) 的一列</text>
+  <text x="860" y="302" font-size="10" fill="#6e6e73" text-anchor="middle">列式向量化,分摊调用开销</text>
+  <text x="860" y="324" font-size="10" fill="#6e6e73" text-anchor="middle">用满 CPU cache / SIMD</text>
+  <text x="860" y="350" font-size="9.5" fill="#a1a1a6" text-anchor="middle">列存高性能读写的内存表示 (非逐行)</text>
+
+  <text x="540" y="410" font-size="9.5" fill="#a1a1a6" text-anchor="middle">ColumnVector 按类型分子类,与 TypeDescription 类型树对应;VectorizedRowBatch 是 Hive storage-api 依赖,ORC 复用非自定义</text>
+</svg>

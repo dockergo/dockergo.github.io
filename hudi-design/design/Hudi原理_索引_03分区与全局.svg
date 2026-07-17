@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="880" height="420" viewBox="0 0 880 420" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="880" height="420" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">作用域：分区内 vs 全局，与一致性哈希桶</text>
+  <text x="30" y="49" font-size="10" fill="#a1a1a6">isGlobal() 决定键唯一性范围；这是与索引类型正交的一维</text>
+
+  <!-- partition-scoped -->
+  <rect x="30" y="70" width="400" height="150" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="46" y="92" font-size="10.5" font-weight="700" fill="#12402a">分区内（BLOOM/SIMPLE/BUCKET）</text>
+  <text x="46" y="112" font-size="9" fill="#2f6f4f">键在其所属分区内唯一；查找只在目标分区，快。</text>
+  <text x="46" y="130" font-size="9" fill="#2f6f4f">要求：同一键始终落同一分区。</text>
+  <rect x="46" y="142" width="368" height="64" rx="9" fill="#e6f7ee" stroke="#bfe0cd"/><text x="60" y="164" font-size="8.8" fill="#12402a">✓ 最快（查找范围＝一个分区）</text><text x="60" y="184" font-size="8.8" fill="#7a2a2a">✗ 若键换分区 → 会产生重复</text><text x="60" y="200" font-size="8.4" fill="#6e9a7c">适合：分区键稳定的事实表</text>
+
+  <!-- global -->
+  <rect x="450" y="70" width="400" height="150" rx="12" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="466" y="92" font-size="10.5" font-weight="700" fill="#3d2a5a">全局（GLOBAL_* / record-level global）</text>
+  <text x="466" y="112" font-size="9" fill="#7a5a95">键在全表唯一；跨分区查找并保证唯一。</text>
+  <text x="466" y="130" font-size="9" fill="#7a5a95">支持"键的分区可变"（记录换分区）。</text>
+  <rect x="466" y="142" width="368" height="64" rx="9" fill="#faf4fb" stroke="#e2d2ee"/><text x="480" y="164" font-size="8.8" fill="#3d2a5a">✓ 跨分区唯一（如维度表主键）</text><text x="480" y="184" font-size="8.8" fill="#7a2a2a">✗ 查找开销大（扫所有分区 / 靠 MDT）</text><text x="480" y="200" font-size="8.4" fill="#a98bbd">适合：需全局去重的维度表</text>
+
+  <!-- consistent hashing -->
+  <rect x="30" y="240" width="820" height="162" rx="12" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="46" y="262" font-size="10.5" font-weight="700" fill="#12402a">一致性哈希桶（CONSISTENT_HASHING · 仅 MOR）</text>
+  <text x="46" y="282" font-size="9" fill="#2f6f4f">SIMPLE bucket 桶数一旦定死难改；一致性哈希用 HoodieConsistentHashingMetadata 记哈希环划分，clustering 时可动态 split/merge 桶</text>
+
+  <g font-size="8.8" text-anchor="middle">
+    <rect x="60" y="298" width="150" height="46" rx="9" fill="#e6f7ee" stroke="#bfe0cd"/><text x="135" y="318" fill="#12402a">数据增长</text><text x="135" y="335" fill="#2f6f4f">某些桶过大/不均</text>
+    <rect x="300" y="298" width="180" height="46" rx="9" fill="#faf4fb" stroke="#e2d2ee"/><text x="390" y="318" fill="#3d2a5a">clustering 触发调整</text><text x="390" y="335" fill="#7a5a95">split 大桶 / merge 小桶</text>
+    <rect x="570" y="298" width="230" height="46" rx="9" fill="#e6f7ee" stroke="#bfe0cd"/><text x="685" y="318" fill="#12402a">桶重新均衡</text><text x="685" y="335" fill="#2f6f4f">写吞吐与查询恢复均衡</text>
+  </g>
+  <line x1="210" y1="321" x2="300" y2="321" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+  <line x1="480" y1="321" x2="570" y2="321" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+  <text x="46" y="378" font-size="8.8" fill="#2f6f4f">canIndexLogFiles()：MOR + Bucket 可把插入直送 log（免小文件塞入路径），提写吞吐。</text>
+  <text x="46" y="394" font-size="8.6" fill="#6e6e73">选错作用域 = 要么重复键、要么白付全局开销。</text>
+</svg>

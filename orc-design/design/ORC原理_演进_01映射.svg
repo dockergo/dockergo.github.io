@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="600" viewBox="0 0 980 600"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="980" height="600" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">schema 映射：默认按列名（加列/删列/重排）vs 无名或强制时按位置回退</text>
+
+  <!-- Header SchemaEvolution -->
+  <rect x="270" y="52" width="440" height="80" rx="12" fill="#f7f7f9" stroke="#e3e3e8" filter="url(#soft)"/>
+  <text x="490" y="76" font-size="12" font-weight="600" fill="#1d1d1f" text-anchor="middle">SchemaEvolution（SchemaEvolution.java:39）</text>
+  <text x="490" y="98" font-size="10.5" fill="#6e6e73" text-anchor="middle">buildConversion(fileSchema, readerSchema, positionalLevels)（:129）</text>
+  <text x="490" y="118" font-size="10.5" fill="#6e6e73" text-anchor="middle">递归建每列转换关系 · readerIncluded[] 标读取列（:83）</text>
+
+  <!-- Decision -->
+  <rect x="345" y="148" width="290" height="52" rx="12" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+  <text x="490" y="172" font-size="11.5" font-weight="600" fill="#5a3410" text-anchor="middle">字段有意义列名 且 未强制位置？</text>
+  <text x="490" y="190" font-size="9.5" fill="#93762e" text-anchor="middle">hasColumnNames（:148）</text>
+
+  <path d="M345,174 L120,174 L120,238" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="200" y="168" font-size="10" fill="#2f6f4f">是 → 按名</text>
+  <path d="M635,174 L860,174 L860,238" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="690" y="168" font-size="10" fill="#93762e">否（_colN / 强制）→ 按位置</text>
+
+  <!-- Left panel 按名 -->
+  <rect x="50" y="238" width="420" height="336" rx="14" fill="#f5faf6" stroke="#cfe6d5" filter="url(#soft)"/>
+  <text x="70" y="262" font-size="12" font-weight="600" fill="#12402a">按名映射（默认）· getFieldNames（:153）</text>
+  <text x="70" y="282" font-size="10" fill="#2f6f4f">reader 多的列读 null、文件多的列忽略、重排也对上</text>
+
+  <text x="140" y="308" font-size="10.5" font-weight="600" fill="#12402a" text-anchor="middle">file schema</text>
+  <text x="330" y="308" font-size="10.5" font-weight="600" fill="#12402a" text-anchor="middle">reader schema</text>
+
+  <!-- file fields -->
+  <rect x="82" y="318" width="116" height="34" rx="8" fill="#ffffff" stroke="#ececef"/><text x="140" y="340" font-size="11" fill="#1d1d1f" text-anchor="middle">id</text>
+  <rect x="82" y="360" width="116" height="34" rx="8" fill="#ffffff" stroke="#ececef"/><text x="140" y="382" font-size="11" fill="#1d1d1f" text-anchor="middle">name</text>
+  <rect x="82" y="402" width="116" height="34" rx="8" fill="#ffffff" stroke="#ececef"/><text x="140" y="424" font-size="11" fill="#1d1d1f" text-anchor="middle">age</text>
+  <rect x="82" y="444" width="116" height="34" rx="8" fill="#f9ecec" stroke="#e8c9c9"/><text x="140" y="466" font-size="11" fill="#7a2230" text-anchor="middle">dept</text>
+
+  <!-- reader fields -->
+  <rect x="272" y="318" width="116" height="34" rx="8" fill="#ffffff" stroke="#ececef"/><text x="330" y="340" font-size="11" fill="#1d1d1f" text-anchor="middle">id</text>
+  <rect x="272" y="360" width="116" height="34" rx="8" fill="#ffffff" stroke="#ececef"/><text x="330" y="382" font-size="11" fill="#1d1d1f" text-anchor="middle">name</text>
+  <rect x="272" y="402" width="116" height="34" rx="8" fill="#eef3fb" stroke="#bcd0ec"/><text x="330" y="424" font-size="11" fill="#1b2a4a" text-anchor="middle">city</text>
+  <rect x="272" y="444" width="116" height="34" rx="8" fill="#ffffff" stroke="#ececef"/><text x="330" y="466" font-size="11" fill="#1d1d1f" text-anchor="middle">age</text>
+
+  <!-- name-based lines -->
+  <path d="M198,335 L272,335" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M198,377 L272,377" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M198,419 L235,419 L235,461 L272,461" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <text x="404" y="424" font-size="9.5" fill="#1b2a4a">加列</text>
+  <text x="404" y="437" font-size="9.5" fill="#5b7db1">→ null</text>
+  <text x="220" y="497" font-size="9.5" fill="#7a2230">dept 文件有 reader 无 → 忽略</text>
+  <text x="70" y="530" font-size="10" fill="#2f6f4f">age 位置变了仍按名对上（重排不破坏映射）</text>
+  <text x="70" y="552" font-size="10" fill="#2f6f4f">city reader 有文件无 → 该列读 null（新增列）</text>
+
+  <!-- Right panel 按位置 -->
+  <rect x="510" y="238" width="420" height="336" rx="14" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+  <text x="530" y="262" font-size="12" font-weight="600" fill="#5a3410">按位置回退</text>
+  <text x="530" y="282" font-size="10" fill="#93762e">丢了列名（_colN），或强制开关时按序号对齐</text>
+
+  <text x="600" y="308" font-size="10.5" font-weight="600" fill="#5a3410" text-anchor="middle">file schema</text>
+  <text x="790" y="308" font-size="10.5" font-weight="600" fill="#5a3410" text-anchor="middle">reader schema</text>
+
+  <rect x="542" y="318" width="116" height="34" rx="8" fill="#ffffff" stroke="#ececef"/><text x="600" y="340" font-size="11" fill="#1d1d1f" text-anchor="middle">_col0</text>
+  <rect x="542" y="360" width="116" height="34" rx="8" fill="#ffffff" stroke="#ececef"/><text x="600" y="382" font-size="11" fill="#1d1d1f" text-anchor="middle">_col1</text>
+  <rect x="542" y="402" width="116" height="34" rx="8" fill="#ffffff" stroke="#ececef"/><text x="600" y="424" font-size="11" fill="#1d1d1f" text-anchor="middle">_col2</text>
+
+  <rect x="732" y="318" width="116" height="34" rx="8" fill="#ffffff" stroke="#ececef"/><text x="790" y="340" font-size="11" fill="#1d1d1f" text-anchor="middle">a（位 0）</text>
+  <rect x="732" y="360" width="116" height="34" rx="8" fill="#ffffff" stroke="#ececef"/><text x="790" y="382" font-size="11" fill="#1d1d1f" text-anchor="middle">b（位 1）</text>
+  <rect x="732" y="402" width="116" height="34" rx="8" fill="#ffffff" stroke="#ececef"/><text x="790" y="424" font-size="11" fill="#1d1d1f" text-anchor="middle">c（位 2）</text>
+
+  <path d="M658,335 L732,335" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M658,377 L732,377" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M658,419 L732,419" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="695" y="330" font-size="9" fill="#a1a1a6">按序号</text>
+
+  <text x="530" y="472" font-size="10" fill="#93762e">触发：orc.force.positional.evolution（OrcConf.java:177，默认 false）</text>
+  <text x="530" y="492" font-size="10" fill="#93762e">level 默认 1（OrcConf.java:182）</text>
+  <text x="530" y="512" font-size="10" fill="#93762e">ACID 文件强制 positionalLevels = 2（:112）</text>
+  <text x="530" y="540" font-size="10" fill="#5a3410"><tspan font-weight="600">风险：位置错位</tspan>；有名数据切位置反而对错</text>
+</svg>

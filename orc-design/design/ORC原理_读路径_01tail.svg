@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="640" viewBox="0 0 1000 640" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1000" height="640" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">ORC 读路径 · 倒读尾部三步:一次 16KB 小 IO 拿全文件地图</text>
+
+  <text x="60" y="74" font-size="11" font-weight="600" fill="#93762e">文件物理布局</text>
+  <text x="560" y="74" font-size="11" font-weight="600" fill="#2f6f4f">extractFileTail 解析顺序 (倒读: 尾 → 头, ReaderImpl.java:599)</text>
+
+  <!-- backward read direction arrow -->
+  <path d="M46,444 L46,96" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="30" y="270" font-size="9.5" fill="#a1a1a6" text-anchor="middle" transform="rotate(-90 30 270)">倒读方向 (尾 → 头)</text>
+
+  <!-- ===== file layout (amber) ===== -->
+  <rect x="70" y="90" width="290" height="30" rx="6" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="215" y="110" font-size="10" font-weight="600" fill="#5a3410" text-anchor="middle">magic "ORC" (开头)</text>
+
+  <rect x="70" y="120" width="290" height="150" rx="6" fill="#fff7e6" stroke="#e8cf9a"/>
+  <text x="215" y="190" font-size="11" font-weight="600" fill="#5a3410" text-anchor="middle">stripe 1 … stripe N</text>
+  <text x="215" y="208" font-size="9" fill="#93762e" text-anchor="middle">数据主体 (不参与尾读)</text>
+
+  <rect x="70" y="270" width="290" height="40" rx="6" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="215" y="294" font-size="10.5" font-weight="600" fill="#5a3410" text-anchor="middle">Metadata (stripe 统计)</text>
+
+  <rect x="70" y="310" width="290" height="70" rx="6" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="215" y="332" font-size="10.5" font-weight="600" fill="#5a3410" text-anchor="middle">File Footer</text>
+  <text x="215" y="350" font-size="9" fill="#93762e" text-anchor="middle">类型树 · stripe 目录 · 文件统计</text>
+  <text x="215" y="366" font-size="9" fill="#93762e" text-anchor="middle">(压缩)</text>
+
+  <rect x="70" y="380" width="290" height="40" rx="6" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="215" y="404" font-size="10.5" font-weight="600" fill="#5a3410" text-anchor="middle">PostScript (不压缩)</text>
+
+  <rect x="70" y="420" width="290" height="28" rx="6" fill="#f9ecec" stroke="#e8c9c9"/>
+  <text x="215" y="439" font-size="9.5" font-weight="600" fill="#7a2230" text-anchor="middle">末字节 = PostScript 长度</text>
+
+  <!-- 16KB tail window highlight -->
+  <rect x="64" y="266" width="302" height="186" rx="8" fill="none" stroke="#efdcb4" stroke-width="2"/>
+  <text x="215" y="470" font-size="9.5" fill="#93762e" text-anchor="middle">首次尾读 16KB 窗口 (DIRECTORY_SIZE_GUESS = 16*1024, ReaderImpl.java:75)</text>
+
+  <!-- ===== steps (green, read bottom→top) ===== -->
+  <path d="M750,380 L750,342" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M750,270 L750,242" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <rect x="560" y="380" width="380" height="64" rx="11" fill="#f5faf6" stroke="#cfe6d5" filter="url(#soft)"/>
+  <text x="750" y="404" font-size="11.5" font-weight="600" fill="#12402a" text-anchor="middle">① 读末字节 → 得 PostScript 长度</text>
+  <text x="750" y="424" font-size="9.5" fill="#2f6f4f" text-anchor="middle">最末 1 字节即定位 PostScript 起点</text>
+
+  <rect x="560" y="270" width="380" height="70" rx="11" fill="#f5faf6" stroke="#cfe6d5" filter="url(#soft)"/>
+  <text x="750" y="294" font-size="11.5" font-weight="600" fill="#12402a" text-anchor="middle">② 读 PostScript (不压缩)</text>
+  <text x="750" y="314" font-size="9.5" fill="#2f6f4f" text-anchor="middle">→ 得 压缩方式 + File Footer 长度</text>
+  <text x="750" y="330" font-size="9" fill="#2f6f4f" text-anchor="middle">postscript 本身不压缩,直接解析</text>
+
+  <rect x="560" y="150" width="380" height="90" rx="11" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="750" y="176" font-size="11.5" font-weight="600" fill="#12402a" text-anchor="middle">③ 按长度解压 File Footer</text>
+  <text x="750" y="196" font-size="9.5" fill="#2f6f4f" text-anchor="middle">→ 类型树 · stripe 目录(偏移/长度) · 文件统计</text>
+  <text x="750" y="214" font-size="10" font-weight="600" fill="#12402a" text-anchor="middle">= 全文件地图 (打开即知全貌)</text>
+  <text x="750" y="230" font-size="9" fill="#2f6f4f" text-anchor="middle">footer 超 16KB(列极多) → 再补一次读</text>
+
+  <!-- ===== mapping dashed arrows (file block → step) ===== -->
+  <path d="M360,434 L460,434 L460,412 L560,412" stroke="#c7c7cc" stroke-width="1.5" stroke-dasharray="5 4" fill="none" marker-end="url(#ar)"/>
+  <path d="M360,400 L440,400 L440,305 L560,305" stroke="#c7c7cc" stroke-width="1.5" stroke-dasharray="5 4" fill="none" marker-end="url(#ar)"/>
+  <path d="M360,345 L420,345 L420,195 L560,195" stroke="#c7c7cc" stroke-width="1.5" stroke-dasharray="5 4" fill="none" marker-end="url(#ar)"/>
+
+  <!-- ===== bottom notes ===== -->
+  <rect x="60" y="490" width="880" height="132" rx="12" fill="#f7f7f9" stroke="#e3e3e8"/>
+  <text x="80" y="514" font-size="11" font-weight="600" fill="#1d1d1f">机制要点</text>
+  <text x="80" y="540" font-size="10.5" fill="#1d1d1f"><tspan font-weight="600">尾读三步</tspan>:extractFileTail(ReaderImpl.java:599) 倒读末尾 → 末字节给 PostScript 长度 → PostScript(不压缩)给压缩方式 + footer 长度 → 解压 footer。</text>
+  <text x="80" y="566" font-size="10.5" fill="#1d1d1f"><tspan font-weight="600">全文件地图</tspan>:footer 含类型树、stripe 目录(每 stripe 偏移/长度)、文件级统计;默认猜 16KB(DIRECTORY_SIZE_GUESS)通常一次读够,超出再补读。</text>
+  <text x="80" y="592" font-size="10.5" fill="#1d1d1f"><tspan font-weight="600">为什么倒读</tspan>:写时 footer 在尾部(见写路径);读时一次小尾读拿全图,无需扫描文件主体——这是列存"打开即知全貌"的物理基础。</text>
+</svg>

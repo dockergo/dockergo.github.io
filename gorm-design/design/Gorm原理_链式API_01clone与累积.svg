@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="540" viewBox="0 0 1080 540" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="540" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">GORM 链式 API · chainable 累积 + finisher 触发</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">两段式:chainable 方法 clone *DB 累积条件不碰库;finisher 触发 callbacks 回调链执行 SQL;clone 是并发安全的根</text>
+
+  <!-- chainable -->
+  <rect x="30" y="70" width="500" height="200" rx="13" fill="#f4eefb" stroke="#d9c7ec"/>
+  <text x="46" y="92" font-size="11" font-weight="700" fill="#3d2a5a">① chainable 累积(chainable_api.go)</text>
+  <text x="46" y="114" font-size="8.8" fill="#7a5a95">Where(:207) / Select(:112) / Joins(:248) / Order(:313)</text>
+  <text x="46" y="132" font-size="8.8" fill="#7a5a95">Preload(:395) / Group / Having / Limit / Offset</text>
+  <rect x="46" y="144" width="468" height="44" rx="8" fill="#faf4fb" stroke="#e2d2ee"/><text x="60" y="164" font-size="8.8" font-weight="600" fill="#3d2a5a">每方法先 getInstance() 克隆新 *DB(gorm.go:448)</text><text x="60" y="180" font-size="8.3" fill="#7a5a95">再把条件塞进 tx.Statement.Clauses / Preloads / Selects</text>
+  <rect x="46" y="196" width="468" height="30" rx="7" fill="#eafaf1" stroke="#bfe0cd"/><text x="60" y="216" font-size="8.5" fill="#12402a">不碰数据库,返回 tx 供继续链</text>
+  <text x="46" y="248" font-size="8.5" fill="#7a5a95">db.Where("a=?",1).Select("x").Order("y") 累积条件</text>
+
+  <!-- finisher -->
+  <rect x="550" y="70" width="500" height="200" rx="13" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="566" y="92" font-size="11" font-weight="700" fill="#12402a">② finisher 触发(finisher_api.go)</text>
+  <text x="566" y="114" font-size="8.8" fill="#2f6f4f">First(:130) / Find(:174) / Create(:19) / Save(:85)</text>
+  <text x="566" y="132" font-size="8.8" fill="#2f6f4f">Update(:413) / Delete(:443) / Scan(:537) / Count(:454)</text>
+  <rect x="566" y="144" width="468" height="44" rx="8" fill="#e6f7ee" stroke="#bfe0cd"/><text x="580" y="164" font-size="8.8" font-weight="600" fill="#12402a">调 db.callbacks.Query()/Create()/....Execute(db)</text><text x="580" y="180" font-size="8.3" fill="#2f6f4f">跑回调链(见 callbacks 篇)</text>
+  <rect x="566" y="196" width="468" height="30" rx="7" fill="#fff7e6" stroke="#e8cf9a"/><text x="580" y="216" font-size="8.5" fill="#5a3410">链末尾 stmt.Build 拼出 SQL 执行</text>
+  <text x="566" y="248" font-size="8.5" fill="#2f6f4f">.Find(&amp;users) 触发——此刻才真正查库</text>
+
+  <line x1="530" y1="170" x2="550" y2="170" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+
+  <!-- clone concurrency -->
+  <rect x="30" y="284" width="1020" height="140" rx="13" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="46" y="306" font-size="11" font-weight="700" fill="#1b2a4a">克隆语义是并发安全的根(gorm.go:448 getInstance)</text>
+  <text x="46" y="328" font-size="8.8" fill="#274a78">· db.clone==1 时建全新 Statement;==2 时 Statement.clone()(gorm.go:452)</text>
+  <g text-anchor="middle" font-size="8.3">
+    <rect x="46" y="340" width="200" height="34" rx="7" fill="#f3f7fc" stroke="#cfe0f2"/><text x="146" y="361" fill="#274a78">base := db.Where("a=?",1)</text>
+    <rect x="300" y="340" width="340" height="34" rx="7" fill="#e6f7ee" stroke="#bfe0cd"/><text x="470" y="357" fill="#12402a">base.Where("b=?",2) → clone,独立 tx</text><text x="470" y="369" fill="#2f6f4f">不影响 base</text>
+    <rect x="694" y="340" width="340" height="34" rx="7" fill="#e6f7ee" stroke="#bfe0cd"/><text x="864" y="357" fill="#12402a">base.Where("c=?",3) → 另一 clone</text><text x="864" y="369" fill="#2f6f4f">与上面互不干扰</text>
+  </g>
+  <line x1="246" y1="357" x2="300" y2="357" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="246" y1="357" x2="270" y2="357" stroke="none"/>
+  <path d="M170 374 L170 390 L864 390 L864 374" fill="none" stroke="#c7c7cc" stroke-width="1" stroke-dasharray="3 2" marker-end="url(#ar)"/>
+  <text x="46" y="410" font-size="8.5" fill="#5b7db1">克隆让同一 base 派生的多条链互不干扰——并发安全,可复用查询前缀</text>
+
+  <rect x="30" y="440" width="1020" height="70" rx="13" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="46" y="462" font-size="11" font-weight="700" fill="#1d1d1f">要点</text>
+  <text x="46" y="483" font-size="9" fill="#6e6e73">· 链式两段式:chainable(Where/Select…)clone *DB 累积条件不碰库,finisher(Find/Create…)触发 callbacks 执行——延迟到 finisher 才查库</text>
+  <text x="46" y="501" font-size="9" fill="#6e6e73">· clone 语义(getInstance)让派生链互不干扰,是并发安全 + 查询前缀复用的根基;依赖 Statement 累积、callbacks 执行两能力域</text>
+</svg>

@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="560" viewBox="0 0 1080 560"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1080" height="560" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">callbacks 回调链是灵魂 · 六 processor 各注册一条可插拔回调序列</text>
+  <text x="30" y="50" font-size="11.5" fill="#a1a1a6">每种操作走注册的回调链，链上顺序跑 fns 构建并执行 SQL；主逻辑 gorm:create/gorm:query 与 hook 平级（★）</text>
+
+  <!-- 六 processor 顶栏 -->
+  <rect x="30" y="64" width="1020" height="46" rx="12" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="46" y="92" font-size="10" fill="#3d2a5a">finisher（Create/First/Find/Update/Delete/Row/Raw）触发 db.callbacks.&lt;op&gt;().Execute(db)（callbacks.go:75）→ 顺序跑该链的 fns（callbacks.go:135）</text>
+
+  <!-- Create 链 -->
+  <text x="30" y="132" font-size="11" font-weight="600" fill="#5a3410">Create 链（callbacks/callbacks.go:42）</text>
+  <rect x="30" y="140" width="140" height="30" rx="7" fill="#eef3fb" stroke="#bcd0ec"/><text x="100" y="159" font-size="8.4" fill="#1b2a4a" text-anchor="middle">begin_transaction</text>
+  <rect x="182" y="140" width="140" height="30" rx="7" fill="#ffffff" stroke="#ececf1"/><text x="252" y="159" font-size="8.4" fill="#494950" text-anchor="middle">before_create</text>
+  <rect x="334" y="140" width="150" height="30" rx="7" fill="#ffffff" stroke="#ececf1"/><text x="409" y="159" font-size="8.4" fill="#494950" text-anchor="middle">save_before_assoc</text>
+  <rect x="496" y="140" width="140" height="30" rx="7" fill="#eafaf1" stroke="#bfe0cd"/><text x="566" y="159" font-size="8.4" font-weight="600" fill="#12402a" text-anchor="middle">gorm:create ★</text>
+  <rect x="648" y="140" width="150" height="30" rx="7" fill="#ffffff" stroke="#ececf1"/><text x="723" y="159" font-size="8.4" fill="#494950" text-anchor="middle">save_after_assoc</text>
+  <rect x="810" y="140" width="120" height="30" rx="7" fill="#ffffff" stroke="#ececf1"/><text x="870" y="159" font-size="8.4" fill="#494950" text-anchor="middle">after_create</text>
+  <rect x="942" y="140" width="108" height="30" rx="7" fill="#eef3fb" stroke="#bcd0ec"/><text x="996" y="159" font-size="8.4" fill="#1b2a4a" text-anchor="middle">commit/rollback</text>
+
+  <!-- Query 链 -->
+  <text x="30" y="192" font-size="11" font-weight="600" fill="#5a3410">Query 链</text>
+  <rect x="30" y="200" width="180" height="30" rx="7" fill="#eafaf1" stroke="#bfe0cd"/><text x="120" y="219" font-size="8.4" font-weight="600" fill="#12402a" text-anchor="middle">gorm:query ★</text>
+  <rect x="222" y="200" width="180" height="30" rx="7" fill="#ffffff" stroke="#ececf1"/><text x="312" y="219" font-size="8.4" fill="#494950" text-anchor="middle">gorm:preload</text>
+  <rect x="414" y="200" width="180" height="30" rx="7" fill="#ffffff" stroke="#ececf1"/><text x="504" y="219" font-size="8.4" fill="#494950" text-anchor="middle">after_query</text>
+
+  <!-- Update 链 -->
+  <text x="30" y="252" font-size="11" font-weight="600" fill="#5a3410">Update 链</text>
+  <rect x="30" y="260" width="140" height="30" rx="7" fill="#eef3fb" stroke="#bcd0ec"/><text x="100" y="279" font-size="8.4" fill="#1b2a4a" text-anchor="middle">begin_transaction</text>
+  <rect x="182" y="260" width="150" height="30" rx="7" fill="#ffffff" stroke="#ececf1"/><text x="257" y="279" font-size="8.4" fill="#494950" text-anchor="middle">setup_reflect_value</text>
+  <rect x="344" y="260" width="140" height="30" rx="7" fill="#ffffff" stroke="#ececf1"/><text x="414" y="279" font-size="8.4" fill="#494950" text-anchor="middle">before_update</text>
+  <rect x="496" y="260" width="150" height="30" rx="7" fill="#ffffff" stroke="#ececf1"/><text x="571" y="279" font-size="8.4" fill="#494950" text-anchor="middle">save_before/after_assoc</text>
+  <rect x="658" y="260" width="140" height="30" rx="7" fill="#eafaf1" stroke="#bfe0cd"/><text x="728" y="279" font-size="8.4" font-weight="600" fill="#12402a" text-anchor="middle">gorm:update ★</text>
+  <rect x="810" y="260" width="120" height="30" rx="7" fill="#ffffff" stroke="#ececf1"/><text x="870" y="279" font-size="8.4" fill="#494950" text-anchor="middle">after_update</text>
+  <rect x="942" y="260" width="108" height="30" rx="7" fill="#eef3fb" stroke="#bcd0ec"/><text x="996" y="279" font-size="8.4" fill="#1b2a4a" text-anchor="middle">commit/rollback</text>
+
+  <!-- Delete 链 -->
+  <text x="30" y="312" font-size="11" font-weight="600" fill="#5a3410">Delete 链 · Row/Raw 链（无回调序列，直接执行原生 SQL）</text>
+  <rect x="30" y="320" width="140" height="30" rx="7" fill="#eef3fb" stroke="#bcd0ec"/><text x="100" y="339" font-size="8.4" fill="#1b2a4a" text-anchor="middle">begin_transaction</text>
+  <rect x="182" y="320" width="140" height="30" rx="7" fill="#ffffff" stroke="#ececf1"/><text x="252" y="339" font-size="8.4" fill="#494950" text-anchor="middle">before_delete</text>
+  <rect x="334" y="320" width="150" height="30" rx="7" fill="#ffffff" stroke="#ececf1"/><text x="409" y="339" font-size="8.4" fill="#494950" text-anchor="middle">delete_before_assoc</text>
+  <rect x="496" y="320" width="140" height="30" rx="7" fill="#eafaf1" stroke="#bfe0cd"/><text x="566" y="339" font-size="8.4" font-weight="600" fill="#12402a" text-anchor="middle">gorm:delete ★</text>
+  <rect x="648" y="320" width="150" height="30" rx="7" fill="#ffffff" stroke="#ececf1"/><text x="723" y="339" font-size="8.4" fill="#494950" text-anchor="middle">after_delete</text>
+  <rect x="810" y="320" width="120" height="30" rx="7" fill="#eef3fb" stroke="#bcd0ec"/><text x="870" y="339" font-size="8.4" fill="#1b2a4a" text-anchor="middle">commit/rollback</text>
+  <rect x="942" y="320" width="108" height="30" rx="7" fill="#f6f6f8" stroke="#e2e2e7"/><text x="996" y="339" font-size="8.4" fill="#6e6e73" text-anchor="middle">row / raw</text>
+
+  <!-- 编译期定序 -->
+  <rect x="30" y="368" width="500" height="128" rx="13" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="48" y="392" font-size="11.5" font-weight="600" fill="#1d1d1f">编译期定序（callbacks.go:194 compile）</text>
+  <text x="48" y="416" font-size="9" fill="#494950">· Register / Before(name) / After(name) 声明偏序（:170/:174/:182）</text>
+  <text x="48" y="437" font-size="9" fill="#494950">· sortCallbacks(:261) sort.SliceStable + 依赖遍历 → 拓扑排序成 []func(*DB)</text>
+  <text x="48" y="458" font-size="9" fill="#494950">· Match(cond) 条件回调（如仅事务时插 begin/commit）</text>
+  <text x="48" y="479" font-size="9" fill="#86868b">排一次，之后每次 Execute 直接跑 fns，零重排</text>
+
+  <!-- 灵魂点 -->
+  <rect x="546" y="368" width="504" height="128" rx="13" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="564" y="392" font-size="11.5" font-weight="600" fill="#12402a">灵魂点 · 插件靠插回调织入，核心零改动</text>
+  <text x="564" y="416" font-size="9" fill="#2f6f4f">gorm:create / gorm:query 主逻辑本身就是链上一个回调，与 before/after 平级</text>
+  <text x="564" y="437" font-size="9" fill="#2f6f4f">· 软删除：Replace gorm:delete → UPDATE deleted_at</text>
+  <text x="564" y="458" font-size="9" fill="#2f6f4f">· 审计/多租户/乐观锁：Before("gorm:create/update") 注入字段/条件</text>
+  <text x="564" y="479" font-size="9" fill="#2f6f4f">查询也走回调链（query→preload→after_query），不存在绕过回调的裸执行</text>
+</svg>

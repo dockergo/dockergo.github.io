@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="520" viewBox="0 0 1080 520" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="520" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Spring Boot 内嵌服务器 · SmartLifecycle 相位与优雅停机</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">服务器生命周期用高相位——晚于普通 bean 启动、早于普通 bean 停止（最后启动、最先停）</text>
+
+  <!-- Phase ordering band -->
+  <rect x="30" y="70" width="1020" height="170" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="48" y="94" font-size="11.5" font-weight="700" fill="#1b2a4a">① 相位 START_STOP_LIFECYCLE_PHASE（比普通 bean 晚）</text>
+
+  <rect x="60" y="110" width="440" height="112" rx="12" fill="#f3f7fc" stroke="#cfe0f2"/>
+  <text x="280" y="134" font-size="10.5" font-weight="700" text-anchor="middle" fill="#274a78">启动顺序</text>
+  <text x="280" y="160" font-size="9.6" text-anchor="middle" fill="#5b7db1">普通 bean 先就绪</text>
+  <path d="M180,172 L380,172" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="280" y="196" font-size="9.6" text-anchor="middle" fill="#274a78">服务器最后启动（高相位）</text>
+  <text x="280" y="214" font-size="8.8" text-anchor="middle" fill="#a1a1a6">保证依赖的 bean 都已就绪</text>
+
+  <rect x="580" y="110" width="440" height="112" rx="12" fill="#fbeaea" stroke="#e7c3c3"/>
+  <text x="800" y="134" font-size="10.5" font-weight="700" text-anchor="middle" fill="#4a1414">停止顺序</text>
+  <text x="800" y="160" font-size="9.6" text-anchor="middle" fill="#7a2a2a">服务器最先停止</text>
+  <path d="M700,172 L900,172" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="800" y="196" font-size="9.6" text-anchor="middle" fill="#7a2a2a">普通 bean 后销毁</text>
+  <text x="800" y="214" font-size="8.8" text-anchor="middle" fill="#a1a1a6">先断新流量，再拆依赖 bean</text>
+
+  <!-- Graceful shutdown steps -->
+  <rect x="30" y="256" width="1020" height="150" rx="14" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="48" y="280" font-size="11.5" font-weight="700" fill="#12402a">② 优雅停机 webServerGracefulShutdown</text>
+
+  <rect x="60" y="296" width="290" height="94" rx="12" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="205" y="326" font-size="10.5" font-weight="700" text-anchor="middle" fill="#12402a">先停接新请求</text>
+  <text x="205" y="352" font-size="9.4" text-anchor="middle" fill="#2f6f4f">不再受理新连接</text>
+  <text x="205" y="374" font-size="9" text-anchor="middle" fill="#a1a1a6">对外“关门”</text>
+
+  <path d="M350,343 L392,343" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <rect x="394" y="296" width="290" height="94" rx="12" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="539" y="326" font-size="10.5" font-weight="700" text-anchor="middle" fill="#12402a">等在途请求完成</text>
+  <text x="539" y="352" font-size="9.4" text-anchor="middle" fill="#2f6f4f">让已受理请求处理完</text>
+  <text x="539" y="374" font-size="9" text-anchor="middle" fill="#a1a1a6">不粗暴断连</text>
+
+  <path d="M684,343 L726,343" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <rect x="728" y="296" width="292" height="94" rx="12" fill="#fbeaea" stroke="#e7c3c3"/>
+  <text x="874" y="326" font-size="10.5" font-weight="700" text-anchor="middle" fill="#4a1414">再关服务器</text>
+  <text x="874" y="352" font-size="9.4" text-anchor="middle" fill="#7a2a2a">在途完成后真正关闭</text>
+  <text x="874" y="374" font-size="9" text-anchor="middle" fill="#a1a1a6">平滑退出</text>
+
+  <!-- Startup step observability -->
+  <rect x="30" y="422" width="1020" height="72" rx="13" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="48" y="450" font-size="11" font-weight="700" fill="#1d1d1f">③ 可观测：startup step 埋点</text>
+  <text x="48" y="474" font-size="9.6" fill="#6e6e73">spring.boot.webserver.create —— 记录服务器创建阶段的耗时，用于启动性能分析</text>
+</svg>

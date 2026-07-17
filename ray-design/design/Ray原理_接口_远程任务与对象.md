@@ -1,6 +1,6 @@
 # Ray 接口主线 · 远程任务与对象
 
-> **定位**：Ray 最基础的接触面——把普通 Python 函数变成可在集群任意节点异步执行的 **remote task**，用 **`ObjectRef`（分布式 future）** 串起数据流。这是 task/actor 二元模型里"无状态"的一半，也是理解 `ObjectRef` 贯穿层的入口。核实基准 `src/ray/core_worker/core_worker.cc`（commit 6ff3a75）。
+> **定位**：Ray 最基础的接触面——把普通 Python 函数变成可在集群任意节点异步执行的 **remote task**，用 **`ObjectRef`（分布式 future）** 串起数据流。这是 task/actor 二元模型里"无状态"的一半，也是理解 `ObjectRef` 贯穿层的入口。核实基准 `src/ray/core_worker/core_worker.cc`（commit 2a70ac4）。
 
 ## 一、从 `@ray.remote` 到 ObjectRef 的一次调用
 
@@ -18,11 +18,13 @@
 
 ## 二、隐式依赖 DAG 与参数解析
 
-![提交与获取](Ray原理_远程任务_01提交与获取.svg)
+![隐式依赖 DAG](Ray原理_远程任务_02依赖DAG.svg)
 
 ObjectRef 作为参数传给另一个 task，就形成**数据依赖**：`g.remote(f.remote(x))`。Ray 不需要显式声明 DAG——**把 ObjectRef 当参数即是声明依赖**。task 只有在其所有参数 ObjectRef 就绪后才可被调度执行；依赖解析发生在 owner 侧（提交前解引用本地已知值）与 raylet 侧（等待远程依赖 Pull 到本地）。这套隐式 DAG 支持**动态生成**：task 内部可继续 `.remote()` 派生新 task（嵌套并行），无需预先构图。
 
 ## 三、两级对象存储的取值决策
+
+![两级对象存储](Ray原理_远程任务_03两级存储.svg)
 
 | 场景 | 值存哪 | 依据 |
 |---|---|---|

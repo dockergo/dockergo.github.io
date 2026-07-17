@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="880" height="410" viewBox="0 0 880 410" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="880" height="410" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">metadata table：内置的元数据加速表（.hoodie/metadata）</text>
+  <text x="30" y="49" font-size="10" fill="#a1a1a6">它本身是一张 MOR Hudi 表（有时间线/base+log/compaction），随主表事务一致更新</text>
+
+  <!-- expensive ops -->
+  <rect x="30" y="70" width="240" height="130" rx="12" fill="#fbeaea" stroke="#e7c3c3"/>
+  <text x="46" y="92" font-size="10" font-weight="700" fill="#4a1414">昂贵的元数据操作</text>
+  <text x="46" y="114" font-size="8.8" fill="#7a2a2a">· list 对象存储（慢）</text>
+  <text x="46" y="134" font-size="8.8" fill="#7a2a2a">· 读文件页脚取列统计</text>
+  <text x="46" y="154" font-size="8.8" fill="#7a2a2a">· 查记录键位置</text>
+  <text x="46" y="182" font-size="8.4" fill="#a86a6a">大表尤其慢</text>
+
+  <!-- MDT partitions -->
+  <rect x="310" y="70" width="540" height="200" rx="12" fill="#f7f2fb" stroke="#ddd0ec" filter="url(#soft)"/>
+  <text x="326" y="92" font-size="10.5" font-weight="700" fill="#4a2f78">metadata table 的分区（MetadataPartitionType）</text>
+  <g font-size="8.8">
+    <rect x="326" y="104" width="250" height="46" rx="8" fill="#f4eefb" stroke="#e2d2ee"/><text x="340" y="123" font-weight="600" fill="#4a2f78">files</text><text x="340" y="140" fill="#6e4f95">分区→文件列表，免 list</text>
+    <rect x="586" y="104" width="248" height="46" rx="8" fill="#f4eefb" stroke="#e2d2ee"/><text x="600" y="123" font-weight="600" fill="#4a2f78">column_stats</text><text x="600" y="140" fill="#6e4f95">各列 min/max/null → data skipping</text>
+    <rect x="326" y="158" width="250" height="46" rx="8" fill="#f4eefb" stroke="#e2d2ee"/><text x="340" y="177" font-weight="600" fill="#4a2f78">bloom_filters</text><text x="340" y="194" fill="#6e4f95">各 base 文件布隆，供索引查找</text>
+    <rect x="586" y="158" width="248" height="46" rx="8" fill="#f4eefb" stroke="#e2d2ee"/><text x="600" y="177" font-weight="600" fill="#4a2f78">record_index</text><text x="600" y="194" fill="#6e4f95">键→位置，支撑 RECORD_LEVEL 索引</text>
+    <rect x="326" y="212" width="508" height="42" rx="8" fill="#eef3fb" stroke="#bcd0ec"/><text x="340" y="231" fill="#274a78">partition_stats / expression_index / secondary_index（按需启用）</text><text x="340" y="247" font-size="8.2" fill="#5b7db1">各分区加速一类操作</text>
+  </g>
+  <line x1="270" y1="130" x2="310" y2="150" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+
+  <!-- consistency -->
+  <rect x="30" y="284" width="820" height="116" rx="12" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="46" y="306" font-size="10.5" font-weight="700" fill="#12402a">它本身是 MOR 表 · 随主表事务一致</text>
+  <g font-size="9">
+    <rect x="46" y="318" width="390" height="70" rx="10" fill="#e6f7ee" stroke="#bfe0cd"/><text x="60" y="340" font-weight="600" fill="#12402a">更新方式</text><text x="60" y="360" fill="#2f6f4f">写主表时同步更新 MDT（deltacommit 追加 log），</text><text x="60" y="378" fill="#2f6f4f">MDT 也需 compaction 合 log 进 base。</text>
+    <rect x="450" y="318" width="400" height="70" rx="10" fill="#eef3fb" stroke="#bcd0ec"/><text x="464" y="340" font-weight="600" fill="#1b2a4a">一致性</text><text x="464" y="360" fill="#274a78">MDT 与主表时间线对齐；主表 instant 完成，</text><text x="464" y="378" fill="#274a78">对应元数据即可见——避免"文件已写元数据没跟上"。</text>
+  </g>
+</svg>

@@ -1,6 +1,6 @@
 # Ray 核心原理 · 全景主线框架
 
-> **定位**：统领全部原理文档。Ray 是**通用分布式计算框架**——把单机的函数调用与对象引用透明地扩展到集群，用 **task（无状态远程函数）+ actor（有状态远程对象）** 两种原语承载一切负载。核实基准为源码 `github.com/ray-project/ray`（`commit 6ff3a75`，C++ 核心在 `src/ray/`、Python 前端在 `python/ray/`）。在原型库属**新家族（分布式计算框架 / 通用分布式运行时，family 11）**，走元模式判型（接触面 × 能力域 × 执行时机）。灵魂三条：**共享内存对象存储（Plasma）**、**owner-based 分布式引用计数与 lineage 重建**、**去中心化（worker lease）调度**。
+> **定位**：统领全部原理文档。Ray 是**通用分布式计算框架**——把单机的函数调用与对象引用透明地扩展到集群，用 **task（无状态远程函数）+ actor（有状态远程对象）** 两种原语承载一切负载。核实基准为源码 `github.com/ray-project/ray`（`commit 2a70ac4`，C++ 核心在 `src/ray/`、Python 前端在 `python/ray/`）。在原型库属**新家族（分布式计算框架 / 通用分布式运行时，family 11）**，走元模式判型（接触面 × 能力域 × 执行时机）。灵魂三条：**共享内存对象存储（Plasma）**、**owner-based 分布式引用计数与 lineage 重建**、**去中心化（worker lease）调度**。
 
 Ray 的 3 条接口主线 + 8 条支撑能力域，既无遗漏也无越界。
 
@@ -11,7 +11,7 @@ Ray 的 3 条接口主线 + 8 条支撑能力域，既无遗漏也无越界。
 Ray 的认知结构是两个正交维度的叉乘：
 
 - **接触面主线（外部怎么用）**：应用只面对三样东西——① **远程任务与对象**（`@ray.remote` 装饰函数、`.remote()` 异步提交、`ray.get`/`ray.put` 与 `ObjectRef`）；② **Actor 编程模型**（`@ray.remote` 装饰类，得到有状态远程对象）；③ **集群与运行时**（`ray.init` 起集群、driver/worker 进程、runtime env、namespace）。
-- **支撑能力域（内部靠什么）**：8 条内部公共机制支撑上述接口——远程 task 提交与依赖、Actor 生命周期与调度、分布式对象存储、全局控制存储 GCS、分布式调度、引用计数与容错、资源管理与放置组、上层库 AIR。
+- **支撑能力域（内部靠什么）**：8 条内部公共机制支撑上述接口——远程 task 提交与依赖、Actor 生命周期与调度、分布式对象存储、全局控制存储 GCS、分布式调度、引用计数与容错、资源管理与放置组、集群自动伸缩与运行时环境（autoscaler + runtime env agent）。
 
 一条铁律贯穿归属判断：**一个知识点属于哪条主线，看它的能力域，而非它出现在哪个文件/API 里**。例如 `ray.get` 阻塞等待值就绪，虽从"远程任务"接口触发，但"值存哪、怎么取回、丢了怎么办"属于"分布式对象存储"与"引用计数与容错"。
 
@@ -53,7 +53,7 @@ Ray 的认知结构是两个正交维度的叉乘：
 | 分布式调度 | ● | ● | ○ |
 | 引用计数与容错 | ● | ● | — |
 | 资源管理与放置组 | ● | ● | ○ |
-| 上层库 AIR | ○ | ○ | ○ |
+| 集群自动伸缩与运行时环境 | ○ | ○ | ● |
 
 ## 五、主线清单与源码锚点
 
@@ -68,8 +68,8 @@ Ray 的认知结构是两个正交维度的叉乘：
 | 支撑 | 全局控制存储 GCS | 集群元数据、actor 注册表、KV、pub/sub | `gcs/gcs_server.cc`、`gcs_table_storage.cc` |
 | 支撑 | 分布式调度 | Raylet 本地 + cluster resource scheduler + 混合策略 | `cluster_lease_manager.cc:45`、`scheduling/policy/hybrid_scheduling_policy` |
 | 支撑 | 引用计数与容错 | owner-based ref counting + lineage 重建 | `reference_counter.cc:223`、`object_recovery_manager.cc:140` |
-| 支撑 | 资源管理与放置组 | 逻辑资源、placement group、autoscaler | `gcs_placement_group_scheduler.cc:41`、`gcs_autoscaler_state_manager.cc:51` |
-| 支撑 | 上层库 AIR | Data/Train/Tune/Serve 建在 task+actor 之上 | `python/ray/{data,train,tune,serve}` |
+| 支撑 | 资源管理与放置组 | 逻辑资源、placement group、bundle 放置策略（PACK/SPREAD） | `gcs_placement_group_manager.cc`、`gcs_placement_group_scheduler.cc:41` |
+| 支撑 | 集群自动伸缩与运行时环境 | autoscaler 按资源需求扩缩节点 + runtime env agent 预备依赖 | `autoscaler.py`、`gcs_autoscaler_state_manager.cc:51`、`runtime_env_agent.py` |
 
 ## 六、三条贯穿全库的声明
 

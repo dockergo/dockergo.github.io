@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="880" height="410" viewBox="0 0 880 410" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="880" height="410" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">Compaction：合 log 进 base（RunCompactionActionExecutor）</text>
+  <text x="30" y="49" font-size="10" fill="#a1a1a6">MOR "写快"红利的必要还款：缩小后续读的合并量</text>
+
+  <!-- two phases -->
+  <rect x="30" y="72" width="400" height="80" rx="12" fill="#faf4fb" stroke="#e2d2ee" filter="url(#soft)"/>
+  <text x="46" y="96" font-size="10.5" font-weight="700" fill="#5a3d78">① schedule</text>
+  <text x="46" y="116" font-size="9" fill="#7a5a95">生成 HoodieCompactionPlan：按策略挑</text>
+  <text x="46" y="134" font-size="9" fill="#7a5a95">哪些 file slice 要合（log 数/大小/间隔）</text>
+
+  <rect x="450" y="72" width="400" height="80" rx="12" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="466" y="96" font-size="10.5" font-weight="700" fill="#3d2a5a">② execute</text>
+  <text x="466" y="116" font-size="9" fill="#7a5a95">RunCompactionActionExecutor 读 base+log、</text>
+  <text x="466" y="134" font-size="9" fill="#7a5a95">合并、写新 base 文件</text>
+  <line x1="430" y1="112" x2="450" y2="112" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- before / after -->
+  <rect x="30" y="176" width="400" height="150" rx="12" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="46" y="198" font-size="10" font-weight="600" fill="#5a3410">compaction 前（读慢）</text>
+  <rect x="46" y="208" width="368" height="30" rx="7" fill="#fef2e0" stroke="#e8cf9a"/><text x="230" y="228" font-size="8.6" text-anchor="middle" fill="#5a3410">base + log1 + log2 + log3（读要合并全部）</text>
+  <text x="46" y="262" font-size="8.8" fill="#93762e">log 越攒越多 → 快照读合并量越大越慢</text>
+  <text x="46" y="284" font-size="8.6" fill="#a98b6a">log-compaction（LOG_COMPACT）：只合小 log 成大 log，</text>
+  <text x="46" y="302" font-size="8.6" fill="#a98b6a">不产新 base（轻量变体）</text>
+
+  <rect x="450" y="176" width="400" height="150" rx="12" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="466" y="198" font-size="10" font-weight="600" fill="#12402a">compaction 后（读快）</text>
+  <rect x="466" y="208" width="368" height="30" rx="7" fill="#e6f7ee" stroke="#bfe0cd"/><text x="650" y="228" font-size="8.6" text-anchor="middle" fill="#12402a">新 base（含所有 log 已合并）· log 清零</text>
+  <text x="466" y="262" font-size="8.8" fill="#2f6f4f">新 base 成为该 file group 最新 slice 基线</text>
+  <text x="466" y="284" font-size="8.6" fill="#2f6f4f">compaction 是 compaction 动作（三态）</text>
+  <text x="466" y="302" font-size="8.6" fill="#6e9a7c">可 inline（写后同步）或 async（独立作业）</text>
+
+  <!-- tradeoff -->
+  <rect x="30" y="342" width="820" height="52" rx="12" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="46" y="364" font-size="9.6" font-weight="600" fill="#1d1d1f">取舍</text>
+  <text x="46" y="382" font-size="8.8" fill="#6e6e73">太疏 → log 越攒越多、快照读越来越慢；太勤 → 频繁重写 base 耗资源。读延迟敏感调勤，资源紧张调疏。</text>
+</svg>

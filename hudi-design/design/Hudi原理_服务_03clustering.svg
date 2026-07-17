@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="880" height="410" viewBox="0 0 880 410" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="880" height="410" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">Clustering：重排数据布局（replacecommit）</text>
+  <text x="30" y="49" font-size="10" fill="#a1a1a6">不改记录内容，只重排布局：合并小文件、按列排序；用 replacecommit 原子替换旧 file group</text>
+
+  <!-- before -->
+  <rect x="30" y="72" width="240" height="150" rx="12" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="46" y="94" font-size="10" font-weight="600" fill="#5a3410">clustering 前</text>
+  <g font-size="8.2" text-anchor="middle">
+    <rect x="46" y="104" width="90" height="26" rx="6" fill="#fef2e0" stroke="#e8cf9a"/><text x="91" y="121" fill="#5a3410">小文件 g1</text>
+    <rect x="146" y="104" width="100" height="26" rx="6" fill="#fef2e0" stroke="#e8cf9a"/><text x="196" y="121" fill="#5a3410">小文件 g2</text>
+    <rect x="46" y="136" width="90" height="26" rx="6" fill="#fef2e0" stroke="#e8cf9a"/><text x="91" y="153" fill="#5a3410">小文件 g3</text>
+    <rect x="146" y="136" width="100" height="26" rx="6" fill="#fef2e0" stroke="#e8cf9a"/><text x="196" y="153" fill="#5a3410">小文件 g4</text>
+  </g>
+  <text x="46" y="184" font-size="8.4" fill="#93762e">碎片多、相关数据分散、</text>
+  <text x="46" y="200" font-size="8.4" fill="#93762e">对查询不友好</text>
+
+  <!-- replacecommit -->
+  <rect x="320" y="96" width="240" height="100" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="440" y="120" font-size="10.5" text-anchor="middle" font-weight="700" fill="#1b2a4a">replacecommit</text>
+  <text x="440" y="142" font-size="8.6" text-anchor="middle" fill="#274a78">读旧 file group → 按新布局重写</text>
+  <text x="440" y="160" font-size="8.6" text-anchor="middle" fill="#274a78">→ 原子替换（时间线一个动作）</text>
+  <text x="440" y="182" font-size="8.2" text-anchor="middle" fill="#5b7db1">旧的被后续 cleaning 回收</text>
+  <line x1="270" y1="146" x2="320" y2="146" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- after -->
+  <rect x="610" y="72" width="240" height="150" rx="12" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="626" y="94" font-size="10" font-weight="600" fill="#12402a">clustering 后</text>
+  <rect x="626" y="104" width="208" height="34" rx="7" fill="#e6f7ee" stroke="#bfe0cd"/><text x="730" y="125" font-size="8.6" text-anchor="middle" fill="#12402a">大文件 G1（合并 + 排序）</text>
+  <rect x="626" y="144" width="208" height="34" rx="7" fill="#e6f7ee" stroke="#bfe0cd"/><text x="730" y="165" font-size="8.6" text-anchor="middle" fill="#12402a">大文件 G2（按查询列排序）</text>
+  <text x="626" y="200" font-size="8.4" fill="#2f6f4f">碎片减少、data skipping 更有效</text>
+  <line x1="560" y1="146" x2="610" y2="146" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- benefits -->
+  <rect x="30" y="242" width="400" height="150" rx="12" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="46" y="264" font-size="10.5" font-weight="700" fill="#12402a">典型收益</text>
+  <text x="46" y="286" font-size="9" fill="#2f6f4f">① 合并小文件（减碎片）</text>
+  <text x="46" y="306" font-size="9" fill="#2f6f4f">② 按高频列排序（sort / z-order / hilbert）</text>
+  <text x="46" y="326" font-size="9" fill="#2f6f4f">　→ column_stats 剪枝更有效（data skipping）</text>
+  <text x="46" y="352" font-size="8.6" fill="#6e9a7c">CONSISTENT_HASHING 桶的动态 split/merge 也经</text>
+  <text x="46" y="370" font-size="8.6" fill="#6e9a7c">clustering（HoodieConsistentHashingMetadata）</text>
+
+  <rect x="450" y="242" width="400" height="150" rx="12" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="466" y="264" font-size="10.5" font-weight="700" fill="#1d1d1f">replacecommit 语义 &amp; 取舍</text>
+  <text x="466" y="286" font-size="9" fill="#6e6e73">clustering / insert_overwrite 都用 replacecommit</text>
+  <text x="466" y="306" font-size="9" fill="#6e6e73">——"用新 file group 替换旧的"，原子替换动作。</text>
+  <text x="466" y="332" font-size="8.8" fill="#6e6e73">改善读（布局/排序/小文件），但要重写数据（耗 IO）。</text>
+  <text x="466" y="352" font-size="8.8" fill="#6e6e73">对查询延迟敏感、写模式松散的表收益大。</text>
+  <text x="466" y="374" font-size="8.6" fill="#a1a1a6">与 compaction 区别：compaction 同组合 log；clustering 跨组重排</text>
+</svg>

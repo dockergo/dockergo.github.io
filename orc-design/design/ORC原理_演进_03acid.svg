@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="580" viewBox="0 0 980 580"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="980" height="580" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">Hive ACID 事件 schema：5 定长前缀包住 row + base/delta 合并（事务边界在 Hive 层）</text>
+
+  <!-- struct 标题 -->
+  <text x="40" y="60" font-size="11.5" font-weight="600" fill="#5a3410">createEventSchema(rowType)（SchemaEvolution.java:596，字段 :598–:604）</text>
+  <text x="40" y="78" font-size="10" fill="#6e6e73">把用户行包进定长前缀 struct；checkAcidSchema（:576）按 6 个 acidEventFieldNames（:617）判定 ACID</text>
+
+  <!-- group labels -->
+  <text x="408" y="102" font-size="10" fill="#93762e" text-anchor="middle">定长前缀（5 列，reader 按 readerColumnOffset :94 跳过）</text>
+  <text x="855" y="102" font-size="10" fill="#1b2a4a" text-anchor="middle">用户原始行</text>
+
+  <!-- 6 fields -->
+  <rect x="40" y="110" width="141" height="72" rx="10" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+  <text x="110" y="140" font-size="11" font-weight="600" fill="#5a3410" text-anchor="middle">operation</text>
+  <text x="110" y="162" font-size="9" fill="#93762e" text-anchor="middle">增/删/改类型</text>
+
+  <rect x="189" y="110" width="141" height="72" rx="10" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+  <text x="259" y="140" font-size="10.5" font-weight="600" fill="#5a3410" text-anchor="middle">originalTransaction</text>
+  <text x="259" y="162" font-size="9" fill="#93762e" text-anchor="middle">原始事务号</text>
+
+  <rect x="338" y="110" width="141" height="72" rx="10" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+  <text x="408" y="140" font-size="11" font-weight="600" fill="#5a3410" text-anchor="middle">bucket</text>
+  <text x="408" y="162" font-size="9" fill="#93762e" text-anchor="middle">分桶号</text>
+
+  <rect x="487" y="110" width="141" height="72" rx="10" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+  <text x="557" y="140" font-size="11" font-weight="600" fill="#5a3410" text-anchor="middle">rowId</text>
+  <text x="557" y="162" font-size="9" fill="#93762e" text-anchor="middle">行号（桶内）</text>
+
+  <rect x="636" y="110" width="141" height="72" rx="10" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+  <text x="706" y="140" font-size="10.5" font-weight="600" fill="#5a3410" text-anchor="middle">currentTransaction</text>
+  <text x="706" y="162" font-size="9" fill="#93762e" text-anchor="middle">当前事务号</text>
+
+  <rect x="785" y="110" width="141" height="72" rx="10" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="855" y="140" font-size="11" font-weight="600" fill="#1b2a4a" text-anchor="middle">row</text>
+  <text x="855" y="162" font-size="9" fill="#5b7db1" text-anchor="middle">原始用户行</text>
+
+  <text x="40" y="206" font-size="10" fill="#6e6e73">判定为 ACID 后置 isAcid（:91）；reader 列偏移跳过前缀，只把 row 当用户数据读</text>
+
+  <!-- divider -->
+  <text x="40" y="248" font-size="11.5" font-weight="600" fill="#12402a">base + delta 合并（Hive 层）</text>
+  <line x1="40" y1="258" x2="940" y2="258" stroke="#ececef" stroke-width="1"/>
+
+  <!-- base -->
+  <rect x="50" y="286" width="230" height="80" rx="12" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+  <text x="165" y="312" font-size="12" font-weight="600" fill="#5a3410" text-anchor="middle">base 文件</text>
+  <text x="165" y="334" font-size="10.5" fill="#93762e" text-anchor="middle">全量基线快照</text>
+  <text x="165" y="352" font-size="10" fill="#93762e" text-anchor="middle">高效列存承载</text>
+
+  <!-- delta -->
+  <rect x="50" y="392" width="230" height="90" rx="12" fill="#f5faf6" stroke="#cfe6d5" filter="url(#soft)"/>
+  <text x="165" y="418" font-size="12" font-weight="600" fill="#12402a" text-anchor="middle">delta 文件</text>
+  <text x="165" y="440" font-size="10.5" fill="#2f6f4f" text-anchor="middle">增量：insert / update</text>
+  <text x="165" y="458" font-size="10.5" fill="#2f6f4f" text-anchor="middle">/ delete 事件行</text>
+  <text x="165" y="476" font-size="10" fill="#2f6f4f" text-anchor="middle">同为 ACID 事件 schema</text>
+
+  <path d="M280,326 L340,326 L340,392 L400,392" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M280,437 L340,437 L340,412 L400,412" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <!-- Hive merge -->
+  <rect x="400" y="336" width="270" height="132" rx="12" fill="#f7f7f9" stroke="#e3e3e8" filter="url(#soft)"/>
+  <text x="535" y="362" font-size="12" font-weight="600" fill="#1d1d1f" text-anchor="middle">Hive 层合并</text>
+  <text x="535" y="386" font-size="10.5" fill="#6e6e73" text-anchor="middle">按 currentTransaction / rowId</text>
+  <text x="535" y="404" font-size="10.5" fill="#6e6e73" text-anchor="middle">合并出某时点快照</text>
+  <text x="535" y="428" font-size="10" fill="#6e6e73" text-anchor="middle">事务边界、可见性判定在此</text>
+  <text x="535" y="450" font-size="10" fill="#6e6e73" text-anchor="middle">ORC 不参与</text>
+
+  <path d="M670,402 L730,402" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <!-- 快照 -->
+  <rect x="730" y="356" width="200" height="92" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="830" y="384" font-size="12" font-weight="600" fill="#1b2a4a" text-anchor="middle">合并快照</text>
+  <text x="830" y="406" font-size="10.5" fill="#5b7db1" text-anchor="middle">上层可见的</text>
+  <text x="830" y="424" font-size="10.5" fill="#5b7db1" text-anchor="middle">当前表数据</text>
+
+  <!-- 职责边界 banner -->
+  <rect x="400" y="486" width="530" height="72" rx="12" fill="#f9ecec" stroke="#e8c9c9"/>
+  <text x="420" y="510" font-size="11.5" font-weight="600" fill="#7a2230">职责边界：事务边界在 Hive 层，不在 ORC</text>
+  <text x="420" y="532" font-size="10.5" fill="#a85560">快照合并 = 表格式/引擎（Hive）职责；ORC 只保证"事件行也是</text>
+  <text x="420" y="550" font-size="10.5" fill="#a85560">高效列存文件"，多 5 个定长前缀列，reader 按 offset 跳过。</text>
+
+  <text x="50" y="512" font-size="10" fill="#6e6e73">ACID 文件比普通</text>
+  <text x="50" y="530" font-size="10" fill="#6e6e73">文件多 5 定长前缀，</text>
+  <text x="50" y="548" font-size="10" fill="#6e6e73">强制 positionalLevels=2。</text>
+</svg>

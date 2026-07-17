@@ -1,6 +1,6 @@
 # Iceberg 原理 · 支撑主线 · 扫描规划
 
-> **定位**：属"规划能力域"。管查询如何从元数据树规划出要读的 data file:两级剪枝(manifest 分区剪 + data file 列统计剪)、residual 残差、split 切分。被【接触面】的 scan 调用、消费【元数据树】、叠加【行级删除】。源码基准 **Iceberg(f2875fd)**(`core/`)。
+> **定位**：属"规划能力域"。管查询如何从元数据树规划出要读的 data file:两级剪枝(manifest 分区剪 + data file 列统计剪)、residual 残差、split 切分。被【接触面】的 scan 调用、消费【元数据树】、叠加【行级删除】。源码基准 **Iceberg(apache/iceberg main · commit 6ec1a01)**(`core/`)。
 
 Iceberg 的查询规划**不 list 目录**,而是顺元数据树剪枝:读快照的 manifest list → 按分区摘要剪掉整个 manifest → 读存活 manifest、按 data file 列统计剪掉整个文件 → 剩下的 data file 组成扫描任务交计算引擎。两级剪枝 + 列统计让规划只碰真正相关的文件,是 Iceberg 查询快的关键。
 
@@ -24,7 +24,7 @@ Iceberg 的查询规划**不 list 目录**,而是顺元数据树剪枝:读快照
 ![Iceberg residual 与 split](Iceberg原理_规划_02residual.svg)
 
 - **Residual(残差谓词)**:`ResidualEvaluator`(按 spec id 缓存,`ManifestGroup.java:182`)——已被分区满足的谓词从行过滤里**去掉**。例如 `WHERE day(ts)='2024-01-01'` 若分区就是 `day(ts)`,该谓词由分区剪枝保证,残差为空,引擎读文件时无需再过滤——省 CPU。
-- **FileScanTask 组装**:每个存活条目 → `BaseFileScanTask(dataFile, deleteFiles, schema, spec, residuals)`(`ManifestGroup.java:393`),附上匹配的 delete files。
+- **FileScanTask 组装**:每个存活条目 → `BaseFileScanTask(dataFile, deleteFiles, schema, spec, residuals)`(`ManifestGroup.java:402`),附上匹配的 delete files。
 - **split 切分**:`planTasks()` 按目标 split 大小切分/合并文件任务(`BaseTableScan.java:43`,`TableScanUtil.planTasks`)——大文件切成多 split 并行读、小文件合并减少任务数。
 
 ---
@@ -38,7 +38,7 @@ Iceberg 的查询规划**不 list 目录**,而是顺元数据树剪枝:读快照
 | ManifestEvaluator | `core/.../ManifestGroup.java:279` | 第一级 manifest 分区剪 |
 | InclusiveMetricsEvaluator | `core/.../ManifestReader.java:269` | 第二级文件列统计剪 |
 | ResidualEvaluator | `core/.../ManifestGroup.java:182` | 残差(去掉分区已满足的谓词) |
-| BaseFileScanTask | `core/.../ManifestGroup.java:393` | 扫描任务(data file+deletes+residual) |
+| BaseFileScanTask | `core/.../ManifestGroup.java:402` | 扫描任务(data file+deletes+residual) |
 
 ## 调优要点（关键开关）
 

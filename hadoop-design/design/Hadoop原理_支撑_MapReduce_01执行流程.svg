@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="470" viewBox="0 0 960 470"
+     font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="960" height="470" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">MapReduce 执行:就近读块的 Map → 拉取归并的 Shuffle → 汇聚输出的 Reduce</text>
+
+  <!-- 提交 -->
+  <rect x="30" y="52" width="900" height="56" rx="12" fill="#f4eefb" stroke="#d9c9ef"/>
+  <text x="48" y="76" font-size="10" fill="#3c1361">client:JobSubmitter.submitJobInternal(JobSubmitter.java:138) → writeSplits(:322) 算分片 → YARNRunner.submitJob(:320) 变 YARN 应用</text>
+  <text x="48" y="96" font-size="9" fill="#7c5aa6">RM 启动 MRAppMaster(MRAppMaster.java:180) 作为 AM,经 ContainerAllocator(:205) 优先申请 split 所在节点的 Container(数据本地性)</text>
+
+  <!-- Map -->
+  <rect x="30" y="128" width="270" height="300" rx="13" fill="#f3f7fc" stroke="#cfe0f2"/>
+  <text x="165" y="152" font-size="12" font-weight="600" fill="#1b2a4a" text-anchor="middle">① Map 阶段</text>
+  <rect x="48" y="166" width="234" height="40" rx="9" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="165" y="184" font-size="9" font-weight="600" fill="#1b2a4a" text-anchor="middle">HDFS 块(本地读)</text>
+  <text x="165" y="199" font-size="7.8" fill="#5b7db1" text-anchor="middle">一个 split ≈ 一个块</text>
+  <rect x="48" y="216" width="234" height="40" rx="9" fill="#ffffff" stroke="#bcd0ec"/>
+  <text x="165" y="240" font-size="9" fill="#1b2a4a" text-anchor="middle">map() 逐记录处理</text>
+  <rect x="48" y="266" width="234" height="56" rx="9" fill="#ffffff" stroke="#bcd0ec"/>
+  <text x="165" y="288" font-size="9" fill="#1b2a4a" text-anchor="middle">按 key 分区 + 排序</text>
+  <text x="165" y="306" font-size="8.3" fill="#5b7db1" text-anchor="middle">combiner 预聚合(可选)</text>
+  <rect x="48" y="332" width="234" height="44" rx="9" fill="#fff7e6" stroke="#f0dcae"/>
+  <text x="165" y="354" font-size="9" font-weight="600" fill="#7a4d00" text-anchor="middle">溢写到 Map 节点本地磁盘</text>
+  <text x="165" y="370" font-size="7.8" fill="#9a7328" text-anchor="middle">中间数据不进 HDFS</text>
+  <path d="M165,206 L165,216" stroke="#c7c7cc" stroke-width="1.3" fill="none" marker-end="url(#ar)"/>
+  <path d="M165,256 L165,266" stroke="#c7c7cc" stroke-width="1.3" fill="none" marker-end="url(#ar)"/>
+  <path d="M165,322 L165,332" stroke="#c7c7cc" stroke-width="1.3" fill="none" marker-end="url(#ar)"/>
+
+  <!-- Shuffle -->
+  <rect x="330" y="128" width="270" height="300" rx="13" fill="#fdfaf3" stroke="#efdcb4"/>
+  <text x="465" y="152" font-size="12" font-weight="600" fill="#7a4d00" text-anchor="middle">② Shuffle 阶段</text>
+  <rect x="348" y="180" width="234" height="80" rx="9" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="465" y="206" font-size="9.5" font-weight="600" fill="#7a4d00" text-anchor="middle">Reduce 端主动 pull</text>
+  <text x="465" y="228" font-size="8.5" fill="#9a7328" text-anchor="middle">从各 Map 节点拉取</text>
+  <text x="465" y="246" font-size="8.5" fill="#9a7328" text-anchor="middle">属于自己分区的数据</text>
+  <rect x="348" y="278" width="234" height="70" rx="9" fill="#ffffff" stroke="#efdcb4"/>
+  <text x="465" y="304" font-size="9" fill="#7a4d00" text-anchor="middle">归并排序</text>
+  <text x="465" y="324" font-size="8.3" fill="#9a7328" text-anchor="middle">聚成 &lt;key, values&gt; 有序</text>
+  <text x="465" y="378" font-size="8.5" fill="#c4341c" text-anchor="middle">是 pull 而非 push</text>
+
+  <!-- Reduce -->
+  <rect x="630" y="128" width="300" height="300" rx="13" fill="#f5faf6" stroke="#e2ece5"/>
+  <text x="780" y="152" font-size="12" font-weight="600" fill="#2c5a3a" text-anchor="middle">③ Reduce 阶段</text>
+  <rect x="648" y="180" width="264" height="56" rx="9" fill="#eafaf1" stroke="#bce6cd"/>
+  <text x="780" y="204" font-size="9" fill="#0f5132" text-anchor="middle">reduce() 对每个 key</text>
+  <text x="780" y="222" font-size="8.5" fill="#3f8f66" text-anchor="middle">的 values 集合聚合</text>
+  <rect x="648" y="256" width="264" height="60" rx="9" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="780" y="282" font-size="9.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">输出写回 HDFS</text>
+  <text x="780" y="302" font-size="8.3" fill="#5b7db1" text-anchor="middle">经 pipeline 写 3 副本</text>
+  <rect x="648" y="336" width="264" height="70" rx="9" fill="#f7f7f9" stroke="#e2e2e7"/>
+  <text x="780" y="360" font-size="9" font-weight="600" fill="#1d1d1f" text-anchor="middle">容错</text>
+  <text x="780" y="380" font-size="8.3" fill="#494950" text-anchor="middle">Task 失败 AM 重试(默认 4 次)</text>
+  <text x="780" y="398" font-size="8.3" fill="#494950" text-anchor="middle">慢 Task → 推测执行</text>
+
+  <path d="M300,300 L330,220" stroke="#c7c7cc" stroke-width="1.6" fill="none" marker-end="url(#ar)"/>
+  <path d="M600,300 L630,270" stroke="#c7c7cc" stroke-width="1.6" fill="none" marker-end="url(#ar)"/>
+
+  <rect x="30" y="440" width="900" height="24" rx="7" fill="#f4eefb" stroke="#d9c9ef"/>
+  <text x="480" y="457" font-size="9" fill="#3c1361" text-anchor="middle">MapReduce 是跑在 YARN 上的一个应用/框架,MRAppMaster 只是一种 AM —— 不是 YARN 的内建能力(Spark/Flink 同理)</text>
+</svg>

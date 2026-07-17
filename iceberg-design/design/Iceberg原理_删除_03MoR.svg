@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="520" viewBox="0 0 1080 520" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="520" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="700" fill="#1d1d1f">Merge-on-Read · 读时把删除叠加到 data file 上过滤</text>
+  <text x="30" y="49" font-size="9.5" fill="#a1a1a6">DeleteFileIndex.forDataFile(seq, file) 为每个 data file 找适用 delete → 附到 FileScanTask · DeleteFileIndex.java:151</text>
+
+  <!-- flow: data file + deletes -> engine -->
+  <rect x="30" y="72" width="230" height="150" rx="12" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="46" y="96" font-size="10.5" font-weight="700" fill="#5a3410">data file</text>
+  <text x="46" y="118" font-size="8.8" fill="#93762e">parquet/orc(不动)</text>
+  <text x="46" y="138" font-size="8.8" fill="#93762e">seq=2</text>
+  <g font-size="8" fill="#b3934a"><text x="46" y="162">row0 · row1 · row2</text><text x="46" y="180">row3 · row4 · row5</text></g>
+
+  <rect x="30" y="238" width="230" height="130" rx="12" fill="#f9ecec" stroke="#e8c9c9"/>
+  <text x="46" y="262" font-size="10.5" font-weight="700" fill="#7a2230">适用 delete files</text>
+  <text x="46" y="284" font-size="8.6" fill="#a85560">pos-delete(file,row1)</text>
+  <text x="46" y="302" font-size="8.6" fill="#a85560">pos-delete(file,row4)</text>
+  <text x="46" y="322" font-size="8.6" fill="#a85560">eq-delete(id=123)</text>
+  <text x="46" y="344" font-size="8" fill="#c07882">DeleteFileIndex 四路 + DV</text>
+
+  <line x1="260" y1="147" x2="360" y2="200" stroke="#b8b8bf" stroke-width="1.4" marker-end="url(#ar)"/>
+  <line x1="260" y1="300" x2="360" y2="240" stroke="#b8b8bf" stroke-width="1.4" marker-end="url(#ar)"/>
+
+  <rect x="360" y="160" width="300" height="120" rx="12" fill="#e7f0fb" stroke="#b9d2ef"/>
+  <text x="510" y="186" font-size="10.5" font-weight="700" text-anchor="middle" fill="#1b2a4a">计算引擎 merge-on-read</text>
+  <text x="510" y="210" font-size="8.8" text-anchor="middle" fill="#5b7db1">读 data file 时叠加 deletes</text>
+  <text x="510" y="230" font-size="8.8" text-anchor="middle" fill="#5b7db1">位置删除:按 (file,pos) 跳过</text>
+  <text x="510" y="250" font-size="8.8" text-anchor="middle" fill="#5b7db1">等值删除:按列值比对过滤</text>
+  <text x="510" y="270" font-size="8" text-anchor="middle" fill="#a1a1a6">FileScanTask 附带 deletes(见扫描规划)</text>
+
+  <line x1="660" y1="220" x2="760" y2="220" stroke="#b8b8bf" stroke-width="1.6" marker-end="url(#ar)"/>
+
+  <rect x="760" y="160" width="290" height="120" rx="12" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="905" y="186" font-size="10.5" font-weight="700" text-anchor="middle" fill="#12402a">输出(删除后)</text>
+  <g font-size="8.6" fill="#2f6f4f" text-anchor="middle"><text x="905" y="212">row0 · row2</text><text x="905" y="232">row3 · row5</text></g>
+  <text x="905" y="258" font-size="8" text-anchor="middle" fill="#5b8f6f">row1/row4(位置删)+ id=123(等值删)被滤掉</text>
+
+  <!-- MoR vs CoW -->
+  <rect x="30" y="298" width="230" height="70" rx="12" fill="#f7f7f9" stroke="#e3e3e8"/>
+  <text x="46" y="322" font-size="9.5" font-weight="700" fill="#1d1d1f">DV(v3 · 删除向量)</text>
+  <text x="46" y="342" font-size="8.4" fill="#6e6e73">puffin 位图,每 data file 一个</text>
+  <text x="46" y="358" font-size="8.4" fill="#6e6e73">替代多个 pos-delete file(dvByPath:202)</text>
+
+  <rect x="30" y="384" width="500" height="116" rx="12" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="46" y="408" font-size="10.5" font-weight="700" fill="#12402a">Merge-on-Read(MoR)</text>
+  <text x="46" y="430" font-size="9" fill="#2f6f4f">写快:只写小 delete file,不重写 data</text>
+  <text x="46" y="450" font-size="9" fill="#2f6f4f">读慢:每次读要叠加删除</text>
+  <text x="46" y="472" font-size="8.6" fill="#5b8f6f">适合写多读少;delete file 堆积需 compaction 物化</text>
+  <text x="46" y="490" font-size="8" fill="#a1a1a6">position 快(按位置跳)· equality 慢(按值比)</text>
+
+  <rect x="550" y="384" width="500" height="116" rx="12" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="566" y="408" font-size="10.5" font-weight="700" fill="#5a3410">Copy-on-Write(CoW)</text>
+  <text x="566" y="430" font-size="9" fill="#93762e">写慢:重写整个 data file(去掉删除行)</text>
+  <text x="566" y="450" font-size="9" fill="#93762e">读快:无删除叠加,直接读</text>
+  <text x="566" y="472" font-size="8.6" fill="#b3934a">适合读多写少;或对 MoR 表定期 compaction 转 CoW 效果</text>
+  <text x="566" y="490" font-size="8" fill="#a1a1a6">按读写比选择,或按操作粒度混用</text>
+</svg>

@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="520" viewBox="0 0 1080 520" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="520" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Rust catch_unwind · 边界捕获 panic（不让它跨边界）</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">展开模式下把可能 panic 的代码包起来,panic 被捕获返回 Err 不向上传播 —— 是最后防线,非常规 try/catch</text>
+
+  <!-- catch_unwind API (blue = 接口/逻辑) -->
+  <rect x="40" y="80" width="500" height="180" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="62" y="106" font-size="12.5" font-weight="600" fill="#1b2a4a">std::panic::catch_unwind</text>
+  <text x="62" y="126" font-size="9" fill="#5b7db1">library/std/src/panic.rs:358 · 带 UnwindSafe 约束</text>
+  <rect x="62" y="140" width="456" height="46" rx="8" fill="#ffffff" stroke="#cfe0f2"/>
+  <text x="290" y="160" font-size="9.5" font-weight="600" text-anchor="middle" fill="#1b2a4a">展开模式:panic 被捕获 → 返回 Err</text>
+  <text x="290" y="176" font-size="9" text-anchor="middle" fill="#5b7db1">不向上传播,不跨边界</text>
+  <text x="62" y="208" font-size="10" fill="#1b2a4a">· 实现用 intrinsics::catch_unwind（panicking.rs:544）</text>
+  <text x="62" y="230" font-size="10" fill="#1b2a4a">· 把可能 panic 的代码包起来</text>
+  <text x="62" y="252" font-size="9" fill="#a1a1a6">仅 -C panic=unwind 模式生效</text>
+
+  <!-- abort 退化 (red) -->
+  <rect x="560" y="80" width="480" height="180" rx="14" fill="#fbeaea" stroke="#e7c3c3" filter="url(#soft)"/>
+  <text x="582" y="106" font-size="12.5" font-weight="600" fill="#4a1414">abort 模式 · 退化不捕获</text>
+  <text x="582" y="126" font-size="9" fill="#7a2a2a">panicking.rs:494</text>
+  <rect x="582" y="140" width="436" height="46" rx="8" fill="#ffffff" stroke="#e7c3c3"/>
+  <text x="800" y="160" font-size="9.5" font-weight="600" text-anchor="middle" fill="#4a1414">退化为直接 Ok(f())</text>
+  <text x="800" y="176" font-size="9" text-anchor="middle" fill="#7a2a2a">不能捕获 panic</text>
+  <text x="582" y="208" font-size="10" fill="#4a1414">· abort 直接终止进程,无展开可捕</text>
+  <text x="582" y="230" font-size="10" fill="#4a1414">· panic 总能 catch 是误区</text>
+  <text x="582" y="252" font-size="9" fill="#7a2a2a">catch_unwind 只在展开模式有意义</text>
+
+  <!-- 用途 (green = 用途场景) -->
+  <rect x="40" y="280" width="640" height="130" rx="14" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="62" y="306" font-size="12" font-weight="600" fill="#12402a">用途 · 只在边界防扩散</text>
+  <g text-anchor="middle">
+    <rect x="62" y="322" width="192" height="66" rx="8" fill="#ffffff" stroke="#bfe0cd"/>
+    <text x="158" y="348" font-size="10" font-weight="600" fill="#12402a">FFI 边界</text>
+    <text x="158" y="368" font-size="9" fill="#2f6f4f">panic 跨语言是 UB</text>
+    <rect x="266" y="322" width="192" height="66" rx="8" fill="#ffffff" stroke="#bfe0cd"/>
+    <text x="362" y="348" font-size="10" font-weight="600" fill="#12402a">线程边界</text>
+    <text x="362" y="368" font-size="9" fill="#2f6f4f">线程 panic 不崩主进程</text>
+    <rect x="470" y="322" width="192" height="66" rx="8" fill="#ffffff" stroke="#bfe0cd"/>
+    <text x="566" y="348" font-size="10" font-weight="600" fill="#12402a">插件隔离</text>
+    <text x="566" y="368" font-size="9" fill="#2f6f4f">隔离不可信代码</text>
+  </g>
+
+  <!-- 不是异常处理 (amber warning) -->
+  <rect x="700" y="280" width="340" height="130" rx="14" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="722" y="306" font-size="12" font-weight="600" fill="#5a3410">不是异常处理</text>
+  <text x="722" y="330" font-size="10" fill="#5a3410">· 最后防线,非常规 try/catch</text>
+  <text x="722" y="352" font-size="10" fill="#5a3410">· panic 是逻辑 bug,应修不是</text>
+  <text x="722" y="370" font-size="10" fill="#5a3410">&#160;&#160;常规处理</text>
+  <text x="722" y="392" font-size="9" fill="#a1a1a6">正常错误用 Result,不是控制流工具</text>
+
+  <text x="30" y="440" font-size="9.5" fill="#a1a1a6">为什么有捕获但不鼓励常规用:panic 表示程序 bug(不该发生的),正常错误用 Result;catch_unwind 只在边界(FFI/线程/插件)防扩散</text>
+  <text x="30" y="464" font-size="9" fill="#a1a1a6">仅展开模式(-C panic=unwind);abort 模式退化不捕获 · 源码基准 Rust 1.99.0</text>
+</svg>

@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="500" viewBox="0 0 1080 500" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="500" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="700" fill="#1d1d1f">catalog · 找表的入口(表名 → 当前 metadata 位置,一个指针)</text>
+  <text x="30" y="49" font-size="9.5" fill="#a1a1a6">catalog 只存指针;拿到 metadata.json 就能顺元数据树读整张表 · api/.../catalog/Catalog.java:33 · TableOperations.java:64 commit(base, metadata)</text>
+
+  <rect x="30" y="70" width="240" height="60" rx="12" fill="#f4eefb" stroke="#d9c7ec"/>
+  <text x="150" y="96" font-size="11" font-weight="700" text-anchor="middle" fill="#3d2a5a">计算引擎</text>
+  <text x="150" y="115" font-size="8.6" text-anchor="middle" fill="#8a6db3">loadTable(名) → 拿指针</text>
+
+  <rect x="420" y="70" width="240" height="60" rx="12" fill="#e7f0fb" stroke="#b9d2ef"/>
+  <text x="540" y="96" font-size="11" font-weight="700" text-anchor="middle" fill="#1b2a4a">Catalog</text>
+  <text x="540" y="115" font-size="8.6" text-anchor="middle" fill="#5b7db1">表名 → metadata 位置</text>
+
+  <rect x="810" y="70" width="240" height="60" rx="12" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="930" y="96" font-size="11" font-weight="700" text-anchor="middle" fill="#5a3410">metadata.json</text>
+  <text x="930" y="115" font-size="8.6" text-anchor="middle" fill="#93762e">元数据树根(对象存储)</text>
+
+  <line x1="270" y1="100" x2="420" y2="100" stroke="#b8b8bf" stroke-width="1.6" marker-end="url(#ar)"/>
+  <line x1="660" y1="100" x2="810" y2="100" stroke="#b8b8bf" stroke-width="1.6" marker-end="url(#ar)"/>
+  <text x="345" y="92" font-size="8" text-anchor="middle" fill="#86868b">找表</text>
+  <text x="735" y="92" font-size="8" text-anchor="middle" fill="#86868b">读/换指针</text>
+
+  <text x="30" y="172" font-size="11.5" font-weight="700" fill="#1d1d1f">catalog 四类实现 —— 差异只在"如何原子换指针"</text>
+
+  <g font-size="9">
+  <rect x="30" y="186" width="248" height="120" rx="11" fill="#f6f8fc" stroke="#dbe6f3"/>
+  <text x="46" y="208" font-size="10.5" font-weight="700" fill="#1b2a4a">Hadoop(文件系统)</text>
+  <text x="46" y="228" fill="#5b7db1">指针 = 目录约定</text>
+  <text x="46" y="246" fill="#5b7db1">vN.metadata.json 序号</text>
+  <text x="46" y="264" fill="#5b7db1">提交 = 原子 rename</text>
+  <text x="46" y="288" font-size="8" fill="#a1a1a6">测试/单机可用,并发弱</text>
+
+  <rect x="292" y="186" width="248" height="120" rx="11" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="308" y="208" font-size="10.5" font-weight="700" fill="#12402a">Hive metastore</text>
+  <text x="308" y="228" fill="#2f6f4f">指针存 HMS 表参数</text>
+  <text x="308" y="246" fill="#2f6f4f">metadata_location</text>
+  <text x="308" y="264" fill="#2f6f4f">提交 = 条件更新/锁</text>
+  <text x="308" y="288" font-size="8" fill="#a1a1a6">生态兼容 Hive 表</text>
+
+  <rect x="554" y="186" width="248" height="120" rx="11" fill="#f4eefb" stroke="#d9c7ec"/>
+  <text x="570" y="208" font-size="10.5" font-weight="700" fill="#3d2a5a">JDBC(关系库)</text>
+  <text x="570" y="228" fill="#8a6db3">指针存关系表一行</text>
+  <text x="570" y="246" fill="#8a6db3">条件 UPDATE ... WHERE</text>
+  <text x="570" y="264" fill="#8a6db3">metadata_location=旧值</text>
+  <text x="570" y="288" font-size="8" fill="#a1a1a6">恰更新 1 行才成功</text>
+
+  <rect x="816" y="186" width="234" height="120" rx="11" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="832" y="208" font-size="10.5" font-weight="700" fill="#5a3410">REST</text>
+  <text x="832" y="228" fill="#93762e">指针由 REST 服务管</text>
+  <text x="832" y="246" fill="#93762e">CAS 在服务端做</text>
+  <text x="832" y="264" fill="#93762e">客户端只处理冲突</text>
+  <text x="832" y="288" font-size="8" fill="#a1a1a6">引擎解耦,可托管</text>
+  </g>
+
+  <rect x="30" y="326" width="1020" height="66" rx="12" fill="#f7f9fc" stroke="#e5ecf5"/>
+  <text x="46" y="350" font-size="10.5" font-weight="700" fill="#1b2a4a">共性:指针语义统一,提交原子性由 catalog 保证</text>
+  <text x="46" y="371" font-size="9.5" fill="#5b7db1">无论哪种 catalog,读者永远从"当前指针"顺元数据树读一致快照;写者产新 metadata.json 后原子换指针,冲突则乐观重试(见 catalog 与并发篇)</text>
+
+  <rect x="30" y="410" width="1020" height="56" rx="12" fill="#f0f0f4" stroke="#d2d2d7"/>
+  <text x="46" y="433" font-size="10" font-weight="700" fill="#48484a">TableOperations 抽象(core/.../TableOperations.java)</text>
+  <text x="46" y="453" font-size="9" fill="#6e6e73">current():当前 metadata　·　refresh():重读最新　·　commit(base, metadata):校验 base==current 后原子换指针 —— 各 catalog 实现这一个契约</text>
+</svg>

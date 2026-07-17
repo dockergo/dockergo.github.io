@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="500" viewBox="0 0 1080 500" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="500" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Rust 类型推断 · 两层引擎（rustc_infer + rustc_hir_typeck）</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">类型静态但少标注:推断在 HIR 上给每个表达式定类型,底层靠推断引擎的合一/相等判定;体内推断,签名必标</text>
+
+  <!-- top layer: hir_typeck -->
+  <rect x="60" y="78" width="960" height="132" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="82" y="104" font-size="12" font-weight="600" fill="#1b2a4a">① 类型检查 pass · rustc_hir_typeck（主 query）</text>
+  <text x="82" y="124" font-size="10.5" fill="#5b7db1">typeck_with_inspect（lib.rs:111）—— 在 HIR 上给每个表达式定类型</text>
+  <text x="82" y="141" font-size="10.5" fill="#5b7db1">从 rustc_hir_analysis::check_crate 驱动（passes.rs:1135）</text>
+  <g text-anchor="middle" font-size="9.5">
+    <rect x="82" y="156" width="176" height="38" rx="8" fill="#f3f7fc" stroke="#cfe0f2"/><text x="170" y="173" fill="#274a78">HIR 表达式</text><text x="170" y="187" fill="#5b7db1">let x = ...</text>
+    <rect x="278" y="156" width="176" height="38" rx="8" fill="#f3f7fc" stroke="#cfe0f2"/><text x="366" y="173" fill="#274a78">定类型</text><text x="366" y="187" fill="#5b7db1">每表达式一类型</text>
+    <rect x="474" y="156" width="230" height="38" rx="8" fill="#f3f7fc" stroke="#cfe0f2"/><text x="589" y="173" fill="#274a78">产出喂给下游</text><text x="589" y="187" fill="#5b7db1">借用检查 / 单态化</text>
+  </g>
+  <rect x="724" y="156" width="276" height="38" rx="8" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="862" y="173" font-size="9.5" text-anchor="middle" fill="#12402a">推断局部于函数体（每 fn 独立推）</text>
+  <text x="862" y="187" font-size="9.5" text-anchor="middle" fill="#2f6f4f">函数签名必须显式标类型</text>
+
+  <!-- bottom layer: infer -->
+  <rect x="60" y="258" width="960" height="120" rx="14" fill="#e7f0fb" stroke="#b9d2ef" filter="url(#soft)"/>
+  <text x="82" y="284" font-size="12" font-weight="600" fill="#1b2a4a">② 推断引擎 · rustc_infer（低层 "type inference engine" · lib.rs:1）</text>
+  <text x="82" y="305" font-size="10.5" fill="#5b7db1">相等 / 子类型判定 · 类型变量管理 · 合一（unification）</text>
+  <g text-anchor="middle" font-size="9.5">
+    <rect x="82" y="320" width="200" height="40" rx="8" fill="#ffffff" stroke="#cfe0f2"/><text x="182" y="337" fill="#274a78">相等 / 子类型判定</text><text x="182" y="351" fill="#5b7db1">equate / subtype</text>
+    <rect x="302" y="320" width="200" height="40" rx="8" fill="#ffffff" stroke="#cfe0f2"/><text x="402" y="337" fill="#274a78">类型变量管理</text><text x="402" y="351" fill="#5b7db1">?T 引入与解析</text>
+    <rect x="522" y="320" width="200" height="40" rx="8" fill="#ffffff" stroke="#cfe0f2"/><text x="622" y="337" fill="#274a78">合一（union-find）</text><text x="622" y="351" fill="#5b7db1">求解约束方程组</text>
+  </g>
+  <text x="862" y="343" font-size="9.5" text-anchor="middle" fill="#5b7db1">typeck 请求判定 ↓ · infer 返回解出类型 ↑</text>
+
+  <!-- vertical connectors between layers -->
+  <path d="M330,210 L330,258" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M600,258 L600,210" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <text x="60" y="418" font-size="9.5" fill="#a1a1a6">分层意义:rustc_hir_typeck 定"每表达式是什么类型"（HIR 阶段）· rustc_infer 提供底层合一/相等能力 —— 签名标注 + 体内推断,平衡少写与接口明确</text>
+  <text x="30" y="470" font-size="9" fill="#a1a1a6">源码基准 Rust 1.99.0 · compiler/rustc_hir_typeck/ · compiler/rustc_infer/</text>
+</svg>

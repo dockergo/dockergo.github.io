@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="470" viewBox="0 0 920 470"
+     font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="920" height="470" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">心跳(3s):DataNode 来问保活、NameNode 搭车回令 —— 命令下发的唯一通道</text>
+
+  <!-- DataNode -->
+  <rect x="30" y="60" width="300" height="300" rx="14" fill="#fff7e6" stroke="#f0dcae"/>
+  <text x="180" y="84" font-size="12" font-weight="600" fill="#7a4d00" text-anchor="middle">DataNode</text>
+  <rect x="50" y="98" width="260" height="90" rx="11" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="180" y="122" font-size="10.5" font-weight="600" fill="#7a4d00" text-anchor="middle">BPServiceActor(BPServiceActor.java:94)</text>
+  <text x="180" y="144" font-size="8.5" fill="#9a7328" text-anchor="middle">offerService 循环(:673)</text>
+  <text x="180" y="164" font-size="8.5" fill="#9a7328" text-anchor="middle">每 3 秒(DFSConfigKeys.java:1029)</text>
+  <text x="180" y="180" font-size="8.5" fill="#9a7328" text-anchor="middle">sendHeartBeat(:544)</text>
+  <rect x="50" y="200" width="260" height="70" rx="11" fill="#ffffff" stroke="#efdcb4"/>
+  <text x="180" y="224" font-size="9.5" font-weight="600" fill="#7a4d00" text-anchor="middle">心跳携带:</text>
+  <text x="180" y="244" font-size="8.5" fill="#9a7328" text-anchor="middle">容量 / 已用 / 剩余 / xceiver 数</text>
+  <text x="180" y="262" font-size="8.5" fill="#9a7328" text-anchor="middle">= 我还活着 + 我的负载</text>
+  <rect x="50" y="282" width="260" height="64" rx="11" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="180" y="306" font-size="9.5" font-weight="600" fill="#7a4d00" text-anchor="middle">执行回令</text>
+  <text x="180" y="326" font-size="8.5" fill="#9a7328" text-anchor="middle">复制块 / 删块 / 恢复块 / 重注册</text>
+
+  <!-- NameNode -->
+  <rect x="590" y="60" width="300" height="300" rx="14" fill="#f3f7fc" stroke="#cfe0f2"/>
+  <text x="740" y="84" font-size="12" font-weight="600" fill="#1b2a4a" text-anchor="middle">NameNode</text>
+  <rect x="610" y="98" width="260" height="90" rx="11" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="740" y="122" font-size="10.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">handleHeartbeat</text>
+  <text x="740" y="144" font-size="8.5" fill="#5b7db1" text-anchor="middle">DatanodeManager.java:1856</text>
+  <text x="740" y="164" font-size="8.5" fill="#5b7db1" text-anchor="middle">更新该节点统计</text>
+  <text x="740" y="180" font-size="8.5" fill="#5b7db1" text-anchor="middle">在响应里搭载 DatanodeCommand[]</text>
+  <rect x="610" y="200" width="260" height="90" rx="11" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="740" y="224" font-size="10.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">HeartbeatManager.Monitor</text>
+  <text x="740" y="246" font-size="8.5" fill="#5b7db1" text-anchor="middle">heartbeatCheck(HeartbeatManager.java:441)</text>
+  <text x="740" y="266" font-size="8.5" fill="#5b7db1" text-anchor="middle">约 10.5 分钟无心跳 → 判死</text>
+  <text x="740" y="282" font-size="8.5" fill="#c4341c" text-anchor="middle">→ 其上块进欠副本队列重建</text>
+  <rect x="610" y="302" width="260" height="44" rx="11" fill="#e7eefb" stroke="#bcd0ec"/>
+  <text x="740" y="324" font-size="9" font-weight="600" fill="#1b2a4a" text-anchor="middle">关键:NameNode 从不主动连 DataNode</text>
+  <text x="740" y="339" font-size="8" fill="#5b7db1" text-anchor="middle">全靠 DataNode 来问、搭车回令</text>
+
+  <!-- 双向箭头 -->
+  <path d="M330,150 L590,150" stroke="#3f8f66" stroke-width="2" fill="none" marker-end="url(#ar)"/>
+  <text x="460" y="142" font-size="9" font-weight="600" fill="#0f5132" text-anchor="middle">① 心跳(保活+统计) →</text>
+  <path d="M590,314 L330,314" stroke="#c4341c" stroke-width="2" fill="none" marker-end="url(#ar)"/>
+  <text x="460" y="306" font-size="9" font-weight="600" fill="#c4341c" text-anchor="middle">← ② 响应搭载命令</text>
+
+  <rect x="30" y="378" width="860" height="62" rx="12" fill="#f7f7f9" stroke="#e2e2e7"/>
+  <text x="48" y="402" font-size="9.2" fill="#494950">· 判死时间 ≈ 2×recheck(5min,DFSConfigKeys.java:269) + 10×heartbeat(3s) ≈ 10.5 分钟</text>
+  <text x="48" y="424" font-size="9.2" fill="#494950">· 心跳是 NameNode 指挥 DataNode 的唯一途径 —— 这是理解 HDFS「主控被动、节点主动」控制流的关键</text>
+</svg>

@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="520" viewBox="0 0 1080 520" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="520" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="700" fill="#1d1d1f">列操作 · 全部按不可变字段 ID,零重写数据</text>
+  <text x="30" y="49" font-size="9.5" fill="#a1a1a6">SchemaUpdate 各操作只改元数据;data file 里列按字段 ID 存,故名字/位置变化都不影响读 · core/.../SchemaUpdate.java</text>
+
+  <!-- four ops -->
+  <rect x="30" y="72" width="248" height="200" rx="12" fill="#f4eefb" stroke="#d9c7ec"/>
+  <text x="46" y="96" font-size="11" font-weight="700" fill="#3d2a5a">rename 列</text>
+  <text x="46" y="120" font-size="9" fill="#8a6db3">renameColumn(SchemaUpdate.java:205)</text>
+  <text x="46" y="140" font-size="9" fill="#8a6db3">读 fieldId、只改 name</text>
+  <text x="46" y="160" font-size="9" fill="#8a6db3">保持同 ID</text>
+  <text x="46" y="188" font-size="8.6" fill="#a07dc4">→ 从不重写数据</text>
+  <text x="46" y="210" font-size="8.6" fill="#a07dc4">(data file 按 ID 存,名字只在元数据)</text>
+  <text x="46" y="242" font-size="8" fill="#a1a1a6">Hive:rename 可能读错列</text>
+
+  <rect x="290" y="72" width="248" height="200" rx="12" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="306" y="96" font-size="11" font-weight="700" fill="#12402a">加列</text>
+  <text x="306" y="120" font-size="9" fill="#2f6f4f">TypeUtil.assignFreshIds</text>
+  <text x="306" y="140" font-size="9" fill="#2f6f4f">分配全新字段 ID</text>
+  <text x="306" y="160" font-size="9" fill="#2f6f4f">必须 optional 或有默认值</text>
+  <text x="306" y="188" font-size="8.6" fill="#5b8f6f">→ 老数据文件无此 ID</text>
+  <text x="306" y="210" font-size="8.6" fill="#5b8f6f">读时该列投影为 null/默认值</text>
+  <text x="306" y="242" font-size="8" fill="#a1a1a6">highestFieldId 单调发号</text>
+
+  <rect x="550" y="72" width="248" height="200" rx="12" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="566" y="96" font-size="11" font-weight="700" fill="#5a3410">删列</text>
+  <text x="566" y="120" font-size="9" fill="#93762e">deleteColumn</text>
+  <text x="566" y="140" font-size="9" fill="#93762e">从 schema 去掉该 ID</text>
+  <text x="566" y="160" font-size="9" fill="#93762e">data file 里的列被忽略</text>
+  <text x="566" y="188" font-size="8.6" fill="#b3934a">→ 不重写数据</text>
+  <text x="566" y="210" font-size="8.6" fill="#b3934a">读时不再投影该 ID</text>
+  <text x="566" y="242" font-size="8" fill="#a1a1a6">ID 不复用,避免歧义</text>
+
+  <rect x="810" y="72" width="240" height="200" rx="12" fill="#e7f0fb" stroke="#b9d2ef"/>
+  <text x="826" y="96" font-size="11" font-weight="700" fill="#1b2a4a">改类型(提升)</text>
+  <text x="826" y="120" font-size="9" fill="#5b7db1">updateColumn</text>
+  <text x="826" y="140" font-size="9" fill="#5b7db1">只允许安全提升:</text>
+  <text x="826" y="160" font-size="9" fill="#5b7db1">int→long · float→double</text>
+  <text x="826" y="180" font-size="9" fill="#5b7db1">decimal 精度增大</text>
+  <text x="826" y="206" font-size="8.6" fill="#4a6fa0">不兼容改动被 flag 挡住</text>
+  <text x="826" y="228" font-size="8.6" fill="#4a6fa0">(除非 allowIncompatibleChanges)</text>
+  <text x="826" y="252" font-size="8" fill="#a1a1a6">保 ID,读老数据自动提升</text>
+
+  <!-- why -->
+  <rect x="30" y="292" width="1020" height="76" rx="12" fill="#f7f9fc" stroke="#e5ecf5"/>
+  <text x="46" y="316" font-size="11" font-weight="700" fill="#3d2a5a">为什么按字段 ID</text>
+  <text x="46" y="338" font-size="9.5" fill="#8a6db3">data file 里列用字段 ID 标识(非名字/位置);读时按 ID 投影 —— 名字变了、位置变了、加删了列,老数据文件照样正确读,零重写。</text>
+  <text x="46" y="357" font-size="9.5" fill="#8a6db3">Schema 维护 idToField/idToName/aliasToId 映射(api/.../Schema.java:78),findField(int id) / findColumnName(int id) 按 ID 查。</text>
+
+  <rect x="30" y="384" width="1020" height="116" rx="12" fill="#f0f0f4" stroke="#d2d2d7"/>
+  <text x="46" y="408" font-size="10.5" font-weight="700" fill="#48484a">对比 Hive:字段 ID 是杀手锏</text>
+  <text x="46" y="432" font-size="9.3" fill="#6e6e73">Hive 表按名字/位置解析列:加列要小心位置、rename 可能读错列、改类型可能读乱 —— 演进如履薄冰。</text>
+  <text x="46" y="452" font-size="9.3" fill="#6e6e73">Iceberg 按不可变字段 ID:所有列操作都是纯元数据变更,提交后立即生效、不停写、不重写数据。</text>
+  <text x="46" y="474" font-size="9.3" fill="#6e6e73">工程建议:优先加 optional 列(兼容);类型只做安全提升;不要绕过 API 手改 schema,保 ID 稳定是安全演进的前提。</text>
+  <text x="46" y="493" font-size="8.4" fill="#a1a1a6">schemas 存在 TableMetadata(schemasById);演进逻辑在本主线,字段 ID 让 data file 跨演进可读。</text>
+</svg>

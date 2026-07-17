@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="510" viewBox="0 0 1080 510" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="510" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Rust 生命周期 · 借用不超 owner 生命周期 —— 编译期防悬垂,零开销</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">借用不能活得比被借的值久;编译器给每个引用推断生命周期,借用检查验"引用不超 owner 生命周期"</text>
+
+  <!-- rule card (blue logic) -->
+  <rect x="40" y="82" width="330" height="200" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="60" y="108" font-size="12.5" font-weight="600" fill="#1b2a4a">规则 · 借用 &#8804; owner 生命周期</text>
+  <text x="60" y="132" font-size="10" fill="#5b7db1">编译器给每个引用推断 lifetime</text>
+  <text x="60" y="154" font-size="10" fill="#5b7db1">借用检查:引用不超被借值</text>
+  <text x="60" y="176" font-size="10" fill="#5b7db1">被借值先释放 → 引用悬垂 → 拒</text>
+  <text x="60" y="200" font-size="10" fill="#5b7db1">防"引用指向已释放的内存"</text>
+  <text x="60" y="226" font-size="9.5" fill="#a1a1a6">悬垂引用 = dangling reference</text>
+  <text x="60" y="248" font-size="9.5" fill="#a1a1a6">归属:借用检查器</text>
+  <text x="60" y="270" font-size="9" fill="#a1a1a6">与 use-after-free 同源的错误类</text>
+
+  <!-- elision vs annotation (amber storage) -->
+  <rect x="390" y="82" width="330" height="200" rx="14" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="410" y="108" font-size="12.5" font-weight="600" fill="#5a3410">标注 · 多数省略,复杂需写</text>
+  <text x="410" y="132" font-size="10" fill="#93762e">多数情况按省略规则自动推</text>
+  <text x="410" y="154" font-size="10" fill="#93762e">复杂关系(函数返回引用)需标注</text>
+  <rect x="410" y="168" width="290" height="42" rx="8" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="555" y="188" font-size="9.5" font-weight="600" text-anchor="middle" fill="#5a3410">fn longest&lt;'a&gt;(x:&amp;'a str, y:&amp;'a str)</text>
+  <text x="555" y="203" font-size="9.5" text-anchor="middle" fill="#93762e">-&gt; &amp;'a str · 输出不超输入</text>
+  <text x="410" y="230" font-size="10" fill="#93762e">&lt;'a&gt; 是给借用检查器的约束标签</text>
+  <text x="410" y="252" font-size="9" fill="#a1a1a6">结构体存引用时也要标注</text>
+  <text x="410" y="272" font-size="9" fill="#a1a1a6">标注不改变行为,只是显式表达</text>
+
+  <!-- zero cost (green success) -->
+  <rect x="740" y="82" width="300" height="200" rx="14" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="760" y="108" font-size="12.5" font-weight="600" fill="#12402a">编译期概念 · 零开销</text>
+  <text x="760" y="132" font-size="10" fill="#2f6f4f">生命周期是编译期概念</text>
+  <text x="760" y="154" font-size="10" fill="#2f6f4f">运行时不存在</text>
+  <text x="760" y="176" font-size="10" fill="#2f6f4f">不占内存、无运行时检查</text>
+  <text x="760" y="198" font-size="10" fill="#2f6f4f">只是借用检查器的约束标签</text>
+  <text x="760" y="224" font-size="9.5" fill="#2f6f4f">编完就"消失",纯静态分析</text>
+  <text x="760" y="248" font-size="9" fill="#a1a1a6">误区:以为有运行时开销 —— 没有</text>
+  <text x="760" y="270" font-size="9" fill="#a1a1a6">零成本抽象的一部分</text>
+
+  <!-- C dangling bug vs Rust reject -->
+  <rect x="40" y="302" width="500" height="150" rx="14" fill="#fbeaea" stroke="#e7c3c3" filter="url(#soft)"/>
+  <text x="60" y="328" font-size="12" font-weight="600" fill="#4a1414">C 的经典 bug · return 局部地址</text>
+  <text x="60" y="352" font-size="10" fill="#7a2a2a">char* f() { char buf[16]; return buf; }</text>
+  <text x="60" y="374" font-size="10" fill="#7a2a2a">返回局部变量地址 → 函数返回即释放</text>
+  <text x="60" y="396" font-size="10" fill="#7a2a2a">调用者拿到悬垂指针 → 未定义行为</text>
+  <text x="60" y="420" font-size="9.5" fill="#7a2a2a">C 编译器不拦,运行时才崩(或更糟:静默错)</text>
+  <text x="60" y="440" font-size="9" fill="#a1a1a6">局部变量生命周期短于返回的引用</text>
+
+  <rect x="560" y="302" width="480" height="150" rx="14" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="580" y="328" font-size="12" font-weight="600" fill="#12402a">Rust · 编译期就拒绝</text>
+  <text x="580" y="352" font-size="10" fill="#2f6f4f">fn f() -&gt; &amp;str { let s = String::new(); &amp;s }</text>
+  <text x="580" y="374" font-size="10" fill="#2f6f4f">s 出作用域即 Drop,返回的引用会悬垂</text>
+  <text x="580" y="396" font-size="10" fill="#2f6f4f">借用检查发现:引用生命周期 &gt; s 的</text>
+  <text x="580" y="420" font-size="9.5" fill="#2f6f4f">编译错误 E0515,根本编不过 —— 不给运行的机会</text>
+  <text x="580" y="440" font-size="9" fill="#a1a1a6">同类 bug 从"运行时崩"提前到"编译期拒"</text>
+
+  <text x="30" y="482" font-size="9.5" fill="#a1a1a6">为什么:防止引用指向已释放内存(悬垂) —— 把 C 的运行时隐患变成编译期错误 · 源码基准 Rust 1.99.0</text>
+</svg>

@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="500" viewBox="0 0 1080 500" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="500" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Rust 借用 · &amp;T 不可变可多个 / &amp;mut T 可变唯一 —— 编译期读写锁防数据竞争</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">不想转移所有权就借用(引用);某时刻要么多个 &amp;T 共享只读,要么一个 &amp;mut T 独占可写,不能混</text>
+
+  <!-- shared borrow &T (blue, multiple) -->
+  <rect x="40" y="82" width="480" height="176" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="60" y="108" font-size="12.5" font-weight="600" fill="#1b2a4a">不可变借用 &amp;T · 只读,可同时多个</text>
+  <g text-anchor="middle">
+    <rect x="60" y="124" width="130" height="46" rx="8" fill="#ffffff" stroke="#bcd0ec"/>
+    <text x="125" y="143" font-size="9.5" fill="#1b2a4a">&amp;T 读者 r1</text>
+    <text x="125" y="159" font-size="9" fill="#5b7db1">只读</text>
+    <rect x="205" y="124" width="130" height="46" rx="8" fill="#ffffff" stroke="#bcd0ec"/>
+    <text x="270" y="143" font-size="9.5" fill="#1b2a4a">&amp;T 读者 r2</text>
+    <text x="270" y="159" font-size="9" fill="#5b7db1">只读</text>
+    <rect x="350" y="124" width="130" height="46" rx="8" fill="#ffffff" stroke="#bcd0ec"/>
+    <text x="415" y="143" font-size="9.5" fill="#1b2a4a">&amp;T 读者 r3</text>
+    <text x="415" y="159" font-size="9" fill="#5b7db1">只读</text>
+  </g>
+  <text x="60" y="192" font-size="10" fill="#5b7db1">多个读者同时读,无冲突(都不改)</text>
+  <text x="60" y="214" font-size="10" fill="#5b7db1">let r1 = &amp;x; let r2 = &amp;x;  // OK</text>
+  <text x="60" y="238" font-size="9" fill="#a1a1a6">共享只读:读读不冲突,可无限多个</text>
+
+  <!-- mutable borrow &mut T (amber, unique) -->
+  <rect x="540" y="82" width="500" height="176" rx="14" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="560" y="108" font-size="12.5" font-weight="600" fill="#5a3410">可变借用 &amp;mut T · 可改,同一时刻唯一(独占)</text>
+  <g text-anchor="middle">
+    <rect x="560" y="124" width="180" height="46" rx="8" fill="#ffffff" stroke="#e8cf9a"/>
+    <text x="650" y="143" font-size="9.5" fill="#5a3410">&amp;mut T 写者 m</text>
+    <text x="650" y="159" font-size="9" fill="#93762e">独占,可读可写</text>
+    <rect x="756" y="124" width="264" height="46" rx="8" fill="#fbeaea" stroke="#e7c3c3"/>
+    <text x="888" y="143" font-size="9.5" fill="#4a1414">其间任何其它借用 → 编译错误</text>
+    <text x="888" y="159" font-size="9" fill="#7a2a2a">可变或不可变都不许并存</text>
+  </g>
+  <text x="560" y="192" font-size="10" fill="#93762e">&amp;mut 期间:不许有任何 &amp;T,也不许第二个 &amp;mut T</text>
+  <text x="560" y="214" font-size="10" fill="#93762e">let m = &amp;mut x;  // 独占期间 r1/r2 不可用</text>
+  <text x="560" y="238" font-size="9" fill="#a1a1a6">借用完(NLL 按最后使用)才能再借</text>
+  <path d="M740,147 L756,147" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <!-- core constraint: read-write lock (green result) -->
+  <rect x="40" y="278" width="1000" height="120" rx="14" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="60" y="304" font-size="12.5" font-weight="600" fill="#12402a">核心约束 · 编译期"读写锁"—— 某时刻二选一</text>
+  <g text-anchor="middle">
+    <rect x="60" y="320" width="470" height="56" rx="8" fill="#ffffff" stroke="#bfe0cd"/>
+    <text x="295" y="343" font-size="10.5" font-weight="600" fill="#12402a">要么 多个 &amp;T(共享只读)</text>
+    <text x="295" y="362" font-size="9.5" fill="#2f6f4f">N 个读者,谁都不改 → 安全</text>
+    <rect x="550" y="320" width="470" height="56" rx="8" fill="#fdf6ea" stroke="#efdcb4"/>
+    <text x="785" y="343" font-size="10.5" font-weight="600" fill="#5a3410">要么 一个 &amp;mut T(独占可写)</text>
+    <text x="785" y="362" font-size="9.5" fill="#93762e">改的时候没人读 → 安全</text>
+  </g>
+
+  <text x="30" y="430" font-size="9.5" fill="#a1a1a6">为什么:可变借用唯一 = 编译期保证"改的时候没人读" —— 一边读一边写(数据竞争)被这条规则挡住</text>
+  <text x="30" y="454" font-size="9.5" fill="#a1a1a6">单线程与多线程都适用(多线程配合 Send/Sync 扩展) · 归属:借用检查器</text>
+  <text x="30" y="478" font-size="9" fill="#a1a1a6">误区:能同时可变+不可变借用 —— 不行,读写不能混 · 源码基准 Rust 1.99.0</text>
+</svg>

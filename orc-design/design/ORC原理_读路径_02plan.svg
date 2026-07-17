@@ -1,0 +1,111 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="640" viewBox="0 0 1000 640" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1000" height="640" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">ORC 读路径 · 双重裁剪:列裁剪 × 行组裁剪,只读交集</text>
+
+  <!-- ===== 列裁剪 mechanism (blue, top) ===== -->
+  <rect x="430" y="66" width="372" height="66" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="616" y="88" font-size="11.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">列裁剪:findColumns (RecordReaderImpl.java:137)</text>
+  <text x="616" y="106" font-size="9.5" fill="#5b7db1" text-anchor="middle">列名 → 文件列 ID · included[] 标记选中列 (:99)</text>
+  <text x="616" y="122" font-size="9.5" fill="#5b7db1" text-anchor="middle">无关列 stream 根本不读</text>
+  <path d="M616,132 L616,143" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <!-- ===== 谓词选块 mechanism (blue, left) ===== -->
+  <rect x="40" y="180" width="310" height="176" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="195" y="204" font-size="11.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">谓词选块 (行组裁剪)</text>
+  <text x="60" y="230" font-size="9.5" fill="#5b7db1">readStripe (:1312)</text>
+  <text x="60" y="250" font-size="9.5" fill="#5b7db1">→ pickRowGroups (:1315)</text>
+  <text x="60" y="272" font-size="9.5" fill="#5b7db1">用 SargApplier (:247)</text>
+  <text x="60" y="292" font-size="9.5" fill="#5b7db1">+ 各级统计 + 布隆过滤器</text>
+  <text x="60" y="314" font-size="9.5" fill="#5b7db1">→ includedRowGroups[] (:114)</text>
+  <text x="60" y="338" font-size="9" fill="#5b7db1">整 stripe 无匹配则跳; 内部按行组跳</text>
+  <path d="M350,268 L372,268" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <!-- axis titles -->
+  <text x="616" y="53" font-size="9.5" fill="#6e6e73" text-anchor="middle">列 (投影) →</text>
+  <text x="399" y="140" font-size="9.5" fill="#6e6e73" text-anchor="middle">↓ row-group</text>
+
+  <!-- ===== column headers ===== -->
+  <rect x="430" y="143" width="60" height="26" rx="5" fill="#f0f0f2" stroke="#e3e3e8"/><text x="460" y="160" font-size="10" fill="#a1a1a6" text-anchor="middle">c0</text>
+  <rect x="492" y="143" width="60" height="26" rx="5" fill="#eef3fb" stroke="#bcd0ec"/><text x="522" y="160" font-size="10" font-weight="600" fill="#1b2a4a" text-anchor="middle">c1</text>
+  <rect x="554" y="143" width="60" height="26" rx="5" fill="#f0f0f2" stroke="#e3e3e8"/><text x="584" y="160" font-size="10" fill="#a1a1a6" text-anchor="middle">c2</text>
+  <rect x="616" y="143" width="60" height="26" rx="5" fill="#eef3fb" stroke="#bcd0ec"/><text x="646" y="160" font-size="10" font-weight="600" fill="#1b2a4a" text-anchor="middle">c3</text>
+  <rect x="678" y="143" width="60" height="26" rx="5" fill="#eef3fb" stroke="#bcd0ec"/><text x="708" y="160" font-size="10" font-weight="600" fill="#1b2a4a" text-anchor="middle">c4</text>
+  <rect x="740" y="143" width="60" height="26" rx="5" fill="#f0f0f2" stroke="#e3e3e8"/><text x="770" y="160" font-size="10" fill="#a1a1a6" text-anchor="middle">c5</text>
+
+  <!-- ===== row headers ===== -->
+  <rect x="372" y="175" width="54" height="36" rx="5" fill="#f0f0f2" stroke="#e3e3e8"/><text x="399" y="197" font-size="10" fill="#a1a1a6" text-anchor="middle">rg0</text>
+  <rect x="372" y="215" width="54" height="36" rx="5" fill="#eafaf1" stroke="#bfe0cd"/><text x="399" y="237" font-size="10" font-weight="600" fill="#12402a" text-anchor="middle">rg1</text>
+  <rect x="372" y="255" width="54" height="36" rx="5" fill="#f0f0f2" stroke="#e3e3e8"/><text x="399" y="277" font-size="10" fill="#a1a1a6" text-anchor="middle">rg2</text>
+  <rect x="372" y="295" width="54" height="36" rx="5" fill="#eafaf1" stroke="#bfe0cd"/><text x="399" y="317" font-size="10" font-weight="600" fill="#12402a" text-anchor="middle">rg3</text>
+  <rect x="372" y="335" width="54" height="36" rx="5" fill="#f0f0f2" stroke="#e3e3e8"/><text x="399" y="357" font-size="10" fill="#a1a1a6" text-anchor="middle">rg4</text>
+
+  <!-- ===== grid cells ===== -->
+  <!-- row i0 (rg0, skipped) -->
+  <rect x="430" y="175" width="60" height="36" rx="4" fill="#f0f0f2" stroke="#e3e3e8"/>
+  <rect x="492" y="175" width="60" height="36" rx="4" fill="#f0f0f2" stroke="#e3e3e8"/>
+  <rect x="554" y="175" width="60" height="36" rx="4" fill="#f0f0f2" stroke="#e3e3e8"/>
+  <rect x="616" y="175" width="60" height="36" rx="4" fill="#f0f0f2" stroke="#e3e3e8"/>
+  <rect x="678" y="175" width="60" height="36" rx="4" fill="#f0f0f2" stroke="#e3e3e8"/>
+  <rect x="740" y="175" width="60" height="36" rx="4" fill="#f0f0f2" stroke="#e3e3e8"/>
+  <!-- row i1 (rg1, selected) -->
+  <rect x="430" y="215" width="60" height="36" rx="4" fill="#f0f0f2" stroke="#e3e3e8"/>
+  <rect x="492" y="215" width="60" height="36" rx="4" fill="#eafaf1" stroke="#bfe0cd"/><text x="522" y="237" font-size="10" font-weight="600" fill="#12402a" text-anchor="middle">读</text>
+  <rect x="554" y="215" width="60" height="36" rx="4" fill="#f0f0f2" stroke="#e3e3e8"/>
+  <rect x="616" y="215" width="60" height="36" rx="4" fill="#eafaf1" stroke="#bfe0cd"/><text x="646" y="237" font-size="10" font-weight="600" fill="#12402a" text-anchor="middle">读</text>
+  <rect x="678" y="215" width="60" height="36" rx="4" fill="#eafaf1" stroke="#bfe0cd"/><text x="708" y="237" font-size="10" font-weight="600" fill="#12402a" text-anchor="middle">读</text>
+  <rect x="740" y="215" width="60" height="36" rx="4" fill="#f0f0f2" stroke="#e3e3e8"/>
+  <!-- row i2 (rg2, skipped) -->
+  <rect x="430" y="255" width="60" height="36" rx="4" fill="#f0f0f2" stroke="#e3e3e8"/>
+  <rect x="492" y="255" width="60" height="36" rx="4" fill="#f0f0f2" stroke="#e3e3e8"/>
+  <rect x="554" y="255" width="60" height="36" rx="4" fill="#f0f0f2" stroke="#e3e3e8"/>
+  <rect x="616" y="255" width="60" height="36" rx="4" fill="#f0f0f2" stroke="#e3e3e8"/>
+  <rect x="678" y="255" width="60" height="36" rx="4" fill="#f0f0f2" stroke="#e3e3e8"/>
+  <rect x="740" y="255" width="60" height="36" rx="4" fill="#f0f0f2" stroke="#e3e3e8"/>
+  <!-- row i3 (rg3, selected) -->
+  <rect x="430" y="295" width="60" height="36" rx="4" fill="#f0f0f2" stroke="#e3e3e8"/>
+  <rect x="492" y="295" width="60" height="36" rx="4" fill="#eafaf1" stroke="#bfe0cd"/><text x="522" y="317" font-size="10" font-weight="600" fill="#12402a" text-anchor="middle">读</text>
+  <rect x="554" y="295" width="60" height="36" rx="4" fill="#f0f0f2" stroke="#e3e3e8"/>
+  <rect x="616" y="295" width="60" height="36" rx="4" fill="#eafaf1" stroke="#bfe0cd"/><text x="646" y="317" font-size="10" font-weight="600" fill="#12402a" text-anchor="middle">读</text>
+  <rect x="678" y="295" width="60" height="36" rx="4" fill="#eafaf1" stroke="#bfe0cd"/><text x="708" y="317" font-size="10" font-weight="600" fill="#12402a" text-anchor="middle">读</text>
+  <rect x="740" y="295" width="60" height="36" rx="4" fill="#f0f0f2" stroke="#e3e3e8"/>
+  <!-- row i4 (rg4, skipped) -->
+  <rect x="430" y="335" width="60" height="36" rx="4" fill="#f0f0f2" stroke="#e3e3e8"/>
+  <rect x="492" y="335" width="60" height="36" rx="4" fill="#f0f0f2" stroke="#e3e3e8"/>
+  <rect x="554" y="335" width="60" height="36" rx="4" fill="#f0f0f2" stroke="#e3e3e8"/>
+  <rect x="616" y="335" width="60" height="36" rx="4" fill="#f0f0f2" stroke="#e3e3e8"/>
+  <rect x="678" y="335" width="60" height="36" rx="4" fill="#f0f0f2" stroke="#e3e3e8"/>
+  <rect x="740" y="335" width="60" height="36" rx="4" fill="#f0f0f2" stroke="#e3e3e8"/>
+
+  <!-- ===== legend ===== -->
+  <rect x="822" y="175" width="158" height="196" rx="11" fill="#f7f7f9" stroke="#e3e3e8"/>
+  <text x="842" y="198" font-size="10.5" font-weight="600" fill="#1d1d1f">图例</text>
+  <rect x="842" y="210" width="18" height="14" rx="3" fill="#eafaf1" stroke="#bfe0cd"/><text x="868" y="221" font-size="9" fill="#1d1d1f">读 (发 IO)</text>
+  <rect x="842" y="234" width="18" height="14" rx="3" fill="#f0f0f2" stroke="#e3e3e8"/><text x="868" y="245" font-size="9" fill="#1d1d1f">跳过 (不碰)</text>
+  <rect x="842" y="258" width="18" height="14" rx="3" fill="#eef3fb" stroke="#bcd0ec"/><text x="868" y="269" font-size="9" fill="#1d1d1f">选中列</text>
+  <text x="842" y="298" font-size="9.5" fill="#6e6e73">只读交集:</text>
+  <text x="842" y="316" font-size="10" font-weight="600" fill="#12402a">3 列 × 2 行组 = 6 块</text>
+  <text x="842" y="336" font-size="9.5" fill="#6e6e73">全表 6×5 = 30 块</text>
+  <text x="842" y="354" font-size="9" fill="#a1a1a6">仅读 1/5, 其余不碰</text>
+
+  <!-- ===== planner.readData (green) ===== -->
+  <path d="M616,371 L616,398" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <rect x="430" y="398" width="372" height="72" rx="11" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="616" y="422" font-size="11.5" font-weight="600" fill="#12402a" text-anchor="middle">planner.readData (:1327)</text>
+  <text x="616" y="441" font-size="9.5" fill="#2f6f4f" text-anchor="middle">只对 选中列 × 选中 row-group 的字节区间发 IO</text>
+  <text x="616" y="457" font-size="9.5" fill="#2f6f4f" text-anchor="middle">reader.startStripe (:1328) 准备解码</text>
+
+  <!-- ===== bottom notes ===== -->
+  <rect x="40" y="498" width="940" height="122" rx="12" fill="#f7f7f9" stroke="#e3e3e8"/>
+  <text x="60" y="522" font-size="11" font-weight="600" fill="#1d1d1f">机制要点</text>
+  <text x="60" y="548" font-size="10.5" fill="#1d1d1f"><tspan font-weight="600">列裁剪</tspan>:findColumns(:137) 把列名解析到文件列 ID,included[](:99) 标记选中列,无关列 stream 根本不读(列存红利)。</text>
+  <text x="60" y="574" font-size="10.5" fill="#1d1d1f"><tspan font-weight="600">谓词选块</tspan>:readStripe(:1312) → pickRowGroups(:1315) 用 SargApplier(:247) + 各级统计 + 布隆算 includedRowGroups(:114);整 stripe 无匹配则跳,内部按 row-group(每 10000 行)跳。</text>
+  <text x="60" y="600" font-size="10.5" fill="#1d1d1f"><tspan font-weight="600">交集</tspan>:planner.readData(:1327) 只对 选中列 × 选中 row-group 发 IO;二维叠加让一次查询往往只读文件一小片。</text>
+</svg>

@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="470" viewBox="0 0 980 470" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="980" height="470" fill="#fbfbfd"/>
+  <text x="30" y="32" font-size="14" font-weight="600" fill="#1d1d1f">changelog 生成 · 把 upsert 翻译成变更流</text>
+
+  <!-- ChangeType 图例条 -->
+  <rect x="30" y="50" width="920" height="46" rx="11" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="46" y="70" font-size="10.5" font-weight="600" fill="#1d1d1f">ChangeType 图例</text>
+  <text x="46" y="88" font-size="9" fill="#a1a1a6">ChangeType.java:34</text>
+  <rect x="150" y="60" width="146" height="26" rx="7" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="223" y="77" font-size="10" fill="#12402a" text-anchor="middle">+A · APPEND_ONLY</text>
+  <rect x="306" y="60" width="120" height="26" rx="7" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="366" y="77" font-size="10" fill="#1b2a4a" text-anchor="middle">+I · INSERT</text>
+  <rect x="436" y="60" width="166" height="26" rx="7" fill="#fff7e6" stroke="#e8cf9a"/>
+  <text x="519" y="77" font-size="10" fill="#5a3410" text-anchor="middle">-U · UPDATE_BEFORE</text>
+  <rect x="612" y="60" width="160" height="26" rx="7" fill="#f4eefb" stroke="#d9c7ec"/>
+  <text x="692" y="77" font-size="10" fill="#3d2a5a" text-anchor="middle">+U · UPDATE_AFTER</text>
+  <rect x="782" y="60" width="120" height="26" rx="7" fill="#fbeaea" stroke="#e7c3c3"/>
+  <text x="842" y="77" font-size="10" fill="#4a1414" text-anchor="middle">-D · DELETE</text>
+
+  <!-- 中间三分支卡 -->
+  <!-- applyDelete -->
+  <rect x="30" y="120" width="290" height="120" rx="12" fill="#fbeaea" stroke="#e7c3c3" filter="url(#soft)"/>
+  <text x="46" y="144" font-size="11.5" font-weight="600" fill="#4a1414">applyDelete</text>
+  <text x="46" y="162" font-size="9" fill="#a1a1a6">KvTablet.java:561</text>
+  <rect x="46" y="176" width="258" height="48" rx="8" fill="#ffffff" stroke="#e7c3c3"/>
+  <text x="60" y="197" font-size="10" fill="#4a1414">产 DELETE(oldRow)</text>
+  <text x="60" y="214" font-size="10" font-weight="600" fill="#4a1414">-D</text>
+
+  <!-- applyInsert -->
+  <rect x="345" y="120" width="290" height="120" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="361" y="144" font-size="11.5" font-weight="600" fill="#1b2a4a">applyInsert</text>
+  <text x="361" y="162" font-size="9" fill="#a1a1a6">KvTablet.java:573</text>
+  <rect x="361" y="176" width="258" height="48" rx="8" fill="#ffffff" stroke="#bcd0ec"/>
+  <text x="375" y="197" font-size="10" fill="#1b2a4a">填自增列 → 产 INSERT(newRow)</text>
+  <text x="375" y="214" font-size="10" font-weight="600" fill="#1b2a4a">+I</text>
+
+  <!-- applyUpdate -->
+  <rect x="660" y="120" width="290" height="120" rx="12" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="676" y="144" font-size="11.5" font-weight="600" fill="#3d2a5a">applyUpdate</text>
+  <text x="676" y="162" font-size="9" fill="#a1a1a6">KvTablet.java:589</text>
+  <rect x="676" y="172" width="258" height="30" rx="7" fill="#ffffff" stroke="#d9c7ec"/>
+  <text x="690" y="191" font-size="9.5" fill="#3d2a5a">FULL 镜像：-U(old) + +U(new) 两条</text>
+  <rect x="676" y="206" width="258" height="28" rx="7" fill="#ffffff" stroke="#d9c7ec"/>
+  <text x="690" y="224" font-size="9.5" fill="#3d2a5a">WAL 镜像：仅 +U(new) 一条</text>
+
+  <!-- 三支汇合 -->
+  <path d="M175 240 L175 280 L490 280 L490 296" fill="none" stroke="#c7c7cc" stroke-width="1.5"/>
+  <path d="M490 240 L490 296" fill="none" stroke="#c7c7cc" stroke-width="1.5"/>
+  <path d="M805 240 L805 280 L490 280" fill="none" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- 汇合到 changelog -->
+  <rect x="290" y="296" width="400" height="52" rx="12" fill="#fff7e6" stroke="#e8cf9a" stroke-width="2" filter="url(#soft)"/>
+  <text x="490" y="318" font-size="11.5" font-weight="600" fill="#5a3410" text-anchor="middle">changelog（带 ChangeType 的变更序列）</text>
+  <text x="490" y="336" font-size="9.5" fill="#93762e" text-anchor="middle">三条分支的变更记录汇成同一条流</text>
+  <path d="M490 348 L490 366" fill="none" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- 追加 LogTablet -->
+  <rect x="290" y="366" width="400" height="44" rx="12" fill="#f5faf6" stroke="#cfe6d5" filter="url(#soft)"/>
+  <text x="490" y="393" font-size="11" font-weight="600" fill="#2c5a3a" text-anchor="middle">追加到 LogTablet（changelog 即 WAL）</text>
+
+  <!-- 双出口 -->
+  <path d="M490 410 L490 428 L290 428 L290 442" fill="none" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <path d="M490 410 L490 428 L690 428 L690 442" fill="none" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <rect x="150" y="442" width="280" height="24" rx="7" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="290" y="459" font-size="10" fill="#1b2a4a" text-anchor="middle">下游 CDC 流（Flink source 消费）</text>
+  <rect x="550" y="442" width="280" height="24" rx="7" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="690" y="459" font-size="10" fill="#12402a" text-anchor="middle">KV 恢复重放源（replay 重建状态）</text>
+</svg>

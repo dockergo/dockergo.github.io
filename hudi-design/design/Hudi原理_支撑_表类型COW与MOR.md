@@ -1,6 +1,6 @@
 # Hudi 原理 · 支撑主线 · 表类型（COW / MOR）
 
-> **定位**：属"存储能力域"——Hudi 的定义性设计选择。管数据的两种组织方式:Copy-on-Write(写时重写)vs Merge-on-Read(读时合并),以及文件组织 FileGroup/FileSlice(base + log)。决定写读代价的取舍。被【写入与索引】用不同 handle、被【MoR 读合并】读。源码基准 **Hudi(1dfbdcb)**(`hudi-common/`、`hudi-client/`)。
+> **定位**：属"存储能力域"——Hudi 的定义性设计选择。管数据的两种组织方式:Copy-on-Write(写时重写)vs Merge-on-Read(读时合并),以及文件组织 FileGroup/FileSlice(base + log)。决定写读代价的取舍。被【写入路径与 upsert】用不同 handle、被【MoR 读合并】读、物理布局在【文件布局】。源码基准 **Hudi(1dfbdcb)**(`hudi-common/`、`hudi-client/`)。
 
 Hudi 最核心的设计选择:**两种表类型**。`HoodieTableType { COPY_ON_WRITE, MERGE_ON_READ }`(`HoodieTableType.java:30`)——COW 更新时重写整个文件(写慢读快),MOR 写 delta log 文件、读时合并(写快读慢)。这是"写代价 vs 读代价"的取舍,让用户按工作负载选。数据都按 FileGroup/FileSlice 组织,区别只在 slice 有无 log 文件。
 
@@ -55,7 +55,7 @@ IOType 枚举区分操作:`MERGE, CREATE, APPEND`(`IOType.java:25`)——COW 更
 - **误区:COW 更新只改变化的行。** COW 重写**整个文件**(逐行合并产新版本),不是原地改行——这是写慢的原因。
 - **误区:FileGroup 就是一个文件。** FileGroup 是逻辑单元,含多个 FileSlice(按 commit 版本),每 slice 是 base + log。
 - **误区:MOR 读只读 log。** MOR 快照读要 base file + 所有 log 合并;读优化查才只读 base。
-- **归属提醒**:写用哪个 handle 由本类型决定,写流程在【写入与索引】;MOR 的读合并在【MoR 读合并】;compaction 合 log 进 base 在【表服务】;slice 版本按时间线 instant(【时间线】)。
+- **归属提醒**:写用哪个 handle 由本类型决定,写流程在【写入路径与 upsert】;FileGroup/FileSlice 的命名/分区/bootstrap 深化在【文件布局】;MOR 的读合并在【MoR 读合并】;compaction 合 log 进 base 在【表服务】;slice 版本按时间线 instant(【时间线】)。
 
 ## 一句话总纲
 

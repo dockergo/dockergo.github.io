@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="510" viewBox="0 0 1080 510" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="510" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Spring Boot 核心原理 · 接触面 ③ 扩展点 SPI 加载</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">SpringFactoriesLoader 经 META-INF 工厂配置动态加载扩展 · 无侵入扩展启动流程 · SpringApplication.java:279</text>
+
+  <!-- loader source -->
+  <rect x="360" y="76" width="360" height="60" rx="14" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="540" y="100" font-size="12" font-weight="700" text-anchor="middle" fill="#3d2a5a">SpringFactoriesLoader</text>
+  <text x="540" y="120" font-size="8.8" text-anchor="middle" fill="#8a6db3">读 META-INF 工厂配置 · 第三方 starter 可注册自己的扩展</text>
+
+  <!-- four extension edges -->
+  <path d="M420,136 L165,180" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M485,136 L405,180" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M595,136 L675,180" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M660,136 L915,180" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <!-- 4 extension cards -->
+  <rect x="30" y="184" width="246" height="96" rx="12" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="153" y="207" font-size="10" font-weight="700" text-anchor="middle" fill="#3d2a5a">BootstrapRegistryInitializer</text>
+  <text x="46" y="230" font-size="8.6" fill="#8a6db3">引导上下文初始化(最早)</text>
+  <text x="46" y="248" font-size="8.6" fill="#8a6db3">在 Environment 之前</text>
+  <text x="46" y="268" font-size="8" fill="#a1a1a6">对应阶段:BootstrapContext</text>
+
+  <rect x="290" y="184" width="246" height="96" rx="12" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="413" y="207" font-size="10" font-weight="700" text-anchor="middle" fill="#3d2a5a">ApplicationContextInitializer</text>
+  <text x="306" y="230" font-size="8.6" fill="#8a6db3">上下文 refresh 前定制</text>
+  <text x="306" y="248" font-size="8.6" fill="#8a6db3">改 Environment / 注册 bean</text>
+  <text x="306" y="268" font-size="8" fill="#a1a1a6">对应阶段:prepareContext</text>
+
+  <rect x="550" y="184" width="246" height="96" rx="12" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="673" y="207" font-size="10" font-weight="700" text-anchor="middle" fill="#3d2a5a">ApplicationListener</text>
+  <text x="566" y="230" font-size="8.6" fill="#8a6db3">监听应用事件</text>
+  <text x="566" y="248" font-size="8.6" fill="#8a6db3">如 ApplicationReadyEvent</text>
+  <text x="566" y="268" font-size="8" fill="#a1a1a6">对应阶段:全生命周期</text>
+
+  <rect x="810" y="184" width="240" height="96" rx="12" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="930" y="207" font-size="10" font-weight="700" text-anchor="middle" fill="#3d2a5a">SpringApplicationRunListener</text>
+  <text x="826" y="230" font-size="8.6" fill="#8a6db3">run 各阶段回调</text>
+  <text x="826" y="248" font-size="8.6" fill="#8a6db3">7 阶段(starting…ready…failed)</text>
+  <text x="826" y="268" font-size="8" fill="#a1a1a6">对应阶段:贯穿 run()</text>
+
+  <!-- 4.x change: WebApplicationType.deduce -->
+  <rect x="30" y="308" width="1020" height="86" rx="13" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="46" y="331" font-size="10.5" font-weight="700" fill="#12402a">4.x 变化 · WebApplicationType.deduce() 用可插拔 Deducer SPI（WebApplicationType.java:63,@since 4.0.1）</text>
+  <g text-anchor="middle" font-size="9">
+    <rect x="46" y="344" width="300" height="40" rx="8" fill="#f5faf6" stroke="#cfe6d5"/><text x="196" y="362" fill="#1a5a38" font-weight="600">Deducer SPI 推断</text><text x="196" y="377" fill="#2f6f4f" font-size="8.4">先问可插拔 Deducer,再退回 servlet 类存在性判断</text>
+    <rect x="360" y="344" width="216" height="40" rx="8" fill="#e7f0fb" stroke="#b9d2ef"/><text x="468" y="362" fill="#1b2a4a" font-weight="600">servlet</text><text x="468" y="377" fill="#5b7db1" font-size="8.4">有 servlet API</text>
+    <rect x="590" y="344" width="216" height="40" rx="8" fill="#e7f0fb" stroke="#b9d2ef"/><text x="698" y="362" fill="#1b2a4a" font-weight="600">reactive</text><text x="698" y="377" fill="#5b7db1" font-size="8.4">有 reactive 栈</text>
+    <rect x="820" y="344" width="230" height="40" rx="8" fill="#f7f7f9" stroke="#e3e3e8"/><text x="935" y="362" fill="#1d1d1f" font-weight="600">none</text><text x="935" y="377" fill="#6e6e73" font-size="8.4">非 web(如批处理)</text>
+  </g>
+
+  <!-- why SPI -->
+  <rect x="30" y="416" width="1020" height="70" rx="12" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="46" y="438" font-size="10.5" font-weight="700" fill="#1d1d1f">为什么用 SPI</text>
+  <text x="46" y="458" font-size="9" fill="#6e6e73">框架不硬编码扩展,经 META-INF 工厂配置动态加载——第三方 starter 可注册自己的初始化器/监听器。</text>
+  <text x="46" y="476" font-size="9" fill="#6e6e73">无侵入扩展启动流程:引入依赖即生效,不改框架源码。web 类型也从硬编码推断改为可插拔 Deducer。</text>
+</svg>

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""quiche-design 交互式核心原理图谱生成器（自包含 · 离线 · 双主题）。
+"""fluss-design 交互式核心原理图谱生成器（自包含 · 离线 · 双主题）。
 
 单向流水线：design/(md + 手绘 svg) → gen.py → index.html
 - design/ 是内容真源；本脚本只编译不创作。
@@ -8,7 +8,7 @@
 - 自包含：仅读同级 design/，默认写同级 index.html。
 
 用法：
-  cd quiche-design && python3 gen.py
+  cd fluss-design && python3 gen.py
   python3 gen.py --design-dir <dir> --out <path>
 """
 import os
@@ -19,7 +19,7 @@ import argparse
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
-_ap = argparse.ArgumentParser(description="生成 quiche 交互式核心原理图谱（离线自包含 HTML）")
+_ap = argparse.ArgumentParser(description="生成 Fluss 交互式核心原理图谱（离线自包含 HTML）")
 _ap.add_argument("--design-dir", default=None, help="手绘 SVG + prose 文档目录（默认：脚本同级 ./design）")
 _ap.add_argument("--out", default=None, help="输出 HTML 路径（默认：脚本同级 index.html）")
 _args, _ = _ap.parse_known_args()
@@ -34,96 +34,96 @@ def _first_dir(*cands):
 
 _DESIGN_DIR = _first_dir(
     _args.design_dir,
-    os.environ.get("QUICHE_DESIGN_DIR"),
+    os.environ.get("FLUSS_DESIGN_DIR"),
     os.path.join(HERE, "design"),
 )
-OUT = _args.out or os.environ.get("QUICHE_DESIGN_OUT") or os.path.join(HERE, "index.html")
+OUT = _args.out or os.environ.get("FLUSS_DESIGN_OUT") or os.path.join(HERE, "index.html")
 
 # ===================================================================== #
 # 一、主线注册表 —— 唯一需随项目调整的数据块
-#     新家族（传输协议库 · QUIC/HTTP3 · Google QUICHE C++）：元模式 = 接口 × 能力域 × 时机。
-#     全景 + 3 接口主线 + 8 支撑能力域。
+#     Apache Fluss（面向 Flink 的流式存储，介于消息/事件流平台与分布式存储之间）：
+#     元模式 = 接触面 × 支撑能力域 × 时机。全景 + 3 接触面 + 8 支撑能力域 = 12 主线。
 # ===================================================================== #
 MAINLINES = [
-    ("Quiche原理_全景主线框架", "pano", "◇", "全景主线框架",
-     "新家族传输协议库：双维模型 · 总架构 · IO 抽象 · 依赖矩阵 · 三条贯穿声明"),
+    ("Fluss原理_全景主线框架", "pano", "◇", "全景主线框架",
+     "流式湖仓存储：双维模型 · 总架构 · 依赖矩阵 · 部署形态 · 三条贯穿声明"),
 
-    ("Quiche原理_接口_会话与连接", "iface", "⚙", "会话与连接",
-     "三层对象 QuicConnection/Session/Stream + Visitor 回调 · C++ OO 观察者风格"),
-    ("Quiche原理_接口_IO与事件驱动", "iface", "⇄", "IO 与事件驱动",
-     "灵魂：ProcessUdpPacket 入 / QuicPacketWriter 出 / QuicAlarm 时钟 · 应用编排循环"),
-    ("Quiche原理_接口_HTTP与流", "iface", "◷", "HTTP 与流",
-     "QuicSpdySession 承载 HTTP/2·HTTP/3 · 服务端 QuicDispatcher 按 CID 接客"),
+    ("Fluss原理_接触面_表模型与写入", "iface", "✎", "表模型与写入",
+     "日志表 Append 直接追加 / 主键表 Upsert 经 KvTablet 物化产 changelog · 幂等分桶"),
+    ("Fluss原理_接触面_读取Lookup与Scan", "iface", "⌕", "读取 Lookup 与 Scan",
+     "LogScanner 流式 / Lookuper 点查前缀 / BatchScanner 快照批读 · 投影下推"),
+    ("Fluss原理_接触面_Flink与Lakehouse集成", "iface", "⇄", "Flink 与 Lakehouse 集成",
+     "connector source/sink · lookup join 维表 · union read 历史+实时联合读"),
 
-    ("Quiche原理_支撑_包与帧编解码", "support", "▤", "包与帧编解码",
-     "QuicFramer 解析 / QuicPacketCreator 组装 · UDP→包→帧 · varint · coalesce"),
-    ("Quiche原理_支撑_TLS握手与加密", "support", "⛨", "TLS 握手与加密",
-     "灵魂：TLS 1.3 内嵌 · QuicCryptoStream · 三加密级 · AEAD · 1-RTT/0-RTT"),
-    ("Quiche原理_支撑_流与流量控制", "support", "▦", "流与流量控制",
-     "一连接多流无队头阻塞 · QuicFlowController 流级/连接级两级窗口"),
-    ("Quiche原理_支撑_丢包检测与恢复", "support", "◉", "丢包检测与恢复",
-     "单调包号 · QuicSentPacketManager · UberLossAlgorithm 判丢 · PTO · 重传新包号"),
-    ("Quiche原理_支撑_拥塞控制", "support", "⚡", "拥塞控制",
-     "可插拔 SendAlgorithmInterface · BBRv1/v2 + CUBIC · 用户态热切换 · pacing"),
-    ("Quiche原理_支撑_连接管理与迁移", "support", "◫", "连接管理与迁移",
-     "Connection ID 标识非四元组 · QuicConnectionIdManager · PATH_CHALLENGE 换网不断"),
-    ("Quiche原理_支撑_HTTP3与QPACK", "support", "✲", "HTTP/3 与 QPACK",
-     "请求映射到 QUIC 流 · 静/动表 + Huffman · blocking manager 抗队头阻塞"),
-    ("Quiche原理_支撑_可靠性与抗攻击", "support", "◐", "可靠性与抗攻击",
-     "QuicDispatcher 入口关卡 · 3× 放大限制 · Retry 地址验证 · 缓冲限流 · stateless reset"),
+    ("Fluss原理_支撑_Log追加存储引擎", "support", "▤", "Log 追加存储引擎",
+     "LogTablet→LogSegment 追加日志 · .log+稀疏索引 · 幂等 WriterState · 零拷贝"),
+    ("Fluss原理_支撑_KV主键表与changelog", "support", "◈", "KV 主键表与 changelog",
+     "RocksDB 物化 · WAL 先行 + preWriteBuffer · rowMerger 合并 · CDC changelog"),
+    ("Fluss原理_支撑_Arrow列存与投影下推", "support", "▦", "Arrow 列存与投影下推",
+     "MemoryLogRecordsArrowBuilder 攒 Arrow batch · FileLogProjection 服务端裁列"),
+    ("Fluss原理_支撑_副本复制与ISR", "support", "⬡", "副本复制与 ISR",
+     "Leader/Follower pull 复制 · ISR 收缩扩张 · HW = ISR 最小 LEO · AdjustIsr"),
+    ("Fluss原理_支撑_协调器元数据与调度", "support", "⚙", "协调器元数据与调度",
+     "单线程事件循环 · 状态机 + Leader 选举 · ZooKeeper 元数据 · 建表副本放置"),
+    ("Fluss原理_支撑_分层存储与Lakehouse", "support", "◫", "分层存储与 Lakehouse",
+     "远程日志 tiering → DFS · 独立 Flink 作业写 Paimon/Iceberg · 按 offset 联合读"),
+    ("Fluss原理_支撑_KV快照与恢复", "support", "◉", "KV 快照与恢复",
+     "RocksDB 增量快照 → DFS · 下载快照 + 从 offset 两阶段回放 changelog"),
+    ("Fluss原理_支撑_网络RPC与安全", "support", "◱", "网络 RPC 与安全",
+     "Netty Reactor · RequestChannel 队列削峰 · ApiKeys 分派 · ACL/SASL 鉴权"),
 ]
 
 CAT_ORDER = [
     ("pano", "全景框架 · 先读这一篇"),
-    ("iface", "接口主线 · 应用如何用（会话连接 / IO 事件 / HTTP 与流）"),
-    ("support", "支撑主线 · 协议内部（8 条能力域）"),
+    ("iface", "接触面主线 · 应用如何用（写入 / 读取 / Flink 集成）"),
+    ("support", "支撑主线 · 存储内部（8 条能力域）"),
 ]
 
 # ===================================================================== #
 # 一·b、项目总架构图 = 唯一导航底图 —— 热区注册表（决定"点击下钻"）
-#   产出准则（用户明确要求）：项目页统一用【项目总架构图】(ARCH_SVG_NAME) 做导航，
-#   在图上叠透明热区，每个语义模块 = 一个可点区域 → 下钻对应主线。
 #   坐标系 = 该总架构 SVG 的 viewBox（ARCH_W×ARCH_H），生成期换算成百分比定位。
-#   两条覆盖铁律：① 图上每个模块都有热区 ② 每条主线都被某热区覆盖（未覆盖者自动兜底成 chip）。
+#   两条覆盖铁律：① 图上每个模块都有热区 ② 每条主线都被某热区覆盖。
 # ===================================================================== #
-PANO_NAME = "Quiche原理_全景主线框架"
-ARCH_W, ARCH_H = 1020, 670  # 必须与 ARCH_SVG_NAME 的 viewBox 一致
+PANO_NAME = "Fluss原理_全景主线框架"
+ARCH_W, ARCH_H = 1040, 750  # 必须与 ARCH_SVG_NAME 的 viewBox 一致
 # (x, y, w, h, 主线name) —— 一个模块可拆多行热区，一条主线可被多个区域指向
 ARCH_HOTSPOTS = [
-    # 顶部 powers 标题条 → 全景总览
-    (30, 44, 960, 46, "Quiche原理_全景主线框架"),
-    # ① 应用层（提供 IO 原语、用 Session/Stream API）
-    (30, 106, 960, 30, "Quiche原理_接口_会话与连接"),
-    (48, 140, 290, 26, "Quiche原理_接口_IO与事件驱动"),   # 收 UDP→ProcessUdpPacket
-    (350, 140, 290, 26, "Quiche原理_接口_IO与事件驱动"),  # 提供 Writer+AlarmFactory
-    (652, 140, 318, 26, "Quiche原理_接口_会话与连接"),    # 经 Session/Stream 读写 + Visitor
-    # ② QuicDispatcher（服务端接客 + 入口防护）——左右拆两块
-    (30, 188, 478, 60, "Quiche原理_接口_HTTP与流"),        # Dispatcher 接客/demux
-    (512, 188, 478, 60, "Quiche原理_支撑_可靠性与抗攻击"), # 入口关卡/抗攻击
-    # ③ QuicSession（左）
-    (30, 262, 470, 84, "Quiche原理_接口_会话与连接"),      # 标题 + GetOrCreateStream/WritevData
-    (30, 350, 470, 20, "Quiche原理_支撑_HTTP3与QPACK"),     # QuicSpdySession HTTP/3 语义
-    (30, 372, 470, 18, "Quiche原理_支撑_流与流量控制"),     # QuicStream 收发缓冲 + 流控
-    # ④ QuicConnection（右）
-    (520, 262, 470, 84, "Quiche原理_支撑_连接管理与迁移"),  # 状态机 + 收发包 inner boxes
-    (520, 350, 232, 20, "Quiche原理_支撑_丢包检测与恢复"),  # SentPacketManager（丢包）
-    (756, 350, 234, 20, "Quiche原理_支撑_拥塞控制"),        # SentPacketManager（拥塞）
-    (520, 372, 470, 18, "Quiche原理_接口_IO与事件驱动"),    # 定时器经 AlarmFactory
-    # ⑤ QuicFramer + 加密
-    (30, 410, 620, 30, "Quiche原理_支撑_包与帧编解码"),     # 标题条
-    (48, 444, 290, 76, "Quiche原理_支撑_包与帧编解码"),     # Framer/Creator
-    (354, 444, 296, 76, "Quiche原理_支撑_TLS握手与加密"),   # CryptoStream + AEAD
-    # ⑥ IO 抽象（Writer / AlarmFactory）
-    (670, 406, 320, 130, "Quiche原理_接口_IO与事件驱动"),
+    # 顶部标题条 → 全景总览
+    (30, 16, 980, 30, "Fluss原理_全景主线框架"),
+    # ① 客户端 / 引擎接触面
+    (48, 90, 300, 52, "Fluss原理_接触面_表模型与写入"),
+    (364, 90, 300, 52, "Fluss原理_接触面_读取Lookup与Scan"),
+    (680, 90, 312, 52, "Fluss原理_接触面_Flink与Lakehouse集成"),
+    # ② RPC 网络层
+    (30, 160, 980, 34, "Fluss原理_支撑_网络RPC与安全"),
+    # ③ CoordinatorServer（标题条 + 三格）
+    (30, 212, 980, 26, "Fluss原理_支撑_协调器元数据与调度"),
+    (48, 240, 300, 34, "Fluss原理_支撑_协调器元数据与调度"),
+    (364, 240, 300, 34, "Fluss原理_支撑_副本复制与ISR"),
+    (680, 240, 312, 34, "Fluss原理_支撑_分层存储与Lakehouse"),
+    # ④ TabletServer（header + Replica 内 log/KV/Arrow 列 + ISR 条）
+    (30, 298, 980, 26, "Fluss原理_支撑_副本复制与ISR"),
+    (72, 386, 424, 62, "Fluss原理_支撑_Log追加存储引擎"),
+    (524, 386, 452, 62, "Fluss原理_支撑_KV主键表与changelog"),
+    (72, 456, 424, 44, "Fluss原理_支撑_Arrow列存与投影下推"),
+    (72, 512, 904, 60, "Fluss原理_支撑_副本复制与ISR"),
+    # ⑤ 分层存储（标题条 + 三格）
+    (30, 616, 980, 26, "Fluss原理_支撑_分层存储与Lakehouse"),
+    (48, 648, 300, 66, "Fluss原理_支撑_分层存储与Lakehouse"),
+    (364, 648, 300, 66, "Fluss原理_支撑_KV快照与恢复"),
+    (680, 648, 312, 66, "Fluss原理_支撑_分层存储与Lakehouse"),
 ]
 # 没有独立架构区域、需底部 chip 兜底的主线（本项目 12 主线全部落在图上 → 空）
 ARCH_ALWAYS_CHIP = []
 
-BRAND_TITLE = "一切知识皆索引"
-BRAND_SUB = "Google QUICHE 核心原理 · 交互式图谱"
-HOME_DESC = ("Google QUICHE 核心原理设计文档库的离线交互图谱——新家族（QUIC + HTTP/3 传输协议库 · C++ · 驱动 Chromium/Envoy）。"
-             "12 条主线、15 张手绘原理图，全部回本地源码核实。点击项目总架构图任意模块即可下钻到对应主线。")
-ARCH_SVG_NAME = "Quiche原理_全景_02总架构.svg"
+BRAND_SUB = "Apache Fluss 核心原理 · 交互式图谱"
+HOME_DESC = ("Apache Fluss 核心原理设计文档库的离线交互图谱——面向 Flink 的流式湖仓存储"
+             "（介于消息/事件流平台与分布式存储之间：Table API 接触面、桶副本上的追加日志 + KV 物化、副本 ISR 容错、ZooKeeper 协调、本地到湖仓的分层存储）。"
+             "12 条主线、33 张手绘原理图，全部回本地源码核实。点击项目总架构图任意模块即可下钻到对应主线。")
+ARCH_SVG_NAME = "Fluss原理_全景_02总架构.svg"
+
+# 非"逐图走查"图（项目图标等），不计入孤儿/缺失统计
+_NON_WALK_SVG = {"icon.svg"}
 
 # ===================================================================== #
 # 二、md 解析 —— 从每篇 design 文档抽取结构化内容
@@ -225,7 +225,8 @@ _all_refs = set()
 for d in DOCS.values():
     for _, _, svg in d["walk"]:
         _all_refs.add(svg)
-_on_disk = {f for f in os.listdir(_DESIGN_DIR) if f.endswith(".svg")}
+_on_disk = {f for f in os.listdir(_DESIGN_DIR)
+            if f.endswith(".svg") and f not in _NON_WALK_SVG}
 _missing = _all_refs - _on_disk
 _orphan = _on_disk - _all_refs
 
@@ -272,7 +273,7 @@ def build_archnav():
                  % "".join(items))
     return (
         '<div class="arch-wrap">'
-        '<img alt="Google QUICHE 项目总架构图" src="data:image/svg+xml;base64,%s"/>'
+        '<img alt="Apache Fluss 项目总架构图" src="data:image/svg+xml;base64,%s"/>'
         '%s</div>%s' % (_ARCH_SVG, "".join(hots), chips))
 
 
@@ -442,12 +443,12 @@ b{color:var(--c-ink);font-weight:700}
 APP_JS = r"""
 (function(){
   var root=document.documentElement;
-  var saved=localStorage.getItem('quiche-atlas-theme');
+  var saved=localStorage.getItem('fluss-atlas-theme');
   if(saved) root.setAttribute('data-theme',saved);
   function toggleTheme(){
     var cur=root.getAttribute('data-theme')==='light'?'':'light';
     if(cur) root.setAttribute('data-theme',cur); else root.removeAttribute('data-theme');
-    localStorage.setItem('quiche-atlas-theme',cur);
+    localStorage.setItem('fluss-atlas-theme',cur);
     var b=document.getElementById('themeBtn'); if(b) b.textContent=cur==='light'?'☀ 浅色':'☾ 深色';
   }
   var tb=document.getElementById('themeBtn');

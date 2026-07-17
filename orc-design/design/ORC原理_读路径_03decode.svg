@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="660" viewBox="0 0 1000 660" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1000" height="660" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">ORC 读路径 · TreeReader 树解码:stream → 解压 → 解码 → 填列式批</text>
+
+  <!-- ===== left: TreeReader tree (blue) ===== -->
+  <text x="145" y="60" font-size="11" font-weight="600" fill="#5b7db1" text-anchor="middle">TreeReader 树 (与类型树同构)</text>
+
+  <path d="M145,124 L145,150" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M145,206 L145,232" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <rect x="40" y="72" width="210" height="52" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="145" y="94" font-size="11" font-weight="600" fill="#1b2a4a" text-anchor="middle">createRootReader (:367)</text>
+  <text x="145" y="112" font-size="9" fill="#5b7db1" text-anchor="middle">建同构 reader 树</text>
+
+  <rect x="40" y="150" width="210" height="56" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="145" y="172" font-size="11" font-weight="600" fill="#1b2a4a" text-anchor="middle">StructTreeReader (:2615)</text>
+  <text x="145" y="190" font-size="9" fill="#5b7db1" text-anchor="middle">持子 reader,递归镜像类型树</text>
+
+  <rect x="40" y="232" width="210" height="66" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="145" y="254" font-size="10.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">子 reader (每列一个)</text>
+  <text x="145" y="272" font-size="9" fill="#5b7db1" text-anchor="middle">LongTreeReader · StringTreeReader</text>
+  <text x="145" y="288" font-size="9" fill="#5b7db1" text-anchor="middle">ListTreeReader …</text>
+
+  <!-- child reader → pipeline -->
+  <path d="M250,265 L300,265" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <!-- ===== decode pipeline ===== -->
+  <text x="590" y="222" font-size="10.5" font-weight="600" fill="#2f6f4f">nextBatch (:1462) → reader.nextBatch (:1481) — 逐列解码流水</text>
+
+  <rect x="300" y="240" width="132" height="64" rx="11" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="366" y="266" font-size="10.5" font-weight="600" fill="#5a3410" text-anchor="middle">列 stream</text>
+  <text x="366" y="284" font-size="9" fill="#93762e" text-anchor="middle">压缩块 (磁盘/缓冲)</text>
+
+  <rect x="452" y="240" width="120" height="64" rx="11" fill="#f5faf6" stroke="#cfe6d5" filter="url(#soft)"/>
+  <text x="512" y="266" font-size="10.5" font-weight="600" fill="#12402a" text-anchor="middle">解压</text>
+  <text x="512" y="284" font-size="9" fill="#2f6f4f" text-anchor="middle">压缩与流分块</text>
+
+  <rect x="592" y="240" width="140" height="64" rx="11" fill="#f5faf6" stroke="#cfe6d5" filter="url(#soft)"/>
+  <text x="662" y="266" font-size="10.5" font-weight="600" fill="#12402a" text-anchor="middle">解码 RLE / 字典</text>
+  <text x="662" y="284" font-size="9" fill="#2f6f4f" text-anchor="middle">列编码</text>
+
+  <rect x="752" y="240" width="126" height="64" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="815" y="266" font-size="10.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">填 ColumnVector</text>
+  <text x="815" y="284" font-size="9" fill="#5b7db1" text-anchor="middle">每列一个</text>
+
+  <path d="M432,272 L452,272" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M572,272 L592,272" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M732,272 L752,272" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <!-- S4 → batch -->
+  <path d="M815,304 L815,340 L631,340 L631,384" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="720" y="332" font-size="9" fill="#a1a1a6" text-anchor="middle">组装各列</text>
+
+  <!-- ===== VectorizedRowBatch (green success) ===== -->
+  <rect x="452" y="384" width="360" height="94" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="632" y="406" font-size="11.5" font-weight="600" fill="#12402a" text-anchor="middle">VectorizedRowBatch (默认 1024 行)</text>
+  <rect x="470" y="416" width="26" height="46" rx="4" fill="#dff2e8" stroke="#bfe0cd"/>
+  <rect x="502" y="416" width="26" height="46" rx="4" fill="#dff2e8" stroke="#bfe0cd"/>
+  <rect x="534" y="416" width="26" height="46" rx="4" fill="#dff2e8" stroke="#bfe0cd"/>
+  <rect x="566" y="416" width="26" height="46" rx="4" fill="#dff2e8" stroke="#bfe0cd"/>
+  <text x="531" y="474" font-size="8.5" fill="#2f6f4f" text-anchor="middle">各列 ColumnVector</text>
+  <text x="700" y="436" font-size="9.5" fill="#2f6f4f" text-anchor="middle">列式内存</text>
+  <text x="700" y="453" font-size="9.5" fill="#2f6f4f" text-anchor="middle">填满 1024 行返回</text>
+
+  <!-- batch → 引擎 -->
+  <path d="M812,430 L858,430" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <rect x="858" y="400" width="120" height="60" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="918" y="426" font-size="11" font-weight="600" fill="#1b2a4a" text-anchor="middle">引擎</text>
+  <text x="918" y="444" font-size="9" fill="#5b7db1" text-anchor="middle">向量化处理</text>
+
+  <!-- ===== advanceToNextRow seek loop ===== -->
+  <rect x="40" y="384" width="250" height="70" rx="11" fill="#f5faf6" stroke="#cfe6d5" filter="url(#soft)"/>
+  <text x="165" y="408" font-size="10.5" font-weight="600" fill="#12402a" text-anchor="middle">advanceToNextRow (:1491)</text>
+  <text x="165" y="426" font-size="9" fill="#2f6f4f" text-anchor="middle">推进到下一批;跨 row-group/stripe</text>
+  <text x="165" y="442" font-size="9" fill="#2f6f4f" text-anchor="middle">按 positions seek (行组与索引)</text>
+
+  <path d="M452,430 L300,430" stroke="#c7c7cc" stroke-width="1.5" stroke-dasharray="5 4" fill="none" marker-end="url(#ar)"/>
+  <path d="M165,384 L165,344 L366,344 L366,304" stroke="#c7c7cc" stroke-width="1.5" stroke-dasharray="5 4" fill="none" marker-end="url(#ar)"/>
+  <text x="266" y="338" font-size="9" fill="#a1a1a6" text-anchor="middle">seek 下一 row-group,重取 stream</text>
+
+  <!-- ===== bottom notes ===== -->
+  <rect x="40" y="498" width="940" height="132" rx="12" fill="#f7f7f9" stroke="#e3e3e8"/>
+  <text x="60" y="522" font-size="11" font-weight="600" fill="#1d1d1f">机制要点</text>
+  <text x="60" y="548" font-size="10.5" fill="#1d1d1f"><tspan font-weight="600">建树</tspan>:createRootReader(RecordReaderImpl.java:367) 建与类型树同构的 TreeReader 树;StructTreeReader(TreeReaderFactory.java:2615) 持子 reader,递归镜像。</text>
+  <text x="60" y="574" font-size="10.5" fill="#1d1d1f"><tspan font-weight="600">解码</tspan>:nextBatch(:1462) → reader.nextBatch(:1481) 从各 stream 解压(压缩块) + 解码(RLE/字典) 填每列 ColumnVector;advanceToNextRow(:1491) 跨块按 positions seek。</text>
+  <text x="60" y="600" font-size="10.5" fill="#1d1d1f"><tspan font-weight="600">返批</tspan>:填满 VectorizedRowBatch(默认 1024 行) 返给引擎向量化处理;嵌套类型递归解码天然树形,按批返回避免逐行开销。</text>
+</svg>

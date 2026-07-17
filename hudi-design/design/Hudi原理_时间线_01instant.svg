@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="880" height="430" viewBox="0 0 880 430" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="880" height="430" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">HoodieInstant：动作 × 状态（表上一个动作）</text>
+  <text x="30" y="49" font-size="10" fill="#a1a1a6">state + action + requestedTime + completionTime；状态编码为 .hoodie 里的文件扩展名</text>
+
+  <!-- state machine -->
+  <text x="30" y="82" font-size="10.5" font-weight="600" fill="#6e6e73">状态机（每个动作的生命周期）</text>
+  <g font-size="10" text-anchor="middle">
+    <rect x="40" y="94" width="150" height="46" rx="10" fill="#f6f8fc" stroke="#cfe0f2"/><text x="115" y="115" font-weight="600" fill="#274a78">REQUESTED</text><text x="115" y="131" font-size="8.4" fill="#5b7db1">.requested（已请求）</text>
+    <rect x="260" y="94" width="150" height="46" rx="10" fill="#fff7e6" stroke="#e8cf9a"/><text x="335" y="115" font-weight="600" fill="#5a3410">INFLIGHT</text><text x="335" y="131" font-size="8.4" fill="#93762e">.inflight（执行中）</text>
+    <rect x="480" y="94" width="170" height="46" rx="10" fill="#eafaf1" stroke="#bfe0cd"/><text x="565" y="115" font-weight="600" fill="#12402a">COMPLETED</text><text x="565" y="131" font-size="8.4" fill="#2f6f4f">.commit / .deltacommit …</text>
+    <rect x="700" y="94" width="150" height="46" rx="10" fill="#fbeaea" stroke="#e7c3c3"/><text x="775" y="115" font-weight="600" fill="#7a2a2a">崩溃 → rollback</text><text x="775" y="131" font-size="8.4" fill="#7a2a2a">无 COMPLETED 者可回滚</text>
+  </g>
+  <line x1="190" y1="117" x2="260" y2="117" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <line x1="410" y1="117" x2="480" y2="117" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <line x1="335" y1="140" x2="710" y2="118" stroke="#e0b4b4" stroke-width="1.2" stroke-dasharray="4 3" marker-end="url(#ar)"/>
+
+  <!-- action types -->
+  <text x="30" y="180" font-size="10.5" font-weight="600" fill="#6e6e73">动作类型（action）· 各有语义</text>
+  <g font-size="9.3" text-anchor="middle">
+    <rect x="40" y="192" width="128" height="40" rx="8" fill="#fef2e0" stroke="#e8cf9a"/><text x="104" y="210" font-weight="600" fill="#5a3410">commit</text><text x="104" y="225" font-size="8.2" fill="#93762e">COW 写</text>
+    <rect x="180" y="192" width="128" height="40" rx="8" fill="#fef2e0" stroke="#e8cf9a"/><text x="244" y="210" font-weight="600" fill="#5a3410">deltacommit</text><text x="244" y="225" font-size="8.2" fill="#93762e">MOR 写</text>
+    <rect x="320" y="192" width="128" height="40" rx="8" fill="#faf4fb" stroke="#e2d2ee"/><text x="384" y="210" font-weight="600" fill="#5a3d78">compaction</text><text x="384" y="225" font-size="8.2" fill="#7a5a95">合 log 进 base</text>
+    <rect x="460" y="192" width="128" height="40" rx="8" fill="#faf4fb" stroke="#e2d2ee"/><text x="524" y="210" font-weight="600" fill="#5a3d78">clean</text><text x="524" y="225" font-size="8.2" fill="#7a5a95">清旧文件片</text>
+    <rect x="600" y="192" width="120" height="40" rx="8" fill="#eef3fb" stroke="#bcd0ec"/><text x="660" y="210" font-weight="600" fill="#274a78">rollback</text><text x="660" y="225" font-size="8.2" fill="#5b7db1">回滚</text>
+    <rect x="732" y="192" width="118" height="40" rx="8" fill="#eef3fb" stroke="#bcd0ec"/><text x="791" y="210" font-weight="600" fill="#274a78">replacecommit</text><text x="791" y="225" font-size="8.2" fill="#5b7db1">clustering/覆盖</text>
+    <rect x="40" y="242" width="128" height="36" rx="8" fill="#f7f7f9" stroke="#e2e2e7"/><text x="104" y="264" fill="#6e6e73">savepoint</text>
+    <rect x="180" y="242" width="128" height="36" rx="8" fill="#f7f7f9" stroke="#e2e2e7"/><text x="244" y="264" fill="#6e6e73">logcompaction</text>
+    <rect x="320" y="242" width="128" height="36" rx="8" fill="#f7f7f9" stroke="#e2e2e7"/><text x="384" y="264" fill="#6e6e73">restore</text>
+    <rect x="460" y="242" width="128" height="36" rx="8" fill="#f7f7f9" stroke="#e2e2e7"/><text x="524" y="264" fill="#6e6e73">indexing</text>
+  </g>
+
+  <!-- .hoodie -->
+  <rect x="30" y="300" width="820" height="106" rx="12" fill="#f6f8fc" stroke="#dbe6f4"/>
+  <text x="46" y="322" font-size="10.5" font-weight="700" fill="#1b2a4a">.hoodie 目录（METAFOLDER_NAME）· 元数据根</text>
+  <text x="46" y="344" font-size="9.3" fill="#274a78">所有 instant 文件按 requestedTime 命名 + 状态扩展名，如 20260717093000.deltacommit.requested / .inflight / .deltacommit</text>
+  <text x="46" y="364" font-size="9.3" fill="#274a78">一个动作＝三个文件标记生命周期（requested→inflight→completed）；hoodie.properties 存表配置</text>
+  <text x="46" y="388" font-size="9" fill="#5b7db1">崩溃时未完成（无 COMPLETED）的 instant 可被 rollback 清理，不污染表</text>
+</svg>

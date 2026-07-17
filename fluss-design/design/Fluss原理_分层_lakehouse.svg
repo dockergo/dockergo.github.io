@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="500" viewBox="0 0 1020 500" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1020" height="500" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">Lakehouse 分层 · 独立作业写 Paimon/Iceberg</text>
+  <text x="30" y="52" font-size="10.5" fill="#a1a1a6">分层不在 server 内置，而是一个独立 Flink 作业：读 Fluss 桶 → 写湖表 → 快照元数据回提协调器</text>
+
+  <!-- 左 Fluss 桶 琥珀 -->
+  <rect x="30" y="95" width="150" height="112" rx="12" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="44" y="122" font-size="11.5" font-weight="600" fill="#5a3410">Fluss 桶</text>
+  <text x="44" y="146" font-size="10.5" fill="#5a3410">Log / KV 桶数据</text>
+  <text x="44" y="167" font-size="10.5" fill="#93762e">按桶并行读取</text>
+  <text x="44" y="192" font-size="9" fill="#b39456">TabletServer</text>
+
+  <!-- 大框 独立 Flink 分层作业 -->
+  <rect x="215" y="80" width="590" height="142" rx="14" fill="#f3f7fc" stroke="#cfe0f2" filter="url(#soft)"/>
+  <text x="232" y="104" font-size="12" font-weight="600" fill="#274a78">独立 Flink 分层作业</text>
+  <text x="232" y="124" font-size="9" fill="#8aa5cf">LakeTieringJobBuilder.build · flink/tiering/LakeTieringJobBuilder.java:76</text>
+
+  <rect x="235" y="138" width="160" height="66" rx="10" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="315" y="167" font-size="11" font-weight="600" fill="#1b2a4a" text-anchor="middle">TieringSource</text>
+  <text x="315" y="187" font-size="9.5" fill="#5b7db1" text-anchor="middle">申领表 + 读桶</text>
+
+  <rect x="430" y="138" width="160" height="66" rx="10" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="510" y="163" font-size="11" font-weight="600" fill="#1b2a4a" text-anchor="middle">TieringCommit</text>
+  <text x="510" y="180" font-size="11" font-weight="600" fill="#1b2a4a" text-anchor="middle">Operator</text>
+  <text x="510" y="197" font-size="9.5" fill="#5b7db1" text-anchor="middle">两阶段提交</text>
+
+  <rect x="625" y="138" width="160" height="66" rx="10" fill="#ffffff" stroke="#ececf1"/>
+  <text x="705" y="167" font-size="11" font-weight="600" fill="#1d1d1f" text-anchor="middle">DiscardingSink</text>
+  <text x="705" y="187" font-size="9.5" fill="#6e6e73" text-anchor="middle">末端占位</text>
+
+  <path d="M395,171 L428,171" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M590,171 L623,171" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <!-- 右 Paimon/Iceberg 绿 -->
+  <rect x="840" y="95" width="150" height="112" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="854" y="122" font-size="11.5" font-weight="600" fill="#12402a">Paimon / Iceberg</text>
+  <text x="854" y="146" font-size="10.5" fill="#12402a">湖表 + 快照</text>
+  <text x="854" y="167" font-size="10.5" fill="#2f6f4f">列式文件落 DFS</text>
+  <text x="854" y="192" font-size="9" fill="#5b9e77">DataLake 表</text>
+
+  <!-- 左右主连线 -->
+  <path d="M180,151 L213,151" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="196" y="143" font-size="9" fill="#a1a1a6" text-anchor="middle">读</text>
+  <path d="M807,151 L838,151" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="822" y="143" font-size="9" fill="#a1a1a6" text-anchor="middle">写</text>
+
+  <!-- 三条要点卡 -->
+  <rect x="30" y="252" width="300" height="192" rx="12" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="46" y="279" font-size="12" font-weight="600" fill="#5a3410">① TieringSourceEnumerator</text>
+  <text x="46" y="304" font-size="10.5" fill="#5a3410"><tspan font-weight="600">coordinatorGateway</tspan></text>
+  <text x="46" y="325" font-size="10.5" fill="#5a3410">.lakeTieringHeartbeat</text>
+  <text x="46" y="349" font-size="10.5" fill="#93762e">向协调器申领待分层的表</text>
+  <text x="46" y="373" font-size="10.5" fill="#93762e">协调器统一决定谁被分层</text>
+  <text x="46" y="397" font-size="10.5" fill="#93762e">按分配到的桶生成 split</text>
+  <text x="46" y="428" font-size="9" fill="#b39456">TieringSourceEnumerator:165</text>
+
+  <rect x="360" y="252" width="300" height="192" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="376" y="279" font-size="12" font-weight="600" fill="#1b2a4a">② TieringSplitReader</text>
+  <text x="376" y="304" font-size="10.5" fill="#1b2a4a">读 Fluss：<tspan font-weight="600">LogScanner.poll</tspan></text>
+  <text x="376" y="325" font-size="10.5" fill="#1b2a4a">写湖：每桶一个 LakeWriter</text>
+  <text x="376" y="349" font-size="10.5" fill="#5b7db1">流式把桶数据搬进湖表</text>
+  <text x="376" y="373" font-size="10.5" fill="#5b7db1">记录各桶已读到的 offset</text>
+  <text x="376" y="397" font-size="10.5" fill="#5b7db1">生成待提交的湖文件</text>
+  <text x="376" y="428" font-size="9" fill="#8aa5cf">tiering/source/TieringSplitReader.java:74</text>
+
+  <rect x="690" y="252" width="300" height="192" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="706" y="279" font-size="12" font-weight="600" fill="#12402a">③ TieringCommitOperator</text>
+  <text x="706" y="304" font-size="10.5" fill="#12402a">+ FlussTableLakeSnapshotCommitter</text>
+  <text x="706" y="325" font-size="10.5" fill="#12402a"><tspan font-weight="600">两阶段提交</tspan>：先写湖再回提</text>
+  <text x="706" y="349" font-size="10.5" fill="#2f6f4f">湖快照元数据 = snapshotId</text>
+  <text x="706" y="373" font-size="10.5" fill="#2f6f4f">+ 文件 + 各桶 log end offset</text>
+  <text x="706" y="397" font-size="10.5" fill="#2f6f4f">回提协调器 → 落 ZK</text>
+  <text x="706" y="428" font-size="9" fill="#5b9e77">FlussTableLakeSnapshotCommitter:70</text>
+
+  <!-- 底部小注 -->
+  <rect x="30" y="456" width="960" height="30" rx="10" fill="#ffffff" stroke="#ececf1"/>
+  <text x="46" y="476" font-size="10.5" fill="#6e6e73"><tspan font-weight="600" fill="#12402a">支持湖格式</tspan>　Paimon / Iceberg / Lance / Hudi · DataLakeFormat.java:21</text>
+</svg>

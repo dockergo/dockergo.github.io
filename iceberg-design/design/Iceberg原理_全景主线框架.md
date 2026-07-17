@@ -1,6 +1,6 @@
 # Iceberg 原理 · 全景主线框架
 
-> 统领全部原理文档:Apache Iceberg 是**开放表格式**(新家族:表格式/湖仓表——不是存储引擎、不是查询引擎,而是**数据文件之上的一层元数据规范**,让对象存储上的一堆文件表现得像有 ACID、schema 演进、时间旅行的表)。源码基准 **Iceberg(git f2875fd)**(`~/workdir/iceberg`,core/src/main/java/org/apache/iceberg/)。
+> 统领全部原理文档:Apache Iceberg 是**开放表格式**(新家族:表格式/湖仓表——不是存储引擎、不是查询引擎,而是**数据文件之上的一层元数据规范**,让对象存储上的一堆文件表现得像有 ACID、schema 演进、时间旅行的表)。源码基准 **Iceberg(apache/iceberg main · commit 6ec1a01)**(core/src/main/java/org/apache/iceberg/、api/src/main/java/org/apache/iceberg/)。
 
 Iceberg 的世界观:**表 = 一棵不可变元数据树**。数据还是那些 parquet/orc 文件躺在对象存储上,但 Iceberg 在其上加一层元数据(metadata.json → manifest list → manifest → data file),让"一堆文件"变成有快照、有 ACID 提交、能安全演进 schema/分区的表。它自己不读写数据、不执行查询——那是 Spark/Trino/Flink 的事;Iceberg 只管"表的元数据规范"。理解"元数据树 + 原子提交 + 按字段 ID 演进"三点,就懂了 Iceberg。
 
@@ -12,8 +12,8 @@ Iceberg 的世界观:**表 = 一棵不可变元数据树**。数据还是那些 
 
 ![双维模型](Iceberg原理_双维模型.svg)
 
-- **能力域**:接触面(表 API + 快照读)面向计算引擎;支撑侧——元数据树、快照与提交、schema/分区演进、扫描规划、行级删除。
-- **执行时机**:前台(commit 提交、scan 规划、读数据文件)vs 后台(过期快照清理、孤儿文件清理、manifest 合并 compaction、这些由计算引擎/维护任务触发)。
+- **能力域**:接触面(表 API + 快照读)面向计算引擎;支撑侧 8 域——元数据树、快照与提交、schema 演进、分区演进与隐藏分区、扫描规划、行级删除、表维护、catalog 与并发。
+- **执行时机**:前台(commit 提交、scan 规划、读数据文件)vs 后台(过期快照清理、孤儿文件清理、compaction 小文件/manifest 合并、这些由计算引擎/维护任务触发)。
 
 ---
 
@@ -31,10 +31,13 @@ Iceberg 的世界观:**表 = 一棵不可变元数据树**。数据还是那些 
 |---|---|---|
 | 接触面 | **表 API + 快照读** | 计算引擎经库读写表、时间旅行 |
 | 元数据 | **元数据树(核心)** | metadata.json→manifest list→manifest→data file |
-| 事务 | **快照与提交** | 每提交产新快照;catalog 原子 CAS + OCC 乐观重试 |
-| 演进 | **schema 与分区演进** | 字段 ID 追踪 + 隐藏分区/分区演进,不重写数据 |
+| 事务 | **快照与提交(灵魂)** | 每提交产新快照;catalog 原子 CAS + OCC 乐观重试 |
+| 演进 | **schema 演进** | 列靠不可变字段 ID 追踪,rename/加删列/类型提升不重写数据 |
+| 演进 | **分区演进与隐藏分区** | 隐藏分区从源列派生 + 每 manifest 记 spec id,改规则不重写老数据 |
 | 规划 | **扫描规划** | 两级剪枝(manifest 分区剪 + 文件列统计剪) |
 | 删除 | **行级删除(v2)** | position/equality delete files + merge-on-read |
+| 维护 | **表维护** | compaction 合并小文件/物化删除 + expire snapshots + 清孤儿 |
+| 事务 | **catalog 与并发** | catalog 类型(Hadoop/Hive/JDBC/REST)+ TableOperations 提交契约 |
 
 ---
 

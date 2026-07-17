@@ -1,6 +1,6 @@
 # Iceberg 原理 · 支撑主线 · 行级删除（v2 · Merge-on-Read）
 
-> **定位**：属"删除能力域"。管 v2 表的行级删除:位置删除(position delete)vs 等值删除(equality delete)delete files、读时 merge-on-read 叠加、按序列号决定作用范围。依赖【元数据树】的 delete manifest、被【扫描规划】附到 FileScanTask。源码基准 **Iceberg(f2875fd)**(`api/`、`core/`)。
+> **定位**：属"删除能力域"。管 v2 表的行级删除:位置删除(position delete)vs 等值删除(equality delete)delete files、读时 merge-on-read 叠加、按序列号决定作用范围。依赖【元数据树】的 delete manifest、被【扫描规划】附到 FileScanTask。源码基准 **Iceberg(apache/iceberg main · commit 6ec1a01)**(`api/`、`core/`)。
 
 Iceberg v2 支持行级删除,但不重写 data file(那太贵)——而是写独立的 **delete file** 记"哪些行被删了",读时**merge-on-read** 把删除叠加到 data file 上过滤掉。两种删除:**位置删除**(按文件+行号)和**等值删除**(按列值)。哪个 delete 作用于哪个 data file,靠序列号(sequence number)比较决定。
 

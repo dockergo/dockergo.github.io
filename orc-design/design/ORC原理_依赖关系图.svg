@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="556" viewBox="0 0 1080 556" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="556" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">ORC 原理 · 能力域依赖关系图（A→B：A 依赖 B）</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">实线 = 数据流 / 调用，虚线 = 约束；文件布局是被依赖最多的核心枢纽，箭头汇入；列 ID（前序编号）为贯穿层，横切类型/编码/统计</text>
+
+  <!-- legend -->
+  <rect x="770" y="80" width="272" height="56" rx="10" fill="#f7f7f9" stroke="#e3e3e8"/>
+  <path d="M786,100 L826,100" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="834" y="103" font-size="8.8" fill="#6e6e73">实线：数据流 / 调用</text>
+  <path d="M786,122 L826,122" stroke="#c7c7cc" stroke-width="1.5" stroke-dasharray="5 4" fill="none" marker-end="url(#ar)"/>
+  <text x="834" y="125" font-size="8.8" fill="#6e6e73">虚线：约束 / 列 ID 映射</text>
+
+  <!-- ===== edges (drawn before nodes) ===== -->
+  <!-- 读写API → 文件布局（经中间间隙通道 x=331） -->
+  <path d="M248,136 L248,176 L331,176 L331,330" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <!-- 谓词下推 → 行组与索引 -->
+  <path d="M470,136 L470,210" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <!-- 谓词下推 → 列统计与布隆 -->
+  <path d="M535,136 L535,168 L687,168 L687,210" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <!-- 列编码 → 文件布局 -->
+  <path d="M223,258 L223,300 L300,300 L300,330" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <!-- 行组与索引 → 文件布局 -->
+  <path d="M455,258 L455,330" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <!-- 列统计与布隆 → 文件布局 -->
+  <path d="M687,258 L687,300 L620,300 L620,330" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <!-- 列统计与布隆 → 行组与索引（统计挂 row index） -->
+  <path d="M582,234 L563,234" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <!-- 类型系统 → 文件布局（types[] 存 footer） -->
+  <path d="M935,258 L935,310 L680,310 L680,330" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <!-- 类型系统 ⇢ 贯穿层（前序编号赋列 ID，虚线约束） -->
+  <path d="M968,258 L968,438" stroke="#c7c7cc" stroke-width="1.5" stroke-dasharray="5 4" fill="none" marker-end="url(#ar)"/>
+
+  <!-- ===== nodes ===== -->
+  <!-- 读写 API 接触面 (origin) -->
+  <rect x="118" y="88" width="260" height="48" rx="11" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="248" y="109" font-size="10.5" font-weight="700" text-anchor="middle" fill="#3d2a5a">接触面 · 读写 API</text>
+  <text x="248" y="126" font-size="8" text-anchor="middle" fill="#8a6db3">写定 schema、给取 VectorizedRowBatch，调布局/编码</text>
+
+  <!-- 谓词下推 -->
+  <rect x="430" y="88" width="210" height="48" rx="11" fill="#fbeaea" stroke="#e7c3c3" filter="url(#soft)"/>
+  <text x="535" y="109" font-size="10.5" font-weight="700" text-anchor="middle" fill="#4a1414">谓词下推 SARG</text>
+  <text x="535" y="126" font-size="8" text-anchor="middle" fill="#7a2a2a">用统计 + 布隆剪 stripe / row-group</text>
+
+  <!-- 列编码 -->
+  <rect x="118" y="210" width="200" height="48" rx="11" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="218" y="231" font-size="10.5" font-weight="700" text-anchor="middle" fill="#12402a">列编码</text>
+  <text x="218" y="248" font-size="8" text-anchor="middle" fill="#2f6f4f">stream 分工 + RLE + 字符串字典</text>
+
+  <!-- 行组与索引 -->
+  <rect x="350" y="210" width="200" height="48" rx="11" fill="#e7f0fb" stroke="#b9d2ef" filter="url(#soft)"/>
+  <text x="450" y="231" font-size="10.5" font-weight="700" text-anchor="middle" fill="#1b2a4a">行组与索引</text>
+  <text x="450" y="248" font-size="8" text-anchor="middle" fill="#5b7db1">stride 10000 · positions seek</text>
+
+  <!-- 列统计与布隆 -->
+  <rect x="582" y="210" width="200" height="48" rx="11" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="682" y="231" font-size="10.5" font-weight="700" text-anchor="middle" fill="#5a3410">列统计与布隆</text>
+  <text x="682" y="248" font-size="8" text-anchor="middle" fill="#93762e">3 级 min/max/count/sum + 布隆</text>
+
+  <!-- 类型系统 -->
+  <rect x="812" y="210" width="210" height="48" rx="11" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="917" y="231" font-size="10.5" font-weight="700" text-anchor="middle" fill="#3d2a5a">类型系统</text>
+  <text x="917" y="248" font-size="8" text-anchor="middle" fill="#8a6db3">TypeDescription 树 · 列 ID 前序编号</text>
+
+  <!-- 文件布局 core hub -->
+  <rect x="250" y="330" width="460" height="64" rx="13" fill="#eef3fb" stroke="#bcd0ec" stroke-width="1.8" filter="url(#soft)"/>
+  <text x="480" y="356" font-size="12" font-weight="700" text-anchor="middle" fill="#1b2a4a">文件布局（核心枢纽 · 被依赖最多）</text>
+  <text x="480" y="374" font-size="8.4" text-anchor="middle" fill="#5b7db1">header + stripes + footer + postscript · 倒读定位</text>
+  <text x="480" y="388" font-size="8" text-anchor="middle" fill="#5b7db1">stripe 承载各列 stream，各级统计 / row index 挂于其上</text>
+
+  <!-- pervasive column-ID band -->
+  <rect x="30" y="438" width="1012" height="48" rx="12" fill="#f4eefb" stroke="#d9c7ec" stroke-dasharray="5 4"/>
+  <text x="46" y="459" font-size="10.5" font-weight="700" fill="#3d2a5a">贯穿层 · 列 ID（前序编号 root=0，类型树 assignIds 赋值）</text>
+  <text x="46" y="477" font-size="8.8" fill="#8a6db3">横切 类型系统 / 列编码 / 列统计与布隆 / 行组与索引 —— 每列的 stream、统计、索引都按列 ID 定位，SARG 谓词也映射到列 ID</text>
+
+  <!-- bottom caption -->
+  <text x="30" y="512" font-size="9" fill="#6e6e73"><tspan font-weight="600" fill="#1d1d1f">读法</tspan>：列编码 / 行组与索引 / 列统计与布隆 / 类型系统 均直接依赖 文件布局（stream、索引、统计、types[] 都落在 stripe/footer 里）—— 箭头汇入枢纽。</text>
+  <text x="30" y="530" font-size="9" fill="#6e6e73">谓词下推依赖 列统计与布隆（判据）+ 行组与索引（跳读单位）；列统计与布隆挂在行组与索引（row-group 级统计）；接触面读写 API 驱动写/读、调用文件布局。</text>
+  <text x="30" y="548" font-size="8.6" fill="#a1a1a6">文件布局被依赖最多（核心枢纽）；类型系统近“根”（供列 ID + 编码选择，自身少依赖）；列 ID 是横切一切的贯穿维度。</text>
+</svg>

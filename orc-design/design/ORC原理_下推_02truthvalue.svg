@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="520" viewBox="0 0 1080 520" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1080" height="520" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">ORC 谓词下推 · TruthValue 三态求值剪枝</text>
+  <text x="30" y="50" font-size="12" fill="#a1a1a6">pickRowGroups 对每 row group 的统计+布隆算每谓词叶 TruthValue;sarg.evaluate.isNeeded 决定读不读</text>
+
+  <!-- input row group -->
+  <rect x="60" y="74" width="220" height="90" rx="12" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+  <text x="170" y="99" font-size="12" font-weight="600" fill="#5a3410" text-anchor="middle">每个 row group</text>
+  <text x="170" y="120" font-size="9.5" fill="#93762e" text-anchor="middle">ColumnStatistics (min/max)</text>
+  <text x="170" y="138" font-size="9.5" fill="#93762e" text-anchor="middle">+ 可选布隆过滤器</text>
+  <text x="170" y="156" font-size="9" fill="#93762e" text-anchor="middle">每 10000 行一组</text>
+
+  <path d="M280,119 L336,119" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <!-- evaluate -->
+  <rect x="340" y="74" width="320" height="90" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="500" y="98" font-size="11" font-weight="600" fill="#1b2a4a" text-anchor="middle">evaluatePredicateProto (:666)</text>
+  <text x="500" y="118" font-size="9.5" fill="#5b7db1" text-anchor="middle">→ evaluatePredicateRange</text>
+  <text x="500" y="137" font-size="9.5" fill="#5b7db1" text-anchor="middle">用 min/max 判每谓词叶可能真/假/不确定</text>
+  <text x="500" y="155" font-size="9" fill="#5b7db1" text-anchor="middle">SargApplier.pickRowGroups (:1177)</text>
+
+  <path d="M660,119 L716,119" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <!-- sarg evaluate -->
+  <rect x="720" y="74" width="300" height="90" rx="12" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="870" y="102" font-size="11" font-weight="600" fill="#3d2a5a" text-anchor="middle">sarg.evaluate(leafValues)</text>
+  <text x="870" y="123" font-size="10" fill="#8a72b0" text-anchor="middle">.isNeeded()</text>
+  <text x="870" y="143" font-size="9.5" fill="#8a72b0" text-anchor="middle">决定该 row group 读不读</text>
+
+  <!-- three-state title -->
+  <text x="80" y="205" font-size="12" font-weight="600" fill="#1d1d1f">三态 TruthValue (统计是范围,不能精确判每行 → 只能三态)</text>
+
+  <!-- YES / possible -->
+  <rect x="60" y="222" width="300" height="120" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="210" y="248" font-size="12" font-weight="600" fill="#12402a" text-anchor="middle">可能有 (YES / YES_NO_NULL)</text>
+  <text x="210" y="272" font-size="10" fill="#2f6f4f" text-anchor="middle">min/max 与谓词有交集</text>
+  <text x="210" y="292" font-size="10" fill="#2f6f4f" text-anchor="middle">→ 读进来,由引擎精确过滤</text>
+  <text x="210" y="318" font-size="10" fill="#2f6f4f" text-anchor="middle">isNeeded() = true</text>
+
+  <!-- NO / impossible -->
+  <rect x="390" y="222" width="300" height="120" rx="12" fill="#fbeaea" stroke="#e7c3c3" filter="url(#soft)"/>
+  <text x="540" y="248" font-size="12" font-weight="600" fill="#4a1414" text-anchor="middle">肯定无 (NO)</text>
+  <text x="540" y="272" font-size="10" fill="#7a2a2a" text-anchor="middle">min/max 都不满足谓词</text>
+  <text x="540" y="292" font-size="10" fill="#7a2a2a" text-anchor="middle">→ 整块跳过,不读</text>
+  <text x="540" y="318" font-size="10" fill="#7a2a2a" text-anchor="middle">isNeeded() = false</text>
+
+  <!-- reason -->
+  <rect x="720" y="222" width="300" height="120" rx="12" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="870" y="248" font-size="12" font-weight="600" fill="#1d1d1f" text-anchor="middle">为何三态</text>
+  <text x="870" y="272" font-size="10" fill="#6e6e73" text-anchor="middle">统计是范围 (min/max)</text>
+  <text x="870" y="292" font-size="10" fill="#6e6e73" text-anchor="middle">不能精确判每行</text>
+  <text x="870" y="318" font-size="10" fill="#6e6e73" text-anchor="middle">只能说肯定无 / 可能有</text>
+
+  <!-- return values -->
+  <path d="M500,342 L500,376" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="80" y="373" font-size="11" font-weight="600" fill="#1d1d1f">pickRowGroups 返回</text>
+
+  <rect x="60" y="386" width="300" height="76" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="210" y="412" font-size="11" font-weight="600" fill="#1b2a4a" text-anchor="middle">READ_ALL_RGS</text>
+  <text x="210" y="434" font-size="9.5" fill="#5b7db1" text-anchor="middle">null → 全读</text>
+  <text x="210" y="452" font-size="9" fill="#5b7db1" text-anchor="middle">无有效剪枝信息</text>
+
+  <rect x="390" y="386" width="300" height="76" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="540" y="412" font-size="11" font-weight="600" fill="#1b2a4a" text-anchor="middle">READ_NO_RGS</text>
+  <text x="540" y="434" font-size="9.5" fill="#5b7db1" text-anchor="middle">空 → 全跳</text>
+  <text x="540" y="452" font-size="9" fill="#5b7db1" text-anchor="middle">无一组命中</text>
+
+  <rect x="720" y="386" width="300" height="76" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="870" y="412" font-size="11" font-weight="600" fill="#1b2a4a" text-anchor="middle">boolean[]</text>
+  <text x="870" y="434" font-size="9.5" fill="#5b7db1" text-anchor="middle">逐 row group 标记</text>
+  <text x="870" y="452" font-size="9" fill="#5b7db1" text-anchor="middle">命中组用 positions seek 精读</text>
+
+  <text x="540" y="500" font-size="9.5" fill="#a1a1a6" text-anchor="middle">下推只跳整块肯定无匹配的 row group;可能有的块读进来仍由引擎精确过滤每行</text>
+</svg>

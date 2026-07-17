@@ -1,0 +1,102 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="500" viewBox="0 0 1080 500" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="500" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Rust 编译管线 · 多阶段降级 lex→AST→HIR→THIR→MIR→codegen→机器码</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">rustc 逐级降成越来越低层的中间表示,每级做特定分析;rustc_interface/src/passes.rs 编排</text>
+
+  <!-- Top row L→R -->
+  <!-- 1 源码 (white) -->
+  <rect x="40" y="95" width="184" height="120" rx="13" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="54" y="118" font-size="12" font-weight="600" fill="#1d1d1f">① 源码</text>
+  <text x="54" y="140" font-size="10" fill="#6e6e73">程序员写的</text>
+  <text x="54" y="158" font-size="10" fill="#6e6e73">.rs 文本</text>
+
+  <!-- 2 lex (blue) -->
+  <rect x="244" y="95" width="184" height="120" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="258" y="118" font-size="12" font-weight="600" fill="#1b2a4a">② 词法 lex</text>
+  <text x="258" y="139" font-size="9.5" fill="#5b7db1">rustc_lexer 原始分词</text>
+  <text x="258" y="155" font-size="9" fill="#5b7db1">→ rustc_parse 包装 :65</text>
+  <text x="258" y="176" font-size="10" fill="#1b2a4a">lex_token_trees</text>
+  <text x="258" y="194" font-size="9.5" fill="#1b2a4a">产 token 流</text>
+
+  <!-- 3 AST (blue) -->
+  <rect x="448" y="95" width="184" height="120" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="462" y="118" font-size="12" font-weight="600" fill="#1b2a4a">③ 语法 AST</text>
+  <text x="462" y="139" font-size="9.5" fill="#5b7db1">rustc_parse</text>
+  <text x="462" y="155" font-size="9" fill="#5b7db1">parse() passes.rs:54</text>
+  <text x="462" y="176" font-size="10" fill="#1b2a4a">parse_crate_mod()</text>
+  <text x="462" y="194" font-size="9.5" fill="#1b2a4a">产 ast::Crate</text>
+
+  <!-- 4 HIR (blue) -->
+  <rect x="652" y="95" width="184" height="120" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="666" y="118" font-size="12" font-weight="600" fill="#1b2a4a">④ HIR</text>
+  <text x="666" y="139" font-size="9.5" fill="#5b7db1">rustc_ast_lowering</text>
+  <text x="666" y="155" font-size="9" fill="#5b7db1">lower_to_hir :100</text>
+  <text x="666" y="176" font-size="10" fill="#1b2a4a">去语法糖</text>
+  <text x="666" y="194" font-size="9.5" fill="#1b2a4a">+ 名字解析</text>
+
+  <!-- 5 THIR (blue) -->
+  <rect x="856" y="95" width="184" height="120" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="870" y="118" font-size="12" font-weight="600" fill="#1b2a4a">⑤ THIR</text>
+  <text x="870" y="139" font-size="9.5" fill="#5b7db1">rustc_mir_build</text>
+  <text x="870" y="155" font-size="9" fill="#5b7db1">thir_body</text>
+  <text x="870" y="176" font-size="10" fill="#1b2a4a">带类型的 HIR</text>
+
+  <!-- Bottom row R→L -->
+  <!-- 6 MIR (blue, emphasized) -->
+  <rect x="856" y="262" width="184" height="120" rx="13" fill="#eef3fb" stroke="#7ea3d6" stroke-width="2" filter="url(#soft)"/>
+  <text x="870" y="285" font-size="12" font-weight="600" fill="#1b2a4a">⑥ MIR · 中心 ★</text>
+  <text x="870" y="306" font-size="9.5" fill="#5b7db1">rustc_mir_build</text>
+  <text x="870" y="322" font-size="9" fill="#5b7db1">construct_fn :67</text>
+  <text x="870" y="343" font-size="10" fill="#1b2a4a">控制流图 CFG</text>
+  <text x="870" y="361" font-size="9.5" fill="#1b2a4a">borrow/move/drop 显式</text>
+
+  <!-- 7 优化 (blue) -->
+  <rect x="652" y="262" width="184" height="120" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="666" y="285" font-size="12" font-weight="600" fill="#1b2a4a">⑦ MIR 优化</text>
+  <text x="666" y="306" font-size="9.5" fill="#5b7db1">rustc_mir_transform</text>
+  <text x="666" y="322" font-size="9" fill="#5b7db1">run_..._passes :700</text>
+  <text x="666" y="343" font-size="10" fill="#1b2a4a">内联 / 常量传播</text>
+  <text x="666" y="361" font-size="9.5" fill="#1b2a4a">产 optimized_mir :801</text>
+
+  <!-- 8 codegen (purple, trait boundary) -->
+  <rect x="448" y="262" width="184" height="120" rx="13" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="462" y="285" font-size="12" font-weight="600" fill="#3d2a5a">⑧ codegen</text>
+  <text x="462" y="306" font-size="9.5" fill="#7c68a6">rustc_codegen_ssa</text>
+  <text x="462" y="322" font-size="9" fill="#7c68a6">后端无关 lib.rs:12</text>
+  <text x="462" y="343" font-size="10" fill="#3d2a5a">rustc_codegen_llvm</text>
+  <text x="462" y="361" font-size="9.5" fill="#3d2a5a">CodegenBackend :36</text>
+
+  <!-- 9 机器码 (green) -->
+  <rect x="244" y="262" width="184" height="120" rx="13" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="258" y="285" font-size="12" font-weight="600" fill="#12402a">⑨ 机器码</text>
+  <text x="258" y="306" font-size="9.5" fill="#2f6f4f">LLVM IR → 机器码</text>
+  <text x="258" y="343" font-size="10" fill="#12402a">可执行程序</text>
+
+  <!-- why-note (green) -->
+  <rect x="40" y="262" width="184" height="120" rx="13" fill="#f5faf6" stroke="#cfe6d5" filter="url(#soft)"/>
+  <text x="54" y="285" font-size="11.5" font-weight="600" fill="#2c5a3a">为什么多级</text>
+  <text x="54" y="308" font-size="9.5" fill="#2c5a3a">名字解析在 HIR</text>
+  <text x="54" y="326" font-size="9.5" fill="#2c5a3a">类型在 THIR</text>
+  <text x="54" y="344" font-size="9.5" fill="#2c5a3a">借用 / 优化在 MIR</text>
+  <text x="54" y="362" font-size="9.5" fill="#2c5a3a">机器码在 LLVM</text>
+
+  <!-- connectors: top row -->
+  <path d="M224,155 L244,155" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M428,155 L448,155" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M632,155 L652,155" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M836,155 L856,155" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <!-- wrap THIR → MIR -->
+  <path d="M948,215 L948,262" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <!-- bottom row R→L -->
+  <path d="M856,322 L836,322" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M652,322 L632,322" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M448,322 L428,322" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <text x="30" y="422" font-size="9.5" fill="#a1a1a6">误区:AST 直接到 MIR —— 中间有 THIR(带类型);误区:rustc 是线性 pass —— 实为 query 驱动(见 03query)</text>
+  <text x="30" y="445" font-size="9.5" fill="#a1a1a6">MIR 是中心舞台:借用检查 / Drop 精化 / 优化 / 单态化都在此(见 02MIR)</text>
+  <text x="30" y="468" font-size="9" fill="#a1a1a6">误区:LLVM 是唯一后端 —— CodegenBackend trait 是边界,cranelift/gcc 可插拔 · 源码基准 Rust 1.99.0</text>
+</svg>

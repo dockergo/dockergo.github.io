@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="460" viewBox="0 0 920 460"
+     font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="920" height="460" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">Federation:多个独立 NameNode 各管一段命名空间,Router(RBF) 拼统一视图</text>
+
+  <!-- Client -->
+  <rect x="360" y="52" width="200" height="44" rx="10" fill="#f4eefb" stroke="#d9c9ef" filter="url(#soft)"/>
+  <text x="460" y="80" font-size="10.5" font-weight="600" fill="#3c1361" text-anchor="middle">Client(只连 Router)</text>
+
+  <!-- Router -->
+  <rect x="300" y="120" width="320" height="70" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="460" y="146" font-size="11" font-weight="600" fill="#1b2a4a" text-anchor="middle">Router(RBF · 无状态,可多实例)</text>
+  <text x="460" y="166" font-size="8.5" fill="#5b7db1" text-anchor="middle">按挂载表把统一命名空间转发到正确 NameNode</text>
+  <text x="460" y="182" font-size="8" fill="#86868b" text-anchor="middle">挂载表存 State Store(ZK / 内嵌)</text>
+  <path d="M460,96 L460,120" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <!-- 三个 NameNode -->
+  <rect x="30" y="230" width="270" height="110" rx="12" fill="#f3f7fc" stroke="#cfe0f2"/>
+  <text x="165" y="254" font-size="10.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">NameNode NS1</text>
+  <rect x="48" y="266" width="234" height="30" rx="7" fill="#e7eefb" stroke="#bcd0ec"/>
+  <text x="165" y="286" font-size="9" fill="#1b2a4a" text-anchor="middle">命名空间 /user</text>
+  <text x="165" y="316" font-size="8.3" fill="#5b7db1" text-anchor="middle">独立 INode 树 + FsImage/EditLog</text>
+  <text x="165" y="332" font-size="8.3" fill="#5b7db1" text-anchor="middle">独享内存,隔离压力</text>
+
+  <rect x="325" y="230" width="270" height="110" rx="12" fill="#f3f7fc" stroke="#cfe0f2"/>
+  <text x="460" y="254" font-size="10.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">NameNode NS2</text>
+  <rect x="343" y="266" width="234" height="30" rx="7" fill="#e7eefb" stroke="#bcd0ec"/>
+  <text x="460" y="286" font-size="9" fill="#1b2a4a" text-anchor="middle">命名空间 /data</text>
+  <text x="460" y="316" font-size="8.3" fill="#5b7db1" text-anchor="middle">与 NS1 完全独立、不重叠</text>
+
+  <rect x="620" y="230" width="270" height="110" rx="12" fill="#f3f7fc" stroke="#cfe0f2"/>
+  <text x="755" y="254" font-size="10.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">NameNode NS3</text>
+  <rect x="638" y="266" width="234" height="30" rx="7" fill="#e7eefb" stroke="#bcd0ec"/>
+  <text x="755" y="286" font-size="9" fill="#1b2a4a" text-anchor="middle">命名空间 /tmp</text>
+  <text x="755" y="316" font-size="8.3" fill="#5b7db1" text-anchor="middle">如高频小文件目录单独一 NN</text>
+
+  <path d="M400,190 L200,230" stroke="#c7c7cc" stroke-width="1.4" fill="none" marker-end="url(#ar)"/>
+  <path d="M460,190 L460,230" stroke="#c7c7cc" stroke-width="1.4" fill="none" marker-end="url(#ar)"/>
+  <path d="M520,190 L720,230" stroke="#c7c7cc" stroke-width="1.4" fill="none" marker-end="url(#ar)"/>
+
+  <!-- 共享 DataNode -->
+  <rect x="30" y="360" width="860" height="46" rx="11" fill="#fff7e6" stroke="#f0dcae"/>
+  <text x="460" y="382" font-size="10" font-weight="600" fill="#7a4d00" text-anchor="middle">共享 DataNode 池(每个 DataNode 向所有 NameNode 汇报,块池 BlockPool 隔离)</text>
+  <text x="460" y="399" font-size="8.3" fill="#9a7328" text-anchor="middle">存储层共享、命名空间层水平拆分</text>
+  <path d="M165,340 L300,360" stroke="#c7c7cc" stroke-width="1.3" fill="none" marker-end="url(#ar)"/>
+  <path d="M460,340 L460,360" stroke="#c7c7cc" stroke-width="1.3" fill="none" marker-end="url(#ar)"/>
+  <path d="M755,340 L620,360" stroke="#c7c7cc" stroke-width="1.3" fill="none" marker-end="url(#ar)"/>
+
+  <rect x="30" y="420" width="860" height="30" rx="8" fill="#f4eefb" stroke="#d9c9ef"/>
+  <text x="460" y="440" font-size="9" fill="#3c1361" text-anchor="middle">Federation 解决单 NameNode 命名空间/内存上限,与 HA(主备容错)正交、可叠加;RBF 把挂载逻辑从客户端移到服务端</text>
+</svg>

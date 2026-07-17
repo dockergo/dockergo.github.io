@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="520" viewBox="0 0 960 520"
+ font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="960" height="520" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="700" fill="#1d1d1f">ORC · row group:stripe 内的细粒度跳读单位（默认每 10000 行）</text>
+  <text x="40" y="58" font-size="10.5" fill="#6e6e73">一个 stripe（默认 64MB）内按 row index stride 细分为多个 row group，每组默认 10000 行</text>
+
+  <!-- 配置盒 -->
+  <rect x="620" y="42" width="310" height="62" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="636" y="62" font-size="11" font-weight="600" fill="#1b2a4a">默认索引配置</text>
+  <text x="636" y="80" font-size="10" fill="#1b2a4a"><tspan font-weight="600">ROW_INDEX_STRIDE = 10000</tspan> 行（OrcConf.java:44）</text>
+  <text x="636" y="96" font-size="9.5" fill="#5b7db1">ENABLE_INDEXES 默认 true — 索引总开关</text>
+
+  <!-- stripe 容器 -->
+  <rect x="40" y="120" width="880" height="86" rx="12" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="54" y="140" font-size="11" font-weight="600" fill="#5a3410">stripe · 默认 64MB（rowsInStripe 行）</text>
+
+  <!-- row group 细胞 -->
+  <g font-family="-apple-system,'PingFang SC',sans-serif">
+    <rect x="54"  y="150" width="120" height="46" rx="6" fill="#fdf6ea" stroke="#efdcb4"/>
+    <text x="114" y="171" font-size="10.5" font-weight="600" fill="#5a3410" text-anchor="middle">RG0</text>
+    <text x="114" y="187" font-size="9" fill="#93762e" text-anchor="middle">10000 行</text>
+    <rect x="176" y="150" width="120" height="46" rx="6" fill="#fdf6ea" stroke="#efdcb4"/>
+    <text x="236" y="171" font-size="10.5" font-weight="600" fill="#5a3410" text-anchor="middle">RG1</text>
+    <text x="236" y="187" font-size="9" fill="#93762e" text-anchor="middle">10000 行</text>
+    <rect x="298" y="150" width="120" height="46" rx="6" fill="#fbeec9" stroke="#e0bf74" stroke-width="1.6"/>
+    <text x="358" y="171" font-size="10.5" font-weight="600" fill="#5a3410" text-anchor="middle">RG2</text>
+    <text x="358" y="187" font-size="9" fill="#93762e" text-anchor="middle">10000 行</text>
+    <rect x="420" y="150" width="120" height="46" rx="6" fill="#fdf6ea" stroke="#efdcb4"/>
+    <text x="480" y="171" font-size="10.5" font-weight="600" fill="#5a3410" text-anchor="middle">RG3</text>
+    <text x="480" y="187" font-size="9" fill="#93762e" text-anchor="middle">10000 行</text>
+    <rect x="542" y="150" width="120" height="46" rx="6" fill="#fdf6ea" stroke="#efdcb4"/>
+    <text x="602" y="171" font-size="10.5" font-weight="600" fill="#5a3410" text-anchor="middle">RG4</text>
+    <text x="602" y="187" font-size="9" fill="#93762e" text-anchor="middle">10000 行</text>
+    <rect x="664" y="150" width="120" height="46" rx="6" fill="#fdf6ea" stroke="#efdcb4"/>
+    <text x="724" y="171" font-size="10.5" font-weight="600" fill="#5a3410" text-anchor="middle">RG5</text>
+    <text x="724" y="187" font-size="9" fill="#93762e" text-anchor="middle">10000 行</text>
+    <rect x="786" y="150" width="120" height="46" rx="6" fill="#f7f7f9" stroke="#e3e3e8"/>
+    <text x="846" y="171" font-size="10.5" font-weight="600" fill="#6e6e73" text-anchor="middle">RG6</text>
+    <text x="846" y="187" font-size="9" fill="#6e6e73" text-anchor="middle">尾组 4000 行</text>
+  </g>
+
+  <!-- 放大连线 -->
+  <path d="M358,196 L358,270" stroke="#c7c7cc" stroke-width="1.5" fill="none" stroke-dasharray="5 4" marker-end="url(#ar)"/>
+  <text x="368" y="238" font-size="9" fill="#a1a1a6">放大一个 row group</text>
+
+  <!-- RowIndexEntry 明细卡 -->
+  <rect x="250" y="270" width="460" height="112" rx="12" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="270" y="292" font-size="12" font-weight="600" fill="#1d1d1f">每个 row group 一个 RowIndexEntry</text>
+  <rect x="270" y="304" width="420" height="30" rx="6" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="282" y="323" font-size="10" fill="#1b2a4a"><tspan font-weight="600">positions[]</tspan> — 各 stream 该组起点（让 seek 精读）</text>
+  <rect x="270" y="340" width="420" height="30" rx="6" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="282" y="359" font-size="10" fill="#12402a"><tspan font-weight="600">ColumnStatistics</tspan> — 该组 min/max/count（让按谓词跳过整组）</text>
+
+  <!-- 公式盒 -->
+  <rect x="40" y="418" width="440" height="66" rx="11" fill="#f5faf6" stroke="#cfe6d5" filter="url(#soft)"/>
+  <text x="56" y="438" font-size="11" font-weight="600" fill="#12402a">row group 数 = ceil(rowsInStripe / rowIndexStride)</text>
+  <text x="56" y="457" font-size="9.5" fill="#2f6f4f">写侧 WriterImpl.java:568 · 读侧 RecordReaderImpl.java:1184 皆按此算</text>
+  <text x="56" y="474" font-size="9.5" fill="#2f6f4f">写侧在 TreeWriterBase 建 rowIndex / rowIndexEntry</text>
+
+  <!-- 权衡盒 -->
+  <rect x="500" y="418" width="420" height="66" rx="11" fill="#f7f7f9" stroke="#e3e3e8" filter="url(#soft)"/>
+  <text x="516" y="438" font-size="11" font-weight="600" fill="#1d1d1f">为什么默认 10000 行</text>
+  <text x="516" y="457" font-size="9.5" fill="#6e6e73">太大 → 跳读粒度粗（读进无用行）；太小 → 索引膨胀</text>
+  <text x="516" y="474" font-size="9.5" fill="#6e6e73">10000 = 「索引开销 vs 跳读精度」的平衡默认</text>
+</svg>

@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="490" viewBox="0 0 960 490"
+     font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="960" height="490" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">HA 共享编辑日志:Active 写 JournalNode 多数派、Standby 追日志热同步</text>
+
+  <!-- Active -->
+  <rect x="30" y="58" width="270" height="150" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="165" y="82" font-size="12" font-weight="600" fill="#1b2a4a" text-anchor="middle">Active NameNode</text>
+  <rect x="48" y="96" width="234" height="44" rx="9" fill="#e7eefb" stroke="#bcd0ec"/>
+  <text x="165" y="116" font-size="9" font-weight="600" fill="#1b2a4a" text-anchor="middle">QuorumJournalManager(:72)</text>
+  <text x="165" y="132" font-size="8" fill="#5b7db1" text-anchor="middle">AsyncLoggerSet loggers(:106)</text>
+  <rect x="48" y="148" width="234" height="50" rx="9" fill="#ffffff" stroke="#bcd0ec"/>
+  <text x="165" y="170" font-size="8.8" fill="#1b2a4a" text-anchor="middle">每批 edits 并行写 3 个 JN</text>
+  <text x="165" y="188" font-size="8.8" fill="#1b2a4a" text-anchor="middle">等多数派(2/3)确认才成功</text>
+
+  <!-- Standby -->
+  <rect x="660" y="58" width="270" height="150" rx="13" fill="#f5faf6" stroke="#e2ece5" filter="url(#soft)"/>
+  <text x="795" y="82" font-size="12" font-weight="600" fill="#2c5a3a" text-anchor="middle">Standby NameNode</text>
+  <rect x="678" y="96" width="234" height="44" rx="9" fill="#eafaf1" stroke="#bce6cd"/>
+  <text x="795" y="116" font-size="9" font-weight="600" fill="#0f5132" text-anchor="middle">EditLogTailer(:73)</text>
+  <text x="795" y="132" font-size="8" fill="#3f8f66" text-anchor="middle">doTailEdits(:341) 循环拉取重放</text>
+  <rect x="678" y="148" width="234" height="50" rx="9" fill="#ffffff" stroke="#bce6cd"/>
+  <text x="795" y="170" font-size="8.8" fill="#0f5132" text-anchor="middle">内存树与 Active 近实时同步</text>
+  <text x="795" y="188" font-size="8.8" fill="#0f5132" text-anchor="middle">兼做检查点 StandbyCheckpointer</text>
+
+  <!-- JournalNode Quorum -->
+  <rect x="330" y="90" width="300" height="150" rx="13" fill="#fff7e6" stroke="#f0dcae" filter="url(#soft)"/>
+  <text x="480" y="114" font-size="11.5" font-weight="600" fill="#7a4d00" text-anchor="middle">JournalNode Quorum(通常 3 个)</text>
+  <rect x="348" y="128" width="80" height="60" rx="9" fill="#fdf6ea" stroke="#efdcb4"/><text x="388" y="152" font-size="9" font-weight="600" fill="#7a4d00" text-anchor="middle">JN1</text><text x="388" y="170" font-size="7.5" fill="#9a7328" text-anchor="middle">Journal:85</text>
+  <rect x="440" y="128" width="80" height="60" rx="9" fill="#fdf6ea" stroke="#efdcb4"/><text x="480" y="152" font-size="9" font-weight="600" fill="#7a4d00" text-anchor="middle">JN2</text><text x="480" y="170" font-size="7.5" fill="#9a7328" text-anchor="middle">journal:393</text>
+  <rect x="532" y="128" width="80" height="60" rx="9" fill="#fdf6ea" stroke="#efdcb4"/><text x="572" y="152" font-size="9" font-weight="600" fill="#7a4d00" text-anchor="middle">JN3</text>
+  <text x="480" y="212" font-size="8.5" fill="#9a7328" text-anchor="middle">多数派复制 EditLog,容忍 1 个 JN 挂</text>
+  <text x="480" y="230" font-size="8.5" fill="#9a7328" text-anchor="middle">存的是元数据日志,与 DataNode 无关</text>
+
+  <path d="M300,140 L330,150" stroke="#c7c7cc" stroke-width="2" fill="none" marker-end="url(#ar)"/>
+  <text x="300" y="130" font-size="8.5" font-weight="600" fill="#1b2a4a">写 →</text>
+  <path d="M630,150 L660,140" stroke="#c7c7cc" stroke-width="2" fill="none" marker-end="url(#ar)"/>
+  <text x="632" y="130" font-size="8.5" font-weight="600" fill="#0f5132">← 拉</text>
+
+  <!-- epoch 防脑裂 -->
+  <rect x="30" y="266" width="900" height="120" rx="13" fill="#f4eefb" stroke="#d9c9ef"/>
+  <text x="48" y="290" font-size="11.5" font-weight="600" fill="#3c1361">epoch(纪元号)防脑裂 —— 即使旧 Active 未死也写不进 quorum</text>
+  <rect x="48" y="304" width="420" height="70" rx="10" fill="#faf4fb" stroke="#e4d3ee"/>
+  <text x="258" y="326" font-size="9.5" font-weight="600" fill="#3c1361" text-anchor="middle">newEpoch(Journal.java:339)</text>
+  <text x="258" y="346" font-size="8.5" fill="#7c5aa6" text-anchor="middle">成为 writer 时抢一个更大的 epoch</text>
+  <text x="258" y="364" font-size="8.5" fill="#7c5aa6" text-anchor="middle">QuorumJournalManager 侧 :244</text>
+  <rect x="490" y="304" width="440" height="70" rx="10" fill="#faf4fb" stroke="#e4d3ee"/>
+  <text x="710" y="326" font-size="9.5" font-weight="600" fill="#3c1361" text-anchor="middle">checkRequest(Journal.java:484)</text>
+  <text x="710" y="346" font-size="8.5" fill="#7c5aa6" text-anchor="middle">拒绝 epoch 更小的旧 writer 写入</text>
+  <text x="710" y="364" font-size="8.5" fill="#7c5aa6" text-anchor="middle">→ 旧 Active 无法产生分裂的日志</text>
+
+  <rect x="30" y="404" width="900" height="66" rx="12" fill="#eafaf1" stroke="#bce6cd"/>
+  <text x="48" y="428" font-size="9.5" fill="#0f5132">· 共享编辑日志本质是一个多数派(N/2+1)写的复制日志 —— 家族 4 与家族 6(etcd/ZK 共识)在此交汇</text>
+  <text x="48" y="450" font-size="9.5" fill="#0f5132">· DataNode 同时向两个 NameNode 心跳+块汇报,故切换后 Standby 无需重等汇报即可服务</text>
+</svg>

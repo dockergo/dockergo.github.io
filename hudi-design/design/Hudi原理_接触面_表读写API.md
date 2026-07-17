@@ -1,6 +1,6 @@
 # Hudi 原理 · 接触面主线 · 表读写 API
 
-> **定位**：属"接触面主线"(计算引擎可见)。Hudi 的接触面是**表读写 API**:通过 Spark/Flink 的 write client 做 upsert/insert/delete,通过三种查询类型读。它是链接进引擎的库 + write client,不是终端 SQL。调用【写入与索引】写、【MoR 读合并】读、【时间线】定序。源码基准 **Hudi(1dfbdcb)**(`hudi-client/`)。
+> **定位**：属"接触面主线"(计算引擎可见)。Hudi 的接触面是**表读写 API**:通过 Spark/Flink 的 write client 做 upsert/insert/delete,通过三种查询类型读。它是链接进引擎的库 + write client,不是终端 SQL。调用【写入路径与 upsert】写、【MoR 读合并】读、【时间线】定序。源码基准 **Hudi(1dfbdcb)**(`hudi-client/`)。
 
 Hudi 怎么被用?**通过计算引擎的 write client**:Spark DataSource / Flink sink 调 `BaseHoodieWriteClient` 做 upsert/insert/bulk_insert/delete;读通过 Spark/Flink 的 Hudi relation 按查询类型(快照/读优化/增量)读。用户写的是引擎 SQL/DataFrame,底下调 Hudi API。所以接触面是引擎集成层 + write client 的操作族。
 
@@ -12,7 +12,7 @@ Hudi 怎么被用?**通过计算引擎的 write client**:Spark DataSource / Flin
 
 `BaseHoodieWriteClient` 的写操作(`WriteOperationType`):
 
-- **upsert**:主操作——索引 tag 后更新已存在键、插入新键(见写入与索引篇)。Hudi 的招牌能力。
+- **upsert**:主操作——索引 tag 后更新已存在键、插入新键(见【写入路径与 upsert】与【索引】篇)。Hudi 的招牌能力。
 - **insert**:不查索引直接插(允许重复键),比 upsert 快,适合无更新场景。
 - **bulk_insert**:大批量初始导入,优化文件大小分布(不走小文件合并逻辑)。
 - **delete**:按记录键删除(写删除标记)。
@@ -72,7 +72,7 @@ Hudi 通过引擎适配层接入:
 - **误区:insert 和 upsert 一样。** insert 不查索引(允许重复键,快);upsert 查索引去重更新(招牌但略慢)。
 - **误区:bulk_insert 走小文件合并。** bulk_insert 优化初始导入的文件分布,不走 upsert 的小文件塞入逻辑。
 - **误区:读总是最新。** 快照查最新;读优化查(MOR)略旧;增量查只拿区间变更——按查询类型定。
-- **归属提醒**:写的索引/路由在【写入与索引】;COW/MOR handle 在【表类型】;MOR 读合并在【MoR 读合并】;写动作 instant 在【时间线】;并发在【表服务与并发】。
+- **归属提醒**:写路径在【写入路径与 upsert】、索引在【索引】;COW/MOR handle 在【表类型】;MOR 读合并在【MoR 读合并】;写动作 instant 在【时间线】;并发在【并发控制与元数据】。
 
 ## 一句话总纲
 

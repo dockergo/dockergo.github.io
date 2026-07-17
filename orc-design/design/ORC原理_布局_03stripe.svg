@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="580" viewBox="0 0 1000 580" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1000" height="580" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">ORC 原理 · stripe 结构（index + data + footer 三段）</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">stripe = 一批行的自包含列数据（默认 64MB，不跨行边界）；物理写序 index-then-data；每列多个 stream 独立存放</text>
+
+  <!-- physical write order arrow -->
+  <path d="M45,150 L45,478" stroke="#c7c7cc" stroke-width="1.6" fill="none" marker-end="url(#ar)"/>
+  <text x="38" y="315" font-size="9" fill="#a1a1a6" transform="rotate(-90 38 315)" text-anchor="middle">物理写序（finalizeStripe：先 index area，再 data area，再 footer）</text>
+
+  <!-- stripe frame -->
+  <rect x="62" y="100" width="320" height="400" rx="13" fill="#f7f7f9" stroke="#e3e3e8" filter="url(#soft)"/>
+  <text x="222" y="122" font-size="11" font-weight="700" text-anchor="middle" fill="#1d1d1f">一个 stripe（默认 64MB · 只含完整行）</text>
+
+  <!-- seg1 index streams -->
+  <rect x="78" y="135" width="288" height="96" rx="10" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="92" y="155" font-size="10" font-weight="700" fill="#1b2a4a">① index streams</text>
+  <text x="92" y="173" font-size="8.6" fill="#5b7db1">各列 ROW_INDEX：row-group 级 positions</text>
+  <text x="92" y="188" font-size="8.6" fill="#5b7db1">+ row-group 统计（min/max/count…）</text>
+  <rect x="92" y="197" width="120" height="26" rx="7" fill="#e7f0fb" stroke="#b9d2ef"/><text x="152" y="214" font-size="8.4" text-anchor="middle" fill="#1b2a4a">ROW_INDEX</text>
+  <rect x="222" y="197" width="130" height="26" rx="7" fill="#f5faf6" stroke="#cfe6d5"/><text x="287" y="214" font-size="8.4" text-anchor="middle" fill="#2f6f4f">BLOOM_FILTER（可选）</text>
+
+  <!-- seg2 data streams -->
+  <rect x="78" y="239" width="288" height="175" rx="10" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="92" y="259" font-size="10" font-weight="700" fill="#5a3410">② data streams</text>
+  <text x="92" y="277" font-size="8.6" fill="#93762e">各列实际数据 stream（PRESENT/DATA/…）</text>
+  <rect x="92" y="286" width="120" height="26" rx="7" fill="#ffffff" stroke="#e6d8c4"/><text x="152" y="303" font-size="8.4" text-anchor="middle" fill="#5a3410">列 0 · streams</text>
+  <rect x="222" y="286" width="130" height="26" rx="7" fill="#ffffff" stroke="#e6d8c4"/><text x="287" y="303" font-size="8.4" text-anchor="middle" fill="#5a3410">列 1 · streams</text>
+  <rect x="92" y="318" width="120" height="26" rx="7" fill="#ffffff" stroke="#e6d8c4"/><text x="152" y="335" font-size="8.4" text-anchor="middle" fill="#5a3410">列 2 · streams</text>
+  <rect x="222" y="318" width="130" height="26" rx="7" fill="#fbf1df" stroke="#e6d8c4"/><text x="287" y="335" font-size="8.4" text-anchor="middle" fill="#5a3410">列 3（string）→ 展开</text>
+  <text x="92" y="362" font-size="8.4" fill="#93762e">同列多 stream 连续存放，按列 ID 定位</text>
+  <text x="92" y="378" font-size="8.4" fill="#93762e">整数 RLE、字符串字典编码后再块压缩</text>
+  <text x="92" y="399" font-size="8" fill="#a1a1a6">stripe 内是文件主体，占绝大部分字节</text>
+
+  <!-- seg3 stripe footer -->
+  <rect x="78" y="422" width="288" height="66" rx="10" fill="#f4eefb" stroke="#d9c7ec"/>
+  <text x="92" y="442" font-size="10" font-weight="700" fill="#3d2a5a">③ stripe footer</text>
+  <text x="92" y="459" font-size="8.6" fill="#8a6db3">streams[]（各 stream 位置/长度）</text>
+  <text x="92" y="474" font-size="8.6" fill="#8a6db3">+ columns[] ColumnEncoding + writerTimezone</text>
+
+  <!-- bridging dashed arrows to expansion -->
+  <path d="M366,210 L470,175" stroke="#c7c7cc" stroke-width="1.3" stroke-dasharray="5 4" fill="none" marker-end="url(#ar)"/>
+  <path d="M352,331 L470,335" stroke="#c7c7cc" stroke-width="1.3" stroke-dasharray="5 4" fill="none" marker-end="url(#ar)"/>
+
+  <!-- RIGHT: expand one column multi-stream -->
+  <text x="470" y="122" font-size="11" font-weight="700" fill="#1d1d1f">某列（string，列 ID 3）的多 stream 展开</text>
+
+  <!-- index area group -->
+  <rect x="470" y="132" width="490" height="88" rx="11" fill="#f3f7fc" stroke="#cfe0f2"/>
+  <text x="486" y="151" font-size="9.4" font-weight="700" fill="#1b2a4a">index area（写在前）</text>
+  <rect x="486" y="158" width="220" height="52" rx="9" fill="#e7f0fb" stroke="#b9d2ef"/>
+  <text x="596" y="178" font-size="9.4" font-weight="700" text-anchor="middle" fill="#1b2a4a">ROW_INDEX</text>
+  <text x="596" y="195" font-size="8" text-anchor="middle" fill="#5b7db1">row-group positions + 统计</text>
+  <rect x="722" y="158" width="222" height="52" rx="9" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="833" y="178" font-size="9.4" font-weight="700" text-anchor="middle" fill="#12402a">BLOOM_FILTER_UTF8</text>
+  <text x="833" y="195" font-size="8" text-anchor="middle" fill="#2f6f4f">等值过滤（可选）</text>
+
+  <!-- data area group -->
+  <rect x="470" y="230" width="490" height="188" rx="11" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="486" y="249" font-size="9.4" font-weight="700" fill="#5a3410">data area（写在后）· 字典编码列的 stream 分工</text>
+  <rect x="486" y="258" width="220" height="66" rx="9" fill="#ffffff" stroke="#e6d8c4"/>
+  <text x="596" y="280" font-size="9.4" font-weight="700" text-anchor="middle" fill="#5a3410">PRESENT</text>
+  <text x="596" y="297" font-size="8" text-anchor="middle" fill="#93762e">null 位图（noNulls 时可省）</text>
+  <text x="596" y="312" font-size="8" text-anchor="middle" fill="#93762e">boolean RLE</text>
+  <rect x="722" y="258" width="222" height="66" rx="9" fill="#ffffff" stroke="#e6d8c4"/>
+  <text x="833" y="280" font-size="9.4" font-weight="700" text-anchor="middle" fill="#5a3410">DATA</text>
+  <text x="833" y="297" font-size="8" text-anchor="middle" fill="#93762e">字典码（每行指向字典下标）</text>
+  <text x="833" y="312" font-size="8" text-anchor="middle" fill="#93762e">整数 RLE</text>
+  <rect x="486" y="332" width="220" height="66" rx="9" fill="#ffffff" stroke="#e6d8c4"/>
+  <text x="596" y="354" font-size="9.4" font-weight="700" text-anchor="middle" fill="#5a3410">LENGTH</text>
+  <text x="596" y="371" font-size="8" text-anchor="middle" fill="#93762e">字典项各自的字节长度</text>
+  <text x="596" y="386" font-size="8" text-anchor="middle" fill="#93762e">整数 RLE</text>
+  <rect x="722" y="332" width="222" height="66" rx="9" fill="#ffffff" stroke="#e6d8c4"/>
+  <text x="833" y="354" font-size="9.4" font-weight="700" text-anchor="middle" fill="#5a3410">DICTIONARY_DATA</text>
+  <text x="833" y="371" font-size="8" text-anchor="middle" fill="#93762e">去重后的字典值（拼接字节）</text>
+  <text x="833" y="386" font-size="8" text-anchor="middle" fill="#93762e">编码方式随 ColumnEncoding</text>
+
+  <!-- encoding note -->
+  <rect x="470" y="428" width="490" height="34" rx="9" fill="#f4eefb" stroke="#d9c7ec"/>
+  <text x="486" y="450" font-size="8.8" fill="#3d2a5a">stripe footer 记该列 <tspan font-weight="600">ColumnEncoding = DICTIONARY_V2</tspan>：读端据此选解码器；直编列则只有 PRESENT + DATA（+LENGTH）</text>
+
+  <!-- facts caption -->
+  <rect x="62" y="512" width="898" height="44" rx="10" fill="#f7f7f9" stroke="#e3e3e8"/>
+  <text x="78" y="531" font-size="9" fill="#6e6e73">物理写序 index-then-data：<tspan font-weight="600" fill="#1d1d1f">PhysicalFsWriter.finalizeStripe（PhysicalFsWriter.java:680）</tspan> 先写全部 INDEX area stream，再全部 DATA area stream，再 stripe footer。</text>
+  <text x="78" y="547" font-size="9" fill="#6e6e73">默认 stripe 大小 <tspan font-weight="600" fill="#1d1d1f">64MB（STRIPE_SIZE，OrcConf.java:32）</tspan>；flush 触发：内存超限 <tspan font-weight="600" fill="#1d1d1f">或</tspan> 行数超 STRIPE_ROW_COUNT（checkMemory）；每 stripe 自包含、支持并行读 + 按统计跳整 stripe。</text>
+</svg>

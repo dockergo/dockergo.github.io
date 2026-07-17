@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="540" viewBox="0 0 1080 540" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1080" height="540" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">ORC 接触面 · Writer / Reader 的 TreeWriter/Reader 树 + 压缩</text>
+  <text x="30" y="50" font-size="12" fill="#a1a1a6">每列一个 writer/reader,树结构镜像类型树;复合类型递归到子;压缩默认 ZSTD 块 256KB</text>
+
+  <!-- WRITE side -->
+  <rect x="60" y="72" width="460" height="290" rx="14" fill="#f5faf6" stroke="#cfe6d5" filter="url(#soft)"/>
+  <text x="80" y="97" font-size="13" font-weight="600" fill="#2c5a3a">写 &#183; WriterImpl 持 root TreeWriter 树 (:242)</text>
+
+  <rect x="80" y="112" width="420" height="58" rx="11" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="290" y="135" font-size="10.5" font-weight="600" fill="#1d1d1f" text-anchor="middle">TreeWriter.Factory.create &#183; 每列一个</text>
+  <text x="290" y="155" font-size="9.5" fill="#6e6e73" text-anchor="middle">Integer / String / StructTreeWriter…</text>
+
+  <rect x="80" y="180" width="205" height="72" rx="11" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="182" y="204" font-size="10.5" font-weight="600" fill="#12402a" text-anchor="middle">TreeWriterBase</text>
+  <text x="182" y="224" font-size="9" fill="#2f6f4f" text-anchor="middle">建 PRESENT stream</text>
+  <text x="182" y="241" font-size="9" fill="#2f6f4f" text-anchor="middle">+ 索引 / 统计</text>
+
+  <rect x="295" y="180" width="205" height="72" rx="11" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="397" y="204" font-size="10.5" font-weight="600" fill="#12402a" text-anchor="middle">addRowBatch()</text>
+  <text x="397" y="224" font-size="9" fill="#2f6f4f" text-anchor="middle">喂列式批</text>
+  <text x="397" y="241" font-size="9" fill="#2f6f4f" text-anchor="middle">编码进 stream</text>
+
+  <path d="M290,252 L290,278" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <rect x="80" y="282" width="420" height="62" rx="11" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="290" y="306" font-size="10.5" font-weight="600" fill="#5a3410" text-anchor="middle">PhysicalFsWriter</text>
+  <text x="290" y="326" font-size="9.5" fill="#93762e" text-anchor="middle">物理布局 + 压缩 &#183; stream 编码后再块压缩</text>
+
+  <!-- READ side -->
+  <rect x="560" y="72" width="460" height="290" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="580" y="97" font-size="13" font-weight="600" fill="#1b2a4a">读 &#183; ReaderImpl 解析 tail / footer (:770)</text>
+
+  <rect x="580" y="112" width="420" height="58" rx="11" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="790" y="135" font-size="10.5" font-weight="600" fill="#1d1d1f" text-anchor="middle">RecordReaderImpl &#183; 逐 stripe 读</text>
+  <text x="790" y="155" font-size="9.5" fill="#6e6e73" text-anchor="middle">readStripe 调 pickRowGroups (剪枝)</text>
+
+  <path d="M790,170 L790,196" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <rect x="580" y="200" width="420" height="72" rx="11" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="790" y="224" font-size="10.5" font-weight="600" fill="#3d2a5a" text-anchor="middle">TreeReader 树 &#183; 每列一个</text>
+  <text x="790" y="244" font-size="9.5" fill="#8a72b0" text-anchor="middle">解码列 stream</text>
+  <text x="790" y="261" font-size="9.5" fill="#8a72b0" text-anchor="middle">nextVector 填 ColumnVector</text>
+
+  <path d="M790,272 L790,298" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <rect x="580" y="302" width="420" height="42" rx="11" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="790" y="328" font-size="10" fill="#6e6e73" text-anchor="middle">树镜像类型树 &#8212; 每节点(列)负责自己类型的编解码,复合递归到子</text>
+
+  <!-- compression bar -->
+  <rect x="60" y="378" width="960" height="86" rx="12" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="80" y="403" font-size="12" font-weight="600" fill="#5a3410">压缩 CompressionKind (OrcConf.java:55) &#183; 默认 ZSTD &#183; 块 256KB</text>
+
+  <rect x="80" y="416" width="118" height="34" rx="8" fill="#ffffff" stroke="#ececf1"/>
+  <text x="139" y="438" font-size="10" fill="#6e6e73" text-anchor="middle">NONE</text>
+  <rect x="206" y="416" width="118" height="34" rx="8" fill="#ffffff" stroke="#ececf1"/>
+  <text x="265" y="438" font-size="10" fill="#6e6e73" text-anchor="middle">ZLIB</text>
+  <rect x="332" y="416" width="118" height="34" rx="8" fill="#ffffff" stroke="#ececf1"/>
+  <text x="391" y="438" font-size="10" fill="#6e6e73" text-anchor="middle">SNAPPY</text>
+  <rect x="458" y="416" width="118" height="34" rx="8" fill="#ffffff" stroke="#ececf1"/>
+  <text x="517" y="438" font-size="10" fill="#6e6e73" text-anchor="middle">LZO</text>
+  <rect x="584" y="416" width="118" height="34" rx="8" fill="#ffffff" stroke="#ececf1"/>
+  <text x="643" y="438" font-size="10" fill="#6e6e73" text-anchor="middle">LZ4</text>
+  <rect x="710" y="416" width="118" height="34" rx="8" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="769" y="438" font-size="10" font-weight="600" fill="#12402a" text-anchor="middle">ZSTD (默认)</text>
+  <rect x="836" y="416" width="118" height="34" rx="8" fill="#ffffff" stroke="#ececf1"/>
+  <text x="895" y="438" font-size="10" fill="#6e6e73" text-anchor="middle">BROTLI</text>
+
+  <text x="540" y="498" font-size="9.5" fill="#a1a1a6" text-anchor="middle">ORC 是读写库非查询引擎:Spark/Hive/Trino 定 schema、给取向量批调 Writer 写 / Reader 读;SQL 在引擎里</text>
+</svg>

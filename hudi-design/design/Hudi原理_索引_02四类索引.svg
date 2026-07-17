@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="880" height="430" viewBox="0 0 880 430" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs><filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter></defs>
+  <rect width="880" height="430" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">四类索引：精度 / 速度 / 规模的取舍（IndexType）</text>
+  <text x="30" y="49" font-size="10" fill="#a1a1a6">HoodieIndex 的实现族，各有取舍；选型是 Hudi 调优的第一杠杆</text>
+
+  <g font-size="10.5">
+    <rect x="30" y="70" width="405" height="160" rx="12" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+    <text x="46" y="92" font-weight="700" fill="#3d2a5a">BLOOM / GLOBAL_BLOOM（默认）</text>
+    <text x="46" y="113" font-size="9" fill="#7a5a95">每个 parquet 在元数据里含 row_key 布隆过滤器</text>
+    <text x="46" y="132" font-size="9" fill="#7a5a95">查键：布隆快速排除 → 键范围(min/max)剪枝 → 精确校验</text>
+    <text x="46" y="155" font-size="9" fill="#7a5a95">✓ 通用、随机 upsert　✗ 有假阳性（需回读校验）</text>
+    <rect x="46" y="168" width="373" height="50" rx="9" fill="#faf4fb" stroke="#e2d2ee"/><text x="60" y="188" font-size="8.8" fill="#4a2f78">布隆：说"不在"一定不在，说"在"可能假阳性</text><text x="60" y="206" font-size="8.8" fill="#4a2f78">→ 配合键范围剪枝先剪掉键不在范围的文件</text>
+
+    <rect x="445" y="70" width="405" height="160" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+    <text x="461" y="92" font-weight="700" fill="#1b2a4a">SIMPLE / GLOBAL_SIMPLE</text>
+    <text x="461" y="113" font-size="9" fill="#274a78">把 incoming 键与从存储提取的键做精简 join</text>
+    <text x="461" y="132" font-size="9" fill="#274a78">✓ 逻辑简单、无假阳性　✗ 要读存储键，大表贵</text>
+    <rect x="461" y="146" width="373" height="72" rx="9" fill="#f6f8fc" stroke="#cfe0f2"/><text x="475" y="168" font-size="8.8" fill="#274a78">适合中小表、或键分布不适合布隆时；</text><text x="475" y="188" font-size="8.8" fill="#274a78">开销随存储键量线性增长。</text><text x="475" y="208" font-size="8.8" fill="#5b7db1">精确，但没有布隆的"快速排除"优势。</text>
+  </g>
+
+  <g font-size="10.5">
+    <rect x="30" y="242" width="405" height="160" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+    <text x="46" y="264" font-weight="700" fill="#12402a">BUCKET（哈希桶，免查）</text>
+    <text x="46" y="285" font-size="9" fill="#2f6f4f">按 numBuckets + 索引键字段哈希直接定位文件组</text>
+    <text x="46" y="304" font-size="9" fill="#2f6f4f">✓ 免查找（哈希即位置），最快　✗ 需预设桶数</text>
+    <rect x="46" y="318" width="373" height="72" rx="9" fill="#e6f7ee" stroke="#bfe0cd"/><text x="60" y="340" font-size="8.8" fill="#12402a">BucketIndexEngineType：</text><text x="60" y="360" font-size="8.8" fill="#2f6f4f">· SIMPLE：桶数固定（估不准会不均）</text><text x="60" y="380" font-size="8.8" fill="#2f6f4f">· CONSISTENT_HASHING：仅 MOR，可动态 resize</text>
+
+    <rect x="445" y="242" width="405" height="160" rx="12" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+    <text x="461" y="264" font-weight="700" fill="#5a3410">RECORD_LEVEL_INDEX / GLOBAL</text>
+    <text x="461" y="285" font-size="9" fill="#93762e">键→位置映射存 Hudi 元数据表 record_index 分区</text>
+    <text x="461" y="304" font-size="9" fill="#93762e">✓ 支持极高规模的点更新　（依赖 metadata table）</text>
+    <rect x="461" y="318" width="373" height="72" rx="9" fill="#fdf3e2" stroke="#efdcb4"/><text x="475" y="340" font-size="8.8" fill="#5a3410">查找 = 点查元数据表，不必读数据文件布隆；</text><text x="475" y="360" font-size="8.8" fill="#93762e">分片可扩展到超大表；</text><text x="475" y="380" font-size="8.8" fill="#93762e">MDT 详见【并发控制与元数据】。</text>
+  </g>
+</svg>

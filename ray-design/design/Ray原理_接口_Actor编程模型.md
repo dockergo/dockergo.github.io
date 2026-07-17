@@ -1,6 +1,6 @@
 # Ray 接口主线 · Actor 编程模型
 
-> **定位**：task/actor 二元模型里"有状态"的一半。`@ray.remote` 装饰**类**得到一个 **actor**——一个持有状态、生命周期独立、方法在固定 worker 上串行执行的远程对象。它把"有状态服务/参数服务器/模型副本"这类负载纳入 Ray。核实基准 `src/ray/core_worker/core_worker.cc`、`src/ray/gcs/actor/`（commit 6ff3a75）。
+> **定位**：task/actor 二元模型里"有状态"的一半。`@ray.remote` 装饰**类**得到一个 **actor**——一个持有状态、生命周期独立、方法在固定 worker 上串行执行的远程对象。它把"有状态服务/参数服务器/模型副本"这类负载纳入 Ray。核实基准 `src/ray/core_worker/core_worker.cc`、`src/ray/gcs/actor/`（commit 2a70ac4）。
 
 ## 一、Actor 的创建与调用两条路径
 
@@ -11,6 +11,8 @@
 - **调用**：拿到 actor handle 后 `actor.method.remote(x)` → `SubmitActorTask`（`core_worker.cc:2415`）。actor task 也是 TaskSpec，但**调度目标固定为该 actor 的 worker**，且按提交顺序**串行**执行（保证状态一致）。返回值同样是 ObjectRef。
 
 ## 二、Actor 与 task 的统一与差异
+
+![Actor 与 task 对照](Ray原理_Actor_02统一与差异.svg)
 
 | 维度 | 无状态 task | 有状态 actor |
 |---|---|---|
@@ -25,10 +27,10 @@
 
 ## 三、生命周期与容错
 
-![Actor 生命周期](Ray原理_Actor_01生命周期.svg)
+![Actor 生命周期状态机](Ray原理_Actor_03容错与重启.svg)
 
 - **重启**：actor 进程/节点挂掉，GCS `RestartActor`（`gcs_actor_manager.cc:1444`）依 `max_restarts` 重建；重建后状态丢失（除非应用自做 checkpoint）。
-- **lineage 重建**：actor 也可因下游对象丢失被重建以重放方法——`HandleRestartActorForLineageReconstruction`（`gcs_actor_manager.cc:341`）。
+- **lineage 重建**：actor 也可因下游对象丢失被重建以重放方法——`HandleRestartActorForLineageReconstruction`（`gcs_actor_manager.cc:340`）。
 - **detached actor**：脱离 driver 生命周期、有全局命名（namespace + name），driver 退出仍存活，供跨 job 共享。
 - **回收**：非 detached actor 的所有 handle 释放后自动销毁；`ray.kill(actor)` 强制终止。
 
@@ -40,7 +42,7 @@
 | GCS 处理创建 | 选节点、租 worker、置 ALIVE | `gcs_actor_manager.cc:794`、`gcs_actor_scheduler.cc:50/235` |
 | 方法调用 | SubmitActorTask 定向直投、串行 | `core_worker.cc:2415` |
 | 重启容错 | max_restarts 重建 | `gcs_actor_manager.cc:1444` |
-| lineage 重建 actor | 为重放方法而重建 | `gcs_actor_manager.cc:341` |
+| lineage 重建 actor | 为重放方法而重建 | `gcs_actor_manager.cc:340` |
 | 创建成功广播 | 通知所有 handle 持有者 | `gcs_actor_manager.cc:1652` |
 
 ## 调优要点

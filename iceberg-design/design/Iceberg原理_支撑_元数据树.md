@@ -1,6 +1,6 @@
 # Iceberg 原理 · 支撑主线 · 元数据树
 
-> **定位**：属"元数据能力域"——Iceberg 的核心。管表的分层元数据:metadata.json → manifest list → manifest files → data files。这棵树自带全部文件清单 + 列统计,让读取"不 list 目录"。被【扫描规划】遍历、【快照与提交】写入。源码基准 **Iceberg(f2875fd)**(`core/`、`api/`)。
+> **定位**：属"元数据能力域"——Iceberg 的核心。管表的分层元数据:metadata.json → manifest list → manifest files → data files。这棵树自带全部文件清单 + 列统计,让读取"不 list 目录"。被【扫描规划】遍历、【快照与提交】写入。源码基准 **Iceberg(apache/iceberg main · commit 6ec1a01)**(`core/`、`api/`)。
 
 Iceberg 的立身之本:**表是一棵不可变的分层元数据树**。Hive 表靠"list 目录拿文件"(慢、无事务);Iceberg 把所有文件明确记在元数据里——一个 metadata.json 指向若干快照,每个快照指向一个 manifest list,列出若干 manifest,每个 manifest 列出若干 data file(带分区值 + 列统计)。读取时顺树而下、按统计剪枝,**从不 list 目录**。理解这四层就懂了 Iceberg 的一切。
 
@@ -38,7 +38,7 @@ Manifest 是"data file 清单"。**ManifestEntry.Status**(`core/.../ManifestEntr
 **sequence number** 是元数据树的贯穿线:
 
 - 每次提交分配递增 `sequenceNumber = base.nextSequenceNumber()`(`SnapshotProducer.java:297`)。
-- ManifestEntry 带 `data_sequence_number`(数据的序列号,可比添加它的快照更老,如 compaction 保留原 seq)+ `file_sequence_number`(`ManifestEntry.java:91`)。
+- ManifestEntry 带 `data_sequence_number`(数据的序列号,可比添加它的快照更老,如 compaction 保留原 seq)+ `file_sequence_number`(`ManifestEntry.java:104`)。
 - **行级删除靠 seq 比较**:position delete 作用于 `delete.dataSequenceNumber >= dataFile.dataSequenceNumber` 的文件;equality delete 作用于**严格更老** seq 的文件(见行级删除篇)。
 
 seq 让 Iceberg 在不重写数据的前提下,正确判断"哪些删除该应用到哪些数据文件"——这是 v2 merge-on-read 的基础。

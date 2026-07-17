@@ -71,7 +71,7 @@ Hudi 的立身之本:**表 = 一条动作时间线**。每次写、compaction、
 - **误区:instant 是版本号。** 它是"带类型和状态的动作记录";单调 instant time 提供全序,但含丰富语义(动作/状态)。
 - **误区:时间线可变。** 不可变——过滤操作产生新视图,原时间线不变。
 - **误区:所有动作都是 commit。** 有 commit(COW)/deltacommit(MOR)/compaction/clean/rollback/clustering… 多种动作,各有语义。
-- **归属提醒**:文件片(FileGroup/FileSlice)在【表类型 COW/MOR】;写动作开 instant 在【写入与索引】;compaction/clean 动作在【表服务】;并发提交的 instant 冲突检测在【并发控制】。
+- **归属提醒**:文件片(FileGroup/FileSlice)在【文件布局】、类型取舍在【表类型 COW/MOR】;写动作开 instant 在【写入路径与 upsert】;compaction/clean 动作在【表服务】;并发提交的 instant 冲突检测在【并发控制与元数据】。
 
 ## 一句话总纲
 

@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="470" viewBox="0 0 1000 470" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1000" height="470" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">Netty Reactor 线程模型</text>
+  <text x="30" y="52" font-size="10.5" fill="#a1a1a6">IO 线程只收发字节，业务放 worker 池，中间用 RequestChannel 队列削峰解耦</text>
+
+  <!-- 客户端 -->
+  <rect x="30" y="150" width="94" height="100" rx="12" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="77" y="196" font-size="11" font-weight="600" fill="#1d1d1f" text-anchor="middle">客户端</text>
+  <text x="77" y="216" font-size="9.5" fill="#6e6e73" text-anchor="middle">连接请求</text>
+
+  <!-- Group1 IO 网络层 -->
+  <rect x="138" y="88" width="196" height="230" rx="14" fill="#f3f7fc" stroke="#cfe0f2"/>
+  <text x="152" y="110" font-size="11" font-weight="600" fill="#274a78">IO 网络层</text>
+  <rect x="152" y="122" width="168" height="82" rx="10" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="164" y="145" font-size="10.5" font-weight="600" fill="#1b2a4a">acceptorGroup</text>
+  <text x="164" y="165" font-size="9.5" fill="#5b7db1">接受新连接</text>
+  <text x="164" y="184" font-size="9" fill="#8aa5cf">NettyServer.java:79</text>
+  <rect x="152" y="212" width="168" height="94" rx="10" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="164" y="235" font-size="10.5" font-weight="600" fill="#1b2a4a">selectorGroup</text>
+  <text x="164" y="254" font-size="9.5" fill="#5b7db1">N = num-network-threads</text>
+  <text x="164" y="272" font-size="9.5" fill="#5b7db1">默认 3 · 只收发字节</text>
+  <text x="164" y="292" font-size="9" fill="#8aa5cf">NettyServer.java:124</text>
+
+  <!-- Group2 请求队列 -->
+  <rect x="348" y="88" width="128" height="230" rx="14" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="362" y="110" font-size="11" font-weight="600" fill="#5a3410">请求队列</text>
+  <rect x="362" y="140" width="100" height="140" rx="10" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="412" y="176" font-size="10.5" font-weight="600" fill="#5a3410" text-anchor="middle">Request</text>
+  <text x="412" y="193" font-size="10.5" font-weight="600" fill="#5a3410" text-anchor="middle">Channel</text>
+  <text x="412" y="216" font-size="9.5" fill="#93762e" text-anchor="middle">Linked</text>
+  <text x="412" y="232" font-size="9.5" fill="#93762e" text-anchor="middle">BlockingQueue</text>
+  <text x="412" y="252" font-size="9.5" fill="#93762e" text-anchor="middle">削峰</text>
+  <text x="412" y="272" font-size="8.5" fill="#b39456" text-anchor="middle">RequestChannel.java:95</text>
+
+  <!-- Group3 Worker 处理层 -->
+  <rect x="490" y="88" width="300" height="230" rx="14" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="504" y="110" font-size="11" font-weight="600" fill="#2c5a3a">Worker 处理层 · RequestProcessorPool</text>
+  <text x="504" y="127" font-size="9" fill="#5b9e77">M = num-worker-threads 默认 8 · RequestProcessor.java:59</text>
+  <rect x="504" y="138" width="272" height="30" rx="8" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="516" y="157" font-size="10" fill="#12402a">RequestProcessor #1 · 绑定一个 channel</text>
+  <rect x="504" y="172" width="272" height="30" rx="8" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="516" y="191" font-size="10" fill="#12402a">RequestProcessor #2 · 绑定一个 channel</text>
+  <rect x="504" y="206" width="272" height="30" rx="8" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="516" y="225" font-size="10" fill="#12402a">RequestProcessor #… · 绑定一个 channel</text>
+  <text x="504" y="258" font-size="9.5" fill="#2f6f4f">pollRequest → handler.processRequest · :53 / :98</text>
+  <text x="504" y="278" font-size="9.5" fill="#2f6f4f">ApiManager.forApiKey 分派到对应 Gateway</text>
+
+  <!-- Gateway -->
+  <rect x="806" y="150" width="164" height="100" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="888" y="192" font-size="11.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">Gateway</text>
+  <text x="888" y="214" font-size="9.5" fill="#5b7db1" text-anchor="middle">业务服务入口</text>
+
+  <!-- 跨组箭头 -->
+  <path d="M124,200 L136,200" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M334,200 L346,200" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M476,200 L488,200" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M790,200 L804,200" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <!-- 底部强调框 -->
+  <rect x="30" y="352" width="940" height="94" rx="12" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="46" y="378" font-size="11.5" font-weight="600" fill="#5a3410">职责分离 · 高吞吐不阻塞</text>
+  <text x="46" y="403" font-size="10.5" fill="#93762e">IO 线程（selector）只负责收发字节，绝不执行业务逻辑，避免慢请求拖垮网络收发</text>
+  <text x="46" y="424" font-size="10.5" fill="#93762e">业务在 worker 池并行执行；RequestChannel 队列在 IO 与 worker 之间削峰解耦，突发流量先入队</text>
+</svg>

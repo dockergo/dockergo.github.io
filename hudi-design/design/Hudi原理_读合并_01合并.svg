@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="880" height="420" viewBox="0 0 880 420" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="880" height="420" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">读合并：HoodieMergedLogRecordReader</text>
+  <text x="30" y="49" font-size="10" fill="#a1a1a6">同一记录键的多个 log 版本按 instant 序合并出最新，再与 base 归并</text>
+
+  <!-- inputs -->
+  <rect x="30" y="72" width="220" height="300" rx="12" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="46" y="94" font-size="10" font-weight="600" fill="#5a3410">输入：base + log 列表</text>
+  <rect x="46" y="106" width="188" height="46" rx="9" fill="#fef2e0" stroke="#e8cf9a"/><text x="140" y="126" font-size="9" text-anchor="middle" font-weight="600" fill="#5a3410">base：k1=v1, k2=v2</text><text x="140" y="143" font-size="8.2" text-anchor="middle" fill="#93762e">基线</text>
+  <rect x="46" y="162" width="188" height="40" rx="8" fill="#fdf3e2" stroke="#efdcb4"/><text x="140" y="187" font-size="8.6" text-anchor="middle" fill="#93762e">log1：k1=v1b（upsert）</text>
+  <rect x="46" y="212" width="188" height="40" rx="8" fill="#fdf3e2" stroke="#efdcb4"/><text x="140" y="237" font-size="8.6" text-anchor="middle" fill="#93762e">log2：k1=v1c（更近）</text>
+  <rect x="46" y="262" width="188" height="40" rx="8" fill="#fbeaea" stroke="#e7c3c3"/><text x="140" y="287" font-size="8.6" text-anchor="middle" fill="#7a2a2a">log3：delete k2</text>
+  <text x="140" y="330" font-size="8.4" text-anchor="middle" fill="#a1a1a6">越往下 instant 越新</text>
+  <text x="140" y="352" font-size="8.2" text-anchor="middle" fill="#a1a1a6">List&lt;HoodieLogFile&gt;</text>
+
+  <!-- reader -->
+  <rect x="300" y="120" width="260" height="180" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="430" y="144" font-size="10.5" text-anchor="middle" font-weight="700" fill="#1b2a4a">MergedLogRecordReader</text>
+  <rect x="316" y="156" width="228" height="42" rx="8" fill="#f3f7fc" stroke="#cfe0f2"/><text x="430" y="174" font-size="8.6" text-anchor="middle" fill="#274a78">scan()：处理 log block</text><text x="430" y="190" font-size="8.2" text-anchor="middle" fill="#5b7db1">forceFullScan→performScan()</text>
+  <rect x="316" y="206" width="228" height="42" rx="8" fill="#f3f7fc" stroke="#cfe0f2"/><text x="430" y="224" font-size="8.6" text-anchor="middle" fill="#274a78">同键按 instant 序合并</text><text x="430" y="240" font-size="8.2" text-anchor="middle" fill="#5b7db1">HoodieFileGroupRecordBuffer</text>
+  <rect x="316" y="256" width="228" height="34" rx="8" fill="#e7f0fb" stroke="#b9d2ef"/><text x="430" y="277" font-size="8.4" text-anchor="middle" fill="#1b2a4a">numMergedRecordsInLog + 耗时</text>
+
+  <!-- output -->
+  <rect x="610" y="120" width="240" height="180" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="730" y="144" font-size="10.5" text-anchor="middle" font-weight="700" fill="#12402a">合并结果（最新视图）</text>
+  <rect x="626" y="158" width="208" height="34" rx="8" fill="#e6f7ee" stroke="#bfe0cd"/><text x="730" y="180" font-size="9" text-anchor="middle" fill="#12402a">k1 = v1c（log 最新）</text>
+  <rect x="626" y="200" width="208" height="34" rx="8" fill="#fff" stroke="#bfe0cd"/><text x="730" y="222" font-size="9" text-anchor="middle" fill="#12402a">k2 → 已删除（delete）</text>
+  <text x="730" y="262" font-size="8.6" text-anchor="middle" fill="#2f6f4f">规则：log 有→用 log 最新；</text>
+  <text x="730" y="280" font-size="8.6" text-anchor="middle" fill="#2f6f4f">log 无→用 base；删除排数据后</text>
+
+  <line x1="250" y1="170" x2="300" y2="180" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <line x1="560" y1="200" x2="610" y2="200" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+</svg>

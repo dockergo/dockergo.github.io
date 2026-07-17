@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="520" viewBox="0 0 1080 520" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="520" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Rust 组合 · Rc&lt;RefCell&lt;T&gt;&gt; / Arc&lt;Mutex&lt;T&gt;&gt; · "多所有者 + 可变"标准配方</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">单个智能指针解决一维问题(Box 堆/Rc 共享/RefCell 可变);组合解决"既共享又可变" —— 有运行时成本换灵活</text>
+
+  <!-- Rc&lt;RefCell&gt; (blue = 单线程逻辑) -->
+  <rect x="40" y="80" width="500" height="180" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="62" y="106" font-size="12.5" font-weight="600" fill="#1b2a4a">Rc&lt;RefCell&lt;T&gt;&gt; · 单线程共享可变</text>
+  <g text-anchor="middle">
+    <rect x="62" y="122" width="212" height="56" rx="8" fill="#ffffff" stroke="#cfe0f2"/>
+    <text x="168" y="146" font-size="10" font-weight="600" fill="#1b2a4a">Rc → 多所有者</text>
+    <text x="168" y="164" font-size="9" fill="#5b7db1">多处可持有同一节点</text>
+    <rect x="290" y="122" width="228" height="56" rx="8" fill="#ffffff" stroke="#cfe0f2"/>
+    <text x="404" y="146" font-size="10" font-weight="600" fill="#1b2a4a">RefCell → 共享的可变</text>
+    <text x="404" y="164" font-size="9" fill="#5b7db1">运行时借用检查</text>
+  </g>
+  <text x="62" y="204" font-size="10" fill="#1b2a4a">场景:图 / 链表节点被多处引用且需改</text>
+  <rect x="62" y="216" width="456" height="32" rx="8" fill="#f4eefb" stroke="#d9c7ec"/>
+  <text x="290" y="236" font-size="9.5" font-weight="600" text-anchor="middle" fill="#3d2a5a">单线程内使用（Rc !Send,不能跨线程）</text>
+
+  <!-- Arc&lt;Mutex&gt; (green = 跨线程) -->
+  <rect x="560" y="80" width="480" height="180" rx="14" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="582" y="106" font-size="12.5" font-weight="600" fill="#12402a">Arc&lt;Mutex&lt;T&gt;&gt; · 跨线程共享可变</text>
+  <g text-anchor="middle">
+    <rect x="582" y="122" width="212" height="56" rx="8" fill="#ffffff" stroke="#bfe0cd"/>
+    <text x="688" y="146" font-size="10" font-weight="600" fill="#12402a">Arc → 跨线程共享</text>
+    <text x="688" y="164" font-size="9" fill="#2f6f4f">原子计数,共享所有权</text>
+    <rect x="810" y="122" width="208" height="56" rx="8" fill="#fbeaea" stroke="#e7c3c3"/>
+    <text x="914" y="146" font-size="10" font-weight="600" fill="#4a1414">Mutex → 运行时互斥</text>
+    <text x="914" y="164" font-size="9" fill="#7a2a2a">锁保证可变唯一</text>
+  </g>
+  <text x="582" y="204" font-size="10" fill="#12402a">场景:多线程共享状态的标准（见并发篇）</text>
+  <rect x="582" y="216" width="436" height="32" rx="8" fill="#ffffff" stroke="#bfe0cd"/>
+  <text x="800" y="236" font-size="9.5" font-weight="600" text-anchor="middle" fill="#12402a">跨线程使用（Arc Send,可跨线程）</text>
+
+  <!-- 代价 strip (amber = 成本提醒) -->
+  <rect x="40" y="280" width="1000" height="130" rx="14" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="62" y="306" font-size="12" font-weight="600" fill="#5a3410">代价 · 比编译期检查有运行时成本（换灵活）</text>
+  <g text-anchor="middle">
+    <rect x="62" y="322" width="306" height="66" rx="8" fill="#fdf6ea" stroke="#efdcb4"/>
+    <text x="215" y="348" font-size="10" font-weight="600" fill="#5a3410">Rc / Arc 计数开销</text>
+    <text x="215" y="368" font-size="9" fill="#93762e">Arc 原子操作更贵</text>
+    <rect x="388" y="322" width="306" height="66" rx="8" fill="#fbeaea" stroke="#e7c3c3"/>
+    <text x="541" y="348" font-size="10" font-weight="600" fill="#4a1414">RefCell 运行时借用检查</text>
+    <text x="541" y="368" font-size="9" fill="#7a2a2a">违反 → panic</text>
+    <rect x="714" y="322" width="304" height="66" rx="8" fill="#fdf6ea" stroke="#efdcb4"/>
+    <text x="866" y="348" font-size="10" font-weight="600" fill="#5a3410">Mutex 锁开销</text>
+    <text x="866" y="368" font-size="9" fill="#93762e">加锁/解锁 + 争用</text>
+  </g>
+
+  <text x="30" y="440" font-size="9.5" fill="#a1a1a6">为什么组合:单个智能指针解决一维;组合解决"既共享又可变" —— Rc&lt;RefCell&gt; / Arc&lt;Mutex&gt; 是"多所有者 + 可变"的标准配方</text>
+  <text x="30" y="464" font-size="9" fill="#a1a1a6">有运行时成本(计数/借用检查/锁)换灵活,默认仍优先零开销的栈 + 所有权 · 源码基准 Rust 1.99.0</text>
+</svg>

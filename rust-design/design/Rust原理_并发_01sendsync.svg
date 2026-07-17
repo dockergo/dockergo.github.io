@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="520" viewBox="0 0 1080 520" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="520" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Rust Send / Sync · auto marker trait · 编译器自动推导线程安全</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">两个 auto trait 自动为大多数类型实现;不含方法,纯标记"这类型线程安全吗" —— 把线程安全变成类型系统的一部分</text>
+
+  <!-- Send card (purple = 接口/marker) -->
+  <rect x="40" y="78" width="500" height="176" rx="14" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="62" y="106" font-size="12.5" font-weight="600" fill="#3d2a5a">Send · 可跨线程移动所有权</text>
+  <text x="62" y="126" font-size="9.5" fill="#3d2a5a">unsafe auto trait · library/core/src/marker.rs:92</text>
+  <rect x="62" y="140" width="456" height="44" rx="8" fill="#ffffff" stroke="#d9c7ec"/>
+  <text x="290" y="160" font-size="10" font-weight="600" text-anchor="middle" fill="#3d2a5a">类型的所有权可移动到另一个线程</text>
+  <text x="290" y="176" font-size="9" text-anchor="middle" fill="#3d2a5a">进 thread::spawn 闭包要求 Send</text>
+  <text x="62" y="206" font-size="10" fill="#3d2a5a">大多数类型自动 Send</text>
+  <rect x="62" y="216" width="456" height="30" rx="8" fill="#fbeaea" stroke="#e7c3c3"/>
+  <text x="290" y="235" font-size="9.5" font-weight="600" text-anchor="middle" fill="#4a1414">裸指针 !Send · impl&lt;T&gt; !Send for *const T（:97）</text>
+
+  <!-- Sync card (blue = 逻辑) -->
+  <rect x="560" y="78" width="480" height="176" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="582" y="106" font-size="12.5" font-weight="600" fill="#1b2a4a">Sync · 可跨线程共享引用</text>
+  <text x="582" y="126" font-size="9.5" fill="#5b7db1">library/core/src/marker.rs:657</text>
+  <rect x="582" y="140" width="436" height="44" rx="8" fill="#ffffff" stroke="#cfe0f2"/>
+  <text x="800" y="160" font-size="10" font-weight="600" text-anchor="middle" fill="#1b2a4a">&amp;T 可安全发给别的线程</text>
+  <text x="800" y="176" font-size="9" text-anchor="middle" fill="#5b7db1">多线程同时持有该值的引用</text>
+  <text x="582" y="206" font-size="10" fill="#1b2a4a">关系:T: Sync 则 &amp;T: Send</text>
+  <rect x="582" y="216" width="436" height="30" rx="8" fill="#eef3fb" stroke="#cfe0f2"/>
+  <text x="800" y="235" font-size="9.5" font-weight="600" text-anchor="middle" fill="#1b2a4a">unsafe impl&lt;T: Sync&gt; Send for &amp;T（:105）</text>
+
+  <!-- auto 推导 (green) -->
+  <rect x="40" y="272" width="1000" height="140" rx="14" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="62" y="298" font-size="12" font-weight="600" fill="#12402a">auto · 编译器自动推导（无需手写）</text>
+  <g text-anchor="middle">
+    <rect x="62" y="316" width="270" height="70" rx="8" fill="#ffffff" stroke="#bfe0cd"/>
+    <text x="197" y="342" font-size="10" font-weight="600" fill="#12402a">看字段</text>
+    <text x="197" y="362" font-size="9.5" fill="#2f6f4f">检查类型每个字段</text>
+    <text x="197" y="378" font-size="9" fill="#a1a1a6">递归组合而成</text>
+    <rect x="392" y="316" width="270" height="70" rx="8" fill="#eafaf1" stroke="#bfe0cd"/>
+    <text x="527" y="342" font-size="10" font-weight="600" fill="#12402a">字段都 Send → 它 Send</text>
+    <text x="527" y="362" font-size="9.5" fill="#2f6f4f">字段都 Sync → 它 Sync</text>
+    <text x="527" y="378" font-size="9" fill="#a1a1a6">自动获得标记</text>
+    <rect x="722" y="316" width="296" height="70" rx="8" fill="#fbeaea" stroke="#e7c3c3"/>
+    <text x="870" y="342" font-size="10" font-weight="600" fill="#4a1414">有非 Send 字段 → 它 !Send</text>
+    <text x="870" y="362" font-size="9.5" fill="#7a2a2a">如含裸指针 / Rc 的类型</text>
+    <text x="870" y="378" font-size="9" fill="#a1a1a6">自动不获得标记</text>
+  </g>
+  <path d="M332,351 L392,351" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M662,351 L722,351" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <text x="30" y="442" font-size="9.5" fill="#a1a1a6">为什么 marker trait:不含方法,纯标记线程安全;编译器自动推、thread::spawn 边界检查它 —— 线程安全成为类型系统的一部分,编译期验证</text>
+  <text x="30" y="466" font-size="9" fill="#a1a1a6">Send=移动所有权跨线程 · Sync=共享引用跨线程 · 极少需手写 unsafe impl · 源码基准 Rust 1.99.0</text>
+</svg>

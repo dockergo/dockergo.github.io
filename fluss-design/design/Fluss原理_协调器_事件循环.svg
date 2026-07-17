@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="970" height="450" viewBox="0 0 970 450" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="970" height="450" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">协调器单线程事件循环</text>
+  <text x="30" y="52" font-size="10.5" fill="#a1a1a6">异构事件统一入队，单线程串行 poll 与 process，天然规避 CoordinatorContext 与状态机的并发竞争</text>
+
+  <!-- event sources 淡蓝 -->
+  <rect x="30" y="96" width="184" height="46" rx="11" fill="#f3f7fc" stroke="#cfe0f2" filter="url(#soft)"/>
+  <text x="44" y="118" font-size="11" font-weight="600" fill="#274a78">AdjustIsrReceived</text>
+  <text x="44" y="134" font-size="9" fill="#5b7db1">副本上报 ISR 变更</text>
+
+  <rect x="30" y="158" width="184" height="46" rx="11" fill="#f3f7fc" stroke="#cfe0f2" filter="url(#soft)"/>
+  <text x="44" y="180" font-size="11" font-weight="600" fill="#274a78">建表 / SchemaChange</text>
+  <text x="44" y="196" font-size="9" fill="#5b7db1">元数据 DDL 请求</text>
+
+  <rect x="30" y="220" width="184" height="46" rx="11" fill="#f3f7fc" stroke="#cfe0f2" filter="url(#soft)"/>
+  <text x="44" y="242" font-size="11" font-weight="600" fill="#274a78">CommitKvSnapshot</text>
+  <text x="44" y="258" font-size="9" fill="#5b7db1">快照提交上报</text>
+
+  <rect x="30" y="282" width="184" height="46" rx="11" fill="#f3f7fc" stroke="#cfe0f2" filter="url(#soft)"/>
+  <text x="44" y="304" font-size="11" font-weight="600" fill="#274a78">节点上下线</text>
+  <text x="44" y="320" font-size="9" fill="#5b7db1">DeadTabletServer 等</text>
+
+  <!-- arrows sources -> queue -->
+  <path d="M214,119 L266,150" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M214,181 L266,190" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M214,243 L266,220" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M214,305 L266,255" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <!-- middle queue card 蓝 -->
+  <rect x="268" y="100" width="316" height="228" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="286" y="126" font-size="12" font-weight="600" fill="#1b2a4a">事件队列与单线程</text>
+  <rect x="286" y="140" width="280" height="40" rx="9" fill="#ffffff" stroke="#dbe6f4"/>
+  <text x="300" y="158" font-size="10.5" font-weight="600" fill="#1b2a4a">LinkedBlockingQueue</text>
+  <text x="300" y="173" font-size="9" fill="#8aa5cf">put 入队 · CoordinatorEventManager.java:225</text>
+  <rect x="286" y="190" width="280" height="40" rx="9" fill="#ffffff" stroke="#dbe6f4"/>
+  <text x="300" y="208" font-size="10.5" font-weight="600" fill="#1b2a4a">单一 CoordinatorEventThread</text>
+  <text x="300" y="223" font-size="9" fill="#8aa5cf">:249 · doWork 循环</text>
+  <rect x="286" y="240" width="280" height="40" rx="9" fill="#ffffff" stroke="#dbe6f4"/>
+  <text x="300" y="258" font-size="10.5" font-weight="600" fill="#1b2a4a">poll 取事件 · :271</text>
+  <text x="300" y="273" font-size="9" fill="#8aa5cf">阻塞式出队，队空则等待</text>
+  <rect x="286" y="290" width="280" height="28" rx="9" fill="#dbe6f4" stroke="#bcd0ec"/>
+  <text x="426" y="308" font-size="10.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">eventProcessor.process 串行 · :286</text>
+
+  <!-- arrow queue -> dispatch -->
+  <path d="M584,214 L636,214" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <!-- right dispatch 琥珀 -->
+  <rect x="638" y="100" width="304" height="228" rx="13" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="654" y="124" font-size="12" font-weight="600" fill="#5a3410">process 分派 (instanceof)</text>
+  <text x="654" y="140" font-size="9" fill="#b39456">CoordinatorEventProcessor.java:647</text>
+  <rect x="654" y="150" width="132" height="26" rx="8" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="720" y="167" font-size="10" fill="#5a3410" text-anchor="middle">CreateTable</text>
+  <rect x="794" y="150" width="132" height="26" rx="8" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="860" y="167" font-size="10" fill="#5a3410" text-anchor="middle">SchemaChange</text>
+  <rect x="654" y="182" width="132" height="26" rx="8" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="720" y="199" font-size="10" fill="#5a3410" text-anchor="middle">AdjustIsrReceived</text>
+  <rect x="794" y="182" width="132" height="26" rx="8" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="860" y="199" font-size="10" fill="#5a3410" text-anchor="middle">CommitKvSnapshot</text>
+  <rect x="654" y="214" width="132" height="26" rx="8" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="720" y="231" font-size="10" fill="#5a3410" text-anchor="middle">ControlledShutdown</text>
+  <rect x="794" y="214" width="132" height="26" rx="8" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="860" y="231" font-size="10" fill="#5a3410" text-anchor="middle">DeadTabletServer</text>
+  <rect x="654" y="246" width="132" height="26" rx="8" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="720" y="263" font-size="10" fill="#5a3410" text-anchor="middle">Rebalance</text>
+  <text x="808" y="263" font-size="9.5" fill="#93762e">…按事件类型路由处理器</text>
+  <text x="654" y="300" font-size="9.5" fill="#93762e">每类事件对应独立处理逻辑，读写同一 Context</text>
+
+  <!-- bottom emphasis -->
+  <rect x="30" y="360" width="912" height="66" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="46" y="386" font-size="12" font-weight="600" fill="#12402a">单线程串行的意义</text>
+  <text x="46" y="408" font-size="10.5" fill="#2f6f4f">所有事件顺序处理，同一时刻只有一个事件在改状态——CoordinatorContext（表/桶/副本分配）与状态机</text>
+  <text x="46" y="424" font-size="10.5" fill="#2f6f4f">无需加锁即无并发竞争，逻辑简单且行为可预测；代价是重活不能阻塞事件线程</text>
+</svg>

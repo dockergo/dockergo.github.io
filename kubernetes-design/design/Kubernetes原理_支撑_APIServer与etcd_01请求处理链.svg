@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="440" viewBox="0 0 900 440" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="900" height="440" fill="#fbfbfd"/>
+  <text x="30" y="32" font-size="14" font-weight="600" fill="#1d1d1f">请求处理链 · 过滤器链（authn/authz/限流）+ REST 层（准入/存储）</text>
+
+  <!-- chain filters as pipeline -->
+  <g font-size="11">
+    <rect x="30" y="70" width="120" height="52" rx="9" fill="#ffffff" stroke="#ececef" filter="url(#soft)"/>
+    <text x="90" y="92" text-anchor="middle" font-weight="600" fill="#1d1d1f">PanicRecovery</text>
+    <text x="90" y="110" text-anchor="middle" fill="#a1a1a6">RequestInfo</text>
+
+    <rect x="166" y="70" width="120" height="52" rx="9" fill="#fdeeeb" stroke="#e6c9c2"/>
+    <text x="226" y="92" text-anchor="middle" font-weight="600" fill="#8a3527">认证 authn</text>
+    <text x="226" y="110" text-anchor="middle" fill="#b06a5c">失败 401</text>
+
+    <rect x="302" y="70" width="120" height="52" rx="9" fill="#ffffff" stroke="#ececef" filter="url(#soft)"/>
+    <text x="362" y="92" text-anchor="middle" font-weight="600" fill="#1d1d1f">Audit</text>
+    <text x="362" y="110" text-anchor="middle" fill="#a1a1a6">Impersonation</text>
+
+    <rect x="438" y="70" width="130" height="52" rx="9" fill="#ffffff" stroke="#ececef" filter="url(#soft)"/>
+    <text x="503" y="92" text-anchor="middle" font-weight="600" fill="#1d1d1f">限流 P&amp;F</text>
+    <text x="503" y="110" text-anchor="middle" fill="#a1a1a6">MaxInFlight 400/200</text>
+
+    <rect x="584" y="70" width="120" height="52" rx="9" fill="#fdeeeb" stroke="#e6c9c2"/>
+    <text x="644" y="92" text-anchor="middle" font-weight="600" fill="#8a3527">授权 authz</text>
+    <text x="644" y="110" text-anchor="middle" fill="#b06a5c">RBAC · 失败 403</text>
+
+    <rect x="720" y="70" width="150" height="52" rx="9" fill="#e9f0fb" stroke="#bcd0ec"/>
+    <text x="795" y="92" text-anchor="middle" font-weight="600" fill="#1b2a4a">REST handler</text>
+    <text x="795" y="110" text-anchor="middle" fill="#5b7db1">进入存储层 →</text>
+  </g>
+  <path d="M150 96 L166 96" fill="none" stroke="#b8b8bf" stroke-width="1.4" marker-end="url(#ar)"/>
+  <path d="M286 96 L302 96" fill="none" stroke="#b8b8bf" stroke-width="1.4" marker-end="url(#ar)"/>
+  <path d="M422 96 L438 96" fill="none" stroke="#b8b8bf" stroke-width="1.4" marker-end="url(#ar)"/>
+  <path d="M568 96 L584 96" fill="none" stroke="#b8b8bf" stroke-width="1.4" marker-end="url(#ar)"/>
+  <path d="M704 96 L720 96" fill="none" stroke="#b8b8bf" stroke-width="1.4" marker-end="url(#ar)"/>
+  <text x="30" y="150" font-size="10.5" fill="#a1a1a6">执行顺序（请求入向）：config.go DefaultBuildHandlerChain —— 认证鉴权是 HTTP filter</text>
+
+  <!-- REST layer detail -->
+  <rect x="30" y="176" width="840" height="140" rx="12" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="46" y="200" font-size="12.5" font-weight="600" fill="#1b2a4a">REST 层（Store.Create / Update）—— 准入在此，不在过滤器链</text>
+  <g font-size="11">
+    <rect x="46" y="214" width="150" height="80" rx="9" fill="#ffffff" stroke="#ececef"/>
+    <text x="121" y="238" text-anchor="middle" font-weight="600" fill="#1d1d1f">解码 + 默认值</text>
+    <text x="121" y="258" text-anchor="middle" fill="#6e6e73">+ 校验</text>
+    <text x="121" y="278" text-anchor="middle" fill="#6e6e73">对象成形</text>
+
+    <rect x="212" y="214" width="160" height="80" rx="9" fill="#faf4fb" stroke="#e4cdea"/>
+    <text x="292" y="238" text-anchor="middle" font-weight="600" fill="#8944ab">Mutating 准入</text>
+    <text x="292" y="258" text-anchor="middle" fill="#8944ab">可改写对象</text>
+    <text x="292" y="278" text-anchor="middle" fill="#8944ab">（注入 sidecar…）</text>
+
+    <rect x="388" y="214" width="160" height="80" rx="9" fill="#faf4fb" stroke="#e4cdea"/>
+    <text x="468" y="238" text-anchor="middle" font-weight="600" fill="#8944ab">Validating 准入</text>
+    <text x="468" y="258" text-anchor="middle" fill="#8944ab">只校验 · 可拒</text>
+    <text x="468" y="278" text-anchor="middle" fill="#8944ab">（配额/策略）</text>
+
+    <rect x="564" y="214" width="150" height="80" rx="9" fill="#ffffff" stroke="#ececef"/>
+    <text x="639" y="238" text-anchor="middle" font-weight="600" fill="#1d1d1f">转存储版本</text>
+    <text x="639" y="258" text-anchor="middle" fill="#6e6e73">外部多版本</text>
+    <text x="639" y="278" text-anchor="middle" fill="#6e6e73">→ 内部一份</text>
+
+    <rect x="730" y="214" width="124" height="80" rx="9" fill="#fbf7ef" stroke="#ecdcbf"/>
+    <text x="792" y="238" text-anchor="middle" font-weight="600" fill="#8a6d3b">落 etcd</text>
+    <text x="792" y="258" text-anchor="middle" fill="#8a6d3b">Storage.Create</text>
+    <text x="792" y="278" text-anchor="middle" fill="#8a6d3b">store.go:526</text>
+  </g>
+  <path d="M196 254 L212 254" fill="none" stroke="#b8b8bf" stroke-width="1.4" marker-end="url(#ar)"/>
+  <path d="M372 254 L388 254" fill="none" stroke="#b8b8bf" stroke-width="1.4" marker-end="url(#ar)"/>
+  <path d="M548 254 L564 254" fill="none" stroke="#b8b8bf" stroke-width="1.4" marker-end="url(#ar)"/>
+  <path d="M714 254 L730 254" fill="none" stroke="#b8b8bf" stroke-width="1.4" marker-end="url(#ar)"/>
+
+  <text x="30" y="350" font-size="11.5" fill="#6e6e73"><tspan font-weight="600" fill="#1d1d1f">铁律顺序：</tspan>认证在前（不知你是谁无法鉴权）→ 鉴权居中 → 准入最后；Mutating 必先于 Validating（改完要复检）</text>
+  <text x="30" y="376" font-size="11.5" fill="#6e6e73"><tspan font-weight="600" fill="#1d1d1f">默认限流：</tspan>MaxRequestsInFlight=400 · MaxMutatingRequestsInFlight=200 · RequestTimeout=60s（config.go NewConfig）</text>
+  <text x="30" y="402" font-size="11.5" fill="#6e6e73"><tspan font-weight="600" fill="#1d1d1f">多版本统一：</tspan>外部 v1/v1beta1 皆转成"存储版本"落库，读时再转回请求版本 —— API 演进不破坏已存数据</text>
+</svg>

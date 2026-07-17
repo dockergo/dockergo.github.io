@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="530" viewBox="0 0 1080 530" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1080" height="530" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">ORC 谓词下推 · 两级剪枝 (由粗到细,逐级读更少)</text>
+  <text x="30" y="50" font-size="12" fill="#a1a1a6">文件级 → stripe 级 (跳 64MB) → row-group 级 (跳 10000 行) → 布隆加持 (等值精跳)</text>
+
+  <!-- Level 0: file -->
+  <rect x="60" y="76" width="180" height="120" rx="12" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="150" y="102" font-size="11" font-weight="600" fill="#1d1d1f" text-anchor="middle">文件级</text>
+  <text x="150" y="124" font-size="9.5" fill="#6e6e73" text-anchor="middle">Footer 统计</text>
+  <text x="150" y="143" font-size="9.5" fill="#6e6e73" text-anchor="middle">读不读此文件</text>
+  <text x="150" y="170" font-size="9" fill="#a1a1a6" text-anchor="middle">最粗</text>
+
+  <path d="M240,136 L296,136" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <!-- Level 1: stripe -->
+  <rect x="300" y="76" width="230" height="120" rx="12" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+  <text x="415" y="102" font-size="12" font-weight="600" fill="#5a3410" text-anchor="middle">① stripe 级剪枝</text>
+  <text x="415" y="124" font-size="9.5" fill="#93762e" text-anchor="middle">用 stripe 统计 min/max</text>
+  <text x="415" y="143" font-size="9.5" fill="#93762e" text-anchor="middle">不匹配 → 跳整个 stripe</text>
+  <text x="415" y="170" font-size="10" font-weight="600" fill="#5a3410" text-anchor="middle">一下跳掉 64MB</text>
+
+  <path d="M530,136 L586,136" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="558" y="128" font-size="9" fill="#a1a1a6" text-anchor="middle">存活 stripe</text>
+
+  <!-- Level 2: row-group -->
+  <rect x="590" y="76" width="230" height="120" rx="12" fill="#fbeaea" stroke="#e7c3c3" filter="url(#soft)"/>
+  <text x="705" y="102" font-size="12" font-weight="600" fill="#4a1414" text-anchor="middle">② row-group 级剪枝</text>
+  <text x="705" y="124" font-size="9.5" fill="#7a2a2a" text-anchor="middle">每 row group (10000 行) 统计</text>
+  <text x="705" y="143" font-size="9.5" fill="#7a2a2a" text-anchor="middle">不匹配组跳过</text>
+  <text x="705" y="170" font-size="9.5" fill="#7a2a2a" text-anchor="middle">命中组用 positions seek 精读</text>
+
+  <path d="M820,136 L876,136" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="848" y="128" font-size="9" fill="#a1a1a6" text-anchor="middle">等值</text>
+
+  <!-- bloom -->
+  <rect x="880" y="76" width="140" height="120" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="950" y="102" font-size="11" font-weight="600" fill="#12402a" text-anchor="middle">布隆加持</text>
+  <text x="950" y="124" font-size="9" fill="#2f6f4f" text-anchor="middle">判块内有没有</text>
+  <text x="950" y="142" font-size="9" fill="#2f6f4f" text-anchor="middle">该值</text>
+  <text x="950" y="170" font-size="9" fill="#2f6f4f" text-anchor="middle">最细</text>
+
+  <!-- why bloom for col=5 -->
+  <rect x="60" y="228" width="460" height="150" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="290" y="254" font-size="12" font-weight="600" fill="#12402a" text-anchor="middle">布隆为何必要:等值查询 col = 5</text>
+  <text x="290" y="282" font-size="10.5" fill="#2f6f4f" text-anchor="middle">min/max 范围 [1, 100] 里 5 落在范围内</text>
+  <text x="290" y="304" font-size="10.5" fill="#2f6f4f" text-anchor="middle">→ 光靠 min/max 剪不掉 (但 5 可能不存在)</text>
+  <text x="290" y="330" font-size="10.5" fill="#12402a" text-anchor="middle">布隆过滤器判 "这块里有没有 5"</text>
+  <text x="290" y="352" font-size="10.5" fill="#2f6f4f" text-anchor="middle">无 → 跳;有 → 读进来精确判</text>
+
+  <!-- data reduction ladder -->
+  <rect x="540" y="228" width="480" height="150" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="780" y="254" font-size="12" font-weight="600" fill="#1b2a4a" text-anchor="middle">逐级读更少 (由粗到细)</text>
+  <text x="780" y="282" font-size="10" fill="#5b7db1" text-anchor="middle">文件级 统计 → 决定读不读整文件</text>
+  <text x="780" y="304" font-size="10" fill="#5b7db1" text-anchor="middle">stripe 级 → 跳整个 stripe (64MB)</text>
+  <text x="780" y="326" font-size="10" fill="#5b7db1" text-anchor="middle">row-group 级 → 跳 10000 行的组</text>
+  <text x="780" y="352" font-size="10" fill="#5b7db1" text-anchor="middle">布隆 → 等值查询精跳块内无匹配</text>
+
+  <text x="540" y="418" font-size="9.5" fill="#a1a1a6" text-anchor="middle">下推在 stripe 级与 row-group 级两级生效,布隆补 min/max 处理不了的等值查询;每级代价小收益大</text>
+  <text x="540" y="440" font-size="9.5" fill="#a1a1a6" text-anchor="middle">跳的是整块肯定无匹配的,块内行仍由引擎精确过滤 — 下推减 IO 不代替过滤</text>
+</svg>

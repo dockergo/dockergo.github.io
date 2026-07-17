@@ -1,18 +1,20 @@
 # Ray 支撑能力域 · 远程 task 提交与依赖
 
-> **定位**：把一次 `.remote()` 从"构建规格"落到"某个 worker 上真正执行"的完整机制。核心是 Ray 的**去中心化 worker-lease 调度**：CoreWorker 直接向 Raylet 租 worker、拿到后**直投 task**，不经中央调度器。核实基准 `src/ray/core_worker/task_submission/normal_task_submitter.cc`、`task_manager.cc`（commit 6ff3a75）。
+> **定位**：把一次 `.remote()` 从"构建规格"落到"某个 worker 上真正执行"的完整机制。核心是 Ray 的**去中心化 worker-lease 调度**：CoreWorker 直接向 Raylet 租 worker、拿到后**直投 task**，不经中央调度器。核实基准 `src/ray/core_worker/task_submission/normal_task_submitter.cc`、`task_manager.cc`（commit 2a70ac4）。
 
 ## 一、提交流水线：spec → lease → 直投
 
 ![租约调度](Ray原理_支撑_远程任务提交与依赖_01租约调度.svg)
 
 1. **入队**：`NormalTaskSubmitter::SubmitTask`（`normal_task_submitter.cc:34`）按 **scheduling key**（资源需求 + 调度策略 + 依赖）把 task 归类排队。相同 scheduling key 的 task 复用同类 worker 租约。
-2. **申请租约**：`RequestNewWorkerIfNeeded`（`:270`）向合适节点的 Raylet 发 `RequestWorkerLeaseRequest`（`:64`）。选点由 lease policy 决定（默认本地优先，可 spillback 到别的 raylet：`raylet_address != nullptr` 即 spillback，`:45`）。
+2. **申请租约**：`RequestNewWorkerIfNeeded`（`:270`）向合适节点的 Raylet 发 `RequestWorkerLeaseRequest`（`:333`）。选点由 lease policy 决定（默认本地优先，可 spillback 到别的 raylet：`raylet_address != nullptr` 即 spillback，`:314`）。
 3. **Raylet 授租**：Raylet `HandleRequestWorkerLease`（`node_manager.cc:1890`）走本地/集群调度选出可运行的节点，从 WorkerPool 取 worker，回授一个 lease（含 worker 地址）。
 4. **直投**：`OnWorkerIdle`（`:141`）/`PushNormalTask`（`:515`）把 task 直接 RPC 推给被租 worker 执行——**不再经调度器中转**。
 5. **归还/续租**：worker 执行完，若同 scheduling key 还有排队 task 则继续复用该租约，否则归还（`HandleReturnWorkerLease`，`node_manager.cc:2192`）。
 
 ## 二、依赖解析：task 何时可跑
+
+![依赖解析两处放行](Ray原理_支撑_远程任务提交与依赖_02依赖解析.svg)
 
 task 的参数含未就绪 ObjectRef 时不能执行。解析分两处：
 
@@ -23,15 +25,17 @@ task 的参数含未就绪 ObjectRef 时不能执行。解析分两处：
 
 ## 三、lineage 与重试登记
 
+![lineage 登记与重放](Ray原理_支撑_远程任务提交与依赖_03lineage登记.svg)
+
 `AddPendingTask`（`task_manager.cc:319`）在 owner 本地登记 task spec 与返回 ref，作为**容错 lineage**。task 失败/对象丢失时 `ResubmitTask`（`:433`）按登记的 spec 重放；成功则 `CompletePendingTask`（`:1158`）落值、按需清 lineage。`max_retries`/`retry_exceptions` 控制应用级重试次数（写在 spec 里，`core_worker.cc:2058`）。
 
 ## 深化表
 
 | 技术点 | 机制 | 源码锚点 |
 |---|---|---|
-| scheduling key 排队 | 按资源+策略+依赖归类复用租约 | `normal_task_submitter.cc:34/71` |
+| scheduling key 排队 | 按资源+策略+依赖归类复用租约 | `normal_task_submitter.cc:34/67` |
 | 申请 worker 租约 | RequestWorkerLease → Raylet | `normal_task_submitter.cc:270`、`node_manager.cc:1890` |
-| spillback | 本地不够转投别节点 raylet | `normal_task_submitter.cc:45` |
+| spillback | 本地不够转投别节点 raylet | `normal_task_submitter.cc:314` |
 | 直投执行 | PushNormalTask 绕过调度器 | `normal_task_submitter.cc:515` |
 | 依赖 Pull | 参数对象拉到本地才放行 | `raylet/lease_dependency_manager`、`object_manager.cc:221` |
 | lineage 登记/重放 | AddPendingTask / ResubmitTask | `task_manager.cc:319/433` |

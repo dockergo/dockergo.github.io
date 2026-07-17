@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="500" viewBox="0 0 1080 500" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs><filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+  <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker></defs>
+  <rect width="1080" height="500" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">GORM 方言/连接池/日志 · 落到真实数据库的出口</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">Dialector 翻译方言差异、ConnPool 执行 SQL、logger.Interface 记慢查询/错误;是所有能力域落到真实库的边界抽象</text>
+  <rect x="30" y="70" width="333" height="200" rx="13" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="46" y="92" font-size="11" font-weight="700" fill="#1b2a4a">Dialector(interfaces.go:12)</text>
+  <text x="46" y="112" font-size="8.6" fill="#274a78">翻译方言差异:</text>
+  <rect x="46" y="122" width="301" height="24" rx="5" fill="#f3f7fc" stroke="#cfe0f2"/><text x="60" y="138" font-size="8.3" fill="#274a78">占位符(? vs $1)· 引号(` vs ")</text>
+  <rect x="46" y="152" width="301" height="24" rx="5" fill="#f3f7fc" stroke="#cfe0f2"/><text x="60" y="168" font-size="8.3" fill="#274a78">数据类型映射(DataTypeOf)</text>
+  <rect x="46" y="182" width="301" height="24" rx="5" fill="#f3f7fc" stroke="#cfe0f2"/><text x="60" y="198" font-size="8.3" fill="#274a78">子句差异(BindVarTo/QuoteTo)</text>
+  <text x="46" y="226" font-size="8.4" fill="#5b7db1">实现:mysql/postgres/sqlite/sqlserver</text>
+  <text x="46" y="246" font-size="8.4" fill="#5b7db1">同一 GORM 代码跑不同库靠它</text>
+  <rect x="373" y="70" width="333" height="200" rx="13" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="389" y="92" font-size="11" font-weight="700" fill="#12402a">ConnPool(interfaces.go:34)</text>
+  <text x="389" y="112" font-size="8.6" fill="#2f6f4f">· 执行 SQL 的接口</text>
+  <text x="389" y="130" font-size="8.4" fill="#2f6f4f">  ExecContext/QueryContext/PrepareContext</text>
+  <rect x="389" y="142" width="301" height="26" rx="6" fill="#e6f7ee" stroke="#bfe0cd"/><text x="403" y="159" font-size="8.3" fill="#12402a">底层是 database/sql 的 *sql.DB(连接池)</text>
+  <rect x="389" y="174" width="301" height="26" rx="6" fill="#e6f7ee" stroke="#bfe0cd"/><text x="403" y="191" font-size="8.3" fill="#12402a">复用连接、限最大连接数/空闲数</text>
+  <text x="389" y="220" font-size="8.4" fill="#2f6f4f">· PreparedStmtDB 也实现 ConnPool</text>
+  <text x="389" y="240" font-size="8.4" fill="#2f6f4f">  (预编译缓存包一层,见事务篇)</text>
+  <rect x="716" y="70" width="334" height="200" rx="13" fill="#fff7e6" stroke="#e8cf9a"/>
+  <text x="732" y="92" font-size="11" font-weight="700" fill="#5a3410">logger.Interface(logger.go:64)</text>
+  <text x="732" y="112" font-size="8.6" fill="#93762e">· Trace(每 SQL 记:耗时/行数/SQL)</text>
+  <text x="732" y="130" font-size="8.4" fill="#93762e">  callbacks 链末尾 Logger.Trace 调</text>
+  <rect x="732" y="142" width="302" height="26" rx="6" fill="#fdf6ea" stroke="#efdcb4"/><text x="746" y="159" font-size="8.3" fill="#5a3410">慢查询阈值:超 SlowThreshold 告警</text>
+  <rect x="732" y="174" width="302" height="26" rx="6" fill="#fdf6ea" stroke="#efdcb4"/><text x="746" y="191" font-size="8.3" fill="#5a3410">错误记录 + LogLevel(Silent/Error/Warn/Info)</text>
+  <text x="732" y="220" font-size="8.4" fill="#93762e">· 可自定义 logger(接管输出/上报)</text>
+  <text x="732" y="240" font-size="8.4" fill="#93762e">观测慢查询的入口</text>
+  <rect x="30" y="284" width="1020" height="110" rx="13" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="46" y="306" font-size="11" font-weight="700" fill="#12402a">出口链路:GORM → 真实数据库</text>
+  <g text-anchor="middle" font-size="8.5">
+    <rect x="46" y="320" width="220" height="56" rx="8" fill="#e6f7ee" stroke="#bfe0cd"/><text x="156" y="344" fill="#12402a">clause/Statement 拼 SQL</text><text x="156" y="362" fill="#2f6f4f">(逻辑 SQL)</text>
+    <rect x="306" y="320" width="220" height="56" rx="8" fill="#eef3fb" stroke="#bcd0ec"/><text x="416" y="344" fill="#1b2a4a">Dialector 翻方言</text><text x="416" y="362" fill="#5b7db1">占位符/引号/类型适配</text>
+    <rect x="566" y="320" width="220" height="56" rx="8" fill="#e6f7ee" stroke="#bfe0cd"/><text x="676" y="344" fill="#12402a">ConnPool 执行</text><text x="676" y="362" fill="#2f6f4f">database/sql 连接池</text>
+    <rect x="826" y="320" width="208" height="56" rx="8" fill="#fff7e6" stroke="#e8cf9a"/><text x="930" y="344" fill="#5a3410">Logger.Trace 记录</text><text x="930" y="362" fill="#93762e">耗时/慢查询/错误</text>
+  </g>
+  <line x1="266" y1="348" x2="306" y2="348" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="526" y1="348" x2="566" y2="348" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="786" y1="348" x2="826" y2="348" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <rect x="30" y="410" width="1020" height="70" rx="13" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="46" y="432" font-size="11" font-weight="700" fill="#1d1d1f">要点</text>
+  <text x="46" y="453" font-size="9" fill="#6e6e73">· 三个边界抽象:Dialector(翻方言差异,同代码跑 mysql/pg/sqlite)、ConnPool(经 database/sql 连接池执行)、logger(记慢查询/错误)</text>
+  <text x="46" y="471" font-size="9" fill="#6e6e73">· 是所有能力域落到真实数据库的出口——逻辑 SQL 经方言翻译、连接池执行、日志观测</text>
+</svg>

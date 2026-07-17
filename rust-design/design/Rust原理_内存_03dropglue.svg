@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="520" viewBox="0 0 1080 520" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="520" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Rust Drop glue · 编译器在 MIR 插入析构 · 全编译期确定（无 GC）</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">Drop 调用不是运行时 GC 扫描,而是编译器在 MIR 插入;运行时直接执行插入的析构调用 —— 无扫描、无 stop-the-world 停顿</text>
+
+  <!-- Card A: Drop 精化 pass (blue) -->
+  <rect x="40" y="78" width="500" height="180" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="62" y="106" font-size="12.5" font-weight="600" fill="#1b2a4a">① Drop 精化 · MIR pass 插入 Drop 调用</text>
+  <text x="62" y="126" font-size="9.5" fill="#5b7db1">mir_drops_elaborated_and_const_checked</text>
+  <text x="62" y="142" font-size="9" fill="#5b7db1">rustc_mir_transform/src/lib.rs:537</text>
+  <text x="62" y="164" font-size="10" fill="#1b2a4a">· 每个 owner 作用域结束处插入 Drop 调用</text>
+  <text x="62" y="184" font-size="10" fill="#1b2a4a">· 考虑条件析构、部分 move 等情形</text>
+  <rect x="62" y="198" width="456" height="48" rx="8" fill="#ffffff" stroke="#cfe0f2"/>
+  <text x="290" y="220" font-size="10" font-weight="600" text-anchor="middle" fill="#1b2a4a">作用域结束 → 插入析构调用</text>
+  <text x="290" y="236" font-size="9" text-anchor="middle" fill="#5b7db1">编译期决定插在哪,运行时直接执行</text>
+
+  <!-- Card B: Drop glue 递归 (blue) -->
+  <rect x="560" y="78" width="480" height="180" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="582" y="106" font-size="12.5" font-weight="600" fill="#1b2a4a">② Drop glue 合成 · 递归析构复合类型</text>
+  <text x="582" y="126" font-size="9.5" fill="#5b7db1">Instance::resolve_drop_glue</text>
+  <text x="582" y="142" font-size="9" fill="#5b7db1">rustc_middle/ty/instance.rs:789</text>
+  <text x="582" y="164" font-size="10" fill="#1b2a4a">struct / enum 合成递归析构代码</text>
+  <rect x="582" y="180" width="130" height="46" rx="8" fill="#ffffff" stroke="#cfe0f2"/>
+  <text x="647" y="200" font-size="9.5" font-weight="600" text-anchor="middle" fill="#1b2a4a">先析构字段</text>
+  <text x="647" y="216" font-size="9" text-anchor="middle" fill="#5b7db1">/ 元素</text>
+  <rect x="736" y="180" width="120" height="46" rx="8" fill="#ffffff" stroke="#cfe0f2"/>
+  <text x="796" y="200" font-size="9.5" font-weight="600" text-anchor="middle" fill="#1b2a4a">递归下去</text>
+  <text x="796" y="216" font-size="9" text-anchor="middle" fill="#5b7db1">逐个</text>
+  <rect x="880" y="180" width="138" height="46" rx="8" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="949" y="200" font-size="9.5" font-weight="600" text-anchor="middle" fill="#12402a">再析构自己</text>
+  <text x="949" y="216" font-size="9" text-anchor="middle" fill="#2f6f4f">最后</text>
+  <path d="M712,203 L736,203" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M856,203 L880,203" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="582" y="246" font-size="9" fill="#a1a1a6">顺序确定:先字段/元素,后自身</text>
+
+  <!-- Bottom-left: GC 方式 对比 (amber) -->
+  <rect x="40" y="274" width="500" height="148" rx="14" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="62" y="300" font-size="12" font-weight="600" fill="#5a3410">GC 方式（对比）· 运行时追踪</text>
+  <text x="62" y="324" font-size="10" fill="#93762e">运行时扫描 / 追踪谁还活着</text>
+  <text x="62" y="346" font-size="10" fill="#93762e">有额外开销 · 有 stop-the-world 停顿</text>
+  <text x="62" y="368" font-size="10" fill="#93762e">回收时机不确定</text>
+  <text x="62" y="394" font-size="9" fill="#a1a1a6">需要运行时机制持续参与</text>
+
+  <!-- Bottom-right: Rust 方式 (green) -->
+  <rect x="560" y="274" width="480" height="148" rx="14" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="582" y="300" font-size="12" font-weight="600" fill="#12402a">Rust 方式 · 编译期插入</text>
+  <text x="582" y="324" font-size="10" fill="#2f6f4f">所有权 + 作用域 → 编译期知每值在哪析构</text>
+  <text x="582" y="346" font-size="10" fill="#2f6f4f">运行时直接执行插入的析构调用</text>
+  <text x="582" y="368" font-size="10" fill="#2f6f4f">无 GC 扫描 · 无 stop-the-world · 零开销</text>
+  <text x="582" y="394" font-size="9" fill="#a1a1a6">确定性析构,零 GC 开销</text>
+
+  <text x="30" y="452" font-size="9.5" fill="#a1a1a6">为什么编译期插入:GC 要运行时追踪(开销/停顿);Rust 编译期就知每值在哪析构 —— 确定性析构、零 GC 开销、无停顿</text>
+  <text x="30" y="476" font-size="9" fill="#a1a1a6">全编译期确定 · 运行时直接执行插入的析构调用 · 源码基准 Rust 1.99.0</text>
+</svg>

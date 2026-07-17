@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="500" viewBox="0 0 1080 500" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="500" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Rust 所有权三规则 · 每值唯一 owner · move 转移 · 出作用域 Drop（无 GC）</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">编译期强制的三条规则:唯一 owner + move 让"谁负责释放"编译期明确,出作用域自动 Drop —— 无 GC 内存安全的地基</text>
+
+  <!-- rule 1: unique owner (blue) -->
+  <rect x="40" y="82" width="320" height="150" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="60" y="108" font-size="12.5" font-weight="600" fill="#1b2a4a">① 每个值有唯一 owner</text>
+  <text x="60" y="132" font-size="10" fill="#5b7db1">一个变量拥有一个值</text>
+  <text x="60" y="152" font-size="10" fill="#5b7db1">同一时刻只有它拥有</text>
+  <text x="60" y="172" font-size="10" fill="#5b7db1">owner 出作用域 → 值被 Drop</text>
+  <text x="60" y="200" font-size="9" fill="#a1a1a6">归属:内存与 Drop</text>
+
+  <!-- rule 2: move (amber) -->
+  <rect x="380" y="82" width="320" height="150" rx="14" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="400" y="108" font-size="12.5" font-weight="600" fill="#5a3410">② move · 一次一个 owner</text>
+  <text x="400" y="132" font-size="10" fill="#93762e">赋值 / 传参 转移所有权</text>
+  <text x="400" y="152" font-size="10" fill="#93762e">原变量失效,不能再用</text>
+  <text x="400" y="172" font-size="10" fill="#93762e">防 double-free(两处都释放)</text>
+  <text x="400" y="200" font-size="9" fill="#a1a1a6">非 Copy 类型的默认行为</text>
+
+  <!-- rule 3: Drop (green) -->
+  <rect x="720" y="82" width="320" height="150" rx="14" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="740" y="108" font-size="12.5" font-weight="600" fill="#12402a">③ owner 出作用域 → Drop</text>
+  <text x="740" y="132" font-size="10" fill="#2f6f4f">自动调 Drop 析构</text>
+  <text x="740" y="152" font-size="10" fill="#2f6f4f">回收资源(RAII)</text>
+  <text x="740" y="172" font-size="10" fill="#2f6f4f">无需手动 free、无 GC</text>
+  <text x="740" y="200" font-size="9" fill="#a1a1a6">确定析构,一定只调一次</text>
+
+  <!-- move flow illustration (amber variant) -->
+  <rect x="40" y="252" width="660" height="164" rx="14" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+  <text x="60" y="278" font-size="12" font-weight="600" fill="#5a3410">move 语义 · 赋值 / 传参即转移所有权</text>
+  <g text-anchor="middle">
+    <rect x="60" y="294" width="192" height="54" rx="8" fill="#ffffff" stroke="#efdcb4"/>
+    <text x="156" y="317" font-size="9.5" fill="#5a3410">let s1 = String::from(...)</text>
+    <text x="156" y="334" font-size="9" fill="#93762e">s1 拥有堆上的值</text>
+    <rect x="276" y="294" width="192" height="54" rx="8" fill="#ffffff" stroke="#efdcb4"/>
+    <text x="372" y="317" font-size="9.5" fill="#5a3410">let s2 = s1;</text>
+    <text x="372" y="334" font-size="9" fill="#93762e">所有权 move 给 s2</text>
+    <rect x="492" y="294" width="188" height="54" rx="8" fill="#fbeaea" stroke="#e7c3c3"/>
+    <text x="586" y="317" font-size="9.5" fill="#4a1414">再用 s1 → 编译错误</text>
+    <text x="586" y="334" font-size="9" fill="#7a2a2a">E0382 use of moved value</text>
+  </g>
+  <path d="M252,321 L276,321" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M468,321 L492,321" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="60" y="372" font-size="9.5" fill="#93762e">move 后原变量不可用 → 编译期防止两个变量都释放同一份堆内存(double-free)</text>
+  <text x="60" y="394" font-size="9" fill="#a1a1a6">只有拥有堆资源的类型这样;简单值见右侧 Copy 例外</text>
+
+  <!-- Copy exception (green) -->
+  <rect x="720" y="252" width="320" height="164" rx="14" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="740" y="278" font-size="12" font-weight="600" fill="#12402a">Copy 类型例外 · 位拷贝</text>
+  <text x="740" y="303" font-size="10" fill="#2f6f4f">整数 / bool / char 等</text>
+  <text x="740" y="325" font-size="10" fill="#2f6f4f">实现 Copy trait,赋值不 move</text>
+  <text x="740" y="351" font-size="10" fill="#2f6f4f">let x = 5; let y = x;</text>
+  <text x="740" y="375" font-size="10" fill="#2f6f4f">位拷贝 → x 仍有效</text>
+  <text x="740" y="397" font-size="9" fill="#a1a1a6">栈上简单值,复制成本低</text>
+
+  <text x="30" y="448" font-size="9.5" fill="#a1a1a6">为什么:唯一 owner + move 让"谁负责释放"编译期明确 —— 不重复释放、不忘释放、不用已释放的(use-after-free)</text>
+  <text x="30" y="472" font-size="9" fill="#a1a1a6">无 GC 内存安全的地基 · 规则由借用检查器编译期强制 · 源码基准 Rust 1.99.0</text>
+</svg>

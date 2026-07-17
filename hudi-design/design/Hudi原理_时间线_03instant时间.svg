@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="880" height="420" viewBox="0 0 880 420" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="880" height="420" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">instant time：单调定序（HoodieInstantTimeGenerator）</text>
+  <text x="30" y="49" font-size="10" fill="#a1a1a6">格式 yyyyMMddHHmmss（14 位秒）/ yyyyMMddHHmmssSSS（17 位毫秒）；严格递增 = 全序</text>
+
+  <!-- generator -->
+  <rect x="30" y="70" width="400" height="150" rx="12" fill="#f6f8fc" stroke="#dbe6f4" filter="url(#soft)"/>
+  <text x="46" y="92" font-size="10.5" font-weight="700" fill="#1b2a4a">createNewInstantTime()</text>
+  <rect x="46" y="104" width="368" height="42" rx="8" fill="#eef3fb" stroke="#bcd0ec"/><text x="230" y="122" font-size="9" text-anchor="middle" font-weight="600" fill="#274a78">AtomicReference&lt;String&gt; LAST_INSTANT_TIME</text><text x="230" y="138" font-size="8.4" text-anchor="middle" fill="#5b7db1">updateAndGet 原子更新</text>
+  <rect x="46" y="154" width="368" height="54" rx="8" fill="#e7f0fb" stroke="#b9d2ef"/><text x="230" y="174" font-size="8.7" text-anchor="middle" fill="#1b2a4a">while compareTimestamps(new, LESSER_OR_EQUALS, old)</text><text x="230" y="190" font-size="8.7" text-anchor="middle" fill="#1b2a4a">→ 循环递增，保证 new 严格 &gt; 上一个</text><text x="230" y="203" font-size="8.2" text-anchor="middle" fill="#5b7db1">哨兵：INIT_INSTANT_TS = "00000000000000"</text>
+
+  <!-- monotonic sequence -->
+  <rect x="450" y="70" width="400" height="150" rx="12" fill="#f5faf6" stroke="#cfe6d5" filter="url(#soft)"/>
+  <text x="466" y="92" font-size="10.5" font-weight="700" fill="#12402a">全序序列（严格递增）</text>
+  <g font-size="8.6" text-anchor="middle">
+    <rect x="466" y="106" width="112" height="30" rx="7" fill="#eafaf1" stroke="#bfe0cd"/><text x="522" y="125" fill="#12402a">…093000</text>
+    <rect x="588" y="106" width="112" height="30" rx="7" fill="#eafaf1" stroke="#bfe0cd"/><text x="644" y="125" fill="#12402a">…093145</text>
+    <rect x="710" y="106" width="124" height="30" rx="7" fill="#eafaf1" stroke="#bfe0cd"/><text x="772" y="125" fill="#12402a">…093512</text>
+  </g>
+  <text x="650" y="160" font-size="9" text-anchor="middle" fill="#2f6f4f">InstantComparison.compareTimestamps 比较</text>
+  <text x="650" y="178" font-size="9" text-anchor="middle" fill="#2f6f4f">GREATER/LESSER_THAN_OR_EQUALS …</text>
+  <text x="650" y="200" font-size="8.6" text-anchor="middle" fill="#a1a1a6">毫秒精度（17 位）避免高频写时间戳冲突</text>
+  <line x1="578" y1="121" x2="588" y2="121" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="700" y1="121" x2="710" y2="121" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+
+  <!-- what it orders -->
+  <rect x="30" y="240" width="820" height="160" rx="12" fill="#f6f8fc" stroke="#dbe6f4"/>
+  <text x="46" y="262" font-size="10.5" font-weight="700" fill="#1b2a4a">单调 instant time 让全序横切三处</text>
+  <g font-size="9.3">
+    <rect x="46" y="276" width="256" height="108" rx="10" fill="#eef3fb" stroke="#bcd0ec"/><text x="174" y="298" text-anchor="middle" font-weight="600" fill="#274a78">时间线排序</text><text x="62" y="320" fill="#5b7db1">所有 instant 按 instant time</text><text x="62" y="338" fill="#5b7db1">严格有序，构成动作全序。</text><text x="62" y="362" fill="#5b7db1">增量读按 instant 区间。</text>
+    <rect x="312" y="276" width="256" height="108" rx="10" fill="#f5faf6" stroke="#cfe6d5"/><text x="440" y="298" text-anchor="middle" font-weight="600" fill="#12402a">文件片归位</text><text x="328" y="320" fill="#2f6f4f">FileSlice 按 baseInstantTime</text><text x="328" y="338" fill="#2f6f4f">组织；新版本在前。</text><text x="328" y="362" fill="#2f6f4f">TreeMap 按 instant 排序。</text>
+    <rect x="578" y="276" width="256" height="108" rx="10" fill="#fdf6ea" stroke="#efdcb4"/><text x="706" y="298" text-anchor="middle" font-weight="600" fill="#5a3410">MoR 合并顺序</text><text x="594" y="320" fill="#93762e">同键多个 log 版本</text><text x="594" y="338" fill="#93762e">按 instant 序合并出最新；</text><text x="594" y="362" fill="#93762e">删除排数据后保序。</text>
+  </g>
+</svg>

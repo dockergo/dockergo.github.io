@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="530" viewBox="0 0 1080 530" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="530" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Spring Boot 核心原理 · 自动配置 ② 条件注解:classpath 有什么配什么</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">自动配置 bean 全条件化(condition/ 目录 20 个) · 只在合适时装配、给合理默认、允许用户覆盖</text>
+
+  <!-- 5 condition annotation cards, top row -->
+  <g>
+    <rect x="30" y="76" width="200" height="96" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+    <text x="130" y="99" font-size="10" font-weight="700" text-anchor="middle" fill="#12402a">@ConditionalOnClass</text>
+    <text x="130" y="120" font-size="8.8" text-anchor="middle" fill="#2f6f4f">有某类才配</text>
+    <text x="130" y="138" font-size="8.4" text-anchor="middle" fill="#2f6f4f">有 Tomcat 类才配 web 服务器</text>
+    <text x="130" y="160" font-size="8" text-anchor="middle" fill="#a1a1a6">ConditionalOnClass.java:65</text>
+
+    <rect x="242" y="76" width="200" height="96" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+    <text x="342" y="99" font-size="9.4" font-weight="700" text-anchor="middle" fill="#12402a">@ConditionalOnMissingBean</text>
+    <text x="342" y="120" font-size="8.8" text-anchor="middle" fill="#2f6f4f">无某 bean 才配</text>
+    <text x="342" y="138" font-size="8.4" text-anchor="middle" fill="#2f6f4f">用户没自定义才用默认</text>
+    <text x="342" y="160" font-size="8.2" text-anchor="middle" fill="#1a5a38" font-weight="600">可覆盖(用户优先)</text>
+
+    <rect x="454" y="76" width="200" height="96" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+    <text x="554" y="99" font-size="9.6" font-weight="700" text-anchor="middle" fill="#12402a">@ConditionalOnProperty</text>
+    <text x="554" y="120" font-size="8.8" text-anchor="middle" fill="#2f6f4f">某配置项开才配</text>
+    <text x="554" y="138" font-size="8.4" text-anchor="middle" fill="#2f6f4f">按 Environment 属性开关</text>
+    <text x="554" y="160" font-size="8" text-anchor="middle" fill="#a1a1a6">读「配置属性」</text>
+
+    <rect x="666" y="76" width="188" height="96" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+    <text x="760" y="99" font-size="10" font-weight="700" text-anchor="middle" fill="#12402a">@ConditionalOnBean</text>
+    <text x="760" y="120" font-size="8.8" text-anchor="middle" fill="#2f6f4f">有某 bean 才配</text>
+    <text x="760" y="138" font-size="8.4" text-anchor="middle" fill="#2f6f4f">依赖前置 bean 存在</text>
+    <text x="760" y="160" font-size="8" text-anchor="middle" fill="#a1a1a6">与 OnMissingBean 相对</text>
+
+    <rect x="866" y="76" width="184" height="96" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+    <text x="958" y="99" font-size="9.2" font-weight="700" text-anchor="middle" fill="#12402a">@ConditionalOnWebApplication</text>
+    <text x="958" y="120" font-size="8.8" text-anchor="middle" fill="#2f6f4f">是 web 应用才配</text>
+    <text x="958" y="138" font-size="8.4" text-anchor="middle" fill="#2f6f4f">另有 @ConditionalOnThreading</text>
+    <text x="958" y="160" font-size="8" text-anchor="middle" fill="#a1a1a6">按 web 类型区分</text>
+  </g>
+
+  <!-- 实例 title -->
+  <text x="30" y="206" font-size="11" font-weight="700" fill="#1d1d1f">实例 · TomcatServletWebServerAutoConfiguration.java:53</text>
+
+  <!-- example: class level -->
+  <rect x="30" y="218" width="1020" height="86" rx="13" fill="#f5faf6" stroke="#cfe6d5" filter="url(#soft)"/>
+  <text x="46" y="241" font-size="10" font-weight="700" fill="#1a5a38">类级条件</text>
+  <text x="46" y="263" font-size="9.2" fill="#12402a"><tspan font-weight="600">@AutoConfiguration</tspan>　+　<tspan font-weight="600">@ConditionalOnClass({ ServletRequest, Tomcat, TomcatServletWebServerFactory })</tspan></text>
+  <text x="46" y="285" font-size="8.8" fill="#2f6f4f">→ classpath 上同时有 ServletRequest、Tomcat、TomcatServletWebServerFactory 三个类,本自动配置类才整体生效。</text>
+  <text x="46" y="299" font-size="8" fill="#a1a1a6">缺任一类整块跳过,不装配任何 bean。</text>
+
+  <!-- arrow down -->
+  <path d="M540,304 L540,330" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <!-- example: bean level -->
+  <rect x="30" y="334" width="1020" height="86" rx="13" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="46" y="357" font-size="10" font-weight="700" fill="#12402a">bean 级条件</text>
+  <text x="46" y="379" font-size="9.2" fill="#12402a"><tspan font-weight="600">@Bean</tspan>　<tspan font-weight="600">@ConditionalOnMissingBean(ServletWebServerFactory.class)</tspan></text>
+  <text x="46" y="401" font-size="8.8" fill="#2f6f4f">→ 用户没自定义 ServletWebServerFactory 时,才配默认的 Tomcat web 服务器工厂;用户自定义即覆盖。</text>
+  <text x="46" y="415" font-size="8" fill="#a1a1a6">合起来:有 Tomcat 且用户没自定义,才配默认 web 服务器工厂。</text>
+
+  <!-- why -->
+  <rect x="30" y="446" width="1020" height="64" rx="12" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="46" y="468" font-size="10.5" font-weight="700" fill="#1d1d1f">为什么条件</text>
+  <text x="46" y="488" font-size="9" fill="#6e6e73">让自动配置「聪明」——只在合适时装配、给合理默认、允许用户覆盖,这就是「约定优于配置」的实现。</text>
+  <text x="46" y="504" font-size="9" fill="#a1a1a6">误区:自动配置不可改。@ConditionalOnMissingBean 让用户自定义 bean 即覆盖默认;也可 exclude、可配属性调整。</text>
+</svg>

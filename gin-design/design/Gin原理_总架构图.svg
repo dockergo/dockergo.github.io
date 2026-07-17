@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="800" viewBox="0 0 1080 800" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs><filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+  <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker></defs>
+  <rect width="1080" height="800" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Gin 核心原理 · 总架构图（位置即语义）</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">高性能 Go Web 框架:薄封装 net/http,radix 树路由 + Context 对象池 + 索引式中间件链,低分配高吞吐</text>
+  <rect x="30" y="64" width="1020" height="40" rx="12" fill="#f4f2ee" stroke="#e3ddd2" stroke-dasharray="6 4"/>
+  <text x="540" y="89" font-size="10.5" font-weight="700" text-anchor="middle" fill="#6e6357">标准库 net/http(Server + goroutine-per-request)· Engine 实现 http.Handler,无缝嵌入</text>
+  <rect x="30" y="118" width="1020" height="46" rx="13" fill="#f4eefb" stroke="#d9c7ec"/>
+  <text x="46" y="141" font-size="11" fill="#3d2a5a"><tspan font-weight="700">① 接触面 · 路由注册 + Context API</tspan>　r.GET(path, handler) 注册 · c.Param/Query/Bind 读 · c.JSON/String 写</text>
+  <text x="46" y="157" font-size="8.6" fill="#8a6db3">开发者入口:一行注册路由 + 一个 c 读写请求响应</text>
+  <rect x="30" y="176" width="1020" height="56" rx="13" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="46" y="198" font-size="11" font-weight="700" fill="#1b2a4a">② 请求处理流程 · ServeHTTP</text>
+  <text x="46" y="220" font-size="8.8" fill="#274a78">pool.Get 取 Context → reset → handleHTTPRequest(按 method 选 radix 树 → getValue 匹配 + 提参数)→ c.Next() 跑链 → pool.Put 还</text>
+  <rect x="30" y="244" width="330" height="120" rx="13" fill="#e7f0fb" stroke="#b9d2ef"/>
+  <text x="46" y="266" font-size="11" font-weight="700" fill="#1b2a4a">③ 引擎与路由树(radix)</text>
+  <text x="46" y="286" font-size="8.5" fill="#274a78">每 method 一棵 radix 树</text>
+  <text x="46" y="303" font-size="8.5" fill="#274a78">node indices 首字节索引</text>
+  <text x="46" y="320" font-size="8.5" fill="#274a78">O(路径长)匹配(与路由数无关)</text>
+  <text x="46" y="337" font-size="8.5" fill="#274a78">:name param / *wildcard catchAll</text>
+  <text x="46" y="356" font-size="8" fill="#a1a1a6">gin.go / tree.go</text>
+  <rect x="375" y="244" width="330" height="120" rx="13" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="391" y="266" font-size="11" font-weight="700" fill="#12402a">④ Context 与对象池(灵魂)</text>
+  <text x="391" y="286" font-size="8.5" fill="#2f6f4f">sync.Pool 每请求复用 Context</text>
+  <text x="391" y="303" font-size="8.5" fill="#2f6f4f">reset [:0] 复用 backing array</text>
+  <text x="391" y="320" font-size="8.5" fill="#2f6f4f">零重分配(近零 GC 压力)</text>
+  <text x="391" y="337" font-size="8.5" fill="#2f6f4f">承载 req/resp/params/Keys/index</text>
+  <text x="391" y="356" font-size="8" fill="#a1a1a6">context.go:61 / gin.go:229</text>
+  <rect x="720" y="244" width="330" height="120" rx="13" fill="#fff7e6" stroke="#e8cf9a"/>
+  <text x="736" y="266" font-size="11" font-weight="700" fill="#5a3410">⑤ 中间件链(洋葱模型)</text>
+  <text x="736" y="286" font-size="8.5" fill="#93762e">HandlersChain + c.Next() int8 index</text>
+  <text x="736" y="303" font-size="8.5" fill="#93762e">index++ 跑下游、返回续跑</text>
+  <text x="736" y="320" font-size="8.5" fill="#93762e">Abort 设 index=63 中断</text>
+  <text x="736" y="337" font-size="8.5" fill="#93762e">Use 注册,执行序=注册序</text>
+  <text x="736" y="356" font-size="8" fill="#a1a1a6">context.go:198</text>
+  <rect x="30" y="376" width="330" height="110" rx="13" fill="#f4eefb" stroke="#d9c7ec"/>
+  <text x="46" y="398" font-size="11" font-weight="700" fill="#3d2a5a">⑥ 绑定与渲染</text>
+  <text x="46" y="418" font-size="8.5" fill="#8a6db3">binding 按 Content-Type 自动绑</text>
+  <text x="46" y="435" font-size="8.5" fill="#8a6db3">JSON/form/XML + validator/v10</text>
+  <text x="46" y="452" font-size="8.5" fill="#8a6db3">render 按类型渲染 + 内容协商</text>
+  <text x="46" y="470" font-size="8" fill="#a1a1a6">binding/ · render/</text>
+  <rect x="375" y="376" width="330" height="110" rx="13" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="391" y="398" font-size="11" font-weight="700" fill="#1b2a4a">⑦ RouterGroup</text>
+  <text x="391" y="418" font-size="8.5" fill="#274a78">前缀共享 + 中间件继承</text>
+  <text x="391" y="435" font-size="8.5" fill="#274a78">/api 组挂鉴权组内共享</text>
+  <text x="391" y="452" font-size="8.5" fill="#274a78">嵌套前缀累积 /api/v1</text>
+  <text x="391" y="470" font-size="8" fill="#a1a1a6">routergroup.go:55</text>
+  <rect x="720" y="376" width="330" height="110" rx="13" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="736" y="398" font-size="11" font-weight="700" fill="#12402a">handler 执行</text>
+  <text x="736" y="418" font-size="8.5" fill="#2f6f4f">c.Bind 读请求 → 业务逻辑</text>
+  <text x="736" y="435" font-size="8.5" fill="#2f6f4f">→ c.JSON 写响应</text>
+  <text x="736" y="452" font-size="8.5" fill="#2f6f4f">链最内层(中间件包裹)</text>
+  <text x="736" y="470" font-size="8" fill="#a1a1a6">见接触面/绑定渲染</text>
+  <rect x="30" y="498" width="1020" height="44" rx="13" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="540" y="525" font-size="10.5" font-weight="700" text-anchor="middle" fill="#5a3410">响应写回 net/http → 客户端 · pool.Put 还 Context 供下请求复用</text>
+  <line x1="540" y1="104" x2="540" y2="118" stroke="#86868b" stroke-width="1.6" marker-end="url(#ar)"/>
+  <line x1="540" y1="164" x2="540" y2="176" stroke="#86868b" stroke-width="1.4" marker-end="url(#ar)"/>
+  <line x1="540" y1="232" x2="540" y2="244" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="540" y1="486" x2="540" y2="498" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <rect x="30" y="554" width="1020" height="46" rx="12" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="46" y="576" font-size="11" font-weight="700" fill="#1d1d1f">位置即语义</text>
+  <text x="46" y="592" font-size="8.6" fill="#6e6e73">顶=net/http(外部);①接触面;②请求流程;③~⑦五能力域(路由树/Context池/中间件链/绑定渲染/RouterGroup);底=响应+还池。薄封装 net/http。</text>
+  <rect x="30" y="612" width="1020" height="42" rx="12" fill="#f0f0f4" stroke="#d2d2d7"/>
+  <text x="540" y="638" font-size="10" font-weight="700" text-anchor="middle" fill="#48484a">贯穿层 · Context 对象池 —— 每请求从池取一个 Context 贯穿始终(承载状态、还池复用),低分配是它带来的</text>
+  <rect x="30" y="666" width="1020" height="66" rx="13" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="46" y="686" font-size="10" font-weight="700" fill="#12402a">三条贯穿声明</text>
+  <text x="46" y="704" font-size="8.5" fill="#2f6f4f">① 薄封装 net/http 不重造(Engine 实现 http.Handler)　② radix 树路由 O(路径长)匹配 + :param/*wildcard 路径参数</text>
+  <text x="46" y="720" font-size="8.5" fill="#2f6f4f">③ Context 对象池 + 索引式中间件链 = 低分配高吞吐(sync.Pool 复用 + reset [:0] 复用 backing array + int8 index 推进)</text>
+  <text x="30" y="762" font-size="9" fill="#a1a1a6">源码基准 Gin v1.12.0(git 34dac20)· flat package gin + binding//render/ · httprouter 派生 radix 树</text>
+</svg>

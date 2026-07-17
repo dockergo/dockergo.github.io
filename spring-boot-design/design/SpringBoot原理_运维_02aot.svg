@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="520" viewBox="0 0 1080 520" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="520" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Spring Boot AOT · 构建期提前处理（把动态装配变生成代码）</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">构建期把条件判断/反射/代理算好、生成初始化代码——运行时直接执行，无反射开销，启动快</text>
+
+  <!-- Build-time zone -->
+  <rect x="30" y="70" width="1020" height="230" rx="14" fill="#fbeaea" stroke="#e7c3c3" filter="url(#soft)"/>
+  <text x="48" y="94" font-size="12" font-weight="700" fill="#4a1414">构建期（build time）</text>
+
+  <!-- entry -->
+  <rect x="48" y="110" width="300" height="170" rx="12" fill="#ffffff" stroke="#eecccc"/>
+  <text x="198" y="136" font-size="10.5" font-weight="700" text-anchor="middle" fill="#4a1414">① 构建入口</text>
+  <text x="198" y="158" font-size="9.6" text-anchor="middle" fill="#7a2a2a">SpringApplicationAotProcessor</text>
+  <text x="198" y="176" font-size="8.8" text-anchor="middle" fill="#a1a1a6">extends ContextAotProcessor</text>
+  <text x="198" y="204" font-size="9.4" text-anchor="middle" fill="#7a2a2a">构建期跑应用 main</text>
+  <text x="198" y="224" font-size="9.4" text-anchor="middle" fill="#7a2a2a">AotProcessorHook 捕获上下文</text>
+  <text x="198" y="252" font-size="8.8" text-anchor="middle" fill="#a1a1a6">SpringApplicationAotProcessor.java:43</text>
+  <text x="198" y="272" font-size="8.8" text-anchor="middle" fill="#a1a1a6">生成 __ApplicationContextInitializer</text>
+
+  <path d="M348,195 L392,195" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <!-- processors -->
+  <rect x="394" y="110" width="320" height="170" rx="12" fill="#ffffff" stroke="#eecccc"/>
+  <text x="554" y="136" font-size="10.5" font-weight="700" text-anchor="middle" fill="#4a1414">② AOT 处理器</text>
+  <text x="554" y="158" font-size="8.8" text-anchor="middle" fill="#a1a1a6">META-INF/spring/aot.factories:16</text>
+  <rect x="410" y="172" width="288" height="44" rx="9" fill="#fbeaea" stroke="#e7c3c3"/>
+  <text x="554" y="192" font-size="9" font-weight="700" text-anchor="middle" fill="#4a1414">ConfigurationProperties</text>
+  <text x="554" y="208" font-size="9" font-weight="700" text-anchor="middle" fill="#4a1414">BeanFactoryInitializationAotProcessor</text>
+  <text x="554" y="240" font-size="9.4" text-anchor="middle" fill="#7a2a2a">把配置属性绑定、bean 注册的</text>
+  <text x="554" y="260" font-size="9.4" text-anchor="middle" fill="#7a2a2a">动态逻辑变成生成代码</text>
+
+  <path d="M714,195 L758,195" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <!-- generated code -->
+  <rect x="760" y="110" width="272" height="170" rx="12" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="896" y="136" font-size="10.5" font-weight="700" text-anchor="middle" fill="#12402a">③ 生成初始化代码</text>
+  <text x="896" y="162" font-size="9.4" text-anchor="middle" fill="#2f6f4f">__ApplicationContextInitializer</text>
+  <text x="896" y="184" font-size="9.4" text-anchor="middle" fill="#2f6f4f">等初始化代码</text>
+  <text x="896" y="212" font-size="9" text-anchor="middle" fill="#a1a1a6">静态、可被 GraalVM 分析</text>
+  <text x="896" y="234" font-size="9" text-anchor="middle" fill="#a1a1a6">无运行时反射/条件判断</text>
+  <text x="896" y="262" font-size="9" text-anchor="middle" fill="#a1a1a6">直接执行装配</text>
+
+  <!-- transition arrow -->
+  <path d="M540,300 L540,332" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="640" y="322" font-size="9" text-anchor="middle" fill="#a1a1a6">生成物随包发布 → 运行期使用</text>
+
+  <!-- Runtime zone -->
+  <rect x="30" y="336" width="1020" height="102" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="48" y="360" font-size="12" font-weight="700" fill="#1b2a4a">运行期（runtime）· 开关</text>
+  <rect x="48" y="372" width="500" height="54" rx="10" fill="#f3f7fc" stroke="#cfe0f2"/>
+  <text x="298" y="394" font-size="10" font-weight="700" text-anchor="middle" fill="#274a78">AotDetector.useGeneratedArtifacts()</text>
+  <text x="298" y="414" font-size="8.8" text-anchor="middle" fill="#5b7db1">SpringApplication.java:412</text>
+  <path d="M548,399 L616,399" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <rect x="618" y="372" width="414" height="54" rx="10" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="825" y="394" font-size="10" font-weight="700" text-anchor="middle" fill="#12402a">用生成的初始化代码跳过运行时 bean 定义扫描</text>
+  <text x="825" y="414" font-size="8.8" text-anchor="middle" fill="#2f6f4f">运行时直接执行生成代码，无反射开销</text>
+
+  <!-- Why band -->
+  <rect x="30" y="454" width="1020" height="52" rx="12" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="540" y="485" font-size="10.5" font-weight="700" text-anchor="middle" fill="#1d1d1f">为什么 AOT：把“运行时才算的装配”挪到构建期算好、生成代码——启动快、可被 GraalVM 静态分析</text>
+</svg>

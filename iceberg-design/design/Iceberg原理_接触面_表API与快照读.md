@@ -1,6 +1,6 @@
 # Iceberg 原理 · 接触面主线 · 表 API 与快照读
 
-> **定位**：属"接触面主线"(计算引擎可见)。Iceberg 的接触面是**表操作 API**:通过计算引擎(Spark/Trino/Flink)读写表、时间旅行读历史快照、DDL 演进。它不是给终端用户的 SQL,而是给引擎集成的库 API + catalog。调用【元数据树】遍历、【快照与提交】写、【扫描规划】读。源码基准 **Iceberg(f2875fd)**(`api/`、`core/`)。
+> **定位**：属"接触面主线"(计算引擎可见)。Iceberg 的接触面是**表操作 API**:通过计算引擎(Spark/Trino/Flink)读写表、时间旅行读历史快照、DDL 演进。它不是给终端用户的 SQL,而是给引擎集成的库 API + catalog。调用【元数据树】遍历、【快照与提交】写、【扫描规划】读。源码基准 **Iceberg(apache/iceberg main · commit 6ec1a01)**(`api/`、`core/`)。
 
 Iceberg 怎么被用?**不直接面向终端用户**——它是链接进 Spark/Trino/Flink 的库,引擎通过 Iceberg 的表 API + catalog 读写表。用户写的 SQL 在引擎里执行,引擎调 Iceberg 做元数据操作(找文件、提交快照)。所以 Iceberg 的"接触面"是引擎集成层:catalog(找表)、TableScan(读)、SnapshotProducer(写)、时间旅行(读历史)。
 

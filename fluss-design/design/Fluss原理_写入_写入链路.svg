@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="420" viewBox="0 0 980 420" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="980" height="420" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">写入链路 · 从 Table API 到桶副本</text>
+  <text x="30" y="52" font-size="10.5" fill="#a1a1a6">客户端攒批 → 独立 IO 线程发送 → 服务端定位副本并追加，全程按 bucket 组织</text>
+
+  <!-- arrows -->
+  <path d="M168,210 L186,210" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M324,210 L342,210" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M480,210 L498,210" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M636,210 L654,210" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M792,210 L810,210" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <!-- A 客户端 API 紫 -->
+  <rect x="30" y="125" width="138" height="170" rx="12" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="42" y="151" font-size="11.5" font-weight="600" fill="#3d2a5a">A 客户端 API</text>
+  <text x="42" y="175" font-size="10.5" fill="#3d2a5a">FlussTable</text>
+  <text x="42" y="195" font-size="10.5" fill="#3d2a5a">.newAppend()</text>
+  <text x="42" y="215" font-size="10.5" fill="#3d2a5a">.newUpsert()</text>
+  <text x="42" y="238" font-size="10.5" fill="#7a5aa6">构造写入器</text>
+  <text x="42" y="278" font-size="9" fill="#9a86bd">client/table/writer</text>
+
+  <!-- B RecordAccumulator 蓝 -->
+  <rect x="186" y="125" width="138" height="170" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="198" y="151" font-size="11.5" font-weight="600" fill="#1b2a4a">B RecordAccumulator</text>
+  <text x="198" y="175" font-size="10.5" fill="#1b2a4a">按 bucket 攒批</text>
+  <text x="198" y="195" font-size="10.5" fill="#1b2a4a">ArrowLog-</text>
+  <text x="198" y="215" font-size="10.5" fill="#1b2a4a">WriteBatch</text>
+  <text x="198" y="238" font-size="10.5" fill="#5b7db1">列存内存缓冲</text>
+  <text x="198" y="278" font-size="9" fill="#8aa5cf">RecordAccumulator.java:177</text>
+
+  <!-- C Sender 蓝 -->
+  <rect x="342" y="125" width="138" height="170" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="354" y="151" font-size="11.5" font-weight="600" fill="#1b2a4a">C Sender</text>
+  <text x="354" y="175" font-size="10.5" fill="#1b2a4a">独立 IO 线程</text>
+  <text x="354" y="195" font-size="10.5" fill="#1b2a4a">drain 后发送</text>
+  <text x="354" y="215" font-size="10.5" fill="#1b2a4a">PRODUCE_LOG</text>
+  <text x="354" y="238" font-size="10.5" fill="#5b7db1">异步不阻塞主线程</text>
+  <text x="354" y="278" font-size="9" fill="#8aa5cf">Sender.java:177</text>
+
+  <!-- D Netty RPC 淡蓝 -->
+  <rect x="498" y="125" width="138" height="170" rx="12" fill="#f3f7fc" stroke="#cfe0f2" filter="url(#soft)"/>
+  <text x="510" y="151" font-size="11.5" font-weight="600" fill="#274a78">D Netty RPC</text>
+  <text x="510" y="175" font-size="10.5" fill="#274a78">ApiKeys 协议</text>
+  <text x="510" y="195" font-size="10.5" fill="#274a78">PRODUCE_LOG</text>
+  <text x="510" y="215" font-size="10.5" fill="#274a78">(1014)</text>
+  <text x="510" y="238" font-size="10.5" fill="#5b7db1">二进制帧传输</text>
+  <text x="510" y="278" font-size="9" fill="#8aa5cf">跨节点通信</text>
+
+  <!-- E TabletService 琥珀 -->
+  <rect x="654" y="125" width="138" height="170" rx="12" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="666" y="151" font-size="11.5" font-weight="600" fill="#5a3410">E TabletService</text>
+  <text x="666" y="175" font-size="10.5" fill="#5a3410">produceLog</text>
+  <text x="666" y="195" font-size="10.5" fill="#5a3410">服务端入口</text>
+  <text x="666" y="215" font-size="10.5" fill="#5a3410">路由到副本</text>
+  <text x="666" y="238" font-size="10.5" fill="#93762e">解码并校验请求</text>
+  <text x="666" y="278" font-size="9" fill="#b39456">TabletService.java:207</text>
+
+  <!-- F Replica 琥珀 -->
+  <rect x="810" y="125" width="138" height="170" rx="12" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="822" y="151" font-size="11.5" font-weight="600" fill="#5a3410">F Replica</text>
+  <text x="822" y="175" font-size="10.5" fill="#5a3410">appendRecords-</text>
+  <text x="822" y="195" font-size="10.5" fill="#5a3410">ToLeader</text>
+  <text x="822" y="215" font-size="10.5" fill="#93762e">→ LogTablet</text>
+  <text x="822" y="235" font-size="10.5" fill="#93762e">→ KvTablet</text>
+  <text x="822" y="278" font-size="9" fill="#b39456">Replica.java:1037</text>
+
+  <!-- bottom note -->
+  <rect x="30" y="335" width="918" height="44" rx="10" fill="#ffffff" stroke="#ececf1"/>
+  <text x="46" y="362" font-size="10.5" fill="#6e6e73"><tspan font-weight="600" fill="#3d2a5a">幂等基线</tspan>　writerId 在首次写入前经 INIT_WRITER(1026) 申请，服务端据 writerId + batchSequence 去重 · IdempotenceManager.java:314</text>
+</svg>

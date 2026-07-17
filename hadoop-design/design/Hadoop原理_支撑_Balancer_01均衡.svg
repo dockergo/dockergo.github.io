@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="440" viewBox="0 0 920 440"
+     font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="920" height="440" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">Balancer:把块从满节点搬到空节点,均衡磁盘利用率(不改副本数)</text>
+
+  <text x="30" y="60" font-size="10" fill="#86868b">Balancer.java:187 · 按 BalancingPolicy(默认 Node 级,:369)计算集群平均利用率,分类节点后配对搬块</text>
+
+  <!-- 均衡前 -->
+  <rect x="30" y="76" width="410" height="200" rx="13" fill="#fdf3f2" stroke="#f0c9c2"/>
+  <text x="235" y="100" font-size="11.5" font-weight="600" fill="#c4341c" text-anchor="middle">均衡前(利用率不均)</text>
+  <!-- 柱状 -->
+  <rect x="70" y="130" width="70" height="110" rx="5" fill="#f4f4f6" stroke="#e2e2e7"/>
+  <rect x="70" y="140" width="70" height="100" rx="5" fill="#f7c5bd" stroke="#f0c9c2"/>
+  <text x="105" y="256" font-size="8.5" fill="#c4341c" text-anchor="middle">DN1 90%(过载)</text>
+  <rect x="175" y="130" width="70" height="110" rx="5" fill="#f4f4f6" stroke="#e2e2e7"/>
+  <rect x="175" y="150" width="70" height="90" rx="5" fill="#f7c5bd" stroke="#f0c9c2"/>
+  <text x="210" y="256" font-size="8.5" fill="#c4341c" text-anchor="middle">DN2 82%(过载)</text>
+  <rect x="280" y="130" width="70" height="110" rx="5" fill="#f4f4f6" stroke="#e2e2e7"/>
+  <rect x="280" y="215" width="70" height="25" rx="5" fill="#cdeeda" stroke="#bce6cd"/>
+  <text x="315" y="256" font-size="8.5" fill="#0f5132" text-anchor="middle">DN3 18%(欠载)</text>
+  <rect x="373" y="130" width="50" height="110" rx="5" fill="#f4f4f6" stroke="#e2e2e7"/>
+  <rect x="373" y="222" width="50" height="18" rx="5" fill="#cdeeda" stroke="#bce6cd"/>
+  <text x="398" y="256" font-size="8" fill="#0f5132" text-anchor="middle">DN4 12%</text>
+
+  <!-- 均衡后 -->
+  <rect x="480" y="76" width="410" height="200" rx="13" fill="#f5faf6" stroke="#e2ece5"/>
+  <text x="685" y="100" font-size="11.5" font-weight="600" fill="#2c5a3a" text-anchor="middle">均衡后(差 ≤ threshold 10%)</text>
+  <rect x="520" y="130" width="70" height="110" rx="5" fill="#f4f4f6" stroke="#e2e2e7"/>
+  <rect x="520" y="180" width="70" height="60" rx="5" fill="#cdeeda" stroke="#bce6cd"/>
+  <text x="555" y="256" font-size="8.5" fill="#0f5132" text-anchor="middle">DN1 52%</text>
+  <rect x="625" y="130" width="70" height="110" rx="5" fill="#f4f4f6" stroke="#e2e2e7"/>
+  <rect x="625" y="182" width="70" height="58" rx="5" fill="#cdeeda" stroke="#bce6cd"/>
+  <text x="660" y="256" font-size="8.5" fill="#0f5132" text-anchor="middle">DN2 50%</text>
+  <rect x="730" y="130" width="70" height="110" rx="5" fill="#f4f4f6" stroke="#e2e2e7"/>
+  <rect x="730" y="185" width="70" height="55" rx="5" fill="#cdeeda" stroke="#bce6cd"/>
+  <text x="765" y="256" font-size="8.5" fill="#0f5132" text-anchor="middle">DN3 48%</text>
+  <rect x="823" y="130" width="50" height="110" rx="5" fill="#f4f4f6" stroke="#e2e2e7"/>
+  <rect x="823" y="188" width="50" height="52" rx="5" fill="#cdeeda" stroke="#bce6cd"/>
+  <text x="848" y="256" font-size="8" fill="#0f5132" text-anchor="middle">DN4 46%</text>
+
+  <path d="M440,176 L480,176" stroke="#c7c7cc" stroke-width="2" fill="none" marker-end="url(#ar)"/>
+  <text x="460" y="168" font-size="8.5" fill="#86868b" text-anchor="middle">搬块</text>
+
+  <!-- 规则 -->
+  <rect x="30" y="292" width="860" height="130" rx="13" fill="#fff7e6" stroke="#f0dcae"/>
+  <text x="48" y="316" font-size="11.5" font-weight="600" fill="#7a4d00">搬块规则</text>
+  <text x="48" y="340" font-size="9.2" fill="#9a7328">· chooseStorageGroups(Balancer.java:578):优先配对同机架的 over→under(省跨机架带宽),再跨机架</text>
+  <text x="48" y="362" font-size="9.2" fill="#9a7328">· 不破坏放置策略:不能把两副本挪到同机架冲突;成功复制到 under 后删原副本(副本数不变)</text>
+  <text x="48" y="384" font-size="9.2" fill="#9a7328">· 限流:dfs.datanode.balance.bandwidthPerSec 控带宽,不影响正常读写;达 threshold(默认10%)即停</text>
+  <text x="48" y="406" font-size="9.2" fill="#c4341c">· 是按需运行的工具(非常驻);扩容后必跑一次,新写入会再打破均衡 → 需周期性运行</text>
+</svg>

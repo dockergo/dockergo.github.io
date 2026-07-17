@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="560" viewBox="0 0 1080 560" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="560" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="700" fill="#1d1d1f">乐观并发控制(OCC)· 重试循环 + 冲突检测</text>
+  <text x="30" y="49" font-size="9.5" fill="#a1a1a6">对象存储无锁,OCC 假设冲突少:每次尝试重读 base、重建 metadata、再 CAS · SnapshotProducer.commit :485</text>
+
+  <!-- retry loop -->
+  <text x="30" y="82" font-size="11" font-weight="700" fill="#12402a">commit 重试循环 Tasks.foreach(ops).retry(N).exponentialBackoff().onlyRetryOn(CommitFailedException)</text>
+  <g text-anchor="middle" font-size="9">
+    <rect x="50" y="98" width="170" height="56" rx="11" fill="#f5faf6" stroke="#cfe6d5"/><text x="135" y="120" font-weight="700" fill="#12402a">apply()</text><text x="135" y="138" font-size="8" fill="#2f6f4f">重读 base + 重建 metadata</text>
+    <rect x="280" y="98" width="170" height="56" rx="11" fill="#e7f0fb" stroke="#b9d2ef"/><text x="365" y="120" font-weight="700" fill="#1b2a4a">runValidations</text><text x="365" y="138" font-size="8" fill="#5b7db1">冲突检测(:300)</text>
+    <rect x="510" y="98" width="170" height="56" rx="11" fill="#e7f0fb" stroke="#b9d2ef"/><text x="595" y="120" font-weight="700" fill="#1b2a4a">CAS 提交</text><text x="595" y="138" font-size="8" fill="#5b7db1">换 metadata 指针</text>
+    <rect x="740" y="98" width="170" height="56" rx="11" fill="#f5faf6" stroke="#cfe6d5"/><text x="825" y="120" font-weight="700" fill="#12402a">成功</text><text x="825" y="138" font-size="8" fill="#2f6f4f">退出循环</text>
+  </g>
+  <line x1="220" y1="126" x2="280" y2="126" stroke="#b8b8bf" stroke-width="1.4" marker-end="url(#ar)"/>
+  <line x1="450" y1="126" x2="510" y2="126" stroke="#b8b8bf" stroke-width="1.4" marker-end="url(#ar)"/>
+  <line x1="680" y1="126" x2="740" y2="126" stroke="#b8b8bf" stroke-width="1.4" marker-end="url(#ar)"/>
+  <!-- retry back arrow -->
+  <path d="M595,154 C595,190 135,190 135,158" fill="none" stroke="#d99" stroke-width="1.4" stroke-dasharray="5 4" marker-end="url(#ar)"/>
+  <text x="365" y="184" font-size="8.4" text-anchor="middle" fill="#a85560">CommitFailedException(base 过时)→ 重试(指数退避)</text>
+
+  <!-- two exception types -->
+  <rect x="30" y="212" width="500" height="150" rx="12" fill="#f6f8fc" stroke="#dbe6f3"/>
+  <text x="46" y="236" font-size="10.5" font-weight="700" fill="#1b2a4a">CommitFailedException → 重试</text>
+  <text x="46" y="260" font-size="9.3" fill="#5b7db1">含义:base 过时(有人先提交了)</text>
+  <text x="46" y="280" font-size="9.3" fill="#5b7db1">动作:re-apply 重读 base 再试</text>
+  <text x="46" y="300" font-size="9.3" fill="#5b7db1">因 apply 重新 refresh,能看到并发已提交快照</text>
+  <text x="46" y="322" font-size="8.6" fill="#4a6fa0">大多数提交无冲突,一次成功</text>
+  <text x="46" y="342" font-size="8.6" fill="#4a6fa0">这不是数据错,是正常的乐观信号</text>
+
+  <rect x="550" y="212" width="500" height="150" rx="12" fill="#f9ecec" stroke="#e8c9c9"/>
+  <text x="566" y="236" font-size="10.5" font-weight="700" fill="#7a2230">ValidationException → 失败(不重试)</text>
+  <text x="566" y="260" font-size="9.3" fill="#a85560">含义:真冲突(并发写了冲突数据)</text>
+  <text x="566" y="280" font-size="9.3" fill="#a85560">validateAddedDataFiles 扫起始→当前之间</text>
+  <text x="566" y="300" font-size="9.3" fill="#a85560">新增、匹配分区/冲突过滤的 data file</text>
+  <text x="566" y="322" font-size="8.6" fill="#c07882">有则抛 "Found conflicting files"(MergingSnapshotProducer.java:363,:371)</text>
+  <text x="566" y="342" font-size="8.6" fill="#c07882">重试也无用,直接失败让上层处理</text>
+
+  <!-- isolation -->
+  <rect x="30" y="378" width="1020" height="70" rx="12" fill="#f4eefb" stroke="#d9c7ec"/>
+  <text x="46" y="402" font-size="10.5" font-weight="700" fill="#3d2a5a">隔离级别 = 注册哪些 validation 决定</text>
+  <text x="46" y="424" font-size="9.3" fill="#8a6db3">SERIALIZABLE(严格,更多 validation:overwrite 加冲突过滤器)vs SNAPSHOT(宽松)</text>
+  <text x="46" y="442" font-size="9.3" fill="#8a6db3">真冲突抛 ValidationException(失败不重试),仅 CommitFailedException(base 过时)才重试</text>
+
+  <rect x="30" y="464" width="1020" height="76" rx="12" fill="#f0f0f4" stroke="#d2d2d7"/>
+  <text x="46" y="488" font-size="10" font-weight="700" fill="#48484a">为什么 OCC 而非锁</text>
+  <text x="46" y="509" font-size="9" fill="#6e6e73">对象存储无锁,悲观锁不可行;OCC 假设冲突少 —— 大多数提交一次成功,写不同分区互不干扰。</text>
+  <text x="46" y="527" font-size="9" fill="#6e6e73">写同分区/同文件才可能冲突;高并发同热点写场景需调大 commit.retry.num-retries 或按写入模式重新分区。</text>
+</svg>

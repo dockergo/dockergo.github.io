@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="530" viewBox="0 0 1080 530" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1080" height="530" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">ORC 列统计 · 布隆过滤器补等值查询</text>
+  <text x="30" y="50" font-size="12" fill="#a1a1a6">min/max 处理不了 col=5 (5 在范围内可能不存在);布隆判块内有没有 5;只等值/IN 有用</text>
+
+  <!-- problem: col=5 -->
+  <rect x="60" y="74" width="300" height="110" rx="12" fill="#fbeaea" stroke="#e7c3c3" filter="url(#soft)"/>
+  <text x="210" y="100" font-size="12" font-weight="600" fill="#4a1414" text-anchor="middle">min/max 处理不了 col = 5</text>
+  <text x="210" y="126" font-size="10" fill="#7a2a2a" text-anchor="middle">范围 [1, 100] 里 5 落在范围内</text>
+  <text x="210" y="147" font-size="10" fill="#7a2a2a" text-anchor="middle">但 5 可能根本不存在</text>
+  <text x="210" y="170" font-size="10" fill="#7a2a2a" text-anchor="middle">范围统计剪不掉这块</text>
+
+  <path d="M360,129 L416,129" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="388" y="121" font-size="9" fill="#a1a1a6" text-anchor="middle">补位</text>
+
+  <!-- bloom entry -->
+  <rect x="420" y="74" width="600" height="110" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="720" y="100" font-size="12" font-weight="600" fill="#12402a" text-anchor="middle">布隆过滤器 &#8212; 可选,每列每 row group 一个 (默认 10000 行)</text>
+  <text x="720" y="126" font-size="10" fill="#2f6f4f" text-anchor="middle">只对通过 min/max 的 row group 再查布隆</text>
+  <text x="720" y="148" font-size="10" fill="#2f6f4f" text-anchor="middle">写侧按 getBloomFilterColumns()[id] 决定哪列建 (TreeWriterBase.java:92)</text>
+  <text x="720" y="170" font-size="10" fill="#2f6f4f" text-anchor="middle">stream kind BLOOM_FILTER / BLOOM_FILTER_UTF8 在 index area</text>
+
+  <!-- implementation -->
+  <rect x="60" y="212" width="470" height="150" rx="12" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="295" y="238" font-size="12" font-weight="600" fill="#5a3410" text-anchor="middle">实现 (BloomFilter.java:37)</text>
+  <text x="295" y="264" font-size="10" fill="#93762e" text-anchor="middle">Murmur3 64 位哈希 + Kirsch 双哈希技巧</text>
+  <text x="295" y="285" font-size="10" fill="#93762e" text-anchor="middle">跑 k 个哈希函数</text>
+  <text x="295" y="308" font-size="10" fill="#93762e" text-anchor="middle">optimalNumOfHashFunctions 按 FPP 定 k</text>
+  <text x="295" y="331" font-size="10.5" font-weight="600" fill="#5a3410" text-anchor="middle">默认 FPP = 0.01 (OrcConf.java:99)</text>
+  <text x="295" y="352" font-size="9.5" fill="#93762e" text-anchor="middle">proto: numHashFunctions + utf8bitset</text>
+
+  <!-- semantics -->
+  <rect x="550" y="212" width="470" height="150" rx="12" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="785" y="238" font-size="12" font-weight="600" fill="#1d1d1f" text-anchor="middle">语义:说无一定无,说有可能有</text>
+
+  <rect x="570" y="256" width="200" height="88" rx="10" fill="#fbeaea" stroke="#e7c3c3"/>
+  <text x="670" y="282" font-size="11" font-weight="600" fill="#4a1414" text-anchor="middle">说 "无 5"</text>
+  <text x="670" y="304" font-size="9.5" fill="#7a2a2a" text-anchor="middle">一定无 → 确定跳过</text>
+  <text x="670" y="325" font-size="9" fill="#7a2a2a" text-anchor="middle">无假阴性</text>
+
+  <rect x="800" y="256" width="200" height="88" rx="10" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="900" y="282" font-size="11" font-weight="600" fill="#5a3410" text-anchor="middle">说 "有 5"</text>
+  <text x="900" y="304" font-size="9.5" fill="#93762e" text-anchor="middle">可能有 → 读进精确判</text>
+  <text x="900" y="325" font-size="9" fill="#93762e" text-anchor="middle">假阳性 FPP 0.01</text>
+
+  <text x="540" y="402" font-size="9.5" fill="#a1a1a6" text-anchor="middle">布隆只对等值 / IN 查询有用 (范围查询用 min/max);FPP 调小假阳性少但布隆大,调大反之</text>
+  <text x="540" y="424" font-size="9.5" fill="#a1a1a6" text-anchor="middle">只给等值/IN 高频过滤列建布隆;范围过滤列 min/max 已够,建布隆无用还占空间</text>
+</svg>

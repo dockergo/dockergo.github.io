@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="440" viewBox="0 0 900 440" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="900" height="440" fill="#fbfbfd"/>
+  <text x="30" y="32" font-size="14" font-weight="600" fill="#1d1d1f">Service 数据面 · 稳定虚 IP → 当前后端 → 每节点整表转发规则</text>
+
+  <!-- client -->
+  <rect x="30" y="120" width="130" height="70" rx="11" fill="#f7f7f9" stroke="#ececef"/>
+  <text x="95" y="150" font-size="12" font-weight="600" fill="#1d1d1f" text-anchor="middle">访问方</text>
+  <text x="95" y="170" font-size="10.5" fill="#6e6e73" text-anchor="middle">连 ClusterIP:port</text>
+
+  <!-- Service -->
+  <rect x="200" y="110" width="180" height="90" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="290" y="136" font-size="12.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">Service (ClusterIP)</text>
+  <text x="290" y="158" font-size="10.5" fill="#5b7db1" text-anchor="middle">稳定虚 IP + 负载均衡</text>
+  <text x="290" y="178" font-size="10.5" fill="#5b7db1" text-anchor="middle">selector 选中一组 Pod</text>
+
+  <!-- EndpointSlice -->
+  <rect x="420" y="110" width="180" height="90" rx="11" fill="#f5faf6" stroke="#cfe6d2" filter="url(#soft)"/>
+  <text x="510" y="136" font-size="12.5" font-weight="600" fill="#1d8f3f" text-anchor="middle">EndpointSlice</text>
+  <text x="510" y="158" font-size="10.5" fill="#4a8a5c" text-anchor="middle">当前就绪后端 IP:port</text>
+  <text x="510" y="178" font-size="10.5" fill="#4a8a5c" text-anchor="middle">后端漂移它持续反映</text>
+
+  <!-- Pods -->
+  <rect x="640" y="80" width="230" height="150" rx="12" fill="#ffffff" stroke="#ececef" filter="url(#soft)"/>
+  <text x="755" y="104" font-size="12.5" font-weight="600" fill="#1d1d1f" text-anchor="middle">后端 Pod（会生灭）</text>
+  <rect x="656" y="116" width="198" height="30" rx="6" fill="#f5faf6" stroke="#cfe6d2"/>
+  <text x="755" y="136" font-size="10.5" fill="#1d8f3f" text-anchor="middle">Pod 10.1.1.5 就绪</text>
+  <rect x="656" y="152" width="198" height="30" rx="6" fill="#f5faf6" stroke="#cfe6d2"/>
+  <text x="755" y="172" font-size="10.5" fill="#1d8f3f" text-anchor="middle">Pod 10.1.2.8 就绪</text>
+  <text x="755" y="206" font-size="10.5" fill="#6e6e73" text-anchor="middle">CNI 分配可路由 IP · Pod 间无 NAT 互通</text>
+
+  <path d="M160 155 L200 155" fill="none" stroke="#b8b8bf" stroke-width="1.5" marker-end="url(#ar)"/>
+  <path d="M380 155 L420 155" fill="none" stroke="#b8b8bf" stroke-width="1.4" stroke-dasharray="4 3" marker-end="url(#ar)"/>
+  <path d="M600 155 L640 155" fill="none" stroke="#b8b8bf" stroke-width="1.4" stroke-dasharray="4 3" marker-end="url(#ar)"/>
+
+  <!-- kube-proxy -->
+  <rect x="30" y="250" width="840" height="90" rx="12" fill="#faf4fb" stroke="#e4cdea"/>
+  <text x="46" y="274" font-size="12.5" font-weight="600" fill="#8944ab">kube-proxy（每节点 · 数据面）—— watch Service + EndpointSlice，节流地整表重刷</text>
+  <text x="46" y="300" font-size="11" fill="#8944ab">syncRunner BoundedFrequencyRunner 限频调 syncProxyRules（proxier.go:799）→ 不增量改单条，而是重算整张表</text>
+  <text x="46" y="322" font-size="11" fill="#8944ab">写进 buffer 后 iptables.RestoreAll 一次原子替换 NAT/filter 表（:1558）· 访问 ClusterIP 被 DNAT 到某后端 Pod（概率分摊）</text>
+
+  <text x="30" y="374" font-size="11.5" fill="#6e6e73"><tspan font-weight="600" fill="#1d1d1f">level-triggered：</tspan>kube-proxy 不追"哪条 endpoint 变了"，周期重算整表保证与期望一致（同 reconcile 哲学）</text>
+  <text x="30" y="398" font-size="11.5" fill="#6e6e73"><tspan font-weight="600" fill="#1d1d1f">对外暴露：</tspan>NodePort（每节点开端口）/ LoadBalancer（云 LB）/ Ingress（L7 按 host/path 路由到 Service）</text>
+  <text x="30" y="422" font-size="11.5" fill="#a1a1a6">大规模下 iptables 规则膨胀 → 改 IPVS（内核哈希表 O(1)）/ nftables 模式</text>
+</svg>

@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="540" viewBox="0 0 960 540"
+     font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="960" height="540" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">NameNode 全内存命名空间:FSNamesystem 持有目录树/块管理/租约三大件</text>
+
+  <!-- FSNamesystem 容器 -->
+  <rect x="30" y="52" width="500" height="460" rx="14" fill="#f3f7fc" stroke="#cfe0f2"/>
+  <text x="48" y="74" font-size="12" font-weight="600" fill="#1b2a4a">FSNamesystem · FSNamesystem.java:389(全局读写锁串行化)</text>
+
+  <rect x="48" y="88" width="464" height="150" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="66" y="110" font-size="11" font-weight="600" fill="#1b2a4a">① FSDirectory 目录树(FSDirectory.java:111)</text>
+  <!-- INode 树 -->
+  <rect x="220" y="122" width="120" height="26" rx="7" fill="#ffffff" stroke="#bcd0ec"/>
+  <text x="280" y="139" font-size="9" font-weight="600" fill="#1b2a4a" text-anchor="middle">/ rootDir(:158)</text>
+  <rect x="90" y="166" width="140" height="26" rx="7" fill="#ffffff" stroke="#bcd0ec"/>
+  <text x="160" y="183" font-size="8.5" fill="#1b2a4a" text-anchor="middle">INodeDirectory /user</text>
+  <rect x="330" y="166" width="150" height="26" rx="7" fill="#ffffff" stroke="#bcd0ec"/>
+  <text x="405" y="183" font-size="8.5" fill="#1b2a4a" text-anchor="middle">INodeDirectory /data</text>
+  <rect x="330" y="204" width="150" height="28" rx="7" fill="#e7eefb" stroke="#bcd0ec"/>
+  <text x="405" y="216" font-size="8.3" font-weight="600" fill="#1b2a4a" text-anchor="middle">INodeFile a.log</text>
+  <text x="405" y="227" font-size="7.8" fill="#5b7db1" text-anchor="middle">blocks=[blk_1, blk_2]</text>
+  <path d="M260,148 L170,166" stroke="#c7c7cc" stroke-width="1.3" fill="none" marker-end="url(#ar)"/>
+  <path d="M300,148 L400,166" stroke="#c7c7cc" stroke-width="1.3" fill="none" marker-end="url(#ar)"/>
+  <path d="M405,192 L405,204" stroke="#c7c7cc" stroke-width="1.3" fill="none" marker-end="url(#ar)"/>
+
+  <rect x="48" y="252" width="228" height="90" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="162" y="274" font-size="10.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">② BlockManager(:554)</text>
+  <rect x="64" y="284" width="196" height="46" rx="8" fill="#ffffff" stroke="#bcd0ec"/>
+  <text x="162" y="302" font-size="8.5" fill="#1b2a4a" text-anchor="middle">blocksMap: block↔DataNode</text>
+  <text x="162" y="318" font-size="8" fill="#5b7db1" text-anchor="middle">内存重建 · 不持久化</text>
+
+  <rect x="284" y="252" width="228" height="90" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="398" y="274" font-size="10.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">③ LeaseManager(:570)</text>
+  <rect x="300" y="284" width="196" height="46" rx="8" fill="#ffffff" stroke="#bcd0ec"/>
+  <text x="398" y="302" font-size="8.5" fill="#1b2a4a" text-anchor="middle">写文件的独占租约</text>
+  <text x="398" y="318" font-size="8" fill="#5b7db1" text-anchor="middle">软限 60s(LeaseManager.java:87)</text>
+
+  <rect x="48" y="356" width="464" height="140" rx="12" fill="#f7f7f9" stroke="#e2e2e7"/>
+  <text x="66" y="378" font-size="10.5" font-weight="600" fill="#1d1d1f">startFile 创建文件(FSNamesystem.java:2760→2781)</text>
+  <text x="66" y="400" font-size="9" fill="#494950">· 建 INodeFile 挂到目录树</text>
+  <text x="66" y="420" font-size="9" fill="#494950">· 授租约(LeaseManager)</text>
+  <text x="66" y="440" font-size="9" fill="#494950">· 写 EditLog 并 logSync 后才返回</text>
+  <text x="66" y="466" font-size="9" fill="#c4341c">关键:block→DataNode 位置不在这棵树里</text>
+  <text x="66" y="484" font-size="9" fill="#c4341c">→ 靠块汇报在 blocksMap 内存重建</text>
+
+  <!-- 右侧说明 -->
+  <rect x="556" y="52" width="374" height="200" rx="13" fill="#f4eefb" stroke="#d9c9ef" filter="url(#soft)"/>
+  <text x="743" y="76" font-size="12" font-weight="600" fill="#3c1361" text-anchor="middle">为什么全内存</text>
+  <text x="576" y="104" font-size="9.5" fill="#7c5aa6">· 元数据操作要求毫秒级、海量并发</text>
+  <text x="576" y="128" font-size="9.5" fill="#7c5aa6">· INodeMap 按 id O(1) 索引(:166)</text>
+  <text x="576" y="152" font-size="9.5" fill="#7c5aa6">· 代价:命名空间上限 = NameNode 堆</text>
+  <text x="576" y="176" font-size="9.5" fill="#7c5aa6">· 经验约每百万对象 ~1GB 堆</text>
+  <text x="576" y="204" font-size="9.5" fill="#7c5aa6">· 撑不下 → Federation 水平拆分</text>
+  <text x="576" y="228" font-size="9.5" fill="#7c5aa6">· 崩溃恢复靠 FsImage + EditLog</text>
+
+  <rect x="556" y="268" width="374" height="244" rx="13" fill="#fff7e6" stroke="#f0dcae"/>
+  <text x="743" y="292" font-size="11.5" font-weight="600" fill="#7a4d00" text-anchor="middle">元数据 vs 数据 的边界</text>
+  <rect x="576" y="306" width="334" height="86" rx="9" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="743" y="330" font-size="10" font-weight="600" fill="#7a4d00" text-anchor="middle">NameNode 持有(本图)</text>
+  <text x="743" y="350" font-size="8.8" fill="#9a7328" text-anchor="middle">目录/文件/块列表/权限/租约</text>
+  <text x="743" y="370" font-size="8.8" fill="#9a7328" text-anchor="middle">= 文件系统「长什么样」的权威</text>
+  <rect x="576" y="404" width="334" height="90" rx="9" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="743" y="428" font-size="10" font-weight="600" fill="#7a4d00" text-anchor="middle">DataNode 持有(不在本图)</text>
+  <text x="743" y="448" font-size="8.8" fill="#9a7328" text-anchor="middle">块字节 + 校验和</text>
+  <text x="743" y="468" font-size="8.8" fill="#9a7328" text-anchor="middle">= 块「实际在哪、内容是什么」</text>
+</svg>

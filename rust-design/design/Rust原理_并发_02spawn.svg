@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="530" viewBox="0 0 1080 530" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="530" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Rust thread::spawn 的 Send 边界 · 编译期挡住数据竞争</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">签名的 Send + 'static 边界是无畏并发的关键:进线程的东西必须线程安全且不悬垂 —— 非线程安全数据跨线程会编译错</text>
+
+  <!-- signature card (blue) -->
+  <rect x="40" y="78" width="1000" height="92" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="62" y="104" font-size="12.5" font-weight="600" fill="#1b2a4a">thread::spawn · library/std/src/thread/functions.rs:125</text>
+  <rect x="62" y="116" width="956" height="42" rx="8" fill="#ffffff" stroke="#cfe0f2"/>
+  <text x="540" y="137" font-size="10.5" font-weight="600" text-anchor="middle" fill="#1b2a4a">F: FnOnce()-&gt;T &#160;·&#160; F: Send + 'static &#160;·&#160; T: Send + 'static （functions.rs:127）</text>
+  <text x="540" y="152" font-size="9" text-anchor="middle" fill="#5b7db1">闭包和返回值必须 Send（可跨线程）且 'static（不借用短生命周期数据）</text>
+
+  <!-- left: Rc move (red - fail) -->
+  <rect x="40" y="188" width="500" height="150" rx="14" fill="#fbeaea" stroke="#e7c3c3" filter="url(#soft)"/>
+  <text x="62" y="214" font-size="12" font-weight="600" fill="#4a1414">Rc move 进闭包 → 编译错</text>
+  <text x="62" y="236" font-size="10" fill="#7a2a2a">Rc 是 !Send（非原子计数,只单线程）</text>
+  <text x="62" y="258" font-size="10" fill="#7a2a2a">move 进 spawn 闭包不满足 F: Send</text>
+  <rect x="62" y="272" width="456" height="30" rx="8" fill="#ffffff" stroke="#e7c3c3"/>
+  <text x="290" y="291" font-size="9.5" font-weight="600" text-anchor="middle" fill="#4a1414">编译期挡住:跨线程共享非线程安全数据</text>
+  <text x="62" y="324" font-size="9" fill="#7a2a2a">逼你改用 Arc（Send）—— 数据竞争编译期消除</text>
+
+  <!-- right: Arc move (green - ok) -->
+  <rect x="560" y="188" width="480" height="150" rx="14" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="582" y="214" font-size="12" font-weight="600" fill="#12402a">Arc move 进闭包 → 通过</text>
+  <text x="582" y="236" font-size="10" fill="#2f6f4f">Arc 是 Send（原子计数,可跨线程）</text>
+  <text x="582" y="258" font-size="10" fill="#2f6f4f">满足 F: Send + 'static 边界</text>
+  <rect x="582" y="272" width="436" height="30" rx="8" fill="#ffffff" stroke="#bfe0cd"/>
+  <text x="800" y="291" font-size="9.5" font-weight="600" text-anchor="middle" fill="#12402a">正道:用 Arc 共享所有权跨线程</text>
+  <text x="582" y="324" font-size="9" fill="#2f6f4f">编译器用 Send/Sync 强制,类型系统保证安全</text>
+
+  <!-- scoped thread (blue) -->
+  <rect x="40" y="356" width="1000" height="96" rx="14" fill="#f3f7fc" stroke="#cfe0f2" filter="url(#soft)"/>
+  <text x="62" y="382" font-size="12" font-weight="600" fill="#274a78">scoped thread · builder.rs:254 spawn_unchecked · 放松 'static</text>
+  <text x="62" y="404" font-size="10" fill="#5b7db1">可借用作用域内数据（不必 'static）—— 作用域保证线程在数据存活期内 join</text>
+  <text x="62" y="426" font-size="10" fill="#5b7db1">但仍要 Send —— 借用短生命周期数据会编译错,逼你 move 或用 scoped</text>
+
+  <text x="30" y="482" font-size="9.5" fill="#a1a1a6">为什么这边界:Send + 'static 保证"进线程的东西线程安全 + 不悬垂";用 Rc(!Send)编译错逼用 Arc —— 数据竞争编译期消除</text>
+  <text x="30" y="506" font-size="9" fill="#a1a1a6">依赖借用检查器的借用规则扩展到多线程 · 死锁/逻辑竞态不查 · 源码基准 Rust 1.99.0</text>
+</svg>

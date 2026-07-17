@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="540" viewBox="0 0 960 540"
+ font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="960" height="540" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="700" fill="#1d1d1f">ORC · positions[]:精确 seek 到 row group 起点</text>
+  <text x="40" y="56" font-size="10.5" fill="#6e6e73">row index 的 positions[] 记各 stream 该组起点，读端可直接 seek 到任意 row group，不必从 stripe 头顺读</text>
+
+  <!-- ROW_INDEX 条目卡 -->
+  <rect x="40" y="90" width="230" height="196" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="56" y="112" font-size="11.5" font-weight="600" fill="#1b2a4a">ROW_INDEX（RowIndex）</text>
+  <text x="56" y="127" font-size="9" fill="#5b7db1">重复 RowIndexEntry，每组一条</text>
+  <rect x="56" y="134" width="198" height="42" rx="6" fill="#ffffff" stroke="#cfe0f2"/>
+  <text x="66" y="152" font-size="10.5" font-weight="600" fill="#1b2a4a">positions[0]</text>
+  <text x="66" y="167" font-size="9" fill="#5b7db1">RG0 各 stream 起点</text>
+  <rect x="56" y="182" width="198" height="42" rx="6" fill="#ffffff" stroke="#cfe0f2"/>
+  <text x="66" y="200" font-size="10.5" font-weight="600" fill="#1b2a4a">positions[1]</text>
+  <text x="66" y="215" font-size="9" fill="#5b7db1">RG1 各 stream 起点</text>
+  <rect x="56" y="230" width="198" height="42" rx="6" fill="#dbe8f8" stroke="#8fb2dd" stroke-width="1.6"/>
+  <text x="66" y="248" font-size="10.5" font-weight="600" fill="#1b2a4a">positions[2]</text>
+  <text x="66" y="263" font-size="9" fill="#5b7db1">RG2 各 stream 起点</text>
+
+  <!-- DATA stream 竖条 -->
+  <rect x="580" y="90" width="300" height="196" rx="12" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="596" y="112" font-size="11.5" font-weight="600" fill="#5a3410">DATA stream（该列数据流）</text>
+  <rect x="596" y="122" width="268" height="46" rx="6" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="730" y="149" font-size="10.5" fill="#5a3410" text-anchor="middle">RG0 区段</text>
+  <rect x="596" y="172" width="268" height="46" rx="6" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="730" y="199" font-size="10.5" fill="#5a3410" text-anchor="middle">RG1 区段</text>
+  <rect x="596" y="222" width="268" height="46" rx="6" fill="#fbeec9" stroke="#e0bf74" stroke-width="1.6"/>
+  <text x="730" y="249" font-size="10.5" fill="#5a3410" text-anchor="middle">RG2 区段（命中，seek 至此）</text>
+
+  <!-- seek 箭头 -->
+  <path d="M270,155 L580,145" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M270,203 L580,195" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M270,251 L580,245" stroke="#5b7db1" stroke-width="1.8" fill="none" marker-end="url(#ar)"/>
+  <text x="360" y="228" font-size="9.5" fill="#5b7db1" font-weight="600">seek 到 RG2 起点，跳过前面字节</text>
+
+  <!-- 未压缩格式 -->
+  <rect x="40" y="330" width="420" height="120" rx="12" fill="#f7f7f9" stroke="#e3e3e8" filter="url(#soft)"/>
+  <text x="56" y="352" font-size="12" font-weight="600" fill="#1d1d1f">未压缩 stream 的 position</text>
+  <rect x="56" y="366" width="184" height="34" rx="6" fill="#ffffff" stroke="#ececf1"/>
+  <text x="148" y="387" font-size="9.5" fill="#1d1d1f" text-anchor="middle">RLE 游程字节偏移</text>
+  <rect x="252" y="366" width="184" height="34" rx="6" fill="#ffffff" stroke="#ececf1"/>
+  <text x="344" y="387" font-size="9.5" fill="#1d1d1f" text-anchor="middle">stream 内待消费值数</text>
+  <text x="250" y="428" font-size="9.5" fill="#6e6e73" text-anchor="middle">定位 RLE 游程起点 + 跳过组内已消费值 → 到组起点</text>
+
+  <!-- 压缩格式 -->
+  <rect x="500" y="330" width="420" height="120" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="516" y="352" font-size="12" font-weight="600" fill="#1b2a4a">压缩 stream 的 position（多一段）</text>
+  <rect x="516" y="366" width="120" height="34" rx="6" fill="#ffffff" stroke="#cfe0f2"/>
+  <text x="576" y="387" font-size="9.5" fill="#1b2a4a" text-anchor="middle">压缩块起点</text>
+  <rect x="644" y="366" width="120" height="34" rx="6" fill="#ffffff" stroke="#cfe0f2"/>
+  <text x="704" y="387" font-size="9.5" fill="#1b2a4a" text-anchor="middle">块内解压字节</text>
+  <rect x="772" y="366" width="132" height="34" rx="6" fill="#ffffff" stroke="#cfe0f2"/>
+  <text x="838" y="387" font-size="9.5" fill="#1b2a4a" text-anchor="middle">RLE 待消费值数</text>
+  <text x="710" y="428" font-size="9.5" fill="#5b7db1" text-anchor="middle">先定位压缩块 → 解压 → 块内偏移 → RLE 内偏移</text>
+
+  <!-- 底部旁注 -->
+  <rect x="40" y="464" width="880" height="56" rx="11" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+  <text x="56" y="486" font-size="9.5" fill="#5a3410">多 stream 列的 positions 按固定序拼接（与 stripe footer 的 ColumnEncoding 段一致）。</text>
+  <text x="56" y="505" font-size="9.5" fill="#93762e">字典列无 per-row-group position — 整个字典读入（即使只读部分 stripe），跳读作用于 DATA 引用 stream。</text>
+</svg>

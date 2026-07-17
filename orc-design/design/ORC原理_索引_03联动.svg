@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="500" viewBox="0 0 980 500"
+ font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="980" height="500" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="700" fill="#1d1d1f">ORC · 三级跳读联动:由粗到细，读得越来越少</text>
+  <text x="40" y="56" font-size="10.5" fill="#6e6e73">stripe 级（跳 64MB）→ row-group 级（跳 10000 行）→ seek positions 到组起点，只解该组</text>
+
+  <!-- 漏斗三级 -->
+  <rect x="50" y="88" width="500" height="62" rx="10" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="300" y="113" font-size="12" font-weight="600" fill="#5a3410" text-anchor="middle">① stripe 级（粗）</text>
+  <text x="300" y="133" font-size="9.5" fill="#93762e" text-anchor="middle">用 stripe 统计跳整个 stripe，一跳 64MB</text>
+
+  <rect x="120" y="192" width="360" height="62" rx="10" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="300" y="217" font-size="12" font-weight="600" fill="#1b2a4a" text-anchor="middle">② row-group 级（细）</text>
+  <text x="300" y="237" font-size="9.5" fill="#5b7db1" text-anchor="middle">用组统计+布隆跳 10000 行的 row group</text>
+
+  <rect x="190" y="296" width="220" height="62" rx="10" fill="#f5faf6" stroke="#cfe6d5" filter="url(#soft)"/>
+  <text x="300" y="321" font-size="12" font-weight="600" fill="#12402a" text-anchor="middle">③ seek positions</text>
+  <text x="300" y="341" font-size="9.5" fill="#2f6f4f" text-anchor="middle">只解命中组，读最少</text>
+
+  <path d="M300,150 L300,192" stroke="#c7c7cc" stroke-width="1.6" fill="none" marker-end="url(#ar)"/>
+  <path d="M300,254 L300,296" stroke="#c7c7cc" stroke-width="1.6" fill="none" marker-end="url(#ar)"/>
+
+  <!-- 左侧读入量标注 -->
+  <path d="M34,96 L34,352" stroke="#d0d0d5" stroke-width="1.4" fill="none" marker-end="url(#ar)"/>
+  <text x="30" y="380" font-size="9" fill="#a1a1a6" text-anchor="middle">读入</text>
+  <text x="30" y="392" font-size="9" fill="#a1a1a6" text-anchor="middle">量↓</text>
+
+  <!-- 右侧依赖 -->
+  <rect x="600" y="88" width="350" height="96" rx="12" fill="#f5faf6" stroke="#cfe6d5" filter="url(#soft)"/>
+  <text x="616" y="110" font-size="11.5" font-weight="600" fill="#12402a">判据来源 ·【列统计与布隆】</text>
+  <text x="616" y="130" font-size="9.5" fill="#2f6f4f">每级挂 min/max/count（+ 可选布隆过滤器）</text>
+  <text x="616" y="147" font-size="9.5" fill="#2f6f4f">判「这块肯定无匹配」→ 可跳；否则读进</text>
+  <text x="616" y="164" font-size="9.5" fill="#2f6f4f">row-group 级统计存 RowIndexEntry，每 10000 行</text>
+
+  <rect x="600" y="200" width="350" height="104" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="616" y="222" font-size="11.5" font-weight="600" fill="#1b2a4a">剪枝决策 ·【谓词下推】</text>
+  <text x="616" y="242" font-size="9.5" fill="#5b7db1">RecordReaderImpl.pickRowGroups()</text>
+  <text x="616" y="259" font-size="9.5" fill="#5b7db1">组统计+布隆 → 每谓词算 TruthValue</text>
+  <text x="616" y="276" font-size="9.5" fill="#5b7db1">sarg.evaluate 决定该组读不读</text>
+  <text x="616" y="293" font-size="9.5" fill="#5b7db1">RecordReaderImpl.java:1177</text>
+
+  <rect x="600" y="320" width="350" height="60" rx="12" fill="#f7f7f9" stroke="#e3e3e8" filter="url(#soft)"/>
+  <text x="616" y="342" font-size="11.5" font-weight="600" fill="#1d1d1f">省索引 IO · 按需读</text>
+  <text x="616" y="361" font-size="9.5" fill="#6e6e73">只为 filter 列读 row index（readCurrentStripeRowIndex，:1287）</text>
+
+  <path d="M550,119 L600,130" stroke="#c7c7cc" stroke-width="1.4" fill="none" stroke-dasharray="5 4" marker-end="url(#ar)"/>
+  <path d="M480,223 L600,248" stroke="#c7c7cc" stroke-width="1.4" fill="none" stroke-dasharray="5 4" marker-end="url(#ar)"/>
+  <path d="M410,327 L600,346" stroke="#c7c7cc" stroke-width="1.4" fill="none" stroke-dasharray="5 4" marker-end="url(#ar)"/>
+
+  <!-- 底部总结 -->
+  <rect x="50" y="410" width="900" height="60" rx="11" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+  <text x="66" y="432" font-size="10.5" font-weight="600" fill="#5a3410">层级跳读三段式</text>
+  <text x="66" y="452" font-size="9.5" fill="#93762e">stripe 级统计跳整 stripe（粗）→ row-group 级统计+布隆跳 10000 行组（细）→ 命中组 seek positions 精读；三级由粗到细，代价小收益大。</text>
+</svg>

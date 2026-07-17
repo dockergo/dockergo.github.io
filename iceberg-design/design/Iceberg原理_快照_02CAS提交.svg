@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="540" viewBox="0 0 1080 540" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="540" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="700" fill="#1d1d1f">原子提交 · catalog 的 CAS(在无事务的对象存储上做 ACID)</text>
+  <text x="30" y="49" font-size="9.5" fill="#a1a1a6">每次提交写全新 metadata.json(UUID 路径),再原子换"当前 metadata 位置"这一个指针 · BaseMetastoreTableOperations.java:155</text>
+
+  <!-- common flow -->
+  <g text-anchor="middle" font-size="9">
+    <rect x="40" y="76" width="180" height="52" rx="11" fill="#f5faf6" stroke="#cfe6d5"/><text x="130" y="98" font-weight="700" fill="#12402a">写新 metadata.json</text><text x="130" y="116" font-size="8" fill="#2f6f4f">UUID 路径,不覆盖旧</text>
+    <rect x="270" y="76" width="180" height="52" rx="11" fill="#e7f0fb" stroke="#b9d2ef"/><text x="360" y="98" font-weight="700" fill="#1b2a4a">校验 base==current</text><text x="360" y="116" font-size="8" fill="#5b7db1">否则 stale,重试</text>
+    <rect x="500" y="76" width="180" height="52" rx="11" fill="#e7f0fb" stroke="#b9d2ef"/><text x="590" y="98" font-weight="700" fill="#1b2a4a">原子换指针</text><text x="590" y="116" font-size="8" fill="#5b7db1">CAS 当前 metadata 位置</text>
+    <rect x="730" y="76" width="180" height="52" rx="11" fill="#f5faf6" stroke="#cfe6d5"/><text x="820" y="98" font-weight="700" fill="#12402a">提交成功</text><text x="820" y="116" font-size="8" fill="#2f6f4f">新快照对读者可见</text>
+  </g>
+  <line x1="220" y1="102" x2="270" y2="102" stroke="#b8b8bf" stroke-width="1.4" marker-end="url(#ar)"/>
+  <line x1="450" y1="102" x2="500" y2="102" stroke="#b8b8bf" stroke-width="1.4" marker-end="url(#ar)"/>
+  <line x1="680" y1="102" x2="730" y2="102" stroke="#b8b8bf" stroke-width="1.4" marker-end="url(#ar)"/>
+
+  <text x="30" y="164" font-size="11.5" font-weight="700" fill="#1d1d1f">三种 catalog 的"原子换指针"实现(差异只在这一步)</text>
+
+  <rect x="30" y="178" width="330" height="150" rx="12" fill="#f6f8fc" stroke="#dbe6f3"/>
+  <text x="46" y="202" font-size="10.5" font-weight="700" fill="#1b2a4a">Hadoop(文件系统)</text>
+  <text x="46" y="226" font-size="9" fill="#5b7db1">写临时 metadata</text>
+  <text x="46" y="246" font-size="9" fill="#5b7db1">原子 rename 即提交</text>
+  <text x="46" y="266" font-size="8.4" fill="#4a6fa0">HadoopTableOperations.java:132 commit</text>
+  <text x="46" y="285" font-size="8.4" fill="#4a6fa0">目标版本已存在 → "Version already</text>
+  <text x="46" y="301" font-size="8.4" fill="#4a6fa0">exists"(:370),可选 LockManager</text>
+
+  <rect x="375" y="178" width="330" height="150" rx="12" fill="#f4eefb" stroke="#d9c7ec"/>
+  <text x="391" y="202" font-size="10.5" font-weight="700" fill="#3d2a5a">JDBC(关系库)</text>
+  <text x="391" y="226" font-size="9" fill="#8a6db3">条件 UPDATE:</text>
+  <text x="391" y="246" font-size="8.6" fill="#8a6db3">SET metadata_location=新</text>
+  <text x="391" y="264" font-size="8.6" fill="#8a6db3">WHERE ... AND location=旧</text>
+  <text x="391" y="284" font-size="8.4" fill="#a07dc4">恰好更新 1 行才成功(JdbcUtil.java:66)</text>
+  <text x="391" y="301" font-size="8.4" fill="#a07dc4">否则 CommitFailedException(JdbcTableOperations.java:103)</text>
+
+  <rect x="720" y="178" width="330" height="150" rx="12" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="736" y="202" font-size="10.5" font-weight="700" fill="#5a3410">REST</text>
+  <text x="736" y="226" font-size="9" fill="#93762e">CAS 在服务端做</text>
+  <text x="736" y="246" font-size="9" fill="#93762e">客户端提交 commit 请求</text>
+  <text x="736" y="266" font-size="9" fill="#93762e">服务端校验并交换</text>
+  <text x="736" y="286" font-size="8.4" fill="#b3934a">客户端只处理 CommitFailedException</text>
+  <text x="736" y="302" font-size="8.4" fill="#b3934a">RESTSessionCatalog</text>
+
+  <rect x="30" y="348" width="1020" height="60" rx="12" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="46" y="372" font-size="10.5" font-weight="700" fill="#12402a">共性:每次提交写全新 metadata.json,再原子换指针 —— 这是 ACID 的原子性来源</text>
+  <text x="46" y="393" font-size="9.5" fill="#2f6f4f">"换指针"要么成功(新快照全部可见)、要么失败(整体不可见),无中间态;旧 metadata 保留 → 时间旅行</text>
+
+  <rect x="30" y="428" width="1020" height="72" rx="12" fill="#f0f0f4" stroke="#d2d2d7"/>
+  <text x="46" y="452" font-size="10" font-weight="700" fill="#48484a">为什么不锁表</text>
+  <text x="46" y="473" font-size="9" fill="#6e6e73">对象存储无锁、无事务;悲观锁不可行。CAS + 不可变元数据把"原子性"归约到"原子换一个指针"这个所有存储/元存储都能提供的原语上。</text>
+  <text x="46" y="491" font-size="9" fill="#6e6e73">冲突(base 过时)时乐观重试 —— 见 OCC 篇。</text>
+</svg>

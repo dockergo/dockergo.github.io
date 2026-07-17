@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="528" viewBox="0 0 1000 528" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1000" height="528" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">ZooKeeper 元数据与建表副本放置</text>
+  <text x="30" y="52" font-size="10.5" fill="#a1a1a6">ZK 承载全部集群元数据；建表时协调器生成副本分配落 ZK，再由状态机上线桶并选主</text>
+
+  <!-- ZNode tree box -->
+  <rect x="30" y="72" width="600" height="298" rx="13" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="48" y="98" font-size="12" font-weight="600" fill="#1d1d1f">ZooKeeper ZNode 树 · ZkData.java</text>
+
+  <circle cx="46" cy="126" r="3" fill="#86868b"/>
+  <text x="56" y="130" font-size="10.5" fill="#1d1d1f"><tspan font-weight="600">/</tspan>　Fluss 根命名空间</text>
+  <circle cx="76" cy="148" r="3" fill="#4a7fc0"/>
+  <text x="86" y="152" font-size="10.5" fill="#1b2a4a">metadata</text>
+  <circle cx="108" cy="170" r="3" fill="#4a7fc0"/>
+  <text x="118" y="174" font-size="10.5" fill="#1b2a4a">databases/[db]/tables/[tbl]　<tspan fill="#8aa5cf">· :97</tspan></text>
+  <circle cx="76" cy="192" r="3" fill="#cf9a3a"/>
+  <text x="86" y="196" font-size="10.5" fill="#5a3410">tabletservers</text>
+  <circle cx="108" cy="214" r="3" fill="#cf9a3a"/>
+  <text x="118" y="218" font-size="10.5" fill="#5a3410">tables/[tableId] = TableAssignment　<tspan fill="#b39456">· :463</tspan></text>
+  <circle cx="140" cy="236" r="3" fill="#cf9a3a"/>
+  <text x="150" y="240" font-size="10.5" fill="#5a3410">buckets/[id]/leader_isr　<tspan fill="#b39456">· :540</tspan></text>
+  <circle cx="172" cy="258" r="3" fill="#4a9b6e"/>
+  <text x="182" y="262" font-size="10.5" fill="#12402a">snapshots　<tspan fill="#5b9b78">· :582</tspan></text>
+  <circle cx="172" cy="280" r="3" fill="#4a9b6e"/>
+  <text x="182" y="284" font-size="10.5" fill="#12402a">remote_logs　<tspan fill="#5b9b78">· :637</tspan></text>
+  <circle cx="76" cy="302" r="3" fill="#8a6bc0"/>
+  <text x="86" y="306" font-size="10.5" fill="#3d2a5a">coordinators/active　<tspan fill="#9a86bd">· :356</tspan></text>
+  <circle cx="76" cy="324" r="3" fill="#8a6bc0"/>
+  <text x="86" y="328" font-size="10.5" fill="#3d2a5a">config</text>
+  <circle cx="76" cy="346" r="3" fill="#8a6bc0"/>
+  <text x="86" y="350" font-size="10.5" fill="#3d2a5a">fluss-acls</text>
+
+  <!-- semantics box -->
+  <rect x="650" y="72" width="320" height="298" rx="13" fill="#f3f7fc" stroke="#cfe0f2" filter="url(#soft)"/>
+  <text x="668" y="98" font-size="12" font-weight="600" fill="#274a78">关键节点语义</text>
+  <text x="668" y="128" font-size="10.5" font-weight="600" fill="#1b2a4a">TableAssignment</text>
+  <text x="668" y="144" font-size="9.5" fill="#5b7db1">桶到副本集合的映射表</text>
+  <text x="668" y="170" font-size="10.5" font-weight="600" fill="#5a3410">leader_isr</text>
+  <text x="668" y="186" font-size="9.5" fill="#93762e">当前 leader 与 ISR 副本列表</text>
+  <text x="668" y="212" font-size="10.5" font-weight="600" fill="#12402a">snapshots</text>
+  <text x="668" y="228" font-size="9.5" fill="#2f6f4f">KV 主键表快照句柄</text>
+  <text x="668" y="254" font-size="10.5" font-weight="600" fill="#12402a">remote_logs</text>
+  <text x="668" y="270" font-size="9.5" fill="#2f6f4f">远程日志分层 manifest 指针</text>
+  <text x="668" y="296" font-size="10.5" font-weight="600" fill="#3d2a5a">coordinators/active</text>
+  <text x="668" y="312" font-size="9.5" fill="#7a5aa6">活跃协调器注册点（HA 抢占）</text>
+  <text x="668" y="338" font-size="10.5" font-weight="600" fill="#3d2a5a">config / fluss-acls</text>
+  <text x="668" y="354" font-size="9.5" fill="#7a5aa6">集群配置与访问控制权限</text>
+
+  <!-- lower flow -->
+  <text x="30" y="392" font-size="12" font-weight="600" fill="#1d1d1f">建表副本放置流程</text>
+  <path d="M252,436 L268,436" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M490,436 L506,436" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M728,436 L744,436" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <rect x="30" y="402" width="222" height="76" rx="12" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="44" y="426" font-size="11" font-weight="600" fill="#5a3410">① createTable 入口</text>
+  <text x="44" y="446" font-size="10" fill="#5a3410">CoordinatorService 收建表请求</text>
+  <text x="44" y="466" font-size="9" fill="#b39456">CoordinatorService.java:454</text>
+
+  <rect x="268" y="402" width="222" height="76" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="282" y="426" font-size="11" font-weight="600" fill="#1b2a4a">② generateAssignment</text>
+  <text x="282" y="446" font-size="10" fill="#1b2a4a">round-robin 随机起点 + 错开 follower</text>
+  <text x="282" y="466" font-size="9" fill="#8aa5cf">TableAssignmentUtils.java:164</text>
+
+  <rect x="506" y="402" width="222" height="76" rx="12" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+  <text x="520" y="426" font-size="11" font-weight="600" fill="#5a3410">③ 落 ZK</text>
+  <text x="520" y="446" font-size="10" fill="#5a3410">写 TableAssignment 到 tabletservers</text>
+  <text x="520" y="466" font-size="9" fill="#93762e">/tabletservers/tables/[tableId]</text>
+
+  <rect x="744" y="402" width="222" height="76" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="758" y="426" font-size="11" font-weight="600" fill="#12402a">④ 状态机上线桶</text>
+  <text x="758" y="446" font-size="10" fill="#12402a">New→Online 选 leader</text>
+  <text x="758" y="466" font-size="9" fill="#2f6f4f">写 leader_isr 完成放置</text>
+
+  <!-- bottom note -->
+  <rect x="30" y="490" width="936" height="30" rx="10" fill="#ffffff" stroke="#ececf1"/>
+  <text x="46" y="510" font-size="10.5" fill="#6e6e73"><tspan font-weight="600" fill="#3d2a5a">协调器 HA</tspan>　多协调器经 Curator LeaderLatch 抢占 /coordinators/active，仅当选者处理事件 · CoordinatorLeaderElection.java:51</text>
+</svg>

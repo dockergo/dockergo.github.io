@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="520" viewBox="0 0 1080 520" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs><filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+  <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker></defs>
+  <rect width="1080" height="520" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">GORM Statement · 链式 API 的状态容器与 SQL 拼装器</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">Statement(statement.go:22)挂每个 *DB 上,累积 clause/投影/关联/变量,最终 Build(:493)拼成 SQL 文本</text>
+  <rect x="30" y="70" width="500" height="200" rx="13" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="46" y="92" font-size="11" font-weight="700" fill="#1b2a4a">Statement 状态容器(statement.go:22)</text>
+  <text x="46" y="116" font-size="8.8" fill="#274a78">· 挂在每个 *DB 上,随链式方法累积</text>
+  <rect x="46" y="128" width="468" height="26" rx="6" fill="#f3f7fc" stroke="#cfe0f2"/><text x="60" y="145" font-size="8.5" fill="#274a78">Clauses:各 SQL 子句(WHERE/SELECT/…)</text>
+  <rect x="46" y="160" width="468" height="26" rx="6" fill="#f3f7fc" stroke="#cfe0f2"/><text x="60" y="177" font-size="8.5" fill="#274a78">Selects / Omits:投影(选/略字段)</text>
+  <rect x="46" y="192" width="468" height="26" rx="6" fill="#f3f7fc" stroke="#cfe0f2"/><text x="60" y="209" font-size="8.5" fill="#274a78">Preloads:关联预加载;Model/Schema:元数据</text>
+  <rect x="46" y="224" width="468" height="26" rx="6" fill="#f3f7fc" stroke="#cfe0f2"/><text x="60" y="241" font-size="8.5" fill="#274a78">Vars:参数变量;SQL:拼好的文本</text>
+  <rect x="550" y="70" width="500" height="200" rx="13" fill="#fff7e6" stroke="#e8cf9a"/>
+  <text x="566" y="92" font-size="11" font-weight="700" fill="#5a3410">Build 拼装(statement.go:493)</text>
+  <text x="566" y="116" font-size="8.8" fill="#93762e">· 按 BuildClauses 顺序选定 clause</text>
+  <text x="566" y="136" font-size="8.8" fill="#93762e">· 逐个调 clause.Build(builder)写出片段</text>
+  <text x="566" y="156" font-size="8.8" fill="#93762e">· 拼成完整 SQL 文本 + Vars 参数</text>
+  <rect x="566" y="170" width="468" height="40" rx="8" fill="#fdf6ea" stroke="#efdcb4"/><text x="580" y="188" font-size="8.5" fill="#5a3410">clone 语义(gorm.go:448):派生链各自独立 Statement</text><text x="580" y="203" font-size="8" fill="#93762e">并发安全</text>
+  <text x="566" y="234" font-size="8.5" fill="#93762e">是链式查询 API 接触面的直接支撑</text>
+  <text x="566" y="254" font-size="8.5" fill="#93762e">驱动 clause 能力域(SQL AST)构建</text>
+  <line x1="530" y1="170" x2="550" y2="170" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <rect x="30" y="284" width="1020" height="130" rx="13" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="46" y="306" font-size="11" font-weight="700" fill="#12402a">累积 → 拼装 流程</text>
+  <g text-anchor="middle" font-size="8.5">
+    <rect x="46" y="320" width="230" height="80" rx="8" fill="#eafaf1" stroke="#bfe0cd"/><text x="161" y="346" fill="#12402a">chainable 累积</text><text x="161" y="364" fill="#2f6f4f">条件塞进 Statement.Clauses</text><text x="161" y="382" fill="#2f6f4f">(不碰库)</text>
+    <rect x="316" y="320" width="230" height="80" rx="8" fill="#e6f7ee" stroke="#bfe0cd"/><text x="431" y="346" fill="#12402a">finisher 触发</text><text x="431" y="364" fill="#2f6f4f">callbacks 回调链跑</text><text x="431" y="382" fill="#2f6f4f">链末尾调 Build</text>
+    <rect x="586" y="320" width="230" height="80" rx="8" fill="#fff7e6" stroke="#e8cf9a"/><text x="701" y="346" fill="#5a3410">Build:493</text><text x="701" y="364" fill="#93762e">选 clause + 各 Build 片段</text><text x="701" y="382" fill="#93762e">拼 SQL 文本</text>
+    <rect x="856" y="320" width="178" height="80" rx="8" fill="#eef3fb" stroke="#bcd0ec"/><text x="945" y="346" fill="#1b2a4a">ConnPool 执行</text><text x="945" y="364" fill="#5b7db1">SQL + Vars</text><text x="945" y="382" fill="#5b7db1">→ 数据库</text>
+  </g>
+  <line x1="276" y1="360" x2="316" y2="360" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="546" y1="360" x2="586" y2="360" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="816" y1="360" x2="856" y2="360" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <rect x="30" y="430" width="1020" height="70" rx="13" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="46" y="452" font-size="11" font-weight="700" fill="#1d1d1f">要点</text>
+  <text x="46" y="473" font-size="9" fill="#6e6e73">· Statement 是链式 API 的状态容器:挂 *DB 上累积 Clauses/Selects/Preloads/Vars,finisher 时 Build(:493)按顺序选 clause 逐个 Build 拼成 SQL</text>
+  <text x="46" y="491" font-size="9" fill="#6e6e73">· 上承链式查询接触面(累积状态),下驱 clause 能力域(SQL AST 片段),clone 保并发安全</text>
+</svg>

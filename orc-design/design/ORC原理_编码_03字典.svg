@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="580" viewBox="0 0 980 580" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="980" height="580" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="700" fill="#1d1d1f">ORC 原理 · 列编码 · 字符串字典 vs 直存（自动选）</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">写完第一个 row group 按唯一值占比测：ratio ≤ 0.8 用字典（低基数极省），&gt; 0.8 退直存（高基数字典无益）</text>
+
+  <!-- decision block -->
+  <rect x="30" y="72" width="920" height="150" rx="14" fill="#f5faf6" stroke="#cfe6d5" filter="url(#soft)"/>
+  <text x="48" y="96" font-size="12" font-weight="700" fill="#12402a">自动选择判据（StringBaseTreeWriter.java:120）</text>
+  <rect x="48" y="108" width="430" height="46" rx="9" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="263" y="128" font-size="10.5" font-weight="700" text-anchor="middle" fill="#12402a">ratio = dictionary.size() / rows.size()</text>
+  <text x="263" y="145" font-size="8.6" text-anchor="middle" fill="#2f6f4f">唯一值个数 ÷ 行数 = 该列去重后的占比</text>
+  <text x="500" y="126" font-size="16" fill="#6e6e73">→</text>
+  <rect x="524" y="108" width="410" height="46" rx="9" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="729" y="128" font-size="10.5" font-weight="700" text-anchor="middle" fill="#12402a">useDictionaryEncoding = ratio ≤ 阈值</text>
+  <text x="729" y="145" font-size="8.6" text-anchor="middle" fill="#2f6f4f">DICTIONARY_KEY_SIZE_THRESHOLD 默认 0.8（OrcConf.java:116）</text>
+  <text x="48" y="180" font-size="9" fill="#2f6f4f">orc.dictionary.key.threshold 可调：高基数列可调低甚至关字典以免多一层引用开销；低基数列保默认 0.8。</text>
+  <text x="48" y="200" font-size="9" fill="#2f6f4f">阈值下方（ratio 小 = 重复多）走字典分支；阈值上方（ratio 大 = 重复少）走直存分支：</text>
+
+  <!-- ratio axis -->
+  <line x1="90" y1="252" x2="890" y2="252" stroke="#c7c7cc" stroke-width="1.6"/>
+  <path d="M890,252 L884,248 M890,252 L884,256" stroke="#c7c7cc" stroke-width="1.6" fill="none"/>
+  <text x="90" y="272" font-size="8.6" fill="#6e6e73">ratio 0（重复极多）</text>
+  <line x1="730" y1="244" x2="730" y2="260" stroke="#a85560" stroke-width="1.6"/>
+  <text x="730" y="238" font-size="9" font-weight="700" text-anchor="middle" fill="#a85560">0.8 阈值</text>
+  <text x="895" y="256" font-size="8.6" fill="#6e6e73">1.0（全不同）</text>
+
+  <!-- LEFT: dictionary branch -->
+  <path d="M340,262 L340,296" stroke="#c7c7cc" stroke-width="1.4" fill="none" marker-end="url(#ar)"/>
+  <rect x="30" y="300" width="640" height="252" rx="14" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="48" y="324" font-size="12" font-weight="700" fill="#3d2a5a">ratio ≤ 0.8 → 字典编码（示例：低基数国家列，5 行 2 唯一 → ratio 0.4）</text>
+
+  <!-- raw column -->
+  <rect x="48" y="338" width="120" height="150" rx="9" fill="#faf6fe" stroke="#e3d3f2"/>
+  <text x="108" y="356" font-size="9" font-weight="700" text-anchor="middle" fill="#3d2a5a">原始 country</text>
+  <text x="108" y="376" font-size="8.6" text-anchor="middle" fill="#3d2a5a">"CN"</text>
+  <text x="108" y="393" font-size="8.6" text-anchor="middle" fill="#3d2a5a">"US"</text>
+  <text x="108" y="410" font-size="8.6" text-anchor="middle" fill="#3d2a5a">"CN"</text>
+  <text x="108" y="427" font-size="8.6" text-anchor="middle" fill="#3d2a5a">"CN"</text>
+  <text x="108" y="444" font-size="8.6" text-anchor="middle" fill="#3d2a5a">"US"</text>
+  <text x="108" y="470" font-size="8" text-anchor="middle" fill="#8a6db3">重复多</text>
+
+  <path d="M168,413 L196,413" stroke="#c7c7cc" stroke-width="1.4" fill="none" marker-end="url(#ar)"/>
+
+  <!-- three streams -->
+  <rect x="198" y="338" width="216" height="66" rx="9" fill="#f9f3fe" stroke="#d9c7ec"/>
+  <text x="214" y="357" font-size="9.5" font-weight="700" fill="#3d2a5a">DICTIONARY_DATA</text>
+  <text x="214" y="374" font-size="8.4" fill="#8a6db3">按字典序排的唯一 UTF-8 blob</text>
+  <text x="214" y="392" font-size="8.6" fill="#3d2a5a">"CN" "US"（每个只存一次）</text>
+
+  <rect x="198" y="412" width="216" height="60" rx="9" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="214" y="431" font-size="9.5" font-weight="700" fill="#5a3410">LENGTH</text>
+  <text x="214" y="448" font-size="8.4" fill="#93762e">字典每项长度</text>
+  <text x="214" y="465" font-size="8.6" fill="#5a3410">2, 2</text>
+
+  <rect x="426" y="338" width="228" height="134" rx="9" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="442" y="357" font-size="9.5" font-weight="700" fill="#1b2a4a">DATA（整数字典引用）</text>
+  <text x="442" y="376" font-size="8.4" fill="#5b7db1">每行存"指字典第几项"的小整数</text>
+  <text x="442" y="398" font-size="10" font-weight="700" fill="#1b2a4a">0, 1, 0, 0, 1</text>
+  <text x="442" y="418" font-size="8.4" fill="#5b7db1">(0→"CN"  1→"US")</text>
+  <text x="442" y="440" font-size="8.4" fill="#5b7db1">整数引用再走 RLE v2 压缩</text>
+  <text x="442" y="459" font-size="8.4" fill="#5b7db1">→ 重复串只存一次，极省</text>
+
+  <text x="48" y="512" font-size="8.8" fill="#8a6db3">收益：重复的长字符串只存一份 &#43; 用小整数引用 &#43; RLE 再压；低基数列（国家/状态/枚举）大赢。</text>
+  <text x="48" y="532" font-size="8.8" fill="#8a6db3">编码在 stripe footer 记为 DICTIONARY_V2（v2）或 DICTIONARY（v1）。</text>
+
+  <!-- RIGHT: direct branch -->
+  <path d="M790,262 L790,296" stroke="#c7c7cc" stroke-width="1.4" fill="none" marker-end="url(#ar)"/>
+  <rect x="686" y="300" width="264" height="252" rx="14" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+  <text x="704" y="324" font-size="12" font-weight="700" fill="#5a3410">ratio &gt; 0.8 → 退回直存</text>
+  <text x="704" y="344" font-size="8.8" fill="#93762e">示例：高基数 UUID 列，几乎行行不同</text>
+
+  <rect x="704" y="356" width="228" height="66" rx="9" fill="#fbf6ef" stroke="#e6d8c4"/>
+  <text x="720" y="375" font-size="9.5" font-weight="700" fill="#5a3410">DATA（值本身直存）</text>
+  <text x="720" y="392" font-size="8.4" fill="#93762e">字符串字节顺序直接落 DATA</text>
+  <text x="720" y="410" font-size="8.4" fill="#93762e">配 LENGTH 存每项长度</text>
+
+  <text x="704" y="446" font-size="8.8" fill="#93762e">原因：唯一值太多，字典本身几乎</text>
+  <text x="704" y="462" font-size="8.8" fill="#93762e">跟原列一样大，还多一层整数引用</text>
+  <text x="704" y="478" font-size="8.8" fill="#93762e">开销 → 字典无益，直存更好。</text>
+  <rect x="704" y="494" width="228" height="42" rx="8" fill="#fbf6ef" stroke="#e6d8c4"/>
+  <text x="818" y="514" font-size="8.8" text-anchor="middle" fill="#5a3410">编码记为 DIRECT_V2 / DIRECT</text>
+  <text x="818" y="529" font-size="8.4" text-anchor="middle" fill="#93762e">（无 DICTIONARY_DATA 流）</text>
+</svg>

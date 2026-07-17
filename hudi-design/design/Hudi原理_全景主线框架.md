@@ -12,7 +12,7 @@ Hudi 的世界观:**表 = 一条时间线(timeline)+ 按记录键组织的文件
 
 ![双维模型](Hudi原理_双维模型.svg)
 
-- **能力域**:接触面(表读写 API)面向计算引擎;支撑侧——表类型(COW/MOR)、时间线、写入与索引、MoR 读合并、表服务、并发控制。
+- **能力域**:接触面(表读写 API)面向计算引擎;支撑侧 **8 条能力域**——时间线、表类型(COW/MOR)、写入路径与 upsert、索引、MoR 读合并、文件布局、表服务、并发控制与元数据。
 - **执行时机**:前台(upsert 写、快照/增量读)vs 后台(compaction 合 log 进 base、cleaning 清旧文件片、clustering 重组,由表服务触发)。
 
 ---
@@ -25,16 +25,19 @@ Hudi 的世界观:**表 = 一条时间线(timeline)+ 按记录键组织的文件
 
 ---
 
-## 三、6 条主线的分层归位
+## 三、主线的分层归位（接触面 + 8 支撑域）
 
 | 层 | 主线 | 一句话职责 |
 |---|---|---|
 | 接触面 | **表读写 API** | 引擎经库 upsert/query,时间线驱动 |
+| 时间线 | **时间线(核心·灵魂)** | HoodieInstant 动作×状态,表的真相 |
 | 类型 | **表类型 COW/MOR** | 写时重写 vs 读时合并的核心取舍 |
-| 时间线 | **时间线(核心)** | HoodieInstant 动作×状态,表的真相 |
-| 写入 | **写入与索引** | 索引 tag→路由文件组→写(高效 upsert) |
-| 读 | **MoR 读合并** | base + log 读时合并,查询类型 |
-| 服务 | **表服务 + 并发** | compaction/cleaning/clustering + OCC |
+| 写入 | **写入路径与 upsert** | 开 instant→tag→路由→handle→提交 |
+| 写入 | **索引** | 记录键→文件组,高效 upsert 地基 |
+| 读 | **MoR 读合并** | base + log 读时合并,三种查询类型 |
+| 存储 | **文件布局** | FileGroup→FileSlice(base+log)、命名、bootstrap |
+| 保障 | **表服务** | compaction/cleaning/clustering 后台维护 |
+| 保障 | **并发控制与元数据** | OCC/锁/marker + metadata table + catalog |
 
 ---
 
@@ -42,7 +45,7 @@ Hudi 的世界观:**表 = 一条时间线(timeline)+ 按记录键组织的文件
 
 ![Hudi 依赖矩阵](Hudi原理_依赖矩阵.svg)
 
-upsert(写)依赖时间线(开 instant)+ 写入与索引(tag+路由)+ 表类型(COW/MOR 决定 handle)+ 并发(OCC);query(读)依赖 MoR 读合并(base+log)+ 时间线(可见性/增量)+ 表类型(读优化仅 base)。
+upsert(写)依赖时间线(开 instant)+ 写入路径 + 索引(tag 定位)+ 表类型(COW/MOR 决定 handle)+ 文件布局(落到 file group)+ 并发控制(OCC);query(读)依赖 MoR 读合并(base+log)+ 时间线(可见性/增量)+ 表类型(读优化仅 base)+ 元数据(metadata table 加速)。表服务(compaction/cleaning/clustering)在后台维护文件布局。
 
 ---
 

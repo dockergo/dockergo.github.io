@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="500" viewBox="0 0 1080 500" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="500" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Spring Boot 核心原理 · 依赖矩阵（接触面动作 × 能力域）</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">行=开发者动作(启动 run / 写业务 bean / 引 starter) · 列=依赖的能力域 · ● 强依赖 · ○ 条件/可选</text>
+
+  <!-- column headers -->
+  <g text-anchor="middle" font-size="9.5" font-weight="700">
+    <rect x="30" y="82" width="228" height="46" rx="9" fill="#f0f0f4" stroke="#d2d2d7" filter="url(#soft)"/><text x="144" y="110" fill="#48484a">动作 ＼ 能力域</text>
+    <rect x="266" y="82" width="150" height="46" rx="9" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/><text x="341" y="104" fill="#1b2a4a">IoC 容器</text><text x="341" y="119" fill="#5b7db1" font-size="8" font-weight="400">refresh/注入</text>
+    <rect x="424" y="82" width="150" height="46" rx="9" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/><text x="499" y="104" fill="#12402a">自动配置</text><text x="499" y="119" fill="#2f6f4f" font-size="8" font-weight="400">条件装配</text>
+    <rect x="582" y="82" width="150" height="46" rx="9" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/><text x="657" y="104" fill="#3d2a5a">配置属性</text><text x="657" y="119" fill="#8a6db3" font-size="8" font-weight="400">环境绑定</text>
+    <rect x="740" y="82" width="150" height="46" rx="9" fill="#e7f0fb" stroke="#b9d2ef" filter="url(#soft)"/><text x="815" y="104" fill="#1b2a4a">内嵌服务器</text><text x="815" y="119" fill="#5b7db1" font-size="8" font-weight="400">web 应用</text>
+    <rect x="898" y="82" width="152" height="46" rx="9" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/><text x="974" y="104" fill="#5a3410">starter</text><text x="974" y="119" fill="#93762e" font-size="8" font-weight="400">依赖入口</text>
+  </g>
+
+  <!-- row1 启动 run -->
+  <rect x="30" y="134" width="228" height="70" rx="9" fill="#e7f0fb" stroke="#b9d2ef" filter="url(#soft)"/>
+  <text x="46" y="163" font-size="10.5" font-weight="700" fill="#1b2a4a">启动 run()</text>
+  <text x="46" y="181" font-size="8.4" fill="#5b7db1">SpringApplication.run</text>
+  <text x="46" y="196" font-size="8" fill="#a1a1a6">一行走完启动全流程</text>
+  <g text-anchor="middle" font-size="8.4">
+    <rect x="266" y="134" width="150" height="70" rx="8" fill="#eef3fb" stroke="#bcd0ec"/><text x="341" y="163" font-size="15" fill="#1b2a4a">●</text><text x="341" y="185" fill="#5b7db1">触发 refresh</text>
+    <rect x="424" y="134" width="150" height="70" rx="8" fill="#eafaf1" stroke="#bfe0cd"/><text x="499" y="163" font-size="15" fill="#12402a">●</text><text x="499" y="185" fill="#2f6f4f">refresh 中装配</text>
+    <rect x="582" y="134" width="150" height="70" rx="8" fill="#f4eefb" stroke="#d9c7ec"/><text x="657" y="163" font-size="15" fill="#3d2a5a">●</text><text x="657" y="185" fill="#8a6db3">prepareEnvironment</text>
+    <rect x="740" y="134" width="150" height="70" rx="8" fill="#e7f0fb" stroke="#b9d2ef"/><text x="815" y="163" font-size="14" fill="#5b7db1">○</text><text x="815" y="185" fill="#5b7db1">仅 web 应用</text>
+    <rect x="898" y="134" width="152" height="70" rx="8" fill="#fff7e6" stroke="#e8cf9a"/><text x="974" y="163" font-size="14" fill="#93762e">○</text><text x="974" y="185" fill="#93762e">经依赖间接</text>
+  </g>
+
+  <!-- row2 写业务 bean -->
+  <rect x="30" y="210" width="228" height="70" rx="9" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="46" y="239" font-size="10.5" font-weight="700" fill="#3d2a5a">写业务 bean</text>
+  <text x="46" y="257" font-size="8.4" fill="#8a6db3">@Component/@Service/@Bean</text>
+  <text x="46" y="272" font-size="8" fill="#a1a1a6">@ComponentScan 扫描</text>
+  <g text-anchor="middle" font-size="8.4">
+    <rect x="266" y="210" width="150" height="70" rx="8" fill="#eef3fb" stroke="#bcd0ec"/><text x="341" y="239" font-size="15" fill="#1b2a4a">●</text><text x="341" y="261" fill="#5b7db1">容器注入依赖</text>
+    <rect x="424" y="210" width="150" height="70" rx="8" fill="#eafaf1" stroke="#bfe0cd"/><text x="499" y="239" font-size="14" fill="#2f6f4f">○</text><text x="499" y="256" fill="#2f6f4f">默认 bean 可用</text><text x="499" y="270" fill="#2f6f4f">@OnMissingBean 覆盖</text>
+    <rect x="582" y="210" width="150" height="70" rx="8" fill="#f4eefb" stroke="#d9c7ec"/><text x="657" y="239" font-size="14" fill="#8a6db3">○</text><text x="657" y="261" fill="#8a6db3">按需注入配置</text>
+    <rect x="740" y="210" width="150" height="70" rx="8" fill="#f7f7f9" stroke="#ececf1"/><text x="815" y="248" fill="#c7c7cc">—</text>
+    <rect x="898" y="210" width="152" height="70" rx="8" fill="#f7f7f9" stroke="#ececf1"/><text x="974" y="248" fill="#c7c7cc">—</text>
+  </g>
+
+  <!-- row3 引 starter -->
+  <rect x="30" y="286" width="228" height="70" rx="9" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="46" y="315" font-size="10.5" font-weight="700" fill="#5a3410">引 starter</text>
+  <text x="46" y="333" font-size="8.4" fill="#93762e">spring-boot-starter-*</text>
+  <text x="46" y="348" font-size="8" fill="#a1a1a6">一个依赖拉全一套</text>
+  <g text-anchor="middle" font-size="8.4">
+    <rect x="266" y="286" width="150" height="70" rx="8" fill="#f7f7f9" stroke="#ececf1"/><text x="341" y="324" fill="#c7c7cc">—</text>
+    <rect x="424" y="286" width="150" height="70" rx="8" fill="#eafaf1" stroke="#bfe0cd"/><text x="499" y="315" font-size="15" fill="#12402a">●</text><text x="499" y="337" fill="#2f6f4f">依赖驱动装配</text>
+    <rect x="582" y="286" width="150" height="70" rx="8" fill="#f7f7f9" stroke="#ececf1"/><text x="657" y="324" fill="#c7c7cc">—</text>
+    <rect x="740" y="286" width="150" height="70" rx="8" fill="#e7f0fb" stroke="#b9d2ef"/><text x="815" y="315" font-size="14" fill="#5b7db1">○</text><text x="815" y="337" fill="#5b7db1">web starter 带</text>
+    <rect x="898" y="286" width="152" height="70" rx="8" fill="#fff7e6" stroke="#e8cf9a"/><text x="974" y="315" font-size="15" fill="#93762e">●</text><text x="974" y="337" fill="#93762e">自身即入口</text>
+  </g>
+
+  <!-- legend / note -->
+  <rect x="30" y="378" width="1020" height="96" rx="12" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="46" y="400" font-size="10.5" font-weight="700" fill="#1d1d1f">读法</text>
+  <text x="46" y="420" font-size="9" fill="#6e6e73">启动 run 依赖 IoC 容器(refresh)+ 自动配置(条件装配)+ 配置属性(环境绑定)+ 内嵌服务器(仅 web 应用);starter 经依赖间接触发自动配置。</text>
+  <text x="46" y="440" font-size="9" fill="#6e6e73">写业务 bean 依赖 IoC 容器(注入)+ 自动配置(默认 bean 可覆盖,@ConditionalOnMissingBean)+ 配置属性(按需注入)。</text>
+  <text x="46" y="460" font-size="9" fill="#6e6e73">引 starter 是依赖入口,把技术 jar + .imports 带上 classpath,驱动对应模块的自动配置生效;web starter 带内嵌服务器。</text>
+</svg>
