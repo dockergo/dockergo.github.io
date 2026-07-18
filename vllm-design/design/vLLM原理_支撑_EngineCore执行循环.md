@@ -1,16 +1,16 @@
 # vLLM 原理 · 支撑主线 · EngineCore 执行循环
 
-> **定位**：属"引擎能力域"——vLLM 的心脏。管推理主循环:EngineCore 的 step()(调度→前向→输出)busy loop,并可拆到独立进程(AsyncLLM/MPClient)与 API 前端异步通信。是串起调度/执行/采样的驱动器。调用【连续批处理】选批、【采样】出 token。源码基准 **vLLM(git 7aab6e2)**(`vllm/v1/engine/core.py`)。
+> **定位**：属"引擎能力域"——vLLM 的心脏。管推理主循环:EngineCore 的 step(调度→前向→输出)busy loop,并可拆到独立进程(AsyncLLM/MPClient)与 API 前端异步通信。是串起调度/执行/采样的驱动器。调用【连续批处理】选批、【采样】出 token。源码基准 **vLLM(git 7aab6e2)**(`vllm/v1/engine/core.py`)。
 
-调度选好批、模型跑前向、采样出 token——谁把这些串成一个不停转的循环?**EngineCore**。它的 `step()` = 调度一批 → 交给执行器跑模型 → 处理输出(采样、检查停止、回填);busy loop 反复 step 直到没请求。v1 的关键设计:把 EngineCore 拆到**独立进程**,API 前端(FastAPI/AsyncLLM)通过队列异步喂请求/取结果——前端处理 HTTP 不阻塞 GPU 循环。理解"step 循环 + 进程拆分",就懂了 vLLM 的执行骨架。
+调度选好批、模型跑前向、采样出 token——谁把这些串成一个不停转的循环?**EngineCore**。它的 `step` = 调度一批 → 交给执行器跑模型 → 处理输出(采样、检查停止、回填);busy loop 反复 step 直到没请求。v1 的关键设计:把 EngineCore 拆到**独立进程**,API 前端(FastAPI/AsyncLLM)通过队列异步喂请求/取结果——前端处理 HTTP 不阻塞 GPU 循环。理解"step 循环 + 进程拆分",就懂了 vLLM 的执行骨架。
 
 ---
 
-## 一、EngineCore.step():一步推理
+## 一、EngineCore.step:一步推理
 
 ![vLLM step 循环](vLLM原理_引擎_01step.svg)
 
-**EngineCore**(`vllm/v1/engine/core.py:97`)的核心是 `step()`(:546):
+**EngineCore**(`vllm/v1/engine/core.py:97`)的核心是 `step`(:546):
 
 - 一步三件事:① **schedule** 调度一批请求(见【连续批处理】)② **execute_model** 交执行器跑模型前向 ③ **update_from_output** 处理输出(采样结果回填请求、判停止、完成的出队)。
 - busy loop 反复 step——只要还有 running/waiting 请求就继续。
@@ -54,7 +54,7 @@ v1 把 EngineCore 拆到独立进程:
 | 项 | 定义 | 职责 |
 |---|---|---|
 | EngineCore | `v1/engine/core.py:97` | 推理核心 |
-| step() | `:546` | 一步:调度→前向→输出 |
+| step | `:546` | 一步:调度→前向→输出 |
 | EngineCoreProc | `:963` | 独立进程 busy loop |
 | input/output_queue | `:982` / `:983` | 请求/结果队列 |
 | AsyncLLM | `async_llm.py:70` | 异步引擎(在线) |
@@ -77,4 +77,4 @@ v1 把 EngineCore 拆到独立进程:
 
 ## 一句话总纲
 
-**vLLM 的心脏 EngineCore(v1/engine/core.py:97):step()(:546)一步=schedule 选批→execute_model 跑前向→update_from_output 采样回填判停,busy loop 反复 step 串起调度/执行/采样;v1 把它拆到独立进程 EngineCoreProc(:963,run_busy_loop:1326)经 input_queue(:982)/output_queue(:983)与前端异步通信——避开 Python GIL 让 GPU 循环不被前端 IO 阻塞;AsyncLLM(async_llm.py:70)+ EngineCoreClient(InprocClient 离线同进程 / AsyncMPClient 在线异步多进程)按场景适配;v0 已删,vllm/engine/ 只是转发到 v1 的兼容壳。**
+**vLLM 的心脏 EngineCore(v1/engine/core.py:97):step(:546)一步=schedule 选批→execute_model 跑前向→update_from_output 采样回填判停,busy loop 反复 step 串起调度/执行/采样;v1 把它拆到独立进程 EngineCoreProc(:963,run_busy_loop:1326)经 input_queue(:982)/output_queue(:983)与前端异步通信——避开 Python GIL 让 GPU 循环不被前端 IO 阻塞;AsyncLLM(async_llm.py:70)+ EngineCoreClient(InprocClient 离线同进程 / AsyncMPClient 在线异步多进程)按场景适配;v0 已删,vllm/engine/ 只是转发到 v1 的兼容壳。**

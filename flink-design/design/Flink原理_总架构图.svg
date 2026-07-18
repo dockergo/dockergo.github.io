@@ -4,11 +4,11 @@
     <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
   </defs>
   <rect width="1080" height="800" fill="#fbfbfd"/>
-  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Flink 核心原理 · 总架构图（位置即语义）</text>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Flink 核心原理 · 总架构图</text>
   <text x="30" y="50" font-size="10.5" fill="#a1a1a6">流优先统一计算引擎:多 API 汇入统一执行管线,mailbox 单线程执行,credit 网络交换,分布式快照容错</text>
 
   <!-- API layer -->
-  <rect x="30" y="64" width="1020" height="66" rx="13" fill="#f4eefb" stroke="#d9c7ec"/>
+  <rect x="30" y="64" width="1020" height="66" rx="13" fill="#f4eefb" stroke="#d9c7ec" data-tid="api" data-lab="编程 API"/>
   <text x="46" y="84" font-size="11" font-weight="700" fill="#5a3d78">编程 API 接触面（多 API,非 SQL 语句族）</text>
   <g text-anchor="middle" font-size="8.8">
     <rect x="46" y="94" width="490" height="30" rx="8" fill="#faf4fb" stroke="#e2d2ee"/><text x="291" y="113" fill="#5a3d78">DataStream API(命令式:map/keyBy/window,含 V2 FLIP-409)</text>
@@ -16,7 +16,7 @@
   </g>
 
   <!-- graph transform -->
-  <rect x="30" y="144" width="1020" height="88" rx="14" fill="#eef3fb" stroke="#bcd0ec"/>
+  <rect x="30" y="144" width="1020" height="88" rx="14" fill="#eef3fb" stroke="#bcd0ec" data-tid="graph" data-lab="图变换"/>
   <text x="46" y="166" font-size="11" font-weight="700" fill="#1b2a4a">图变换(编译):两 API 汇入同一管线</text>
   <g text-anchor="middle" font-size="8.8">
     <rect x="46" y="178" width="310" height="44" rx="8" fill="#f3f7fc" stroke="#cfe0f2"/><text x="201" y="198" font-weight="600" fill="#274a78">StreamGraph(逻辑 DAG)</text><text x="201" y="214" fill="#5b7db1">一节点一算子</text>
@@ -30,16 +30,16 @@
   <rect x="30" y="246" width="1020" height="90" rx="14" fill="#e6f7ee" stroke="#bfe0cd"/>
   <text x="46" y="268" font-size="11" font-weight="700" fill="#12402a">JobManager（调度与协调 · 不处理数据）</text>
   <g text-anchor="middle" font-size="8.5">
-    <rect x="46" y="280" width="320" height="46" rx="8" fill="#eafaf1" stroke="#bfe0cd"/><text x="206" y="300" font-weight="600" fill="#12402a">JobMaster(单作业领导)</text><text x="206" y="316" fill="#2f6f4f">持 SchedulerNG,调度子任务</text>
-    <rect x="376" y="280" width="320" height="46" rx="8" fill="#eafaf1" stroke="#bfe0cd"/><text x="536" y="300" font-weight="600" fill="#12402a">ResourceManager + SlotManager</text><text x="536" y="316" fill="#2f6f4f">集群资源,分配 slot</text>
-    <rect x="706" y="280" width="328" height="46" rx="8" fill="#e6f7ee" stroke="#bfe0cd"/><text x="870" y="300" font-weight="600" fill="#12402a">CheckpointCoordinator</text><text x="870" y="316" fill="#2f6f4f">定时触发分布式快照(容错灵魂)</text>
+    <rect x="46" y="280" width="320" height="46" rx="8" fill="#eafaf1" stroke="#bfe0cd" data-tid="sched" data-lab="JobMaster"/><text x="206" y="300" font-weight="600" fill="#12402a">JobMaster(单作业领导)</text><text x="206" y="316" fill="#2f6f4f">持 SchedulerNG,调度子任务</text>
+    <rect x="376" y="280" width="320" height="46" rx="8" fill="#eafaf1" stroke="#bfe0cd" data-tid="sched" data-lab="ResourceManager"/><text x="536" y="300" font-weight="600" fill="#12402a">ResourceManager + SlotManager</text><text x="536" y="316" fill="#2f6f4f">集群资源,分配 slot</text>
+    <rect x="706" y="280" width="328" height="46" rx="8" fill="#e6f7ee" stroke="#bfe0cd" data-tid="ckpt" data-lab="CheckpointCoordinator"/><text x="870" y="300" font-weight="600" fill="#12402a">CheckpointCoordinator</text><text x="870" y="316" fill="#2f6f4f">定时触发分布式快照(容错灵魂)</text>
   </g>
 
   <!-- TaskManager -->
   <rect x="30" y="350" width="1020" height="220" rx="16" fill="#fff7e6" stroke="#e8cf9a"/>
   <text x="46" y="372" font-size="11" font-weight="700" fill="#5a3410">TaskManager / TaskExecutor（执行数据 · MPP 多节点并行 · slot 为资源单位）</text>
   <!-- slot with operator chain + mailbox -->
-  <rect x="46" y="384" width="470" height="112" rx="10" fill="#fef2e0" stroke="#e8cf9a" filter="url(#soft)"/>
+  <rect x="46" y="384" width="470" height="112" rx="10" fill="#fef2e0" stroke="#e8cf9a" filter="url(#soft)" data-tid="task" data-lab="Slot · 算子链 + mailbox"/>
   <text x="60" y="404" font-size="9.5" font-weight="600" fill="#5a3410">Slot(slot sharing:一条流水线共享)</text>
   <text x="60" y="422" font-size="8.3" fill="#93762e">算子链 · mailbox 单线程(记录/检查点/定时器串行,免加锁)</text>
   <g text-anchor="middle" font-size="8">
@@ -49,7 +49,7 @@
   </g>
   <text x="60" y="482" font-size="8" fill="#93762e">读写状态 backend · 收检查点屏障做异步快照</text>
 
-  <rect x="536" y="384" width="498" height="112" rx="10" fill="#fef2e0" stroke="#e8cf9a" filter="url(#soft)"/>
+  <rect x="536" y="384" width="498" height="112" rx="10" fill="#fef2e0" stroke="#e8cf9a" filter="url(#soft)" data-tid="net" data-lab="网络与数据交换"/>
   <text x="550" y="404" font-size="9.5" font-weight="600" fill="#5a3410">网络与数据交换(链间跨子任务)</text>
   <g text-anchor="middle" font-size="8">
     <rect x="550" y="416" width="230" height="34" rx="6" fill="#fff" stroke="#e8cf9a"/><text x="665" y="431" fill="#5a3410">ResultPartition(生产)</text><text x="665" y="444" fill="#93762e">→ InputGate(消费)</text>
@@ -58,7 +58,7 @@
   <text x="550" y="472" font-size="8" fill="#93762e">keyed 分区按 key-group 确定性映射 · 屏障随数据流传播</text>
 
   <!-- state backend row -->
-  <rect x="46" y="506" width="988" height="52" rx="9" fill="#fff" stroke="#e8cf9a"/>
+  <rect x="46" y="506" width="988" height="52" rx="9" fill="#fff" stroke="#e8cf9a" data-tid="state" data-lab="状态后端"/>
   <text x="60" y="526" font-size="9.5" font-weight="600" fill="#5a3410">状态管理 State Backend · keyed/operator state · 按 key-group 分片(rescale 基础)</text>
   <text x="60" y="544" font-size="8" fill="#93762e">HashMapStateBackend(堆内,小状态低延迟) vs EmbeddedRocksDBStateBackend(盘,大状态+增量检查点)</text>
 
@@ -79,7 +79,7 @@
 
   <!-- semantics + pervasive -->
   <rect x="30" y="648" width="1020" height="56" rx="12" fill="#f7f7f9" stroke="#ececf1"/>
-  <text x="46" y="670" font-size="11" font-weight="700" fill="#1d1d1f">位置即语义</text>
+  <text x="46" y="670" font-size="11" font-weight="700" fill="#1d1d1f"></text>
   <text x="46" y="690" font-size="8.8" fill="#6e6e73">上=多 API 接触面;上中=图变换编译;中=JobManager 调度;下中=TaskManager 执行(mailbox+网络+状态);下=外部系统。JM 只调度,数据全在 TM。</text>
 
   <rect x="30" y="716" width="1020" height="46" rx="12" fill="#f0f0f4" stroke="#d2d2d7"/>

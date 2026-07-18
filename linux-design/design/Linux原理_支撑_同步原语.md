@@ -9,7 +9,7 @@
 选锁的**第一判据是"持锁期间会不会睡眠"**（等 IO、可能阻塞的内存分配、调用可能睡眠的函数）。
 
 - **忙等类（不可睡眠）**：`spinlock`。拿不到锁就**原地自旋**，因此临界区内绝不能睡眠、必须极短。`spin_lock` 会 `preempt_disable` 关抢占（`spinlock.h`）；与中断共享数据要用 `spin_lock_irqsave`（关本地中断）或 `spin_lock_bh`（关软中断），否则中断里再抢同一锁会自死锁。
-- **睡眠类（可睡眠）**：`mutex` / `rwsem` / `semaphore`。拿不到锁就**让出 CPU 睡眠**（入口都有 `might_sleep()`，`mutex.c:623`、`rwsem.c` down_read/down_write），因此不能在原子上下文（中断、持 spinlock）里用。
+- **睡眠类（可睡眠）**：`mutex` / `rwsem` / `semaphore`。拿不到锁就**让出 CPU 睡眠**（入口都有 `might_sleep`，`mutex.c:623`、`rwsem.c` down_read/down_write），因此不能在原子上下文（中断、持 spinlock）里用。
 - **无锁读类**：`RCU` / `seqlock`，读侧几乎零开销，见下方深化。
 
 | 原语 | 上下文 | 抢不到时 | 读写并发 | 典型场景 |

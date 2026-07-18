@@ -25,7 +25,7 @@
 所有读图都经 **Read 接口**(`community/kernel-api/.../Read.java:38`)的游标:
 
 - `singleNode(id, NodeCursor)`(`:330`)、`allNodesScan`(`:311`)、`singleRelationship`(`:446`)、`nodeProperties(..., PropertyCursor)`(`:585`)、索引 seek `nodeIndexSeek`(`:76`)、label 扫 `nodeLabelScan`(`:283`,返 `NodeLabelIndexCursor`)。
-- **游标类型**:`NodeCursor`/`PropertyCursor`/`RelationshipTraversalCursor`/`NodeIndexCursor`/`NodeLabelIndexCursor`。游标是"指向当前实体的可移动指针",`next()` 前进。
+- **游标类型**:`NodeCursor`/`PropertyCursor`/`RelationshipTraversalCursor`/`NodeIndexCursor`/`NodeLabelIndexCursor`。游标是"指向当前实体的可移动指针",`next` 前进。
 - **运行时→内核桥**:Cypher 的 `TransactionBoundQueryContext.getRelationshipsForIds`(`:787`)分配 NodeCursor、`read.singleNode` 定位、按方向建关系游标遍历——所有图读都汇聚到 kernel 游标。
 
 **为什么游标**:游标是流式、零拷贝的读取——不 materialize 整个结果集,而是按需前进,配合免索引邻接实现"边遍历边产结果"。
@@ -36,8 +36,8 @@
 
 ![Neo4j Label 扫描与遍历](Neo4j原理_索引_03遍历.svg)
 
-- **label 扫描 = LOOKUP token 索引**:`Read.nodeLabelScan` 返 `NodeLabelIndexCursor`;运行时 `NodeByLabelScanPipe`(`:33`)解析 label token id、`getNodesByLabel` 经 `reads().nodeLabelScan(...)`(`:1222`)拿到该 label 的所有节点。token 索引存底层 GBP-tree(`TokenScanLayout`/`TokenScanKey`)。
-- **遍历落到免索引邻接**:`StorageRelationshipTraversalCursor.neighbourNodeReference()` 是存储级遍历契约;`NodeCursor.relationships(cursor, selection)` 从节点发起遍历,`RecordRelationshipTraversalCursor` 顺着关系链走(见记录存储篇)——**不查关系索引**。
+- **label 扫描 = LOOKUP token 索引**:`Read.nodeLabelScan` 返 `NodeLabelIndexCursor`;运行时 `NodeByLabelScanPipe`(`:33`)解析 label token id、`getNodesByLabel` 经 `reads.nodeLabelScan(...)`(`:1222`)拿到该 label 的所有节点。token 索引存底层 GBP-tree(`TokenScanLayout`/`TokenScanKey`)。
+- **遍历落到免索引邻接**:`StorageRelationshipTraversalCursor.neighbourNodeReference` 是存储级遍历契约;`NodeCursor.relationships(cursor, selection)` 从节点发起遍历,`RecordRelationshipTraversalCursor` 顺着关系链走(见记录存储篇)——**不查关系索引**。
 
 **分工清晰**:索引找起点(按 label/property/全文/向量),免索引邻接做遍历(跟指针)。两者配合:`MATCH (p:Person {name:'Alice'})-[:KNOWS]->(friend)` = 索引 seek 找 Alice(起点)+ expand 遍历 KNOWS 关系链(免索引)。
 

@@ -11,7 +11,7 @@
   <rect width="1020" height="670" fill="#fbfbfd"/>
   <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">Google QUICHE 总架构 · C++ 分层：应用 → Session → Connection → Framer/加密 → Writer</text>
 
-  <rect x="30" y="46" width="960" height="44" rx="11" fill="#f6f6f8" stroke="#e2e2e7"/>
+  <rect x="30" y="46" width="960" height="44" rx="11" fill="#f6f6f8" stroke="#e2e2e7" data-tid="Quiche原理_全景主线框架" data-lab="全景"/>
   <text x="46" y="63" font-size="10.5" font-weight="600" fill="#1d1d1f">powers</text>
   <text x="96" y="63" font-size="10" fill="#494950">Chromium · Envoy · Google 服务器 —— Google 的生产级 QUIC / HTTP2 / HTTP3 / WebTransport / MASQUE / MoQT 栈</text>
   <text x="46" y="82" font-size="9" fill="#86868b">QUIC 传输是核心；HTTP/BinaryHTTP/Oblivious-HTTP/BlindSignAuth 等是其上应用</text>
@@ -19,44 +19,51 @@
   <!-- 应用 -->
   <rect x="30" y="104" width="960" height="70" rx="14" fill="#f4eefb" stroke="#d9c9ef" filter="url(#soft)"/>
   <text x="48" y="128" font-size="12" font-weight="600" fill="#3c1361">① 应用（提供 IO 原语，用 Session/Stream API）</text>
-  <rect x="48" y="140" width="290" height="26" rx="7" fill="#ffffff" stroke="#d9c9ef"/><text x="193" y="158" font-size="8.5" fill="#3c1361" text-anchor="middle">收 UDP → QuicConnection::ProcessUdpPacket</text>
-  <rect x="350" y="140" width="290" height="26" rx="7" fill="#ffffff" stroke="#d9c9ef"/><text x="495" y="158" font-size="8.5" fill="#3c1361" text-anchor="middle">提供 QuicPacketWriter + QuicAlarmFactory</text>
-  <rect x="652" y="140" width="318" height="26" rx="7" fill="#ffffff" stroke="#d9c9ef"/><text x="811" y="158" font-size="8.5" fill="#3c1361" text-anchor="middle">经 QuicSession/QuicStream 读写数据、实现 Visitor 回调</text>
+  <rect x="48" y="140" width="290" height="26" rx="7" fill="#ffffff" stroke="#d9c9ef" data-tid="Quiche原理_接口_IO与事件驱动" data-lab="ProcessUdpPacket"/><text x="193" y="158" font-size="8.5" fill="#3c1361" text-anchor="middle">收 UDP → QuicConnection::ProcessUdpPacket</text>
+  <rect x="350" y="140" width="290" height="26" rx="7" fill="#ffffff" stroke="#d9c9ef" data-tid="Quiche原理_接口_IO与事件驱动" data-lab="Writer/Alarm"/><text x="495" y="158" font-size="8.5" fill="#3c1361" text-anchor="middle">提供 QuicPacketWriter + QuicAlarmFactory</text>
+  <rect x="652" y="140" width="318" height="26" rx="7" fill="#ffffff" stroke="#d9c9ef" data-tid="Quiche原理_接口_会话与连接" data-lab="Session/Stream API"/><text x="811" y="158" font-size="8.5" fill="#3c1361" text-anchor="middle">经 QuicSession/QuicStream 读写数据、实现 Visitor 回调</text>
 
   <!-- QuicDispatcher (server) -->
   <rect x="30" y="188" width="960" height="60" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
   <text x="48" y="210" font-size="11.5" font-weight="600" fill="#1b2a4a">② QuicDispatcher（服务端 · quic_dispatcher.h:62）：按 connection ID 把入站包 demux 到对应会话</text>
   <text x="48" y="232" font-size="9" fill="#5b7db1">ProcessPacket(:85) → 新连接建 QuicSession、已有连接路由过去；客户端侧无 Dispatcher（一连接一 Connection）</text>
+  <text x="48" y="244" font-size="8.5" fill="#86868b">入口防护：3× 放大限制 · Retry 地址验证 · 缓冲限流 · stateless reset（可靠性与抗攻击）</text>
+  <rect x="30" y="188" width="478" height="60" fill="none" stroke="none" data-tid="Quiche原理_接口_HTTP与流" data-lab="Dispatcher 接客"/>
+  <rect x="512" y="188" width="478" height="60" fill="none" stroke="none" data-tid="Quiche原理_支撑_可靠性与抗攻击" data-lab="入口抗攻击"/>
 
   <!-- Session -->
   <rect x="30" y="262" width="470" height="130" rx="14" fill="#eafaf1" stroke="#bce6cd" filter="url(#soft)"/>
   <text x="48" y="286" font-size="12" font-weight="600" fill="#0f5132">③ QuicSession（quic_session.h:62）</text>
   <text x="48" y="308" font-size="9.5" fill="#3f8f66">管理连接内所有 QuicStream、把帧事件分发到流</text>
-  <rect x="48" y="320" width="210" height="26" rx="7" fill="#ffffff" stroke="#bce6cd"/><text x="153" y="338" font-size="8.5" fill="#0f5132" text-anchor="middle">GetOrCreateStream(:714)</text>
-  <rect x="270" y="320" width="212" height="26" rx="7" fill="#ffffff" stroke="#bce6cd"/><text x="376" y="338" font-size="8.5" fill="#0f5132" text-anchor="middle">OnStreamFrame / WritevData(:530)</text>
+  <rect x="48" y="320" width="210" height="26" rx="7" fill="#ffffff" stroke="#bce6cd" data-tid="Quiche原理_接口_会话与连接" data-lab="GetOrCreateStream"/><text x="153" y="338" font-size="8.5" fill="#0f5132" text-anchor="middle">GetOrCreateStream(:714)</text>
+  <rect x="270" y="320" width="212" height="26" rx="7" fill="#ffffff" stroke="#bce6cd" data-tid="Quiche原理_接口_会话与连接" data-lab="WritevData"/><text x="376" y="338" font-size="8.5" fill="#0f5132" text-anchor="middle">OnStreamFrame / WritevData(:530)</text>
   <text x="48" y="366" font-size="9" fill="#3f8f66">QuicSpdySession 子类加 HTTP/2·HTTP/3 语义（控制流/QPACK）</text>
+  <rect x="48" y="352" width="454" height="18" fill="none" stroke="none" data-tid="Quiche原理_支撑_HTTP3与QPACK" data-lab="QuicSpdySession"/>
   <text x="48" y="384" font-size="8.5" fill="#5aa06f">QuicStream：单条流的收发缓冲 + 流控</text>
+  <rect x="48" y="372" width="454" height="16" fill="none" stroke="none" data-tid="Quiche原理_支撑_流与流量控制" data-lab="QuicStream 流控"/>
 
   <!-- Connection -->
   <rect x="520" y="262" width="470" height="130" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
   <text x="538" y="286" font-size="12" font-weight="600" fill="#1d1d1f">④ QuicConnection（quic_connection.h）</text>
   <text x="538" y="308" font-size="9.5" fill="#494950">连接状态机核心：收包解密解帧、发包组包加密</text>
-  <rect x="538" y="320" width="210" height="26" rx="7" fill="#eef3fb" stroke="#bcd0ec"/><text x="643" y="338" font-size="8.5" fill="#1b2a4a" text-anchor="middle">ProcessUdpPacket(:692) 入站</text>
-  <rect x="760" y="320" width="212" height="26" rx="7" fill="#eafaf1" stroke="#bce6cd"/><text x="866" y="338" font-size="8.5" fill="#0f5132" text-anchor="middle">写出经 QuicPacketWriter(:723)</text>
+  <rect x="538" y="320" width="210" height="26" rx="7" fill="#eef3fb" stroke="#bcd0ec" data-tid="Quiche原理_支撑_连接管理与迁移" data-lab="Connection 状态机"/><text x="643" y="338" font-size="8.5" fill="#1b2a4a" text-anchor="middle">ProcessUdpPacket(:692) 入站</text>
+  <rect x="760" y="320" width="212" height="26" rx="7" fill="#eafaf1" stroke="#bce6cd" data-tid="Quiche原理_接口_IO与事件驱动" data-lab="PacketWriter 出"/><text x="866" y="338" font-size="8.5" fill="#0f5132" text-anchor="middle">写出经 QuicPacketWriter(:723)</text>
   <text x="538" y="366" font-size="9" fill="#494950">内含 QuicSentPacketManager（丢包/拥塞）、QuicFramer、加密</text>
+  <rect x="538" y="352" width="215" height="18" fill="none" stroke="none" data-tid="Quiche原理_支撑_丢包检测与恢复" data-lab="SentPacketManager"/>
+  <rect x="757" y="352" width="215" height="18" fill="none" stroke="none" data-tid="Quiche原理_支撑_拥塞控制" data-lab="拥塞控制"/>
   <text x="538" y="384" font-size="8.5" fill="#86868b">定时器经 QuicAlarmFactory(:562) 建</text>
 
   <!-- Framer + crypto -->
   <rect x="30" y="406" width="620" height="130" rx="14" fill="#fff7e6" stroke="#f0dcae" filter="url(#soft)"/>
   <text x="48" y="430" font-size="12" font-weight="600" fill="#7a4d00">⑤ QuicFramer + 加密（线上字节 ↔ 帧）</text>
-  <rect x="48" y="444" width="290" height="76" rx="10" fill="#ffffff" stroke="#f0dcae"/><text x="193" y="466" font-size="9.5" font-weight="600" fill="#7a4d00" text-anchor="middle">QuicFramer / QuicPacketCreator</text><text x="193" y="486" font-size="8.5" fill="#9a7328" text-anchor="middle">解析入站包→帧（Visitor 回调）</text><text x="193" y="504" font-size="8.5" fill="#9a7328" text-anchor="middle">组装出站帧→包（packet_creator.h:52）</text>
-  <rect x="354" y="444" width="296" height="76" rx="10" fill="#ffffff" stroke="#f0dcae"/><text x="502" y="466" font-size="9.5" font-weight="600" fill="#7a4d00" text-anchor="middle">QuicCryptoStream + AEAD</text><text x="502" y="486" font-size="8.5" fill="#9a7328" text-anchor="middle">TLS 1.3(BoringSSL) 握手走 CRYPTO 帧</text><text x="502" y="504" font-size="8.5" fill="#9a7328" text-anchor="middle">每包 AEAD 加密 + 头保护</text>
+  <rect x="48" y="444" width="290" height="76" rx="10" fill="#ffffff" stroke="#f0dcae" data-tid="Quiche原理_支撑_包与帧编解码" data-lab="QuicFramer/Creator"/><text x="193" y="466" font-size="9.5" font-weight="600" fill="#7a4d00" text-anchor="middle">QuicFramer / QuicPacketCreator</text><text x="193" y="486" font-size="8.5" fill="#9a7328" text-anchor="middle">解析入站包→帧（Visitor 回调）</text><text x="193" y="504" font-size="8.5" fill="#9a7328" text-anchor="middle">组装出站帧→包（packet_creator.h:52）</text>
+  <rect x="354" y="444" width="296" height="76" rx="10" fill="#ffffff" stroke="#f0dcae" data-tid="Quiche原理_支撑_TLS握手与加密" data-lab="CryptoStream+AEAD"/><text x="502" y="466" font-size="9.5" font-weight="600" fill="#7a4d00" text-anchor="middle">QuicCryptoStream + AEAD</text><text x="502" y="486" font-size="8.5" fill="#9a7328" text-anchor="middle">TLS 1.3(BoringSSL) 握手走 CRYPTO 帧</text><text x="502" y="504" font-size="8.5" fill="#9a7328" text-anchor="middle">每包 AEAD 加密 + 头保护</text>
 
   <!-- Writer/Alarm 抽象 -->
   <rect x="670" y="406" width="320" height="130" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
   <text x="688" y="430" font-size="12" font-weight="600" fill="#1b2a4a">⑥ IO 抽象（应用实现）</text>
-  <rect x="688" y="444" width="284" height="26" rx="7" fill="#ffffff" stroke="#bcd0ec"/><text x="830" y="462" font-size="8.5" fill="#1b2a4a" text-anchor="middle">QuicPacketWriter：把包写到 UDP socket</text>
-  <rect x="688" y="476" width="284" height="26" rx="7" fill="#ffffff" stroke="#bcd0ec"/><text x="830" y="494" font-size="8.5" fill="#1b2a4a" text-anchor="middle">QuicAlarmFactory：建定时器（epoll/事件循环）</text>
+  <rect x="688" y="444" width="284" height="26" rx="7" fill="#ffffff" stroke="#bcd0ec" data-tid="Quiche原理_接口_IO与事件驱动" data-lab="QuicPacketWriter"/><text x="830" y="462" font-size="8.5" fill="#1b2a4a" text-anchor="middle">QuicPacketWriter：把包写到 UDP socket</text>
+  <rect x="688" y="476" width="284" height="26" rx="7" fill="#ffffff" stroke="#bcd0ec" data-tid="Quiche原理_接口_IO与事件驱动" data-lab="QuicAlarmFactory"/><text x="830" y="494" font-size="8.5" fill="#1b2a4a" text-anchor="middle">QuicAlarmFactory：建定时器（epoll/事件循环）</text>
   <text x="688" y="522" font-size="8.5" fill="#5b7db1">→ 库不直接碰 socket/时钟，经抽象由应用驱动</text>
 
   <!-- 底部说明 -->
@@ -66,8 +73,31 @@
   <text x="48" y="622" font-size="10" fill="#494950">协议本身（QUIC/HTTP3）是 RFC 标准，两实现一致；差异在语言、API 形态与工程结构。</text>
   <text x="48" y="642" font-size="9" fill="#86868b">HTTP/2 在 quiche/http2/（HPACK），HTTP/3 在 quic/core/http/（QuicSpdySession + QPACK）。</text>
 
-  <line x1="510" y1="174" x2="510" y2="188" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
-  <line x1="510" y1="248" x2="510" y2="262" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
-  <line x1="500" y1="327" x2="520" y2="327" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
-  <line x1="340" y1="392" x2="340" y2="406" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <!-- ===== 模块间数据流连线（实线=主数据流；虚线=异步/反馈）===== -->
+  <!-- 入站主链：应用收 UDP → Dispatcher 按 CID demux → Connection → Framer 解密解帧 → Session 分发到流 -->
+  <line x1="193" y1="174" x2="193" y2="188" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+  <text x="201" y="185" font-size="8.5" fill="#86868b">喂入 UDP 报</text>
+
+  <line x1="643" y1="248" x2="643" y2="262" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+  <text x="635" y="259" font-size="8.5" fill="#86868b" text-anchor="end">按 CID demux 路由到连接</text>
+
+  <!-- Connection ↔ Framer：入站解密解帧 / 出站组包加密（双向）-->
+  <line x1="585" y1="392" x2="585" y2="406" stroke="#c7c7cc" stroke-width="1.4" marker-start="url(#ar)" marker-end="url(#ar)"/>
+  <text x="593" y="402" font-size="8.5" fill="#86868b">字节↔帧 · 解密/加密</text>
+
+  <!-- Connection → Session：帧事件分发到流（入站终点）-->
+  <line x1="520" y1="302" x2="500" y2="302" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+  <text x="510" y="294" font-size="8.5" fill="#86868b" text-anchor="middle">分发帧到流</text>
+
+  <!-- Session → Connection：出站写数据（WritevData）-->
+  <line x1="500" y1="352" x2="520" y2="352" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+  <text x="510" y="366" font-size="8.5" fill="#86868b" text-anchor="middle">出站 写数据</text>
+
+  <!-- Framer/Creator → Writer：加密后交 QuicPacketWriter 发出 -->
+  <line x1="650" y1="460" x2="670" y2="460" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+  <text x="660" y="440" font-size="8.5" fill="#86868b" text-anchor="middle">加密后发包</text>
+
+  <!-- QuicAlarm → Connection：定时器触发（异步 · 无自跑线程）-->
+  <line x1="900" y1="406" x2="900" y2="392" stroke="#b0b0b8" stroke-width="1.3" stroke-dasharray="4 3" marker-end="url(#ar)"/>
+  <text x="892" y="402" font-size="8.5" fill="#86868b" text-anchor="end">定时器 → 重传/PTO/pacing</text>
 </svg>

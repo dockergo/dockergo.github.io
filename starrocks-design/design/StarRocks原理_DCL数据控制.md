@@ -10,7 +10,7 @@
 
 ![StarRocks 认证链](StarRocks原理_DCL_01认证.svg)
 
-`AuthenticationHandler.authenticate()`(`fe/.../authentication/AuthenticationHandler.java:50`)先试**原生认证** `authenticateWithNative`(`:63`)再试**安全集成** `authenticateWithSecurityIntegration`(`:68`)。原生按 `AuthPlugin`(`:97`)经 `AuthenticationProviderFactory.create`(`:98`)选 provider 再 `authenticate(...)`(`:115`)。
+`AuthenticationHandler.authenticate`(`fe/.../authentication/AuthenticationHandler.java:50`)先试**原生认证** `authenticateWithNative`(`:63`)再试**安全集成** `authenticateWithSecurityIntegration`(`:68`)。原生按 `AuthPlugin`(`:97`)经 `AuthenticationProviderFactory.create`(`:98`)选 provider 再 `authenticate(...)`(`:115`)。
 
 支持的认证 provider(`fe/.../authentication/`):
 - `PlainPasswordAuthenticationProvider`(密码)

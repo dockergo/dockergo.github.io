@@ -13,7 +13,7 @@ rustc 把源码逐级降成越来越低层的中间表示,每级做特定分析:
 管线(`rustc_interface/src/passes.rs` 编排):
 
 1. **lex**:`rustc_lexer` 原始分词 → `rustc_parse` 包装(`lex_token_trees`,`lexer/mod.rs:65`)。
-2. **parse → AST**:`parse()`(`passes.rs:54`)`parser.parse_crate_mod()` 产 `ast::Crate`。
+2. **parse → AST**:`parse`(`passes.rs:54`)`parser.parse_crate_mod` 产 `ast::Crate`。
 3. **AST → HIR**:`rustc_ast_lowering`(`lib.rs:1` "Lowers the AST to the HIR")去语法糖、名字解析;`lower_to_hir`(`:100`)。
 4. **HIR → THIR → MIR**:`rustc_mir_build`(`lib.rs:1` "Construction of MIR from HIR");先 `thir_body`(带类型的 HIR)→ 再 `construct_fn` 建 MIR(`builder/mod.rs:67`)。
 5. **MIR 变换/优化**:`rustc_mir_transform`(`run_optimization_passes`,`lib.rs:700`;`optimized_mir`,`:801`)。

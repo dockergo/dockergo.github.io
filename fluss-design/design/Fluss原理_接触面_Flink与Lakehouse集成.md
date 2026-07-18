@@ -18,7 +18,7 @@ Fluss 与 Flink 的集成不是简单的读写 connector，而是三层能力叠
 
 ![Lookup join 维表](Fluss原理_Flink_lookupjoin.svg)
 
-`getLookupRuntimeProvider`（`FlinkTableSource.java:468`）先用 `LookupNormalizer` 校验 lookup key 命中主键/bucket key/前缀，再据 `lookupAsync` 选 `FlinkAsyncLookupFunction`（`flink/source/lookup/FlinkAsyncLookupFunction.java:55`）或同步版。`open()` 建 `Lookuper`（`table.newLookup()`，前缀 join 时 `lookupBy(fieldNames)`，`:110-118`）；`asyncLookup(keyRow)` 归一化 key 后 `lookuper.lookup(...)` 走 KvTablet 点查，`whenComplete` 里做剩余过滤与投影（`:129-163`）。可选客户端缓存包成 `PartialCachingLookupProvider`。
+`getLookupRuntimeProvider`（`FlinkTableSource.java:468`）先用 `LookupNormalizer` 校验 lookup key 命中主键/bucket key/前缀，再据 `lookupAsync` 选 `FlinkAsyncLookupFunction`（`flink/source/lookup/FlinkAsyncLookupFunction.java:55`）或同步版。`open` 建 `Lookuper`（`table.newLookup`，前缀 join 时 `lookupBy(fieldNames)`，`:110-118`）；`asyncLookup(keyRow)` 归一化 key 后 `lookuper.lookup(...)` 走 KvTablet 点查，`whenComplete` 里做剩余过滤与投影（`:129-163`）。可选客户端缓存包成 `PartialCachingLookupProvider`。
 
 ---
 
@@ -26,7 +26,7 @@ Fluss 与 Flink 的集成不是简单的读写 connector，而是三层能力叠
 
 ![Union read 联合读](Fluss原理_Flink_unionread.svg)
 
-`FlinkSourceEnumerator` 持 `LakeSource`（`flink/source/enumerator/FlinkSourceEnumerator.java:248`），`generateHybridLakeFlussSplits`（`:1057`）经 `LakeSplitGenerator`（`flink/lake/LakeSplitGenerator.java:88`）：`getReadableLakeSnapshot` 取湖快照 → `lakeSource.createPlanner(snapshotId).plan()` 得湖侧 split → `getTableBucketsOffset()` 得**每桶的 log offset 分界点**（`:108`）→ 构造 `LakeSnapshotAndFlussLogSplit(bucket, lakeSplits, snapshotLogOffset, stoppingOffset)`（`:306`）。湖快照读历史，Fluss log 从该 offset 起接续实时——按 **offset 分界**而非 timestamp。startup 为 FULL 且有 lake 时 `enableLakeSource=true`（`FlinkTableSource.java:381`）。
+`FlinkSourceEnumerator` 持 `LakeSource`（`flink/source/enumerator/FlinkSourceEnumerator.java:248`），`generateHybridLakeFlussSplits`（`:1057`）经 `LakeSplitGenerator`（`flink/lake/LakeSplitGenerator.java:88`）：`getReadableLakeSnapshot` 取湖快照 → `lakeSource.createPlanner(snapshotId).plan` 得湖侧 split → `getTableBucketsOffset` 得**每桶的 log offset 分界点**（`:108`）→ 构造 `LakeSnapshotAndFlussLogSplit(bucket, lakeSplits, snapshotLogOffset, stoppingOffset)`（`:306`）。湖快照读历史，Fluss log 从该 offset 起接续实时——按 **offset 分界**而非 timestamp。startup 为 FULL 且有 lake 时 `enableLakeSource=true`（`FlinkTableSource.java:381`）。
 
 ---
 

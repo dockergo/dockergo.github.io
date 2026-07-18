@@ -8,13 +8,13 @@
 
 **接口注入是灵魂**：`NewRaft(conf, fsm, logs, stable, snaps, trans)`（`api.go:508`）接收六个参数——`conf`（`config.go` 参数）与 5 个由宿主实现的接口，随后启动 3 个后台协程 `run` / `runFSM` / `runSnapshots`（`api.go:636-638`）。5 个接口把库“外包”出去的能力精确划界：
 
-- **FSM**（`fsm.go:16`）：业务状态机。`Apply(*Log)` 在日志被多数派提交后调用、`Snapshot()(FSMSnapshot,error)` 生成快照、`Restore(io.ReadCloser)` 从快照恢复。可选实现 `BatchingFSM`（`fsm.go:54`，`ApplyBatch` 批量应用，最多 `MaxAppendEntries` 条）。
+- **FSM**（`fsm.go:16`）：业务状态机。`Apply(*Log)` 在日志被多数派提交后调用、`Snapshot(FSMSnapshot,error)` 生成快照、`Restore(io.ReadCloser)` 从快照恢复。可选实现 `BatchingFSM`（`fsm.go:54`，`ApplyBatch` 批量应用，最多 `MaxAppendEntries` 条）。
 - **LogStore**（`log.go:112`）：日志条目存取——`FirstIndex/LastIndex/GetLog/StoreLog/StoreLogs/DeleteRange`。生产常用 `raft-boltdb`。
 - **StableStore**（`stable.go:8`）：单调元数据——`Set/Get`（`[]byte`）与 `SetUint64/GetUint64`，持久化 CurrentTerm / LastVote。
 - **SnapshotStore**：快照的 `Create/Open/List`（`snaps` 参数，如 `FileSnapshotStore`）。
-- **Transport**（`transport.go:31`）：节点间 RPC——`AppendEntries/RequestVote/InstallSnapshot/TimeoutNow` + `Consumer()` 消费入站 + `AppendEntriesPipeline` 流水线。
+- **Transport**（`transport.go:31`）：节点间 RPC——`AppendEntries/RequestVote/InstallSnapshot/TimeoutNow` + `Consumer` 消费入站 + `AppendEntriesPipeline` 流水线。
 
-**Apply 写路径**（Leader 上，图右）：`Apply(cmd, timeout)`（`api.go:867`）返回 `ApplyFuture` → 命令投递 applyCh、`run` 主线程 `dispatchLogs`（`raft.go:1245`）写本地日志 → Transport 复制到 follower → 多数派确认后 `commitment` 推进 commitIndex → `processLogs`（`raft.go:1296`）送 `fsmMutateCh` → `runFSM` 调 `FSM.Apply` → `future.respond(FSM 返回值)`，宿主 `future.Response()` 取结果。**非 Leader 调 `Apply` 返回 `ErrNotLeader`**，宿主须自行重定向。
+**Apply 写路径**（Leader 上，图右）：`Apply(cmd, timeout)`（`api.go:867`）返回 `ApplyFuture` → 命令投递 applyCh、`run` 主线程 `dispatchLogs`（`raft.go:1245`）写本地日志 → Transport 复制到 follower → 多数派确认后 `commitment` 推进 commitIndex → `processLogs`（`raft.go:1296`）送 `fsmMutateCh` → `runFSM` 调 `FSM.Apply` → `future.respond(FSM 返回值)`，宿主 `future.Response` 取结果。**非 Leader 调 `Apply` 返回 `ErrNotLeader`**，宿主须自行重定向。
 
 ---
 
@@ -48,7 +48,7 @@
 
 ## 调优要点
 
-- **Future 必须等待**：`Apply` 等返回 Future，务必 `.Error()`/`.Response()`，否则拿不到“已提交并 apply”的真实结果。
+- **Future 必须等待**：`Apply` 等返回 Future，务必 `.Error`/`.Response`，否则拿不到“已提交并 apply”的真实结果。
 - **选对 LogStore/StableStore 实现**：生产用 `raft-boltdb`（可选开 `MonotonicLogStore` 优化）；测试用 `InmemStore`。
 - **BatchingFSM**：写吞吐高时实现 `ApplyBatch`，一次拿一批已提交日志，减少 apply 开销。
 - **VerifyLeader 做线性读**：读之前调它确认领导权，避免读到旧 Leader 的过期数据。

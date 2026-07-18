@@ -31,7 +31,7 @@ PyTorch 不是数据系统，先立几条认知：
 
 ![总架构](PyTorch原理_全景_02总架构.svg)
 
-以贯穿示例 `y=model(x); loss.backward(); opt.step()` 看：① Python 前端（torch/nn/optim，经 pybind 下到 C++）→ ② **Dispatcher**（`Dispatcher.h:71`，按 `DispatchKeySet` 分层：Autograd key 记反向图节点再 redispatch → Autocast 等切面 → Backend key 选 CPU/CUDA kernel）→ ③ **ATen 算子库**（~2000 算子，`native_functions.yaml` 声明 schema，structured kernel 分离形状推导与计算）→ ④ **设备后端**（CPU 向量化/CUDA 调 cuBLAS/cuDNN，异步 stream）+ ⑤ 内存（CUDACachingAllocator 显存池化、Storage 引用计数、view 共享）。`backward()` 沿前向建好的反向图逆序遍历（`engine.cpp:1294`）又走一遍 ②③④。
+以贯穿示例 `y=model(x); loss.backward; opt.step` 看：① Python 前端（torch/nn/optim，经 pybind 下到 C++）→ ② **Dispatcher**（`Dispatcher.h:71`，按 `DispatchKeySet` 分层：Autograd key 记反向图节点再 redispatch → Autocast 等切面 → Backend key 选 CPU/CUDA kernel）→ ③ **ATen 算子库**（~2000 算子，`native_functions.yaml` 声明 schema，structured kernel 分离形状推导与计算）→ ④ **设备后端**（CPU 向量化/CUDA 调 cuBLAS/cuDNN，异步 stream）+ ⑤ 内存（CUDACachingAllocator 显存池化、Storage 引用计数、view 共享）。`backward` 沿前向建好的反向图逆序遍历（`engine.cpp:1294`）又走一遍 ②③④。
 
 ---
 
@@ -69,7 +69,7 @@ PyTorch 不是数据系统，先立几条认知：
 ## 六、三条贯穿全库的声明
 
 1. **张量是带元信息的内存视图，算子皆经 Dispatcher。** Tensor = TensorImpl（sizes/strides/dtype/device + 可选 AutogradMeta）+ 共享的 Storage；任何算子调用都进 Dispatcher 按 DispatchKeySet 分层选 kernel——这是所有能力的总线。
-2. **梯度来自动态反向图（define-by-run）。** 前向每个可微算子在 Autograd 层留下 grad_fn 节点连成图，`backward()` 从 loss 反向拓扑遍历、链式累积梯度到叶子张量的 `.grad`——不需要预先声明计算图。
+2. **梯度来自动态反向图（define-by-run）。** 前向每个可微算子在 Autograd 层留下 grad_fn 节点连成图，`backward` 从 loss 反向拓扑遍历、链式累积梯度到叶子张量的 `.grad`——不需要预先声明计算图。
 3. **eager 是默认，编译是可选加速。** 逐算子 eager 直观灵活；torch.compile（Dynamo 抓图 + Inductor 融合 codegen）在不改写法的前提下补上性能——动态优先、编译加速。
 
 ---
@@ -78,7 +78,7 @@ PyTorch 不是数据系统，先立几条认知：
 
 - **以为要先建静态图**：PyTorch 是 define-by-run，正常写 Python，反向图自动生成。
 - **忽视 Dispatcher**：不理解分层分发就看不懂 autograd/autocast/设备为何"自动"生效。
-- **CUDA 计时不同步**：kernel 异步执行，测时间要 `torch.cuda.synchronize()`，否则测的是 launch 时间。
+- **CUDA 计时不同步**：kernel 异步执行，测时间要 `torch.cuda.synchronize`，否则测的是 launch 时间。
 - **数据加载成瓶颈**：GPU 快但 DataLoader 慢会数据饥饿；调 num_workers/pin_memory/预取。
 
 ---

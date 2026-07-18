@@ -29,7 +29,7 @@
 - 节点记录直接存 `nextRel`(第一条关系的 id,`NodeRecord.java:34`)——**不经任何索引**。
 - 每条关系是**两条双向链表**的节点(每个端点一条):`firstPrevRel/firstNextRel`(第一节点的链)+ `secondPrevRel/secondNextRel`(第二节点的链)(`RelationshipRecord.java:39`)。访问器 `getNextRel(nodeId)` 按从哪个端点遍历返回对应指针(`:188`)。
 - 链头(`firstInFirstChain`)的 prev 槽改存**度数/count**(`:43`)——O(1) 拿到节点的关系数。
-- **遍历 = 指针追逐**:`RecordRelationshipTraversalCursor` 从 `nodeCursor.getNextRel()` 起(`:74`),`next()` 读当前关系记录、`computeNext()` 顺着链走到 `NULL`(`:147`),注释直言"Iterate relationship chain until we reach the end"。**全程零索引查找**。
+- **遍历 = 指针追逐**:`RecordRelationshipTraversalCursor` 从 `nodeCursor.getNextRel` 起(`:74`),`next` 读当前关系记录、`computeNext` 顺着链走到 `NULL`(`:147`),注释直言"Iterate relationship chain until we reach the end"。**全程零索引查找**。
 - **稠密节点**(dense)例外:关系太多时切换成按类型/方向分组的 group 间接层(`:181`),避免单条超长链。
 
 代价与图局部(该节点的关系数)成正比,与图总节点数无关——这是图遍历比关系库 JOIN 快几个数量级的根源。

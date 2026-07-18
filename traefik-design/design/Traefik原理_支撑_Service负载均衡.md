@@ -12,7 +12,7 @@
 
 ![健康检查](Traefik原理_Service_02健康检查.svg)
 
-**主动**（`ServiceHealthChecker`，`healthcheck.go:53`）：`Launch()` 起后台 goroutine 定时探测（`healthcheck.go:134`），默认 `interval=30s`、`timeout=5s`（`http_config.go:17`），支持 HTTP（GET path 比对 status，`:232`）与 gRPC（`:297`）；`unhealthyInterval` 允许对不健康后端用更短间隔快速复检。**被动**（`PassiveServiceHealthChecker`，`healthcheck.go:359`）：`WrapHandler` 包在转发路径上观测真实请求，在 `failureWindow`（默认 10s）内累计失败达 `maxFailedAttempts`（默认 1）即标记 unhealthy，窗口内不再选该后端。**关键是状态向上传播**：LB 的 `SetStatus(child, up/down)`（`wrr.go:101`）更新子后端；若某 Service 全部后端 down 就向父级（weighted/failover）上报，父级把它整体摘除——层层传播使 failover 能感知"主已不可用"从而切 fallback。
+**主动**（`ServiceHealthChecker`，`healthcheck.go:53`）：`Launch` 起后台 goroutine 定时探测（`healthcheck.go:134`），默认 `interval=30s`、`timeout=5s`（`http_config.go:17`），支持 HTTP（GET path 比对 status，`:232`）与 gRPC（`:297`）；`unhealthyInterval` 允许对不健康后端用更短间隔快速复检。**被动**（`PassiveServiceHealthChecker`，`healthcheck.go:359`）：`WrapHandler` 包在转发路径上观测真实请求，在 `failureWindow`（默认 10s）内累计失败达 `maxFailedAttempts`（默认 1）即标记 unhealthy，窗口内不再选该后端。**关键是状态向上传播**：LB 的 `SetStatus(child, up/down)`（`wrr.go:101`）更新子后端；若某 Service 全部后端 down 就向父级（weighted/failover）上报，父级把它整体摘除——层层传播使 failover 能感知"主已不可用"从而切 fallback。
 
 ## 深化 · 策略选型
 

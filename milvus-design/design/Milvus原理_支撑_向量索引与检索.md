@@ -43,7 +43,7 @@ knowhere 是 ANN 引擎,`IndexFactory::CreateVectorIndex`(`internal/core/src/ind
 
 - **先算标量谓词成 bitset**:`FilterBitsNode`(`FilterBitsNode.cpp`)评估 expr 谓词,输出位图列(**bit=1 表示该行被过滤掉/排除**,`ExecPlanNodeVisitor.cpp:464`)。
 - **bitset 传进 ANN 搜索**:`PhyVectorSearchNode` 把上游 bitset 转成 `BitsetView`,交给 `vector_search`(`VectorSearchNode.cpp:162`)。bitset 一路穿到 `knowhere index_.Search(dataset, conf, bitset, ...)`——**过滤在 ANN 遍历内部生效**,knowhere 跳过被过滤的行,而非搜完再滤(post-filter)。
-- 若 `view.all()`(全被过滤)直接返空(`VectorSearchNode.cpp:165`)。优化器还可 `filter_only_` 先算 valid_count 决定迭代式还是一次性过滤。
+- 若 `view.all`(全被过滤)直接返空(`VectorSearchNode.cpp:165`)。优化器还可 `filter_only_` 先算 valid_count 决定迭代式还是一次性过滤。
 
 **为什么预过滤更优**:post-filter 搜 topK 后再滤可能剩不够 K 个;pre-filter 让 ANN 只在候选集里找,保证 topK 质量。
 

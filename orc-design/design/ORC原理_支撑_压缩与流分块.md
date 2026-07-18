@@ -40,11 +40,11 @@ ORC 支持 7 种 codec(`CompressionKind.java:27`):`NONE、ZLIB、SNAPPY、LZO、
 
 ![ORC 压缩流水](ORC原理_压缩_03流水.svg)
 
-`OutStream`(`OutStream.java:42`,"handles both compression and encryption")的 `spill()`(`OutStream.java:375`)是压一块的核心:
+`OutStream`(`OutStream.java:42`,"handles both compression and encryption")的 `spill`(`OutStream.java:375`)是压一块的核心:
 
 - 攒够一个缓冲区就 `codec.compress(current, ...)`:
-  - **压得动**(返回 true):`commitCompress()`(`OutStream.java:318`)写块头 isOriginal=0 + 压缩字节;
-  - **压不动**(返回 false,压后 ≥ 原文):`abortCompress()` + `writeHeader(current, 0, len, true)`(`OutStream.java:410`)——**存原文、isOriginal=1**。
+  - **压得动**(返回 true):`commitCompress`(`OutStream.java:318`)写块头 isOriginal=0 + 压缩字节;
+  - **压不动**(返回 false,压后 ≥ 原文):`abortCompress` + `writeHeader(current, 0, len, true)`(`OutStream.java:410`)——**存原文、isOriginal=1**。
 - 这个回退保证"压缩绝不让块变大":对已压/随机数据,ORC 退回存原文,读时看 isOriginal 位决定是否解压。
 
 **为什么要回退**:通用 codec 对高熵数据(已压缩图片、随机 id)会越压越大;isOriginal 位让 ORC 在块粒度上择优——每块独立判断压/不压,不会因个别块拖累。

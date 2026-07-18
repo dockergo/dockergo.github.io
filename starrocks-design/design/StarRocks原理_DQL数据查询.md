@@ -10,9 +10,9 @@
 
 ![StarRocks 查询执行全景](StarRocks原理_DQL_01执行全景.svg)
 
-从连接到结果:`ConnectProcessor.dispatch()`(`fe/.../qe/ConnectProcessor.java:965`)路由 MySQL 命令,`handleQuery()`(`:651`)调 `SqlParser.parse(...)`(`:498`)、建 `StmtExecutor`(`:586`)、`execute()`(`:601`)。`StmtExecutor.execute()`(`qe/StmtExecutor.java:922`)的 `generateExecPlan()`(`:801`)调 `StatementPlanner.plan(...)`(`:829`)。
+从连接到结果:`ConnectProcessor.dispatch`(`fe/.../qe/ConnectProcessor.java:965`)路由 MySQL 命令,`handleQuery`(`:651`)调 `SqlParser.parse(...)`(`:498`)、建 `StmtExecutor`(`:586`)、`execute`(`:601`)。`StmtExecutor.execute`(`qe/StmtExecutor.java:922`)的 `generateExecPlan`(`:801`)调 `StatementPlanner.plan(...)`(`:829`)。
 
-`StatementPlanner.plan()`(`sql/StatementPlanner.java:114`)三步:(a) `analyzeStatement`(`:135`)、(b) `Authorizer.check(stmt, session)`(`:139`,鉴权)、(c) `createQueryPlan`(`:153`)。
+`StatementPlanner.plan`(`sql/StatementPlanner.java:114`)三步:(a) `analyzeStatement`(`:135`)、(b) `Authorizer.check(stmt, session)`(`:139`,鉴权)、(c) `createQueryPlan`(`:153`)。
 
 ---
 
@@ -22,7 +22,7 @@
 
 `SqlParser.parse(sql, sessionVariable)`(`sql/parser/SqlParser.java:80`)按方言分支(trino / starrocks)。StarRocks 路径 `parseWithStarRocksDialect`(`:168`)用 ANTLR `StarRocksParser::sqlStatements`(`:171`)建语法树、`HintCollector` 收 hint(`:178`)、`AstBuilder.visitSingleStatement`(`:184`)构建 `StatementBase`(AST)。
 
-`Analyzer.analyze()`(`sql/analyzer/Analyzer.java:199`)委托 `AnalyzerVisitor`(`:203`)做语义分析:解析库表列、类型检查、展开 `*`、绑定函数——把 AST 变成语义完整、可规划的形态。
+`Analyzer.analyze`(`sql/analyzer/Analyzer.java:199`)委托 `AnalyzerVisitor`(`:203`)做语义分析:解析库表列、类型检查、展开 `*`、绑定函数——把 AST 变成语义完整、可规划的形态。
 
 ---
 
@@ -38,7 +38,7 @@
 
 ![StarRocks MPP 分发执行](StarRocks原理_DQL_04MPP分发.svg)
 
-物理计划切成 fragment 后由**协调器**分发。`DefaultCoordinator`(`qe/DefaultCoordinator.java:135`)`startScheduling()`(`:566`)→ `prepareExec()`(`:577`,内部 `CoordinatorPreprocessor.prepareExec` `:225` → `computeFragmentInstances` `:269`,扫描范围经 `FragmentScanRangeAssignment` 分派)→ `deliverExecFragments()`(`:681`)。`Deployer`(`qe/scheduler/Deployer.java:164`)`deployFragments()` 异步部署实例(`:210`),每 BE 经 `FragmentInstanceExecState`(`qe/scheduler/dag/FragmentInstanceExecState.java:198`)`execPlanFragmentAsync` RPC 下发 `TExecPlanFragmentParams`。
+物理计划切成 fragment 后由**协调器**分发。`DefaultCoordinator`(`qe/DefaultCoordinator.java:135`)`startScheduling`(`:566`)→ `prepareExec`(`:577`,内部 `CoordinatorPreprocessor.prepareExec` `:225` → `computeFragmentInstances` `:269`,扫描范围经 `FragmentScanRangeAssignment` 分派)→ `deliverExecFragments`(`:681`)。`Deployer`(`qe/scheduler/Deployer.java:164`)`deployFragments` 异步部署实例(`:210`),每 BE 经 `FragmentInstanceExecState`(`qe/scheduler/dag/FragmentInstanceExecState.java:198`)`execPlanFragmentAsync` RPC 下发 `TExecPlanFragmentParams`。
 
 单 worker 有快路径 `SingleNodeSchedule`(`DefaultCoordinator.java:699`);多 worker 走 `AllAtOnceExecutionSchedule`/`PhasedExecutionSchedule`。BE 侧 `PInternalServiceImplBase::exec_plan_fragment`(`be/src/service/internal_service.cpp:301`)→ `_exec_plan_fragment_by_pipeline`(`:633`)建 `FragmentExecutor`(见执行引擎篇)。
 

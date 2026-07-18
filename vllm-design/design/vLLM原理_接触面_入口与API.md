@@ -27,7 +27,7 @@ vLLM 怎么被用?两种:**离线 `LLM` 类**(Python 里 `llm.generate(prompts)`
 
 **OpenAI 兼容 server**(`vllm/entrypoints/openai/api_server.py`)起 HTTP 服务:
 
-- `build_app()`(:196)构建 FastAPI 应用,挂载路由。
+- `build_app`(:196)构建 FastAPI 应用,挂载路由。
 - 端点(模块化路由):`POST /v1/chat/completions`(`openai/chat_completion/api_router.py:40`)、`POST /v1/completions`(`openai/completion/api_router.py:34`)。
 - 兼容 OpenAI API 格式——现有 OpenAI 客户端改个 base_url 即可用;支持流式(SSE)返回。
 - 内部:HTTP 请求 → 转成引擎请求 → AsyncLLM 异步驱动 → 流式/整体返回。
@@ -57,7 +57,7 @@ vLLM 怎么被用?两种:**离线 `LLM` 类**(Python 里 `llm.generate(prompts)`
 | 接触面 | 入口 | 职责 |
 |---|---|---|
 | LLM 类 | `entrypoints/llm.py:66` | 离线批量推理 |
-| .generate() | `llm.py:411` | 批量生成 |
+| .generate | `llm.py:411` | 批量生成 |
 | OpenAI server | `openai/api_server.py:196` | 在线 HTTP 服务 |
 | /v1/chat/completions | `chat_completion/api_router.py:40` | 对话端点 |
 | SamplingParams | `sampling_params.py:199` | 采样控制 |

@@ -56,7 +56,7 @@ ReadIndex 的正确性依赖一个微妙点：**leader 必须确认"我此刻仍
 ## 调优要点（关键开关）
 
 - 默认线性读：绝大多数场景直接用，正确性优先。
-- 显式串行读（clientv3 `WithSerializable()`）：对陈旧不敏感、要极致读性能时用，可让 follower 分担读。
+- 显式串行读（clientv3 `WithSerializable`）：对陈旧不敏感、要极致读性能时用，可让 follower 分担读。
 - follower 读：串行读可路由到 follower 减 leader 压力；线性读仍需 leader 心跳确认。
 - 心跳延迟影响线性读延迟：跨地域时线性读延迟 ≈ leader 到多数派的 RTT。
 

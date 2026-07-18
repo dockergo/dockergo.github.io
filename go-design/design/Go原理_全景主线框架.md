@@ -73,7 +73,7 @@ Go 不是"某类数据库/查询引擎"，它属**新家族「编程语言运行
 ## 六、三条贯穿示例（全库统一追踪）
 
 - **编译期贯穿**：一段含泛型 + 逃逸 + 内联的小程序，看它过 `syntax → types2 → Unified IR → 逃逸/内联 → SSA pass → 机器码 → 链接`。
-- **运行期贯穿（一个 goroutine 的一生）**：`go work()` → `newproc` 造 G → 入 P 本地 runq → 被 `schedule` 选中执行 → 栈不够触发 `morestack` 增长 → 分配对象走 `mallocgc` → 被 GC 标记 → 阻塞在 channel 上 `gopark` → 就绪 `goready` → `goexit` 回收。
+- **运行期贯穿（一个 goroutine 的一生）**：`go work` → `newproc` 造 G → 入 P 本地 runq → 被 `schedule` 选中执行 → 栈不够触发 `morestack` 增长 → 分配对象走 `mallocgc` → 被 GC 标记 → 阻塞在 channel 上 `gopark` → 就绪 `goready` → `goexit` 回收。
 - **同步贯穿**：一次 `ch <- v` / `<-ch`，看它在 channel（`hchan`）、调度器（park/ready）、内存模型（happens-before）三处的形态。
 
 ---

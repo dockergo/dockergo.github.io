@@ -14,7 +14,7 @@
 
 **关键模式:请求处理器只生成记录、不改状态;`replay` 方法才应用**(`GroupCoordinatorShard.java:150`)——与 KRaft 控制器同构:先记录、replay 进内存、再复制日志(`CoordinatorRuntime`,在 `coordinator-common/`)。位点/组状态是复制日志上的状态机。
 
-组协调器分布在 Broker 上:`groupId.hashCode() % numPartitions` 决定哪个 Broker 是某组的协调器(`GroupCoordinatorService.java:449`)。
+组协调器分布在 Broker 上:`groupId.hashCode % numPartitions` 决定哪个 Broker 是某组的协调器(`GroupCoordinatorService.java:449`)。
 
 ---
 

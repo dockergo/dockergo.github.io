@@ -28,7 +28,7 @@
 
 ---
 
-## 二、总架构图（driver–executor · 位置即语义）
+## 二、总架构图（driver–executor）
 
 ![Spark 总架构图](Spark原理_总架构图.svg)
 

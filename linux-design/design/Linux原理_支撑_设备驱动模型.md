@@ -8,7 +8,7 @@
 
 设备模型的基石是 **`kobject`**（`include/linux/kobject.h:64`）——一个"内嵌到各种内核对象里的通用节点"，携带四样东西：`name`（在 sysfs 里的目录名）、`parent`（决定它在**目录树**中的位置）、`kset`（所属集合/子系统，也管热插拔）、`ktype`（`kobj_type`，含 `sysfs_ops` 与 `default_groups`），外加 `kref` 引用计数管生命周期、`sd`（`kernfs_node`，即那个 sysfs 目录项）。`struct device` 正是把 `kobject` 内嵌进来（`include/linux/device.h:629`）并带自己的 `parent`（`device.h:630`），所以**设备天然构成一棵 kobject 树**。
 
-映射规则很直接：`kobject_add` 按 `parent` 在 `/sys` 下建一个**目录**；`ktype->default_groups` 里声明的每个 `attribute` 变成该目录下的一个**属性文件**；用户态 `cat`/`echo` 这些文件时，VFS 把读写转成 `sysfs_ops` 的 `show()`/`store()` 回调打到内核。这样"内核对象 + 其属性"就以文件系统的形式对用户态可见可调。
+映射规则很直接：`kobject_add` 按 `parent` 在 `/sys` 下建一个**目录**；`ktype->default_groups` 里声明的每个 `attribute` 变成该目录下的一个**属性文件**；用户态 `cat`/`echo` 这些文件时，VFS 把读写转成 `sysfs_ops` 的 `show`/`store` 回调打到内核。这样"内核对象 + 其属性"就以文件系统的形式对用户态可见可调。
 
 | kobject 概念 | sysfs 中的体现 | 源码 |
 |---|---|---|
@@ -50,7 +50,7 @@
 
 | 类别 | 核心操作集 | 用户态入口 | 接入的上层子系统 | 关键源码 |
 |---|---|---|---|---|
-| **字符设备** | `file_operations`（read/write/ioctl） | `/dev/xxx` 设备节点（主/次设备号） | **VFS**：`open()` 经设备号找到 `cdev`，把 file 的 fops 换成驱动的 fops | `fs/char_dev.c:197`、`cdev` |
+| **字符设备** | `file_operations`（read/write/ioctl） | `/dev/xxx` 设备节点（主/次设备号） | **VFS**：`open` 经设备号找到 `cdev`，把 file 的 fops 换成驱动的 fops | `fs/char_dev.c:197`、`cdev` |
 | **块设备** | `block_device_operations` + `gendisk` | `/dev/sdX` 块设备节点 / 挂载点 | **块层**：IO 下发 `submit_bio` → blk-mq 调度 → 驱动 | `include/linux/blkdev.h:146`（gendisk）、`:163`（fops） |
 | **网络设备** | `net_device_ops`（`ndo_start_xmit`…） | **无 `/dev` 节点**，走 socket API | **网络协议栈**：发包经协议栈到 `ndo_start_xmit`；收包 `netif_rx`/NAPI 上送 | `include/linux/netdevice.h:1436`、`:1441`、`register_netdev`（`:4991`） |
 

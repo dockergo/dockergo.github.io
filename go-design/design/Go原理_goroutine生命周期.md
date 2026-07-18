@@ -1,6 +1,6 @@
 # Go 原理 · goroutine 生命周期
 
-> **定位**：本篇讲一个 goroutine 从 `go f()` 诞生到 `goexit` 消亡的全过程与状态机。属"调度能力域"，是【GMP调度】的"被调度对象"视角补充——调度篇讲"怎么选 G 跑"，本篇讲"G 怎么生、怎么在运行/阻塞/就绪间转、怎么死并被复用"。依赖【栈管理】（生时分配栈）、承载【defer/panic】（退出时执行 defer）、被【并发原语】驱动状态转换（park/ready）。源码基准 **go1.26.4**（`~/workdir/go/src/runtime/proc.go`）。
+> **定位**：本篇讲一个 goroutine 从 `go f` 诞生到 `goexit` 消亡的全过程与状态机。属"调度能力域"，是【GMP调度】的"被调度对象"视角补充——调度篇讲"怎么选 G 跑"，本篇讲"G 怎么生、怎么在运行/阻塞/就绪间转、怎么死并被复用"。依赖【栈管理】（生时分配栈）、承载【defer/panic】（退出时执行 defer）、被【并发原语】驱动状态转换（park/ready）。源码基准 **go1.26.4**（`~/workdir/go/src/runtime/proc.go`）。
 
 一个 goroutine 就是一个 `g` 结构 + 一段栈 + 一个状态。它的一生是状态机的迁移：诞生（`newproc`）→ 可运行 → 运行 →（阻塞 ⇄ 就绪）→ 死亡（`goexit`）→ 被复用。所有状态转换统一走 `casgstatus`（proc.go:1290）原子完成。
 
@@ -35,7 +35,7 @@
 1. `newproc1`（proc.go:5352）**先从 P 的 `gFree` 空闲池取一个 `_Gdead` 的 G 复用**（`gfget`）——避免频繁分配；池空才新建并分配初始栈。
 2. 设置新 G 的栈、`gobuf`（sp/pc 指向 `goexit` 的调用点，使 f 返回后自动进 `goexit`）、拷贝参数到新栈、置 `_Grunnable`、分配 goid。
 3. `runqput(pp, newg, next=true)` 放进当前 P 的 `runnext` 快槽（利用局部性，新 G 大概率马上被跑）。
-4. `wakep()` 若有空闲 P 且无自旋 M，唤醒/新建一个 M 来跑（提高并行度）。
+4. `wakep` 若有空闲 P 且无自旋 M，唤醒/新建一个 M 来跑（提高并行度）。
 
 **关键**：`go` 语句成本极低——多数时候只是"取复用 G + 拷参 + 入本地队列"，无系统调用、无锁（本地队列无锁）。
 
@@ -75,9 +75,9 @@ f 返回后（`gobuf.pc` 预设的返回地址）自动进入 `goexit1` → `mca
 |---|---|
 | `g0` | 每个 M 的**调度栈 goroutine**，不是用户 G；调度、GC、栈增长都在 g0 上执行 |
 | `main goroutine` | 运行 `main.main` 的 G，goid=1；它返回则整个程序退出 |
-| `runtime.Goexit()` | 终止当前 G 但**先执行完所有 defer**（不同于 return，可在任意深度调用；见【defer/panic】） |
-| `runtime.Gosched()` | 主动让出，G 回全局队列（协作式让路，不阻塞） |
-| `runtime.NumGoroutine()` | 当前存活 G 数（不含 gFree 里的 _Gdead） |
+| `runtime.Goexit` | 终止当前 G 但**先执行完所有 defer**（不同于 return，可在任意深度调用；见【defer/panic】） |
+| `runtime.Gosched` | 主动让出，G 回全局队列（协作式让路，不阻塞） |
+| `runtime.NumGoroutine` | 当前存活 G 数（不含 gFree 里的 _Gdead） |
 | goid | 每个 G 唯一，但**故意不暴露 API**（防止基于 goid 的 goroutine-local 滥用） |
 
 ## 调优要点（关键开关，均源码核实）
@@ -91,10 +91,10 @@ f 返回后（`gobuf.pc` 预设的返回地址）自动进入 `goexit1` → `mca
 
 - **误区：goroutine 创建很贵。** 不。多数是从 gFree 池**取复用 G + 拷参 + 无锁入队**，成本远低于 OS 线程创建；初始栈仅 2KB。
 - **误区：阻塞的 goroutine 占着线程。** 不。`gopark` 让 G 让出 M，M 去跑别的 G——阻塞的是 G 不是 M。
-- **误区：可以用 goid 做 goroutine-local storage。** Go 故意不暴露 goid（`getg().goid` 是内部字段），因为它鼓励用 channel/context 传递而非线程本地状态。
+- **误区：可以用 goid 做 goroutine-local storage。** Go 故意不暴露 goid（`getg.goid` 是内部字段），因为它鼓励用 channel/context 传递而非线程本地状态。
 - **误区：主 goroutine 阻塞了别的 goroutine 还能跑完。** `main.main` 返回程序立即退出，**不等**其他 goroutine——需要显式 `sync.WaitGroup`/channel 等待。
 - 归属提醒：G 被"怎么选中执行"在【GMP调度】；park/ready 的**具体触发者**（channel/锁）在【并发原语】；退出时 defer 的执行细节在【defer/panic】；栈的分配/搬移在【栈管理】。
 
 ## 一句话总纲
 
-**一个 goroutine 是「`g` 结构 + 连续栈 + 状态」：`go f()` 编译成 `newproc`，优先从 P 的 gFree 池取复用 `_Gdead` 的 G（池空才新建）、拷参并预设返回地址指向 `goexit`、置 `_Grunnable` 入 runnext 快槽并按需 `wakep`；被调度进 `_Grunning` 后，阻塞走 `gopark`（转 `_Gwaiting`、带 waitReason、让出 M 去跑别的 G、挂到 channel/semaRoot 等待处），唤醒走 `goready`（转回 `_Grunnable` 入队）——所有阻塞最终归到这对 park/ready；f 返回进 `goexit0` 转 `_Gdead`、经 `gfput` 连同栈放回 gFree 池复用——状态转换统一由 `casgstatus` 原子完成，「池化复用 + 阻塞即让出」使 goroutine 廉价到可百万并发。**
+**一个 goroutine 是「`g` 结构 + 连续栈 + 状态」：`go f` 编译成 `newproc`，优先从 P 的 gFree 池取复用 `_Gdead` 的 G（池空才新建）、拷参并预设返回地址指向 `goexit`、置 `_Grunnable` 入 runnext 快槽并按需 `wakep`；被调度进 `_Grunning` 后，阻塞走 `gopark`（转 `_Gwaiting`、带 waitReason、让出 M 去跑别的 G、挂到 channel/semaRoot 等待处），唤醒走 `goready`（转回 `_Grunnable` 入队）——所有阻塞最终归到这对 park/ready；f 返回进 `goexit0` 转 `_Gdead`、经 `gfput` 连同栈放回 gFree 池复用——状态转换统一由 `casgstatus` 原子完成，「池化复用 + 阻塞即让出」使 goroutine 廉价到可百万并发。**

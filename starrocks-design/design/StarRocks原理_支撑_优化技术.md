@@ -10,12 +10,12 @@
 
 ![StarRocks CBO 三阶段](StarRocks原理_优化_01CBO.svg)
 
-`Optimizer` 是接口(`fe/.../sql/optimizer/Optimizer.java:19`),主实现 **QueryOptimizer**。`optimizeByCost()`(`QueryOptimizer.java:250`)三阶段:
+`Optimizer` 是接口(`fe/.../sql/optimizer/Optimizer.java:19`),主实现 **QueryOptimizer**。`optimizeByCost`(`QueryOptimizer.java:250`)三阶段:
 1. **逻辑改写(RBO)**:`rewriteAndValidatePlan`(`:261`)——谓词下推、列裁剪、常量折叠等定点改写。
 2. **Memo 初始化**:`memo.init`(`:265`)把计划树 copyIn 成 Group + GroupExpression(`Memo.java:91`),`Join(Scan A, Scan B)` → 3 个 Group;`deriveAllGroupLogicalProperty` 推导逻辑属性。
 3. **Cascades 搜索**:`memoOptimize`(`:278`)→ `extractBestPlan`(`:287`)→ `physicalRuleRewrite`(`:308`)。
 
-搜索由**任务队列**驱动:`OptimizeGroupTask/ExploreGroupTask/OptimizeExpressionTask/ApplyRuleTask/EnforceAndCostTask/DeriveStatsTask` 经 `TaskScheduler` 调度(`QueryOptimizer.java:956`)。规则分**转换**(logical→logical,`rule/transformation/`)与**实现**(logical→physical,`rule/implementation/` 如 `HashJoinImplementationRule`),基类 `Rule` 持 `RuleType`+`Pattern`+`transform()`(`Rule.java:45`)。
+搜索由**任务队列**驱动:`OptimizeGroupTask/ExploreGroupTask/OptimizeExpressionTask/ApplyRuleTask/EnforceAndCostTask/DeriveStatsTask` 经 `TaskScheduler` 调度(`QueryOptimizer.java:956`)。规则分**转换**(logical→logical,`rule/transformation/`)与**实现**(logical→physical,`rule/implementation/` 如 `HashJoinImplementationRule`),基类 `Rule` 持 `RuleType`+`Pattern`+`transform`(`Rule.java:45`)。
 
 ---
 

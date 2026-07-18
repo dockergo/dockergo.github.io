@@ -6,7 +6,7 @@
 
 ![WAL 全景](etcd原理_wal_01全景.svg)
 
-WAL（Write-Ahead Log，预写日志）是 etcd 崩溃恢复的根基：**任何状态变更生效前，先把它作为一条记录追加到 WAL 并 fsync 落盘**。`WAL`（`server/storage/wal/wal.go:72`）的 `Save(st *raftpb.HardState, ents []*raftpb.Entry)`（`:958`，注意参数是指针）保存 Raft 的 HardState（term/vote/commit）与日志条目，通过 `sync()`（`:832`，`Fdatasync`）落盘。记录类型（`:38-43`，导出的 PascalCase）：`MetadataType/EntryType/StateType/CrcType/SnapshotType`，每条带 CRC 校验防损坏。WAL 是 **append-only 的分段文件**（`SegmentSizeBytes=64MB`，`:55`，预分配），写满一段 `cut()`（`:748`）开新段。**为什么先写 WAL**：见 [[Raft 共识]] Ready 循环——条目落 WAL 后才真正 apply，crash 后从 WAL 回放即恢复，保证 committed 不丢。
+WAL（Write-Ahead Log，预写日志）是 etcd 崩溃恢复的根基：**任何状态变更生效前，先把它作为一条记录追加到 WAL 并 fsync 落盘**。`WAL`（`server/storage/wal/wal.go:72`）的 `Save(st *raftpb.HardState, ents []*raftpb.Entry)`（`:958`，注意参数是指针）保存 Raft 的 HardState（term/vote/commit）与日志条目，通过 `sync`（`:832`，`Fdatasync`）落盘。记录类型（`:38-43`，导出的 PascalCase）：`MetadataType/EntryType/StateType/CrcType/SnapshotType`，每条带 CRC 校验防损坏。WAL 是 **append-only 的分段文件**（`SegmentSizeBytes=64MB`，`:55`，预分配），写满一段 `cut`（`:748`）开新段。**为什么先写 WAL**：见 [[Raft 共识]] Ready 循环——条目落 WAL 后才真正 apply，crash 后从 WAL 回放即恢复，保证 committed 不丢。
 
 ---
 
@@ -14,7 +14,7 @@ WAL（Write-Ahead Log，预写日志）是 etcd 崩溃恢复的根基：**任何
 
 ![快照](etcd原理_wal_02快照.svg)
 
-WAL 不能无限增长，快照定期"结算"。触发在 `snapshotIfNeededAndCompactRaftLog`（`server/etcdserver/server.go:1204`）：`shouldSnapshotToDisk`（`:1215`，已 apply 条目数超 `--snapshot-count`（默认 **10000**，`:78`）时落盘快照）。`snapshot(ep, toDisk=true)`（`:2072`）三步：① `s.KV().Commit()`（`:2094`，boltdb 一致提交，此刻 db 是某 revision 的完整状态）→ ② `CreateSnapshot`（`:2098`，Raft 记录快照元信息）→ ③ `SaveSnap`（`:2114`，`api/snap/snapshotter.go:70`，写 `%016x-%016x.snap` 文件，带 CRC）。快照后 `compactRaftLog`（`:1213`）压缩掉快照点之前的 Raft 日志。**快照 = 状态全量的一致副本，WAL = 快照之后的增量操作**——两者互补。`--max-wals`（默认 **5**，`embed/config.go:63`）限制保留的 WAL 段数。
+WAL 不能无限增长，快照定期"结算"。触发在 `snapshotIfNeededAndCompactRaftLog`（`server/etcdserver/server.go:1204`）：`shouldSnapshotToDisk`（`:1215`，已 apply 条目数超 `--snapshot-count`（默认 **10000**，`:78`）时落盘快照）。`snapshot(ep, toDisk=true)`（`:2072`）三步：① `s.KV.Commit`（`:2094`，boltdb 一致提交，此刻 db 是某 revision 的完整状态）→ ② `CreateSnapshot`（`:2098`，Raft 记录快照元信息）→ ③ `SaveSnap`（`:2114`，`api/snap/snapshotter.go:70`，写 `%016x-%016x.snap` 文件，带 CRC）。快照后 `compactRaftLog`（`:1213`）压缩掉快照点之前的 Raft 日志。**快照 = 状态全量的一致副本，WAL = 快照之后的增量操作**——两者互补。`--max-wals`（默认 **5**，`embed/config.go:63`）限制保留的 WAL 段数。
 
 ---
 

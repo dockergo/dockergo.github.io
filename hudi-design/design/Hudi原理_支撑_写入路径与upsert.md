@@ -30,7 +30,7 @@ Hudi 为 upsert 而生,写路径的主线是:"来一批记录,怎么高效地把
 
 - **写前 `tagLocation`**(`HoodieIndex.java:80`):UPSERT/DELETE 必须先 tag——把 incoming 记录标上"是更新(带位置)还是插入"。这一步决定后续 bucket 路由。
 - **写后 `updateLocation`**(`HoodieIndex.java:88`):把这批记录的最终位置回写索引(对 Bloom 这类"信息在数据文件里"的隐式索引可能是 no-op;对 record_index 这类持久索引则更新元数据表)。
-- **索引能力 flag**:`isGlobal()`(跨分区唯一 vs 分区内)、`canIndexLogFiles()`(MOR 下可否把插入直送 log)等(`HoodieIndex.java:111`)驱动路由决策。
+- **索引能力 flag**:`isGlobal`(跨分区唯一 vs 分区内)、`canIndexLogFiles`(MOR 下可否把插入直送 log)等(`HoodieIndex.java:111`)驱动路由决策。
 
 **归属**:本篇只讲"写路径怎么调索引";Bloom/Simple/Bucket/RECORD_LEVEL 各自怎么实现、怎么选,在【索引】篇。
 
@@ -45,7 +45,7 @@ Hudi 为 upsert 而生,写路径的主线是:"来一批记录,怎么高效地把
 - **HoodieCreateHandle**(COW 新建,IOType=CREATE):新 file group 写全新 base 文件。
 - **HoodieWriteMergeHandle**(COW 更新,IOType=MERGE):逐行合并到已有 base 文件、产**新版本**(`io/HoodieWriteMergeHandle.java:71`)——工作例 rec1_1 + rec1_2 → 输出 rec1_2。这是 COW "写慢"的根源(重写整文件)。
 - **HoodieAppendHandle**(MOR,IOType=APPEND):追加到 log 文件(`io/HoodieAppendHandle.java:68`);`writeRecord` 判断是更新还是删除,`writeInsertAndUpdate`(`:353`)把记录攒进 log block。
-- **marker 文件**:每个 handle 写前创建 marker(记 `getIOType()`,`io/HoodieWriteHandle.java:204`)——标记"本次写产生了哪些文件 + 什么 IO 类型"。失败回滚时按 marker 精确删除部分写的孤儿文件(见【并发控制与元数据】)。
+- **marker 文件**:每个 handle 写前创建 marker(记 `getIOType`,`io/HoodieWriteHandle.java:204`)——标记"本次写产生了哪些文件 + 什么 IO 类型"。失败回滚时按 marker 精确删除部分写的孤儿文件(见【并发控制与元数据】)。
 
 **为什么 handle 分三种**:CREATE(全新)/MERGE(COW 重写)/APPEND(MOR 追加)对应"新建、写慢读快、写快读慢"三种落盘方式;marker 让"写到一半崩溃"可被干净回滚,不留孤儿文件污染表。
 

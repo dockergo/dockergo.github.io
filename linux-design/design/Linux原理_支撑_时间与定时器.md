@@ -6,7 +6,7 @@
 
 ![时间体系概览：clocksource 读时间 / clock_event 触发中断 / timekeeper 维护墙钟与单调时间](Linux原理_时间_01时间体系.svg)
 
-内核把"计时硬件"拆成**职责正交的两类**：**clocksource**（时钟源，只负责*读出*一个单调递增的计数，如 TSC/HPET/arch timer；`include/linux/clocksource.h:98`，靠 `read()` + `mult`/`shift` 把周期数换算成纳秒，`rating` 越高越优先被选中）；**clock_event_device**（时钟事件设备，只负责在*未来某点触发一次中断*；`include/linux/clockchips.h:103`，支持 `CLOCK_EVT_FEAT_PERIODIC` 周期模式与 `CLOCK_EVT_FEAT_ONESHOT` 单次模式两种能力）。**读时间用 clocksource，等到点用 clock_event**——一个是"尺"，一个是"闹钟"。
+内核把"计时硬件"拆成**职责正交的两类**：**clocksource**（时钟源，只负责*读出*一个单调递增的计数，如 TSC/HPET/arch timer；`include/linux/clocksource.h:98`，靠 `read` + `mult`/`shift` 把周期数换算成纳秒，`rating` 越高越优先被选中）；**clock_event_device**（时钟事件设备，只负责在*未来某点触发一次中断*；`include/linux/clockchips.h:103`，支持 `CLOCK_EVT_FEAT_PERIODIC` 周期模式与 `CLOCK_EVT_FEAT_ONESHOT` 单次模式两种能力）。**读时间用 clocksource，等到点用 clock_event**——一个是"尺"，一个是"闹钟"。
 
 `timekeeper`（`kernel/time/timekeeping.c:50`）在其上维护两套时间：**单调时间**（`CLOCK_MONOTONIC`，只增不退，用于测量间隔/超时）与**墙钟时间**（`CLOCK_REALTIME`，可被 NTP/settimeofday 调整，用于日历）。为让读时间不被写锁阻塞，另有 **NMI 安全的 `tk_fast`**（`timekeeping.c:92` 附近）做无锁快照。
 
@@ -20,7 +20,7 @@
 
 ## 二、节拍 tick：周期节拍与无节拍
 
-节拍是"每隔固定间隔（`1/HZ` 秒）产生一次时钟中断"，用来推进 `jiffies`、驱动调度与定时器扫描。周期模式下 clock_event 的处理函数是 `tick_handle_periodic`（`kernel/time/tick-common.c:108`），它调 `tick_periodic`（`tick-common.c:86`）：**只有被选为 `tick_do_timer_cpu` 的那颗 CPU** 才 `do_timer(1)` 推进全局 `jiffies`、`update_wall_time()` 更新墙钟（`tick-common.c:95`）；每颗 CPU 都跑 `update_process_times`（`tick-common.c:101`）做本地时间记账、扫描定时器、触发调度节拍。
+节拍是"每隔固定间隔（`1/HZ` 秒）产生一次时钟中断"，用来推进 `jiffies`、驱动调度与定时器扫描。周期模式下 clock_event 的处理函数是 `tick_handle_periodic`（`kernel/time/tick-common.c:108`），它调 `tick_periodic`（`tick-common.c:86`）：**只有被选为 `tick_do_timer_cpu` 的那颗 CPU** 才 `do_timer(1)` 推进全局 `jiffies`、`update_wall_time` 更新墙钟（`tick-common.c:95`）；每颗 CPU 都跑 `update_process_times`（`tick-common.c:101`）做本地时间记账、扫描定时器、触发调度节拍。
 
 无节拍是省电与降抖动的两个开关：**`NO_HZ_IDLE`** 让 CPU 进入空闲时停掉周期 tick（无事可做就别每毫秒醒一次）；**`NO_HZ_FULL`** 在 CPU 上只剩一个可运行任务时也停 tick（HPC/实时场景消除节拍抖动）。停 tick 后靠一个 hrtimer 记录"下一个真正该醒的时刻"。
 
@@ -61,8 +61,8 @@
 一次时钟中断把三条线同时点亮。**周期模式**下中断打到 `tick_handle_periodic`；**高精度模式**下 clock_event 是单次的，其处理函数是 `hrtimer_interrupt`（`kernel/time/hrtimer.c:2083`），此时**连"周期 tick"本身都变成了一个 hrtimer**（`tick_sched` 的 `sched_timer`，到期回调 `tick_sched_handle` → `update_process_times`，`tick-sched.c:298`）。两条路殊途同归都进 `update_process_times`（`timer.c:2468`），它扇出到：
 
 1. **`do_timer` / 时间记账**：推进 `jiffies`、按用户/内核态给当前进程记 CPU 时间。
-2. **`run_local_timers`（`timer.c:2416`）**：`hrtimer_run_queues()` 跑到期的 hrtimer；若本地低精度定时器到期则 `raise_timer_softirq(TIMER_SOFTIRQ)`（`timer.c:2458`）——**扫描留到软中断，硬中断只置位**。
-3. **`sched_tick()`**：把节拍交给调度器（推进时间片、触发抢占标记）——这是本主线与**进程调度**的衔接点。
+2. **`run_local_timers`（`timer.c:2416`）**：`hrtimer_run_queues` 跑到期的 hrtimer；若本地低精度定时器到期则 `raise_timer_softirq(TIMER_SOFTIRQ)`（`timer.c:2458`）——**扫描留到软中断，硬中断只置位**。
+3. **`sched_tick`**：把节拍交给调度器（推进时间片、触发抢占标记）——这是本主线与**进程调度**的衔接点。
 4. **posix cpu 定时器**（`run_posix_cpu_timers`）。
 
 hrtimer 的实际到期执行走 `__hrtimer_run_queues`（`hrtimer.c:1968`），从各时钟基的 timerqueue 最左端取出所有 `expires <= now` 的定时器逐个回调；标了 soft 的在 `HRTIMER_SOFTIRQ` 里跑，避免长回调压在硬中断里。
@@ -73,8 +73,8 @@ hrtimer 的实际到期执行走 `__hrtimer_run_queues`（`hrtimer.c:1968`），
 
 | 需求 | 接口 / 机制 | 时间基 |
 |---|---|---|
-| 测间隔、超时判断 | `ktime_get()` / `CLOCK_MONOTONIC` | 单调，不受调时影响 |
-| 日历/时间戳 | `ktime_get_real()` / `CLOCK_REALTIME` | 墙钟，NTP 可调 |
+| 测间隔、超时判断 | `ktime_get` / `CLOCK_MONOTONIC` | 单调，不受调时影响 |
+| 日历/时间戳 | `ktime_get_real` / `CLOCK_REALTIME` | 墙钟，NTP 可调 |
 | 含挂起时间的单调 | `CLOCK_BOOTTIME` | 单调 + 睡眠时长 |
 | 粗略时间（快、免读硬件） | `jiffies` / `CLOCK_*_COARSE` | tick 粒度 |
 | 用户态零系统调用取时间 | vDSO（`__vdso_clock_gettime`） | 映射 timekeeper 快照 |

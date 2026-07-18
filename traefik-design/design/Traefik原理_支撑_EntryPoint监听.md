@@ -6,9 +6,9 @@
 
 ![EntryPoint 监听](Traefik原理_EntryPoint_01监听.svg)
 
-EntryPoint 静态定义 `address = :443/tcp`（`GetProtocol()` 缺省 tcp，`entrypoints.go`）、可选 `http/http2/http3/udp` 子配置、`asDefault`/`reusePort`/`forwardedHeaders`/`proxyProtocol`（`entrypoints.go:25`）。启动时 `TCPEntryPoint`（`server_entrypoint_tcp.go:170`）绑 `net.Listener` 并进 Accept 循环；连接先过 **tcprouter** 做 SNI/HostSNI 分流决定"TLS 终止还是 TCP 直通"；需终止 TLS 时按 SNI 选证书，再经 **httpForwarder**（`server_entrypoint_tcp.go:68`）桥接到 Go 标准 `http.Server`（`httpServer`/`httpsServer`），最后交给 HTTP Router。**HTTP/3** 由独立的 `http3server`（`server_entrypoint_tcp_http3.go:21`，基于 `quic-go/quic-go/http3`）在同端口的 UDP PacketConn 上并行提供；**UDP EntryPoint**（`server_entrypoint_udp.go`）则按会话分流到 UDP Service。
+EntryPoint 静态定义 `address = :443/tcp`（`GetProtocol` 缺省 tcp，`entrypoints.go`）、可选 `http/http2/http3/udp` 子配置、`asDefault`/`reusePort`/`forwardedHeaders`/`proxyProtocol`（`entrypoints.go:25`）。启动时 `TCPEntryPoint`（`server_entrypoint_tcp.go:170`）绑 `net.Listener` 并进 Accept 循环；连接先过 **tcprouter** 做 SNI/HostSNI 分流决定"TLS 终止还是 TCP 直通"；需终止 TLS 时按 SNI 选证书，再经 **httpForwarder**（`server_entrypoint_tcp.go:68`）桥接到 Go 标准 `http.Server`（`httpServer`/`httpsServer`），最后交给 HTTP Router。**HTTP/3** 由独立的 `http3server`（`server_entrypoint_tcp_http3.go:21`，基于 `quic-go/quic-go/http3`）在同端口的 UDP PacketConn 上并行提供；**UDP EntryPoint**（`server_entrypoint_udp.go`）则按会话分流到 UDP Service。
 
-## 二、热替换：Switch() 换路由表而非重开监听
+## 二、热替换：Switch 换路由表而非重开监听
 
 ![EntryPoint 监听](Traefik原理_EntryPoint_01监听.svg)
 
@@ -42,4 +42,4 @@ EntryPoint 静态定义 `address = :443/tcp`（`GetProtocol()` 缺省 tcp，`ent
 
 ## 一句话总纲
 
-**EntryPoint 是 Traefik 的监听入口：一个端口上完成 TCP/UDP 监听、TLS 终止与 HTTP/1·2·3 分流，再交给 Router；配置变更时只用 Switch() 热替换内存路由表，端口与连接岿然不动。**
+**EntryPoint 是 Traefik 的监听入口：一个端口上完成 TCP/UDP 监听、TLS 终止与 HTTP/1·2·3 分流，再交给 Router；配置变更时只用 Switch 热替换内存路由表，端口与连接岿然不动。**

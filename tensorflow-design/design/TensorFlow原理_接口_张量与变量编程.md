@@ -6,7 +6,7 @@
 
 ![张量与变量](TensorFlow原理_张量变量_01张量与变量.svg)
 
-`tf.Tensor`（`tensor.py:139` `class Tensor(internal.NativeObject, core_tf_types.Symbol)`）是一个**不可变的多维数组**：带 `shape`、`dtype`、`device` 三要素，是所有算子的输入/输出，产生后不能改。eager 下它是 `EagerTensor`，持有具体值（`.numpy()` 可取）；图内则是**符号张量**（占位符，执行期才有值）。
+`tf.Tensor`（`tensor.py:139` `class Tensor(internal.NativeObject, core_tf_types.Symbol)`）是一个**不可变的多维数组**：带 `shape`、`dtype`、`device` 三要素，是所有算子的输入/输出，产生后不能改。eager 下它是 `EagerTensor`，持有具体值（`.numpy` 可取）；图内则是**符号张量**（占位符，执行期才有值）。
 
 `tf.Variable`（`resource_variable_ops.py:377` `BaseResourceVariable`，`:1707` `ResourceVariable`）不是张量，而是一个**有状态的资源句柄**：内部持有一个 resource handle 指向设备上的缓冲。**读它**（`read_value`）才产出一个 Tensor 参与计算；它可被 `assign`/`assign_add` **原地更新**、跨调用持久存在。模型权重、优化器动量、全局步数都是 Variable。
 
@@ -14,7 +14,7 @@
 
 ![张量与变量](TensorFlow原理_张量变量_01张量与变量.svg)
 
-TF2 默认 eager。`tf.matmul(a, b)` 的旅程：Python 调用 → `EagerLocalExecute`（`tensorflow/core/common_runtime/eager/execute.cc:1734`）查该 op 在当前设备的 `KernelAndDevice` → 调 `OpKernel::Compute()` 真正算 → 立即返回一个 `EagerTensor`。没有图、没有跨算子优化，每行 Python 立刻见结果——直观、可调试，代价是逐次付 Python 解释与 kernel 启动开销（热路径请用 tf.function 包起来，见「图与 tf.function」）。
+TF2 默认 eager。`tf.matmul(a, b)` 的旅程：Python 调用 → `EagerLocalExecute`（`tensorflow/core/common_runtime/eager/execute.cc:1734`）查该 op 在当前设备的 `KernelAndDevice` → 调 `OpKernel::Compute` 真正算 → 立即返回一个 `EagerTensor`。没有图、没有跨算子优化，每行 Python 立刻见结果——直观、可调试，代价是逐次付 Python 解释与 kernel 启动开销（热路径请用 tf.function 包起来，见「图与 tf.function」）。
 
 ## 深化 · Tensor 与 Variable 关键差异
 
@@ -25,7 +25,7 @@ TF2 默认 eager。`tf.matmul(a, b)` 的旅程：Python 调用 → `EagerLocalEx
 | 生命周期 | 用完即弃（可与他 Tensor 共享 buffer） | 跨调用持久 |
 | 求值 | 本身就是值 | 读它才产出 Tensor |
 | 典型用途 | 算子的输入输出、中间激活 | 模型权重、动量、计数器 |
-| 自动微分 | 需 tape.watch() 才被追踪 | 被 GradientTape 默认追踪 |
+| 自动微分 | 需 tape.watch 才被追踪 | 被 GradientTape 默认追踪 |
 | 源码 | `framework/tensor.py:139` | `resource_variable_ops.py:377` |
 
 ## 拓展 · dtype 与设备
@@ -41,7 +41,7 @@ TF2 默认 eager。`tf.matmul(a, b)` 的旅程：Python 调用 → `EagerLocalEx
 
 - **热路径包 `@tf.function`**：eager 逐算子付 Python 开销，追踪成图后由 Grappler/XLA 整体优化。
 - **权重一律用 `tf.Variable`**：只有 Variable 能被 optimizer 更新、被 GradientTape 默认追踪、被 checkpoint 保存。
-- **减少 Python↔Tensor 往返**：频繁 `.numpy()`、Python 侧循环里逐元素操作会打断加速；尽量用向量化的 tf 算子。
+- **减少 Python↔Tensor 往返**：频繁 `.numpy`、Python 侧循环里逐元素操作会打断加速；尽量用向量化的 tf 算子。
 - **混合精度**：大模型在 GPU 上用 `mixed_float16` 策略，显存降、吞吐升，主权重仍保留 float32。
 
 ## 常见误区

@@ -6,7 +6,7 @@
 
 ![syncLoop](Kubernetes原理_支撑_kubelet与CRI_01syncLoop.svg)
 
-kubelet 的核心是 `syncLoop`（kubelet.go:2387）——一个永续循环，`syncLoopIteration`（:2461）用 select 同时监听多个源：`configCh`（API Server 来的 Pod 增删改，`case u, open := <-configCh`:2464）、`plegCh`（PLEG=Pod Lifecycle Event Generator，`kl.pleg.Watch()`:2396，容器实际状态变化，容量 `plegChannelCapacity=1000`:183）、`syncCh`（周期性全量同步 tick）、`housekeepingCh`（清理孤儿）、探针结果。**任一源触发都归结为对某个 Pod 调 `SyncPod`**（:1845）：算出该 Pod 的期望容器集与当前实际容器集的差异 → 需要就创建 Pod 沙箱（pause 容器 + 网络命名空间，经 CNI 配网）→ 拉镜像 → 起/杀容器，全部经 `kl.containerRuntime.SyncPod(...)`（:2029）走 **CRI** gRPC（RunPodSandbox/CreateContainer/StartContainer…）到 containerd。**这就是节点级的 level-triggered reconcile**：不管收到什么事件，`SyncPod` 都重算"这个 Pod 现在该有哪些容器、实际有哪些"，补齐差异；容器崩了 PLEG 会报事件，重算就会按 restartPolicy 重启。`HandlePodAdditions`（:2601）在收到新 Pod 时做准入（资源是否够）再纳管。kubelet 还周期性把节点与 Pod 的 status 写回 API Server（心跳 + 实际态上报），供调度器和控制器决策。
+kubelet 的核心是 `syncLoop`（kubelet.go:2387）——一个永续循环，`syncLoopIteration`（:2461）用 select 同时监听多个源：`configCh`（API Server 来的 Pod 增删改，`case u, open := <-configCh`:2464）、`plegCh`（PLEG=Pod Lifecycle Event Generator，`kl.pleg.Watch`:2396，容器实际状态变化，容量 `plegChannelCapacity=1000`:183）、`syncCh`（周期性全量同步 tick）、`housekeepingCh`（清理孤儿）、探针结果。**任一源触发都归结为对某个 Pod 调 `SyncPod`**（:1845）：算出该 Pod 的期望容器集与当前实际容器集的差异 → 需要就创建 Pod 沙箱（pause 容器 + 网络命名空间，经 CNI 配网）→ 拉镜像 → 起/杀容器，全部经 `kl.containerRuntime.SyncPod(...)`（:2029）走 **CRI** gRPC（RunPodSandbox/CreateContainer/StartContainer…）到 containerd。**这就是节点级的 level-triggered reconcile**：不管收到什么事件，`SyncPod` 都重算"这个 Pod 现在该有哪些容器、实际有哪些"，补齐差异；容器崩了 PLEG 会报事件，重算就会按 restartPolicy 重启。`HandlePodAdditions`（:2601）在收到新 Pod 时做准入（资源是否够）再纳管。kubelet 还周期性把节点与 Pod 的 status 写回 API Server（心跳 + 实际态上报），供调度器和控制器决策。
 
 ## 深化 · CRI 与相邻接口
 

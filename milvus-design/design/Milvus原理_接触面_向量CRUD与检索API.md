@@ -10,7 +10,7 @@
 
 ![Milvus 数据操作](Milvus原理_API_01数据操作.svg)
 
-- **insert**(`internal/proxy/task_insert_streaming.go:28`):Proxy 建可变消息、`streaming.WAL().AppendMessages` 写进日志;**段 id 由 streaming node 分配**(Proxy 侧传 0,`:110`);消息按主键 hash 分到 vchannel(`assignChannelsByPK`)。返回的时间戳用于 session 一致性。
+- **insert**(`internal/proxy/task_insert_streaming.go:28`):Proxy 建可变消息、`streaming.WAL.AppendMessages` 写进日志;**段 id 由 streaming node 分配**(Proxy 侧传 0,`:110`);消息按主键 hash 分到 vchannel(`assignChannelsByPK`)。返回的时间戳用于 session 一致性。
 - **delete**(`task_delete.go`):建 DeleteMsg,按 hash 重分到 vchannel;删除是写"删除标记"(delta),不立即从段移除。
 - **upsert**(`task_upsert.go:191`)= delete + insert:先删旧主键再插新——`upsertMsg` 同时持 DeleteMsg + InsertMsg。
 

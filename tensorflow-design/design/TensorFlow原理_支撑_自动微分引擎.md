@@ -1,12 +1,12 @@
 # TensorFlow 核心原理 · 支撑能力域 · 自动微分引擎
 
-> **定位**：灵魂能力域之一，可微性根基。TF 用**磁带（tape）**做自动微分：`GradientTape` 上下文内执行 op 时把操作录到磁带，`gradient()` 沿录制**逆序回放**、逐 op 调反向函数、链式累积梯度。核实基准：官方源码（`tensorflow/c/eager/tape.h:136`、`:183`、`tensorflow/python/eager/backprop.py:705`）。
+> **定位**：灵魂能力域之一，可微性根基。TF 用**磁带（tape）**做自动微分：`GradientTape` 上下文内执行 op 时把操作录到磁带，`gradient` 沿录制**逆序回放**、逐 op 调反向函数、链式累积梯度。核实基准：官方源码（`tensorflow/c/eager/tape.h:136`、`:183`、`tensorflow/python/eager/backprop.py:705`）。
 
 ## 一、前向录制：磁带记下每个 op
 
 ![Tape反向](TensorFlow原理_autodiff_01Tape反向.svg)
 
-在 `with tf.GradientTape() as tape` 上下文内，每执行一个 op 就把它录到磁带：C++ 侧 `GradientTape`（`tape.h:136`）的 `RecordOperation`（`:167`）追加一个 `OpTapeEntry`（`tape.h:50`：op 类型 + 输入/输出 id + 反向函数）。Python 侧 `GradientTape`（`backprop.py:705`）默认**自动追踪被读到的 trainable `tf.Variable`**；常量张量需 `tape.watch()` 显式加入，或用 `watch_accessed_variables=False`（`:763`）关闭自动追踪后手动 watch。前向照常算出真实值，磁带只是"旁录"操作序列。
+在 `with tf.GradientTape as tape` 上下文内，每执行一个 op 就把它录到磁带：C++ 侧 `GradientTape`（`tape.h:136`）的 `RecordOperation`（`:167`）追加一个 `OpTapeEntry`（`tape.h:50`：op 类型 + 输入/输出 id + 反向函数）。Python 侧 `GradientTape`（`backprop.py:705`）默认**自动追踪被读到的 trainable `tf.Variable`**；常量张量需 `tape.watch` 显式加入，或用 `watch_accessed_variables=False`（`:763`）关闭自动追踪后手动 watch。前向照常算出真实值，磁带只是"旁录"操作序列。
 
 ## 二、反向回放：逆序遍历磁带、链式累积
 
@@ -45,7 +45,7 @@
 
 - **只把需要求导的计算放进 tape**：磁带外的前向不记录、省内存。
 - **`persistent=True` 仅在需多次 gradient 时用**：会保留中间量，用完 `del tape` 及时释放。
-- **常量输入求导记得 `tape.watch()`**：只有被 watch 或 trainable Variable 才有梯度。
+- **常量输入求导记得 `tape.watch`**：只有被 watch 或 trainable Variable 才有梯度。
 - **高阶导数嵌套 tape**：外层 tape 追踪内层 gradient 的计算即可求二阶。
 
 ## 常见误区
@@ -57,4 +57,4 @@
 
 ## 一句话总纲
 
-**自动微分靠磁带：GradientTape 在 with 上下文内把每个 op 录成 OpTapeEntry，gradient() 从 ∂loss/∂loss=1 出发逆序回放、逐 op 调反向、链式累积到 Variable 的梯度——默认追踪 trainable 变量、常量需 watch，反向模式训练、前向模式算 JVP。**
+**自动微分靠磁带：GradientTape 在 with 上下文内把每个 op 录成 OpTapeEntry，gradient 从 ∂loss/∂loss=1 出发逆序回放、逐 op 调反向、链式累积到 Variable 的梯度——默认追踪 trainable 变量、常量需 watch，反向模式训练、前向模式算 JVP。**

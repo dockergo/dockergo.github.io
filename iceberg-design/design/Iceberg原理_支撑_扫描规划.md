@@ -10,7 +10,7 @@ Iceberg 的查询规划**不 list 目录**,而是顺元数据树剪枝:读快照
 
 ![Iceberg 两级剪枝](Iceberg原理_规划_01两级剪枝.svg)
 
-`DataTableScan.doPlanFiles()`(`core/.../DataTableScan.java:64`)拿 snapshot 的 `dataManifests` + `deleteManifests`,建 `ManifestGroup` 剪枝:
+`DataTableScan.doPlanFiles`(`core/.../DataTableScan.java:64`)拿 snapshot 的 `dataManifests` + `deleteManifests`,建 `ManifestGroup` 剪枝:
 
 - **第一级 · manifest 剪枝**:`ManifestEvaluator.forPartitionFilter(...)`(按 spec id 缓存)用 manifest list 里的**分区摘要**,剪掉分区值不可能匹配的整个 manifest(`ManifestGroup.java:279`)——一次跳过一整批文件。
 - **第二级 · data file 剪枝**:存活 manifest 内,`ManifestReader` 用分区 `Evaluator` + `InclusiveMetricsEvaluator`(列统计 lower/upper bounds、null counts)逐 data file 过滤(`ManifestReader.java:269`)——跳过 min/max 不匹配谓词的文件。
@@ -25,7 +25,7 @@ Iceberg 的查询规划**不 list 目录**,而是顺元数据树剪枝:读快照
 
 - **Residual(残差谓词)**:`ResidualEvaluator`(按 spec id 缓存,`ManifestGroup.java:182`)——已被分区满足的谓词从行过滤里**去掉**。例如 `WHERE day(ts)='2024-01-01'` 若分区就是 `day(ts)`,该谓词由分区剪枝保证,残差为空,引擎读文件时无需再过滤——省 CPU。
 - **FileScanTask 组装**:每个存活条目 → `BaseFileScanTask(dataFile, deleteFiles, schema, spec, residuals)`(`ManifestGroup.java:402`),附上匹配的 delete files。
-- **split 切分**:`planTasks()` 按目标 split 大小切分/合并文件任务(`BaseTableScan.java:43`,`TableScanUtil.planTasks`)——大文件切成多 split 并行读、小文件合并减少任务数。
+- **split 切分**:`planTasks` 按目标 split 大小切分/合并文件任务(`BaseTableScan.java:43`,`TableScanUtil.planTasks`)——大文件切成多 split 并行读、小文件合并减少任务数。
 
 ---
 

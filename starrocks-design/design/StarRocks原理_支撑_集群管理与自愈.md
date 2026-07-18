@@ -20,7 +20,7 @@
 
 ![StarRocks Tablet 调度与克隆](StarRocks原理_集群_02调度克隆.svg)
 
-**TabletScheduler**(`fe/.../clone/TabletScheduler.java:130`,`extends LeaderDaemon`,`SCHEDULE_INTERVAL_MS=1000`)维护不变式 `allTabletIds = pendingTablets + runningTablets`(`:160`):`pendingTablets` 是按优先级排序的 `PriorityQueue<TabletSchedCtx>`,`runningTablets` 是 Map。主循环 `updateClusterLoadStatisticsAndPriority()`(`:462`)后 `handleRunningTablets()`(`:468`),分发 **CloneTask** 到目标 BE 拉取健康副本。
+**TabletScheduler**(`fe/.../clone/TabletScheduler.java:130`,`extends LeaderDaemon`,`SCHEDULE_INTERVAL_MS=1000`)维护不变式 `allTabletIds = pendingTablets + runningTablets`(`:160`):`pendingTablets` 是按优先级排序的 `PriorityQueue<TabletSchedCtx>`,`runningTablets` 是 Map。主循环 `updateClusterLoadStatisticsAndPriority`(`:462`)后 `handleRunningTablets`(`:468`),分发 **CloneTask** 到目标 BE 拉取健康副本。
 
 背压:`Config.tablet_sched_max_scheduling_tablets` 限并发(`:313`);每盘并发槽 `MIN_SLOT_PER_PATH=2 .. MAX_SLOT_PER_PATH=64`(`:139`),防单盘 IO 被克隆打满。克隆完成后新副本经 publish 追上版本,Tablet 转 HEALTHY。
 
@@ -30,7 +30,7 @@
 
 ![StarRocks 负载均衡](StarRocks原理_集群_03负载均衡.svg)
 
-健康之外还要**均匀**。`updateClusterLoadStatistic()`(`TabletScheduler.java:526`)构建 `ClusterLoadStatistic`(各 BE 的盘用量/Tablet 数),再由再平衡器搬迁 Tablet:
+健康之外还要**均匀**。`updateClusterLoadStatistic`(`TabletScheduler.java:526`)构建 `ClusterLoadStatistic`(各 BE 的盘用量/Tablet 数),再由再平衡器搬迁 Tablet:
 
 - **DiskAndTabletLoadReBalancer**:按磁盘用量 + Tablet 数把热点 BE 的副本迁到空闲 BE。
 - **ColocateTableBalancer**:维持 colocate 组内 Tablet 的对齐(同组同分桶落同 BE,Join 免 shuffle)。

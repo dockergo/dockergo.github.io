@@ -12,7 +12,7 @@
 
 ![AutoGraph](TensorFlow原理_图与函数_02AutoGraph与重追踪.svg)
 
-图是静态的，普通 Python `if`/`for` 在追踪期只按"追踪那一刻的值"走固定分支/展开固定次数。若控制流**依赖张量值**，必须变成图算子才能在执行期按真实数据分支——**AutoGraph**（默认 `autograph=True`，`polymorphic_function.py:466`）自动完成源码到源码的转换：`if tensor` → `tf.cond`，`for i in tf.range()` → `tf.while_loop`。副作用（`print`、`list.append`）在追踪期只跑一次，要进图得用 `tf.print`、`tf.TensorArray`。
+图是静态的，普通 Python `if`/`for` 在追踪期只按"追踪那一刻的值"走固定分支/展开固定次数。若控制流**依赖张量值**，必须变成图算子才能在执行期按真实数据分支——**AutoGraph**（默认 `autograph=True`，`polymorphic_function.py:466`）自动完成源码到源码的转换：`if tensor` → `tf.cond`，`for i in tf.range` → `tf.while_loop`。副作用（`print`、`list.append`）在追踪期只跑一次，要进图得用 `tf.print`、`tf.TensorArray`。
 
 ## 三、重追踪（retracing）：签名变则重来
 

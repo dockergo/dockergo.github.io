@@ -17,7 +17,7 @@ Fluss 的世界观是**两种表模型共用一套桶副本**：**日志表（Lo
 
 ---
 
-## 二、总架构图（位置即语义）
+## 二、总架构图
 
 ![Fluss 总架构图](Fluss原理_全景_02总架构.svg)
 
@@ -62,7 +62,7 @@ Fluss 的世界观是**两种表模型共用一套桶副本**：**日志表（Lo
 ## 六、三条贯穿声明（Fluss 区别于消息队列/纯存储）
 
 1. **两种表模型在 LogTablet 汇合**：主键表的每次 upsert/delete 都被翻译成 changelog（+I/-U/+U/-D）追加到同一条 LogTablet——所以「主键表写入」本质仍是「日志表追加」，KvTablet 只是 LogTablet 的一个物化视图。这是 Fluss 与「只有日志」的 Kafka 的关键区别。
-2. **先持久化 WAL、再落 KV**：KvTablet 的写从不直接落 RocksDB，而是 `putAsLeader` 先 `logTablet.appendAsLeader(walBuilder.build())` 追加日志 → 进 `preWriteBuffer` → HW 推进（数据已复制到 ISR）后 `flush` 落 RocksDB。崩溃恢复 = 下载 DFS 快照 + 从快照 offset 回放 changelog，快照严格对应一个 `flushedLogOffset`。
+2. **先持久化 WAL、再落 KV**：KvTablet 的写从不直接落 RocksDB，而是 `putAsLeader` 先 `logTablet.appendAsLeader(walBuilder.build)` 追加日志 → 进 `preWriteBuffer` → HW 推进（数据已复制到 ISR）后 `flush` 落 RocksDB。崩溃恢复 = 下载 DFS 快照 + 从快照 offset 回放 changelog，快照严格对应一个 `flushedLogOffset`。
 3. **本地热 → 远程冷 → 湖仓**：日志段先在 TabletServer 本地（保留 `table.log.tiered.local-segments` 段，默认 2），冷段异步 tier 到 DFS（`LogTieringTask`，manifest 落 ZK），再由独立 Flink 分层作业写入 Paimon/Iceberg；读时 union read 以「每桶 log offset」为分界拼接历史（湖）与实时（log）。这是 Fluss 区别于纯消息队列、成为「流式湖仓存储」的价值落点。
 
 ---

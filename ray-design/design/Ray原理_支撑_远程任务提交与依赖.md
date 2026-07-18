@@ -1,6 +1,6 @@
 # Ray 支撑能力域 · 远程 task 提交与依赖
 
-> **定位**：把一次 `.remote()` 从"构建规格"落到"某个 worker 上真正执行"的完整机制。核心是 Ray 的**去中心化 worker-lease 调度**：CoreWorker 直接向 Raylet 租 worker、拿到后**直投 task**，不经中央调度器。核实基准 `src/ray/core_worker/task_submission/normal_task_submitter.cc`、`task_manager.cc`（commit 2a70ac4）。
+> **定位**：把一次 `.remote` 从"构建规格"落到"某个 worker 上真正执行"的完整机制。核心是 Ray 的**去中心化 worker-lease 调度**：CoreWorker 直接向 Raylet 租 worker、拿到后**直投 task**，不经中央调度器。核实基准 `src/ray/core_worker/task_submission/normal_task_submitter.cc`、`task_manager.cc`（commit 2a70ac4）。
 
 ## 一、提交流水线：spec → lease → 直投
 

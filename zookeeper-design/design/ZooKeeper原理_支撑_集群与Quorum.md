@@ -7,7 +7,7 @@
 ![Quorum 与 CnxManager](ZooKeeper原理_支撑_集群与Quorum_01Quorum与CnxManager.svg)
 
 - **QuorumPeer 状态机**：每个节点跑一个主循环，在四态间流转（`ServerState` 枚举 `QuorumPeer.java:578`）——**LOOKING**（选举中，调 `lookForLeader`）、**LEADING**（当选 leader）、**FOLLOWING**（跟随，投票+服务读）、**OBSERVING**（观察者，不投票只同步+读）。Leader 失联过半则回 LOOKING 重选。
-- **QuorumCnxManager**（`QuorumCnxManager.java:99`）：选举**专用**通信层。每对节点维持一条 TCP（`SendWorker`/`RecvWorker` 收发投票），收到的投票入 `recvQueue`（`:167`）供 `FastLeaderElection` 消费。**去重连接**：为避免两节点互相发起造成双向连接，规则是**只有 server id 较大者主动连较小者**——`receiveConnection` 里若入站方 `sid > self.getMyId()` 就关闭该入站连接（`:510`），让高 id 侧重新发起（`initiateConnection:371` / `connectOne:653`）。
+- **QuorumCnxManager**（`QuorumCnxManager.java:99`）：选举**专用**通信层。每对节点维持一条 TCP（`SendWorker`/`RecvWorker` 收发投票），收到的投票入 `recvQueue`（`:167`）供 `FastLeaderElection` 消费。**去重连接**：为避免两节点互相发起造成双向连接，规则是**只有 server id 较大者主动连较小者**——`receiveConnection` 里若入站方 `sid > self.getMyId` 就关闭该入站连接（`:510`），让高 id 侧重新发起（`initiateConnection:371` / `connectOne:653`）。
 - **QuorumVerifier**：定义什么叫"过半"。默认 `QuorumMaj`（投票成员的严格多数）；选举收敛与 `tryToCommit` 都问它 `hasAllQuorums`。也支持带权/分层（不同机房加权）。N 节点容忍 ⌊(N-1)/2⌋ 故障；**过半不可用即停写**（CP：宁停不错）。
 - **动态重配置 reconfig**：增删成员作为特殊事务经 ZAB 提交，`QuorumVerifier` 带版本号；变更期间**新旧配置都要过半双确认**（`Leader.tryToCommit` 对 reconfig 特判，`:970` 内），避免切换脑裂；Observer 可动态提升为 participant。
 

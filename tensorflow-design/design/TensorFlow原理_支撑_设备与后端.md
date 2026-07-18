@@ -6,7 +6,7 @@
 
 ![放置与colocation](TensorFlow原理_设备后端_01放置与colocation.svg)
 
-`Placer::Run()`（`placer.cc:223`）分四步：① **收集约束**——用户显式 `with tf.device(...)` + 各节点 kernel 支持的设备集；② **ColocationGraph**（`colocation_graph.cc`）用并查集把"必须同设备"的节点**归并成组**（如 Variable 与其更新 op），保证同组落同一设备、避免无谓跨设备拷贝；③ **按组选设备**——通常优先 GPU（若该 op 有 GPU kernel）；④ **soft placement**——`allow_soft_placement=True` 时，指定了不存在 kernel 的设备不报错、自动**回退 CPU**。
+`Placer::Run`（`placer.cc:223`）分四步：① **收集约束**——用户显式 `with tf.device(...)` + 各节点 kernel 支持的设备集；② **ColocationGraph**（`colocation_graph.cc`）用并查集把"必须同设备"的节点**归并成组**（如 Variable 与其更新 op），保证同组落同一设备、避免无谓跨设备拷贝；③ **按组选设备**——通常优先 GPU（若该 op 有 GPU kernel）；④ **soft placement**——`allow_soft_placement=True` 时，指定了不存在 kernel 的设备不报错、自动**回退 CPU**。
 
 ## 二、跨设备：自动插 Send/Recv
 

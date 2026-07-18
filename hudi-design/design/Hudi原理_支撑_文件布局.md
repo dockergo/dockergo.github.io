@@ -26,7 +26,7 @@ Hudi 的数据不是"一堆文件",而是有严格层次的物理组织:表 → 
 - **log 文件**(`model/HoodieLogFile.java`):MOR 的增量,命名 `.fileId_baseInstantTime.log.version_writeToken`——绑定到它所修饰的 base 文件的 fileId + baseInstantTime,`version` 递增(一个 slice 可有多个 log)。log 文件扩展名/排序刻意让"删除排在数据之后""保证 commit 时间序"(`HoodieLogFile.java:58` 附近的比较逻辑)。
 - **log block**:log 文件内部由 block 组成(数据块/删除块/命令块),是读时合并的最小单位——详见【MoR 读合并】。这里只强调:log 是"追加写"的,一个 slice 的多个 log 文件 + 多个 block 共同构成该 base 之上的增量。
 
-**命名即元数据**:Hudi 大量信息编码在文件名里(fileId、baseInstantTime、version、writeToken),读端不必打开文件就能按名字归组、定版本、排序——这是"位置即语义"在文件层的体现。
+**命名即元数据**:Hudi 大量信息编码在文件名里(fileId、baseInstantTime、version、writeToken),读端不必打开文件就能按名字归组、定版本、排序——这是在文件层的体现。
 
 ---
 

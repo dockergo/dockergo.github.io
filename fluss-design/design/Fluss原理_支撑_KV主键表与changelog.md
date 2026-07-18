@@ -10,7 +10,7 @@
 
 ![KV 写入路径](Fluss原理_KV_写入路径.svg)
 
-`KvTablet.putAsLeader`（`server/kv/KvTablet.java:337`）全程持写锁：取 schema → 逐条 `processKvRecords`（`:423`），`row==null` 走 `processDeletion`（`:478`）否则 `processUpsert`（`:516`）→ 读旧值 `getFromBufferOrKv`（`:686`，先查 buffer 再查 RocksDB）→ `rowMerger.merge`/`delete` → 产 changelog → `logTablet.appendAsLeader(walBuilder.build())`（`:395`，先追加 WAL）→ 值进 `KvPreWriteBuffer`（`kv/prewrite/KvPreWriteBuffer.java`）。若 WAL 返回 duplicated/异常则 `truncateTo` 回滚脏值（`:397-410`）。**RocksDB 落盘发生在 flush**（见深化）。
+`KvTablet.putAsLeader`（`server/kv/KvTablet.java:337`）全程持写锁：取 schema → 逐条 `processKvRecords`（`:423`），`row==null` 走 `processDeletion`（`:478`）否则 `processUpsert`（`:516`）→ 读旧值 `getFromBufferOrKv`（`:686`，先查 buffer 再查 RocksDB）→ `rowMerger.merge`/`delete` → 产 changelog → `logTablet.appendAsLeader(walBuilder.build)`（`:395`，先追加 WAL）→ 值进 `KvPreWriteBuffer`（`kv/prewrite/KvPreWriteBuffer.java`）。若 WAL 返回 duplicated/异常则 `truncateTo` 回滚脏值（`:397-410`）。**RocksDB 落盘发生在 flush**（见深化）。
 
 ---
 
@@ -18,7 +18,7 @@
 
 ![changelog 生成](Fluss原理_KV_changelog.svg)
 
-三个 `apply*` 产 changelog（`ChangeType`：+A/+I/-U/+U/-D，`fluss-common/.../record/ChangeType.java:34`）：`applyDelete` 产 `DELETE(oldRow)`（`KvTablet.java:561`）；`applyInsert` 填自增列后产 `INSERT(newRow)`（`:573`）；`applyUpdate` 在 **FULL 镜像**下产 `UPDATE_BEFORE(old)+UPDATE_AFTER(new)` 两条、**WAL 镜像**下只产 `UPDATE_AFTER`（`:589`）。镜像模式由 `TableConfig.getChangelogImage()` 决定。这条 changelog 追加到 LogTablet 后，既是 CDC 流、也是崩溃恢复的重放源。
+三个 `apply*` 产 changelog（`ChangeType`：+A/+I/-U/+U/-D，`fluss-common/.../record/ChangeType.java:34`）：`applyDelete` 产 `DELETE(oldRow)`（`KvTablet.java:561`）；`applyInsert` 填自增列后产 `INSERT(newRow)`（`:573`）；`applyUpdate` 在 **FULL 镜像**下产 `UPDATE_BEFORE(old)+UPDATE_AFTER(new)` 两条、**WAL 镜像**下只产 `UPDATE_AFTER`（`:589`）。镜像模式由 `TableConfig.getChangelogImage` 决定。这条 changelog 追加到 LogTablet 后，既是 CDC 流、也是崩溃恢复的重放源。
 
 ---
 
@@ -34,7 +34,7 @@
 
 | 环节 | 机制 | 锚点 |
 |---|---|---|
-| flush 触发 | high-watermark 推进（数据已复制到 ISR）后 `KvTablet.flush()` 把 LSN < HW 的 buffer 项落 RocksDB | `KvTablet.java:611` |
+| flush 触发 | high-watermark 推进（数据已复制到 ISR）后 `KvTablet.flush` 把 LSN < HW 的 buffer 项落 RocksDB | `KvTablet.java:611` |
 | preWriteBuffer 双职责 | ① 缓冲已写 WAL 未落 RocksDB 的对；② 作 CDC 读旧值的临时缓存 | `kv/prewrite/KvPreWriteBuffer.java:41` |
 | RocksDB 关 WAL | `WriteOptions.setDisableWAL(true)`——一致性由 Fluss WAL 保证 | `kv/rocksdb/RocksDBResourceContainer.java:182` |
 | 一桶一 RocksDB | 每个 KvTablet 独占一个 RocksDB 实例、用 default column family | `kv/rocksdb/RocksDBKv.java:64` |

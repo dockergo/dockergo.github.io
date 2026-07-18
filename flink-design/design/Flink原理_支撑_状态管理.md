@@ -10,7 +10,7 @@
 
 ![Flink 两类状态](Flink原理_状态_01两类.svg)
 
-`State` 基接口只有 `void clear()`(`flink-core-api/.../state/State.java:32`)。两类:
+`State` 基接口只有 `void clear`(`flink-core-api/.../state/State.java:32`)。两类:
 
 - **keyed state**(按 key 分区,最常用):`ValueState<T>`(value/update,`ValueState.java:40`)、`ListState<T>`(`ListState.java:44`)、`MapState<UK,UV>`(get/put/entries,`MapState.java:45`)。每个 key 一份状态,算子处理某 key 的记录时自动切到该 key 的状态。
 - **operator state**(按算子并行实例):`OperatorStateStore.getListState`(SPLIT_DISTRIBUTE 重分布)、`getUnionListState`(UNION)、`getBroadcastState`(`OperatorStateStore.java:78,101,54`)。常用于 source 记录偏移量等。

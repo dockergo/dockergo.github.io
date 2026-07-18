@@ -1,10 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="820" viewBox="0 0 1080 820" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="990" viewBox="0 0 1080 990" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
   <defs>
     <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
     <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
   </defs>
-  <rect width="1080" height="820" fill="#fbfbfd"/>
-  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">ORC 核心原理 · 总架构图（位置即语义）</text>
+  <rect width="1080" height="990" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">ORC 核心原理 · 总架构图</text>
   <text x="30" y="50" font-size="10.5" fill="#a1a1a6">列式文件格式:单文件按列存字节布局 + 多级统计索引,支撑列裁剪与谓词跳读;纯文件库,不管表/事务</text>
 
   <!-- compute engines (external) -->
@@ -17,61 +17,61 @@
   </g>
 
   <!-- API layer (iface) -->
-  <rect x="30" y="130" width="1020" height="46" rx="13" fill="#f4eefb" stroke="#d9c7ec"/>
+  <rect x="30" y="130" width="1020" height="46" rx="13" fill="#f4eefb" stroke="#d9c7ec" data-tid="ORC原理_接触面_读写API与类型系统" data-lab="读写 API"/>
   <text x="46" y="153" font-size="11" fill="#3d2a5a"><tspan font-weight="700">① 接触面 · 读写 API</tspan>　TypeDescription 类型树(列 ID)· VectorizedRowBatch 列式批 · WriterImpl/ReaderImpl · 压缩 ZSTD</text>
   <text x="46" y="169" font-size="8.6" fill="#8a6db3">给计算引擎集成的读写库,不面向终端用户 SQL</text>
 
   <!-- file layout core -->
-  <rect x="30" y="190" width="1020" height="206" rx="16" fill="#eef3fb" stroke="#bcd0ec"/>
+  <rect x="30" y="190" width="1020" height="206" rx="16" fill="#eef3fb" stroke="#bcd0ec" data-tid="ORC原理_支撑_文件布局" data-lab="文件布局"/>
   <text x="46" y="212" font-size="12" font-weight="700" fill="#1b2a4a">② 文件布局（核心 · 倒读:postscript→footer→stripe）</text>
   <g text-anchor="middle" font-size="8.4">
-    <rect x="46" y="222" width="988" height="26" rx="7" fill="#f3f7fc" stroke="#cfe0f2"/><text x="540" y="239" font-weight="600" fill="#274a78">header "ORC"(3B) + … stripes … + footer(stripe 信息/类型树/文件级统计) + postscript(不压缩,末字节=其长度)</text>
-    <rect x="46" y="254" width="988" height="106" rx="8" fill="#e7f0fb" stroke="#b9d2ef"/><text x="540" y="272" font-weight="600" fill="#1b2a4a">stripe(默认 64MB,自包含一批行)= index streams + data streams + stripe footer</text>
-    <rect x="66" y="282" width="470" height="30" rx="6" fill="#f3f7fc" stroke="#cfe0f2"/><text x="301" y="301" fill="#274a78">index streams:ROW_INDEX(positions + row-group 统计)+ 布隆</text>
-    <rect x="546" y="282" width="468" height="30" rx="6" fill="#f3f7fc" stroke="#cfe0f2"/><text x="780" y="301" fill="#274a78">data streams:每列 PRESENT/DATA/LENGTH/DICTIONARY_DATA…</text>
-    <rect x="66" y="318" width="948" height="32" rx="6" fill="#fdf6ea" stroke="#efdcb4"/><text x="540" y="338" fill="#5a3410">row group(默认 10000 行):细粒度 seek/skip 单位;物理写序 index-then-data</text>
+    <rect x="46" y="222" width="988" height="26" rx="7" fill="#f3f7fc" stroke="#cfe0f2" data-tid="ORC原理_支撑_文件布局" data-lab="header/footer/postscript"/><text x="540" y="239" font-weight="600" fill="#274a78">header "ORC"(3B) + … stripes … + footer(stripe 信息/类型树/文件级统计) + postscript(不压缩,末字节=其长度)</text>
+    <rect x="46" y="254" width="988" height="106" rx="8" fill="#e7f0fb" stroke="#b9d2ef" data-tid="ORC原理_支撑_文件布局" data-lab="stripe"/><text x="540" y="272" font-weight="600" fill="#1b2a4a">stripe(默认 64MB,自包含一批行)= index streams + data streams + stripe footer</text>
+    <rect x="66" y="282" width="470" height="30" rx="6" fill="#f3f7fc" stroke="#cfe0f2" data-tid="ORC原理_支撑_行组与索引" data-lab="index streams"/><text x="301" y="301" fill="#274a78">index streams:ROW_INDEX(positions + row-group 统计)+ 布隆</text>
+    <rect x="546" y="282" width="468" height="30" rx="6" fill="#f3f7fc" stroke="#cfe0f2" data-tid="ORC原理_支撑_列编码" data-lab="data streams"/><text x="780" y="301" fill="#274a78">data streams:每列 PRESENT/DATA/LENGTH/DICTIONARY_DATA…</text>
+    <rect x="66" y="318" width="948" height="32" rx="6" fill="#fdf6ea" stroke="#efdcb4" data-tid="ORC原理_支撑_行组与索引" data-lab="row group"/><text x="540" y="338" fill="#5a3410">row group(默认 10000 行):细粒度 seek/skip 单位;物理写序 index-then-data</text>
   </g>
   <text x="540" y="382" font-size="8.4" text-anchor="middle" fill="#5b7db1">读:ReaderImpl 末 16KB 倒读 postscript→footer→按 SARG+统计剪 stripe/row-group→TreeReader 解码填 batch</text>
 
   <!-- capability band: 2 rows x 3 -->
-  <rect x="30" y="410" width="330" height="78" rx="13" fill="#f5faf6" stroke="#cfe6d5"/>
+  <rect x="30" y="410" width="330" height="78" rx="13" fill="#f5faf6" stroke="#cfe6d5" data-tid="ORC原理_支撑_列编码" data-lab="列编码"/>
   <text x="46" y="431" font-size="10.5" font-weight="700" fill="#12402a">③ 列编码</text>
   <text x="46" y="449" font-size="8.4" fill="#2f6f4f">stream 分工 + 整数 RLE v1/v2</text>
   <text x="46" y="464" font-size="8.4" fill="#2f6f4f">字符串字典(≤0.8)vs 直存自动选</text>
   <text x="46" y="480" font-size="8" fill="#a1a1a6">ColumnEncoding DIRECT/DICTIONARY×v1/v2</text>
 
-  <rect x="375" y="410" width="330" height="78" rx="13" fill="#e7f0fb" stroke="#b9d2ef"/>
+  <rect x="375" y="410" width="330" height="78" rx="13" fill="#e7f0fb" stroke="#b9d2ef" data-tid="ORC原理_支撑_行组与索引" data-lab="行组与索引"/>
   <text x="391" y="431" font-size="10.5" font-weight="700" fill="#1b2a4a">④ 行组与索引</text>
   <text x="391" y="449" font-size="8.4" fill="#5b7db1">row index stride 10000 · positions seek</text>
   <text x="391" y="464" font-size="8.4" fill="#5b7db1">stripe→row-group→seek 三级跳读</text>
   <text x="391" y="480" font-size="8" fill="#a1a1a6">RowIndexEntry / pickRowGroups</text>
 
-  <rect x="720" y="410" width="330" height="78" rx="13" fill="#f9ecec" stroke="#e8c9c9"/>
+  <rect x="720" y="410" width="330" height="78" rx="13" fill="#f9ecec" stroke="#e8c9c9" data-tid="ORC原理_支撑_谓词下推" data-lab="谓词下推 SARG"/>
   <text x="736" y="431" font-size="10.5" font-weight="700" fill="#7a2230">⑤ 谓词下推 SARG</text>
   <text x="736" y="449" font-size="8.4" fill="#a85560">SearchArgument + 三态 TruthValue</text>
   <text x="736" y="464" font-size="8.4" fill="#a85560">统计+布隆跳 stripe/row-group</text>
   <text x="736" y="480" font-size="8" fill="#a1a1a6">SargApplier / evaluatePredicate</text>
 
-  <rect x="30" y="500" width="330" height="78" rx="13" fill="#fff7e6" stroke="#e8cf9a"/>
+  <rect x="30" y="500" width="330" height="78" rx="13" fill="#fff7e6" stroke="#e8cf9a" data-tid="ORC原理_支撑_列统计与布隆" data-lab="列统计与布隆"/>
   <text x="46" y="521" font-size="10.5" font-weight="700" fill="#5a3410">⑥ 列统计与布隆</text>
   <text x="46" y="539" font-size="8.4" fill="#93762e">3 级统计(文件/stripe/row-group)</text>
   <text x="46" y="554" font-size="8.4" fill="#93762e">min/max/count/sum + 布隆(等值)</text>
   <text x="46" y="570" font-size="8" fill="#a1a1a6">ColumnStatistics / BloomFilter FPP 0.01</text>
 
-  <rect x="375" y="500" width="330" height="78" rx="13" fill="#f4eefb" stroke="#d9c7ec"/>
+  <rect x="375" y="500" width="330" height="78" rx="13" fill="#f4eefb" stroke="#d9c7ec" data-tid="ORC原理_接触面_读写API与类型系统" data-lab="类型系统"/>
   <text x="391" y="521" font-size="10.5" font-weight="700" fill="#3d2a5a">⑦ 类型系统</text>
   <text x="391" y="539" font-size="8.4" fill="#8a6db3">TypeDescription 树(struct/list/map…)</text>
   <text x="391" y="554" font-size="8.4" fill="#8a6db3">列 ID 前序编号 root=0,贯穿一切</text>
   <text x="391" y="570" font-size="8" fill="#a1a1a6">Category 18 种 / assignIds</text>
 
-  <rect x="720" y="500" width="330" height="78" rx="13" fill="#f7f7f9" stroke="#e3e3e8"/>
+  <rect x="720" y="500" width="330" height="78" rx="13" fill="#f7f7f9" stroke="#e3e3e8" data-tid="ORC原理_接触面_读写API与类型系统" data-lab="向量批读写"/>
   <text x="736" y="521" font-size="10.5" font-weight="700" fill="#1d1d1f">向量批读写(接触面延伸)</text>
   <text x="736" y="539" font-size="8.4" fill="#6e6e73">VectorizedRowBatch 列式批(1024)</text>
   <text x="736" y="554" font-size="8.4" fill="#6e6e73">TreeWriter/Reader 树镜像类型树</text>
   <text x="736" y="570" font-size="8" fill="#a1a1a6">见接触面主线</text>
 
   <!-- storage -->
-  <rect x="30" y="592" width="1020" height="50" rx="14" fill="#fdf6ea" stroke="#efdcb4"/>
+  <rect x="30" y="592" width="1020" height="50" rx="14" fill="#fdf6ea" stroke="#efdcb4" data-tid="ORC原理_支撑_文件布局" data-lab="磁盘/对象存储"/>
   <text x="46" y="614" font-size="11" font-weight="700" fill="#5a3410">磁盘/对象存储 · 单个 .orc 文件字节流(header + stripes + footer + postscript)</text>
   <text x="46" y="632" font-size="8.6" fill="#93762e">ORC 只定义单文件布局 + 读写库;多文件组表、schema 演进、ACID 由 Iceberg/Hive/Delta 管</text>
 
@@ -83,12 +83,56 @@
 
   <!-- semantics -->
   <rect x="30" y="656" width="1020" height="48" rx="12" fill="#f7f7f9" stroke="#ececf1"/>
-  <text x="46" y="677" font-size="11" font-weight="700" fill="#1d1d1f">位置即语义</text>
+  <text x="46" y="677" font-size="11" font-weight="700" fill="#1d1d1f"></text>
   <text x="46" y="695" font-size="8.6" fill="#6e6e73">上=引擎/表格式(外部);①接触面读写API;②文件布局(核心,倒读);③~⑦五能力域(编码/索引/下推/统计/类型);底=单 .orc 文件。ORC 只管一个文件。</text>
 
   <!-- pervasive -->
-  <rect x="30" y="718" width="1020" height="44" rx="12" fill="#f0f0f4" stroke="#d2d2d7"/>
+  <rect x="30" y="718" width="1020" height="44" rx="12" fill="#f0f0f4" stroke="#d2d2d7" data-tid="ORC原理_接触面_读写API与类型系统" data-lab="贯穿层 · 列 ID"/>
   <text x="540" y="745" font-size="10" font-weight="700" text-anchor="middle" fill="#48484a">贯穿层 · 列 ID(前序编号 root=0)—— 类型树赋 ID,每列的 stream/统计/索引/SARG 谓词都按列 ID 定位,横切类型/编码/统计/剪枝</text>
 
-  <text x="30" y="792" font-size="9" fill="#a1a1a6">三条贯穿声明:① 按列存不按行(高压缩+列裁剪)　② 三级统计+布隆支撑跳读(扫得快)　③ 纯文件格式库,不管表/事务(被表格式和引擎调用的底层砖块)</text>
+  <!-- 读写路径 · 压缩落盘 · 兼容边界（贯穿流程带） -->
+  <text x="30" y="800" font-size="11.5" font-weight="700" fill="#1d1d1f">读写路径 · 压缩落盘 · 兼容边界<tspan font-size="8.8" font-weight="400" fill="#a1a1a6">　贯穿流程:写建 stripe → 压缩落盘 → 读倒读解压 → schema 演进调和 file↔reader,点击任一模块下钻</tspan></text>
+
+  <!-- 写路径 -->
+  <rect x="30" y="810" width="240" height="132" rx="13" fill="#eef4ff" stroke="#c3d4f0" filter="url(#soft)" data-tid="ORC原理_支撑_写路径" data-lab="写路径"/>
+  <text x="46" y="830" font-size="11" font-weight="700" fill="#29406e">写路径</text>
+  <text x="46" y="848" font-size="8.4" fill="#4a628f">WriterImpl 按类型树建 TreeWriter 树</text>
+  <text x="46" y="864" font-size="8.4" fill="#4a628f">addRowBatch 列式并行编码 + 攒 row index</text>
+  <text x="46" y="880" font-size="8.4" fill="#4a628f">size&gt;limit 或 rows≥上限 → flushStripe</text>
+  <text x="46" y="896" font-size="8.4" fill="#4a628f">close: writeFooter + writePostScript</text>
+  <text x="46" y="918" font-size="8" fill="#a1a1a6">writer/WriterImpl.java:733/559/804</text>
+
+  <!-- 压缩与流分块 -->
+  <rect x="290" y="810" width="240" height="132" rx="13" fill="#fdf3e8" stroke="#ecd6b2" filter="url(#soft)" data-tid="ORC原理_支撑_压缩与流分块" data-lab="压缩分块"/>
+  <text x="306" y="830" font-size="11" font-weight="700" fill="#6b4a17">压缩与流分块</text>
+  <text x="306" y="848" font-size="8.4" fill="#93762e">7 codec · 默认 ZSTD · 作用于每 stream</text>
+  <text x="306" y="864" font-size="8.4" fill="#93762e">默认 256KB 分块,逐块独立压</text>
+  <text x="306" y="880" font-size="8.4" fill="#93762e">3 字节块头:(长度&lt;&lt;1)|isOriginal</text>
+  <text x="306" y="896" font-size="8.4" fill="#93762e">压不动存原文(isOriginal=1)不膨胀</text>
+  <text x="306" y="918" font-size="8" fill="#a1a1a6">impl/OutStream.java · CompressionKind</text>
+
+  <!-- 读路径 -->
+  <rect x="550" y="810" width="240" height="132" rx="13" fill="#e9f6f4" stroke="#bce0d6" filter="url(#soft)" data-tid="ORC原理_支撑_读路径" data-lab="读路径"/>
+  <text x="566" y="830" font-size="11" font-weight="700" fill="#1e5d4c">读路径</text>
+  <text x="566" y="848" font-size="8.4" fill="#3d7d68">extractFileTail 倒读末 16KB 拿全图</text>
+  <text x="566" y="864" font-size="8.4" fill="#3d7d68">列裁剪 + pickRowGroups 谓词选块</text>
+  <text x="566" y="880" font-size="8.4" fill="#3d7d68">TreeReader 树 nextBatch 解压+解码填批</text>
+  <text x="566" y="896" font-size="8.4" fill="#3d7d68">只读选中列 × 选中 row-group</text>
+  <text x="566" y="918" font-size="8" fill="#a1a1a6">RecordReaderImpl.java:1312/1462</text>
+
+  <!-- schema 演进与 ACID -->
+  <rect x="810" y="810" width="240" height="132" rx="13" fill="#f6eefb" stroke="#ddc9ec" filter="url(#soft)" data-tid="ORC原理_支撑_schema演进与ACID" data-lab="演进ACID"/>
+  <text x="826" y="830" font-size="11" font-weight="700" fill="#55306e">schema 演进与 ACID</text>
+  <text x="826" y="848" font-size="8.4" fill="#8a6db3">SchemaEvolution 默认按列名映射</text>
+  <text x="826" y="864" font-size="8.4" fill="#8a6db3">无名 _colN / 强制开关才按位置</text>
+  <text x="826" y="880" font-size="8.4" fill="#8a6db3">仅 PPD 安全转换才下推谓词</text>
+  <text x="826" y="896" font-size="8.4" fill="#8a6db3">Hive ACID:5 前缀列包 row · base+delta</text>
+  <text x="826" y="918" font-size="8" fill="#a1a1a6">SchemaEvolution.java:39/303/596</text>
+
+  <!-- band flow arrows: 写→压缩→读→演进 -->
+  <line x1="270" y1="876" x2="290" y2="876" stroke="#b8b8bf" stroke-width="1.2" stroke-dasharray="4 3" marker-end="url(#ar)"/>
+  <line x1="530" y1="876" x2="550" y2="876" stroke="#b8b8bf" stroke-width="1.2" stroke-dasharray="4 3" marker-end="url(#ar)"/>
+  <line x1="790" y1="876" x2="810" y2="876" stroke="#b8b8bf" stroke-width="1.2" stroke-dasharray="4 3" marker-end="url(#ar)"/>
+
+  <text x="30" y="968" font-size="9" fill="#a1a1a6">三条贯穿声明:① 按列存不按行(高压缩+列裁剪)　② 三级统计+布隆支撑跳读(扫得快)　③ 纯文件格式库,不管表/事务(被表格式和引擎调用的底层砖块)</text>
 </svg>

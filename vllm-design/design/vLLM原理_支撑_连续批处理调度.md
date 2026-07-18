@@ -10,7 +10,7 @@
 
 ![vLLM 连续批处理](vLLM原理_调度_01连续批处理.svg)
 
-**Scheduler.schedule()**(`vllm/v1/core/sched/scheduler.py:417`)每步组批:
+**Scheduler.schedule**(`vllm/v1/core/sched/scheduler.py:417`)每步组批:
 
 - 两个队列:`self.waiting`(:182,等待)、`self.running`(:185,运行中)。
 - 每步:先调度 **RUNNING** 里的请求继续解码(:461),再看还有预算就从 **WAITING** 补新请求进来(:657)。
@@ -55,7 +55,7 @@
 | 项 | 定义 | 职责 |
 |---|---|---|
 | Scheduler | `sched/scheduler.py:69` | 调度器 |
-| schedule() | `:417` | 每步组批 |
+| schedule | `:417` | 每步组批 |
 | waiting / running | `:182` / `:185` | 等待/运行队列 |
 | max_num_batched_tokens | `:113` | 每步 token 预算 |
 | 重算式抢占 | `_preempt_request` | 释放块 + 归零 + 重入队 |
@@ -77,4 +77,4 @@
 
 ## 一句话总纲
 
-**vLLM 高吞吐支柱连续批处理:Scheduler.schedule()(scheduler.py:417)每步重组批——先续跑 running(:461)再按预算补 waiting(:657),完成即出、随到随入,GPU 每步满载(区别于静态批的短请求做完空转等长请求);token 预算 max_num_batched_tokens(:113)约束每步计算量,chunked prefill 把长 prompt 切块与 decode 混批避免阻塞;显存不够时重算式抢占(_preempt_request 释放块+num_computed_tokens 归零+prepend 回 waiting,重新调度时重算而非 CPU swap——KV 太大换出比重算还慢)。**
+**vLLM 高吞吐支柱连续批处理:Scheduler.schedule(scheduler.py:417)每步重组批——先续跑 running(:461)再按预算补 waiting(:657),完成即出、随到随入,GPU 每步满载(区别于静态批的短请求做完空转等长请求);token 预算 max_num_batched_tokens(:113)约束每步计算量,chunked prefill 把长 prompt 切块与 decode 混批避免阻塞;显存不够时重算式抢占(_preempt_request 释放块+num_computed_tokens 归零+prepend 回 waiting,重新调度时重算而非 CPU swap——KV 太大换出比重算还慢)。**

@@ -10,7 +10,7 @@ Flink 给两类用户两种 API,但**统一后端**:写惯代码的用 DataStrea
 
 ![Flink API 全景](Flink原理_API_01全景.svg)
 
-- **DataStream API**(命令式):`StreamExecutionEnvironment` 是入口,用户的 `map/filter/keyBy/window` 等转换累积进 `List<Transformation>`(`flink-runtime/.../streaming/api/environment/StreamExecutionEnvironment.java:171`),经 `addOperator`(`:2131`)登记。`execute()` 惰性 `getStreamGraph()`(`:1838`)。Flink 2.x 还有 DataStream V2(FLIP-409,`flink-datastream-api`/`flink-datastream`),同样汇入 `StreamGraphGenerator`。
+- **DataStream API**(命令式):`StreamExecutionEnvironment` 是入口,用户的 `map/filter/keyBy/window` 等转换累积进 `List<Transformation>`(`flink-runtime/.../streaming/api/environment/StreamExecutionEnvironment.java:171`),经 `addOperator`(`:2131`)登记。`execute` 惰性 `getStreamGraph`(`:1838`)。Flink 2.x 还有 DataStream V2(FLIP-409,`flink-datastream-api`/`flink-datastream`),同样汇入 `StreamGraphGenerator`。
 - **Table / SQL API**(声明式):`TableEnvironmentImpl.executeSql`(`flink-table/flink-table-api-java/.../TableEnvironmentImpl.java:947`);SQL 文本经 `ParserImpl.parse`(Calcite)→ Operation 树,`PlannerBase.translate`(Scala,`PlannerBase.scala:176`)跑 `translateToRel`(Calcite RelNode)→ `optimize` → `translateToExecNodeGraph` → `translateToPlan`(产 Transformations)。批/流共享 `PlannerBase`,由 `isStreamingMode` 选 Stream/BatchPlanner。
 
 两条路的输出都是 `Transformation` 列表 → 同一 StreamGraph→JobGraph 管线。
@@ -21,7 +21,7 @@ Flink 给两类用户两种 API,但**统一后端**:写惯代码的用 DataStrea
 
 ![Flink DataStream 转换累积](Flink原理_API_02DataStream.svg)
 
-每个算子(如 `map`)经 `DataStream.doTransform` 把结果 transformation 登记进环境(`DataStream.java:844`)。`keyBy` 产生 `KeyedStream`(`:276`),其重分区用 `KeyGroupStreamPartitioner`(按 key-group 分,`KeyedStream.java:134`)——这就是 keyed state 分区的来源。`execute()` 时 `StreamGraphGenerator.generate()`(`streaming/api/graph/StreamGraphGenerator.java:253`)遍历 transformation 建 StreamGraph。**惰性**:转换只是搭图,`execute()` 才真正提交。
+每个算子(如 `map`)经 `DataStream.doTransform` 把结果 transformation 登记进环境(`DataStream.java:844`)。`keyBy` 产生 `KeyedStream`(`:276`),其重分区用 `KeyGroupStreamPartitioner`(按 key-group 分,`KeyedStream.java:134`)——这就是 keyed state 分区的来源。`execute` 时 `StreamGraphGenerator.generate`(`streaming/api/graph/StreamGraphGenerator.java:253`)遍历 transformation 建 StreamGraph。**惰性**:转换只是搭图,`execute` 才真正提交。
 
 ---
 
@@ -54,11 +54,11 @@ Flink 给两类用户两种 API,但**统一后端**:写惯代码的用 DataStrea
 ## 常见误区与工程要点
 
 - **误区:DataStream 和 Table 是两个引擎。** 不。两者都翻译成 Transformation,汇入同一 StreamGraph→JobGraph→ExecutionGraph。
-- **误区:转换写完就在跑。** 惰性:转换只搭 StreamGraph,`execute()` 才提交执行。
+- **误区:转换写完就在跑。** 惰性:转换只搭 StreamGraph,`execute` 才提交执行。
 - **误区:keyBy 只是分组。** 它决定数据按 key-group 重分区、并绑定 keyed state 的分区——影响状态与并行。
 - **误区:SQL 只能批。** Table/SQL 流批统一,流上支持窗口/聚合/Join(带 retract/upsert 语义)。
 - **归属提醒**:transformation 变图在【图变换】;keyBy 的分区在【网络与数据交换】;keyed state 在【状态管理】。
 
 ## 一句话总纲
 
-**Flink 是原型 C(多 API 而非 SQL 语句族):命令式 DataStream(StreamExecutionEnvironment 累积 Transformation,keyBy 产 KeyedStream 按 key-group 分区)与声明式 Table/SQL(Calcite planner 经 translateToRel→optimize→ExecNodeGraph→Transformations)两套 API,最终都汇入同一条 StreamGraph→JobGraph→ExecutionGraph 执行管线——一份引擎两种表达,惰性构图、execute() 才提交,批流统一。**
+**Flink 是原型 C(多 API 而非 SQL 语句族):命令式 DataStream(StreamExecutionEnvironment 累积 Transformation,keyBy 产 KeyedStream 按 key-group 分区)与声明式 Table/SQL(Calcite planner 经 translateToRel→optimize→ExecNodeGraph→Transformations)两套 API,最终都汇入同一条 StreamGraph→JobGraph→ExecutionGraph 执行管线——一份引擎两种表达,惰性构图、execute 才提交,批流统一。**

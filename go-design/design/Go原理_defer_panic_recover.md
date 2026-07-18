@@ -52,13 +52,13 @@ panic 展开是"边跑 defer 边爬栈"，不是先爬完再跑——因为 defe
 
 ![recover 拦截 · gorecover 标记 + recovery 跳转](Go原理_defer_04recover.svg)
 
-`recover()` 编译成 `gorecover`（panic.go:1083）——**只在 defer 函数中直接调用才有效**：
+`recover` 编译成 `gorecover`（panic.go:1083）——**只在 defer 函数中直接调用才有效**：
 
 1. `gorecover` 检查当前是否正在 panic（`g._panic` 非空）且该 panic 未被 recover、非 Goexit；满足则把 `_panic.recovered = true`、返回 panic 的值。
 2. 控制权回到 `gopanic`，它见 `recovered` 为真 → 调 `recovery`（panic.go:1310）：**把该 defer 所在函数的栈帧「伪装成正常返回」**——用 `_panic` 里记录的 `sp`/`pc`/`retpc` 恢复到那个函数的返回点，让它像正常 return 一样继续。
 3. 于是 panic 被"吞掉"，程序从 recover 所在函数的调用者处继续正常执行。
 
-**recover 必须在 defer 里直接调**：`if r := recover(); r != nil` 写在被 defer 的函数体内。间接调（如 defer 里再调一个函数、那函数里 recover）无效——因为 `gorecover` 靠栈帧位置判定合法性。
+**recover 必须在 defer 里直接调**：`if r := recover; r != nil` 写在被 defer 的函数体内。间接调（如 defer 里再调一个函数、那函数里 recover）无效——因为 `gorecover` 靠栈帧位置判定合法性。
 
 ---
 
@@ -68,7 +68,7 @@ panic 展开是"边跑 defer 边爬栈"，不是先爬完再跑——因为 defe
 |---|---|
 | defer 参数求值时机 | **注册时**求值，非执行时（`defer f(i)` 捕获当时的 i） |
 | defer 执行顺序 | LIFO，后进先出 |
-| `runtime.Goexit()` | 用一个 `_panic{goexit:true}` 走 defer 链但**不可被 recover**，跑完 defer 后终止 G |
+| `runtime.Goexit` | 用一个 `_panic{goexit:true}` 走 defer 链但**不可被 recover**，跑完 defer 后终止 G |
 | recover 返回值 | panic 传入的值；无 panic 时返回 nil |
 | 命名返回值 + defer | defer 可修改命名返回值（recover 后返回错误的常见手法） |
 | re-panic | recover 后可再 `panic` 重新抛出 |

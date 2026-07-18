@@ -6,7 +6,7 @@
 
 ![聚合管线](Traefik原理_Provider_01聚合管线.svg)
 
-`provider.Provider` 接口只有两个方法：`Provide(chan<- dynamic.Message, *safe.Pool) error` 和 `Init()`（`provider.go:9`）。`ProviderAggregator`（`aggregator.go:63`）在 `Provide()` 里为**每个 Provider 起一个 goroutine**（`safe.Go(launchProvider)`，`aggregator.go:178`），各自 watch 自己的真源、把 `dynamic.Message{ProviderName, Configuration}`（`config.go:10`）推入共享 `configurationChan`。为避免抖动，聚合层给每个 Provider 套一层 **throttle**：`maybeThrottledProvide`（`aggregator.go:32`）用 `ringChannel` 合并突发，保证两次事件间隔 ≥ `ThrottleDuration`（默认取全局 `providersThrottleDuration`，Provider 可自定义如 ACME）。**internal provider**（含 ACME/API/ping）作为 `requiredProvider` **最后加载**（`aggregator.go:190`），watcher 以它为信号确认"所有 Provider 已就绪"才首次应用配置。
+`provider.Provider` 接口只有两个方法：`Provide(chan<- dynamic.Message, *safe.Pool) error` 和 `Init`（`provider.go:9`）。`ProviderAggregator`（`aggregator.go:63`）在 `Provide` 里为**每个 Provider 起一个 goroutine**（`safe.Go(launchProvider)`，`aggregator.go:178`），各自 watch 自己的真源、把 `dynamic.Message{ProviderName, Configuration}`（`config.go:10`）推入共享 `configurationChan`。为避免抖动，聚合层给每个 Provider 套一层 **throttle**：`maybeThrottledProvide`（`aggregator.go:32`）用 `ringChannel` 合并突发，保证两次事件间隔 ≥ `ThrottleDuration`（默认取全局 `providersThrottleDuration`，Provider 可自定义如 ACME）。**internal provider**（含 ACME/API/ping）作为 `requiredProvider` **最后加载**（`aggregator.go:190`），watcher 以它为信号确认"所有 Provider 已就绪"才首次应用配置。
 
 ## 二、发现机制对照：各 Provider 如何翻译外部真源
 
@@ -30,7 +30,7 @@
 ## 调优要点
 
 - **`providersThrottleDuration`（默认 2s）** 是去抖闸门；大集群容器频繁起停时调大它，避免过度重建路由表。
-- **Provider 自定义 throttle**：ACME 实现了 `ThrottleDuration()`（`acme/provider.go:231`）走独立节流，与全局解耦。
+- **Provider 自定义 throttle**：ACME 实现了 `ThrottleDuration`（`acme/provider.go:231`）走独立节流，与全局解耦。
 - **多 Provider 共存靠 `@provider` 后缀 + `providers.precedence`** 消解命名/优先级冲突。
 - **K8s 选 CRD 优先**：IngressRoute CRD 表达力最全（中间件、TLS 选项、TCP/UDP），标准 Ingress 能力受限。
 

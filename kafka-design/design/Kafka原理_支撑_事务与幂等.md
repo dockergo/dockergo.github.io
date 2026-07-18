@@ -12,7 +12,7 @@
 
 `enable.idempotence` 默认 `true`(`ProducerConfig.java:543`)。机制:
 
-- 每个生产者领一个 **PID**(producer id),每分区维护递增**序列号**;`TransactionManager.sequenceNumber()` 给批分配、drain 时 `batch.setProducerState(pid, seq, isTxn)`(`RecordAccumulator.java:927`)。
+- 每个生产者领一个 **PID**(producer id),每分区维护递增**序列号**;`TransactionManager.sequenceNumber` 给批分配、drain 时 `batch.setProducerState(pid, seq, isTxn)`(`RecordAccumulator.java:927`)。
 - **Broker 校验**:`ProducerAppendInfo.checkSequence`(`storage/.../log/ProducerAppendInfo.java:156`)校验序列连续——`nextSeq == lastSeq+1`(`:196`);重复序列的批被去重(重传不重复写),乱序抛 `OutOfOrderSequenceException`。
 - 要求:`max.in.flight ≤ 5`(`ProducerConfig.java:279`)且 `acks=all`——否则重试可能乱序。
 

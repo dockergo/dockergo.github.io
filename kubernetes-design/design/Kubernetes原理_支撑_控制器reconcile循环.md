@@ -6,7 +6,7 @@
 
 ![reconcile闭环](Kubernetes原理_支撑_控制器reconcile_01闭环.svg)
 
-以 Deployment 控制器为标准骨架：`worker`（deployment_controller.go:482）循环调 `processNextWorkItem`（:487）——`key, quit := dc.queue.Get()`（:488）、`defer dc.queue.Done(key)`、`err := dc.syncHandler(ctx, key)`（:494，即 `syncDeployment`:590）、`dc.handleErr(ctx, err, key)`（:500）。**syncHandler 的固定套路**：`SplitMetaNamespaceKey` 拆出 namespace/name → 从 **本地 lister（Informer 缓存）** 读对象（不打 API Server）→ `d := deployment.DeepCopy()`（:615，绝不改缓存）→ 对比期望与实际、算差异 → 写回 API Server。**错误处理即重试策略**：`handleErr` 里 `if dc.queue.NumRequeues(key) < maxRetries { dc.queue.AddRateLimited(key) }`（:511，`maxRetries=15`:58），否则 `Forget` 丢弃并告警；`AddRateLimited` 走指数退避（基 5ms、上限 1000s）+ 全局令牌桶（10 qps/突发 100）。**level-triggered 的关键**：informer 的 AddFunc/UpdateFunc/DeleteFunc 都只做 `enqueue(key)`——**事件只是"叫醒信号"**，syncHandler 永远重算当前全量差异；因此丢一个事件不致命（resync 会重发），重复入队无害（去重 + 重算幂等）。这就是 K8s 自愈的机制根源。
+以 Deployment 控制器为标准骨架：`worker`（deployment_controller.go:482）循环调 `processNextWorkItem`（:487）——`key, quit := dc.queue.Get`（:488）、`defer dc.queue.Done(key)`、`err := dc.syncHandler(ctx, key)`（:494，即 `syncDeployment`:590）、`dc.handleErr(ctx, err, key)`（:500）。**syncHandler 的固定套路**：`SplitMetaNamespaceKey` 拆出 namespace/name → 从 **本地 lister（Informer 缓存）** 读对象（不打 API Server）→ `d := deployment.DeepCopy`（:615，绝不改缓存）→ 对比期望与实际、算差异 → 写回 API Server。**错误处理即重试策略**：`handleErr` 里 `if dc.queue.NumRequeues(key) < maxRetries { dc.queue.AddRateLimited(key) }`（:511，`maxRetries=15`:58），否则 `Forget` 丢弃并告警；`AddRateLimited` 走指数退避（基 5ms、上限 1000s）+ 全局令牌桶（10 qps/突发 100）。**level-triggered 的关键**：informer 的 AddFunc/UpdateFunc/DeleteFunc 都只做 `enqueue(key)`——**事件只是"叫醒信号"**，syncHandler 永远重算当前全量差异；因此丢一个事件不致命（resync 会重发），重复入队无害（去重 + 重算幂等）。这就是 K8s 自愈的机制根源。
 
 ## 二、级联 reconcile：Deployment → ReplicaSet → Pod
 
@@ -18,7 +18,7 @@
 
 | 步 | 动作 | 代码锚点 |
 |---|---|---|
-| 1 | 从 workqueue 取 key | `queue.Get()` :488 |
+| 1 | 从 workqueue 取 key | `queue.Get` :488 |
 | 2 | 拆 namespace/name | `SplitMetaNamespaceKey` |
 | 3 | 从本地缓存 lister 读对象 | `dLister...Get(name)` |
 | 4 | DeepCopy（不改缓存） | :615 |

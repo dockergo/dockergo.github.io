@@ -20,7 +20,7 @@
 |---|---|---|
 | OpDef（schema） | op 的接口契约，与实现无关 | `op.h:318` REGISTER_OP |
 | 形状推导 | schema 附带，图构建期推形状 | 随 REGISTER_OP 声明 |
-| OpKernel | 基类，重写 Compute() | `op_kernel.h:107`、`:158` |
+| OpKernel | 基类，重写 Compute | `op_kernel.h:107`、`:158` |
 | AsyncOpKernel | 异步 op（如 Recv、队列） | `op_kernel.h:231`、`:251` |
 | OpKernelContext | 入参/出参、分配器、设备 | `op_kernel.h:572` |
 | kernel 注册 | 进全局注册表 | `op_kernel.h:1500`、`op_kernel.cc:1334` |
@@ -50,4 +50,4 @@
 
 ## 一句话总纲
 
-**算子两次注册、schema 与实现分离：REGISTER_OP 定接口契约、REGISTER_KERNEL_BUILDER 为各设备各 dtype 提供 OpKernel；运行时按「op 名 + 设备」单层查全局注册表选中唯一 kernel 调 Compute()——切面（autograd/精度）不在分发层而在图/Python 层，这是与 PyTorch 分层分发的分野。**
+**算子两次注册、schema 与实现分离：REGISTER_OP 定接口契约、REGISTER_KERNEL_BUILDER 为各设备各 dtype 提供 OpKernel；运行时按「op 名 + 设备」单层查全局注册表选中唯一 kernel 调 Compute——切面（autograd/精度）不在分发层而在图/Python 层，这是与 PyTorch 分层分发的分野。**

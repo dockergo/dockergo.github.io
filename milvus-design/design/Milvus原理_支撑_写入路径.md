@@ -11,7 +11,7 @@ Milvus 的写入是**日志驱动**的:insert 不直接改存储,而是先追加
 ![Milvus 写入全景](Milvus原理_写入_01全景.svg)
 
 一条 insert 的旅程:
-1. **Proxy** 建可变消息、按主键 hash 分到 vchannel、`streaming.WAL().AppendMessages`(`task_insert_streaming.go`)追加日志。段 id 此时为 0——**由 streaming node 分配**。
+1. **Proxy** 建可变消息、按主键 hash 分到 vchannel、`streaming.WAL.AppendMessages`(`task_insert_streaming.go`)追加日志。段 id 此时为 0——**由 streaming node 分配**。
 2. **streaming WAL**(`internal/streamingnode/server/wal/wal.go:19`)按 **PChannel** 组织,`Append(ctx, msg)` 写日志;底层 MQ 是 Pulsar/Kafka/woodpecker。
 3. **Flusher 消费**(`wal_flusher.go`):从恢复检查点扫 WAL,按 vchannel 路由消息给 per-vchannel 的 DataSyncService(`flusher_components.go:117`)。
 4. **WriteBuffer → binlog**:消息 buffer 成 insert/delta/stats 三类 buffer(`internal/flushcommon/writebuffer/`),SyncManager 序列化成 binlog 落对象存储。

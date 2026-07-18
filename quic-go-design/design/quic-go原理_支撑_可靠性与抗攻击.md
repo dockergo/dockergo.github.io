@@ -6,11 +6,11 @@
 
 ![入口防护](quic-go原理_支撑_可靠性与抗攻击_01入口防护.svg)
 
-**3× 放大限制**（`sent_packet_handler.go:25` `amplificationFactor = 3`）：地址验证前，服务端发出字节 ≤ 3 × 已收字节——`isAmplificationLimited()`（`:1034`）判 `bytesSent ≥ 3 × bytesReceived`（`:1038`）即停发，等对端再发包。防攻击者伪造受害者 IP 让服务端向其猛发；地址一旦验证通过限制解除。
+**3× 放大限制**（`sent_packet_handler.go:25` `amplificationFactor = 3`）：地址验证前，服务端发出字节 ≤ 3 × 已收字节——`isAmplificationLimited`（`:1034`）判 `bytesSent ≥ 3 × bytesReceived`（`:1038`）即停发，等对端再发包。防攻击者伪造受害者 IP 让服务端向其猛发；地址一旦验证通过限制解除。
 
-**Retry + 地址验证 token**（`server.go`）：服务端可先回 Retry 包携带 token（`sendRetry:322`），要求客户端带回；`validateToken()`（`:663`）校验——token 由 `tokenGenerator` 加密签名、含客户端地址与时间戳，`ValidateRemoteAddr` 校验地址匹配、过期即拒（`maxTokenAge`/`maxRetryTokenAge`）。带回有效 token = 证明客户端能收到该地址的包 → 真实。
+**Retry + 地址验证 token**（`server.go`）：服务端可先回 Retry 包携带 token（`sendRetry:322`），要求客户端带回；`validateToken`（`:663`）校验——token 由 `tokenGenerator` 加密签名、含客户端地址与时间戳，`ValidateRemoteAddr` 校验地址匹配、过期即拒（`maxTokenAge`/`maxRetryTokenAge`）。带回有效 token = 证明客户端能收到该地址的包 → 真实。
 
-**Transport 入口分流限流**（`transport.go`）：`packetHandlerMap.Get()`（`:767`）按 CID 路由（已有连接直投、新连接建 Conn）；`baseServer` 限制待握手连接数防握手洪泛；`handleNonQUICPacket()`（`:689`）处理不认识的包（交回调或丢弃）。
+**Transport 入口分流限流**（`transport.go`）：`packetHandlerMap.Get`（`:767`）按 CID 路由（已有连接直投、新连接建 Conn）；`baseServer` 限制待握手连接数防握手洪泛；`handleNonQUICPacket`（`:689`）处理不认识的包（交回调或丢弃）。
 
 **stateless reset**（`stateless_reset.go`）：崩溃/重启后丢失连接状态但对端仍发包，用 `StatelessResetKey` 对 CID 算 reset token（无需连接状态）回一个「看似普通短头包」的重置包；对端识别 token（`AddResetToken:774` 登记过）即知连接已死、快速放弃而非傻等超时。未配置 key 则关闭此功能。
 

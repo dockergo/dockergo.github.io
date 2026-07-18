@@ -40,7 +40,7 @@
 
 - **“复制到多数派 = 立即提交”**：还要满足本任期约束——旧任期日志不能靠计数直接提交，须由本任期日志带出。
 - **以为 commitIndex 会回退**：只前进，`recalculate` 有 `> commitIndex` 守卫。
-- **把 FSM.Apply 当同步返回给客户端**：Apply 返回 Future，宿主等 `Response()` 才拿到结果。
+- **把 FSM.Apply 当同步返回给客户端**：Apply 返回 Future，宿主等 `Response` 才拿到结果。
 - **Barrier 会被 FSM 处理**：`LogBarrier` 不下发 FSM，仅用于“等此前写全部 apply”的栅栏。
 - **no-op 是多余的**：恰恰相反——新 Leader 的 no-op 是安全提交旧日志的前提。
 

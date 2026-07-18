@@ -6,7 +6,7 @@
 
 ![三层对象](Quiche原理_会话连接_01三层对象.svg)
 
-**三层**（自上而下）：**QuicSession**（`quic_session.h:62`，管连接内所有流，`GetOrCreateStream:714`/`WritevData:530`，收帧事件分发到流）→ **QuicStream**（`quic_stream.h`，单条流的收发缓冲 + 流控 + fin/reset，应用重写 `OnDataAvailable` 收数据）；QuicSession 建在 **QuicConnection**（`quic_connection.h`，连接状态机：收发包、握手、丢包/拥塞、CID/迁移）之上（拥有它）。**Visitor 回调（控制反转）**：连接把"发生了什么"经 `QuicConnectionVisitorInterface`（OnStreamFrame/OnWriteBlocked/OnConnectionClosed…）回调上层——QuicSession 就是 Connection 的 Visitor（收到帧→回调 Session→找 Stream），QuicStream 也有 Visitor。对比 Cloudflare quiche 的 `readable()` 轮询，QUICHE 用回调推（C++ OO + 观察者模式）。建连：客户端建 Connection + QuicSpdyClientSession 发起握手；服务端由 QuicDispatcher 建（见 HTTP 与流）。
+**三层**（自上而下）：**QuicSession**（`quic_session.h:62`，管连接内所有流，`GetOrCreateStream:714`/`WritevData:530`，收帧事件分发到流）→ **QuicStream**（`quic_stream.h`，单条流的收发缓冲 + 流控 + fin/reset，应用重写 `OnDataAvailable` 收数据）；QuicSession 建在 **QuicConnection**（`quic_connection.h`，连接状态机：收发包、握手、丢包/拥塞、CID/迁移）之上（拥有它）。**Visitor 回调（控制反转）**：连接把"发生了什么"经 `QuicConnectionVisitorInterface`（OnStreamFrame/OnWriteBlocked/OnConnectionClosed…）回调上层——QuicSession 就是 Connection 的 Visitor（收到帧→回调 Session→找 Stream），QuicStream 也有 Visitor。对比 Cloudflare quiche 的 `readable` 轮询，QUICHE 用回调推（C++ OO + 观察者模式）。建连：客户端建 Connection + QuicSpdyClientSession 发起握手；服务端由 QuicDispatcher 建（见 HTTP 与流）。
 
 ---
 
@@ -33,7 +33,7 @@
 
 ## 常见误区与工程要点
 
-- **轮询读数据**：QUICHE 是回调推（OnDataAvailable），不是 Cloudflare 的 readable() 轮询。
+- **轮询读数据**：QUICHE 是回调推（OnDataAvailable），不是 Cloudflare 的 readable 轮询。
 - **绕过 Session 操作 Stream**：帧分发由 Session 编排，应经其 API。
 - **以为 Connection = Session**：Connection 是传输状态机，Session 管流 + HTTP 语义。
 - **忽视 Visitor 生命周期**：回调对象销毁早于连接会崩。

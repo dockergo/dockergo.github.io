@@ -1,8 +1,8 @@
 # Go 原理 · 编译前端
 
-> **定位**：本篇是编译期工具链的第一段——把 `.go` 源文本变成类型完备的中间表示（IR）。属"编译能力域"，是【SSA后端】的上游（产出 IR 供其消费），也是【逃逸内联】【泛型】的宿主阶段，生成【接口与反射】所需的类型描述符/itab。统领 `gc.Main()` 的相位脊柱。源码基准 **go1.26.4**（`~/workdir/go/src/cmd/compile/internal`）。
+> **定位**：本篇是编译期工具链的第一段——把 `.go` 源文本变成类型完备的中间表示（IR）。属"编译能力域"，是【SSA后端】的上游（产出 IR 供其消费），也是【逃逸内联】【泛型】的宿主阶段，生成【接口与反射】所需的类型描述符/itab。统领 `gc.Main` 的相位脊柱。源码基准 **go1.26.4**（`~/workdir/go/src/cmd/compile/internal`）。
 
-Go 的官方编译器 `gc`（非 GCC）前端分三段：**词法/语法分析**（`syntax` 包，源文本 → 语法树）→ **类型检查**（`types2` 包，与标准库 `go/types` 同算法）→ **Unified IR**（`noder` 包，把类型完备的语法树转成编译器 IR）。整个编译由 `gc.Main()`（main.go:61）驱动一串有序相位。
+Go 的官方编译器 `gc`（非 GCC）前端分三段：**词法/语法分析**（`syntax` 包，源文本 → 语法树）→ **类型检查**（`types2` 包，与标准库 `go/types` 同算法）→ **Unified IR**（`noder` 包，把类型完备的语法树转成编译器 IR）。整个编译由 `gc.Main`（main.go:61）驱动一串有序相位。
 
 ---
 
@@ -10,7 +10,7 @@ Go 的官方编译器 `gc`（非 GCC）前端分三段：**词法/语法分析**
 
 ![gc.Main 相位脊柱 · 前端到后端的有序阶段](Go原理_前端_01相位脊柱.svg)
 
-`gc.Main()`（main.go:61）按固定顺序跑各相位，用计时器标签分**前端 `fe`** 与**后端 `be`**：
+`gc.Main`（main.go:61）按固定顺序跑各相位，用计时器标签分**前端 `fe`** 与**后端 `be`**：
 
 1. `InitUniverse`/`InitRuntime`（预声明标识符 + runtime 符号）
 2. **`noder.LoadPackage`**（main.go:218）：解析 + 类型检查 + 建 Unified IR（本篇主体）
@@ -31,8 +31,8 @@ Go 的官方编译器 `gc`（非 GCC）前端分三段：**词法/语法分析**
 
 `syntax` 包把源文本变成**语法树（syntax tree）**：
 
-- **词法（scanner）**：`scanner.next()`（scanner.go:88）逐字符扫描，产出 token 流（标识符、字面量、运算符、关键字）。Go 的词法有个特色——**自动分号插入**：行尾若 token 可结束语句则插入分号，所以 Go 不用手写 `;`。
-- **语法（parser）**：`parser.fileOrNil()`（parser.go:406）递归下降解析 token 流，产出 `*syntax.File`（一个源文件的 AST，节点类型在 nodes.go）。入口 `syntax.Parse`（syntax.go:66）。
+- **词法（scanner）**：`scanner.next`（scanner.go:88）逐字符扫描，产出 token 流（标识符、字面量、运算符、关键字）。Go 的词法有个特色——**自动分号插入**：行尾若 token 可结束语句则插入分号，所以 Go 不用手写 `;`。
+- **语法（parser）**：`parser.fileOrNil`（parser.go:406）递归下降解析 token 流，产出 `*syntax.File`（一个源文件的 AST，节点类型在 nodes.go）。入口 `syntax.Parse`（syntax.go:66）。
 - 一个包的多个 `.go` 文件**并行解析**（`noder.LoadPackage` 里 `syntax.Parse` 并发跑），再汇总。
 
 语法树是纯语法结构——此时还没有类型信息，`a + b` 只知道是加法表达式，不知 a/b 是 int 还是 string。

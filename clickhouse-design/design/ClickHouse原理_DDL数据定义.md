@@ -6,7 +6,7 @@
 
 ![DDL 生命周期总览](ClickHouse原理_DDL_01总览.svg)
 
-一条 `CREATE TABLE` 的链路：`InterpreterCreateQuery::doCreateTable`（`InterpreterCreateQuery.cpp:1763`）解析库、分配/校验 UUID（`assertOrSetUUID:1799`）、经 `StorageFactory::get`（`:1955`）按 `ENGINE=` 造出存储对象、`database->createTable` 持久化 `.sql`（`:2019`）、最后 `res->startup()`（`:2039`）。**关键认知：`CREATE` 一张 MergeTree 表只写元数据、建空目录，不写任何数据**——`MergeTreeData` 构造只 `createDirectories` + 写 `format_version.txt`（`MergeTreeData.cpp:403,440`），不产生 Part。
+一条 `CREATE TABLE` 的链路：`InterpreterCreateQuery::doCreateTable`（`InterpreterCreateQuery.cpp:1763`）解析库、分配/校验 UUID（`assertOrSetUUID:1799`）、经 `StorageFactory::get`（`:1955`）按 `ENGINE=` 造出存储对象、`database->createTable` 持久化 `.sql`（`:2019`）、最后 `res->startup`（`:2039`）。**关键认知：`CREATE` 一张 MergeTree 表只写元数据、建空目录，不写任何数据**——`MergeTreeData` 构造只 `createDirectories` + 写 `format_version.txt`（`MergeTreeData.cpp:403,440`），不产生 Part。
 
 ---
 

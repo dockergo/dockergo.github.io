@@ -27,7 +27,7 @@
 | 概念 | 内容 | 锚点 |
 |---|---|---|
 | 湖存快照 + offset | `LakeTableSnapshot(snapshotId, Map<TableBucket,Long> bucketLogEndOffset)` | `zk/data/lake/LakeTableSnapshot.java:38` |
-| 客户端读到分界 | `LakeSnapshot.getTableBucketsOffset()` = 湖已消费到的 log offset | `client/.../metadata/LakeSnapshot.java:49` |
+| 客户端读到分界 | `LakeSnapshot.getTableBucketsOffset` = 湖已消费到的 log offset | `client/.../metadata/LakeSnapshot.java:49` |
 | 联合读拼接 | 湖快照读历史，Fluss log 从 `snapshotLogOffset` 起接读实时（按 offset 而非 timestamp） | `LakeSplitGenerator.java:306` |
 | 协调器调度 | `LakeTableTieringManager` 状态机：New→Scheduled→Pending→Tiering→Tiered | `coordinator/LakeTableTieringManager.java:110` |
 

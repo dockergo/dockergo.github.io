@@ -6,7 +6,7 @@
 
 ![MVCC 全景](etcd原理_mvcc_01全景.svg)
 
-etcd 不是"key→value"，而是"key→**一串带版本的 value**"。每次写让全局 `currentRev` +1（`server/storage/mvcc/kvstore.go:72`，初值 1，`:104`；仅在事务真有改动时于 `End()` 递增，`kvstore_txn.go:214`）。一个 key 的每次修改都记为一个 `Revision{Main, Sub}`（`revision.go:35`，Main=事务号、Sub=事务内序号）。**读可以指定 revision** 回看历史版本；不指定则读最新。这带来三个能力：**Watch 从某 revision 起精确重放变更**、**事务基于版本做 CAS**、**compact 可回收旧版本**。代价是数据带版本历史，需定期 compaction 清理。
+etcd 不是"key→value"，而是"key→**一串带版本的 value**"。每次写让全局 `currentRev` +1（`server/storage/mvcc/kvstore.go:72`，初值 1，`:104`；仅在事务真有改动时于 `End` 递增，`kvstore_txn.go:214`）。一个 key 的每次修改都记为一个 `Revision{Main, Sub}`（`revision.go:35`，Main=事务号、Sub=事务内序号）。**读可以指定 revision** 回看历史版本；不指定则读最新。这带来三个能力：**Watch 从某 revision 起精确重放变更**、**事务基于版本做 CAS**、**compact 可回收旧版本**。代价是数据带版本历史，需定期 compaction 清理。
 
 ---
 

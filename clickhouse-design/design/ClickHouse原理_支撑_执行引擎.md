@@ -6,7 +6,7 @@
 
 ![Processors 框架](ClickHouse原理_执行_01框架.svg)
 
-执行的原子是 **IProcessor**（`IProcessor.h:119`）——一个有输入/输出 Port 的算子节点。它不主动跑，而是由调度器问它"现在能做什么"：`prepare()` 返回一个 **Status**（`IProcessor.h:134`）：`NeedData`（等上游数据）、`PortFull`（下游满、等消费）、`Ready`（可执行 `work()`）、`Finished`（完成）、`Async`（异步等待）、`ExpandPipeline`（动态扩图）。数据在 Processor 间以 **Chunk**（一批列，向量化单位）经 Port 流动。这套"状态机 + 端口"设计让执行图能被通用调度器驱动。
+执行的原子是 **IProcessor**（`IProcessor.h:119`）——一个有输入/输出 Port 的算子节点。它不主动跑，而是由调度器问它"现在能做什么"：`prepare` 返回一个 **Status**（`IProcessor.h:134`）：`NeedData`（等上游数据）、`PortFull`（下游满、等消费）、`Ready`（可执行 `work`）、`Finished`（完成）、`Async`（异步等待）、`ExpandPipeline`（动态扩图）。数据在 Processor 间以 **Chunk**（一批列，向量化单位）经 Port 流动。这套"状态机 + 端口"设计让执行图能被通用调度器驱动。
 
 ---
 
@@ -34,7 +34,7 @@
 
 ![调度执行](ClickHouse原理_执行_04调度.svg)
 
-`PipelineExecutor::execute`（`PipelineExecutor.cpp:125`）驱动整张图。它构建 **ExecutingGraph**（`ExecutingGraph.h:17`）追踪每个 Processor 的就绪状态，以 **pull 模型**运行：空闲线程从图里找 `Ready` 的 Processor 执行 `work()`，数据不足就顺 Port 向上游要（`NeedData`）。这是一种 work-stealing 式的并行——没有中央协调线程，线程各自从图中取可执行节点，天然负载均衡。`max_threads`（默认 0=CPU 核数，`Settings.cpp:206`）决定线程池大小。
+`PipelineExecutor::execute`（`PipelineExecutor.cpp:125`）驱动整张图。它构建 **ExecutingGraph**（`ExecutingGraph.h:17`）追踪每个 Processor 的就绪状态，以 **pull 模型**运行：空闲线程从图里找 `Ready` 的 Processor 执行 `work`，数据不足就顺 Port 向上游要（`NeedData`）。这是一种 work-stealing 式的并行——没有中央协调线程，线程各自从图中取可执行节点，天然负载均衡。`max_threads`（默认 0=CPU 核数，`Settings.cpp:206`）决定线程池大小。
 
 ---
 

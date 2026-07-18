@@ -10,7 +10,7 @@
 
 包体是若干**帧**，`frame_parser.go` 逐帧解析后按类型分发：STREAM → 流、ACK → 丢包检测、CRYPTO → 握手、`MAX_DATA`/`MAX_STREAM_DATA` → 流控、`NEW_CONNECTION_ID` → 连接迁移、`PATH_CHALLENGE`/`RESPONSE` → 路径验证。`wire/` 下每种帧一个文件（20+ 种）。
 
-**varint**（`quicvarint/varint.go`）：前 2 bit 定字节数，`Append()`（`:113`）编码——1 字节 ≤ 63（`maxVarInt1:17`）、2 字节 ≤ 16383（`maxVarInt2:18`）、4 字节 ≤ 1073741823（`maxVarInt4:19`）、8 字节 ≤ 4.6e18（`Max:15`）；越小的数越省字节。
+**varint**（`quicvarint/varint.go`）：前 2 bit 定字节数，`Append`（`:113`）编码——1 字节 ≤ 63（`maxVarInt1:17`）、2 字节 ≤ 16383（`maxVarInt2:18`）、4 字节 ≤ 1073741823（`maxVarInt4:19`）、8 字节 ≤ 4.6e18（`Max:15`）；越小的数越省字节。
 
 ## 二、深化 · 帧与编码锚点
 

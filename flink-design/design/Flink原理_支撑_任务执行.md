@@ -10,8 +10,8 @@
 
 ![Flink 任务执行层次](Flink原理_执行_01层次.svg)
 
-- **Task**(`taskmanager/Task.java`)是 TM 的可运行单元:`run()→doRun()`(`:579`),`loadAndInstantiateInvokable` 建 `TaskInvokable`(`:756`),`restoreAndInvoke`(`:774`)。
-- 流作业的 invokable 是 **StreamTask**(`streaming/runtime/tasks/StreamTask.java:205`):`restore()→restoreInternal()`(`:788`),`invoke()→runMailboxLoop()`(`:945,1021`)。
+- **Task**(`taskmanager/Task.java`)是 TM 的可运行单元:`run→doRun`(`:579`),`loadAndInstantiateInvokable` 建 `TaskInvokable`(`:756`),`restoreAndInvoke`(`:774`)。
+- 流作业的 invokable 是 **StreamTask**(`streaming/runtime/tasks/StreamTask.java:205`):`restore→restoreInternal`(`:788`),`invoke→runMailboxLoop`(`:945,1021`)。
 - StreamTask 里是**算子链**(链化后的一串算子,见图变换篇):`processInput` 从输入拉记录、推过链上各算子(`:655`)。
 
 ---
@@ -22,7 +22,7 @@
 
 **MailboxProcessor**(`streaming/runtime/tasks/mailbox/MailboxProcessor.java:67`)在**一个线程**上循环:默认动作 `MailboxDefaultAction`(= `StreamTask.processInput`,处理记录)与队列里的 mailbox 信件(检查点、定时器、其他控制动作)**交替执行**。StreamTask 用 `this::processInput` 作默认动作构造它(`StreamTask.java:300,420`)。
 
-**单线程不变量**由 `TaskMailboxImpl` 强制:绑定 `taskMailboxThread`,`checkIsMailboxThread()` 守护所有 put/take(`TaskMailboxImpl.java:65,101`)。**这就是算子无需加锁的原因**:记录处理、状态读写、检查点快照、定时器触发全在同一线程串行,没有并发访问。控制动作(如检查点屏障)作为 mailbox 信件插队,在处理记录的间隙执行。
+**单线程不变量**由 `TaskMailboxImpl` 强制:绑定 `taskMailboxThread`,`checkIsMailboxThread` 守护所有 put/take(`TaskMailboxImpl.java:65,101`)。**这就是算子无需加锁的原因**:记录处理、状态读写、检查点快照、定时器触发全在同一线程串行,没有并发访问。控制动作(如检查点屏障)作为 mailbox 信件插队,在处理记录的间隙执行。
 
 ---
 

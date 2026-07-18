@@ -4,11 +4,15 @@
     <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
   </defs>
   <rect width="1080" height="820" fill="#fbfbfd"/>
-  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">StarRocks 核心原理 · 总架构图（位置即语义）</text>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">StarRocks 核心原理 · 总架构图</text>
   <text x="30" y="50" font-size="10.5" fill="#a1a1a6">FE(Java·规划/元数据/协调) + BE/CN(C++·执行/存储) 的 MPP 架构;存储可存算一体(本地盘)或存算分离(对象存储+StarOS)</text>
 
   <!-- client / SQL -->
   <rect x="30" y="64" width="1020" height="42" rx="12" fill="#f4eefb" stroke="#d9c7ec"/>
+  <rect x="30" y="64" width="255" height="42" fill="none" stroke="none" data-tid="schemachange" data-lab="DDL"/>
+  <rect x="285" y="64" width="255" height="42" fill="none" stroke="none" data-tid="load" data-lab="DML"/>
+  <rect x="540" y="64" width="255" height="42" fill="none" stroke="none" data-tid="qlife" data-lab="DQL"/>
+  <rect x="795" y="64" width="255" height="42" fill="none" stroke="none" data-tid="dcl" data-lab="DCL"/>
   <text x="46" y="90" font-size="10.5" fill="#3d2a5a"><tspan font-weight="700">SQL 接触面</tspan>　DDL 建库建表 · DML 导入(INSERT/Stream/Broker/Routine Load) · DQL 查询(SELECT) · DCL 权限(RBAC/认证)　—— MySQL 协议接入</text>
 
   <!-- FE layer -->
@@ -16,37 +20,37 @@
   <text x="46" y="140" font-size="12" font-weight="700" fill="#1b2a4a">FE 前端（Java · 规划 + 元数据 + 协调 · leader/follower/observer）</text>
   <g text-anchor="middle">
     <rect x="46" y="152" width="235" height="66" rx="9" fill="#f3f7fc" stroke="#cfe0f2" filter="url(#soft)"/><text x="163" y="176" font-size="9.5" font-weight="600" fill="#274a78">解析 + 分析</text><text x="163" y="194" font-size="8" fill="#5b7db1">ANTLR Parser → Analyzer</text><text x="163" y="208" font-size="8" fill="#5b7db1">语义/类型/绑定</text>
-    <rect x="291" y="152" width="235" height="66" rx="9" fill="#f3f7fc" stroke="#cfe0f2" filter="url(#soft)"/><text x="408" y="176" font-size="9.5" font-weight="600" fill="#274a78">优化技术(CBO)</text><text x="408" y="194" font-size="8" fill="#5b7db1">Cascades Memo 搜索</text><text x="408" y="208" font-size="8" fill="#5b7db1">代价/统计/Join 重排</text>
+    <rect x="291" y="152" width="235" height="66" rx="9" fill="#f3f7fc" stroke="#cfe0f2" filter="url(#soft)" data-tid="opttech" data-lab="优化技术"/><text x="408" y="176" font-size="9.5" font-weight="600" fill="#274a78">优化技术(CBO)</text><text x="408" y="194" font-size="8" fill="#5b7db1">Cascades Memo 搜索</text><text x="408" y="208" font-size="8" fill="#5b7db1">代价/统计/Join 重排</text>
     <rect x="536" y="152" width="235" height="66" rx="9" fill="#f3f7fc" stroke="#cfe0f2" filter="url(#soft)"/><text x="653" y="176" font-size="9.5" font-weight="600" fill="#274a78">协调器 Coordinator</text><text x="653" y="194" font-size="8" fill="#5b7db1">切 Fragment</text><text x="653" y="208" font-size="8" fill="#5b7db1">分发实例到 BE</text>
-    <rect x="781" y="152" width="253" height="66" rx="9" fill="#faf4fb" stroke="#e2d2ee" filter="url(#soft)"/><text x="907" y="176" font-size="9.5" font-weight="600" fill="#5a3d78">DCL 安全</text><text x="907" y="194" font-size="8" fill="#7a5a95">认证(密码/LDAP/JWT/OAuth2)</text><text x="907" y="208" font-size="8" fill="#7a5a95">RBAC 授权</text>
+    <rect x="781" y="152" width="253" height="66" rx="9" fill="#faf4fb" stroke="#e2d2ee" filter="url(#soft)" data-tid="dcl" data-lab="DCL 安全"/><text x="907" y="176" font-size="9.5" font-weight="600" fill="#5a3d78">DCL 安全</text><text x="907" y="194" font-size="8" fill="#7a5a95">认证(密码/LDAP/JWT/OAuth2)</text><text x="907" y="208" font-size="8" fill="#7a5a95">RBAC 授权</text>
   </g>
   <g text-anchor="middle">
-    <rect x="46" y="228" width="480" height="72" rx="9" fill="#e7f0fb" stroke="#b9d2ef"/><text x="286" y="250" font-size="9.5" font-weight="600" fill="#1b2a4a">元数据 GlobalStateMgr</text><text x="286" y="268" font-size="8" fill="#5b7db1">BDB-JE + EditLog + 镜像检查点 · leader 写/follower 回放</text><text x="286" y="284" font-size="8" fill="#5b7db1">事务状态 / 版本 / 副本位置 / schema / 权限 的落点</text>
-    <rect x="536" y="228" width="498" height="72" rx="9" fill="#e7f0fb" stroke="#b9d2ef"/><text x="785" y="250" font-size="9.5" font-weight="600" fill="#1b2a4a">调度守护(后台)</text><text x="785" y="268" font-size="8" fill="#5b7db1">事务 publish · TabletChecker/Scheduler 自愈 · 心跳/上报</text><text x="785" y="284" font-size="8" fill="#5b7db1">动态分区 · MV 刷新 · (云原生) Compaction RPC 驱动</text>
+    <rect x="46" y="228" width="480" height="72" rx="9" fill="#e7f0fb" stroke="#b9d2ef" data-tid="metadata" data-lab="元数据"/><text x="286" y="250" font-size="9.5" font-weight="600" fill="#1b2a4a">元数据 GlobalStateMgr</text><text x="286" y="268" font-size="8" fill="#5b7db1">BDB-JE + EditLog + 镜像检查点 · leader 写/follower 回放</text><text x="286" y="284" font-size="8" fill="#5b7db1">事务状态 / 版本 / 副本位置 / schema / 权限 的落点</text>
+    <rect x="536" y="228" width="498" height="72" rx="9" fill="#e7f0fb" stroke="#b9d2ef"/><rect x="536" y="228" width="166" height="72" fill="none" stroke="none" data-tid="transaction" data-lab="事务"/><rect x="702" y="228" width="166" height="72" fill="none" stroke="none" data-tid="tabletsched" data-lab="自愈"/><rect x="868" y="228" width="166" height="72" fill="none" stroke="none" data-tid="compaction" data-lab="后台任务"/><text x="785" y="250" font-size="9.5" font-weight="600" fill="#1b2a4a">调度守护(后台)</text><text x="785" y="268" font-size="8" fill="#5b7db1">事务 publish · TabletChecker/Scheduler 自愈 · 心跳/上报</text><text x="785" y="284" font-size="8" fill="#5b7db1">动态分区 · MV 刷新 · (云原生) Compaction RPC 驱动</text>
   </g>
 
   <!-- BE layer -->
   <rect x="30" y="326" width="1020" height="176" rx="16" fill="#fff7e6" stroke="#e8cf9a"/>
   <text x="46" y="348" font-size="12" font-weight="700" fill="#5a3410">BE / CN 后端（C++ · Pipeline 执行 + 本地存储）· MPP 多节点并行</text>
   <g text-anchor="middle">
-    <rect x="46" y="360" width="315" height="64" rx="9" fill="#fef2e0" stroke="#e8cf9a" filter="url(#soft)"/><text x="203" y="384" font-size="9.5" font-weight="600" fill="#5a3410">Pipeline 执行引擎</text><text x="203" y="402" font-size="8" fill="#93762e">Pipeline→Driver→Operator</text><text x="203" y="416" font-size="8" fill="#93762e">morsel 驱动 · 向量化 Chunk(4096行)</text>
+    <rect x="46" y="360" width="315" height="64" rx="9" fill="#fef2e0" stroke="#e8cf9a" filter="url(#soft)" data-tid="execengine" data-lab="执行引擎"/><text x="203" y="384" font-size="9.5" font-weight="600" fill="#5a3410">Pipeline 执行引擎</text><text x="203" y="402" font-size="8" fill="#93762e">Pipeline→Driver→Operator</text><text x="203" y="416" font-size="8" fill="#93762e">morsel 驱动 · 向量化 Chunk(4096行)</text>
     <rect x="371" y="360" width="315" height="64" rx="9" fill="#fef2e0" stroke="#e8cf9a" filter="url(#soft)"/><text x="528" y="384" font-size="9.5" font-weight="600" fill="#5a3410">数据交换 Exchange</text><text x="528" y="402" font-size="8" fill="#93762e">跨 BE:SinkBuffer+RPC(Shuffler 分区)</text><text x="528" y="416" font-size="8" fill="#93762e">同 BE:LocalExchange 内存</text>
-    <rect x="696" y="360" width="338" height="64" rx="9" fill="#fef2e0" stroke="#e8cf9a" filter="url(#soft)"/><text x="865" y="384" font-size="9.5" font-weight="600" fill="#5a3410">资源组 WorkGroup</text><text x="865" y="402" font-size="8" fill="#93762e">cpu_weight 加权调度 · 内存/并发限</text><text x="865" y="416" font-size="8" fill="#93762e">大查询熔断 · 溢写</text>
+    <rect x="696" y="360" width="338" height="64" rx="9" fill="#fef2e0" stroke="#e8cf9a" filter="url(#soft)" data-tid="workload" data-lab="资源组"/><text x="865" y="384" font-size="9.5" font-weight="600" fill="#5a3410">资源组 WorkGroup</text><text x="865" y="402" font-size="8" fill="#93762e">cpu_weight 加权调度 · 内存/并发限</text><text x="865" y="416" font-size="8" fill="#93762e">大查询熔断 · 溢写</text>
   </g>
-  <rect x="46" y="434" width="988" height="58" rx="9" fill="#fff" stroke="#e8cf9a"/>
+  <rect x="46" y="434" width="988" height="58" rx="9" fill="#fff" stroke="#e8cf9a" data-tid="storageformat" data-lab="存储引擎"/>
   <text x="60" y="454" font-size="9.5" font-weight="600" fill="#5a3410">存储引擎 · Tablet → Rowset → Segment（列式 · Zone Map/Bloom/Bitmap/短键索引）</text>
   <text x="60" y="472" font-size="8" fill="#93762e">四种数据模型:明细/聚合/更新(读时归并) · 主键(持久化主键索引 L0内存+L1盘 + 删除向量,写期去重实时 upsert)</text>
   <text x="60" y="486" font-size="8" fill="#93762e">每次导入产出一个新 Rowset(版本+1) = MVCC 物理载体</text>
 
   <!-- storage forms -->
-  <rect x="30" y="514" width="500" height="96" rx="14" fill="#f5faf6" stroke="#cfe6d5"/>
+  <rect x="30" y="514" width="500" height="96" rx="14" fill="#f5faf6" stroke="#cfe6d5" data-tid="storageformat" data-lab="存算一体"/>
   <text x="46" y="536" font-size="11" font-weight="700" fill="#12402a">存算一体（shared-nothing）</text>
   <text x="46" y="556" font-size="8.5" fill="#2f6f4f">· 数据在 BE 本地盘,Tablet 绑 DataDir</text>
   <text x="46" y="573" font-size="8.5" fill="#2f6f4f">· 三副本冗余,挂了靠克隆修复</text>
   <text x="46" y="590" font-size="8.5" fill="#2f6f4f">· 存储与计算耦合在同一 BE</text>
   <text x="46" y="605" font-size="8" fill="#a1a1a6">默认形态 · 与 Doris 一致</text>
 
-  <rect x="550" y="514" width="500" height="96" rx="14" fill="#faf4fb" stroke="#e2d2ee"/>
+  <rect x="550" y="514" width="500" height="96" rx="14" fill="#faf4fb" stroke="#e2d2ee" data-tid="storageformat" data-lab="存算分离"/>
   <text x="566" y="536" font-size="11" font-weight="700" fill="#5a3d78">存算分离（shared-data / Lake）</text>
   <text x="566" y="556" font-size="8.5" fill="#7a5a95">· 数据在对象存储(S3/OSS),CN 无状态</text>
   <text x="566" y="573" font-size="8.5" fill="#7a5a95">· Tablet = StarOS Shard,放置交 StarManager</text>
@@ -70,7 +74,7 @@
 
   <!-- semantics note -->
   <rect x="30" y="692" width="1020" height="58" rx="12" fill="#f7f7f9" stroke="#ececf1"/>
-  <text x="46" y="714" font-size="11" font-weight="700" fill="#1d1d1f">位置即语义</text>
+  <text x="46" y="714" font-size="11" font-weight="700" fill="#1d1d1f"></text>
   <text x="46" y="734" font-size="8.8" fill="#6e6e73">上=SQL 接触面;中上=FE 规划/元数据/协调(Java);中下=BE 执行(C++ pipeline);下=存储(两形态)。FE 只规划协调,计算全在 BE(MPP)。</text>
   <text x="46" y="747" font-size="8.3" fill="#b1483a">与 Doris 同宗(Tablet/Rowset/Segment + FE/BE),分叉在:存算分离(云原生表)+ 持久化主键索引(写期去重)。</text>
 

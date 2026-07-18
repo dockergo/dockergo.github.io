@@ -10,7 +10,7 @@ Ray 的 3 条接口主线 + 8 条支撑能力域，既无遗漏也无越界。
 
 Ray 的认知结构是两个正交维度的叉乘：
 
-- **接触面主线（外部怎么用）**：应用只面对三样东西——① **远程任务与对象**（`@ray.remote` 装饰函数、`.remote()` 异步提交、`ray.get`/`ray.put` 与 `ObjectRef`）；② **Actor 编程模型**（`@ray.remote` 装饰类，得到有状态远程对象）；③ **集群与运行时**（`ray.init` 起集群、driver/worker 进程、runtime env、namespace）。
+- **接触面主线（外部怎么用）**：应用只面对三样东西——① **远程任务与对象**（`@ray.remote` 装饰函数、`.remote` 异步提交、`ray.get`/`ray.put` 与 `ObjectRef`）；② **Actor 编程模型**（`@ray.remote` 装饰类，得到有状态远程对象）；③ **集群与运行时**（`ray.init` 起集群、driver/worker 进程、runtime env、namespace）。
 - **支撑能力域（内部靠什么）**：8 条内部公共机制支撑上述接口——远程 task 提交与依赖、Actor 生命周期与调度、分布式对象存储、全局控制存储 GCS、分布式调度、引用计数与容错、资源管理与放置组、集群自动伸缩与运行时环境（autoscaler + runtime env agent）。
 
 一条铁律贯穿归属判断：**一个知识点属于哪条主线，看它的能力域，而非它出现在哪个文件/API 里**。例如 `ray.get` 阻塞等待值就绪，虽从"远程任务"接口触发，但"值存哪、怎么取回、丢了怎么办"属于"分布式对象存储"与"引用计数与容错"。
@@ -30,7 +30,7 @@ Ray 的认知结构是两个正交维度的叉乘：
 
 **`ObjectRef` 横切一切主线**，是理解 Ray 的总钥匙：
 
-1. 每个 `.remote()` 调用**立即**返回一个 `ObjectRef`（分布式 future），task 异步执行，调用方不阻塞。
+1. 每个 `.remote` 调用**立即**返回一个 `ObjectRef`（分布式 future），task 异步执行，调用方不阻塞。
 2. 谁创建 ObjectRef，谁就是它的 **owner**；owner 的 CoreWorker 在 `ReferenceCounter` 里记录它的元数据、引用计数与值所在节点（`AddOwnedObject:223`）。
 3. 真正的值存在 Plasma（大对象）或 in-process memory store（小对象 <100KiB，`max_direct_call_object_size`，`common/ray_config_def.h:245`）。
 4. `ray.get(ref)` 阻塞直到值就绪；ObjectRef 可作为下一个 task 的参数，形成**隐式依赖 DAG**。
@@ -59,7 +59,7 @@ Ray 的认知结构是两个正交维度的叉乘：
 
 | 类别 | 主线 | 核心机制 | 源码锚点 |
 |---|---|---|---|
-| 接口 | 远程任务与对象 | `@ray.remote`/`.remote()`/`ray.get`/`ray.put`/ObjectRef | `core_worker.cc:1995/1326/1055` |
+| 接口 | 远程任务与对象 | `@ray.remote`/`.remote`/`ray.get`/`ray.put`/ObjectRef | `core_worker.cc:1995/1326/1055` |
 | 接口 | Actor 编程模型 | 有状态远程对象、actor handle、方法调用串行化 | `core_worker.cc:2076/2415` |
 | 接口 | 集群与运行时 | `ray.init`、driver/worker、runtime env、namespace | `core_worker.cc`、`python/ray/` |
 | 支撑 | 远程 task 提交与依赖 | TaskSpec → worker lease → 直推 worker；参数依赖解析 | `normal_task_submitter.cc:34/270/515` |

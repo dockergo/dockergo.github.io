@@ -6,7 +6,7 @@
 
 ![静态配置结构](Traefik原理_静态配置_01结构.svg)
 
-静态配置有**三类同源来源**——配置文件（`traefik.yml`/`.toml`）、命令行 flag、环境变量 `TRAEFIK_*`——由 paerser 统一解码进同一个 `static.Configuration` 结构体（`static_config.go:86`）。关键字段：**EntryPoints**（监听地址/端口/协议，`entrypoints.go:25`）、**Providers**（启用哪些配置源，`static_config.go:261`）、**CertificatesResolvers**（ACME 证书解析器定义）、以及 **API/Metrics/Log/Tracing/Global** 等全局项。启动时先 `SetEffectiveConfiguration()`（补默认、派生 ACME provider，`static_config.go:293`）再 `ValidateConfiguration()`（`static_config.go:435`）。
+静态配置有**三类同源来源**——配置文件（`traefik.yml`/`.toml`）、命令行 flag、环境变量 `TRAEFIK_*`——由 paerser 统一解码进同一个 `static.Configuration` 结构体（`static_config.go:86`）。关键字段：**EntryPoints**（监听地址/端口/协议，`entrypoints.go:25`）、**Providers**（启用哪些配置源，`static_config.go:261`）、**CertificatesResolvers**（ACME 证书解析器定义）、以及 **API/Metrics/Log/Tracing/Global** 等全局项。启动时先 `SetEffectiveConfiguration`（补默认、派生 ACME provider，`static_config.go:293`）再 `ValidateConfiguration`（`static_config.go:435`）。
 
 ## 二、启动装配与「改需重启」的分水岭
 

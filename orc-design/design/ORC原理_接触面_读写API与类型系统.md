@@ -13,7 +13,7 @@ ORC 怎么被用?**通过读写库**:计算引擎(Spark/Hive/Trino)定义 schema
 schema 是**类型树** `TypeDescription`(`TypeDescription.java:118`),`Category` 18 种:BOOLEAN…TIMESTAMP_INSTANT,含 LIST/MAP/STRUCT/UNION/DECIMAL 复合类型。
 
 - **树结构**:struct 有 fieldNames + 子类型,list/map/union 有子类型;`createList/Map/Union/Struct` 连父子(`:685`)。
-- **列 ID = 前序(深度优先)编号**,root=0:`assignIds()` 先给自己 id、再递归子,存 `maxId` 记子树范围(`:670`)。整个格式靠列 ID 定位(stream/统计/索引都按列 ID)。
+- **列 ID = 前序(深度优先)编号**,root=0:`assignIds` 先给自己 id、再递归子,存 `maxId` 记子树范围(`:670`)。整个格式靠列 ID 定位(stream/统计/索引都按列 ID)。
 - char/varchar 带 maximumLength,decimal 带 precision/scale。
 
 **为什么列 ID 前序**:稳定编号让每列的 stream、统计、索引可按 ID 索引;子树 [id, maxId] 范围支持整子树操作。
@@ -27,7 +27,7 @@ schema 是**类型树** `TypeDescription`(`TypeDescription.java:118`),`Category`
 ORC 读写单位是**列式批** VectorizedRowBatch + ColumnVector(来自 Hive storage-api,非 ORC 树内定义):
 
 - ColumnVector 子类:`LongColumnVector`(整数/bool/date)、`BytesColumnVector`(字符串/binary)、`DoubleColumnVector`、`DecimalColumnVector`、`ListColumnVector`/`MapColumnVector`/`StructColumnVector`(复合)。
-- `TypeDescription.createRowBatch()`:struct root 每子一个 ColumnVector;非 struct 单列(`:539`)。默认批大小 `DEFAULT_SIZE`。
+- `TypeDescription.createRowBatch`:struct root 每子一个 ColumnVector;非 struct 单列(`:539`)。默认批大小 `DEFAULT_SIZE`。
 - 读端 `TreeReader.nextVector(ColumnVector, isNull, size)` 填批,先应用 PRESENT null stream(`TreeReaderFactory.java:405`)。
 
 **为什么向量批**:一次处理一批(默认 1024 行)的一列——列式向量化,分摊调用开销、用满 CPU cache/SIMD,是列存高性能读写的内存表示。
@@ -40,7 +40,7 @@ ORC 读写单位是**列式批** VectorizedRowBatch + ColumnVector(来自 Hive s
 
 读写靠**每列一个 writer/reader 的树**:
 
-- **WriterImpl**:持 root TreeWriter 树(`TreeWriter.Factory.create`,`WriterImpl.java:242`)——IntegerTreeWriter/StringTreeWriter/StructTreeWriter…每列一个;`TreeWriterBase` 建 PRESENT stream + 索引/统计;`addRowBatch()` 喂批;`PhysicalFsWriter` 做物理布局 + 压缩。
+- **WriterImpl**:持 root TreeWriter 树(`TreeWriter.Factory.create`,`WriterImpl.java:242`)——IntegerTreeWriter/StringTreeWriter/StructTreeWriter…每列一个;`TreeWriterBase` 建 PRESENT stream + 索引/统计;`addRowBatch` 喂批;`PhysicalFsWriter` 做物理布局 + 压缩。
 - **ReaderImpl**:解析 tail/footer(`:770`);`RecordReaderImpl` 驱动逐 stripe 读(`readStripe` 调 pickRowGroups);TreeReader 树解码列 stream 填 ColumnVector。
 - **压缩** `CompressionKind`:`NONE/ZLIB/SNAPPY/LZO/LZ4/ZSTD/BROTLI`,默认 **ZSTD**(`OrcConf.java:55`),块大小 **256KB**。stream 编码后再块压缩。
 

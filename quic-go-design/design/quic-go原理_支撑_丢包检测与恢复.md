@@ -8,9 +8,9 @@
 
 **单调包号是 QUIC 区别于 TCP 的关键**：TCP 重传用相同序号 → 重传歧义；QUIC 每次发送（含重传）都用全新更大的包号 → RTT 采样无歧义。「帧」是重传单位、「包」用后即弃——某包丢失，其携带的仍需可靠送达的帧被放回重传队列（`retransmission_queue.go`），装进新包号的新包重发。
 
-`sentPacketHandler`（`sent_packet_handler.go:67`）管发送侧：`SentPacket()`（`:252`）登记包号→所含帧进 `sent_packet_history`；`ReceivedAck()`（`:378`）收 ACK 后移除已确认包、更新 RTT、喂拥塞控制。**判丢两条阈值任一命中即丢**：包序阈值 `packetThreshold = 3`（`:23`，被确认包之后落后达 3 个包号的未确认包判丢）、时间阈值 `timeThreshold = 9/8`（`:21`，发送时间早于最新 RTT × 9/8 的未确认包判丢）。
+`sentPacketHandler`（`sent_packet_handler.go:67`）管发送侧：`SentPacket`（`:252`）登记包号→所含帧进 `sent_packet_history`；`ReceivedAck`（`:378`）收 ACK 后移除已确认包、更新 RTT、喂拥塞控制。**判丢两条阈值任一命中即丢**：包序阈值 `packetThreshold = 3`（`:23`，被确认包之后落后达 3 个包号的未确认包判丢）、时间阈值 `timeThreshold = 9/8`（`:21`，发送时间早于最新 RTT × 9/8 的未确认包判丢）。
 
-**PTO（探测超时）兜底**：无 ACK 时 `OnLossDetectionTimeout()`（`:867`）到期发探测包催对端回 ACK；PTO 时长 = SRTT + 4×RTTVar + max_ack_delay，指数退避，`ptoCount`（`:97`）每超时翻倍、上限 `maxPTODuration = 60s`（`:29`）；收到任意 ACK 即 `ptoCount` 归零。`GetLossDetectionTimeout()`（`:947`）算出下次告警时刻挂到 run() 的 timer。`SendMode()`（`:981`）决定当前可发何种包（正常/PTO 探测/仅 ACK）。
+**PTO（探测超时）兜底**：无 ACK 时 `OnLossDetectionTimeout`（`:867`）到期发探测包催对端回 ACK；PTO 时长 = SRTT + 4×RTTVar + max_ack_delay，指数退避，`ptoCount`（`:97`）每超时翻倍、上限 `maxPTODuration = 60s`（`:29`）；收到任意 ACK 即 `ptoCount` 归零。`GetLossDetectionTimeout`（`:947`）算出下次告警时刻挂到 run 的 timer。`SendMode`（`:981`）决定当前可发何种包（正常/PTO 探测/仅 ACK）。
 
 ## 二、深化 · 丢包检测常量与锚点
 

@@ -12,9 +12,9 @@
 
 **QuorumController**(`metadata/.../controller/QuorumController.java:1365`)在**单线程事件队列**(KafkaEventQueue)上处理所有元数据变更——单线程消除并发、保证确定性。
 
-写路径(RPC→记录→日志):写请求 → `appendWriteEvent`(`:953`)→ `ControllerWriteEvent.run` 调 `op.generateRecordsAndResult()`(`:801`)产出元数据记录 → `appendRecords`(`:898`)。
+写路径(RPC→记录→日志):写请求 → `appendWriteEvent`(`:953`)→ `ControllerWriteEvent.run` 调 `op.generateRecordsAndResult`(`:801`)产出元数据记录 → `appendRecords`(`:898`)。
 
-**先写后应用(active controller)**:`raftClient.prepareAppend(epoch, records)`(`:831`)→ 立即 `replay(...)` 进内存(`:836`)→ `schedulePreparedAppend()`(`:847`);写 future 挂在 `deferredEventQueue` 直到 commit。replay 按 `MetadataRecordType` 分派到各域管理器(`clusterControl`/`replicationControl`),用 `SnapshotRegistry` 做 MVCC 快照(`:1238`)。
+**先写后应用(active controller)**:`raftClient.prepareAppend(epoch, records)`(`:831`)→ 立即 `replay(...)` 进内存(`:836`)→ `schedulePreparedAppend`(`:847`);写 future 挂在 `deferredEventQueue` 直到 commit。replay 按 `MetadataRecordType` 分派到各域管理器(`clusterControl`/`replicationControl`),用 `SnapshotRegistry` 做 MVCC 快照(`:1238`)。
 
 ---
 
@@ -24,7 +24,7 @@
 
 底层 **KafkaRaftClient**(`raft/.../raft/KafkaRaftClient.java`)是标准 Raft:
 
-- `prepareAppend` 把记录追加到 Leader 的 `BatchAccumulator`(暂不复制,`:3702`),`schedulePreparedAppend` 调 `accumulator().allowDrain()` 放行复制(`:3735`)。
+- `prepareAppend` 把记录追加到 Leader 的 `BatchAccumulator`(暂不复制,`:3702`),`schedulePreparedAppend` 调 `accumulator.allowDrain` 放行复制(`:3735`)。
 - 选举:`onBecomeLeader` → `quorum.transitionToLeader` + 写 epoch 起始记录(`:649`);监听者经 `maybeFireLeaderChange` 通知(`:474`)。
 - QuorumController 作为 `RaftClient.Listener`(`QuorumMetaLogListener`,`QuorumController.java:976`):`handleCommit` 推进 offset(active)/replay(standby),`handleLeaderChange` → `claim`(成 Leader)/ `resign`(退位)。
 
@@ -39,7 +39,7 @@
 元数据从控制器流到每个 Broker:
 
 - **MetadataLoader**(`metadata/.../image/loader/MetadataLoader.java:76`)是 Raft Listener:`handleCommit`/`handleLoadSnapshot` 建 `MetadataDelta`、调 `maybePublishMetadata`(`:396`)。
-- **Delta → 不可变 Image**:`MetadataDelta.replay` 按 `MetadataRecordType` 分域重放(`image/MetadataDelta.java:194`),`apply()` 构建新的不可变 `MetadataImage`(`:387`)——每次元数据变更产生一个新 image 快照。
+- **Delta → 不可变 Image**:`MetadataDelta.replay` 按 `MetadataRecordType` 分域重放(`image/MetadataDelta.java:194`),`apply` 构建新的不可变 `MetadataImage`(`:387`)——每次元数据变更产生一个新 image 快照。
 - **扇出到 Publisher**:遍历 `MetadataPublisher` 调 `onMetadataUpdate`(`MetadataLoader.java:362`)。
 - **Broker 应用**:`BrokerMetadataPublisher`(`core/.../server/metadata/BrokerMetadataPublisher.scala:68`)`onMetadataUpdate` → `metadataCache.setImage(newImage)`(`:130`)+ `replicaManager.applyDelta`(`:148`)。
 - **MetadataCache**(已 Java 化,`metadata/.../metadata/KRaftMetadataCache.java:65`)持 `volatile MetadataImage`,`setImage` 原子换引用(`:485`),查询从中读——**无锁读**当前元数据视图。

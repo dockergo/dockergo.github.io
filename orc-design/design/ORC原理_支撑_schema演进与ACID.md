@@ -12,7 +12,7 @@
 
 `SchemaEvolution`(`SchemaEvolution.java:39`)把 file schema 映射到 reader schema:
 
-- **默认按名**:struct 字段按 `getFieldNames()` 名字匹配(`:153` 遍历 file 字段名);reader 有而文件无的列 → 读 **null**(新增列);文件有而 reader 无的列 → **忽略**(未选);顺序变了也能对上。
+- **默认按名**:struct 字段按 `getFieldNames` 名字匹配(`:153` 遍历 file 字段名);reader 有而文件无的列 → 读 **null**(新增列);文件有而 reader 无的列 → **忽略**(未选);顺序变了也能对上。
 - **按位置回退**:当文件字段是无意义名(`_col0/_col1`,`hasColumnNames`(`:148`)判定)或显式开 `orc.force.positional.evolution`(`OrcConf.java:177`,默认 false;level 默认 1,`OrcConf.java:182`)时,退回**按序号**映射。ACID 文件强制 positionalLevels=2(`:112`)。
 - `buildConversion(fileSchema, readerSchema, positionalLevels)`(`:129`)递归建每列的转换关系,`readerIncluded[]`(`:83`)标读取列。
 
@@ -27,7 +27,7 @@
 演进允许**列类型变化**,但要区分是否影响谓词下推正确性:
 
 - **安全提升**:如 int→long、部分数值/字符串放宽,值等价,可直接转换。
-- **PPD 安全判定**:`populatePpdSafeConversion()`(`:131`)为每列算 `ppdSafeConversion[]`(`:61`);`isPPDSafeConversion(fileColId)`(`:303`)返回该列的转换是否**保序/保等值**。
+- **PPD 安全判定**:`populatePpdSafeConversion`(`:131`)为每列算 `ppdSafeConversion[]`(`:61`);`isPPDSafeConversion(fileColId)`(`:303`)返回该列的转换是否**保序/保等值**。
 - 读端在 `pickRowGroups` 前检查:仅当 `evolution.isPPDSafeConversion(columnIx)`(`RecordReaderImpl.java:1217`)才对该列下推谓词——**不安全转换的列不下推**,退回引擎精确过滤,避免用错类型的统计误剪掉命中行。
 
 **为什么要判 PPD 安全**:统计(min/max)是按文件旧类型算的;若转换不保序(如 string→date 边界变化),拿旧统计剪新谓词会漏行——宁可不下推、也不能读错。
@@ -41,7 +41,7 @@
 ORC 本身不管事务,但 **Hive ACID** 在 ORC 之上约定一层**事件 schema**:
 
 - `createEventSchema(rowType)`(`SchemaEvolution.java:596`)把用户行 `row` 包进定长前缀 struct:`operation`(增删改类型)、`originalTransaction`、`bucket`、`rowId`、`currentTransaction`、`row`(原始行,`:598`–`:604`)。
-- `checkAcidSchema()`(`:576`)按这 6 个 `acidEventFieldNames`(`:617`)判文件是否 ACID;是则 `isAcid`(`:91`)、reader 列偏移跳过前缀(`readerColumnOffset`,`:94`)。
+- `checkAcidSchema`(`:576`)按这 6 个 `acidEventFieldNames`(`:617`)判文件是否 ACID;是则 `isAcid`(`:91`)、reader 列偏移跳过前缀(`readerColumnOffset`,`:94`)。
 - **base + delta**:全量 base 文件 + 增量 delta 文件(记 insert/update/delete 事件),读时按 `currentTransaction`/`rowId` 合并出某快照——这套合并逻辑在 Hive 层,ORC 只提供事件行的列存承载。
 
 **为什么 ORC 只管承载**:事务边界、快照合并是表格式/引擎(Hive/Iceberg)的职责;ORC 只保证"事件行也是高效列存文件",职责边界清晰。

@@ -9,18 +9,18 @@
 ![RDB 快照：SAVE 阻塞 vs BGSAVE fork](Redis原理_RDB_01快照生成.svg)
 
 - **SAVE**（`rdb.c:4825`）：主线程直接 `rdbSave`，全程阻塞——生产禁用。
-- **BGSAVE**（`rdb.c:2070` `rdbSaveBackground`）：`fork()` 出子进程，子进程用父进程的内存快照写 RDB 后 `exit`，父进程继续服务命令。这是常规路径。
+- **BGSAVE**（`rdb.c:2070` `rdbSaveBackground`）：`fork` 出子进程，子进程用父进程的内存快照写 RDB 后 `exit`，父进程继续服务命令。这是常规路径。
 - **写盘原子性**（`rdb.c:2032-2055`）：先写 `temp-<pid>.rdb`，成功后 `rename` 覆盖正式文件 + `fsync` 目录，保证不会留下半个损坏的 RDB。
 - 完成后重置 `server.dirty=0`、`server.lastsave=now`（`rdb.c:2063`）。
 
 ## 二、fork 与 Copy-On-Write
 
-BGSAVE 不阻塞的关键是 `fork()` + 操作系统的 **Copy-On-Write**：子进程与父进程初始共享同一份物理内存页，只有当父进程**写**某页时，内核才复制那一页。
+BGSAVE 不阻塞的关键是 `fork` + 操作系统的 **Copy-On-Write**：子进程与父进程初始共享同一份物理内存页，只有当父进程**写**某页时，内核才复制那一页。
 
 ![fork 与 Copy-On-Write](Redis原理_RDB_02fork_COW.svg)
 
 - 子进程看到的是 fork 那一刻的**内存快照**（一致的时点视图），无需加锁。
-- **代价**：`fork()` 本身耗时随数据集增大（要复制页表，`server.c:7479` 统计 fork 耗时）；BGSAVE 期间父进程写入越多，COW 复制的页越多，内存占用可能显著上涨（最坏接近 2×）。
+- **代价**：`fork` 本身耗时随数据集增大（要复制页表，`server.c:7479` 统计 fork 耗时）；BGSAVE 期间父进程写入越多，COW 复制的页越多，内存占用可能显著上涨（最坏接近 2×）。
 - 为减少 COW，子进程 dump 时 `dismissMemory` 提示内核可回收，父进程 rehash 也尽量避让（`server.c:1325`）。
 
 > **一句话**：fork + COW 用"写时才复制"换来"子进程持有一致快照且父进程不停服"——但写密集期的内存膨胀是它的固有代价。

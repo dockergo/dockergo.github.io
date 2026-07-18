@@ -14,7 +14,7 @@
 
 ![缓冲链](Nginx原理_内存_02缓冲链.svg)
 
-`ngx_chain_t` 是 buf 单链表，数据以"引用"传递：内存 buf（pos/last 指向数据）、file buf（指向 fd + 偏移不读进内存）串成链，输出时分批非阻塞写、写不完的挂起等写事件续发。**零拷贝 sendfile**：file buf 走 `sendfile()`，内核直接把文件数据发到 socket 不经用户态拷贝（磁盘→内核→网卡），是静态大文件服务的关键提速。filter 链传递的是 chain 不复制 body——多数 filter 只改指针/标志，只有 gzip 等重编码才分配新 buf。"不搬数据、只传引用"是 nginx 低内存高吞吐的又一支柱。
+`ngx_chain_t` 是 buf 单链表，数据以"引用"传递：内存 buf（pos/last 指向数据）、file buf（指向 fd + 偏移不读进内存）串成链，输出时分批非阻塞写、写不完的挂起等写事件续发。**零拷贝 sendfile**：file buf 走 `sendfile`，内核直接把文件数据发到 socket 不经用户态拷贝（磁盘→内核→网卡），是静态大文件服务的关键提速。filter 链传递的是 chain 不复制 body——多数 filter 只改指针/标志，只有 gzip 等重编码才分配新 buf。"不搬数据、只传引用"是 nginx 低内存高吞吐的又一支柱。
 
 ---
 

@@ -36,7 +36,7 @@
 
 ![Stage 拆 Task](Spark原理_执行_04拆task.svg)
 
-**一个 stage 的 task 数 = 该 stage RDD 的分区数**（`Stage.numPartitions = rdd.partitions.length`，`Stage.scala:66`；`createShuffleMapStage` 设 `numTasks = rdd.partitions.length`，`DAGScheduler.scala:656`）。`submitMissingTasks` 取 `findMissingPartitions()`（`:1865`），对每个待算分区造一个 task：`ShuffleMapTask`（`ShuffleMapTask.scala:54`，`runTask` 返回 `MapStatus`）或 `ResultTask`（`ResultTask.scala:55`）。task 是 Spark 的最小执行/调度/重试单位；同 stage 的 task 逻辑相同、只是分区不同（SIMD 式并行）。
+**一个 stage 的 task 数 = 该 stage RDD 的分区数**（`Stage.numPartitions = rdd.partitions.length`，`Stage.scala:66`；`createShuffleMapStage` 设 `numTasks = rdd.partitions.length`，`DAGScheduler.scala:656`）。`submitMissingTasks` 取 `findMissingPartitions`（`:1865`），对每个待算分区造一个 task：`ShuffleMapTask`（`ShuffleMapTask.scala:54`，`runTask` 返回 `MapStatus`）或 `ResultTask`（`ResultTask.scala:55`）。task 是 Spark 的最小执行/调度/重试单位；同 stage 的 task 逻辑相同、只是分区不同（SIMD 式并行）。
 
 ---
 
@@ -46,7 +46,7 @@
 
 **lineage（血缘）= RDD 的依赖链**，是 Spark 容错的根：某分区数据丢失时，不靠副本，而是**沿血缘重算**。`submitStage` 递归重建缺失父 stage；`resubmitFailedStages`（`:1318`）重提失败 stage。**FetchFailed**（reduce 端拉不到 map 输出，`handleTaskCompletion:2403` 的 `:2593` 分支）会把对应 map stage 重新入队（`:2684`）重跑，再生丢失的 shuffle 输出。
 
-代价：血缘越长、宽依赖越多，重算越贵。**checkpoint**（`RDD.checkpoint():1686`，`ReliableRDDCheckpointData`）把 RDD 物化到可靠存储并**截断血缘**（`markCheckpointed` 清依赖）——长迭代作业该定期 checkpoint。（详见「容错」主线。）
+代价：血缘越长、宽依赖越多，重算越贵。**checkpoint**（`RDD.checkpoint:1686`，`ReliableRDDCheckpointData`）把 RDD 物化到可靠存储并**截断血缘**（`markCheckpointed` 清依赖）——长迭代作业该定期 checkpoint。（详见「容错」主线。）
 
 ---
 

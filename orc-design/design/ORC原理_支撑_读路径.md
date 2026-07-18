@@ -27,7 +27,7 @@
 RecordReader 建立时按查询做**双重裁剪**:
 
 - **列裁剪**:按 reader schema 只选需要的列——`findColumns`(`RecordReaderImpl.java:137`)把列名解析到文件列 ID,`included[]` 标记选中列(`:99` "file included columns indexed by the file's column ids"),无关列的 stream **根本不读**。
-- **谓词选块**:`readStripe()`(`:1312`)→ `pickRowGroups()`(`:1315`)用 SargApplier(`:247`)+ 各级统计 + 布隆算出 `includedRowGroups[]`(`:114`);整 stripe 无匹配则跳过、stripe 内按 row-group 粒度跳。
+- **谓词选块**:`readStripe`(`:1312`)→ `pickRowGroups`(`:1315`)用 SargApplier(`:247`)+ 各级统计 + 布隆算出 `includedRowGroups[]`(`:114`);整 stripe 无匹配则跳过、stripe 内按 row-group 粒度跳。
 - `planner.readData(indexes, includedRowGroups, ...)`(`:1327`):只对选中列 × 选中 row-group 的字节区间发 IO,`reader.startStripe`(`:1328`)准备解码。
 
 **为什么两级裁剪**:列裁剪砍"读哪些列"(列存红利),谓词选块砍"读哪些行块"(统计跳读);二者叠加让一次查询往往只读文件的一小片。

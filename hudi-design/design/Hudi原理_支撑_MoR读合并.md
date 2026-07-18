@@ -13,7 +13,7 @@ MOR 表写时只追加 delta log(快),代价是**读时要合并 base + log**。
 **HoodieMergedLogRecordReader**(`HoodieMergedLogRecordReader.java:50`)= "合并相同记录键的 log record 的 log 读取器"。它:
 
 - 扩展 `BaseHoodieLogRecordReader`,接一个 `List<HoodieLogFile>` + 一个 `HoodieFileGroupRecordBuffer`(`:57`)。
-- `scan()`/`scan(boolean)` 处理 log block;`forceFullScan` 触发 `performScan()` 前置(`:76`)。
+- `scan`/`scan(boolean)` 处理 log block;`forceFullScan` 触发 `performScan` 前置(`:76`)。
 - 跟踪 `numMergedRecordsInLog` + 合并耗时(`:62`)。
 
 **合并逻辑**:同一记录键在多个 log 里可能有多版本(多次 upsert),reader 按 instant 序合并出最新;再与 base 文件里的记录归并——base 有、log 无覆盖则用 base,log 有则用 log 最新。这就是"读时把增量 log 叠加到基线"。
@@ -32,7 +32,7 @@ log 文件由 **HoodieLogBlock**(`HoodieLogBlock.java:77`,version=3)组织,含 h
 - `COMMAND_BLOCK`(:command):命令(如回滚)。
 - `CORRUPT_BLOCK`(:corrupted):损坏块。
 
-`isDataOrDeleteBlock()` 排除 COMMAND/CORRUPT(`:241`)。log 文件扩展名让删除排在数据后"保证 commit 时间序"(`HoodieLogFile.java:58`)——合并时先应用数据再应用删除。
+`isDataOrDeleteBlock` 排除 COMMAND/CORRUPT(`:241`)。log 文件扩展名让删除排在数据后"保证 commit 时间序"(`HoodieLogFile.java:58`)——合并时先应用数据再应用删除。
 
 ---
 

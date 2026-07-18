@@ -10,7 +10,7 @@
 
 1. Leader 给请求分配 zxid（counter++），调 `propose(Request)`（`Leader.java:1295`）：构造 `QuorumPacket(PROPOSAL, zxid, data)`、存入 `outstandingProposals`、`sendPacket` 广播给所有 follower。
 2. Follower 收 PROPOSAL（`Follower.java:161`）→ `logRequest` 先把事务写 **TxnLog**（可 fsync 落盘）再回 **ACK**（`:180`）——**先落盘后 Ack** 是"已提交不丢"的关键。
-3. Leader 的 `processAck`（`Leader.java:1054`）计票，`tryToCommit`（`:970`）判定：该 Proposal 已被**过半**接受（`p.hasAllQuorums()`）**且** zxid == `lastCommitted+1`（保证按序）→ 广播 **COMMIT**、本地 `commit(zxid)` 并交 `commitProcessor.commit`。
+3. Leader 的 `processAck`（`Leader.java:1054`）计票，`tryToCommit`（`:970`）判定：该 Proposal 已被**过半**接受（`p.hasAllQuorums`）**且** zxid == `lastCommitted+1`（保证按序）→ 广播 **COMMIT**、本地 `commit(zxid)` 并交 `commitProcessor.commit`。
 4. 各 follower 收 COMMIT（`Follower.java:199`）→ `processTxn` apply 到 DataTree，触发 watch。
 
 关键不变量：**过半即定**（不必等所有节点）、**按 zxid 顺序提交**（全序）、**先落盘再 Ack**（持久性）。
@@ -21,7 +21,7 @@
 
 Leader 失联时集群进入 LOOKING，走三阶段回到服务：
 
-- **阶段 0 · 选举（FastLeaderElection）**：各节点进入 LOOKING（`QuorumPeer.java` ServerState 枚举 `:578`；主循环 `case LOOKING` 调 `lookForLeader()` `:1566`），投票 `(id, zxid, electionEpoch, peerEpoch)`（`Vote.java:72-78`），经 `QuorumCnxManager` 交换。`totalOrderPredicate`（`FastLeaderElection.java:717`）比较：**先比 peerEpoch，同则比 zxid，再同则比 server id**——数据最新者当选。收敛到同一 leader 且过半认同后，胜者 LEADING、余者 FOLLOWING（`lookForLeader()` `:907`）。
+- **阶段 0 · 选举（FastLeaderElection）**：各节点进入 LOOKING（`QuorumPeer.java` ServerState 枚举 `:578`；主循环 `case LOOKING` 调 `lookForLeader` `:1566`），投票 `(id, zxid, electionEpoch, peerEpoch)`（`Vote.java:72-78`），经 `QuorumCnxManager` 交换。`totalOrderPredicate`（`FastLeaderElection.java:717`）比较：**先比 peerEpoch，同则比 zxid，再同则比 server id**——数据最新者当选。收敛到同一 leader 且过半认同后，胜者 LEADING、余者 FOLLOWING（`lookForLeader` `:907`）。
 - **阶段 1 · 恢复同步**：新 Leader 收集各 follower 的 `ACKEPOCH` 定出更高的新 epoch（`waitForEpochAck` `Leader.java:710`），然后按每个 follower 的落后程度选同步方式（`Learner.syncWithLeader` `:570`）：**DIFF**（只补差异事务，最常见）/ **TRUNC**（follower 有未提交的多余尾巴 → 截断）/ **SNAP**（落后太多 → 发整份快照）。
 - **阶段 2 · 广播**：同步完成发 **UPTODATE**（`Learner.java:731`），Leader 等过半回 NEWLEADER 的 Ack（`waitForNewLeaderAck` `:716`）后正式对外服务，进入第一节的广播循环。此后 Leader 周期 PING follower，失联过半则退回 LOOKING 重选。
 
@@ -49,10 +49,10 @@ Leader 失联时集群进入 LOOKING，走三阶段回到服务：
 
 | 组件 | 职责 | 核实锚点 |
 |---|---|---|
-| Leader | 定序、propose、计票、commit | `Leader.java`：lead():632、propose():1295、processAck():1054、tryToCommit():970 |
+| Leader | 定序、propose、计票、commit | `Leader.java`：lead:632、propose:1295、processAck:1054、tryToCommit:970 |
 | LearnerHandler | Leader 侧每 follower 一个处理线程 | `LearnerHandler.java`（1183 行） |
-| Follower | 收 PROPOSAL/COMMIT、回 Ack | `Follower.java`：followLeader():71、processPacket():156 |
-| FastLeaderElection | LOOKING 期投票选主 | `FastLeaderElection.java`：lookForLeader():907、totalOrderPredicate():717 |
+| Follower | 收 PROPOSAL/COMMIT、回 Ack | `Follower.java`：followLeader:71、processPacket:156 |
+| FastLeaderElection | LOOKING 期投票选主 | `FastLeaderElection.java`：lookForLeader:907、totalOrderPredicate:717 |
 | 包类型常量 | PROPOSAL=2/ACK=3/COMMIT=4/DIFF=13/SNAP=15/UPTODATE=12… | `Leader.java`:382-470 |
 
 ## 调优要点（关键开关）

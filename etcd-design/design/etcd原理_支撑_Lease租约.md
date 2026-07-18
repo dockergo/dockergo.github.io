@@ -14,7 +14,7 @@ Lease 的生命：① 客户端 `LeaseGrant(ttl)` 建一个租约（`lessor.Gran
 
 ![过期检测](etcd原理_lease_02过期.svg)
 
-etcd 用**最小堆**高效找最快到期的租约。`LeaseExpiredNotifier`（`lease_queue.go:63`，底层 `LeaseQueue`，`:31`）按到期时间排序。后台 `runLoop`（`lessor.go:620`，每 **500ms** tick）：`findExpiredLeases`（`:728`）从堆顶取已过期的租约 → `revokeExpiredLeases`（`:640`）。**关键：只有 leader 撤销**（`:647` `if le.isPrimary()`）——撤销不是本地删除，而是**发起一个 LeaseRevoke 请求走 Raft**（`server.go:885` → `v3_server.go` raftRequest），复制到多数派后各节点一致地删除 lease 及其 key。为什么必须经 Raft：撤销 = 删数据，删数据必须在所有副本上一致发生，否则 follower 上的 key 不一致。过期撤销失败会按 `expiredLeaseRetryInterval`（**3s**，`:58`）重试。
+etcd 用**最小堆**高效找最快到期的租约。`LeaseExpiredNotifier`（`lease_queue.go:63`，底层 `LeaseQueue`，`:31`）按到期时间排序。后台 `runLoop`（`lessor.go:620`，每 **500ms** tick）：`findExpiredLeases`（`:728`）从堆顶取已过期的租约 → `revokeExpiredLeases`（`:640`）。**关键：只有 leader 撤销**（`:647` `if le.isPrimary`）——撤销不是本地删除，而是**发起一个 LeaseRevoke 请求走 Raft**（`server.go:885` → `v3_server.go` raftRequest），复制到多数派后各节点一致地删除 lease 及其 key。为什么必须经 Raft：撤销 = 删数据，删数据必须在所有副本上一致发生，否则 follower 上的 key 不一致。过期撤销失败会按 `expiredLeaseRetryInterval`（**3s**，`:58`）重试。
 
 ---
 

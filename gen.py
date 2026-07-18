@@ -39,49 +39,45 @@ SUFFIX = _args.suffix
 
 # ── 计算机体系层次(自上而下 = 近用户 → 近硬件);对齐 archetype-registry 家族 ──
 # 每层:key / 标题 / 副标 / 语义色(与 svg-grammar 语义色一致:蓝=协调 琥珀=存储 绿=网络/成功 紫=接口/AI 青=计算)
+# ── 计算系统母能量流(生命周期机制节点,自上而下 = 请求/数据穿过系统的顺序)──
+# 母隐喻:一台精密计算机器。项目 = 挂在机制节点上的工业模块实例(非主角)。
+# 视觉契约见 design-skills/references/visual-system.md:≤4 语义色,银灰结构 + 单蓝主数据流强调。
 LAYERS = [
-    ("app",      "接口 / 应用框架层",   "用户接触面:Web 框架 · ORM · 语言",      "#7c5fe6"),
-    ("compute",  "计算 / 查询引擎层",   "SQL 存算 · 联邦查询 · 分布式计算 · 流",   "#a78bfa"),
-    ("ai",       "AI / ML 层",          "训练 · 推理 · 向量检索",                 "#f472b6"),
-    ("lakehouse","数据湖 / 表格式层",   "表格式 · 列存文件 · 湖仓",               "#38bdf8"),
-    ("storage",  "存储引擎层",          "KV / LSM · 关系 · 图 · 内存",            "#f59e0b"),
-    ("mq",       "消息 / 流层",         "消息队列 · 事件流",                     "#fbbf24"),
-    ("coord",    "分布式协调 / 共识层", "元数据 · 共识 · 服务发现",               "#0a84ff"),
-    ("orch",     "编排 / 服务网格层",   "容器编排 · 反向代理 · 网关",             "#2dd4a7"),
-    ("net",      "网络 / 传输层",       "协议栈 · QUIC · 多媒体",                 "#4ade80"),
-    ("os",       "操作系统内核层",      "进程 · 内存 · 文件 · 调度",              "#8e8e93"),
-    ("runtime",  "语言 / 运行时层",     "语言运行时 · GC · 并发",                 "#00add8"),
-    ("misc",     "其他 / 待归类",       "尚未归入体系层的项目",                   "#6b7280"),
+    ("ingress",  "Ingress · 入口",       "请求接入 · 路由 · TLS · 负载均衡",       "#0a84ff"),
+    ("schedule", "Schedule · 调度",      "资源编排 · DAG · slot · 控制循环",       "#a78bfa"),
+    ("execute",  "Execute · 执行",       "查询/向量化 · 训练推理 · 算子流水",       "#0a84ff"),
+    ("state",    "State · 状态",         "内存 · 索引 · 事务 · 状态后端",           "#2dd4bf"),
+    ("persist",  "Persist · 持久化",     "日志 · 表格式 · 列存文件 · 分布式文件",   "#2dd4bf"),
+    ("coord",    "Coordinate · 一致性",  "共识 · 选主 · 控制面状态 · 服务发现",     "#a78bfa"),
+    ("runtime",  "Runtime · 执行模型",   "语言运行时 · 内存/调度纪律 · GC · 并发",  "#8a8a90"),
+    ("misc",     "其他 · 待归类",        "尚未映射到机制节点的项目",                "#6b7280"),
 ]
 LAYER_ORDER = [k for k, *_ in LAYERS]
 
-# ── 项目 → 体系层 映射(新增项目补一条即在图上落位) ──
+# ── 项目 → 机制节点 映射(动力学:项目落在"它在计算系统里承担的机制"上,而非技术分类)──
+# 系统本就跨层;此处取其**主导机制**落位。新增项目补一条即在母图上落位。
 LAYER_MAP = {
-    # 接口 / 应用框架
-    "react": "app", "gin": "app", "gorm": "app", "spring-boot": "app",
-    # 计算 / 查询引擎
-    "doris": "compute", "clickhouse": "compute", "starrocks": "compute",
-    "trino": "compute", "spark": "compute", "flink": "compute", "duckdb": "compute",
-    # AI / ML
-    "pytorch": "ai", "tensorflow": "ai", "ray": "ai", "vllm": "ai", "milvus": "ai",
-    # 数据湖 / 表格式
-    "iceberg": "lakehouse", "hudi": "lakehouse", "orc": "lakehouse", "fluss": "lakehouse",
-    # 存储引擎
-    "rocksdb": "storage", "redis": "storage", "postgres": "storage", "neo4j": "storage",
-    "hadoop": "storage",
-    # 消息 / 流
-    "kafka": "mq",
-    # 分布式协调 / 共识
+    # Ingress:入口/路由/TLS/负载均衡/传输
+    "traefik": "ingress", "nginx": "ingress", "quic-go": "ingress",
+    "quiche": "ingress", "ffmpeg": "ingress",
+    # Schedule:编排/调度/资源
+    "kubernetes": "schedule", "ray": "schedule", "spark": "schedule", "flink": "schedule",
+    # Execute:查询执行/向量化/训练推理
+    "doris": "execute", "clickhouse": "execute", "starrocks": "execute",
+    "trino": "execute", "duckdb": "execute",
+    "pytorch": "execute", "tensorflow": "execute", "vllm": "execute", "milvus": "execute",
+    # State:内存/索引/事务/状态后端/图
+    "redis": "state", "rocksdb": "state", "postgres": "state", "neo4j": "state",
+    # Persist:日志/表格式/列存/分布式文件
+    "kafka": "persist", "fluss": "persist", "hudi": "persist",
+    "iceberg": "persist", "orc": "persist", "hadoop": "persist",
+    # Coordinate:共识/选主/控制面状态
     "etcd": "coord", "zookeeper": "coord", "raft": "coord",
-    # 编排 / 服务网格
-    "kubernetes": "orch", "nginx": "orch", "traefik": "orch",
-    # 网络 / 传输
-    "quic-go": "net", "quiche": "net", "ffmpeg": "net",
-    # 操作系统内核
-    "linux": "os",
-    # 语言 / 运行时
-    "go": "runtime", "rust": "runtime",
+    # Runtime:语言运行时/执行模型/内存纪律
+    "go": "runtime", "rust": "runtime", "linux": "runtime",
+    "react": "runtime", "gin": "runtime", "gorm": "runtime", "spring-boot": "runtime",
 }
+
 
 # ── 展示元数据(名称 / 描述 / tile 品牌色);未登记的目录用默认值 ──
 META = {
@@ -301,7 +297,7 @@ def aggregate(projects):
 
 
 def _gid(key):
-    """项目 key → SVG 元素 id;Python 与 JS 必须一致(此处规则简单可在 JS 复刻)。"""
+    """项目 key → SVG 元素 id;Python 与 JS 必须一致。"""
     return "m_" + re.sub(r"[^a-zA-Z0-9]+", "_", key.lower())
 
 
@@ -309,240 +305,242 @@ def _esc(s):
     return html.escape(str(s), quote=True)
 
 
-# 层元数据快查(build_svg 用)
 LAYER_TITLE = {k: t for k, t, s, c in LAYERS}
 LAYER_SUB = {k: s for k, t, s, c in LAYERS}
 LAYER_COLOR = {k: c for k, t, s, c in LAYERS}
 
-# ── 架构图几何(px)—— 计算机系统架构的真实 2D 拓扑,而非平铺色带 ──
-_CW = 1200            # 画布宽
+# ── 几何(px)── 计算系统架构母图:主路径 + 控制面 + 状态/持久化 + 运行时底座 ──
+_CW = 1280
 _PAD = 28
-_COLGAP = 18          # 区域内子列间距
-_RAILW = 158          # 横切侧栏宽
-_RAILGAP = 20         # 侧栏 ↔ 中央区间距
-_MW, _MH = 176, 62    # 标准模块(全宽区 / 中央区)
-_CMW, _CMH = 130, 50  # 紧凑模块(侧栏)
-_MG, _RG = 13, 12     # 模块列间距 / 行间距
-_ARROW = 42           # 层间箭头区高
-_REGHEAD = 52         # 区域标题带高
-_SUBHEAD = 32         # 子列标题高
-_REGPAD = 18          # 区域内边距
+_FRAME_X = 28
+_FRAME_Y = 28
+_FRAME_W = _CW - 2 * _FRAME_X
+_NODEH = 42
+_NG = 10
+_ROWG = 10
+_PANEL_HEAD = 96   # 面板顶 → 第一排卡片
+_PANEL_PAD = 22    # 末排卡片 → 面板底
+# 每面板列数(定死,配合宽度保证卡片可读);高度由项目数 × 列数派生,不再写死。
+# 双轴布局:数据通路(spine,宽 680)3–4 列;控制面(ctrl,窄 334)2 列;runtime 全宽 4 列。
+_COLS = {"ingress": 3, "schedule": 2, "coord": 2,
+         "execute": 3, "state": 4, "persist": 3, "runtime": 4}
+# 窄卡展示名覆盖(全名仍进 tooltip/搜索);配合 2 列布局避免文字溢出
+_DISP = {"PostgreSQL": "Postgres", "Hadoop HDFS": "Hadoop", "Apache Hadoop HDFS": "Hadoop"}
 
-# 每渲染一次填充:layer key → 该层项目列表
 LAYER_ITEMS = {}
 
 
-def _module_svg(p, x, y, w, accent, compact=False):
-    """单个项目模块:可点(<a>)或规划占位(<g>)。图标优先,回退语义色首字母 tile。"""
-    h = _CMH if compact else _MH
+def _node(p, x, y, w, accent):
+    """项目节点:工业铭牌式模块。点击进入项目架构图。"""
     nav = p["status"] != "plan"
     gid = _gid(p["key"])
     dot = {"ready": "var(--ok)", "assets": "var(--warn)"}.get(p["status"], "var(--c-ink3)")
-    cls = "mod" if nav else "mod mod-plan"
+    cls = "nd" if nav else "nd nd-plan"
+    meta = ("{s} 图 · {m} 篇".format(s=p["svg"], m=p["md"]) if (p["svg"] or p["md"])
+            else ("规划中" if not nav else "待编译"))
+    tip = "{n} · {d} · {m}".format(n=p["name"], d=p["desc"], m=meta)
     if nav:
-        head = ('<a href="{h}" class="{c}" id="{i}" tabindex="0" aria-label="{n}:{d}">'
-                .format(h=_esc(p["href"]), c=cls, i=gid, n=_esc(p["name"]), d=_esc(p["desc"])))
+        head = ('<a href="{h}" class="{c}" id="{i}" tabindex="0">'
+                '<title>{t}</title>').format(h=_esc(p["href"]), c=cls, i=gid, t=_esc(tip))
         tail = "</a>"
     else:
-        head = '<g class="{c}" id="{i}" aria-label="{n}(规划中)">'.format(
-            c=cls, i=gid, n=_esc(p["name"]))
+        head = '<g class="{c}" id="{i}"><title>{t}</title>'.format(c=cls, i=gid, t=_esc(tip))
         tail = "</g>"
-    out = [head]
-    out.append('<rect class="mod-rect" x="{x}" y="{y}" width="{w}" height="{h}" rx="12" '
-               'style="--accent:{a}"/>'.format(x=x, y=y, w=w, h=h, a=accent))
-    isz = 30 if compact else 32
-    ix, iy = x + 11, y + (h - isz) / 2
+    out = [head,
+           '<rect class="nd-rect" x="{x}" y="{y}" width="{w}" height="{h}" rx="10" '
+           'style="--accent:{a}"/>'.format(x=x, y=y, w=w, h=_NODEH, a=accent)]
+    isz = 22
+    ix, iy = x + 10, y + (_NODEH - isz) / 2
     if p.get("icon"):
-        out.append('<image x="{ix}" y="{iy:.1f}" width="{s}" height="{s}" href="{u}" '
+        out.append('<image class="nd-ic" x="{ix}" y="{iy:.1f}" width="{s}" height="{s}" href="{u}" '
                    'preserveAspectRatio="xMidYMid meet"/>'.format(ix=ix, iy=iy, s=isz, u=_esc(p["icon"])))
     else:
-        out.append('<rect class="tile" x="{ix}" y="{iy:.1f}" width="{s}" height="{s}" rx="8" '
+        out.append('<rect class="tile" x="{ix}" y="{iy:.1f}" width="{s}" height="{s}" rx="6" '
                    'style="--accent:{a}"/>'.format(ix=ix, iy=iy, s=isz, a=accent))
         out.append('<text class="tile-t" x="{tx:.1f}" y="{ty:.1f}" text-anchor="middle">{t}</text>'
-                   .format(tx=ix + isz / 2, ty=iy + isz / 2 + 4, t=_esc(p["init"])))
-    tx = x + isz + 20
-    maxname = 11 if compact else 15
-    name = p["name"] if len(p["name"]) <= maxname else p["name"][:maxname - 1] + "…"
-    if compact:
-        out.append('<text class="mod-name" x="{tx}" y="{ty:.1f}">{n}</text>'.format(
-            tx=tx, ty=y + h / 2 + 4, n=_esc(name)))
-    else:
-        out.append('<text class="mod-name" x="{tx}" y="{ty}">{n}</text>'.format(
-            tx=tx, ty=y + 25, n=_esc(name)))
-        meta = ("{s} 图 · {m} 篇".format(s=p["svg"], m=p["md"]) if nav and (p["svg"] or p["md"])
-                else ("待编译" if nav else "规划中"))
-        out.append('<text class="mod-meta" x="{tx}" y="{ty}">{m}</text>'.format(
-            tx=tx, ty=y + 43, m=_esc(meta)))
-    out.append('<circle class="mod-dot" cx="{cx}" cy="{cy}" r="3.5" style="fill:{d}"/>'.format(
-        cx=x + w - 13, cy=y + 12, d=dot))
+                   .format(tx=ix + isz / 2, ty=iy + isz / 2 + 3.5, t=_esc(p["init"])))
+    disp = p["name"]
+    for _pre in ("Apache ",):  # 门户展示去掉厂牌前缀,窄卡更清爽;全名仍在 tooltip/搜索
+        if disp.startswith(_pre):
+            disp = disp[len(_pre):]
+    disp = _DISP.get(disp, disp)  # 长名覆盖(PostgreSQL→Postgres 等),配合 2 列避免溢出
+    name = disp if len(disp) <= 14 else disp[:13] + "…"
+    out.append('<text class="nd-name" x="{tx}" y="{ty:.1f}">{n}</text>'.format(
+        tx=x + isz + 18, ty=y + _NODEH / 2 + 4, n=_esc(name)))
+    if p["status"] != "ready":
+        out.append('<circle class="nd-dot" cx="{cx}" cy="{cy}" r="3" style="fill:{d}"/>'.format(
+            cx=x + w - 12, cy=y + 12, d=dot))
     out.append(tail)
     return "".join(out)
 
 
-def _place_grid(items, x, y, colw, accent, compact=False):
-    """把项目在 colw 宽的列里网格排布,水平居中;返回 (svg, 占用高度)。"""
-    mw = _CMW if compact else _MW
-    mh = _CMH if compact else _MH
-    per_row = max(1, int((colw + _MG) // (mw + _MG)))
-    used_w = per_row * mw + (per_row - 1) * _MG
-    offx = x + max(0, (colw - used_w) / 2)
-    out = []
-    for i, p in enumerate(items):
-        r, c = divmod(i, per_row)
-        out.append(_module_svg(p, offx + c * (mw + _MG), y + r * (mh + _RG), mw, accent, compact))
-    rows = (len(items) + per_row - 1) // per_row
-    return "".join(out), rows * mh + max(0, rows - 1) * _RG
+def _flow_path(cls, points, label=None, lx=0, ly=0):
+    d = "M " + " L ".join("{:.1f} {:.1f}".format(x, y) for x, y in points)
+    text = '' if not label else '<text class="flow-label" x="{x}" y="{y}">{t}</text>'.format(
+        x=lx, y=ly, t=_esc(label))
+    return '<path class="{c}" d="{d}" marker-end="url(#{c}-arrow)"/>{text}'.format(c=cls, d=d, text=text)
 
 
-def _subcol(layer_key, x, y, colw, show_head=True):
-    """区域内的一个子列 = 一个体系层:可选标题 + 项目网格。返回 (svg, 高度)。
-    show_head=False 时(区域仅含此一层),省略子列标题以免与区域标题重复。"""
-    items = LAYER_ITEMS.get(layer_key, [])
-    accent = LAYER_COLOR[layer_key]
-    out = []
-    top = y
-    if show_head:
-        out.append('<text class="sub-title" x="{x}" y="{y}">{t}</text>'.format(
-            x=x, y=y + 13, t=_esc(LAYER_TITLE[layer_key])))
-        out.append('<text class="sub-sub" x="{x}" y="{y}">{s} · {n}</text>'.format(
-            x=x, y=y + 28, s=_esc(LAYER_SUB[layer_key]), n=str(len(items)) + " 项"))
-        top = y + _SUBHEAD
-    g, gh = _place_grid(items, x, top, colw, accent)
-    out.append(g)
-    return "".join(out), (top - y) + gh
+def _panel_h(key, cols):
+    """面板高度由真实项目数派生:标题区 + ceil(items/cols) 行。彻底根治溢出。"""
+    n = len(LAYER_ITEMS.get(key, []))
+    rows = max(1, -(-n // cols)) if n else 1  # ceil
+    return _PANEL_HEAD + rows * (_NODEH + _ROWG) - _ROWG + _PANEL_PAD
 
 
-def _region(title, sub, layer_keys, x, y, w, accent):
-    """一个宏区域(白卡容器)内并列若干体系层子列。返回 (svg, 区域高度)。
-    单层区域:省略子列标题(区域标题已表达),模块直接紧贴区域标题下。"""
-    inner_x = x + _REGPAD
-    ncol = max(1, len(layer_keys))
-    single = ncol == 1
-    colw = (w - 2 * _REGPAD - (ncol - 1) * _COLGAP) / ncol
-    cy = y + _REGHEAD
-    cols = []
-    maxh = 0
-    for i, lk in enumerate(layer_keys):
-        cxp = inner_x + i * (colw + _COLGAP)
-        g, h = _subcol(lk, cxp, cy, colw, show_head=not single)
-        cols.append((cxp, g))
-        maxh = max(maxh, h)
-    region_h = _REGHEAD + maxh + _REGPAD
-    parts = ['<rect class="region" x="{x}" y="{y}" width="{w}" height="{h}" rx="18" '
-             'style="--accent:{a}"/>'.format(x=x, y=y, w=w, h=region_h, a=accent),
-             '<rect class="region-bar" x="{x}" y="{y}" width="5" height="{h}" rx="2.5" '
-             'style="fill:{a}"/>'.format(x=x, y=y + 16, h=region_h - 32, a=accent),
-             '<text class="region-title" x="{tx}" y="{ty}">{t}</text>'.format(
-                 tx=x + _REGPAD + 6, ty=y + 27, t=_esc(title)),
-             '<text class="region-sub" x="{tx}" y="{ty}">{s}</text>'.format(
-                 tx=x + _REGPAD + 6, ty=y + 44, s=_esc(sub))]
-    for i, (cxp, g) in enumerate(cols):
-        if i > 0:
-            parts.append('<line class="col-div" x1="{vx:.1f}" y1="{y1}" x2="{vx:.1f}" y2="{y2}"/>'.format(
-                vx=cxp - _COLGAP / 2, y1=cy - 8, y2=y + region_h - _REGPAD))
-        parts.append(g)
-    return "".join(parts), region_h
-
-
-def _rail(layer_key, x, y, w, h):
-    """横切侧栏(如 Doris 的保障域 / 后台任务):跨中央区高度,项目自顶紧凑堆叠、垂直居中。"""
-    items = LAYER_ITEMS.get(layer_key, [])
-    accent = LAYER_COLOR[layer_key]
-    out = ['<rect class="rail" x="{x}" y="{y}" width="{w}" height="{h}" rx="16" '
-           'style="--accent:{a}"/>'.format(x=x, y=y, w=w, h=h, a=accent),
-           '<rect class="rail-bar" x="{x}" y="{y}" width="5" height="{bh}" rx="2.5" '
-           'style="fill:{a}"/>'.format(x=x, y=y + 16, bh=h - 32, a=accent),
-           '<text class="rail-title" x="{tx}" y="{ty}">{t}</text>'.format(
-               tx=x + 16, ty=y + 27, t=_esc(LAYER_TITLE[layer_key])),
-           '<text class="rail-sub" x="{tx}" y="{ty}">{s} · {n} 项</text>'.format(
-               tx=x + 16, ty=y + 44, s=_esc(LAYER_SUB[layer_key]), n=len(items))]
-    n = len(items)
-    if n:
-        gap = 12
-        block = n * _CMH + (n - 1) * gap
-        top = y + 58
-        avail = (y + h - 16) - top
-        start = top + max(0, (avail - block) / 2)   # 紧凑堆叠 + 垂直居中
-        for i, p in enumerate(items):
-            out.append(_module_svg(p, x + 12, start + i * (_CMH + gap), w - 24, accent, compact=True))
-    return "".join(out)
-
-
-def _flow(cx, y, label):
-    return ('<line class="flow" x1="{cx}" y1="{y1}" x2="{cx}" y2="{y2}" marker-end="url(#ar)"/>'
-            '<text class="flow-label" x="{lx}" y="{ly:.0f}">{t}</text>').format(
-        cx=cx, y1=y + 6, y2=y + _ARROW - 9, lx=cx + 14, ly=y + _ARROW / 2 + 3, t=_esc(label))
+def _panel(idx, key, title, sub, x, y, w, h, cols=2):
+    items = LAYER_ITEMS.get(key, [])
+    accent = LAYER_COLOR.get(key, "#8a8a90")
+    parts = [
+        '<g class="sys-panel" data-layer="{k}">'.format(k=_esc(key)),
+        '<rect class="panel-shell" x="{x}" y="{y}" width="{w}" height="{h}" rx="22"/>'.format(x=x, y=y, w=w, h=h),
+        '<text class="panel-num" x="{x}" y="{y}">{n:02d}</text>'.format(x=x + 18, y=y + 42, n=idx),
+        '<text class="panel-title" x="{x}" y="{y}">{t}</text>'.format(x=x + 72, y=y + 32, t=_esc(title)),
+        '<text class="panel-sub" x="{x}" y="{y}">{s}</text>'.format(x=x + 72, y=y + 55, s=_esc(sub)),
+        '<line class="panel-rule" x1="{x1}" y1="{y}" x2="{x2}" y2="{y}"/>'.format(x1=x + 20, x2=x + w - 20, y=y + 76),
+    ]
+    if not items:
+        parts.append('<text class="panel-empty" x="{x}" y="{y}">No project mapped</text>'.format(x=x + 24, y=y + 110))
+    else:
+        inner_x = x + 22
+        inner_y = y + 96
+        card_w = (w - 44 - (cols - 1) * _NG) / cols
+        for i, proj in enumerate(items):
+            r, c = divmod(i, cols)
+            nx = inner_x + c * (card_w + _NG)
+            ny = inner_y + r * (_NODEH + _ROWG)
+            parts.append(_node(proj, nx, ny, card_w, accent))
+    parts.append('</g>')
+    return "".join(parts)
 
 
 def build_svg(projects):
-    """程序化生成一张 Apple 工业风"计算机系统架构图":app 接入 → 计算/数据中央区
-    (两侧为协调/编排横切栏)→ 系统基础设施,层间有向标注箭头。项目自动落位其体系层。"""
+    """计算机系统架构导航图 · 双轴理论骨架(冯诺依曼数据通路 × 控制面)。
+      纵轴 = 冯诺依曼数据通路(von Neumann 1945):I/O 接入 → ALU 执行 → Memory 态 → Storage 外存,
+             左侧竖脊,蓝色 Hot Path 自上而下贯穿。
+      横切 = 控制/数据面分离(分布式经典,正交):调度控制面 + 共识协调面在右列,
+             紫色 Control Path 横向注入数据通路每一级。
+      底座 = Runtime(语言运行时/OS),全宽,点线向上支撑。
+    面板高度由项目数派生,band/rail/侧轨/总高全部从算出的位置回填——根治溢出与走线穿面板。"""
     global LAYER_ITEMS
     LAYER_ITEMS = {k: [p for p in projects if p["layer"] == k] for k, *_ in LAYERS}
-    innerw = _CW - 2 * _PAD
+
+    # —— 双轴几何 —— #
+    SPINE_X, SPINE_W = 70, 680          # 左:数据通路竖脊
+    CTRL_X, CTRL_W = 786, 338           # 右:控制面列
+    Y1, VGAP = 158, 62                  # 数据通路首排顶 / 排间空隙
+    meta = {  # key: (序号, 标题, 副标[含理论出处], 轴)
+        "ingress":  (1, "I/O · Ingress",      "北向接入 · 网关 · TLS · 传输(数据通路 I/O)",   "spine"),
+        "execute":  (4, "ALU · Execution",    "查询/向量化 · 训练推理 · 算子流水(运算器)",    "spine"),
+        "state":    (5, "Memory · State",     "内存 · 索引 · 事务 · 状态后端(主存)",          "spine"),
+        "persist":  (6, "Storage · Durability","日志 · 表格式 · 列存 · 分布式文件(外存)",      "spine"),
+        "schedule": (2, "Control Plane",      "资源编排 · DAG · slot · 控制循环",              "ctrl"),
+        "coord":    (3, "Consensus Plane",    "共识 · 选主 · 控制面状态 · 服务发现",           "ctrl"),
+        "runtime":  (7, "Runtime Substrate",  "语言运行时 · GC · 调度纪律 · 内核(执行底座)",   "base"),
+    }
+    spine = ["ingress", "execute", "state", "persist"]   # 纵轴自上而下
+    ctrl = ["schedule", "coord"]                          # 横切控制面(右列自上而下)
+
+    rect = {}                                             # key -> (x, y, w, h, cols)
+    # 数据通路竖脊:逐级堆叠,高度自适应
+    y = Y1
+    spine_rows = []
+    for k in spine:
+        h = _panel_h(k, _COLS[k])
+        rect[k] = (SPINE_X, y, SPINE_W, h, _COLS[k])
+        spine_rows.append((k, y, h))
+        y += h + VGAP
+    spine_bottom = spine_rows[-1][1] + spine_rows[-1][2]
+
+    # 控制面右列:每块与其"注入的数据通路级"垂直对齐——
+    #   02 Control Plane 注入 04 ALU/Execution(调度决定算子/资源),与 Execution 齐平;
+    #   03 Consensus 注入 05 Memory/State(共识决定状态一致性),与 State 齐平。
+    #   横向紫箭头因此真正落在目标级右缘,并直观表达"控制面在其所控数据级之侧"。
+    inject = {"schedule": "execute", "coord": "state"}
+    for k in ctrl:
+        h = _panel_h(k, _COLS[k])
+        tgt = rect[inject[k]]
+        ty = tgt[1] + tgt[3] / 2 - h / 2      # 中心对齐目标级中心
+        rect[k] = (CTRL_X, ty, CTRL_W, h, _COLS[k])
+
+    # Runtime 底座:全宽,置于数据通路脊底之下
+    rt_y = spine_bottom + 84
+    rt_h = _panel_h("runtime", _COLS["runtime"])
+    rect["runtime"] = (SPINE_X, rt_y, CTRL_X + CTRL_W - SPINE_X, rt_h, _COLS["runtime"])
+
+    last_bottom = rt_y + rt_h
+    total_h = last_bottom + 96
+
     body = []
-    y = _PAD
+    body.append('<rect class="frame" x="{x}" y="{y}" width="{w}" height="{h}" rx="28"/>'.format(
+        x=_FRAME_X, y=_FRAME_Y, w=_FRAME_W, h=total_h - 2 * _FRAME_Y))
+    body.append('<text class="map-kicker" x="70" y="72">COMPUTER SYSTEM ARCHITECTURE · VON NEUMANN DATA PATH × CONTROL PLANE</text>')
+    body.append('<text class="map-title" x="70" y="106">数据通路(I/O → 运算 → 主存 → 外存) 纵贯,控制面 / 共识面 正交横切</text>')
+    body.append('<text class="map-subtitle" x="70" y="130">纵轴=冯诺依曼数据通路(1945) · 横切=控制面/数据面分离(分布式经典) · 底座=运行时;点击任意模块下钻项目架构图</text>')
 
-    # 1) 接入层(全宽)
-    if LAYER_ITEMS["app"]:
-        g, h = _region("接口 / 应用接入", "用户与服务的接触面 · Web 框架 · ORM · 语言",
-                       ["app"], _PAD, y, innerw, LAYER_COLOR["app"])
-        body.append(g); y += h
-        body.append(_flow(_CW // 2, y, "请求 / 调用")); y += _ARROW
+    # —— 轴标注:左脊 DATA PATH,右列 CONTROL —— #
+    body.append('<text class="axis-cap" x="{x}" y="{y}" transform="rotate(-90 {x} {y})">DATA PATH · 冯诺依曼数据通路</text>'.format(x=54, y=(Y1 + spine_bottom) / 2))
+    body.append('<text class="axis-cap axis-cap-ctrl" x="{x}" y="{y}">CONTROL / COORDINATION PLANE · 正交横切</text>'.format(x=CTRL_X, y=Y1 - 18))
 
-    # 2) 中央区(计算 / 数据)+ 两侧横切栏(协调 / 编排)
-    cx = _PAD + _RAILW + _RAILGAP
-    cw = _CW - 2 * _PAD - 2 * (_RAILW + _RAILGAP)
-    center_top = y
-    center_parts = []
-    cy = y
-    comp_layers = [k for k in ("compute", "ai") if LAYER_ITEMS[k]]
-    if comp_layers:
-        g, h = _region("计算与智能", "查询引擎 · 训练推理 · 流处理", comp_layers,
-                       cx, cy, cw, LAYER_COLOR["compute"])
-        center_parts.append(g); cy += h + 20
-    data_layers = [k for k in ("storage", "lakehouse", "mq") if LAYER_ITEMS[k]]
-    if data_layers:
-        g, h = _region("数据与存储", "存储引擎 · 表格式 · 消息流", data_layers,
-                       cx, cy, cw, LAYER_COLOR["storage"])
-        center_parts.append(g); cy += h
-    center_h = cy - center_top
-    if center_h > 0:
-        if LAYER_ITEMS["coord"]:
-            body.append(_rail("coord", _PAD, center_top, _RAILW, center_h))
-        if LAYER_ITEMS["orch"]:
-            body.append(_rail("orch", _CW - _PAD - _RAILW, center_top, _RAILW, center_h))
-    body.extend(center_parts)
-    y = center_top + center_h
-    if center_h > 0:
-        body.append(_flow(_CW // 2, y, "运行 / 依赖")); y += _ARROW
+    def cx(k):
+        x, yy, w, h, _ = rect[k]; return x + w / 2
+    def cyv(k):
+        x, yy, w, h, _ = rect[k]; return yy + h / 2
 
-    # 3) 系统基础设施(全宽)
-    found_layers = [k for k in ("net", "os", "runtime") if LAYER_ITEMS[k]]
-    if found_layers:
-        g, h = _region("系统基础设施", "网络传输 · 操作系统内核 · 语言运行时", found_layers,
-                       _PAD, y, innerw, LAYER_COLOR["os"])
-        body.append(g); y += h
+    body.append('<g class="machine-rails">')
+    # 纵轴 Hot Path:Ingress → Execute → State → Persist(数据通路竖脊,蓝实线发光)
+    for a, b in zip(spine, spine[1:]):
+        ax, ay, aw, ah, _ = rect[a]
+        body.append(_flow_path('flow-hot', [(SPINE_X + SPINE_W / 2, ay + ah), (SPINE_X + SPINE_W / 2, rect[b][1])]))
+    # 横切 Control Path:控制面 → Execute,共识面 → State(紫虚线,水平注入数据通路右缘)
+    sx = rect["execute"]
+    body.append(_flow_path('flow-ctrl', [(CTRL_X, cyv("schedule")), (sx[0] + sx[2], cyv("schedule"))]))
+    stt = rect["state"]
+    body.append(_flow_path('flow-ctrl', [(CTRL_X, cyv("coord")), (stt[0] + stt[2], cyv("coord"))]))
+    # 底座 Runtime:数据通路脊底 → Runtime(点线向上支撑)
+    body.append(_flow_path('flow-opt', [(cx("persist"), spine_bottom), (cx("persist"), rt_y)]))
+    body.append(_flow_path('flow-opt', [(cx("coord"), rect["coord"][1] + rect["coord"][3]), (cx("coord"), rt_y)]))
+    body.append('<text class="rail-label flow-hot-lab" x="{x}" y="{y}">Hot Path · request / stream / batch</text>'.format(x=SPINE_X + SPINE_W / 2 + 12, y=(rect["ingress"][1] + rect["ingress"][3] + rect["execute"][1]) / 2 + 4))
+    body.append('<text class="rail-label flow-ctrl-lab" x="{x}" y="{y}" text-anchor="middle">调度</text>'.format(x=(sx[0] + sx[2] + CTRL_X) / 2, y=cyv("schedule") - 8))
+    body.append('<text class="rail-label flow-ctrl-lab" x="{x}" y="{y}" text-anchor="middle">共识</text>'.format(x=(stt[0] + stt[2] + CTRL_X) / 2, y=cyv("coord") - 8))
+    body.append('<text class="rail-label" x="{x}" y="{y}">Runtime Substrate · memory / thread / kernel</text>'.format(x=SPINE_X + 8, y=(spine_bottom + rt_y) / 2 - 4))
+    body.append('</g>')
 
-    # 4) 其他 / 待归类(全宽,降权)
-    if LAYER_ITEMS["misc"]:
-        y += 14
-        g, h = _region("其他 / 待归类", "尚未归入体系层的项目", ["misc"],
-                       _PAD, y, innerw, LAYER_COLOR["misc"])
-        body.append(g); y += h
+    for k in meta:
+        idx, title, sub, _axis = meta[k]
+        x, yy, w, h, cols = rect[k]
+        body.append(_panel(idx, k, title, sub, x, yy, w, h, cols))
 
-    total_h = y + _PAD
+    # 侧轨:纵向覆盖数据通路(OBSERVE 上半 / RECOVER 下半),挂在最右
+    sr_y, sr_bot = Y1, last_bottom
+    sr_h = sr_bot - sr_y
+    sr_mid = sr_h / 2
+    body.append('<g class="side-rail" transform="translate(1158,{y})">'
+                '<rect x="0" y="0" width="44" height="{h}" rx="22"/>'
+                '<text x="22" y="42" text-anchor="middle">OBSERVE</text>'
+                '<line x1="22" y1="76" x2="22" y2="{m1}"/>'
+                '<text x="22" y="{mt}" text-anchor="middle">RECOVER</text>'
+                '<line x1="22" y1="{m2}" x2="22" y2="{be}"/>'
+                '</g>'.format(y=sr_y, h=sr_h, m1=sr_mid - 40, mt=sr_mid + 46, m2=sr_mid + 80, be=sr_h - 30))
+
+    body.append('<g class="legend" transform="translate(72,{ly})">'
+                '<path class="flow-hot" d="M0 0 L34 0"/><text x="44" y="4">Hot data path · 数据通路</text>'
+                '<path class="flow-ctrl" d="M196 0 L230 0"/><text x="240" y="4">Control · 控制/协调面(横切)</text>'
+                '<path class="flow-opt" d="M470 0 L504 0"/><text x="514" y="4">Runtime substrate · 底座</text>'
+                '<circle cx="712" cy="0" r="3.5" style="fill:var(--warn)"/><text x="722" y="4">assets / plan</text>'
+                '</g>'.format(ly=last_bottom + 46))
     return ('<svg id="atlas" xmlns="http://www.w3.org/2000/svg" '
             'viewBox="0 0 {w} {h}" width="100%" role="img" '
-            'aria-label="计算机系统架构导航图 · 点击任意项目下钻">'
+            'aria-label="计算机系统架构导航图 · 冯诺依曼数据通路×控制面 · 点击任意项目下钻">'
             '<defs>'
             '<filter id="soft" x="-20%" y="-20%" width="140%" height="140%">'
-            '<feDropShadow dx="0" dy="2" stdDeviation="7" flood-color="#000" flood-opacity="0.12"/>'
+            '<feDropShadow dx="0" dy="10" stdDeviation="18" flood-color="#000" flood-opacity="0.18"/>'
             '</filter>'
-            '<marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" '
-            'markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" class="ar"/>'
-            '</marker></defs>{body}</svg>').format(w=_CW, h=total_h, body="".join(body))
-
+            '<marker id="flow-hot-arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 Z" class="arrow-hot"/></marker>'
+            '<marker id="flow-ctrl-arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 Z" class="arrow-ctrl"/></marker>'
+            '<marker id="flow-state-arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 Z" class="arrow-state"/></marker>'
+            '<marker id="flow-opt-arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 Z" class="arrow-opt"/></marker>'
+            '</defs>{body}</svg>').format(w=_CW, h=total_h, body="".join(body))
 
 def _search_index(projects):
     idx = []
@@ -573,10 +571,10 @@ TEMPLATE = r"""<!DOCTYPE html>
 <title>核心原理图谱 · 计算机体系架构导航</title>
 <style>
 :root{
-  --c-bg:#1c1c1e; --c-bg2:#161618; --c-panel:#242426; --c-panel2:#2c2c2e;
-  --c-line:rgba(255,255,255,.12); --c-line2:rgba(255,255,255,.18);
-  --c-ink:#f5f5f7; --c-ink2:#c4c4c9; --c-ink3:#8e8e93;
-  --c-brand:#0a84ff; --c-brand-ink:#409cff; --c-hover:rgba(255,255,255,.07);
+  --c-bg:#0d0d0f; --c-bg2:#111114; --c-panel:#17171a; --c-panel2:#1e1e22;
+  --c-line:rgba(255,255,255,.10); --c-line2:rgba(255,255,255,.16);
+  --c-ink:#f2f2f5; --c-ink2:#c4c4c9; --c-ink3:#8a8a90;
+  --c-brand:#0a84ff; --c-brand-ink:#409cff; --c-hover:rgba(255,255,255,.06);
   --c-shadow-lg:0 8px 28px rgba(0,0,0,.5),0 24px 48px rgba(0,0,0,.45);
   --ok:#2dd4a7; --warn:#fbbf24;
   --mono:"SF Mono",ui-monospace,"JetBrains Mono",Menlo,Consolas,monospace;
@@ -584,8 +582,8 @@ TEMPLATE = r"""<!DOCTYPE html>
   --grid-tint:rgba(10,132,255,.10); --grid-tint2:rgba(139,108,255,.09);
 }
 :root[data-theme="light"]{
-  --c-bg:#f5f5f7; --c-bg2:#fbfbfd; --c-panel:#ffffff; --c-panel2:#f0f0f3;
-  --c-line:rgba(0,0,0,.09); --c-line2:rgba(0,0,0,.14);
+  --c-bg:#fbfbfd; --c-bg2:#f5f5f7; --c-panel:#ffffff; --c-panel2:#f5f5f7;
+  --c-line:rgba(0,0,0,.09); --c-line2:rgba(0,0,0,.13);
   --c-ink:#1d1d1f; --c-ink2:#424245; --c-ink3:#86868b;
   --c-brand:#0071e3; --c-brand-ink:#0066cc; --c-hover:rgba(0,0,0,.04);
   --c-shadow-lg:0 8px 28px rgba(0,0,0,.10),0 24px 48px rgba(0,0,0,.10);
@@ -602,12 +600,15 @@ body{font-family:var(--sans);color:var(--c-ink);min-height:100vh;-webkit-font-sm
   padding:14px 30px;border-bottom:1px solid var(--c-line);
   background:color-mix(in srgb,var(--c-bg) 82%,transparent);
   backdrop-filter:saturate(180%) blur(24px);-webkit-backdrop-filter:saturate(180%) blur(24px)}
-.logo{flex:none;width:34px;height:34px;border-radius:9px;position:relative;
-  background:conic-gradient(from 210deg,var(--c-brand),#8b6cff,#38bdf8,var(--c-brand))}
-.logo::after{content:"";position:absolute;inset:5px;border-radius:5px;background:var(--c-bg);
-  box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--c-ink) 8%,transparent)}
-.brand{font-size:15px;font-weight:700;letter-spacing:-.01em;white-space:nowrap}
-.brand-dim{color:var(--c-ink3);font-weight:400;font-size:12.5px;margin-left:10px}
+.logo{flex:none;width:34px;height:34px;display:flex;align-items:center;justify-content:center}
+.logo svg{display:block}
+.nn-n{fill:var(--c-ink2)}
+.nn-h{fill:var(--c-brand)}
+.nn-e{stroke:var(--c-line2,var(--c-line));stroke-width:1.4}
+.brand{font-size:15px;font-weight:700;letter-spacing:-.01em;white-space:nowrap;
+  display:inline-flex;align-items:baseline;gap:11px}
+.brand-dim{color:var(--c-ink3);font-weight:400;font-size:12.5px;
+  padding-left:11px;border-left:1px solid var(--c-line)}
 .search{margin-left:auto;width:min(340px,42vw);display:flex;align-items:center;gap:9px;
   background:var(--c-panel);border:1px solid var(--c-line);border-radius:10px;padding:8px 13px;
   transition:border-color .18s,box-shadow .18s}
@@ -632,45 +633,58 @@ body{font-family:var(--sans);color:var(--c-ink);min-height:100vh;-webkit-font-sm
 
 /* ── 架构图 SVG 主题化(不反相,图标保持真品牌色)── */
 #atlas{display:block;width:100%;height:auto;min-width:1040px}
-/* 宏区域:白卡容器(Apple 工业风,细边 + 柔投影),内嵌语义色微 tint */
-.region{fill:var(--c-panel);stroke:var(--c-line);stroke-width:1;filter:url(#soft)}
-:root:not([data-theme="light"]) .region{fill:color-mix(in srgb,var(--accent) 5%,var(--c-panel))}
-.region-bar{opacity:.9}
-.region-title{fill:var(--c-ink);font:650 16px var(--sans);letter-spacing:-.01em}
-.region-sub{fill:var(--c-ink3);font:400 11.5px var(--sans)}
-.col-div{stroke:var(--c-line);stroke-width:1;stroke-dasharray:2 4;opacity:.7}
-/* 子列(体系层)标题 */
-.sub-title{fill:var(--c-ink2);font:600 12.5px var(--sans);text-transform:none}
-.sub-sub{fill:var(--c-ink3);font:400 10px var(--mono)}
-/* 横切侧栏(协调 / 编排)—— 类比 Doris 保障域 / 后台任务 */
-.rail{fill:color-mix(in srgb,var(--accent) 7%,var(--c-panel));
-  stroke:color-mix(in srgb,var(--accent) 22%,var(--c-line));stroke-width:1;filter:url(#soft)}
-.rail-bar{opacity:.9}
-.rail-title{fill:var(--c-ink);font:600 13px var(--sans)}
-.rail-sub{fill:var(--c-ink3);font:400 10px var(--sans)}
-/* 项目模块 */
-.mod{cursor:pointer}
-.mod-rect{fill:color-mix(in srgb,var(--accent) 11%,var(--c-panel));
-  stroke:color-mix(in srgb,var(--accent) 34%,var(--c-line2));stroke-width:1.2;transition:stroke .16s,filter .16s}
-.mod:hover .mod-rect{stroke:var(--accent);stroke-width:2;
-  filter:drop-shadow(0 3px 10px color-mix(in srgb,var(--accent) 42%,transparent))}
-.mod:focus{outline:none}
-.mod:focus-visible .mod-rect{stroke:var(--c-brand);stroke-width:2.6}
-.mod-plan{cursor:default}
-.mod-plan .mod-rect{fill:var(--c-panel);stroke-dasharray:5 4;opacity:.72}
-.mod-plan .mod-name,.mod-plan .mod-meta,.mod-plan .tile,.mod-plan image{opacity:.5}
-.mod-name{fill:var(--c-ink);font:600 12.5px var(--sans)}
-.mod-meta{fill:var(--c-ink3);font:500 10px var(--mono)}
+/* 单外框:系统母图是一张精密机器剖面,面板/路径/模块共享一张画布 */
+.frame{fill:var(--c-panel);stroke:var(--c-line);stroke-width:1;filter:url(#soft)}
+:root:not([data-theme="light"]) .frame{fill:color-mix(in srgb,#fff 2%,var(--c-bg))}
+.map-kicker{fill:var(--c-ink3);font:700 10px var(--mono);letter-spacing:.18em}
+.map-title{fill:var(--c-ink);font:600 19px var(--sans);letter-spacing:-.025em}
+.map-subtitle{fill:var(--c-ink3);font:500 12px var(--sans);letter-spacing:-.01em}
+.plane-band rect{fill:transparent;stroke:var(--c-line);stroke-width:1;stroke-dasharray:2 8;opacity:.48}
+.plane-band text{fill:var(--c-ink3);font:700 8.5px var(--mono);letter-spacing:.18em;opacity:.62}
+.machine-rails path{fill:none}
+.flow-hot{stroke:var(--p-hot,#0a84ff);stroke-width:2.4;filter:drop-shadow(0 0 5px color-mix(in srgb,var(--p-hot,#0a84ff) 48%,transparent))}
+.flow-ctrl{stroke:var(--p-ctrl,#a78bfa);stroke-width:1.7;stroke-dasharray:7 5;opacity:.9}
+.flow-state{stroke:var(--p-state,#2dd4bf);stroke-width:1.8;opacity:.9}
+.flow-opt{stroke:var(--c-ink3);stroke-width:1.4;stroke-dasharray:2 5;opacity:.72}
+.arrow-hot{fill:var(--p-hot,#0a84ff)}.arrow-ctrl{fill:var(--p-ctrl,#a78bfa)}.arrow-state{fill:var(--p-state,#2dd4bf)}.arrow-opt{fill:var(--c-ink3)}
+.flow-label{fill:var(--c-ink3);font:600 10px var(--mono);letter-spacing:.08em}
+.rail-label{fill:var(--c-ink3);font:600 11px var(--mono);letter-spacing:.04em}
+.flow-hot-lab{fill:var(--p-hot,#0a84ff)}
+.flow-ctrl-lab{fill:var(--p-ctrl,#a78bfa)}
+.axis-cap{fill:var(--c-ink3);font:700 11px var(--mono);letter-spacing:.16em;opacity:.7}
+.axis-cap-ctrl{fill:color-mix(in srgb,var(--p-ctrl,#a78bfa) 78%,var(--c-ink3))}
+.sys-panel{isolation:isolate}
+.panel-shell{fill:color-mix(in srgb,var(--c-panel) 90%,#fff 3%);stroke:var(--c-line2);stroke-width:1}
+:root[data-theme="light"] .panel-shell{fill:color-mix(in srgb,var(--c-panel) 94%,#000 1%)}
+.panel-rule{stroke:var(--c-line);stroke-width:1}
+.panel-num{fill:var(--c-ink);font:200 42px var(--sans);letter-spacing:-.04em;opacity:.16}
+.panel-title{fill:var(--c-ink);font:650 18px var(--sans);letter-spacing:-.025em}
+.panel-sub{fill:var(--c-ink3);font:400 11.5px var(--sans)}
+.panel-empty{fill:var(--c-ink3);font:500 11px var(--mono);opacity:.55}
+.nd{cursor:pointer}
+.nd-rect{fill:color-mix(in srgb,var(--c-panel) 84%,#fff 4%);stroke:var(--c-line2);stroke-width:1;transition:stroke .18s,fill .18s,filter .18s}
+.nd-ic{transition:opacity .18s}
+.nd:hover .nd-rect{stroke:var(--c-ink);stroke-width:1.35;fill:var(--c-hover);filter:drop-shadow(0 0 7px color-mix(in srgb,var(--accent) 22%,transparent))}
+.nd:focus{outline:none}
+.nd:focus-visible .nd-rect{stroke:var(--c-ink);stroke-width:2}
+.nd-plan{cursor:default}
+.nd-plan .nd-rect{stroke-dasharray:4 3;opacity:.55}
+.nd-plan .nd-name,.nd-plan .tile,.nd-plan .nd-ic{opacity:.42}
+.nd-name{fill:var(--c-ink2);font:590 11.5px var(--sans);letter-spacing:-.01em;transition:fill .18s}
+.nd:hover .nd-name{fill:var(--c-ink)}
+.nd-dot{stroke:var(--c-panel);stroke-width:1}
 .tile{fill:var(--accent)}
-.tile-t{fill:#fff;font:700 13px var(--sans);letter-spacing:-.02em}
-.flow{stroke:var(--c-ink3);stroke-width:1.6;opacity:.55}
-.flow-label{fill:var(--c-ink3);font:500 10px var(--mono)}
-.ar{fill:var(--c-ink3)}
-/* 搜索态:命中在图上 flash 高亮,其余淡出 */
-.mod.dim{opacity:.22;transition:opacity .2s}
-.mod.hit .mod-rect{stroke:var(--c-brand);stroke-width:2.6}
-@keyframes flash{0%,100%{filter:none}35%{filter:drop-shadow(0 0 11px var(--c-brand))}}
-.mod.flash .mod-rect{animation:flash 1.05s ease-out 2;stroke:var(--c-brand);stroke-width:2.8}
+.tile-t{fill:var(--c-panel);font:700 10px var(--sans);letter-spacing:-.02em}
+.side-rail rect{fill:color-mix(in srgb,var(--c-panel) 88%,#fff 3%);stroke:var(--c-line);stroke-width:1}
+.side-rail line{stroke:var(--c-line2);stroke-width:1}
+.side-rail text{fill:var(--c-ink3);font:700 8.5px var(--mono);letter-spacing:.16em;writing-mode:vertical-rl}
+.legend text{fill:var(--c-ink3);font:600 10px var(--mono);letter-spacing:.06em}
+.legend path{fill:none}
+/* 搜索态:命中 flash 高亮,其余淡出 */
+.nd.dim{opacity:.2;transition:opacity .2s}
+.nd.hit .nd-rect{stroke:var(--c-brand);stroke-width:2.4}
+@keyframes flash{0%,100%{filter:none}35%{filter:drop-shadow(0 0 10px var(--c-brand))}}
+.nd.flash .nd-rect{animation:flash 1.05s ease-out 2;stroke:var(--c-brand);stroke-width:2.6}
 
 footer{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-top:26px;
   color:var(--c-ink3);font-size:12px;font-family:var(--mono)}
@@ -679,8 +693,18 @@ footer{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;margin
 </head>
 <body>
 <header class="topbar">
-  <span class="logo" aria-hidden="true"></span>
-  <span class="brand">核心原理图谱<span class="brand-dim">计算机系统架构导航</span></span>
+  <span class="logo" aria-hidden="true">
+    <svg viewBox="0 0 40 40" width="34" height="34" fill="none">
+      <line x1="9" y1="12" x2="20" y2="8" class="nn-e"/><line x1="9" y1="12" x2="20" y2="20" class="nn-e"/>
+      <line x1="9" y1="28" x2="20" y2="20" class="nn-e"/><line x1="9" y1="28" x2="20" y2="32" class="nn-e"/>
+      <line x1="20" y1="8" x2="31" y2="14" class="nn-e"/><line x1="20" y1="20" x2="31" y2="14" class="nn-e"/>
+      <line x1="20" y1="20" x2="31" y2="26" class="nn-e"/><line x1="20" y1="32" x2="31" y2="26" class="nn-e"/>
+      <circle cx="9" cy="12" r="3" class="nn-n"/><circle cx="9" cy="28" r="3" class="nn-n"/>
+      <circle cx="20" cy="8" r="3" class="nn-n nn-h"/><circle cx="20" cy="20" r="3" class="nn-n nn-h"/><circle cx="20" cy="32" r="3" class="nn-n nn-h"/>
+      <circle cx="31" cy="14" r="3" class="nn-n"/><circle cx="31" cy="26" r="3" class="nn-n"/>
+    </svg>
+  </span>
+  <span class="brand">核心原理图谱</span>
   <label class="search">
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
     <input id="q" type="text" placeholder="搜索项目 / 关键词…" autocomplete="off" aria-label="搜索项目"/>
@@ -708,7 +732,7 @@ footer{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;margin
   var tt=document.getElementById("tt");
   if(tt) tt.onclick=function(){ var n=r.getAttribute("data-theme")==="light"?"dark":"light"; ap(n); try{localStorage.setItem(KEY,n);}catch(e){} };
   // 底部一行细描述(数值弱化,不与图争视觉)
-  document.getElementById("stats").textContent=AGG.projects+" 项目 · "+AGG.accessible+" 可交互 · "+AGG.layers+" 体系层 · "+AGG.svg+" 图 · "+AGG.md+" 篇 · 更新 __UPDATED__";
+  document.getElementById("stats").textContent=AGG.projects+" 项目 · "+AGG.accessible+" 可交互 · "+AGG.layers+" 机制节点 · "+AGG.svg+" 图 · "+AGG.md+" 篇 · 更新 __UPDATED__";
   // 搜索 → 图上 flash 高亮(非过滤成列表)
   var q=document.getElementById("q"), countEl=document.getElementById("count");
   var els=IDX.map(function(it){ return {it:it, el:document.getElementById(it.id)}; }).filter(function(x){return x.el;});

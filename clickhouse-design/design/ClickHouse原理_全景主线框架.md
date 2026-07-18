@@ -27,7 +27,7 @@ ClickHouse 与 Doris 同为 MPP 列存分析库，但内核假设差异很大，
 
 ---
 
-## 二、总架构图（位置即语义）
+## 二、总架构图
 
 ![ClickHouse 核心原理 · 总架构图](ClickHouse原理_总架构图.svg)
 

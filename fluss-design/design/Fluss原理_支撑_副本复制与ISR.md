@@ -10,7 +10,7 @@
 
 ![副本复制](Fluss原理_副本_复制.svg)
 
-`Replica`（`server/replica/Replica.java:158`）一桶一实例；`makeLeader`（`:419`）/`makeFollower`（`:478`）按 `leaderEpoch` fencing 切换角色（更小 epoch 抛 `FencedLeaderEpochException`）。Follower 的 `ReplicaFetcherThread`（`server/replica/fetcher/ReplicaFetcherThread.java:79`）循环 `doWork`（`:136`）→ 发 `FETCH_LOG` 给 Leader → `processFetchResultFromLocalStorage`（`:554`）校验 `fetchOffset==localLogEndOffset` → `appendRecordsToFollower` → `updateHighWatermark`（`:591`，follower 先更 HW）。fetcher 线程按 `bucket.hashCode() % numFetchers` 分配（`ReplicaFetcherManager.java:170`）。
+`Replica`（`server/replica/Replica.java:158`）一桶一实例；`makeLeader`（`:419`）/`makeFollower`（`:478`）按 `leaderEpoch` fencing 切换角色（更小 epoch 抛 `FencedLeaderEpochException`）。Follower 的 `ReplicaFetcherThread`（`server/replica/fetcher/ReplicaFetcherThread.java:79`）循环 `doWork`（`:136`）→ 发 `FETCH_LOG` 给 Leader → `processFetchResultFromLocalStorage`（`:554`）校验 `fetchOffset==localLogEndOffset` → `appendRecordsToFollower` → `updateHighWatermark`（`:591`，follower 先更 HW）。fetcher 线程按 `bucket.hashCode % numFetchers` 分配（`ReplicaFetcherManager.java:170`）。
 
 ---
 

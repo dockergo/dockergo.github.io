@@ -6,7 +6,7 @@
 
 ![进程拓扑](Ray原理_集群运行时_01进程拓扑.svg)
 
-`ray.init()` 后一个节点上的进程构成：
+`ray.init` 后一个节点上的进程构成：
 
 - **driver**：用户脚本主进程，内嵌一份 CoreWorker（`core_worker.cc`），是 task/actor 的提交源与多数 ObjectRef 的 owner。
 - **Raylet**（每节点一个，`raylet/`）：本地调度器 + 对象管理器 + worker 池管理者。是节点的"系统守护"。

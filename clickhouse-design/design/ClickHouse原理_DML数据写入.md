@@ -6,7 +6,7 @@
 
 ![写入生命周期总览](ClickHouse原理_DML_01总览.svg)
 
-`InterpreterInsertQuery::execute` 建 Chain 推入管线（`InterpreterInsertQuery.cpp:485,503`），Sink 是 `MergeTreeSink`（`MergeTreeSink.h:36`）。其 `consume()`（`MergeTreeSink.cpp:74`）把 Block 切块 → `writeTempPart` 建临时 Part（`:220`）→ `commitPart`（`:223`）在锁内 `renameTempPartAndAdd`（`:258`）把 Part **原子加入活跃集**、`transaction.commit`（`:259`）。**可见性 = Part 原子 rename 到位的那一刻**——没有 2PC、没有事务提交点。
+`InterpreterInsertQuery::execute` 建 Chain 推入管线（`InterpreterInsertQuery.cpp:485,503`），Sink 是 `MergeTreeSink`（`MergeTreeSink.h:36`）。其 `consume`（`MergeTreeSink.cpp:74`）把 Block 切块 → `writeTempPart` 建临时 Part（`:220`）→ `commitPart`（`:223`）在锁内 `renameTempPartAndAdd`（`:258`）把 Part **原子加入活跃集**、`transaction.commit`（`:259`）。**可见性 = Part 原子 rename 到位的那一刻**——没有 2PC、没有事务提交点。
 
 ---
 
@@ -56,7 +56,7 @@ ClickHouse 用**块级 hash 去重**替代事务保证"重试不重复写"：
 ![轻量 DELETE 与 PatchParts](ClickHouse原理_DML_06轻量删除.svg)
 
 - **轻量 DELETE**（`DELETE FROM`）：`InterpreterDeleteQuery`（`InterpreterDeleteQuery.cpp`）改写为给隐藏掩码列 `_row_exists=0`；`lightweight_delete_mode` 默认 `ALTER_UPDATE`（`Settings.cpp:3994`），走 `ALTER ... UPDATE _row_exists=0`（`:172`），`mutations_sync = lightweight_deletes_sync`（默认 2，`:192`/`Settings.cpp:4002`）。读时跳过 `_row_exists=0` 的行，物理清除延后到 merge。
-- **轻量 UPDATE**（实验特性，近版本演进中）：`InterpreterUpdateQuery`（`InterpreterUpdateQuery.cpp`）在 `supportsLightweightUpdate()` 且 `allow_experimental_lightweight_update=true`（默认 false）时，走 **PatchParts**（`apply_patch_parts=true`）：把更新写成轻量补丁 Part，查询时 `applyPatches` 现场叠加，避免整 Part 重写——把更新代价从写侧转到读侧。
+- **轻量 UPDATE**（实验特性，近版本演进中）：`InterpreterUpdateQuery`（`InterpreterUpdateQuery.cpp`）在 `supportsLightweightUpdate` 且 `allow_experimental_lightweight_update=true`（默认 false）时，走 **PatchParts**（`apply_patch_parts=true`）：把更新写成轻量补丁 Part，查询时 `applyPatches` 现场叠加，避免整 Part 重写——把更新代价从写侧转到读侧。
 
 ---
 

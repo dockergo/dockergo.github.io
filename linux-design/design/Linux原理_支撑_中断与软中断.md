@@ -24,7 +24,7 @@
 
 ![softirq 处理循环：一轮跑完 pending 仍非空时，三闸门(2ms/need_resched/max_restart≤10)全过才 goto restart，否则甩给 ksoftirqd](Linux原理_中断_04软中断循环.svg)
 
-核心是 `handle_softirqs`（`softirq.c:579`，`__do_softirq` 的实现体）的一轮处理：先 `set_softirq_pending(0)` 清空 pending 位、**开中断**，再 `ffs` 逐位扫描 pending，对每个置位向量调 `h->action()`。跑完一轮后重新读 pending——若又有新软中断到达，**不无限循环**：只在同时满足 ① 未超 `MAX_SOFTIRQ_TIME`（2ms，`softirq.c:543`）② 无 `need_resched()`（不欠调度）③ 重启次数 `--max_restart` 未耗尽（初值 `MAX_SOFTIRQ_RESTART=10`，`softirq.c:544`）时才 `goto restart` 再跑一轮；任一条件不满足就 `wakeup_softirqd()`（`softirq.c:645`）把剩余工作甩给 ksoftirqd，让出 CPU。
+核心是 `handle_softirqs`（`softirq.c:579`，`__do_softirq` 的实现体）的一轮处理：先 `set_softirq_pending(0)` 清空 pending 位、**开中断**，再 `ffs` 逐位扫描 pending，对每个置位向量调 `h->action`。跑完一轮后重新读 pending——若又有新软中断到达，**不无限循环**：只在同时满足 ① 未超 `MAX_SOFTIRQ_TIME`（2ms，`softirq.c:543`）② 无 `need_resched`（不欠调度）③ 重启次数 `--max_restart` 未耗尽（初值 `MAX_SOFTIRQ_RESTART=10`，`softirq.c:544`）时才 `goto restart` 再跑一轮；任一条件不满足就 `wakeup_softirqd`（`softirq.c:645`）把剩余工作甩给 ksoftirqd，让出 CPU。
 
 这是一条**反馈限流律**：软中断可能被高速硬件（网卡收包）持续 raise，若在中断返回路径里一直跑会饿死普通进程。用"时间 2ms + 次数 10 + 是否欠调度"三闸门封顶，超限即降级到普通优先级的 ksoftirqd 线程排队处理——**既保吞吐又不饿死调度**。
 

@@ -14,7 +14,7 @@
 
 ![存储级别](Spark原理_存储_02存储级别.svg)
 
-`cache()`（`rdd/RDD.scala:205`）就是 `persist(MEMORY_ONLY)`（`persist()` `:200`，默认级别 MEMORY_ONLY）。`StorageLevel`（`common/utils/.../storage/StorageLevel.scala:39`）由 5 个标志组合：**useDisk / useMemory / useOffHeap / deserialized / replication**（`:40-44`，replication 默认 1）。预定义级别（`object StorageLevel` `:148`）：
+`cache`（`rdd/RDD.scala:205`）就是 `persist(MEMORY_ONLY)`（`persist` `:200`，默认级别 MEMORY_ONLY）。`StorageLevel`（`common/utils/.../storage/StorageLevel.scala:39`）由 5 个标志组合：**useDisk / useMemory / useOffHeap / deserialized / replication**（`:40-44`，replication 默认 1）。预定义级别（`object StorageLevel` `:148`）：
 
 | 级别 | 内存 | 磁盘 | 序列化 | 说明 |
 |---|---|---|---|---|
@@ -73,7 +73,7 @@ broadcast 把一份只读数据高效分发到所有 executor（典型用途：*
 - **无脑 cache 一切**：cache 占 storage 内存，挤压 execution → 反而 spill 变慢；只 cache **多次复用**的 RDD/DataFrame。
 - **cache 用 MEMORY_ONLY 但装不下**：超出的分区不缓存、每次重算；大数据集用 `MEMORY_AND_DISK`。
 - **大表用 broadcast join**：broadcast 的表要能装进每个 executor 内存；表太大广播会 OOM——只广播小表。
-- **cache 后不 unpersist**：长作业里 cache 的 RDD 不再用要 `unpersist()` 释放，否则一直占 storage 内存。
+- **cache 后不 unpersist**：长作业里 cache 的 RDD 不再用要 `unpersist` 释放，否则一直占 storage 内存。
 
 ---
 

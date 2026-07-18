@@ -24,7 +24,7 @@ TensorFlow 不是数据系统，先立几条认知：
 
 ![总架构](TensorFlow原理_全景_02总架构.svg)
 
-一次 `@tf.function` 训练步穿过的层：① Python 前端（张量/变量、tf.function、Keras）→ ② **图追踪与构建**（tf.function 把 Python 追踪成 FuncGraph；eager 则旁路直发）→ ③ **Grappler 图优化**（`meta_optimizer.cc` 串十余个 pass 整图重写）→ ④ **XLA 编译**（可选，`mark_for_compilation_pass.cc` 自动聚类）→ ⑤ **设备放置**（`placer.cc` 按 colocation + soft placement 定设备）→ ⑥ **运行时执行**（图模式 `executor.cc` 数据流调度 / eager 模式 `eager/execute.cc` 逐 op）→ ⑦ **算子分发**（按 op 名+设备查 `op_kernel.cc` 的 GlobalKernelRegistry，调 `OpKernel::Compute()`）→ ⑧ **张量与内存**（`tensor.h` Tensor + 引用计数 TensorBuffer + Allocator）。横切两条：⑨ 自动微分 GradientTape、⑩ 分布式 tf.distribute。
+一次 `@tf.function` 训练步穿过的层：① Python 前端（张量/变量、tf.function、Keras）→ ② **图追踪与构建**（tf.function 把 Python 追踪成 FuncGraph；eager 则旁路直发）→ ③ **Grappler 图优化**（`meta_optimizer.cc` 串十余个 pass 整图重写）→ ④ **XLA 编译**（可选，`mark_for_compilation_pass.cc` 自动聚类）→ ⑤ **设备放置**（`placer.cc` 按 colocation + soft placement 定设备）→ ⑥ **运行时执行**（图模式 `executor.cc` 数据流调度 / eager 模式 `eager/execute.cc` 逐 op）→ ⑦ **算子分发**（按 op 名+设备查 `op_kernel.cc` 的 GlobalKernelRegistry，调 `OpKernel::Compute`）→ ⑧ **张量与内存**（`tensor.h` Tensor + 引用计数 TensorBuffer + Allocator）。横切两条：⑨ 自动微分 GradientTape、⑩ 分布式 tf.distribute。
 
 ## 三、分水岭：eager 即时执行 vs tf.function 追踪成图
 
@@ -71,14 +71,14 @@ TF2 默认 **eager**（`eager/execute.cc` `EagerLocalExecute` 立即执行每个
 - **警惕重追踪（retracing）**：传入 Python 标量/变 shape 会按新签名重新追踪，`polymorphic_function.py` 会在过频时告警；用 `input_signature` 或 `reduce_retracing=True`（`:468`）固定签名。
 - **计算密集且形状稳定的图开 `jit_compile=True`**：触发 XLA 聚类编译融合，减少 kernel 启动与中间张量落地。
 - **用 tf.data 喂数据**：`prefetch(AUTOTUNE)`（`dataset_ops.py:1241`）把输入预处理与训练在后台 overlap，避免 GPU 等数据。
-- **多卡训练用 `MirroredStrategy`，多机用 `MultiWorkerMirroredStrategy`**：在 `strategy.scope()` 内建变量与模型即自动镜像 + all-reduce。
+- **多卡训练用 `MirroredStrategy`，多机用 `MultiWorkerMirroredStrategy`**：在 `strategy.scope` 内建变量与模型即自动镜像 + all-reduce。
 
 ## 常见误区
 
 - **"TF2 没有图了"**：错。图仍是核心，只是从 TF1 显式 `Session`/`placeholder` 变成 tf.function **追踪**出的隐式图；生产/部署仍走图。
 - **"eager 和图性能一样"**：错。eager 无跨 op 优化、逐次付 Python 开销；图经 Grappler/XLA 优化，热路径差距明显。
 - **"tf.Variable 是一种张量"**：不准确。Variable 是**有状态的资源句柄**（`resource_variable_ops.py:377` `BaseResourceVariable`），读它才产出张量；它能跨调用持久、可被 assign 原地更新，张量则不可变。
-- **"GradientTape 会自动追踪所有变量"**：默认追踪被"读"到的 `tf.Variable`，但常量张量需显式 `tape.watch()`；`watch_accessed_variables=False`（`backprop.py:763`）可关掉自动追踪。
+- **"GradientTape 会自动追踪所有变量"**：默认追踪被"读"到的 `tf.Variable`，但常量张量需显式 `tape.watch`；`watch_accessed_variables=False`（`backprop.py:763`）可关掉自动追踪。
 - **"Grappler / XLA 总是更快"**：不一定。小图、动态形状、频繁重追踪场景下编译开销可能盖过收益，需按工作负载实测。
 
 ## 一句话总纲

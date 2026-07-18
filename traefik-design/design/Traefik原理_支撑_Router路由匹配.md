@@ -1,12 +1,12 @@
 # Traefik 核心原理 · 支撑能力域 · Router 路由匹配
 
-> **定位**：数据面的**定位能力域**。Router 决定一个进入 EntryPoint 的请求走哪条路径——用 `rule` 布尔表达式（`Host()`/`Path()`/`Header()`… 以 `&&`/`||`/`!` 组合）匹配，用 `priority` 在多命中时裁决。Router 定义在动态配置里（`pkg/config/dynamic/http_config.go:84`），匹配引擎是 `Muxer`（`pkg/muxer/http/muxer.go`），规则解析基于 `vulcand/predicate`（`pkg/rules/parser.go`）。核实基准：本地源码 `traefik/v3`。
+> **定位**：数据面的**定位能力域**。Router 决定一个进入 EntryPoint 的请求走哪条路径——用 `rule` 布尔表达式（`Host`/`Path`/`Header`… 以 `&&`/`||`/`!` 组合）匹配，用 `priority` 在多命中时裁决。Router 定义在动态配置里（`pkg/config/dynamic/http_config.go:84`），匹配引擎是 `Muxer`（`pkg/muxer/http/muxer.go`），规则解析基于 `vulcand/predicate`（`pkg/rules/parser.go`）。核实基准：本地源码 `traefik/v3`。
 
 ## 一、rule 语法：匹配器 + 布尔组合，编译成匹配树
 
 ![规则语法](Traefik原理_Router_01规则语法.svg)
 
-一条 `rule` 是布尔表达式，如 `Host(...) && (PathPrefix(/v1) || PathPrefix(/v2)) && !Header(X-Debug,1)`。`NewParser(matchers)`（`parser.go:31`）用 `vulcand/predicate` 把它解析成 AST，再编译成 `matchersTree`（`muxer.go:236`）；请求到来时 `match()` 自顶向下短路求值（`muxer.go:248`）。v3 匹配器目录（`matcher.go:17-26`）：**Host、HostRegexp、Path、PathRegexp、PathPrefix、Header、HeaderRegexp、Query、QueryRegexp、Method、ClientIP**。v2 旧语法（`matcher_v2.go`）仍兼容但已弃用，`Router.RuleSyntax` 可显式选版本（`http_config.go:84`，该字段标注 Deprecated）。
+一条 `rule` 是布尔表达式，如 `Host(...) && (PathPrefix(/v1) || PathPrefix(/v2)) && !Header(X-Debug,1)`。`NewParser(matchers)`（`parser.go:31`）用 `vulcand/predicate` 把它解析成 AST，再编译成 `matchersTree`（`muxer.go:236`）；请求到来时 `match` 自顶向下短路求值（`muxer.go:248`）。v3 匹配器目录（`matcher.go:17-26`）：**Host、HostRegexp、Path、PathRegexp、PathPrefix、Header、HeaderRegexp、Query、QueryRegexp、Method、ClientIP**。v2 旧语法（`matcher_v2.go`）仍兼容但已弃用，`Router.RuleSyntax` 可显式选版本（`http_config.go:84`，该字段标注 Deprecated）。
 
 ## 二、优先级：默认 len(rule)，越具体越优先
 

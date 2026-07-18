@@ -8,7 +8,7 @@
 
 `FileSystem`（`hadoop-common-project/hadoop-common/src/main/java/org/apache/hadoop/fs/FileSystem.java:172`）是抽象基类，定义统一文件操作契约。`FileSystem.get(conf)`（`:268`）按 URI scheme（`hdfs://` / `file://` / `s3a://`）从配置查实现类并实例化，且带一层进程级 `CACHE`（`:205`）复用连接。
 
-HDFS 的实现是 `DistributedFileSystem`（`hadoop-hdfs-project/hadoop-hdfs-client/src/main/java/org/apache/hadoop/hdfs/DistributedFileSystem.java:154`，`getScheme:178` 返回 `hdfs`）。它自己不实现协议，而是**委托内部的 `DFSClient`**（`:160` 持有 `DFSClient dfs`）。`create()`（`:603`）与 `open()`（`:340`）都转成 `DFSClient` 调用。`DFSClient`（`hadoop-hdfs-client/.../DFSClient.java:215`）通过 `ClientProtocol namenode`（`:222`）这个 RPC 代理与 NameNode 通信，`getLocatedBlocks`（`:907`）取块位置。
+HDFS 的实现是 `DistributedFileSystem`（`hadoop-hdfs-project/hadoop-hdfs-client/src/main/java/org/apache/hadoop/hdfs/DistributedFileSystem.java:154`，`getScheme:178` 返回 `hdfs`）。它自己不实现协议，而是**委托内部的 `DFSClient`**（`:160` 持有 `DFSClient dfs`）。`create`（`:603`）与 `open`（`:340`）都转成 `DFSClient` 调用。`DFSClient`（`hadoop-hdfs-client/.../DFSClient.java:215`）通过 `ClientProtocol namenode`（`:222`）这个 RPC 代理与 NameNode 通信，`getLocatedBlocks`（`:907`）取块位置。
 
 ## fs shell 与 ClientProtocol RPC
 
@@ -30,7 +30,7 @@ HDFS 的实现是 `DistributedFileSystem`（`hadoop-hdfs-project/hadoop-hdfs-cli
 
 ## 调优要点
 
-- **复用 FileSystem 实例**：`FileSystem.get` 有 `CACHE`，同 URI+conf 返回同一实例；频繁 `newInstance` 会泄漏连接。用完 `close()` 或用带 disable-cache 配置隔离。
+- **复用 FileSystem 实例**：`FileSystem.get` 有 `CACHE`，同 URI+conf 返回同一实例；频繁 `newInstance` 会泄漏连接。用完 `close` 或用带 disable-cache 配置隔离。
 - **fs shell 批量操作合并**：逐文件 `-put` 每次一次 RPC；用 `-put` 一个目录或 `distcp` 并行，减少 NameNode RPC 压力。
 - **短路读（short-circuit）**：client 与 DataNode 同机时开 `dfs.client.read.shortcircuit`，绕过 TCP 直接读本地块文件。
 

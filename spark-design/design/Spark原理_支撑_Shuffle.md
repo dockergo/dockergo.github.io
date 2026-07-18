@@ -30,7 +30,7 @@
 
 ![reduce 端读](Spark原理_Shuffle_03reduce读.svg)
 
-reduce task 通过 `BlockStoreShuffleReader`（`read()`，`BlockStoreShuffleReader.scala:72`）读数据：`ShuffleBlockFetcherIterator`（`storage/ShuffleBlockFetcherIterator.scala:86`）**并发拉取** map 输出块——本地块直读（`fetchLocalBlocks:580`）、远程块发请求（`sendRequest:264`），受 `maxBytesInFlight` 限流（防拉爆内存）。拉到的数据按需 `aggregator` 聚合、`keyOrdering` 排序（`ExternalSorter`，超内存 spill）。map 输出位置由 `MapOutputTracker`（`MapOutputTracker.scala`，driver 侧 Master 记录）告诉 reduce 端去哪拉。
+reduce task 通过 `BlockStoreShuffleReader`（`read`，`BlockStoreShuffleReader.scala:72`）读数据：`ShuffleBlockFetcherIterator`（`storage/ShuffleBlockFetcherIterator.scala:86`）**并发拉取** map 输出块——本地块直读（`fetchLocalBlocks:580`）、远程块发请求（`sendRequest:264`），受 `maxBytesInFlight` 限流（防拉爆内存）。拉到的数据按需 `aggregator` 聚合、`keyOrdering` 排序（`ExternalSorter`，超内存 spill）。map 输出位置由 `MapOutputTracker`（`MapOutputTracker.scala`，driver 侧 Master 记录）告诉 reduce 端去哪拉。
 
 ---
 

@@ -23,8 +23,8 @@
 
 ## 调优要点（关键开关）
 
-- 计时/基准务必 `torch.cuda.synchronize()`（异步）。
-- OOM 先看碎片：`empty_cache()`、`PYTORCH_CUDA_ALLOC_CONF=expandable_segments`。
+- 计时/基准务必 `torch.cuda.synchronize`（异步）。
+- OOM 先看碎片：`empty_cache`、`PYTORCH_CUDA_ALLOC_CONF=expandable_segments`。
 - 混合精度/更小 dtype 省显存；梯度检查点换显存。
 - `non_blocking=True` + pin_memory 重叠 H2D 传输。
 

@@ -6,7 +6,7 @@
 
 ![反向图](PyTorch原理_autograd引擎_01反向图.svg)
 
-前向经 Dispatcher 的 Autograd 层时：为可微算子创建一个 **Node（grad_fn）**、记住输入张量的 grad_fn 作 **next_edges**、输出张量的 grad_fn 指向这个 Node、存反向要用的 saved tensors。于是 `z=relu(x@W); loss=z.sum()` 建出 `SumBackward→ReluBackward→MmBackward` 的图，叶子（参数 W）挂 **AccumulateGrad** 把梯度写进 `.grad`（不需梯度的 x 不挂）。**图边算边连（define-by-run）**：控制流不同则每次图可不同、图默认反向后释放。saved tensors 是显存大头（checkpoint 用重算换显存），原地改被 saved 的张量会报错。
+前向经 Dispatcher 的 Autograd 层时：为可微算子创建一个 **Node（grad_fn）**、记住输入张量的 grad_fn 作 **next_edges**、输出张量的 grad_fn 指向这个 Node、存反向要用的 saved tensors。于是 `z=relu(x@W); loss=z.sum` 建出 `SumBackward→ReluBackward→MmBackward` 的图，叶子（参数 W）挂 **AccumulateGrad** 把梯度写进 `.grad`（不需梯度的 x 不挂）。**图边算边连（define-by-run）**：控制流不同则每次图可不同、图默认反向后释放。saved tensors 是显存大头（checkpoint 用重算换显存），原地改被 saved 的张量会报错。
 
 ---
 
@@ -45,7 +45,7 @@
 - **以为 backward 重跑前向**：它是沿已建图反向传播。
 - **以为图能反复用**：默认反向后释放，需 `retain_graph`。
 - **原地操作破坏图**：覆盖 saved 中间值 → backward 报错。
-- **非叶子想要 grad**：默认不留，需 `retain_grad()`。
+- **非叶子想要 grad**：默认不留，需 `retain_grad`。
 
 ---
 

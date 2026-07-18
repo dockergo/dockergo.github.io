@@ -6,7 +6,7 @@
 
 ![命名空间树与 INode](Hadoop原理_支撑_NameNode_01命名空间树.svg)
 
-`FSNamesystem`（`hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/server/namenode/FSNamesystem.java:389`）是命名空间的容器与并发协调者，持有三大件：目录树 `FSDirectory dir`（`:553`）、块管理 `BlockManager blockManager`（`:554`）、租约管理 `LeaseManager leaseManager`（`:570`）。所有元数据读写经全局读写锁串行化（`dir.writeLock()`）。
+`FSNamesystem`（`hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/server/namenode/FSNamesystem.java:389`）是命名空间的容器与并发协调者，持有三大件：目录树 `FSDirectory dir`（`:553`）、块管理 `BlockManager blockManager`（`:554`）、租约管理 `LeaseManager leaseManager`（`:570`）。所有元数据读写经全局读写锁串行化（`dir.writeLock`）。
 
 `FSDirectory`（`FSDirectory.java:111`）维护 `INodeDirectory rootDir`（`:158`）为根的**全内存 INode 树**，并用 `INodeMap inodeMap`（`:166`）按 id 快速索引。文件是 `INodeFile`，持有它的块列表（`BlockInfo[]`）；目录是 `INodeDirectory`。`startFile`（`FSNamesystem.java:2760`→`startFileInt:2781`）创建文件时建 `INodeFile`、授租约、写 EditLog。
 

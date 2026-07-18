@@ -4,19 +4,26 @@
     <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
   </defs>
   <rect width="1080" height="800" fill="#fbfbfd"/>
+  <rect x="0" y="0" width="1080" height="58" fill="none" stroke="none" data-tid="vLLM原理_全景主线框架" data-lab="全景主线框架"/>
 
   <!-- 标题条 (0,0,1080,58) -->
   <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">vLLM 总架构图 —— LLM 推理引擎：分块 KV 缓存 + 连续批处理，让 GPU 满载生成 token</text>
-  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">位置即语义：顶接触面(LLM/server)·中 EngineCore step 循环(调度→前向→采样)·核心分块 KV·底能力域 · 点击任意模块下钻</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">顶接触面(LLM/server)·中 EngineCore step 循环(调度→前向→采样)·核心分块 KV·底能力域 · 点击任意模块下钻</text>
 
   <!-- ① 接触面 (30,92,1020,58) purple -->
-  <rect x="30" y="92" width="1020" height="58" rx="13" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <rect x="30" y="92" width="1020" height="58" rx="13" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)" data-tid="vLLM原理_接触面_入口与API" data-lab="接触面 · 入口与 API"/>
   <text x="50" y="116" font-size="12.5" font-weight="600" fill="#4a2c6f">接触面 · 离线 LLM 类（批量 generate） + OpenAI 兼容 server（在线 HTTP）+ SamplingParams</text>
   <text x="50" y="137" font-size="10" fill="#7a5aa0">llm.generate(prompts) ｜ POST /v1/chat/completions ｜ temperature/top_p/top_k/max_tokens 控制生成</text>
 
+  <!-- 数据流·接触面→EngineCore：请求入队 / 结果回流 -->
+  <path d="M195,150 L195,169" stroke="#9aa2b1" stroke-width="1.9" fill="none" marker-end="url(#ar)"/>
+  <text x="205" y="165" font-size="8" fill="#8a8a90">请求经 input_queue 入队 → schedule 选批</text>
+  <path d="M885,169 L885,150" stroke="#b8b8bf" stroke-width="1.3" stroke-dasharray="4 3" fill="none" marker-end="url(#ar)"/>
+  <text x="770" y="165" font-size="8" fill="#a1a1a6">结果经 output_queue 异步回流前端</text>
+
   <!-- ② EngineCore step 循环 (30,172,1020,116) green -->
-  <rect x="30" y="172" width="1020" height="116" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
-  <text x="50" y="196" font-size="12.5" font-weight="600" fill="#12402a">EngineCore · step() busy loop（可独立进程,与前端异步通信）</text>
+  <rect x="30" y="172" width="1020" height="116" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)" data-tid="vLLM原理_支撑_EngineCore执行循环" data-lab="EngineCore 执行循环"/>
+  <text x="50" y="196" font-size="12.5" font-weight="600" fill="#12402a">EngineCore · step busy loop（可独立进程,与前端异步通信）</text>
   <!-- 三步 -->
   <rect x="50" y="210" width="290" height="62" rx="9" fill="#ffffff" stroke="#bfe0cd"/>
   <text x="195" y="234" font-size="11" font-weight="600" text-anchor="middle" fill="#12402a">① schedule 调度选批</text>
@@ -35,37 +42,51 @@
   <!-- loop back arrow -->
   <path d="M885,272 L885,282 L195,282 L195,272" stroke="#bcd0ec" stroke-width="1.3" fill="none" marker-end="url(#ar)"/>
 
+  <!-- 数据流·EngineCore→KV：前向读写分块 KV -->
+  <path d="M540,288 L540,304" stroke="#9aa2b1" stroke-width="1.9" fill="none" marker-end="url(#ar)"/>
+  <text x="552" y="301" font-size="8" fill="#8a8a90">execute_model 前向：按块表 gather KV · reshape_and_cache 写块</text>
+
   <!-- ③ 核心分块 KV 带 (30,306,1020,70) amber -->
-  <rect x="30" y="306" width="1020" height="70" rx="12" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <rect x="30" y="306" width="1020" height="70" rx="12" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)" data-tid="vLLM原理_支撑_PagedAttention与KV缓存" data-lab="PagedAttention 与 KV 缓存"/>
   <text x="50" y="332" font-size="12" font-weight="600" fill="#5a3410">PagedAttention 与 KV 缓存 · vLLM 的灵魂(中心资源)</text>
   <text x="50" y="354" font-size="9.5" fill="#93762e">KV 缓存切成固定块(默认 16 token/块,像 OS 分页)· 块表映射逻辑→物理块 · 按需分配、物理分散、可共享 · reshape_and_cache 写块</text>
   <text x="50" y="370" font-size="9" fill="#b1974e">显存利用率从 ~20% 提到接近满 → 同显存装更多并发请求 → 吞吐倍增 · 默认 FlashAttention 后端按块表 gather KV</text>
 
   <!-- ④~⑦ 底部能力域带 y=400 h=92 -->
   <!-- 块管理与前缀缓存 (30,400,245,92) -->
-  <rect x="30" y="400" width="245" height="92" rx="12" fill="#ffffff" stroke="#e4e4ea" filter="url(#soft)"/>
+  <rect x="30" y="400" width="245" height="92" rx="12" fill="#ffffff" stroke="#e4e4ea" filter="url(#soft)" data-tid="vLLM原理_支撑_块管理与前缀缓存" data-lab="块管理与前缀缓存"/>
   <text x="152" y="426" font-size="11" font-weight="600" text-anchor="middle" fill="#1d1d1f">块管理与前缀缓存</text>
   <text x="152" y="448" font-size="8.5" text-anchor="middle" fill="#6e6e73">BlockPool 分配/回收</text>
   <text x="152" y="464" font-size="8.5" text-anchor="middle" fill="#6e6e73">引用计数共享块</text>
   <text x="152" y="480" font-size="8.5" text-anchor="middle" fill="#86868b">hash 前缀复用</text>
   <!-- 连续批处理调度 (285,400,245,92) -->
-  <rect x="285" y="400" width="245" height="92" rx="12" fill="#ffffff" stroke="#e4e4ea" filter="url(#soft)"/>
+  <rect x="285" y="400" width="245" height="92" rx="12" fill="#ffffff" stroke="#e4e4ea" filter="url(#soft)" data-tid="vLLM原理_支撑_连续批处理调度" data-lab="连续批处理调度"/>
   <text x="407" y="426" font-size="11" font-weight="600" text-anchor="middle" fill="#1d1d1f">连续批处理调度</text>
   <text x="407" y="448" font-size="8.5" text-anchor="middle" fill="#6e6e73">每步重组批 GPU 满载</text>
   <text x="407" y="464" font-size="8.5" text-anchor="middle" fill="#6e6e73">token 预算 + chunked prefill</text>
   <text x="407" y="480" font-size="8.5" text-anchor="middle" fill="#86868b">重算式抢占</text>
   <!-- 采样 (540,400,245,92) -->
-  <rect x="540" y="400" width="245" height="92" rx="12" fill="#ffffff" stroke="#e4e4ea" filter="url(#soft)"/>
+  <rect x="540" y="400" width="245" height="92" rx="12" fill="#ffffff" stroke="#e4e4ea" filter="url(#soft)" data-tid="vLLM原理_支撑_采样" data-lab="采样"/>
   <text x="662" y="426" font-size="11" font-weight="600" text-anchor="middle" fill="#1d1d1f">采样</text>
   <text x="662" y="448" font-size="8.5" text-anchor="middle" fill="#6e6e73">logits→token</text>
   <text x="662" y="464" font-size="8.5" text-anchor="middle" fill="#6e6e73">greedy / random</text>
   <text x="662" y="480" font-size="8.5" text-anchor="middle" fill="#86868b">temperature/top_p/top_k</text>
   <!-- 分布式并行 (795,400,255,92) -->
-  <rect x="795" y="400" width="255" height="92" rx="12" fill="#ffffff" stroke="#e4e4ea" filter="url(#soft)"/>
+  <rect x="795" y="400" width="255" height="92" rx="12" fill="#ffffff" stroke="#e4e4ea" filter="url(#soft)" data-tid="vLLM原理_支撑_分布式并行" data-lab="分布式并行(TP/PP)"/>
   <text x="922" y="426" font-size="11" font-weight="600" text-anchor="middle" fill="#1d1d1f">分布式并行(TP/PP)</text>
   <text x="922" y="448" font-size="8.5" text-anchor="middle" fill="#6e6e73">TP 切层内 all-reduce</text>
   <text x="922" y="464" font-size="8.5" text-anchor="middle" fill="#6e6e73">PP 切层间传激活</text>
   <text x="922" y="480" font-size="8.5" text-anchor="middle" fill="#86868b">切大模型上多卡</text>
+
+  <!-- 结构耦合·KV 为中心资源,双向横切底部能力域(各域读/写/依赖 KV 块) -->
+  <path d="M110,399 L110,379" stroke="#a9a9b2" stroke-width="1.3" stroke-dasharray="4 3" fill="none" marker-start="url(#ar)" marker-end="url(#ar)"/>
+  <text x="180" y="391" font-size="7.6" text-anchor="middle" fill="#93762e">分配/回收 · 引用计数共享块</text>
+  <path d="M350,399 L350,379" stroke="#a9a9b2" stroke-width="1.3" stroke-dasharray="4 3" fill="none" marker-start="url(#ar)" marker-end="url(#ar)"/>
+  <text x="432" y="391" font-size="7.6" text-anchor="middle" fill="#93762e">按可用块数决定收批 / 抢占</text>
+  <path d="M580,399 L580,379" stroke="#a9a9b2" stroke-width="1.3" stroke-dasharray="4 3" fill="none" marker-start="url(#ar)" marker-end="url(#ar)"/>
+  <text x="688" y="391" font-size="7.6" text-anchor="middle" fill="#93762e">采样出的 token 追加写回 KV(下一步)</text>
+  <path d="M850,399 L850,379" stroke="#a9a9b2" stroke-width="1.3" stroke-dasharray="4 3" fill="none" marker-start="url(#ar)" marker-end="url(#ar)"/>
+  <text x="935" y="391" font-size="7.6" text-anchor="middle" fill="#93762e">多卡各存自己那份 KV 分片</text>
 
   <!-- 贯穿层 (30,514,1020,52) red -->
   <rect x="30" y="514" width="1020" height="52" rx="12" fill="#fbeaea" stroke="#e6b8b8" filter="url(#soft)"/>
@@ -103,5 +124,5 @@
     <text x="746" y="750" font-size="8.5" fill="#7a9dcb">KV 太大,重算比换出换入更快</text>
   </g>
 
-  <text x="30" y="788" font-size="9" fill="#a1a1a6">源码基准 vLLM(git 7aab6e2 · v1-only) · Python + CUDA · 位置即语义:顶接触面→中 step 循环→核心分块 KV→底能力域,KV 块贯穿全程</text>
+  <text x="30" y="788" font-size="9" fill="#a1a1a6">源码基准 vLLM(git 7aab6e2 · v1-only) · Python + CUDA · 顶接触面→中 step 循环→核心分块 KV→底能力域,KV 块贯穿全程</text>
 </svg>

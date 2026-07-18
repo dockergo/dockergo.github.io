@@ -39,8 +39,8 @@ FTE 调度器为每个 stage partition 建一个 `StagePartition`，`remainingAt
 
 TASK 策略下，stage 间数据不走流式直连，而经 **ExchangeManager SPI**（引擎内部叫 spooling exchange）落到外部存储：
 
-- 上游 task 经 `ExchangeSink.add(partition, Slice)` 写；`FileSystemExchangeSink` 把每分区写成 `.data` 文件，`finish()` 时落 `committed` 标记。
-- 下游经 `ExchangeSource.read()` 读；**忽略无 `committed` 标记的目录**——这是去重关键：某 task 重试产生的多份输出，只有 committed 的那份被读。
+- 上游 task 经 `ExchangeSink.add(partition, Slice)` 写；`FileSystemExchangeSink` 把每分区写成 `.data` 文件，`finish` 时落 `committed` 标记。
+- 下游经 `ExchangeSource.read` 读；**忽略无 `committed` 标记的目录**——这是去重关键：某 task 重试产生的多份输出，只有 committed 的那份被读。
 - `ExchangeManagerRegistry` 从 `exchange-manager.properties` 加载（`filesystem`/S3）；未配则 `EXCHANGE_MANAGER_NOT_CONFIGURED`——**FTE-TASK 必须配 exchange-manager**。
 
 ---

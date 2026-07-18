@@ -39,7 +39,7 @@ packet 发出后移入 `ackQueue` 等确认。DataNode 侧 `PacketResponder`（`
 ## 常见误区
 
 - **误以为副本并行写**：是串行流水（DN1→DN2→DN3），不是 client 同时发 3 份。
-- **误以为 write() 返回即持久**：默认只入客户端缓冲；要 hflush/hsync 才保证到 DataNode/磁盘。
+- **误以为 write 返回即持久**：默认只入客户端缓冲；要 hflush/hsync 才保证到 DataNode/磁盘。
 - **误以为一个 DN 挂就写失败**：pipeline 会剔除坏节点继续，只要满足最小副本数（默认 1）即成功，欠副本后台补。
 
 ## 一句话总纲

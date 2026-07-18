@@ -45,7 +45,7 @@ eager 无图、无调度器：一个 op 一次 `EagerLocalExecute`（`eager/exec
 ## 常见误区
 
 - **"图执行是顺序跑节点"**：不是。是数据流并行——就绪节点并行执行，只受数据依赖约束。
-- **"eager 每步都同步等 GPU"**：默认异步下发到 stream，需要值时（如 .numpy()）才同步。
+- **"eager 每步都同步等 GPU"**：默认异步下发到 stream，需要值时（如 .numpy）才同步。
 - **"一个进程一个 Executor"**：每个设备（分区）一个 Executor，跨设备靠 Send/Recv 协作。
 - **"Executor 决定 kernel 怎么算"**：不。Executor 只编排顺序/并行，真正算的是 OpKernel::Compute。
 

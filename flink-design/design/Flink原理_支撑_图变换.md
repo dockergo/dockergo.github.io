@@ -2,7 +2,7 @@
 
 > **定位**：属"编译能力域"。管从用户 API 到可执行并行图的三级变换:StreamGraph → JobGraph(算子链化)→ ExecutionGraph(并行展开)。接收【接触面】的 transformation 列表、产出给【调度与部署】的物理图。源码基准 **Flink 2.x**(`flink-runtime/.../streaming/api/graph/`、`jobgraph/`、`executiongraph/`)。
 
-用户写的转换要变成"能在多台机器上并行跑、能容错"的物理执行图,中间隔着三级抽象。每一级降一层:逻辑 DAG → 优化过链化的作业图 → 按并行度展开的执行图。理解这三级,就理解了 Flink 怎么把 `map().keyBy().window()` 变成分布式任务。
+用户写的转换要变成"能在多台机器上并行跑、能容错"的物理执行图,中间隔着三级抽象。每一级降一层:逻辑 DAG → 优化过链化的作业图 → 按并行度展开的执行图。理解这三级,就理解了 Flink 怎么把 `map.keyBy.window` 变成分布式任务。
 
 ---
 
@@ -10,7 +10,7 @@
 
 ![Flink 三级图变换](Flink原理_图变换_01全景.svg)
 
-- **StreamGraph**(逻辑 DAG):`StreamGraphGenerator.generate()`(`streaming/api/graph/StreamGraphGenerator.java:253`)遍历 transformation 建图,`StreamGraph implements Pipeline, ExecutionPlan`(`StreamGraph.java:127`)。一个节点 = 一个逻辑算子。
+- **StreamGraph**(逻辑 DAG):`StreamGraphGenerator.generate`(`streaming/api/graph/StreamGraphGenerator.java:253`)遍历 transformation 建图,`StreamGraph implements Pipeline, ExecutionPlan`(`StreamGraph.java:127`)。一个节点 = 一个逻辑算子。
 - **JobGraph**(链化后的作业图):`StreamGraph.getJobGraph` → `StreamingJobGraphGenerator.createJobGraph`(`StreamGraph.java:1195`,`StreamingJobGraphGenerator.java:222`)。**算子链化**把可链的相邻算子合并成一个 `JobVertex`(减少线程/序列化开销)。
 - **ExecutionGraph**(并行展开):`DefaultExecutionGraphBuilder.buildGraph → attachJobGraph`(`DefaultExecutionGraphBuilder.java:77`,`DefaultExecutionGraph.java:867`)。每个 `JobVertex` 按并行度展开成 N 个 `ExecutionVertex`(`ExecutionJobVertex.java:216`),每次尝试是一个 `Execution`。这是 JobManager 调度的对象。
 

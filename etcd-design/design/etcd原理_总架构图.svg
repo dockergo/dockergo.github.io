@@ -3,48 +3,48 @@
   <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker></defs>
   <rect width="1080" height="720" fill="#fbfbfd"/>
   <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">总架构图：一次 Put 的完整生命（贯穿全库的示例）</text>
-  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">client → gRPC → Raft propose → 多数派 commit → WAL 落盘 → apply → MVCC → 唤醒返回 · 位置即语义</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">client → gRPC → Raft propose → 多数派 commit → WAL 落盘 → apply → MVCC → 唤醒返回 · </text>
   <!-- client -->
-  <rect x="40" y="72" width="150" height="54" rx="11" fill="#f6f2fb" stroke="#d9c9ec" filter="url(#soft)"/>
+  <rect x="40" y="72" width="150" height="54" rx="11" fill="#f6f2fb" stroke="#d9c9ec" filter="url(#soft)" data-tid="etcd原理_接触面_gRPC_API族" data-lab="client 入口"/>
   <text x="115" y="96" font-size="10.5" font-weight="700" fill="#3d2a5a" text-anchor="middle">client（etcdctl/</text>
   <text x="115" y="112" font-size="9" fill="#7a5da5" text-anchor="middle">clientv3/k8s）</text>
   <!-- leader node big box -->
   <rect x="215" y="66" width="600" height="560" rx="16" fill="#ffffff" stroke="#d0d0d6" filter="url(#soft)"/>
   <text x="235" y="90" font-size="12" font-weight="700" fill="#1d1d1f">etcd Leader 节点</text>
   <!-- grpc -->
-  <rect x="235" y="102" width="560" height="46" rx="9" fill="#f6f2fb" stroke="#d9c9ec"/>
+  <rect x="235" y="102" width="560" height="46" rx="9" fill="#f6f2fb" stroke="#d9c9ec" data-tid="etcd原理_接触面_gRPC_API族" data-lab="gRPC 服务"/>
   <text x="515" y="122" font-size="10" font-weight="700" fill="#3d2a5a" text-anchor="middle">① gRPC KV 服务（v3rpc）+ 拦截器链（认证 → 配额 → 校验）</text>
   <text x="515" y="138" font-size="8" fill="#9a7cc4" text-anchor="middle">server/etcdserver/api/v3rpc/key.go · grpc.go</text>
   <!-- etcdserver propose -->
-  <rect x="235" y="160" width="560" height="52" rx="9" fill="#eef3fb" stroke="#bcd0ec"/>
+  <rect x="235" y="160" width="560" height="52" rx="9" fill="#eef3fb" stroke="#bcd0ec" data-tid="etcd原理_支撑_Raft共识" data-lab="Propose"/>
   <text x="515" y="180" font-size="10" font-weight="700" fill="#1b2a4a" text-anchor="middle">② EtcdServer：编码 InternalRaftRequest → 提交给 Raft（Propose）</text>
   <text x="515" y="197" font-size="8" fill="#8aa6cf" text-anchor="middle">processInternalRaftRequestOnce · s.w.Register(id) 注册等待，阻塞到 apply</text>
   <!-- raft -->
-  <rect x="235" y="224" width="560" height="86" rx="10" fill="#e9f1fb" stroke="#c4d8f0"/>
+  <rect x="235" y="224" width="560" height="86" rx="10" fill="#e9f1fb" stroke="#c4d8f0" data-tid="etcd原理_支撑_Raft共识" data-lab="Raft 共识"/>
   <text x="515" y="244" font-size="10.5" font-weight="700" fill="#1b2a4a" text-anchor="middle">③ Raft 共识 ★灵魂（go.etcd.io/raft/v3）</text>
   <text x="255" y="264" font-size="8.5" fill="#5b7db1">· 追加到 leader 日志 → 通过 MsgApp 复制给 follower</text>
   <text x="255" y="280" font-size="8.5" fill="#5b7db1">· 收到多数派 ack → 该条目 committed（quorum = N/2+1）</text>
-  <text x="255" y="296" font-size="8.5" fill="#5b7db1">· Ready() 把 committed entries + 待持久化状态吐给上层</text>
+  <text x="255" y="296" font-size="8.5" fill="#5b7db1">· Ready 把 committed entries + 待持久化状态吐给上层</text>
   <!-- raftNode ready loop -->
-  <rect x="235" y="322" width="270" height="94" rx="10" fill="#fdf9f0" stroke="#efe3cd"/>
+  <rect x="235" y="322" width="270" height="94" rx="10" fill="#fdf9f0" stroke="#efe3cd" data-tid="etcd原理_支撑_WAL与快照" data-lab="Ready 循环"/>
   <text x="370" y="342" font-size="10" font-weight="700" fill="#7a5a1e" text-anchor="middle">④ raftNode Ready 循环</text>
   <text x="250" y="362" font-size="8.5" fill="#93762e">先写 WAL 落盘（fsync）</text>
   <text x="250" y="378" font-size="8.5" fill="#93762e">再发送消息给 peer</text>
   <text x="250" y="394" font-size="8.5" fill="#93762e">committed → 交 applier</text>
   <text x="250" y="408" font-size="7.5" fill="#b08843">raft.go：先持久化后应用</text>
   <!-- WAL -->
-  <rect x="525" y="322" width="270" height="94" rx="10" fill="#fdf6ea" stroke="#efdcb4"/>
+  <rect x="525" y="322" width="270" height="94" rx="10" fill="#fdf6ea" stroke="#efdcb4" data-tid="etcd原理_支撑_WAL与快照" data-lab="WAL"/>
   <text x="660" y="342" font-size="10" font-weight="700" fill="#5a3410" text-anchor="middle">WAL（预写日志）</text>
   <text x="540" y="362" font-size="8.5" fill="#93762e">append-only 分段文件</text>
   <text x="540" y="378" font-size="8.5" fill="#93762e">crash 后回放恢复</text>
   <text x="540" y="394" font-size="8" fill="#b08843">server/storage/wal/wal.go</text>
   <text x="540" y="408" font-size="7.5" fill="#b08843">fsync 延迟 = 写性能头号信号</text>
   <!-- applier -->
-  <rect x="235" y="428" width="560" height="50" rx="9" fill="#eef3fb" stroke="#bcd0ec"/>
+  <rect x="235" y="428" width="560" height="50" rx="9" fill="#eef3fb" stroke="#bcd0ec" data-tid="etcd原理_支撑_MVCC存储" data-lab="applier"/>
   <text x="515" y="448" font-size="10" font-weight="700" fill="#1b2a4a" text-anchor="middle">⑤ applier：按类型 apply（Put/Txn/Range/LeaseGrant/…）</text>
   <text x="515" y="465" font-size="8" fill="#8aa6cf" text-anchor="middle">apply/uber_applier.go · 持久化 consistentIndex 保证幂等</text>
   <!-- mvcc -->
-  <rect x="235" y="490" width="270" height="120" rx="10" fill="#fdf6ea" stroke="#efdcb4"/>
+  <rect x="235" y="490" width="270" height="120" rx="10" fill="#fdf6ea" stroke="#efdcb4" data-tid="etcd原理_支撑_MVCC存储" data-lab="MVCC 存储"/>
   <text x="370" y="510" font-size="10" font-weight="700" fill="#5a3410" text-anchor="middle">⑥ MVCC 存储</text>
   <text x="250" y="530" font-size="8.5" fill="#93762e">· currentRev++（单调递增）</text>
   <text x="250" y="546" font-size="8.5" fill="#93762e">· treeIndex：key→revisions</text>
@@ -52,7 +52,7 @@
   <text x="250" y="580" font-size="8" fill="#b08843">mvcc/kvstore_txn.go</text>
   <text x="250" y="596" font-size="8" fill="#b08843">backend batch tx → 批量刷盘</text>
   <!-- watch/lease notify -->
-  <rect x="525" y="490" width="270" height="120" rx="10" fill="#eafaf1" stroke="#bfe0cd"/>
+  <rect x="525" y="490" width="270" height="120" rx="10" fill="#eafaf1" stroke="#bfe0cd" data-tid="etcd原理_支撑_Watch机制" data-lab="变更通知"/>
   <text x="660" y="510" font-size="10" font-weight="700" fill="#12402a" text-anchor="middle">⑦ 变更通知</text>
   <text x="540" y="530" font-size="8.5" fill="#2f6f4f">· watchableStore.notify</text>
   <text x="540" y="546" font-size="8.5" fill="#2f6f4f">  按 revision 推 Watch 事件</text>
@@ -60,7 +60,7 @@
   <text x="540" y="580" font-size="8.5" fill="#2f6f4f">  唤醒②里阻塞的 client</text>
   <text x="540" y="598" font-size="8" fill="#4c8567">→ 返回 revision 给 client</text>
   <!-- followers -->
-  <rect x="840" y="200" width="210" height="150" rx="12" fill="#f7f7f9" stroke="#e0e0e4" filter="url(#soft)"/>
+  <rect x="840" y="200" width="210" height="150" rx="12" fill="#f7f7f9" stroke="#e0e0e4" filter="url(#soft)" data-tid="etcd原理_支撑_成员与集群" data-lab="Follower 副本"/>
   <text x="945" y="222" font-size="10.5" font-weight="700" fill="#48484c" text-anchor="middle">Follower ×(N-1)</text>
   <text x="945" y="244" font-size="8.5" fill="#6e6e73" text-anchor="middle">收 MsgApp → 写日志</text>
   <text x="945" y="260" font-size="8.5" fill="#6e6e73" text-anchor="middle">→ 回 ack</text>
@@ -68,6 +68,39 @@
   <text x="945" y="300" font-size="8.5" fill="#6e6e73" text-anchor="middle">MVCC（全量副本）</text>
   <text x="945" y="322" font-size="8" fill="#a1a1a6" text-anchor="middle">每成员存全量数据</text>
   <text x="945" y="338" font-size="8" fill="#a1a1a6" text-anchor="middle">不分片</text>
+  <!-- 认证与权限（入口拦截器） -->
+  <rect x="40" y="150" width="150" height="66" rx="11" fill="#fdf2f2" stroke="#eccaca" filter="url(#soft)" data-tid="etcd原理_支撑_认证与权限" data-lab="认证/RBAC"/>
+  <text x="115" y="171" font-size="10" font-weight="700" fill="#7a2e2e" text-anchor="middle">认证与权限</text>
+  <text x="50" y="188" font-size="8" fill="#a05656">· simpleToken/JWT 鉴权</text>
+  <text x="50" y="202" font-size="8" fill="#a05656">· RBAC：role → 权限区间</text>
+  <text x="50" y="212" font-size="7.5" fill="#c08a8a">auth/store.go（拦截器内）</text>
+  <!-- backend（boltdb）：MVCC/WAL 的底层存储 -->
+  <rect x="40" y="234" width="150" height="392" rx="12" fill="#f2f4f7" stroke="#d3dae4" filter="url(#soft)" data-tid="etcd原理_支撑_backend" data-lab="backend(boltdb)"/>
+  <text x="115" y="258" font-size="10" font-weight="700" fill="#33415c" text-anchor="middle">backend（boltdb）</text>
+  <text x="50" y="284" font-size="8.5" fill="#4a5a78">· 单文件 mmap B+tree</text>
+  <text x="50" y="306" font-size="8.5" fill="#4a5a78">· batchTx 批量写事务</text>
+  <text x="50" y="328" font-size="8.5" fill="#4a5a78">· 读事务并发只读快照</text>
+  <text x="50" y="350" font-size="8.5" fill="#4a5a78">· MVCC 的 KV 落这里</text>
+  <text x="50" y="372" font-size="8.5" fill="#4a5a78">· quota 空间配额守门</text>
+  <text x="50" y="398" font-size="8" fill="#6a7896">defrag 回收碎片</text>
+  <text x="50" y="600" font-size="8" fill="#8894ac">server/storage/backend</text>
+  <text x="50" y="616" font-size="7.5" fill="#a6b0c4">MVCC 与 WAL 之下的持久层</text>
+  <!-- 线性一致读 ReadIndex -->
+  <rect x="840" y="372" width="210" height="116" rx="12" fill="#eef8fb" stroke="#c4e0ec" filter="url(#soft)" data-tid="etcd原理_支撑_线性一致读" data-lab="线性一致读"/>
+  <text x="945" y="393" font-size="10" font-weight="700" fill="#1b4a5a" text-anchor="middle">线性一致读 ReadIndex</text>
+  <text x="852" y="412" font-size="8.5" fill="#2f6a7f">· 读先问 Raft 拿 commitIndex</text>
+  <text x="852" y="430" font-size="8.5" fill="#2f6a7f">· 等本地 apply 追上该 index</text>
+  <text x="852" y="448" font-size="8.5" fill="#2f6a7f">· 再读 MVCC，保证读到最新</text>
+  <text x="852" y="466" font-size="8.5" fill="#2f6a7f">· 串行读跳过、直读本地⑥</text>
+  <text x="852" y="482" font-size="8" fill="#5c92a6">etcdserver/v3_server.go</text>
+  <!-- Lease 租约 -->
+  <rect x="840" y="506" width="210" height="116" rx="12" fill="#fdfaef" stroke="#efe6c0" filter="url(#soft)" data-tid="etcd原理_支撑_Lease租约" data-lab="Lease 租约"/>
+  <text x="945" y="527" font-size="10" font-weight="700" fill="#6a5a1e" text-anchor="middle">Lease 租约</text>
+  <text x="852" y="546" font-size="8.5" fill="#8a742a">· Grant→TTL；KeepAlive 续期</text>
+  <text x="852" y="564" font-size="8.5" fill="#8a742a">· leader 最小堆检查过期</text>
+  <text x="852" y="582" font-size="8.5" fill="#8a742a">· 过期 → 删除挂靠的 key</text>
+  <text x="852" y="600" font-size="8.5" fill="#8a742a">· checkpoint 同步剩余 TTL</text>
+  <text x="852" y="616" font-size="8" fill="#ab9550">lease/lessor.go</text>
   <!-- flows -->
   <g stroke="#c7c7cc" stroke-width="1.4" fill="none">
     <line x1="190" y1="99" x2="235" y2="120" marker-end="url(#ar)"/>
@@ -85,7 +118,20 @@
     <line x1="515" y1="478" x2="370" y2="490" marker-end="url(#ar)"/>
     <line x1="515" y1="478" x2="660" y2="490" marker-end="url(#ar)"/>
   </g>
+  <!-- 支撑连线：拦截器鉴权 / boltdb 落盘 / Lease apply -->
+  <g stroke="#b58a8a" stroke-width="1.2" fill="none" stroke-dasharray="4 3">
+    <line x1="190" y1="175" x2="235" y2="132" marker-end="url(#ar)"/>
+  </g>
+  <text x="196" y="150" font-size="7.5" fill="#b58a8a">拦截器鉴权</text>
+  <g stroke="#8894ac" stroke-width="1.2" fill="none" stroke-dasharray="4 3">
+    <line x1="235" y1="545" x2="192" y2="430" marker-end="url(#ar)"/>
+  </g>
+  <text x="196" y="474" font-size="7.5" fill="#8894ac">boltdb 落盘</text>
+  <g stroke="#b0982e" stroke-width="1.2" fill="none" stroke-dasharray="4 3">
+    <line x1="840" y1="532" x2="797" y2="462" marker-end="url(#ar)"/>
+  </g>
+  <text x="800" y="500" font-size="7.5" fill="#b0982e">LeaseGrant apply</text>
   <text x="30" y="648" font-size="9.5" fill="#86868b">关键：③④之间"先写 WAL 再 apply"不可颠倒——保证 crash 后能回放；⑥的 consistentIndex 保证重启 apply 不重复。</text>
-  <text x="30" y="668" font-size="9.5" fill="#86868b">读路径（未画）：线性读经 ReadIndex（问 Raft 拿 commit index，等 apply 追上再读⑥）；串行读直接读⑥本地。</text>
+  <text x="30" y="668" font-size="9.5" fill="#86868b">读路径（见右）：线性读经 ReadIndex（问 Raft 拿 commit index，等 apply 追上再读⑥）；串行读直接读⑥本地。</text>
   <text x="30" y="694" font-size="9" fill="#a1a1a6">每个 follower 是对等的全量副本；leader 挂了由 Raft 选举产生新 leader，数据不丢（已 commit 的必在多数派）。</text>
 </svg>

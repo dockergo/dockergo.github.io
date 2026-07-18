@@ -18,7 +18,7 @@ Flush 是 LSM 从内存到磁盘的第一次落地：MemTable 写满转 immutabl
 
 ![RocksDB Flush 触发 · 多种触发源 + 后台线程](RocksDB原理_Flush_02触发调度.svg)
 
-触发 flush 的情形：MemTable 写满 `write_buffer_size`（最常见）；WAL 总大小超 `max_total_wal_size`（逼迫 flush 以释放老 WAL）；手动 `Flush()`；DB 关闭；`WriteBufferManager` 跨 CF 总内存超限。`FlushScheduler`（`db/flush_scheduler.cc`，无锁栈）记录需 flush 的 CF，后台线程池（`max_background_jobs`，与 Compaction 共享）取出执行。多个 CF 或多个 immutable 可并发 flush。
+触发 flush 的情形：MemTable 写满 `write_buffer_size`（最常见）；WAL 总大小超 `max_total_wal_size`（逼迫 flush 以释放老 WAL）；手动 `Flush`；DB 关闭；`WriteBufferManager` 跨 CF 总内存超限。`FlushScheduler`（`db/flush_scheduler.cc`，无锁栈）记录需 flush 的 CF，后台线程池（`max_background_jobs`，与 Compaction 共享）取出执行。多个 CF 或多个 immutable 可并发 flush。
 
 ## 深化 · Flush 与 WAL、Version 的联动
 

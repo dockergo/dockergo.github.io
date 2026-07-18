@@ -13,7 +13,7 @@ Rust 无 GC 也不手动 free——靠 **RAII(资源获取即初始化)+ Drop**:
 **Drop trait**(`library/core/src/ops/drop.rs:209`,`pub const trait Drop`,`#[lang="drop"]` `:206`):
 
 - 唯一方法 `fn drop(&mut self)`——owner 出作用域时**隐式**调用,回收资源(关文件、释放堆内存等)。
-- 不能显式调 `drop()`(E0040);要提前析构用 `mem::drop(x)`(move 进去、出其作用域即析构)。
+- 不能显式调 `drop`(E0040);要提前析构用 `mem::drop(x)`(move 进去、出其作用域即析构)。
 - **RAII**:资源(内存/文件/锁)绑定到值的生命周期——值在资源在,值 Drop 资源释放。无需手动 free/close。
 - 注意:Drop 中 panic + 正在 unwind → double-panic → abort(`drop.rs:221`)。
 
@@ -64,16 +64,16 @@ Drop 调用不是运行时 GC 扫描,而是**编译器在 MIR 插入**:
 - **RAII 封装资源**:自定义类型 impl Drop 管资源(连接/句柄),出作用域自动释放——比手动 close 安全。
 - **提前释放**:`drop(x)` 显式提前析构(释放锁/资源),不用等作用域结束。
 - **避免 Drop 中 panic**:double-panic 会 abort;Drop 里做可能 panic 的操作要小心。
-- **Copy vs Clone**:小值 impl Copy(隐式拷贝廉价);大值/含资源用 Clone(显式 .clone(),明确成本)。
+- **Copy vs Clone**:小值 impl Copy(隐式拷贝廉价);大值/含资源用 Clone(显式 .clone,明确成本)。
 
 ## 常见误区与工程要点
 
 - **误区:Rust 有 GC。** 无。靠 RAII/Drop——编译期在作用域结束插析构调用,确定性回收,无运行时 GC 扫描/停顿。
 - **误区:move 是运行时拷贝。** move 是编译期所有权转移;运行时可能 memcpy 或优化掉——语义是转移不是拷贝。
-- **误区:能显式调 .drop()。** 不能(E0040);用 mem::drop(x) 提前析构。
+- **误区:能显式调 .drop。** 不能(E0040);用 mem::drop(x) 提前析构。
 - **误区:Drop 顺序随意。** 逆声明序析构(后声明先 Drop),字段递归析构(drop glue);顺序确定。
 - **归属提醒**:所有权/move 的编译期强制在【借用检查器】;Drop 插入是【编译管线】MIR pass;智能指针(Box/Rc/Arc)的 Drop 行为在【智能指针】;Drop 中 panic 关联【panic 展开】。
 
 ## 一句话总纲
 
-**Rust 无 GC 靠 RAII + Drop:值绑定 owner,owner 出作用域编译器自动调 Drop::drop(#[lang=drop])析构回收资源(RAII,不能显式调用 drop()、用 mem::drop 提前);move 语义(非 Copy 类型赋值/传参转移所有权、原变量失效防 double-free,Copy 类型位拷贝例外)保证每值恰好一个析构点;Drop 调用由编译器 MIR pass(mir_drops_elaborated)在作用域结束处插入、resolve_drop_glue 合成递归析构——全编译期确定,运行时直接执行、无 GC 扫描无停顿,确定性析构零开销。**
+**Rust 无 GC 靠 RAII + Drop:值绑定 owner,owner 出作用域编译器自动调 Drop::drop(#[lang=drop])析构回收资源(RAII,不能显式调用 drop、用 mem::drop 提前);move 语义(非 Copy 类型赋值/传参转移所有权、原变量失效防 double-free,Copy 类型位拷贝例外)保证每值恰好一个析构点;Drop 调用由编译器 MIR pass(mir_drops_elaborated)在作用域结束处插入、resolve_drop_glue 合成递归析构——全编译期确定,运行时直接执行、无 GC 扫描无停顿,确定性析构零开销。**

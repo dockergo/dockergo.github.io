@@ -12,7 +12,7 @@
 
 - **处理时间**:算子墙上时钟,简单但不可重现(重跑结果不同)。
 - **事件时间**:数据自带的时间戳,可重现、能正确处理乱序——流计算首选。
-- **水位线 Watermark**(`flink-core/.../eventtime/Watermark.java:46`,`MAX_WATERMARK=Long.MAX_VALUE`):一条特殊标记,声明"事件时间已到 T,不再期待 < T 的数据"。由 `WatermarkGenerator`(`onEvent` + `onPeriodicEmit`,`WatermarkGenerator.java:32`)产生,`WatermarkStrategy`(`WatermarkStrategy.java:56`)配置:`forMonotonousTimestamps()`(严格递增)/`forBoundedOutOfOrderness(Duration)`(容忍固定乱序)/`noWatermarks()`。
+- **水位线 Watermark**(`flink-core/.../eventtime/Watermark.java:46`,`MAX_WATERMARK=Long.MAX_VALUE`):一条特殊标记,声明"事件时间已到 T,不再期待 < T 的数据"。由 `WatermarkGenerator`(`onEvent` + `onPeriodicEmit`,`WatermarkGenerator.java:32`)产生,`WatermarkStrategy`(`WatermarkStrategy.java:56`)配置:`forMonotonousTimestamps`(严格递增)/`forBoundedOutOfOrderness(Duration)`(容忍固定乱序)/`noWatermarks`。
 
 水位线随数据流传播,算子取所有输入通道水位线的**最小值**作为自己的事件时间——保证不漏早到的数据。
 
@@ -28,7 +28,7 @@
 - **Trigger**:决定窗口何时触发计算(`onEventTime`/`onProcessingTime` 触发 `emitWindowContents`,`:450,497`);事件时间窗口在水位线越过窗口结束时触发。
 - **窗口状态**:累积值存 keyed state(AppendingState),按 key + window 命名——所以窗口是有状态的,靠状态管理存、检查点保。
 
-`windowAssigner.isEventTime()` 决定走事件时间还是处理时间分支(`:519`)。
+`windowAssigner.isEventTime` 决定走事件时间还是处理时间分支(`:519`)。
 
 ---
 

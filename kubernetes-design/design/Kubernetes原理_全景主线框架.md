@@ -18,7 +18,7 @@ K8s 的外部**接触面**只有一个：**声明式 API 资源**——用户经
 
 ![reconcile贯穿环](Kubernetes原理_全景_03reconcile贯穿环.svg)
 
-**一切控制器都是同一个骨架**：`Informer` 经 Watch 把对象缓存到本地 `Indexer`（`shared_informer.go` Run:471 建 `DeltaFIFO`、Process:486 交 `HandleDeltas`），事件只是**唤醒**——把对象 key 塞进 `workqueue`（`deployment_controller.go` enqueue）；worker 从队列取 key（processNextWorkItem:487，`queue.Get()`:488），调 `syncHandler`（:494，即 `syncDeployment`:590）；syncHandler 读缓存里的**当前完整状态**、对比 `spec`、执行差异动作、写回 API Server；出错经 `handleErr`（:500）按指数退避 `AddRateLimited` 重入队（`maxRetries=15`:58），成功则 `Forget`。这叫 **level-triggered（水平触发）**：不关心"发生了什么事件"，只关心"现在和期望差多少"——丢事件不致命，下次 resync（`minimumResyncPeriod=1s`:579）会全量重算。这条环横切所有能力域，是 K8s 自愈、最终一致的本质。
+**一切控制器都是同一个骨架**：`Informer` 经 Watch 把对象缓存到本地 `Indexer`（`shared_informer.go` Run:471 建 `DeltaFIFO`、Process:486 交 `HandleDeltas`），事件只是**唤醒**——把对象 key 塞进 `workqueue`（`deployment_controller.go` enqueue）；worker 从队列取 key（processNextWorkItem:487，`queue.Get`:488），调 `syncHandler`（:494，即 `syncDeployment`:590）；syncHandler 读缓存里的**当前完整状态**、对比 `spec`、执行差异动作、写回 API Server；出错经 `handleErr`（:500）按指数退避 `AddRateLimited` 重入队（`maxRetries=15`:58），成功则 `Forget`。这叫 **level-triggered（水平触发）**：不关心"发生了什么事件"，只关心"现在和期望差多少"——丢事件不致命，下次 resync（`minimumResyncPeriod=1s`:579）会全量重算。这条环横切所有能力域，是 K8s 自愈、最终一致的本质。
 
 ## 四、依赖矩阵：接触面 × 能力域
 

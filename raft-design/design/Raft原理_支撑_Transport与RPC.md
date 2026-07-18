@@ -6,9 +6,9 @@
 
 ![传输抽象](Raft原理_支撑_Transport与RPC_01传输抽象.svg)
 
-**Transport 接口**（`transport.go:31`）：`Consumer()` 返回消费入站 RPC 的 channel；`AppendEntries`/`RequestVote`/`InstallSnapshot`/`TimeoutNow` 发出站 RPC；`AppendEntriesPipeline` 建流水线；`SetHeartbeatHandler` 装心跳快路径；`EncodePeer`/`DecodePeer` 编解码地址；`LocalAddr` 报本地址。另有可选扩展接口 `WithPreVote`（`:74`，声明支持预投票）、`WithClose`、`WithPeers`、`LoopbackTransport`（测试）。入站 RPC 用 `RPC.Respond(resp, err)`（`transport.go:25`）应答。
+**Transport 接口**（`transport.go:31`）：`Consumer` 返回消费入站 RPC 的 channel；`AppendEntries`/`RequestVote`/`InstallSnapshot`/`TimeoutNow` 发出站 RPC；`AppendEntriesPipeline` 建流水线；`SetHeartbeatHandler` 装心跳快路径；`EncodePeer`/`DecodePeer` 编解码地址；`LocalAddr` 报本地址。另有可选扩展接口 `WithPreVote`（`:74`，声明支持预投票）、`WithClose`、`WithPeers`、`LoopbackTransport`（测试）。入站 RPC 用 `RPC.Respond(resp, err)`（`transport.go:25`）应答。
 
-**5 类 RPC**（`commands.go`）：`AppendEntriesRequest`（`:27`，复制日志 + 心跳）、`RequestVoteRequest`（`:78`，拉票）、`RequestPreVoteRequest`（`:125`，预投票探路）、`InstallSnapshotRequest`（`:159`，推整快照）、`TimeoutNowRequest`（`:206`，触发领导权转移）。入站经 `Consumer()` channel → `processRPC`（`raft.go:1408`）分派到对应处理函数。
+**5 类 RPC**（`commands.go`）：`AppendEntriesRequest`（`:27`，复制日志 + 心跳）、`RequestVoteRequest`（`:78`，拉票）、`RequestPreVoteRequest`（`:125`，预投票探路）、`InstallSnapshotRequest`（`:159`，推整快照）、`TimeoutNowRequest`（`:206`，触发领导权转移）。入站经 `Consumer` channel → `processRPC`（`raft.go:1408`）分派到对应处理函数。
 
 **实现与优化**：`NetworkTransport`（`net_transport.go:81`）是通用实现，走 `StreamLayer`（`:179`）抽象；`TCPTransport`（`tcp_transport.go:67`）用 TCP StreamLayer 供生产；`InmemTransport` 是内存回环供测试。两项优化：① **Pipeline**——`AppendEntriesPipeline` 不等上一批 ACK 就连发，吃满高延迟链路带宽；② **心跳快路径**——`SetHeartbeatHandler` 让心跳绕过普通 RPC 队列，避免磁盘 IO 造成的队头阻塞（心跳延迟直接决定 lease 与选举稳定性）。
 

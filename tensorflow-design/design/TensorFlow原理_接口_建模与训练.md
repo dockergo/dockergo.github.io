@@ -6,7 +6,7 @@
 
 ![训练闭环](TensorFlow原理_建模训练_01训练闭环.svg)
 
-一步训练（`train_step`）：① **Keras Model/Layer** 组织权重——每个 layer 持有若干 `tf.Variable`，`model.trainable_variables` 汇总；② 在 `with tf.GradientTape() as tape` 内做前向 `y = model(x)`（`backprop.py:705` 的 GradientTape 边执行边把 op 录到磁带）；③ 算标量 `loss`；④ `tape.gradient(loss, vars)` 沿录制**逆序回放**求 `∂loss/∂w`；⑤ `optimizer.apply_gradients` 把梯度作用到权重（内部 `assign` 更新 Variable）。下一个 batch 重复，权重被逐步优化。整个 train_step 常用 `@tf.function` 包起来追踪成图提速。
+一步训练（`train_step`）：① **Keras Model/Layer** 组织权重——每个 layer 持有若干 `tf.Variable`，`model.trainable_variables` 汇总；② 在 `with tf.GradientTape as tape` 内做前向 `y = model(x)`（`backprop.py:705` 的 GradientTape 边执行边把 op 录到磁带）；③ 算标量 `loss`；④ `tape.gradient(loss, vars)` 沿录制**逆序回放**求 `∂loss/∂w`；⑤ `optimizer.apply_gradients` 把梯度作用到权重（内部 `assign` 更新 Variable）。下一个 batch 重复，权重被逐步优化。整个 train_step 常用 `@tf.function` 包起来追踪成图提速。
 
 ## 二、tf.data 输入管线：声明式变换 + 后台预取
 
@@ -30,7 +30,7 @@
 |---|---|---|
 | 高层 model.compile + model.fit | 标准监督训练 | Keras 内部就是 GradientTape train_step，省心 |
 | 自定义 GradientTape 循环 | GAN / 多优化器 / 自定义损失 | 完全掌控前向、梯度、更新时机 |
-| 分布式 strategy.run | 多卡/多机 | 在 strategy.scope() 内建模型，run 并行副本（见「分布式训练」） |
+| 分布式 strategy.run | 多卡/多机 | 在 strategy.scope 内建模型，run 并行副本（见「分布式训练」） |
 
 ## 调优要点
 
@@ -41,8 +41,8 @@
 
 ## 常见误区
 
-- **"GradientTape 会追踪所有东西"**：默认只追踪被读到的 `tf.Variable`；常量张量要 `tape.watch()`，或用 `watch_accessed_variables=False`（`backprop.py:763`）关闭自动追踪再手动 watch。
-- **"tape 可以反复 gradient"**：默认非持久，`gradient()` 调一次后资源即释放；要多次求梯度需 `persistent=True`。
+- **"GradientTape 会追踪所有东西"**：默认只追踪被读到的 `tf.Variable`；常量张量要 `tape.watch`，或用 `watch_accessed_variables=False`（`backprop.py:763`）关闭自动追踪再手动 watch。
+- **"tape 可以反复 gradient"**：默认非持久，`gradient` 调一次后资源即释放；要多次求梯度需 `persistent=True`。
 - **"model.fit 和自定义循环性能不同"**：底层都是同一套 train_step；fit 只是把循环写好了。
 - **"数据慢就换更快的硬盘"**：多数是管线没并行/没预取；先上 tf.data 的 map 并行 + prefetch。
 

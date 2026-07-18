@@ -17,11 +17,11 @@ vLLM 的世界观:**一切围绕"高效复用 GPU 显存里的 KV 缓存 + 让 G
 
 ---
 
-## 二、总架构图(位置即语义)
+## 二、总架构图
 
 ![vLLM 总架构图](vLLM原理_总架构图.svg)
 
-一次推理的数据流:**用户 prompt** → `LLM.generate`/OpenAI server(`entrypoints/`)→ **EngineCore**(`v1/engine/core.py:97`)的 `step()` 循环 → **Scheduler**(`v1/core/sched/scheduler.py:69`)选一批请求 + 分配 KV 块 → **Executor**(`v1/executor/`)→ **Worker/ModelRunner**(`v1/worker/gpu_model_runner.py`)跑模型前向 → **PagedAttention**(用分块 KV 缓存算注意力)→ **Sampler**(`v1/sample/sampler.py`)从 logits 采出 token → 回填、检查停止 → 未完成的请求下一步继续。KV 缓存由 **BlockPool**(`v1/core/block_pool.py`)分块管理,前缀相同的请求共享块。
+一次推理的数据流:**用户 prompt** → `LLM.generate`/OpenAI server(`entrypoints/`)→ **EngineCore**(`v1/engine/core.py:97`)的 `step` 循环 → **Scheduler**(`v1/core/sched/scheduler.py:69`)选一批请求 + 分配 KV 块 → **Executor**(`v1/executor/`)→ **Worker/ModelRunner**(`v1/worker/gpu_model_runner.py`)跑模型前向 → **PagedAttention**(用分块 KV 缓存算注意力)→ **Sampler**(`v1/sample/sampler.py`)从 logits 采出 token → 回填、检查停止 → 未完成的请求下一步继续。KV 缓存由 **BlockPool**(`v1/core/block_pool.py`)分块管理,前缀相同的请求共享块。
 
 ---
 

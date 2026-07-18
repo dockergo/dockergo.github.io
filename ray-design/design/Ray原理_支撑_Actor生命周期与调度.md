@@ -6,7 +6,7 @@
 
 ![Actor 集中调度出生](Ray原理_支撑_Actor生命周期与调度_01GCS调度出生.svg)
 
-一个 `Actor.remote()` 的出生链路横跨 CoreWorker 与 GCS：
+一个 `Actor.remote` 的出生链路横跨 CoreWorker 与 GCS：
 
 1. **注册**：CoreWorker `CreateActor`（`core_worker.cc:2076`）构建 **actor creation task**，先经 `GcsActorManager::HandleRegisterActor`（`gcs_actor_manager.cc:313`）→ `RegisterActor`（`:660`）把 actor 元数据落入 GCS 注册表，初始状态 `DEPENDENCIES_UNREADY`。
 2. **触发创建**：creation task 的依赖就绪后，`HandleCreateActor`（`:432`）→ `CreateActor`（`:794`）把状态推进到 `PENDING_CREATION`（`UpdateState`，`:855`），交给调度器。

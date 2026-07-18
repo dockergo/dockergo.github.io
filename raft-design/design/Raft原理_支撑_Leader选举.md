@@ -6,7 +6,7 @@
 
 ![状态机与投票](Raft原理_支撑_Leader选举_01状态机与投票.svg)
 
-**状态机**（`state.go:11-23`）：`Follower`(iota) / `Candidate` / `Leader`，由单线程 `run()`（`raft.go:136`）按当前状态分派到 `runFollower`(`:159`)/`runCandidate`(`:286`)/`runLeader`(`:469`)。Follower 在 `randomTimeout(HeartbeatTimeout)`（`:164`）内没收到 Leader 心跳就发起选举。
+**状态机**（`state.go:11-23`）：`Follower`(iota) / `Candidate` / `Leader`，由单线程 `run`（`raft.go:136`）按当前状态分派到 `runFollower`(`:159`)/`runCandidate`(`:286`)/`runLeader`(`:469`)。Follower 在 `randomTimeout(HeartbeatTimeout)`（`:164`）内没收到 Leader 心跳就发起选举。
 
 **PreVote（默认开）**：`runCandidate` 先调 `preElectSelf`（`raft.go:293-298`，`!preVoteDisabled && !candidateFromLeadershipTransfer`）——**不递增 term**，先向多数派探询“若我发起选举能否赢”。赢得 preVote 才真正 `electSelf`（`:1999`）：`term++`、转 Candidate、`persistVote` 先给自己投票（落盘）、向所有 `Voter` 并发发 `RequestVote`。得 `voters/2+1` 票即成为 Leader、立即发心跳压制其他候选人。
 

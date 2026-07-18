@@ -437,10 +437,10 @@ APP_JS = r"""
     var cur=root.getAttribute('data-theme')==='light'?'':'light';
     if(cur) root.setAttribute('data-theme',cur); else root.removeAttribute('data-theme');
     localStorage.setItem('hudi-atlas-theme',cur);
-    var b=document.getElementById('themeBtn'); if(b) b.textContent=cur==='light'?'☀ 浅色':'☾ 深色';
+    var b=document.getElementById('themeBtn'); if(b) b.textContent=cur==='light'?'☀':'☾';
   }
   var tb=document.getElementById('themeBtn');
-  if(tb){tb.onclick=toggleTheme; tb.textContent=root.getAttribute('data-theme')==='light'?'☀ 浅色':'☾ 深色';}
+  if(tb){tb.onclick=toggleTheme; tb.textContent=root.getAttribute('data-theme')==='light'?'☀':'☾';}
 
   var home=document.getElementById('home'), panes=document.getElementById('panes');
   function showHome(){home.style.display='block';panes.style.display='none';
@@ -505,7 +505,7 @@ def build_html():
 <header>
   <a class="logo" id="logo" href="../index.html" title="返回导航主页"><span class="homeico" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg></span></a>
   <div class="spacer"></div>
-  <button class="hbtn" id="themeBtn">☾ 深色</button>
+  <a href="https://github.com/apache/hudi" target="_blank" rel="noopener" title="GitHub 源码仓库" style="display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:9px;border:1px solid var(--c-line);color:var(--c-ink2);text-decoration:none;margin-right:8px"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.7.5.5 5.7.5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.2.8-.6v-2c-3.2.7-3.9-1.4-3.9-1.4-.5-1.3-1.3-1.7-1.3-1.7-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.7 1.3 3.4 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.8 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.3 1.2a11.4 11.4 0 0 1 6 0C17.3 4.7 18.3 5 18.3 5c.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.5-2.7 5.5-5.3 5.8.4.4.8 1.1.8 2.2v3.3c0 .4.2.7.8.6 4.6-1.5 7.9-5.8 7.9-10.9C23.5 5.7 18.3.5 12 .5z"/></svg></a><a href="https://hudi.apache.org" target="_blank" rel="noopener" title="项目官网" style="display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:9px;border:1px solid var(--c-line);color:var(--c-ink2);text-decoration:none;margin-right:8px"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0OCA0OCIgcm9sZT0iaW1nIj48dGl0bGU+QXBhY2hlIEh1ZGk8L3RpdGxlPjxkZWZzPjxsaW5lYXJHcmFkaWVudCBpZD0iaHUtZyIgeDE9IjAiIHkxPSIwIiB4Mj0iMCIgeTI9IjEiPjxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iIzJiYTZkZSIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzE4NzdjMCIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxyZWN0IHdpZHRoPSI0OCIgaGVpZ2h0PSI0OCIgcng9IjExIiBmaWxsPSJ1cmwoI2h1LWcpIi8+PHBhdGggZD0iTTExIDMzIFYxNSIgc3Ryb2tlPSIjYmRlNWZiIiBzdHJva2Utd2lkdGg9IjIuNCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBvcGFjaXR5PSIwLjgiLz48cGF0aCBkPSJNMTEgMzEgSDM2IiBzdHJva2U9IiNlYWY2ZmYiIHN0cm9rZS13aWR0aD0iMi40IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48Y2lyY2xlIGN4PSIxNyIgY3k9IjMxIiByPSIzLjQiIGZpbGw9IiNlYWY2ZmYiLz48Y2lyY2xlIGN4PSIyNS41IiBjeT0iMzEiIHI9IjMuNCIgZmlsbD0iI2VhZjZmZiIvPjxjaXJjbGUgY3g9IjM0IiBjeT0iMzEiIHI9IjMuOSIgZmlsbD0iI2ZmZmZmZiIvPjxyZWN0IHg9IjE0LjYiIHk9IjEyIiB3aWR0aD0iNSIgaGVpZ2h0PSI5IiByeD0iMS40IiBmaWxsPSIjZWFmNmZmIiBvcGFjaXR5PSIwLjkiLz48cmVjdCB4PSIyMyIgeT0iMTAiIHdpZHRoPSI1IiBoZWlnaHQ9IjExIiByeD0iMS40IiBmaWxsPSIjZWFmNmZmIi8+PHJlY3QgeD0iMzEuNCIgeT0iMTQiIHdpZHRoPSI1IiBoZWlnaHQ9IjciIHJ4PSIxLjQiIGZpbGw9IiNlYWY2ZmYiIG9wYWNpdHk9IjAuNzUiLz48L3N2Zz4K" width="18" height="18" alt="官网" style="display:block"/></a><button id="themeBtn" title="切换主题" aria-label="切换主题" style="width:38px;height:38px;border-radius:50%;border:1px solid var(--c-line);background:var(--c-panel);color:var(--c-ink2);cursor:pointer;display:inline-grid;place-items:center;font-size:16px;flex:none">☾</button>
 </header>
 <div class="wrap">
   <div id="home">

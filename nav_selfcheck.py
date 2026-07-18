@@ -57,6 +57,11 @@ def check(proj_dir):
     else:
         fails.append("no index.html")
 
+    # 判据 4b：热区容器无内边距（padding 会把底图推偏，热区百分比错位——见坑 C.5）
+    mp = re.search(r'\.arch-wrap\{[^}]*?padding:\s*([0-9]+)px', g)
+    if mp and mp.group(1) != "0":
+        fails.append(f".arch-wrap padding:{mp.group(1)}px≠0 (热区会错位)")
+
     # 判据 3：wrap 族 ARCH_W×H == svg viewBox
     mw = re.search(r'ARCH_W,\s*ARCH_H\s*=\s*(\d+),\s*(\d+)', g)
     mn = re.search(r'ARCH_SVG_NAME\s*=\s*"([^"]+)"', g)
@@ -72,11 +77,13 @@ def check(proj_dir):
             if vb and (vb.group(1), vb.group(2)) != (W, H):
                 fails.append(f"viewBox mismatch: decl {W}x{H} vs svg {vb.group(1)}x{vb.group(2)}")
 
-    # 判据 5：主线→可达 —— 每条 MAINLINES 主线都被某热区 mid 或 ALWAYS_CHIP 覆盖（否则架构图入口"失联"）
+    # 判据 5：主线→可达 —— 每条 MAINLINES 主线都被某热区或 ALWAYS_CHIP 覆盖（否则架构图入口"失联"）
     mains = set(re.findall(r'\(\s*"([^"]+原理[^"]*)"\s*,\s*"(?:pano|iface|support)"', g))
-    hs_block = re.search(r'ARCH_HOTSPOTS\s*=\s*\[(.*?)\]\s*\n', g, re.S)
+    # 兼容"热区自动派生"：以产物 index.html 实际渲染的 data-theme-id（热区+chip）判定覆盖，
+    # 不再仅依赖 gen.py 源码里的静态 ARCH_HOTSPOTS 列表（派生后已无此列表）。
     chip_block = re.search(r'ARCH_ALWAYS_CHIP\s*=\s*\[(.*?)\]', g, re.S)
-    covered = set()
+    covered = set(re.findall(r'data-(?:theme-id|mid|k|tid)="([^"]+原理[^"]*)"', t))
+    hs_block = re.search(r'ARCH_HOTSPOTS\s*=\s*\[(.*?)\]\s*\n', g, re.S)
     if hs_block:
         covered |= set(re.findall(r'"([^"]+原理[^"]*)"', hs_block.group(1)))
     if chip_block:

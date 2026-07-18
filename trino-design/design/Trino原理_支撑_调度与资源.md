@@ -10,7 +10,7 @@
 
 ![Trino Stage 调度 · 按 PartitioningHandle 选调度器](Trino原理_调度_01Stage调度.svg)
 
-`PipelinedQueryScheduler` 的 `DistributedStagesScheduler` 循环驱动每个 stage 的 `StageScheduler.schedule()`。**调度器按 fragment 的 `PartitioningHandle` 选择**（`createStageScheduler`）：
+`PipelinedQueryScheduler` 的 `DistributedStagesScheduler` 循环驱动每个 stage 的 `StageScheduler.schedule`。**调度器按 fragment 的 `PartitioningHandle` 选择**（`createStageScheduler`）：
 
 - `SOURCE_DISTRIBUTION` + 单源 → `SourcePartitionedScheduler`：拉 split 批、分配、task 数随 split/节点动态增长。
 - 全 remote source → `FixedCountScheduler`：task 数 = `NodePartitionMap` 大小（固定）。
@@ -40,9 +40,9 @@
 
 查询准入路径：`DispatchManager.createQueryInternal` 构建 `SelectionCriteria`（user/source/tags…）→ `resourceGroupManager.selectGroup` 匹配到 `ResourceGroupId` → `InternalResourceGroup.run(query)` 做**准入判定**：
 
-- 自底向上（本组→根）检查每个祖先的 `canQueueMore()` 与 `canRunMore()`。
+- 自底向上（本组→根）检查每个祖先的 `canQueueMore` 与 `canRunMore`。
 - `!canQueue && !canRun` → **拒绝**（`QueryQueueFullException`）；`canRun` → **立即跑**；否则 → **排队**。
-- 后台 100ms 刷新 `internalStartNext()`：`canRunMore()` 时从队列取下一个查询启动。
+- 后台 100ms 刷新 `internalStartNext`：`canRunMore` 时从队列取下一个查询启动。
 
 限额（`InternalResourceGroup`）：`hardConcurrencyLimit`（并发上限）、`maxQueuedQueries`（队列上限）、`softMemoryLimit`（超过则停新启动）、`hard/softCpuLimit`（软硬 CPU 限，之间线性收缩并发）。
 

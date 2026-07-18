@@ -18,7 +18,7 @@
 各处理器分工（配合总架构图第二节的贯穿示例）：
 
 - **PrepRequestProcessor**：请求预处理——校验路径/版本、`checkACL`（`PrepRequestProcessor.java` 各 case，如 create→CREATE `:664`、setData→WRITE `:383`）、把写请求转成幂等**事务**（记录变更前的 ChangeRecord，供后续处理器和回滚用）。
-- **ProposalRequestProcessor**（仅 Leader）：`processRequest`（`:68`）先把请求转 `nextProcessor`（=CommitProcessor，等提交，`:80`），若是写则调 `zks.getLeader().propose`（`:85`）广播，并交内嵌 `syncProcessor` 落盘计票（`:89`）。
+- **ProposalRequestProcessor**（仅 Leader）：`processRequest`（`:68`）先把请求转 `nextProcessor`（=CommitProcessor，等提交，`:80`），若是写则调 `zks.getLeader.propose`（`:85`）广播，并交内嵌 `syncProcessor` 落盘计票（`:89`）。
 - **SyncRequestProcessor**：把事务批量写 TxnLog（`flush` → `ZKDatabase.commit` `:235`），并周期触发快照（`shouldSnapshot` `:143`）——详见 [[事务日志与快照]]。
 - **CommitProcessor**（`CommitProcessor.java:77`）：双队列——`queuedRequests`（本地已排的请求 `:93`）与 `committedRequests`（ZAB 送回的 COMMIT `:114`）。它把两者对齐，保证写按全序放行、读看到已提交状态，是"本地顺序 ↔ 全局提交顺序"的汇合点。
 - **FinalRequestProcessor**：链尾——把已提交事务 `processTxn` apply 到 DataTree、组织响应、触发 watch、处理读请求（`case OpCode.getData/getChildren/addWatch` `FinalRequestProcessor.java:437`）。

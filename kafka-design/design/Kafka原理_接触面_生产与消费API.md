@@ -12,7 +12,7 @@
 
 `KafkaProducer.doSend`(`clients/.../producer/KafkaProducer.java:1127`)核心路径:等元数据 → 序列化 key/value → 算分区 → 追加到累积器 → 唤醒 Sender 线程。
 
-- **分区选择**(`partition()`,`:1627`):显式 `record.partition()` 优先;否则自定义 partitioner 插件;否则按 key 哈希(`BuiltInPartitioner.partitionForKey`);无 key 则累积器自适应粘性选择(`:1643`)。
+- **分区选择**(`partition`,`:1627`):显式 `record.partition` 优先;否则自定义 partitioner 插件;否则按 key 哈希(`BuiltInPartitioner.partitionForKey`);无 key 则累积器自适应粘性选择(`:1643`)。
 - **攒批**(`RecordAccumulator`):每分区一个 `Deque<ProducerBatch>`,`append` 往最后一个批追加(`:325`),满则从 `BufferPool` 分配 `batch.size`(默认 16384)缓冲建新批(`:335`)。攒批是吞吐关键——多条消息合并成一个批一次发。
 - **acks**(默认 `all`,`ProducerConfig.java:405`):写进 `ProduceRequest`;`acks=0` 时 fire-and-forget、Sender 本地完成批(不等响应)。Sender `drain` 后按 node 组请求发送(`Sender.java:418`)。
 
@@ -24,7 +24,7 @@
 
 `group.protocol` 选实现(`GroupProtocol{CLASSIC, CONSUMER}`,默认 CLASSIC):`CONSUMER` → `AsyncKafkaConsumer`(KIP-848);否则 `ClassicKafkaConsumer`(`ConsumerDelegateCreator.java:61`)。
 
-- **异步消费者 = 双线程事件模型**:应用线程 `poll()` 提交 `AsyncPollEvent`、循环 `pollForFetches`(`AsyncKafkaConsumer.java:933`);后台 `ConsumerNetworkThread.runOnce` 排空事件、驱动各 RequestManager 与网络(`ConsumerNetworkThread.java:210`)。
+- **异步消费者 = 双线程事件模型**:应用线程 `poll` 提交 `AsyncPollEvent`、循环 `pollForFetches`(`AsyncKafkaConsumer.java:933`);后台 `ConsumerNetworkThread.runOnce` 排空事件、驱动各 RequestManager 与网络(`ConsumerNetworkThread.java:210`)。
 - **拉取**:`FetchRequestManager` 备 fetch(`:105`),`AbstractFetch.createFetchRequest` 建请求带 fetch-session、`isolationLevel`(EOS 用 read_committed)、min/max bytes(`:310`)。
 - **位点提交**:`commitSync` → `SyncCommitEvent`,`commitAsync` → `AsyncCommitEvent`;后台 `CommitRequestManager` 建 `OffsetCommitRequest`、管自动提交(`enable.auto.commit`,`AutoCommitState`)。
 

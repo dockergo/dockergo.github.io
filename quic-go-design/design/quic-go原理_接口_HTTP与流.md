@@ -6,7 +6,7 @@
 
 ![http3 栈](quic-go原理_接口_HTTP与流_01http3栈.svg)
 
-服务端 `http3.Server`：`ListenAndServe()`（`server.go:177`）/`Serve()`（`:211`）/`ServeQUICConn()`（`:238`）→ `handleConn()`（`:470`）复用标准 `http.Handler`。客户端 `http3.Transport` 是 `http.RoundTripper`：`RoundTrip()`（`transport.go:289`）→ `dial()`（`:344`）建 QUIC 连接，`NewClientConn()`（`:434`）管理请求流。
+服务端 `http3.Server`：`ListenAndServe`（`server.go:177`）/`Serve`（`:211`）/`ServeQUICConn`（`:238`）→ `handleConn`（`:470`）复用标准 `http.Handler`。客户端 `http3.Transport` 是 `http.RoundTripper`：`RoundTrip`（`transport.go:289`）→ `dial`（`:344`）建 QUIC 连接，`NewClientConn`（`:434`）管理请求流。
 
 每个 HTTP 请求 = 一条 QUIC 双向流：先发 HEADERS 帧（`0x1`，头部经 QPACK 编码），再发若干 DATA 帧（`0x0`，请求/响应体）。连接级参数走单向控制流的 SETTINGS 帧（`0x4`，含 `MaxFieldSectionSize`、`ExtendedConnect 0x8`、`Datagram 0x33`），优雅关闭用 GOAWAY 帧（`0x7`）。帧类型用 varint 编码，保留类型 `0x2/0x6/0x8/0x9` 直接忽略（`frames.go:112`）。
 

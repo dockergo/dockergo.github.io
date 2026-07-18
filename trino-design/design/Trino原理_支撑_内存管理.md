@@ -18,7 +18,7 @@ Trino 483 的内存模型有一个关键简化：**每 worker 只有一个内存
 
 ![Trino 单池模型 · 无 reserved/system 池](Trino原理_内存_02单池模型.svg)
 
-`LocalMemoryManager` 在每 worker 建**一个无名 `MemoryPool`**，大小 = 可用内存 − heap headroom。`MemoryPool.reserve(bytes)` 为 `(TaskId, tag)` 预留，池满（`getFreeBytes() ≤ 0`）时返回阻塞 future；`reserveRevocable` 单独记可溢写内存。旧的 `general`/`reserved`/`system` 三池模型与 `MemoryPoolId` 已移除，相关配置标 `@DefunctConfig`（"general" 仅作 JMX 导出标签存活）。关键限额：`query.max-memory-per-node`（默认 30%）、`memory.heap-headroom-per-node`（默认 30%）。
+`LocalMemoryManager` 在每 worker 建**一个无名 `MemoryPool`**，大小 = 可用内存 − heap headroom。`MemoryPool.reserve(bytes)` 为 `(TaskId, tag)` 预留，池满（`getFreeBytes ≤ 0`）时返回阻塞 future；`reserveRevocable` 单独记可溢写内存。旧的 `general`/`reserved`/`system` 三池模型与 `MemoryPoolId` 已移除，相关配置标 `@DefunctConfig`（"general" 仅作 JMX 导出标签存活）。关键限额：`query.max-memory-per-node`（默认 30%）、`memory.heap-headroom-per-node`（默认 30%）。
 
 ---
 
@@ -26,7 +26,7 @@ Trino 483 的内存模型有一个关键简化：**每 worker 只有一个内存
 
 ![Trino 溢写 · 可溢写算子 revocable→disk](Trino原理_内存_03溢写.svg)
 
-可溢写算子（HashAggregation / HashBuilder(Join) / OrderBy / Window）用 **revocable 内存**申请空间。内存压力时框架调 `startMemoryRevoke()`，算子把 revocable 数据经 `Spiller`（`GenericSpiller` → `FileSingleStreamSpiller`）写到 `spiller-spill-path` 下的临时文件（可压缩/加密），随后回读归并；输出时把保留部分转记为 user 内存。`SpillSpaceTracker` 是节点级磁盘配额（超则 `OUT_OF_SPILL_SPACE`）。溢写让"内存装不下的聚合/Join/排序"仍能完成，代价是磁盘 IO。
+可溢写算子（HashAggregation / HashBuilder(Join) / OrderBy / Window）用 **revocable 内存**申请空间。内存压力时框架调 `startMemoryRevoke`，算子把 revocable 数据经 `Spiller`（`GenericSpiller` → `FileSingleStreamSpiller`）写到 `spiller-spill-path` 下的临时文件（可压缩/加密），随后回读归并；输出时把保留部分转记为 user 内存。`SpillSpaceTracker` 是节点级磁盘配额（超则 `OUT_OF_SPILL_SPACE`）。溢写让"内存装不下的聚合/Join/排序"仍能完成，代价是磁盘 IO。
 
 ---
 
@@ -34,7 +34,7 @@ Trino 483 的内存模型有一个关键简化：**每 worker 只有一个内存
 
 ![Trino OOM killer · ClusterMemoryManager 择一杀之](Trino原理_内存_04OOMkiller.svg)
 
-coordinator 侧 `ClusterMemoryManager.process()` 轮询各 worker 内存视图（`MemoryPoolInfo`），若集群 OOM（有 blocked 节点）且无查询已被限额杀，则调 `callOomKiller`——**先跑 task killer，再跑 query killer**（`ImmutableList.of(taskLowMemoryKiller, queryLowMemoryKiller)`，取首个非空目标）：
+coordinator 侧 `ClusterMemoryManager.process` 轮询各 worker 内存视图（`MemoryPoolInfo`），若集群 OOM（有 blocked 节点）且无查询已被限额杀，则调 `callOomKiller`——**先跑 task killer，再跑 query killer**（`ImmutableList.of(taskLowMemoryKiller, queryLowMemoryKiller)`，取首个非空目标）：
 
 - **Query killer**（默认 `TotalReservationOnBlockedNodesQueryLowMemoryKiller`）：只看 blocked 节点，杀其上总预留最大的查询（跳过 TASK 策略查询）。
 - **Task killer**（默认同名 Task 版）：仅对 FTE(TASK) 查询，在 blocked 节点上择大 task 杀（可重试）。

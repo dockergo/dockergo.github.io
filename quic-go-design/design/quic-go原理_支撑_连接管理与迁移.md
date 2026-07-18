@@ -6,9 +6,9 @@
 
 ![CID与路径](quic-go原理_支撑_连接管理与迁移_01CID与路径.svg)
 
-**两套 Connection ID**：本端签发的由 `connIDGenerator`（`conn_id_generator.go:46`）管理——`SetMaxActiveConnIDs()`（`:81`）按对端上限签发、`NEW_CONNECTION_ID` 帧下发、`Retire()`（`:99`）回收；应用可自定义 `ConnectionIDGenerator`（`interface.go:87`）用于负载均衡（LB 按 CID 路由到同一后端）。对端的 CID 由 `connIDManager`（`conn_id_manager.go:19`）管理——`Add()`（`:64`）收 `NEW_CONNECTION_ID` 帧入池、`Get()`（`:238`）取当前活跃 CID 作发包的目的 CID、`SentPacket()`（`:219`）计数；迁移或探测新路径时换用未用过的 CID，避免链路观察者靠固定 CID 关联用户。
+**两套 Connection ID**：本端签发的由 `connIDGenerator`（`conn_id_generator.go:46`）管理——`SetMaxActiveConnIDs`（`:81`）按对端上限签发、`NEW_CONNECTION_ID` 帧下发、`Retire`（`:99`）回收；应用可自定义 `ConnectionIDGenerator`（`interface.go:87`）用于负载均衡（LB 按 CID 路由到同一后端）。对端的 CID 由 `connIDManager`（`conn_id_manager.go:19`）管理——`Add`（`:64`）收 `NEW_CONNECTION_ID` 帧入池、`Get`（`:238`）取当前活跃 CID 作发包的目的 CID、`SentPacket`（`:219`）计数；迁移或探测新路径时换用未用过的 CID，避免链路观察者靠固定 CID 关联用户。
 
-**路径验证**（`path_manager.go:40`）：① 检测到来自新四元组的包（尚不可信）→ ② 发 `PATH_CHALLENGE`（含随机数据、`:136`）到新地址 → ③ 收 `PATH_RESPONSE` 原样回传随机数据（证明对端确在该地址）→ ④ 迁移完成、切换新路径。验证前对新路径同样受 3× 放大限制，防被用作反射放大攻击。`Conn.AddPath()`（`connection.go:3082`）支持应用主动在新 Transport 上加路径（多路径基础），主动迁移由 `path_manager_outgoing.go` 的 `pathManagerOutgoing` 驱动。
+**路径验证**（`path_manager.go:40`）：① 检测到来自新四元组的包（尚不可信）→ ② 发 `PATH_CHALLENGE`（含随机数据、`:136`）到新地址 → ③ 收 `PATH_RESPONSE` 原样回传随机数据（证明对端确在该地址）→ ④ 迁移完成、切换新路径。验证前对新路径同样受 3× 放大限制，防被用作反射放大攻击。`Conn.AddPath`（`connection.go:3082`）支持应用主动在新 Transport 上加路径（多路径基础），主动迁移由 `path_manager_outgoing.go` 的 `pathManagerOutgoing` 驱动。
 
 **贯穿层**：Connection ID 是「连接身份」、四元组只是「当前路径」——身份与路径解耦是迁移的根本。服务端 `Transport` 靠 `packetHandlerMap` 按 DCID 把包路由到正确 `Conn`。
 

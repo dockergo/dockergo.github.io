@@ -12,7 +12,7 @@
 
 `WriterImpl` 按类型树建一棵**同构的 TreeWriter 树**:
 
-- 入口 `TreeWriter.create(schema, ...)`(`writer/TreeWriter.java:124`)按 `schema.getCategory()` 分派(`:148`):原始类型建对应 writer,`STRUCT` 建 `StructTreeWriter`(`:182`)并 `Factory.create` 递归建每个子字段的 writer(`StructTreeWriter.java:44`);list/map/union 同理递归(`ListTreeWriter.java:47`、`MapTreeWriter.java:50`)。
+- 入口 `TreeWriter.create(schema, ...)`(`writer/TreeWriter.java:124`)按 `schema.getCategory` 分派(`:148`):原始类型建对应 writer,`STRUCT` 建 `StructTreeWriter`(`:182`)并 `Factory.create` 递归建每个子字段的 writer(`StructTreeWriter.java:44`);list/map/union 同理递归(`ListTreeWriter.java:47`、`MapTreeWriter.java:50`)。
 - 每个 `TreeWriterBase`(`writer/TreeWriterBase.java:52`)持有自己的输出 stream(PRESENT/DATA/…)与统计累加器。
 - 写一批时,`StructTreeWriter` 把批里各列分派给对应子 writer——**列式并行编码**,而非逐行。
 
@@ -26,10 +26,10 @@
 
 `addRowBatch(VectorizedRowBatch)`(`WriterImpl.java:733`)是写主循环:
 
-- 把批交给根 TreeWriter 编码进各 stream;`rowsInStripe += batch.size`(`:784`),超大批按 row index stride 切段并 `createRowIndexEntry()`(`:761`)。
+- 把批交给根 TreeWriter 编码进各 stream;`rowsInStripe += batch.size`(`:784`),超大批按 row index stride 切段并 `createRowIndexEntry`(`:761`)。
 - 每批末 `memoryManager.checkMemory(...)`(`:787`)——由 `MemoryManager`(`:112`)全局管所有 writer 的内存配额。
 - **触发 flushStripe** 的两条件(`:349`):`size > memoryLimit`(内存超限)**或** `rowsInStripe >= stripeRowCount`(行数超限)。
-- `flushStripe()`(`:559`):先补最后一个 `createRowIndexEntry`(`:561`),把各 stream + row index + stripe footer 落盘,累加 stripe 信息与文件级统计,`rowsInStripe = 0`(`:602`)重来。
+- `flushStripe`(`:559`):先补最后一个 `createRowIndexEntry`(`:561`),把各 stream + row index + stripe footer 落盘,累加 stripe 信息与文件级统计,`rowsInStripe = 0`(`:602`)重来。
 
 **为什么两个阈值**:stripe 默认 64MB(`OrcConf.java:32`,`STRIPE_SIZE`)控字节体量,行数上限防超宽表单 stripe 行太少;内存管理器让多 writer 共享内存时不 OOM。
 
@@ -39,12 +39,12 @@
 
 ![ORC close 收尾](ORC原理_写路径_03close.svg)
 
-`close()`(`WriterImpl.java:804`)收尾:
+`close`(`WriterImpl.java:804`)收尾:
 
-- 先 `flushStripe()`(`:813`)落最后一个未满 stripe;
-- `treeWriter.writeFileStatistics()`(`:707`)汇总文件级统计;
-- `writeFooter()`(`:691`)→ `writeMetadata()`(`:624`,stripe 级统计)+ `physicalWriter.writeFileFooter(builder)`(`:718`,类型树/stripe 目录/文件统计);
-- `writePostScript()`(`:630`→ `PhysicalFsWriter.writePostScript:475`):写压缩方式、footer 长度、版本,**末字节 = postscript 长度**。
+- 先 `flushStripe`(`:813`)落最后一个未满 stripe;
+- `treeWriter.writeFileStatistics`(`:707`)汇总文件级统计;
+- `writeFooter`(`:691`)→ `writeMetadata`(`:624`,stripe 级统计)+ `physicalWriter.writeFileFooter(builder)`(`:718`,类型树/stripe 目录/文件统计);
+- `writePostScript`(`:630`→ `PhysicalFsWriter.writePostScript:475`):写压缩方式、footer 长度、版本,**末字节 = postscript 长度**。
 - 文件开头的 3 字节 magic `"ORC"`(`PhysicalFsWriter.java:717`,`OrcFile.MAGIC`)在建 writer 时已写。
 
 **为什么尾部写 footer/postscript**:写时行数/stripe 边界事先未知,只能全写完才知全貌;尾部索引 + 末字节长度让 reader 倒读一次小 IO 拿全图(见【读路径】)。

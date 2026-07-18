@@ -18,7 +18,7 @@ RocksDB 的多版本不是靠锁，而是靠**每次写获得的全局递增 Seq
 
 ![RocksDB Snapshot · 钉 seq 做一致读](RocksDB原理_事务_02Snapshot.svg)
 
-`GetSnapshot()` 返回一个 **Snapshot**（`db/snapshot_impl.h`），本质是钉住当前的 SequenceNumber。之后带 `ReadOptions::snapshot` 的读都以该 seq 为上界——无论期间有多少新写，都看不到 seq 更大的版本，得到一致视图。Snapshot 的另一作用：**保护旧版本不被 Compaction 提前回收**——Compaction 丢墓碑/旧值时要检查"是否还有存活 Snapshot 需要它"，最老 Snapshot 之后的版本都得留。用完必须 `ReleaseSnapshot`，否则拖住旧版本回收、涨空间。
+`GetSnapshot` 返回一个 **Snapshot**（`db/snapshot_impl.h`），本质是钉住当前的 SequenceNumber。之后带 `ReadOptions::snapshot` 的读都以该 seq 为上界——无论期间有多少新写，都看不到 seq 更大的版本，得到一致视图。Snapshot 的另一作用：**保护旧版本不被 Compaction 提前回收**——Compaction 丢墓碑/旧值时要检查"是否还有存活 Snapshot 需要它"，最老 Snapshot 之后的版本都得留。用完必须 `ReleaseSnapshot`，否则拖住旧版本回收、涨空间。
 
 ## 三、事务：悲观、乐观与 2PC
 

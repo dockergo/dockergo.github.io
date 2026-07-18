@@ -20,7 +20,7 @@
 
 ![隐式依赖 DAG](Ray原理_远程任务_02依赖DAG.svg)
 
-ObjectRef 作为参数传给另一个 task，就形成**数据依赖**：`g.remote(f.remote(x))`。Ray 不需要显式声明 DAG——**把 ObjectRef 当参数即是声明依赖**。task 只有在其所有参数 ObjectRef 就绪后才可被调度执行；依赖解析发生在 owner 侧（提交前解引用本地已知值）与 raylet 侧（等待远程依赖 Pull 到本地）。这套隐式 DAG 支持**动态生成**：task 内部可继续 `.remote()` 派生新 task（嵌套并行），无需预先构图。
+ObjectRef 作为参数传给另一个 task，就形成**数据依赖**：`g.remote(f.remote(x))`。Ray 不需要显式声明 DAG——**把 ObjectRef 当参数即是声明依赖**。task 只有在其所有参数 ObjectRef 就绪后才可被调度执行；依赖解析发生在 owner 侧（提交前解引用本地已知值）与 raylet 侧（等待远程依赖 Pull 到本地）。这套隐式 DAG 支持**动态生成**：task 内部可继续 `.remote` 派生新 task（嵌套并行），无需预先构图。
 
 ## 三、两级对象存储的取值决策
 
@@ -55,11 +55,11 @@ ObjectRef 作为参数传给另一个 task，就形成**数据依赖**：`g.remo
 
 ## 常见误区
 
-- ❌ "`.remote()` 会阻塞到执行完" → 只返回 ObjectRef，**立即返回**，真正等待在 `ray.get`。
+- ❌ "`.remote` 会阻塞到执行完" → 只返回 ObjectRef，**立即返回**，真正等待在 `ray.get`。
 - ❌ "必须先构建 DAG 再执行" → **动态图**，task 内可派生 task，运行时才成形。
 - ❌ "`ray.get` 里传 list 会逐个等" → 一次性等整批，且底层可并行 Pull。
 - ❌ "小对象也走 Plasma" → <100KiB 走 in-process store，不进共享内存。
 
 ## 一句话总纲
 
-**`.remote()` 立即返回 ObjectRef（分布式 future），task 异步执行、以 ObjectRef 作参数隐式成 DAG，值按大小分流到 in-process/Plasma 两级存储，`ray.get` 才是唯一的阻塞点。**
+**`.remote` 立即返回 ObjectRef（分布式 future），task 异步执行、以 ObjectRef 作参数隐式成 DAG，值按大小分流到 in-process/Plasma 两级存储，`ray.get` 才是唯一的阻塞点。**

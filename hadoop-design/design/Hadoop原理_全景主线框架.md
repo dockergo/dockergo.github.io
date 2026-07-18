@@ -22,7 +22,7 @@
 
 ![读写数据流](Hadoop原理_全景_03读写数据流.svg)
 
-一条贯穿声明：**元数据走 NameNode、数据不经 NameNode 直连 DataNode**。写路径 `create()`→`addBlock()`→pipeline 传 packet→`complete()`（`DistributedFileSystem.java:603` → `DFSClient.java` → `DFSOutputStream.java:96` + `DataStreamer.java:119`）；读路径 `open()`/`getBlockLocations()`→client 直连最近副本 DataNode（`DFSInputStream.java:103`，`blockSeekTo:609`）。HDFS 是「一次写入、多次读取」模型：不支持随机写，只支持追加。
+一条贯穿声明：**元数据走 NameNode、数据不经 NameNode 直连 DataNode**。写路径 `create`→`addBlock`→pipeline 传 packet→`complete`（`DistributedFileSystem.java:603` → `DFSClient.java` → `DFSOutputStream.java:96` + `DataStreamer.java:119`）；读路径 `open`/`getBlockLocations`→client 直连最近副本 DataNode（`DFSInputStream.java:103`，`blockSeekTo:609`）。HDFS 是「一次写入、多次读取」模型：不支持随机写，只支持追加。
 
 ## 依赖矩阵 · 谁依赖谁
 

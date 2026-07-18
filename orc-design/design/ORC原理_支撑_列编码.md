@@ -45,7 +45,7 @@ RLE v2 更聪明——针对不同数据形态(重复/递增/离群)选专门编
 字符串按重复度自动选**字典 vs 直存**:
 
 - **字典编码**:字典按字典序排序,`DICTIONARY_DATA` 存唯一 UTF-8 blob、`LENGTH` 存每项长度、`DATA` 存整数引用(指字典第几项)。重复多时极省(重复串只存一次 + 小整数引用)。
-- **自动选择**:写第一个 row group 后按比率测——`useDictionaryEncoding = ratio <= dictionaryKeySizeThreshold`,`ratio = dictionary.size()/rows.size()`(`StringBaseTreeWriter.java:120`),阈值默认 **0.8**(`DICTIONARY_KEY_SIZE_THRESHOLD`)。唯一值占比高(>0.8,重复少)则退回直存(字典无益)。
+- **自动选择**:写第一个 row group 后按比率测——`useDictionaryEncoding = ratio <= dictionaryKeySizeThreshold`,`ratio = dictionary.size/rows.size`(`StringBaseTreeWriter.java:120`),阈值默认 **0.8**(`DICTIONARY_KEY_SIZE_THRESHOLD`)。唯一值占比高(>0.8,重复少)则退回直存(字典无益)。
 
 **为什么自动**:低基数列(如国家/状态)字典大赢;高基数列(如 UUID)字典反而多一层引用开销,直存更好——ORC 按实际数据选。
 
