@@ -14,6 +14,7 @@
 import os
 import re
 import html
+import json
 import base64
 import argparse
 
@@ -79,46 +80,26 @@ CAT_ORDER = [
 #   两条覆盖铁律：① 图上每个模块都有热区 ② 每条主线都被某热区覆盖（未覆盖者自动兜底成 chip）。
 # ===================================================================== #
 PANO_NAME = "Milvus原理_全景主线框架"
-ARCH_W, ARCH_H = 1080, 800  # 必须与 ARCH_SVG_NAME 的 viewBox 一致
-# (x, y, w, h, 主线name) —— 一个模块可拆多行热区，一条主线可被多个区域指向
-ARCH_HOTSPOTS = [
-    # 顶部标题 → 全景总览
-    (30, 14, 720, 44, "Milvus原理_全景主线框架"),
-    # API 条 → 接触面
-    (30, 64, 1020, 46, "Milvus原理_接触面_向量CRUD与检索API"),
-    # Proxy 接入层 → 分布式架构
-    (30, 124, 1020, 40, "Milvus原理_支撑_分布式架构"),
-    # ① 写入路径（左列）
-    (30, 178, 340, 34, "Milvus原理_支撑_写入路径"),   # 标题
-    (46, 212, 308, 50, "Milvus原理_支撑_写入路径"),   # streaming WAL
-    (46, 270, 308, 50, "Milvus原理_支撑_写入路径"),   # StreamingNode/DataNode 消费
-    (46, 328, 308, 50, "Milvus原理_支撑_写入路径"),   # WriteBuffer
-    (46, 386, 308, 50, "Milvus原理_支撑_写入路径"),   # binlog + delta log
-    (46, 444, 308, 52, "Milvus原理_支撑_段与生命周期"),  # 段 growing→sealed
-    # ② 读/检索路径（中列）
-    (386, 178, 344, 34, "Milvus原理_支撑_向量索引与检索"),  # 标题
-    (402, 212, 312, 50, "Milvus原理_支撑_向量索引与检索"),  # 加载 sealed + knowhere 索引
-    (402, 270, 312, 58, "Milvus原理_支撑_向量索引与检索"),  # ANN 向量检索(segcore)
-    (402, 336, 312, 52, "Milvus原理_支撑_向量索引与检索"),  # 标量 bitset 预过滤
-    (402, 396, 312, 52, "Milvus原理_支撑_一致性与时间"),    # 等 tSafe 追上 guaranteeTs
-    (402, 456, 312, 40, "Milvus原理_支撑_段与生命周期"),    # growing/未建索引段 暴力搜
-    # ③ MixCoord（右列）
-    (746, 178, 304, 46, "Milvus原理_支撑_分布式架构"),      # MixCoord 标题
-    (762, 228, 272, 26, "Milvus原理_支撑_元数据"),          # RootCoord · DDL 元数据
-    (762, 254, 272, 30, "Milvus原理_支撑_一致性与时间"),    # RootCoord · TSO 时间戳
-    (762, 292, 272, 52, "Milvus原理_支撑_段与生命周期"),    # DataCoord · 段/flush/索引
-    (762, 352, 272, 52, "Milvus原理_支撑_分布式架构"),      # QueryCoord · 副本/负载均衡
-    (762, 412, 272, 52, "Milvus原理_支撑_写入路径"),        # StreamingCoord · PChannel 分配
-    (762, 472, 272, 28, "Milvus原理_支撑_元数据"),          # 元数据存 etcd/tikv
-    # ④ 对象存储（存算分离共享持久层）
-    (30, 524, 1020, 56, "Milvus原理_支撑_分布式架构"),
-    # ⑤ 位置即语义 → 全景
-    (30, 596, 1020, 52, "Milvus原理_全景主线框架"),
-    # ⑥ 贯穿层 timestamp → 一致性与时间
-    (30, 662, 1020, 44, "Milvus原理_支撑_一致性与时间"),
-    # ⑦ 三条贯穿声明 → 全景
-    (30, 720, 1020, 66, "Milvus原理_全景主线框架"),
-]
+# 架构热区从总架构 SVG 里带 data-tid 的 rect 自动派生（单一真源：SVG）。
+# viewBox 宽高也从 SVG 自动读取（_ARCH_VBW/_ARCH_VBH），不再手填 ARCH_W/ARCH_H。
+# 注：RootCoord 在 SVG 里被有意拆成"元数据"与"一致性与时间"两个 data-tid rect，
+#     保留原手工的双下钻粒度（单盒视觉，两个透明热区叠加）。
+import re as _re_hot, xml.etree.ElementTree as _ET_hot
+def _parse_arch_hotspots(svg_text):
+    vb = _re_hot.search(r'viewBox="[\d.]+\s+[\d.]+\s+([\d.]+)\s+([\d.]+)"', svg_text)
+    vbw, vbh = float(vb.group(1)), float(vb.group(2))
+    root = _ET_hot.fromstring(svg_text); hots = []
+    def walk(el, dx, dy):
+        m = _re_hot.search(r'translate\(\s*([-\d.]+)(?:[,\s]+([-\d.]+))?', el.get("transform") or "")
+        if m:
+            dx += float(m.group(1))
+            if m.group(2): dy += float(m.group(2))
+        if el.tag.rsplit("}", 1)[-1] == "rect" and el.get("data-tid"):
+            hots.append((float(el.get("x", 0)) + dx, float(el.get("y", 0)) + dy,
+                         float(el.get("width", 0)), float(el.get("height", 0)),
+                         el.get("data-tid"), el.get("data-lab") or ""))
+        for c in el: walk(c, dx, dy)
+    walk(root, 0.0, 0.0); return hots, vbw, vbh
 # 没有独立架构区域、需底部 chip 兜底的主线（本项目 8 主线全部落在图上 → 空）
 ARCH_ALWAYS_CHIP = []
 
@@ -247,7 +228,7 @@ def build_archnav():
     if not _ARCH_SVG:
         return '<p style="color:var(--c-ink2)">（缺项目总架构图 %s）</p>' % esc(ARCH_SVG_NAME)
     hots = []
-    for (x, y, w, h, mid) in ARCH_HOTSPOTS:
+    for (x, y, w, h, mid, lab) in _ARCH_HOTSPOTS:
         if mid not in meta:
             print("  ⚠ 热区指向不存在的主线:", mid)
             continue
@@ -257,9 +238,9 @@ def build_archnav():
             ' style="left:{l:.3f}%;top:{t:.3f}%;width:{w:.3f}%;height:{ht:.3f}%">'
             '<span class="ah-tag">{ico} {title}</span></button>'.format(
                 mid=esc(mid), title=esc(title), ico=esc(_ico),
-                l=x / ARCH_W * 100, t=y / ARCH_H * 100,
-                w=w / ARCH_W * 100, ht=h / ARCH_H * 100))
-    covered = {mid for (*_r, mid) in ARCH_HOTSPOTS}
+                l=x / _ARCH_VBW * 100, t=y / _ARCH_VBH * 100,
+                w=w / _ARCH_VBW * 100, ht=h / _ARCH_VBH * 100))
+    covered = {t[4] for t in _ARCH_HOTSPOTS}
     chip_names = [n for (n, *_r) in MAINLINES if n not in covered] + \
                  [n for n in ARCH_ALWAYS_CHIP if n not in covered]
     chips = ""
@@ -338,6 +319,8 @@ def build_panes():
 
 
 _ARCH_SVG = _b64_svg(ARCH_SVG_NAME)
+_ARCH_SVG_TEXT = _read(ARCH_SVG_NAME)
+_ARCH_HOTSPOTS, _ARCH_VBW, _ARCH_VBH = _parse_arch_hotspots(_ARCH_SVG_TEXT)
 
 # ===================================================================== #
 # 四、页面模板（CSS + JS 内联，双主题 graphite/light）
@@ -365,7 +348,9 @@ header{position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:14px
   padding:12px 22px;background:color-mix(in srgb,var(--c-bg) 82%,transparent);
   backdrop-filter:saturate(160%) blur(14px);border-bottom:1px solid var(--c-border)}
 .logo{display:flex;align-items:center;gap:9px;cursor:pointer;font-weight:700;font-size:15px;text-decoration:none;color:inherit}
-.logo:hover .homeico{color:var(--c-brand)}
+.logo:hover .homeico{display:inline-grid;place-items:center;width:38px;height:38px;border-radius:50%;border:1px solid var(--c-line);background:var(--c-panel);color:var(--c-ink2);transition:color .15s} a:hover .homeico,.logo:hover .homeico,.homelink:hover .homeico{color:var(--c-brand);border-color:var(--c-brand)}
+.nn-n{fill:var(--c-ink2)}.nn-h{fill:var(--c-brand)}.nn-e{stroke:var(--c-line);stroke-width:1.4}
+.tt-ico{font-size:16px;line-height:1}.tt-sun{display:none}:root[data-theme="light"] .tt-moon{display:none}:root[data-theme="light"] .tt-sun{display:inline}
 .homeico{display:inline-flex;color:var(--c-ink2);transition:color .15s}
 .logo .dot{width:11px;height:11px;border-radius:3px;background:linear-gradient(135deg,var(--c-brand),var(--c-amber))}
 .logo .sub{font-weight:500;color:var(--c-ink2);font-size:12px}
@@ -376,7 +361,7 @@ header{position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:14px
 .wrap{max-width:1180px;margin:0 auto;padding:30px 22px 80px}
 .navmap-hint{color:var(--c-ink3);font-size:12px;margin:18px 2px 0;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
 .navmap-hint b{color:var(--c-brand);font-weight:700}
-.arch-wrap{position:relative;margin-top:12px;background:var(--c-card);border:1px solid var(--c-border);border-radius:16px;padding:14px;overflow:hidden}
+.arch-wrap{position:relative;margin-top:12px;background:var(--c-card);border:1px solid var(--c-border);border-radius:16px;padding:0;overflow:hidden}.msearch{position:relative;display:flex;align-items:center;gap:8px;width:min(300px,38vw);padding:0 12px;height:38px;border-radius:19px;border:1px solid var(--c-line);background:var(--c-panel);color:var(--c-ink2);margin-right:12px}.msearch svg{flex:none;opacity:.7}.msearch input{flex:1;border:0;background:transparent;color:var(--c-ink);outline:0;font-size:13px}.msearch kbd{flex:none;font:600 11px monospace;color:var(--c-ink3);border:1px solid var(--c-line);border-radius:5px;padding:1px 6px}.mq-list{position:absolute;top:44px;left:0;right:0;z-index:60;background:var(--c-card);border:1px solid var(--c-line);border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.18);overflow:hidden;display:none}.mq-list.on{display:block}.mq-item{display:block;width:100%;text-align:left;border:0;background:transparent;cursor:pointer;padding:9px 14px;color:var(--c-ink);font-size:13px;border-bottom:1px solid var(--c-line)}.mq-item:last-child{border-bottom:0}.mq-item:hover,.mq-item.sel{background:color-mix(in srgb,var(--c-brand) 12%,transparent)}.mq-item .s{display:block;color:var(--c-ink3);font-size:11px;margin-top:2px}
 .arch-wrap img{width:100%;display:block;border-radius:8px}
 html:not([data-theme="light"]) .arch-wrap img{filter:invert(.92) hue-rotate(180deg) saturate(.85)}
 .arch-hot{position:absolute;border:0;background:transparent;cursor:pointer;padding:0;border-radius:6px;transition:.12s;z-index:2}
@@ -448,21 +433,22 @@ b{color:var(--c-ink);font-weight:700}
 APP_JS = r"""
 (function(){
   var root=document.documentElement;
-  var saved=localStorage.getItem('milvus-atlas-theme');
+  var saved=localStorage.getItem('atlas-nav-theme');
   if(saved) root.setAttribute('data-theme',saved);
   function toggleTheme(){
     var cur=root.getAttribute('data-theme')==='light'?'':'light';
     if(cur) root.setAttribute('data-theme',cur); else root.removeAttribute('data-theme');
-    localStorage.setItem('milvus-atlas-theme',cur);
-    var b=document.getElementById('themeBtn'); if(b) b.textContent=cur==='light'?'☀':'☾';
+    localStorage.setItem('atlas-nav-theme',cur);
+    
   }
   var tb=document.getElementById('themeBtn');
-  if(tb){tb.onclick=toggleTheme; tb.textContent=root.getAttribute('data-theme')==='light'?'☀':'☾';}
+  if(tb){tb.onclick=toggleTheme;}
 
   var home=document.getElementById('home'), panes=document.getElementById('panes');
   function showHome(){home.style.display='block';panes.style.display='none';
     document.querySelectorAll('.pane').forEach(function(p){p.classList.remove('on')});
     window.scrollTo(0,0);}
+  window.openMain=function(mid,idx){return openMain(mid,idx);};
   function openMain(mid,idx){
     home.style.display='none';panes.style.display='block';
     document.querySelectorAll('.pane').forEach(function(p){p.classList.toggle('on',p.dataset.mid===mid)});
@@ -491,13 +477,43 @@ APP_JS = r"""
   requestAnimationFrame(function(){requestAnimationFrame(function(){setTimeout(done,120);});});
   setTimeout(done,4000);
 })();
+
+/* 模块搜索:过滤本项目主线,回车/点击下钻 */
+(function(){
+  var MS=window.__MAINS__||[], mq=document.getElementById('mq'), list=document.getElementById('mqlist');
+  if(!mq||!list) return;
+  var sel=-1, cur=[];
+  function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  function render(){
+    var q=mq.value.trim().toLowerCase();
+    cur = !q ? [] : MS.filter(function(m){return (m.t+' '+m.s+' '+m.mid).toLowerCase().indexOf(q)>=0;}).slice(0,8);
+    if(!cur.length){ list.className='mq-list'; list.innerHTML=''; return; }
+    sel=0;
+    list.innerHTML=cur.map(function(m,i){return '<button class="mq-item'+(i===0?' sel':'')+'" data-mid="'+esc(m.mid)+'"><b>'+esc(m.t)+'</b><span class="s">'+esc(m.s)+'</span></button>';}).join('');
+    list.className='mq-list on';
+  }
+  function go(mid){ mq.value=''; list.className='mq-list'; list.innerHTML=''; if(typeof window.openMain==='function') window.openMain(mid,0); }
+  mq.addEventListener('input',render);
+  mq.addEventListener('keydown',function(e){
+    if(!cur.length){ if(e.key==='Escape') mq.blur(); return; }
+    if(e.key==='ArrowDown'){e.preventDefault();sel=(sel+1)%cur.length;}
+    else if(e.key==='ArrowUp'){e.preventDefault();sel=(sel-1+cur.length)%cur.length;}
+    else if(e.key==='Enter'){e.preventDefault();go(cur[sel].mid);return;}
+    else if(e.key==='Escape'){list.className='mq-list';mq.blur();return;}
+    else return;
+    [].forEach.call(list.children,function(el,i){el.className='mq-item'+(i===sel?' sel':'');});
+  });
+  list.addEventListener('click',function(e){var b=e.target.closest('.mq-item'); if(b) go(b.dataset.mid);});
+  document.addEventListener('keydown',function(e){ if(e.key==='/'&&document.activeElement!==mq){e.preventDefault();mq.focus();} });
+  document.addEventListener('click',function(e){ if(!e.target.closest('.msearch')){list.className='mq-list';} });
+})();
 """
 
 
 def build_html():
     archnav = build_archnav()
     # 导航一致性校验：每条主线要么被某热区覆盖、要么进兜底 chip，否则在架构图入口失联
-    covered = {mid for (*_r, mid) in ARCH_HOTSPOTS} | set(ARCH_ALWAYS_CHIP)
+    covered = {t[4] for t in _ARCH_HOTSPOTS} | set(ARCH_ALWAYS_CHIP)
     unmapped = [n for (n, *_r) in MAINLINES if n not in covered]
     if unmapped:
         print("  ⚠ 架构图上失联的主线(既无热区又无 chip):", unmapped)
@@ -520,9 +536,10 @@ def build_html():
   <div class="lo-s" style="font-size:11px;opacity:.7">短暂空白属正常装载，非内容缺失</div>
 </div>
 <header>
-  <a class="logo" id="logo" href="../index.html" title="返回导航主页"><span class="homeico" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg></span></a>
+  <a class="logo" id="logo" href="../index.html" title="返回导航主页"><span class="homeico" aria-hidden="true" style="width:38px;height:38px;border-radius:50%;border:1px solid var(--c-line);background:var(--c-panel);color:var(--c-ink2);display:inline-grid;place-items:center;text-decoration:none"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg></span></a><div class="brand-intro" style="display:flex;flex-direction:column;align-items:flex-start;margin-left:12px;min-width:0;max-width:min(60vw,760px)"><div style="font-size:15px;font-weight:600;color:var(--c-ink);line-height:1.3">Milvus · 核心原理图谱</div><span style="margin-top:3px;font-size:11.5px;color:var(--c-ink3);line-height:1.5;text-align:left">向量数据库:向量索引(HNSW/IVF)做近邻检索,存算分离 + 流批分离,标量过滤 + 向量召回混合。</span></div>
   <div class="spacer"></div>
-  <a href="https://github.com/milvus-io/milvus" target="_blank" rel="noopener" title="GitHub 源码仓库" style="display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:9px;border:1px solid var(--c-line);color:var(--c-ink2);text-decoration:none;margin-right:8px"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.7.5.5 5.7.5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.2.8-.6v-2c-3.2.7-3.9-1.4-3.9-1.4-.5-1.3-1.3-1.7-1.3-1.7-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.7 1.3 3.4 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.8 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.3 1.2a11.4 11.4 0 0 1 6 0C17.3 4.7 18.3 5 18.3 5c.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.5-2.7 5.5-5.3 5.8.4.4.8 1.1.8 2.2v3.3c0 .4.2.7.8.6 4.6-1.5 7.9-5.8 7.9-10.9C23.5 5.7 18.3.5 12 .5z"/></svg></a><a href="https://milvus.io" target="_blank" rel="noopener" title="项目官网" style="display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:9px;border:1px solid var(--c-line);color:var(--c-ink2);text-decoration:none;margin-right:8px"><img src="data:image/svg+xml;base64,PHN2ZyBmaWxsPSIjMDBBMUVBIiByb2xlPSJpbWciIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48dGl0bGU+TWlsdnVzPC90aXRsZT48cGF0aCBkPSJNMTUuNTM2IDExLjk5N2E0LjAwNSA0LjAwNSAwIDAgMS00LjAxNSA0LjAxOGMtMi4zNi0uMDA1LTQuMDUtMS45NTQtNC4wMS00LjA4YTQuMDEzIDQuMDEzIDAgMCAxIDguMDI1LjA2MXptOC40NjMtLjA0YS44MjMuODIzIDAgMCAxLS4yNS42MTZxLTEuMTIyIDEuMTI4LTIuMjQ4IDIuMjVjLS4wODIuMDgzLS4xNjUuMS0uMjUuMDU0LS4wOTEtLjA0OC0uMTI0LS4xMjEtLjA5OC0uMjQyYTEyLjc2NCAxMi43NjQgMCAwIDAgLjI1LTEuNjI2IDEyLjE1MyAxMi4xNTMgMCAwIDAgLjAyOC0xLjQ5IDExLjU2IDExLjU2IDAgMCAwLS4yNy0yLjExNC4yNTUuMjU1IDAgMCAxIC4wMTctLjIxMy4xOTQuMTk0IDAgMCAxIC4yNzMtLjA1Mi42MjguNjI4IDAgMCAxIC4wODYuMDc1bDIuMTc0IDIuMTc0Yy4xNzEuMTcuMjkuMzY2LjI4OS41Njd6TTExLjIyNiAyMGMtMS44OS0uMDAyLTMuNDg4LS41NjUtNC45MjYtMS42MTFhOC4zMTcgOC4zMTcgMCAwIDEtLjk1Mi0uODE2cS0xLjEyNS0xLjExMi0yLjI1My0yLjIyMWwtMS45MzEtMS44OTljLS4yOTEtLjI4NS0uNTgzLS41Ny0uODczLS44NTctLjM5My0uMzktLjM4Ny0uODMuMDEyLTEuMjE3LjI5Ni0uMjg4LjU5LS41NzkuODg1LS44NjhxMS40MzMtMS40MSAyLjg2Ny0yLjgxOGMuNTMyLS41MjIgMS4wNTctMS4wNTEgMS42MDQtMS41NTVhNy45OTYgNy45OTYgMCAwIDEgMy43ODYtMS45NUE3LjY2OCA3LjY2OCAwIDAgMSAxMS4xMzUgNGMxLjg5LjAxNSAzLjYxMi41NDYgNS4xMTMgMS43MjNhNy45ODcgNy45ODcgMCAwIDEgMi4yODIgMi43NyA3LjU2NyA3LjU2NyAwIDAgMSAuNzYgMi41NTZjLjI1NSAyLjQwNC0uNDE0IDQuNTE4LTIuMDQ2IDYuMzEyYTcuNzcyIDcuNzcyIDAgMCAxLTMuOTI3IDIuMzY2IDguOTk1IDguOTk1IDAgMCAxLTIuMDkxLjI3NHptLjM2NC0yLjEzN2E1LjgxOSA1LjgxOSAwIDAgMCAuNjA1LS4wMzYgNS4zNSA1LjM1IDAgMCAwIC4zOC0uMDVjMS41MjUtLjI4IDIuNzYtMS4wNTEgMy43MDQtMi4yNjMuOTItMS4xNzggMS4yOC0yLjU0MiAxLjE2OC00LjAyOGE1LjYyNiA1LjYyNiAwIDAgMC0uNjMxLTIuMTY4Yy0uNjI3LTEuMjEzLTEuNTk2LTIuMDY3LTIuODE3LTIuNjQ2LTEuMDk2LS41MTktMi4yNDgtLjY0OS0zLjQ0My0uNDY0QTUuODE0IDUuODE0IDAgMCAwIDcuMzMgNy44Yy0uODU4LjgzLTEuNzA3IDEuNjY5LTIuNTYgMi41MDQtLjQyNi40MTktLjg1Ljg0MS0xLjI4IDEuMjU3LS4yNzQuMjY2LS4yODYuNTg4LS4wMTMuODU3cS44MDQuNzkzIDEuNjEgMS41ODNjLjcyMi43MDkgMS40NCAxLjQyIDIuMTY1IDIuMTI2IDEuMTg0IDEuMTUzIDIuNjA0IDEuNzM3IDQuMzM5IDEuNzM4eiIvPjwvc3ZnPg==" width="18" height="18" alt="官网" style="display:block"/></a><button id="themeBtn" title="切换主题" aria-label="切换主题" style="width:38px;height:38px;border-radius:50%;border:1px solid var(--c-line);background:var(--c-panel);color:var(--c-ink2);cursor:pointer;display:inline-grid;place-items:center;font-size:16px;flex:none">☾</button>
+  <label class="msearch"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input id="mq" type="text" placeholder="搜索模块 / 主线…" autocomplete="off" aria-label="搜索模块"/><kbd>/</kbd><div id="mqlist" class="mq-list"></div></label>
+  <a href="https://github.com/milvus-io/milvus" target="_blank" rel="noopener" title="GitHub 源码仓库" style="display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:50%;border:1px solid var(--c-line);color:var(--c-ink2);text-decoration:none;margin-right:8px"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.7.5.5 5.7.5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.2.8-.6v-2c-3.2.7-3.9-1.4-3.9-1.4-.5-1.3-1.3-1.7-1.3-1.7-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.7 1.3 3.4 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.8 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.3 1.2a11.4 11.4 0 0 1 6 0C17.3 4.7 18.3 5 18.3 5c.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.5-2.7 5.5-5.3 5.8.4.4.8 1.1.8 2.2v3.3c0 .4.2.7.8.6 4.6-1.5 7.9-5.8 7.9-10.9C23.5 5.7 18.3.5 12 .5z"/></svg></a><a href="https://milvus.io" target="_blank" rel="noopener" title="项目官网" style="display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:50%;border:1px solid var(--c-line);color:var(--c-ink2);text-decoration:none;margin-right:8px"><img src="data:image/svg+xml;base64,PHN2ZyBmaWxsPSIjMDBBMUVBIiByb2xlPSJpbWciIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48dGl0bGU+TWlsdnVzPC90aXRsZT48cGF0aCBkPSJNMTUuNTM2IDExLjk5N2E0LjAwNSA0LjAwNSAwIDAgMS00LjAxNSA0LjAxOGMtMi4zNi0uMDA1LTQuMDUtMS45NTQtNC4wMS00LjA4YTQuMDEzIDQuMDEzIDAgMCAxIDguMDI1LjA2MXptOC40NjMtLjA0YS44MjMuODIzIDAgMCAxLS4yNS42MTZxLTEuMTIyIDEuMTI4LTIuMjQ4IDIuMjVjLS4wODIuMDgzLS4xNjUuMS0uMjUuMDU0LS4wOTEtLjA0OC0uMTI0LS4xMjEtLjA5OC0uMjQyYTEyLjc2NCAxMi43NjQgMCAwIDAgLjI1LTEuNjI2IDEyLjE1MyAxMi4xNTMgMCAwIDAgLjAyOC0xLjQ5IDExLjU2IDExLjU2IDAgMCAwLS4yNy0yLjExNC4yNTUuMjU1IDAgMCAxIC4wMTctLjIxMy4xOTQuMTk0IDAgMCAxIC4yNzMtLjA1Mi42MjguNjI4IDAgMCAxIC4wODYuMDc1bDIuMTc0IDIuMTc0Yy4xNzEuMTcuMjkuMzY2LjI4OS41Njd6TTExLjIyNiAyMGMtMS44OS0uMDAyLTMuNDg4LS41NjUtNC45MjYtMS42MTFhOC4zMTcgOC4zMTcgMCAwIDEtLjk1Mi0uODE2cS0xLjEyNS0xLjExMi0yLjI1My0yLjIyMWwtMS45MzEtMS44OTljLS4yOTEtLjI4NS0uNTgzLS41Ny0uODczLS44NTctLjM5My0uMzktLjM4Ny0uODMuMDEyLTEuMjE3LjI5Ni0uMjg4LjU5LS41NzkuODg1LS44NjhxMS40MzMtMS40MSAyLjg2Ny0yLjgxOGMuNTMyLS41MjIgMS4wNTctMS4wNTEgMS42MDQtMS41NTVhNy45OTYgNy45OTYgMCAwIDEgMy43ODYtMS45NUE3LjY2OCA3LjY2OCAwIDAgMSAxMS4xMzUgNGMxLjg5LjAxNSAzLjYxMi41NDYgNS4xMTMgMS43MjNhNy45ODcgNy45ODcgMCAwIDEgMi4yODIgMi43NyA3LjU2NyA3LjU2NyAwIDAgMSAuNzYgMi41NTZjLjI1NSAyLjQwNC0uNDE0IDQuNTE4LTIuMDQ2IDYuMzEyYTcuNzcyIDcuNzcyIDAgMCAxLTMuOTI3IDIuMzY2IDguOTk1IDguOTk1IDAgMCAxLTIuMDkxLjI3NHptLjM2NC0yLjEzN2E1LjgxOSA1LjgxOSAwIDAgMCAuNjA1LS4wMzYgNS4zNSA1LjM1IDAgMCAwIC4zOC0uMDVjMS41MjUtLjI4IDIuNzYtMS4wNTEgMy43MDQtMi4yNjMuOTItMS4xNzggMS4yOC0yLjU0MiAxLjE2OC00LjAyOGE1LjYyNiA1LjYyNiAwIDAgMC0uNjMxLTIuMTY4Yy0uNjI3LTEuMjEzLTEuNTk2LTIuMDY3LTIuODE3LTIuNjQ2LTEuMDk2LS41MTktMi4yNDgtLjY0OS0zLjQ0My0uNDY0QTUuODE0IDUuODE0IDAgMCAwIDcuMzMgNy44Yy0uODU4LjgzLTEuNzA3IDEuNjY5LTIuNTYgMi41MDQtLjQyNi40MTktLjg1Ljg0MS0xLjI4IDEuMjU3LS4yNzQuMjY2LS4yODYuNTg4LS4wMTMuODU3cS44MDQuNzkzIDEuNjEgMS41ODNjLjcyMi43MDkgMS40NCAxLjQyIDIuMTY1IDIuMTI2IDEuMTg0IDEuMTUzIDIuNjA0IDEuNzM3IDQuMzM5IDEuNzM4eiIvPjwvc3ZnPg==" width="18" height="18" alt="官网" style="display:block"/></a><button id="themeBtn" title="切换深色 / 浅色主题" aria-label="切换主题" style="width:38px;height:38px;border-radius:50%;border:1px solid var(--c-line);background:var(--c-panel);color:var(--c-ink2);cursor:pointer;display:inline-grid;place-items:center;font-size:16px;flex:none"><span class="tt-ico tt-moon">☾</span><span class="tt-ico tt-sun">☀</span></button>
 </header>
 <div class="wrap">
   <div id="home">
@@ -533,11 +550,12 @@ def build_html():
     {panes}
   </div>
 </div>
+<script>window.__MAINS__={mains};</script>
 <script>{js}</script>
 </body>
 </html>""".format(
         sub=esc(BRAND_SUB), n=total_svg,
-        css=CSS, archnav=archnav, panes=build_panes(), js=APP_JS)
+        css=CSS, archnav=archnav, mains=json.dumps([{"mid":n,"t":ct,"s":sub} for n,_c,_ic,ct,sub in MAINLINES],ensure_ascii=False), panes=build_panes(), js=APP_JS)
 
 
 if __name__ == "__main__":

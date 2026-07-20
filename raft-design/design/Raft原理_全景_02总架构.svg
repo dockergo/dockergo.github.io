@@ -1,149 +1,141 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1040" height="740" viewBox="0 0 1040 740" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
   <defs>
     <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/>
     </filter>
-    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
-    </marker>
+    <marker id="aHot" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#0a84ff"/></marker>
+    <marker id="aCtl" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#7c5fe6"/></marker>
+    <marker id="aState" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#0f9e8e"/></marker>
+    <marker id="aFail" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#e8730f"/></marker>
   </defs>
-  <rect width="1040" height="740" fill="#fbfbfd"/>
-  <rect x="0" y="0" width="1040" height="48" fill="none" stroke="none" data-tid="Raft原理_全景主线框架" data-lab="全景"/>
-  <text x="40" y="34" font-size="15" font-weight="600" fill="#1d1d1f">HashiCorp raft 总架构 · 可嵌入的共识算法库（库形态 · 接口由宿主注入）</text>
 
-  <!-- 宿主进程层 -->
-  <rect x="40" y="52" width="960" height="46" rx="12" fill="#fbf7ef" stroke="#efe2c8" filter="url(#soft)" data-tid="Raft原理_接口_编程API与接口注入" data-lab="宿主注入六件套"/>
-  <text x="60" y="72" font-size="12.5" font-weight="600" fill="#8a6d1f">宿主进程（Consul / Nomad / Vault …）</text>
-  <text x="60" y="89" font-size="11" fill="#a1885a">链接进本库 · 实现 FSM 业务状态机 + 提供 LogStore / StableStore / SnapshotStore / Transport 存储与 IO</text>
+  <rect x="0" y="0" width="1040" height="740" fill="#fbfbfd"/>
 
-  <!-- 编程 API band -->
-  <rect x="40" y="122" width="960" height="70" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
-  <text x="52" y="140" font-size="12.5" font-weight="600" fill="#1b2a4a">编程 API（宿主调用 · api.go）</text>
-  <g font-size="11" fill="#2b3a5a">
-    <rect x="52" y="148" width="172" height="36" rx="8" fill="#ffffff" stroke="#cfe0f2" data-tid="Raft原理_接口_编程API与接口注入" data-lab="NewRaft"/>
-    <text x="138" y="170" text-anchor="middle"><tspan font-weight="600">NewRaft</tspan> 启动</text>
-    <rect x="236" y="148" width="172" height="36" rx="8" fill="#ffffff" stroke="#cfe0f2" data-tid="Raft原理_接口_编程API与接口注入" data-lab="Apply/Barrier"/>
-    <text x="322" y="170" text-anchor="middle"><tspan font-weight="600">Apply</tspan> / Barrier 写</text>
-    <rect x="420" y="148" width="172" height="36" rx="8" fill="#ffffff" stroke="#cfe0f2" data-tid="Raft原理_支撑_成员变更" data-lab="AddVoter"/>
-    <text x="506" y="170" text-anchor="middle"><tspan font-weight="600">AddVoter</tspan> / RemoveServer</text>
-    <rect x="604" y="148" width="172" height="36" rx="8" fill="#ffffff" stroke="#cfe0f2" data-tid="Raft原理_支撑_快照与日志压缩" data-lab="手动 Snapshot"/>
-    <text x="690" y="170" text-anchor="middle"><tspan font-weight="600">Snapshot</tspan> 手动快照</text>
-    <rect x="788" y="148" width="200" height="36" rx="8" fill="#ffffff" stroke="#cfe0f2" data-tid="Raft原理_支撑_可靠性与脑裂防护" data-lab="LeadershipTransfer"/>
-    <text x="888" y="170" text-anchor="middle"><tspan font-weight="600">LeadershipTransfer</tspan> / VerifyLeader</text>
+  <!-- ===== 标题条 ===== -->
+  <rect x="0" y="0" width="1040" height="48" fill="#f4f5f7" stroke="#e6e6eb" data-tid="Raft原理_全景主线框架" data-lab="全景总览"/>
+  <text x="24" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Raft 总架构 · 复制状态机</text>
+  <text x="250" y="30" font-size="11.5" fill="#8a8a90">Leader 单写 → 多数派复制 → 各副本 FSM 收敛到同一序列</text>
+
+  <!-- ===== ① 宿主进程 + 编程 API ===== -->
+  <rect x="40" y="52" width="960" height="46" rx="10" fill="#eef0f3" stroke="#d2d6dd" data-tid="Raft原理_接口_编程API与接口注入" data-lab="宿主进程注入六件套"/>
+  <text x="56" y="72" font-size="12.5" font-weight="600" fill="#33373e">宿主进程</text>
+  <text x="56" y="88" font-size="10.5" fill="#8a8a90">注入六件套 · FSM / LogStore / StableStore / SnapshotStore / Transport / Config</text>
+  <text x="820" y="80" font-size="10" fill="#a1a1a6" text-anchor="middle">api.go</text>
+
+  <rect x="40" y="122" width="960" height="70" rx="11" fill="#e9edf6" stroke="#c6d2ea" data-tid="Raft原理_接口_编程API与接口注入" data-lab="编程 API"/>
+  <text x="56" y="144" font-size="12.5" font-weight="600" fill="#274a78">编程 API · 接触面</text>
+  <g font-size="11" text-anchor="middle" fill="#33373e">
+    <rect x="150" y="152" width="150" height="30" rx="8" fill="#fff" stroke="#c6d2ea"/><text x="225" y="171"><tspan font-weight="600">Apply</tspan> 提交命令</text>
+    <rect x="316" y="152" width="150" height="30" rx="8" fill="#fff" stroke="#c6d2ea"/><text x="391" y="171"><tspan font-weight="600">AddVoter</tspan> 成员变更</text>
+    <rect x="482" y="152" width="150" height="30" rx="8" fill="#fff" stroke="#c6d2ea"/><text x="557" y="171"><tspan font-weight="600">Snapshot</tspan> 触发快照</text>
+    <rect x="648" y="152" width="150" height="30" rx="8" fill="#fff" stroke="#c6d2ea"/><text x="723" y="171"><tspan font-weight="600">VerifyLeader</tspan> 线性读</text>
+    <rect x="814" y="152" width="120" height="30" rx="8" fill="#fff" stroke="#c6d2ea"/><text x="874" y="171"><tspan font-weight="600">Barrier</tspan> 屏障</text>
   </g>
 
-  <!-- Raft 核心容器 -->
-  <rect x="40" y="212" width="960" height="308" rx="14" fill="#f7f7f9" stroke="#e2e2e7" filter="url(#soft)"/>
-  <text x="52" y="232" font-size="12.5" font-weight="600" fill="#1d1d1f">Raft 核心（raft.go · 单线程 run 主循环驱动状态机与日志）</text>
+  <!-- Hot 主数据流:Apply → 日志复制(进核心) -->
+  <line x1="225" y1="192" x2="225" y2="224" stroke="#0a84ff" stroke-width="2.2" marker-end="url(#aHot)"/>
+  <text x="235" y="212" font-size="10" font-weight="600" fill="#0a84ff">写请求 Hot</text>
 
-  <!-- Row1 -->
-  <rect x="60" y="248" width="280" height="106" rx="11" fill="#eef3fb" stroke="#bcd0ec" data-tid="Raft原理_支撑_Leader选举" data-lab="Leader 选举"/>
-  <text x="200" y="272" text-anchor="middle" font-size="12.5" font-weight="600" fill="#1b2a4a">Leader 选举</text>
-  <text x="200" y="292" text-anchor="middle" font-size="10.5" fill="#5b7db1">term++ · RequestVote · PreVote</text>
-  <text x="200" y="309" text-anchor="middle" font-size="10.5" fill="#5b7db1">随机超时 · 多数派授权</text>
-  <text x="200" y="330" text-anchor="middle" font-size="10.5" fill="#86868b">electSelf / requestVote</text>
+  <!-- ===== ② Raft 核心 6 盒 ===== -->
+  <text x="60" y="238" font-size="11" font-weight="600" fill="#8a8a90">Raft 核心 · raft.go run() 三态主循环</text>
 
-  <rect x="370" y="248" width="280" height="106" rx="11" fill="#f3f7fc" stroke="#cfe0f2" data-tid="Raft原理_支撑_日志复制" data-lab="日志复制"/>
-  <text x="510" y="272" text-anchor="middle" font-size="12.5" font-weight="600" fill="#1b2a4a">日志复制</text>
-  <text x="510" y="292" text-anchor="middle" font-size="10.5" fill="#5b7db1">AppendEntries · nextIndex 回退</text>
-  <text x="510" y="309" text-anchor="middle" font-size="10.5" fill="#5b7db1">pipeline · 一致性检查</text>
-  <text x="510" y="330" text-anchor="middle" font-size="10.5" fill="#86868b">replication.go</text>
+  <!-- 选举 -->
+  <rect x="60" y="248" width="280" height="106" rx="12" fill="#eef0f3" stroke="#d2d6dd" filter="url(#soft)" data-tid="Raft原理_支撑_Leader选举" data-lab="Leader 选举"/>
+  <rect x="60" y="248" width="4" height="106" rx="2" fill="#7c5fe6"/>
+  <text x="80" y="272" font-size="13" font-weight="700" fill="#1d1d1f">Leader 选举</text>
+  <text x="80" y="290" font-size="10.5" fill="#5b6470">term++ → pre-vote → electSelf → 多数派</text>
+  <text x="80" y="308" font-size="10" fill="#8a8a90">runCandidate · raft.go:286</text>
+  <text x="80" y="326" font-size="10" fill="#8a8a90">quorumSize 简单多数 · 每 term 至多一票</text>
+  <text x="322" y="345" font-size="9.5" fill="#a1a1a6" text-anchor="end">control</text>
 
-  <rect x="680" y="248" width="280" height="106" rx="11" fill="#f5faf6" stroke="#c9e6cf" data-tid="Raft原理_支撑_提交与应用" data-lab="提交与应用"/>
-  <text x="820" y="272" text-anchor="middle" font-size="12.5" font-weight="600" fill="#1f5130">提交与应用</text>
-  <text x="820" y="292" text-anchor="middle" font-size="10.5" fill="#4f9d69">多数派 match 中位数 → commit</text>
-  <text x="820" y="309" text-anchor="middle" font-size="10.5" fill="#4f9d69">commitIndex → FSM.Apply</text>
-  <text x="820" y="330" text-anchor="middle" font-size="10.5" fill="#86868b">commitment.go / runFSM</text>
+  <!-- 日志复制 (Hot center) -->
+  <rect x="370" y="248" width="280" height="106" rx="12" fill="#e9f2ff" stroke="#a9ccf5" filter="url(#soft)" data-tid="Raft原理_支撑_日志复制" data-lab="日志复制"/>
+  <rect x="370" y="248" width="4" height="106" rx="2" fill="#0a84ff"/>
+  <text x="390" y="272" font-size="13" font-weight="700" fill="#0a3d78">日志复制</text>
+  <text x="390" y="290" font-size="10.5" fill="#2a5a92">Leader 每 follower 一 goroutine 并行发</text>
+  <text x="390" y="308" font-size="10" fill="#4a7ab0">replicate · replication.go:137</text>
+  <text x="390" y="326" font-size="10" fill="#4a7ab0">appendEntries 一致性检查 · raft.go:1458</text>
+  <text x="632" y="345" font-size="9.5" fill="#0a84ff" text-anchor="end" font-weight="600">Hot Path</text>
 
-  <!-- Row2 -->
-  <rect x="60" y="372" width="280" height="106" rx="11" fill="#faf4fb" stroke="#e7cff0" data-tid="Raft原理_支撑_成员变更" data-lab="成员变更"/>
-  <text x="200" y="396" text-anchor="middle" font-size="12.5" font-weight="600" fill="#5a2b6b">成员变更</text>
-  <text x="200" y="416" text-anchor="middle" font-size="10.5" fill="#9a5cb0">单步 AddVoter/RemoveServer</text>
-  <text x="200" y="433" text-anchor="middle" font-size="10.5" fill="#9a5cb0">一次一变更（非 joint）</text>
-  <text x="200" y="454" text-anchor="middle" font-size="10.5" fill="#86868b">configuration.go</text>
+  <!-- 提交与应用 -->
+  <rect x="680" y="248" width="280" height="106" rx="12" fill="#eef0f3" stroke="#d2d6dd" filter="url(#soft)" data-tid="Raft原理_支撑_提交与应用" data-lab="提交与应用"/>
+  <rect x="680" y="248" width="4" height="106" rx="2" fill="#0a84ff"/>
+  <text x="700" y="272" font-size="13" font-weight="700" fill="#1d1d1f">提交与应用</text>
+  <text x="700" y="290" font-size="10.5" fill="#5b6470">多数派 matchIndex → commitIndex</text>
+  <text x="700" y="308" font-size="10" fill="#8a8a90">commitment.recalculate · commitment.go:88</text>
+  <text x="700" y="326" font-size="10" fill="#8a8a90">仅提交当前 term(startIndex 约束)</text>
+  <text x="942" y="345" font-size="9.5" fill="#a1a1a6" text-anchor="end">→ FSM.Apply</text>
 
-  <rect x="370" y="372" width="280" height="106" rx="11" fill="#fbf1f0" stroke="#f2cfca" data-tid="Raft原理_支撑_可靠性与脑裂防护" data-lab="可靠性/脑裂防护"/>
-  <text x="510" y="396" text-anchor="middle" font-size="12.5" font-weight="600" fill="#8a2b1f">可靠性与脑裂防护</text>
-  <text x="510" y="416" text-anchor="middle" font-size="10.5" fill="#c4675a">Leader Lease · quorum 退位</text>
-  <text x="510" y="433" text-anchor="middle" font-size="10.5" fill="#c4675a">PreVote · 单调任期</text>
-  <text x="510" y="454" text-anchor="middle" font-size="10.5" fill="#86868b">checkLeaderLease</text>
+  <!-- 成员变更 -->
+  <rect x="60" y="372" width="280" height="106" rx="12" fill="#eef0f3" stroke="#d2d6dd" filter="url(#soft)" data-tid="Raft原理_支撑_成员变更" data-lab="成员变更"/>
+  <rect x="60" y="372" width="4" height="106" rx="2" fill="#7c5fe6"/>
+  <text x="80" y="396" font-size="13" font-weight="700" fill="#1d1d1f">成员变更</text>
+  <text x="80" y="414" font-size="10.5" fill="#5b6470">single-server:一次 ±1 节点</text>
+  <text x="80" y="432" font-size="10" fill="#8a8a90">LogConfiguration 走日志 · raft.go:1201</text>
+  <text x="80" y="450" font-size="10" fill="#8a8a90">配置差 ≤1 → 新旧多数派必相交</text>
 
-  <rect x="680" y="372" width="280" height="106" rx="11" fill="#eef3fb" stroke="#bcd0ec" data-tid="Raft原理_支撑_Leader选举" data-lab="三状态机"/>
-  <text x="820" y="396" text-anchor="middle" font-size="12.5" font-weight="600" fill="#1b2a4a">三状态机 · 单线程</text>
-  <text x="820" y="416" text-anchor="middle" font-size="10.5" fill="#5b7db1">Follower ⇄ Candidate ⇄ Leader</text>
-  <text x="820" y="433" text-anchor="middle" font-size="10.5" fill="#5b7db1">run 串行处理事件</text>
-  <text x="820" y="454" text-anchor="middle" font-size="10.5" fill="#86868b">state.go / raft.go</text>
+  <!-- 可靠性/脑裂防护 -->
+  <rect x="370" y="372" width="280" height="106" rx="12" fill="#fdf2ea" stroke="#f0cdaa" filter="url(#soft)" data-tid="Raft原理_支撑_可靠性与脑裂防护" data-lab="可靠性与脑裂防护"/>
+  <rect x="370" y="372" width="4" height="106" rx="2" fill="#e8730f"/>
+  <text x="390" y="396" font-size="13" font-weight="700" fill="#8a4a12">可靠性 · 脑裂防护</text>
+  <text x="390" y="414" font-size="10.5" fill="#a8641e">分区 → 心跳超时 → 重选举</text>
+  <text x="390" y="432" font-size="10" fill="#b5793a">pre-vote 防无谓抬 term</text>
+  <text x="390" y="450" font-size="10" fill="#b5793a">VerifyLeader 拒旧 Leader 陈旧读</text>
+  <text x="632" y="469" font-size="9.5" fill="#e8730f" text-anchor="end" font-weight="600">Failure Path</text>
 
-  <!-- 注入接口层 -->
-  <rect x="40" y="540" width="960" height="66" rx="13" fill="#f5faf6" stroke="#c9e6cf" filter="url(#soft)"/>
-  <text x="52" y="558" font-size="12" font-weight="600" fill="#1f5130">注入接口层（由宿主实现 · 本库只依赖接口不碰真实 IO）</text>
-  <g font-size="10.5">
-    <rect x="52" y="566" width="172" height="32" rx="8" fill="#ffffff" stroke="#c9e6cf" data-tid="Raft原理_支撑_提交与应用" data-lab="FSM.Apply"/>
-    <text x="138" y="586" text-anchor="middle" fill="#1f5130"><tspan font-weight="600">FSM</tspan> 业务状态机</text>
-    <rect x="236" y="566" width="172" height="32" rx="8" fill="#ffffff" stroke="#c9e6cf" data-tid="Raft原理_支撑_持久状态" data-lab="LogStore"/>
-    <text x="322" y="586" text-anchor="middle" fill="#1f5130"><tspan font-weight="600">LogStore</tspan> 日志</text>
-    <rect x="420" y="566" width="172" height="32" rx="8" fill="#ffffff" stroke="#c9e6cf" data-tid="Raft原理_支撑_持久状态" data-lab="StableStore"/>
-    <text x="506" y="586" text-anchor="middle" fill="#1f5130"><tspan font-weight="600">StableStore</tspan> 元数据</text>
-    <rect x="604" y="566" width="172" height="32" rx="8" fill="#ffffff" stroke="#c9e6cf" data-tid="Raft原理_支撑_快照与日志压缩" data-lab="SnapshotStore"/>
-    <text x="690" y="586" text-anchor="middle" fill="#1f5130"><tspan font-weight="600">SnapshotStore</tspan></text>
-    <rect x="788" y="566" width="200" height="32" rx="8" fill="#ffffff" stroke="#c9e6cf" data-tid="Raft原理_支撑_Transport与RPC" data-lab="Transport"/>
-    <text x="888" y="586" text-anchor="middle" fill="#1f5130"><tspan font-weight="600">Transport</tspan> 网络传输</text>
+  <!-- 三状态机 -->
+  <rect x="680" y="372" width="280" height="106" rx="12" fill="#eef0f3" stroke="#d2d6dd" filter="url(#soft)" data-tid="Raft原理_支撑_Leader选举" data-lab="三状态机"/>
+  <rect x="680" y="372" width="4" height="106" rx="2" fill="#7c5fe6"/>
+  <text x="700" y="396" font-size="13" font-weight="700" fill="#1d1d1f">三状态机</text>
+  <g font-size="10.5" text-anchor="middle" fill="#33373e">
+    <rect x="700" y="408" width="76" height="26" rx="7" fill="#fff" stroke="#d2d6dd"/><text x="738" y="425">Follower</text>
+    <rect x="784" y="408" width="80" height="26" rx="7" fill="#fff" stroke="#d2d6dd"/><text x="824" y="425">Candidate</text>
+    <rect x="872" y="408" width="72" height="26" rx="7" fill="#fff" stroke="#d2d6dd"/><text x="908" y="425">Leader</text>
+  </g>
+  <text x="700" y="452" font-size="10" fill="#8a8a90">runFollower/Candidate/Leader · raft.go:136</text>
+  <text x="700" y="468" font-size="10" fill="#8a8a90">heartbeat 维持领导权(与复制解耦)</text>
+
+  <!-- 核心内连线:选举→复制(control), 复制→提交(hot), 可靠性→选举(failure回环) -->
+  <line x1="340" y1="301" x2="368" y2="301" stroke="#7c5fe6" stroke-width="1.6" stroke-dasharray="6 4" marker-end="url(#aCtl)"/>
+  <line x1="650" y1="301" x2="678" y2="301" stroke="#0a84ff" stroke-width="2.2" marker-end="url(#aHot)"/>
+  <path d="M370,425 L250,425 L250,356" stroke="#e8730f" stroke-width="1.6" stroke-dasharray="3 3" fill="none" marker-end="url(#aFail)"/>
+  <text x="258" y="372" font-size="9" fill="#e8730f">超时重选</text>
+  <line x1="820" y1="354" x2="820" y2="406" stroke="#7c5fe6" stroke-width="1.6" stroke-dasharray="6 4" marker-end="url(#aCtl)"/>
+
+  <!-- Hot 下行:提交 → 注入 FSM -->
+  <line x1="138" y1="478" x2="138" y2="558" stroke="#0f9e8e" stroke-width="1.6" marker-end="url(#aState)"/>
+  <text x="146" y="522" font-size="9.5" fill="#0f9e8e">State</text>
+
+  <!-- ===== ③ 注入接口层 5 cell ===== -->
+  <text x="52" y="556" font-size="11" font-weight="600" fill="#8a8a90">注入接口 · 宿主实现的五大插件</text>
+  <g font-size="10.5" text-anchor="middle">
+    <rect x="52" y="566" width="172" height="32" rx="8" fill="#e6f4f1" stroke="#b9dfd8" data-tid="Raft原理_支撑_提交与应用" data-lab="FSM Apply"/><text x="138" y="586" fill="#0f6b5e"><tspan font-weight="600">FSM</tspan> → Apply 用户态</text>
+    <rect x="236" y="566" width="172" height="32" rx="8" fill="#e6f4f1" stroke="#b9dfd8" data-tid="Raft原理_支撑_持久状态" data-lab="LogStore 日志"/><text x="322" y="586" fill="#0f6b5e"><tspan font-weight="600">LogStore</tspan> 日志</text>
+    <rect x="420" y="566" width="172" height="32" rx="8" fill="#e6f4f1" stroke="#b9dfd8" data-tid="Raft原理_支撑_持久状态" data-lab="StableStore term/vote"/><text x="506" y="586" fill="#0f6b5e"><tspan font-weight="600">StableStore</tspan> term/vote</text>
+    <rect x="604" y="566" width="172" height="32" rx="8" fill="#e6f4f1" stroke="#b9dfd8" data-tid="Raft原理_支撑_快照与日志压缩" data-lab="SnapshotStore 快照"/><text x="690" y="586" fill="#0f6b5e"><tspan font-weight="600">SnapshotStore</tspan> 快照</text>
+    <rect x="788" y="566" width="200" height="32" rx="8" fill="#e9edf6" stroke="#c6d2ea" data-tid="Raft原理_支撑_Transport与RPC" data-lab="Transport RPC"/><text x="888" y="586" fill="#274a78"><tspan font-weight="600">Transport</tspan> 节点间 RPC</text>
   </g>
 
-  <!-- 底层 IO band -->
-  <rect x="40" y="632" width="450" height="60" rx="12" fill="#fbf7ef" stroke="#efe2c8" filter="url(#soft)" data-tid="Raft原理_支撑_持久状态" data-lab="磁盘持久化"/>
-  <text x="265" y="656" text-anchor="middle" font-size="12" font-weight="600" fill="#8a6d1f">磁盘持久化</text>
-  <text x="265" y="676" text-anchor="middle" font-size="10.5" fill="#a1885a">日志 / CurrentTerm·LastVote 元数据 / 快照文件</text>
+  <!-- 状态落盘 -->
+  <line x1="322" y1="598" x2="322" y2="624" stroke="#0f9e8e" stroke-width="1.6" marker-end="url(#aState)"/>
+  <line x1="506" y1="598" x2="506" y2="624" stroke="#0f9e8e" stroke-width="1.6" marker-end="url(#aState)"/>
+  <line x1="888" y1="598" x2="888" y2="624" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#aState)"/>
 
-  <rect x="550" y="632" width="450" height="60" rx="12" fill="#f3f7fc" stroke="#cfe0f2" filter="url(#soft)" data-tid="Raft原理_支撑_Transport与RPC" data-lab="网络 RPC"/>
-  <text x="775" y="656" text-anchor="middle" font-size="12" font-weight="600" fill="#1b2a4a">网络 RPC（TCP / Inmem）</text>
-  <text x="775" y="676" text-anchor="middle" font-size="10.5" fill="#5b7db1">AppendEntries · RequestVote · InstallSnapshot · TimeoutNow</text>
+  <!-- ===== ④ 底层 IO band ===== -->
+  <rect x="40" y="632" width="450" height="60" rx="11" fill="#eef0f3" stroke="#d2d6dd" data-tid="Raft原理_支撑_持久状态" data-lab="磁盘持久化"/>
+  <text x="60" y="656" font-size="12.5" font-weight="600" fill="#33373e">磁盘持久化 · State Path</text>
+  <text x="60" y="676" font-size="10.5" fill="#8a8a90">CurrentTerm / LastVoteTerm / LastVoteCand + 日志 + 快照 · raft.go:28-30</text>
 
-  <!-- ============ 模块间数据流 / 调用连线（顺出写入主线）============ -->
-  <!-- 主数据面（实线灰）：写入路径 Apply→日志→commit→FSM -->
-  <g stroke="#c7c7cc" stroke-width="1.5" fill="none">
-    <!-- Apply 命令进入日志复制（dispatchLogs 写本地日志并复制） -->
-    <path d="M322,184 L322,240 L490,240 L490,248" marker-end="url(#ar)"/>
-    <!-- 日志复制 → 提交与应用：matchIndex 中位数推进 commit -->
-    <path d="M650,300 L680,300" marker-end="url(#ar)"/>
-    <!-- 已提交条目下发状态机：提交与应用 → FSM（经右侧空隙与层间总线到 FSM 左侧） -->
-    <path d="M690,354 L690,362 L665,362 L665,528 L44,528 L44,582 L52,582" marker-end="url(#ar)"/>
-    <!-- 注入接口 → 底层 IO：日志/元数据落盘、RPC 收发 -->
-    <path d="M322,598 L322,632" marker-end="url(#ar)"/>
-    <path d="M888,598 L888,632" marker-end="url(#ar)"/>
+  <rect x="550" y="632" width="450" height="60" rx="11" fill="#eef0f3" stroke="#d2d6dd" data-tid="Raft原理_支撑_Transport与RPC" data-lab="网络 RPC"/>
+  <text x="570" y="656" font-size="12.5" font-weight="600" fill="#33373e">网络 RPC · pipeline / heartbeat</text>
+  <text x="570" y="676" font-size="10.5" fill="#8a8a90">AppendEntries 流水线复制(不等响应)· replication.go:446 · Opt</text>
+
+  <!-- ===== 图例(右下角 铭牌)===== -->
+  <g font-size="10" fill="#5b6470">
+    <line x1="60" y1="716" x2="86" y2="716" stroke="#0a84ff" stroke-width="2.2"/><text x="92" y="719">Hot 主数据流</text>
+    <line x1="192" y1="716" x2="218" y2="716" stroke="#7c5fe6" stroke-width="1.6" stroke-dasharray="6 4"/><text x="224" y="719">Control 控制/选举</text>
+    <line x1="352" y1="716" x2="378" y2="716" stroke="#0f9e8e" stroke-width="1.6"/><text x="384" y="719">State 状态落盘</text>
+    <line x1="486" y1="716" x2="512" y2="716" stroke="#e8730f" stroke-width="1.6" stroke-dasharray="3 3"/><text x="518" y="719">Failure 分区/重选</text>
+    <line x1="640" y1="716" x2="666" y2="716" stroke="#c7c7cc" stroke-width="1.5"/><text x="672" y="719">Opt 流水线/批</text>
   </g>
-  <text x="330" y="206" font-size="8.5" fill="#86868b">Apply 命令编码为日志 · dispatchLogs</text>
-  <text x="665" y="242" text-anchor="middle" font-size="8.5" fill="#86868b">matchIndex 中位数推进 commit</text>
-  <text x="150" y="522" font-size="8.5" fill="#86868b">已提交条目 → runFSM 调 FSM.Apply</text>
-  <text x="330" y="622" font-size="8.5" fill="#86868b">日志 / 元数据落盘</text>
-  <text x="830" y="622" font-size="8.5" fill="#1b2a4a">RPC 收发</text>
-
-  <!-- 选举 / 控制旁路（虚线蓝） -->
-  <g stroke="#5b7db1" stroke-width="1.3" fill="none" stroke-dasharray="5 3">
-    <!-- Leader 选举 → 日志复制：当选后启动复制 -->
-    <path d="M340,300 L370,300" marker-end="url(#ar)"/>
-    <!-- 三状态机 run 串行驱动提交推进 -->
-    <path d="M820,372 L820,354" marker-end="url(#ar)"/>
-  </g>
-  <text x="355" y="366" text-anchor="middle" font-size="8" fill="#5b7db1">当选后启动复制</text>
-  <text x="690" y="366" font-size="8" fill="#5b7db1">run 单线程串行驱动</text>
-
-  <!-- 可靠性 / 脑裂防护旁路（虚线红） -->
-  <g stroke="#b58a8a" stroke-width="1.3" fill="none" stroke-dasharray="4 3">
-    <!-- 日志复制 ack → 可靠性：刷新 Leader Lease -->
-    <path d="M510,354 L510,372" marker-end="url(#ar)"/>
-  </g>
-  <text x="516" y="366" font-size="8" fill="#b58a8a">acks 刷新 Leader Lease</text>
-
-  <!-- 成员变更旁路（虚线紫）：配置定义投票成员 / quorum -->
-  <g stroke="#9a5cb0" stroke-width="1.3" fill="none" stroke-dasharray="4 3">
-    <path d="M200,372 L200,354" marker-end="url(#ar)"/>
-  </g>
-  <text x="140" y="366" font-size="8" fill="#9a5cb0">配置定义投票成员</text>
-
-  <!-- 机制标注（取自主线 md，勿杜撰） -->
-  <text x="595" y="206" font-size="8.5" fill="#b0982e">落后 follower 改发 InstallSnapshot 追平</text>
-  <text x="60" y="622" font-size="8.5" fill="#4f9d69">runFSM 单线程串行 Apply · 各节点状态机确定性一致</text>
-
-  <text x="1000" y="726" text-anchor="end" font-size="10" fill="#a1a1a6">灵魂：多数派日志复制达成线性一致 · IO/存储/状态机全由宿主注入</text>
 </svg>

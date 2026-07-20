@@ -1,123 +1,107 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="900" viewBox="0 0 1080 900" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="660" viewBox="0 0 1080 660" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
   <defs>
     <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
-    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+    <marker id="aHot" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+    <marker id="aState" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#c99a3a"/></marker>
+    <marker id="aCtl" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#5b7db1"/></marker>
+    <marker id="aBg" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#8a5cae"/></marker>
   </defs>
-  <rect width="1080" height="900" fill="#fbfbfd"/>
-  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">ClickHouse 核心原理 · 总架构图</text>
-  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">对称架构：每个节点是对等的 clickhouse-server；无中心 FE/BE 之分，Keeper 只做协调仲裁</text>
+  <rect width="1080" height="660" fill="#fbfbfd"/>
 
-  <!-- external data ecosystem layer (非 ClickHouse 组件 · 经集成引擎/表函数/字典接入) -->
-  <rect x="30" y="64" width="1020" height="70" rx="12" fill="#f4f2ee" stroke="#e3ddd2" stroke-dasharray="6 4"/>
-  <text x="50" y="84" font-size="11" font-weight="700" fill="#6e6357">外部数据生态（非 ClickHouse 组件 · 经集成引擎 / 表函数 / 字典旁路接入,不进本地 Part）</text>
-  <g text-anchor="middle" font-size="8.5">
-    <rect x="46" y="94" width="176" height="32" rx="8" fill="#fbf6ef" stroke="#e6d8c4"/><text x="134" y="107" font-size="9" font-weight="600" fill="#5a3410">流式接入</text><text x="134" y="120" fill="#93762e">Kafka / RabbitMQ / NATS / FileLog</text>
-    <rect x="230" y="94" width="196" height="32" rx="8" fill="#fbf6ef" stroke="#e6d8c4"/><text x="328" y="107" font-size="9" font-weight="600" fill="#5a3410">对象存储 / 数据湖</text><text x="328" y="120" fill="#93762e">S3 / HDFS / Azure · Iceberg/Delta/Hudi</text>
-    <rect x="434" y="94" width="196" height="32" rx="8" fill="#fbf6ef" stroke="#e6d8c4"/><text x="532" y="107" font-size="9" font-weight="600" fill="#5a3410">外部数据库</text><text x="532" y="120" fill="#93762e">MySQL / PostgreSQL / MongoDB</text>
-    <rect x="638" y="94" width="196" height="32" rx="8" fill="#fbf6ef" stroke="#e6d8c4"/><text x="736" y="107" font-size="9" font-weight="600" fill="#5a3410">表函数 · 即席读</text><text x="736" y="120" fill="#93762e">s3 / url / remote / file</text>
-    <rect x="842" y="94" width="194" height="32" rx="8" fill="#fbf6ef" stroke="#e6d8c4"/><text x="939" y="107" font-size="9" font-weight="600" fill="#5a3410">字典 Dictionary</text><text x="939" y="120" fill="#93762e">维表 JOIN 加速 · 多源加载</text>
+  <!-- ===== 标题带 ===== -->
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">ClickHouse 总架构 · 多视角透视：对等节点各跑完整查询栈，Keeper 只做协调仲裁</text>
+  <text x="30" y="47" font-size="10.5" fill="#6e6e73">分层脊：查询链 接入→解析→分析→优化→执行 → MergeTree 不可变 Part；后台 merge 偿还写入欠账　源码基准 v25.8</text>
+
+  <!-- ===== 图例：四型语义路径 ===== -->
+  <line x1="40" y1="62" x2="70" y2="62" stroke="#2f9e6e" stroke-width="1.8" marker-end="url(#aHot)"/>
+  <text x="76" y="66" font-size="10.5" fill="#3a3a3c">Hot 查询链（接入→执行）</text>
+  <line x1="270" y1="62" x2="300" y2="62" stroke="#c99a3a" stroke-width="1.8" marker-end="url(#aState)"/>
+  <text x="306" y="66" font-size="10.5" fill="#3a3a3c">State 写入落不可变 Part</text>
+  <line x1="500" y1="62" x2="530" y2="62" stroke="#5b7db1" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#aCtl)"/>
+  <text x="536" y="66" font-size="10.5" fill="#3a3a3c">Control Keeper 协调仲裁（虚线）</text>
+  <line x1="760" y1="62" x2="790" y2="62" stroke="#8a5cae" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#aBg)"/>
+  <text x="796" y="66" font-size="10.5" fill="#3a3a3c">后台 merge / mutation（虚线）</text>
+  <text x="1040" y="66" font-size="10" fill="#a1a1a6" text-anchor="end">框 = 主线可下钻</text>
+
+  <!-- ===== ① 查询链（Hot，节点内前台同步） ===== -->
+  <rect x="24" y="82" width="1032" height="100" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="40" y="102" font-size="12" font-weight="600" fill="#1b2a4a">查询链 · 每个对等节点内的前台流水（接入 → 执行）</text>
+  <g text-anchor="middle" font-size="10">
+    <rect x="40" y="114" width="196" height="56" rx="9" fill="#fff" stroke="#cfe0f2" data-tid="qlife" data-lab="接入/解析"/><text x="138" y="136" fill="#1b2a4a" font-weight="600">接入 / 解析</text><text x="138" y="154" fill="#5b7db1" font-size="9">协议接入 → AST</text>
+    <rect x="248" y="114" width="196" height="56" rx="9" fill="#fff" stroke="#cfe0f2" data-tid="qlife" data-lab="分析/规划"/><text x="346" y="136" fill="#1b2a4a" font-weight="600">分析 / 规划</text><text x="346" y="154" fill="#5b7db1" font-size="9">Analyzer → QueryPlan</text>
+    <rect x="456" y="114" width="196" height="56" rx="9" fill="#fff" stroke="#cfe0f2" data-tid="opttech" data-lab="优化技术"/><text x="554" y="136" fill="#1b2a4a" font-weight="600">优化</text><text x="554" y="154" fill="#5b7db1" font-size="9">主键 / PREWHERE 裁剪</text>
+    <rect x="664" y="114" width="196" height="56" rx="9" fill="#fff" stroke="#cfe0f2" data-tid="execengine" data-lab="执行引擎"/><text x="762" y="136" fill="#1b2a4a" font-weight="600">执行</text><text x="762" y="154" fill="#5b7db1" font-size="9">Processors 向量化 Pipeline</text>
+    <rect x="872" y="114" width="168" height="56" rx="9" fill="#eafaf1" stroke="#b8e6cd"/><text x="956" y="136" fill="#1c6b45" font-weight="600">存储读写</text><text x="956" y="154" fill="#3a9b6e" font-size="9">MergeTree</text>
+  </g>
+  <g fill="none" stroke="#2f9e6e" stroke-width="1.6">
+    <line x1="236" y1="142" x2="248" y2="142" marker-end="url(#aHot)"/>
+    <line x1="444" y1="142" x2="456" y2="142" marker-end="url(#aHot)"/>
+    <line x1="652" y1="142" x2="664" y2="142" marker-end="url(#aHot)"/>
+    <line x1="860" y1="142" x2="872" y2="142" marker-end="url(#aHot)"/>
   </g>
 
-  <!-- client layer -->
-  <rect x="30" y="146" width="1020" height="56" rx="12" fill="#f7f7f9" stroke="#e6e6ea"/>
-  <text x="50" y="168" font-size="11" font-weight="700" fill="#4b4b50">客户端 / 协议接入</text>
+  <!-- ===== ② 存储引擎 MergeTree（不可变 Part） ===== -->
+  <rect x="24" y="192" width="1032" height="96" rx="14" fill="#fdf3e5" stroke="#f0d9b5" filter="url(#soft)"/>
+  <text x="40" y="212" font-size="12" font-weight="600" fill="#7a5a1e">存储引擎 · MergeTree（本地盘 · 不可变 Part）</text>
+  <g text-anchor="middle" font-size="10">
+    <rect x="40" y="224" width="232" height="54" rx="9" fill="#fff" stroke="#f0d9b5" data-tid="storageformat" data-lab="存储引擎 · Part 结构"/><text x="156" y="246" fill="#7a5a1e" font-weight="600">Part 目录</text><text x="156" y="264" fill="#b08535" font-size="9">列 .bin/.mrk · Wide/Compact</text>
+    <rect x="284" y="224" width="232" height="54" rx="9" fill="#fff" stroke="#f0d9b5" data-tid="storageformat" data-lab="稀疏主键 / 跳数索引"/><text x="400" y="246" fill="#7a5a1e" font-weight="600">稀疏主键 · 跳数索引</text><text x="400" y="264" fill="#b08535" font-size="9">排序 + 粒度裁剪，非唯一</text>
+    <rect x="528" y="224" width="232" height="54" rx="9" fill="#fff" stroke="#f0d9b5" data-tid="storageformat" data-lab="缓存"/><text x="644" y="246" fill="#7a5a1e" font-weight="600">缓存</text><text x="644" y="264" fill="#b08535" font-size="9">Mark / 未压缩 / 主键索引</text>
+    <rect x="772" y="224" width="268" height="54" rx="9" fill="#fff" stroke="#f0d9b5" data-tid="storageformat" data-lab="Disks 抽象"/><text x="906" y="246" fill="#7a5a1e" font-weight="600">Disks 抽象</text><text x="906" y="264" fill="#b08535" font-size="9">本地盘 / S3 / HDFS · 存算分离</text>
+  </g>
+
+  <!-- ===== ③ 后台任务（守护线程 · 偿还写入欠账） ===== -->
+  <rect x="24" y="298" width="1032" height="88" rx="14" fill="#fdf9f0" stroke="#efe3cd"/>
+  <text x="40" y="318" font-size="11.5" font-weight="600" fill="#7a5a1e">后台任务 · 守护线程异步偿还（merge / mutation / TTL / fetch）</text>
+  <g text-anchor="middle" font-size="10">
+    <rect x="40" y="330" width="232" height="46" rx="9" fill="#fff" stroke="#efe3cd" data-tid="compaction" data-lab="后台任务 · Merge"/><text x="156" y="350" fill="#7a5a1e" font-weight="600">Merge 合并 Part</text><text x="156" y="366" fill="#b08535" font-size="9">变体语义只在 merge 生效</text>
+    <rect x="284" y="330" width="232" height="46" rx="9" fill="#fff" stroke="#efe3cd" data-tid="compaction" data-lab="Mutation / TTL"/><text x="400" y="350" fill="#7a5a1e" font-weight="600">Mutation / TTL</text><text x="400" y="366" fill="#b08535" font-size="9">整 Part 重写 · 过期</text>
+    <rect x="528" y="330" width="232" height="46" rx="9" fill="#fff" stroke="#efe3cd" data-tid="compaction" data-lab="Fetch 副本拉取"/><text x="644" y="350" fill="#7a5a1e" font-weight="600">Fetch 副本拉取</text><text x="644" y="366" fill="#b08535" font-size="9">HTTP 拉 part 补副本</text>
+    <rect x="772" y="330" width="268" height="46" rx="9" fill="#fff" stroke="#efe3cd" data-tid="compaction" data-lab="清理 / TTL move"/><text x="906" y="350" fill="#7a5a1e" font-weight="600">清理 · TTL move</text><text x="906" y="366" fill="#b08535" font-size="9">GC 旧 Part · 分层迁移</text>
+  </g>
+
+  <!-- ===== ④ 下部：Keeper 协调面 + 集群与复制 ===== -->
+  <rect x="24" y="396" width="508" height="128" rx="14" fill="#eafaf1" stroke="#b8e6cd" filter="url(#soft)"/>
+  <text x="40" y="416" font-size="12" font-weight="600" fill="#1c6b45">协调面 · clickhouse-keeper（Raft · Control）</text>
+  <text x="40" y="431" font-size="9" fill="#3a9b6e">替代 ZooKeeper · 只存协调元数据，不存表数据</text>
   <g text-anchor="middle" font-size="9.5">
-    <rect x="360" y="158" width="150" height="34" rx="8" fill="#eef3fb" stroke="#bcd0ec"/><text x="435" y="179" fill="#1b2a4a">Native TCP (9000)</text>
-    <rect x="524" y="158" width="140" height="34" rx="8" fill="#eef3fb" stroke="#bcd0ec"/><text x="594" y="179" fill="#1b2a4a">HTTP (8123)</text>
-    <rect x="678" y="158" width="200" height="34" rx="8" fill="#eef3fb" stroke="#bcd0ec"/><text x="778" y="179" fill="#1b2a4a">MySQL / gRPC / PG 兼容</text>
+    <rect x="40" y="440" width="150" height="72" rx="9" fill="#fff" stroke="#b8e6cd" data-tid="metadata" data-lab="元数据 · 复制日志仲裁"/><text x="115" y="472" fill="#1c6b45" font-weight="600">复制日志仲裁</text><text x="115" y="490" fill="#3a9b6e" font-size="8.5">/log /replicas</text></g>
+  <g text-anchor="middle" font-size="9.5">
+    <rect x="200" y="440" width="150" height="72" rx="9" fill="#fff" stroke="#b8e6cd" data-tid="metadata" data-lab="写入去重 quorum"/><text x="275" y="472" fill="#1c6b45" font-weight="600">写入去重 quorum</text><text x="275" y="490" fill="#3a9b6e" font-size="8.5">/blocks · 幂等</text></g>
+  <g text-anchor="middle" font-size="9.5">
+    <rect x="360" y="440" width="160" height="72" rx="9" fill="#fff" stroke="#b8e6cd" data-tid="metadata" data-lab="分布式 DDL 队列"/><text x="440" y="472" fill="#1c6b45" font-weight="600">分布式 DDL</text><text x="440" y="490" fill="#3a9b6e" font-size="8.5">task_queue/ddl</text></g>
+
+  <rect x="548" y="396" width="508" height="128" rx="14" fill="#f3f7fc" stroke="#cfe0f2" filter="url(#soft)"/>
+  <text x="564" y="416" font-size="12" font-weight="600" fill="#274a78">集群与复制 · 对等节点（Shard × Replica，无主）</text>
+  <text x="564" y="431" font-size="9" fill="#5b7db1">每节点都是完整 server；跨节点靠 Distributed 汇聚 + 副本互拉</text>
+  <g text-anchor="middle" font-size="9.5">
+    <rect x="564" y="440" width="238" height="72" rx="9" fill="#fff" stroke="#cfe0f2" data-tid="tabletsched" data-lab="集群与自愈 · Distributed"/><text x="683" y="468" fill="#274a78" font-weight="600">Distributed 路由汇聚</text><text x="683" y="486" fill="#5b7db1" font-size="8.5">scatter/gather 跨 shard</text><text x="683" y="500" fill="#5b7db1" font-size="8.5">副本恢复 / 均衡 move</text></g>
+  <g text-anchor="middle" font-size="9.5">
+    <rect x="814" y="440" width="226" height="72" rx="9" fill="#fff" stroke="#cfe0f2" data-tid="transaction" data-lab="复制与一致性"/><text x="927" y="468" fill="#274a78" font-weight="600">对等副本 一致</text><text x="927" y="486" fill="#5b7db1" font-size="8.5">part fetch 补齐</text><text x="927" y="500" fill="#5b7db1" font-size="8.5">parallel replicas 分担读</text></g>
+
+  <!-- ===== ⑤ 贯穿带：访问控制 + 资源与负载 ===== -->
+  <rect x="24" y="534" width="1032" height="72" rx="14" fill="#f6f0fb" stroke="#dcc6ee"/>
+  <text x="40" y="554" font-size="11.5" font-weight="600" fill="#5a2a82">贯穿 · 访问控制 / 资源与负载（横切所有节点）</text>
+  <g text-anchor="middle" font-size="10">
+    <rect x="40" y="562" width="504" height="38" rx="9" fill="#fff" stroke="#dcc6ee" data-tid="dcl" data-lab="访问控制 DCL"/><text x="200" y="586" fill="#5a2a82" font-weight="600">访问控制 DCL</text><text x="430" y="586" fill="#8a5cae" font-size="9">User/Role/RowPolicy · Quota 认证</text>
+    <rect x="556" y="562" width="484" height="38" rx="9" fill="#fff" stroke="#dcc6ee" data-tid="workload" data-lab="资源与负载"/><text x="700" y="586" fill="#5a2a82" font-weight="600">资源与负载</text><text x="900" y="586" fill="#8a5cae" font-size="9">Settings/MemoryTracker · Scheduler</text>
   </g>
 
-  <!-- one server node (detailed, left) — body 整体下移 80 让出顶部外部数据生态层 -->
-  <g transform="translate(0,80)">
-  <rect x="30" y="140" width="640" height="470" rx="16" fill="#f3f7fc" stroke="#cfe0f2"/>
-  <text x="50" y="164" font-size="12.5" font-weight="700" fill="#274a78">clickhouse-server 节点（每个节点都是这套完整栈 · 对等）</text>
+  <!-- ===== 语义分型连线 ===== -->
+  <!-- Hot：执行/存储读写 → MergeTree 存储 -->
+  <line x1="900" y1="182" x2="900" y2="192" stroke="#2f9e6e" stroke-width="1.8" marker-end="url(#aHot)"/>
+  <!-- State：写入落不可变 Part -->
+  <line x1="1000" y1="182" x2="1000" y2="192" stroke="#c99a3a" stroke-width="1.8" marker-end="url(#aState)"/>
+  <text x="1006" y="190" font-size="8" fill="#c99a3a">建 Part</text>
+  <!-- 后台：存储 → 后台任务（异步偿还） -->
+  <line x1="156" y1="288" x2="156" y2="298" stroke="#8a5cae" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#aBg)"/>
+  <line x1="500" y1="288" x2="500" y2="298" stroke="#8a5cae" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#aBg)"/>
+  <line x1="906" y1="288" x2="906" y2="298" stroke="#8a5cae" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#aBg)"/>
+  <!-- Control：Keeper → 后台/集群（协调仲裁，虚线） -->
+  <line x1="280" y1="396" x2="280" y2="386" stroke="#5b7db1" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#aCtl)"/>
+  <line x1="532" y1="460" x2="548" y2="460" stroke="#5b7db1" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#aCtl)"/>
 
-  <!-- query path -->
-  <text x="50" y="192" font-size="10.5" font-weight="700" fill="#1b2a4a">查询/写入路径（前台同步）</text>
-  <g text-anchor="middle" font-size="9">
-    <rect x="46" y="200" width="118" height="52" rx="9" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)" data-tid="qlife" data-lab="DQL 查询"/><text x="105" y="220" font-size="9.5" font-weight="600" fill="#1b2a4a">接入/解析</text><text x="105" y="235" fill="#5b7db1">TCPHandler</text><text x="105" y="247" fill="#5b7db1">executeQuery</text>
-    <rect x="176" y="200" width="118" height="52" rx="9" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/><text x="235" y="220" font-size="9.5" font-weight="600" fill="#1b2a4a">分析/规划</text><text x="235" y="235" fill="#5b7db1">Analyzer</text><text x="235" y="247" fill="#5b7db1">Planner→QueryPlan</text>
-    <rect x="306" y="200" width="118" height="52" rx="9" fill="#f3f7fc" stroke="#cfe0f2" filter="url(#soft)" data-tid="opttech" data-lab="优化技术"/><text x="365" y="220" font-size="9.5" font-weight="600" fill="#274a78">优化</text><text x="365" y="235" fill="#5b7db1">QueryPlan 优化 pass</text><text x="365" y="247" fill="#5b7db1">主键/PREWHERE 裁剪</text>
-    <rect x="436" y="200" width="118" height="52" rx="9" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)" data-tid="execengine" data-lab="执行引擎"/><text x="495" y="220" font-size="9.5" font-weight="600" fill="#12402a">执行</text><text x="495" y="235" fill="#2f6f4f">Processors 向量化</text><text x="495" y="247" fill="#2f6f4f">PipelineExecutor</text>
-    <rect x="566" y="200" width="80" height="52" rx="9" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/><text x="606" y="223" font-size="9.5" font-weight="600" fill="#5a3410">存储读写</text><text x="606" y="240" fill="#93762e">MergeTree</text>
-  </g>
-  <g stroke="#c7c7cc" stroke-width="1.3" fill="none">
-    <line x1="164" y1="226" x2="176" y2="226" marker-end="url(#ar)"/>
-    <line x1="294" y1="226" x2="306" y2="226" marker-end="url(#ar)"/>
-    <line x1="424" y1="226" x2="436" y2="226" marker-end="url(#ar)"/>
-    <line x1="554" y1="226" x2="566" y2="226" marker-end="url(#ar)"/>
-  </g>
-
-  <!-- storage layer -->
-  <text x="50" y="284" font-size="10.5" font-weight="700" fill="#5a3410">存储引擎（本地盘 · 不可变 Part）</text>
-  <rect x="46" y="292" width="600" height="86" rx="11" fill="#fdf9f0" stroke="#efe3cd" data-tid="storageformat" data-lab="存储引擎"/>
-  <g text-anchor="middle" font-size="8.5">
-    <rect x="60" y="304" width="130" height="62" rx="8" fill="#fdf6ea" stroke="#efdcb4"/><text x="125" y="324" font-size="9.5" font-weight="600" fill="#5a3410">Part 目录</text><text x="125" y="340" fill="#93762e">列 .bin/.mrk · primary.idx</text><text x="125" y="354" fill="#93762e">Wide/Compact</text>
-    <rect x="202" y="304" width="130" height="62" rx="8" fill="#fdf6ea" stroke="#efdcb4"/><text x="267" y="324" font-size="9.5" font-weight="600" fill="#5a3410">索引</text><text x="267" y="340" fill="#93762e">稀疏主键 · 跳数索引</text><text x="267" y="354" fill="#93762e">分区 minmax</text>
-    <rect x="344" y="304" width="130" height="62" rx="8" fill="#fdf6ea" stroke="#efdcb4"/><text x="409" y="324" font-size="9.5" font-weight="600" fill="#5a3410">缓存</text><text x="409" y="340" fill="#93762e">Mark/Uncompressed</text><text x="409" y="354" fill="#93762e">PrimaryIndex</text>
-    <rect x="486" y="304" width="146" height="62" rx="8" fill="#fdf6ea" stroke="#efdcb4"/><text x="559" y="324" font-size="9.5" font-weight="600" fill="#5a3410">Disks 抽象</text><text x="559" y="340" fill="#93762e">本地盘 / S3 / HDFS</text><text x="559" y="354" fill="#93762e">存算分离可选</text>
-  </g>
-
-  <!-- background layer -->
-  <text x="50" y="404" font-size="10.5" font-weight="700" fill="#7a5a1e">后台任务（守护线程）</text>
-  <rect x="46" y="412" width="600" height="72" rx="11" fill="#fff3e0" stroke="#e8cf9a" data-tid="compaction" data-lab="后台任务"/>
-  <g text-anchor="middle" font-size="8.5" fill="#5a3410">
-    <rect x="60" y="424" width="110" height="48" rx="8" fill="#fff" stroke="#e8cf9a"/><text x="115" y="443" font-weight="600">Merge</text><text x="115" y="459" fill="#93762e">合并 Part</text>
-    <rect x="182" y="424" width="110" height="48" rx="8" fill="#fff" stroke="#e8cf9a"/><text x="237" y="443" font-weight="600">Mutation/TTL</text><text x="237" y="459" fill="#93762e">重写/过期</text>
-    <rect x="304" y="424" width="110" height="48" rx="8" fill="#fff" stroke="#e8cf9a"/><text x="359" y="443" font-weight="600">Fetch</text><text x="359" y="459" fill="#93762e">副本拉取</text>
-    <rect x="426" y="424" width="110" height="48" rx="8" fill="#fff" stroke="#e8cf9a"/><text x="481" y="443" font-weight="600">清理/移动</text><text x="481" y="459" fill="#93762e">GC / TTL move</text>
-    <rect x="548" y="424" width="84" height="48" rx="8" fill="#fff" stroke="#e8cf9a"/><text x="590" y="443" font-weight="600">统计</text><text x="590" y="459" fill="#93762e">刷新</text>
-  </g>
-
-  <!-- access & resource -->
-  <text x="50" y="508" font-size="10.5" font-weight="700" fill="#3d2a5a">贯穿：访问控制 · 资源管理</text>
-  <rect x="46" y="516" width="600" height="80" rx="11" fill="#f6f2fb" stroke="#d9c9ec"/>
-  <g text-anchor="middle" font-size="8.5" fill="#3d2a5a">
-    <rect x="60" y="528" width="180" height="56" rx="8" fill="#fff" stroke="#d9c9ec" data-tid="dcl" data-lab="访问控制 DCL"/><text x="150" y="548" font-weight="600">AccessControl (DCL)</text><text x="150" y="564" fill="#7a5da5">User/Role/RowPolicy</text><text x="150" y="577" fill="#7a5da5">Quota/认证</text>
-    <rect x="252" y="528" width="180" height="56" rx="8" fill="#fff" stroke="#d9c9ec" data-tid="workload" data-lab="资源与负载"/><text x="342" y="548" font-weight="600">资源与负载</text><text x="342" y="564" fill="#7a5da5">Settings/MemoryTracker</text><text x="342" y="577" fill="#7a5da5">Scheduler/并发控制</text>
-    <rect x="444" y="528" width="188" height="56" rx="8" fill="#fff" stroke="#d9c9ec"/><text x="538" y="548" font-weight="600">可观测</text><text x="538" y="564" fill="#7a5da5">system.* 表</text><text x="538" y="577" fill="#7a5da5">query_log/parts/merges</text>
-  </g>
-
-  <!-- Keeper (right top) -->
-  <rect x="690" y="140" width="360" height="230" rx="16" fill="#eafaf1" stroke="#bfe0cd" data-tid="metadata" data-lab="元数据 · Keeper"/>
-  <text x="870" y="164" font-size="12.5" font-weight="700" fill="#12402a" text-anchor="middle">clickhouse-keeper（Raft 协调集群）</text>
-  <text x="870" y="182" font-size="9" fill="#2f6f4f" text-anchor="middle">替代 ZooKeeper · 只存协调元数据，不存表数据</text>
-  <g text-anchor="middle" font-size="8.5" fill="#12402a">
-    <rect x="710" y="196" width="150" height="56" rx="9" fill="#fff" stroke="#bfe0cd"/><text x="785" y="216" font-weight="600">复制日志仲裁</text><text x="785" y="232" fill="#2f6f4f">/log /replicas</text><text x="785" y="245" fill="#2f6f4f">/mutations</text>
-    <rect x="882" y="196" width="150" height="56" rx="9" fill="#fff" stroke="#bfe0cd"/><text x="957" y="216" font-weight="600">写入去重</text><text x="957" y="232" fill="#2f6f4f">/blocks (block hash)</text><text x="957" y="245" fill="#2f6f4f">quorum 跟踪</text>
-    <rect x="710" y="262" width="150" height="52" rx="9" fill="#fff" stroke="#bfe0cd"/><text x="785" y="282" font-weight="600">分布式 DDL</text><text x="785" y="298" fill="#2f6f4f">task_queue/ddl</text>
-    <rect x="882" y="262" width="150" height="52" rx="9" fill="#fff" stroke="#bfe0cd"/><text x="957" y="282" font-weight="600">复制型元数据</text><text x="957" y="298" fill="#2f6f4f">DDL/Access 传播</text>
-  </g>
-  <text x="870" y="340" font-size="9" fill="#2f6f4f" text-anchor="middle">3/5 节点 Raft 组 · 多数派提交 · 见「元数据与协调」「复制与一致性」</text>
-
-  <!-- other replica nodes (right bottom) -->
-  <rect x="690" y="388" width="360" height="222" rx="16" fill="#f3f7fc" stroke="#cfe0f2" data-tid="tabletsched" data-lab="集群与自愈"/>
-  <text x="870" y="412" font-size="12" font-weight="700" fill="#274a78" text-anchor="middle">其余对等节点（Shard × Replica）</text>
-  <g text-anchor="middle" font-size="8.5" fill="#274a78">
-    <rect x="710" y="424" width="150" height="70" rx="9" fill="#eef3fb" stroke="#bcd0ec"/><text x="785" y="446" font-weight="600">Shard 1</text><text x="785" y="463" fill="#5b7db1">Replica A / B</text><text x="785" y="479" fill="#5b7db1">同数据多副本</text>
-    <rect x="882" y="424" width="150" height="70" rx="9" fill="#eef3fb" stroke="#bcd0ec"/><text x="957" y="446" font-weight="600">Shard 2</text><text x="957" y="463" fill="#5b7db1">Replica A / B</text><text x="957" y="479" fill="#5b7db1">不同数据分片</text>
-  </g>
-  <rect x="710" y="504" width="322" height="42" rx="9" fill="#fdf6ea" stroke="#efdcb4" data-tid="transaction" data-lab="复制 · Distributed"/>
-  <text x="871" y="522" font-size="9" font-weight="600" fill="#5a3410" text-anchor="middle">Distributed 表 = 跨 shard 路由/汇聚视图</text>
-  <text x="871" y="537" font-size="8" fill="#93762e" text-anchor="middle">散射到各 shard 本地表 → 汇聚（scatter/gather，非 MPP fragment 交换）</text>
-  <text x="871" y="574" font-size="9" fill="#5b7db1" text-anchor="middle">副本间 part fetch（HTTP）· parallel replicas 分担读</text>
-  <text x="871" y="592" font-size="8.5" fill="#8aa6cf" text-anchor="middle">见「集群与自愈」主线</text>
-
-  <!-- connections -->
-  <g stroke="#9ccbb0" stroke-width="1.5" fill="none" stroke-dasharray="5 3">
-    <path d="M646,300 L690,255" marker-end="url(#ar)"/>
-    <path d="M690,300 L646,300" opacity="0"/>
-  </g>
-  <line x1="435" y1="122" x2="350" y2="200" stroke="#c7c7cc" stroke-width="1.3" fill="none" marker-end="url(#ar)"/>
-  <path d="M660,490 L690,490" stroke="#c7c7cc" stroke-width="1.3" fill="none" marker-end="url(#ar)"/>
-  <text x="668" y="270" font-size="8" fill="#4c8567" transform="rotate(-38 668 270)">Keeper 协调</text>
-
-  <!-- bottom takeaway -->
-  <rect x="30" y="626" width="1020" height="76" rx="12" fill="#f7f7f9" stroke="#e6e6ea"/>
-  <text x="50" y="650" font-size="11" font-weight="700" fill="#1d1d1f"></text>
-  <text x="50" y="672" font-size="10" fill="#4b4b50">与 Doris 的 FE/BE 主从架构不同：ClickHouse 每个节点都是对等的完整 server（解析→优化→执行→存储一条龙），</text>
-  <text x="50" y="689" font-size="10" fill="#4b4b50">没有中心协调进程；Keeper 只做"协调仲裁"（复制日志/去重/DDL 队列），Distributed 表做跨 shard 路由汇聚。</text>
-  <text x="30" y="726" font-size="9" fill="#a1a1a6">纵向 = 一条请求在单节点内的处理链；右侧 = 节点间协作（Keeper 仲裁 + 副本/分片）。后台任务贴在存储侧异步偿还写入欠账。</text>
-  <text x="30" y="744" font-size="9" fill="#a1a1a6">配套详见：物理部署图（Shard/Replica/Keeper 布局）与依赖关系图（能力域分层）。</text>
-  </g>
+  <!-- ===== 读法 ===== -->
+  <rect x="24" y="616" width="1032" height="30" rx="8" fill="#f7f7f9" stroke="#ececef"/>
+  <text x="540" y="635" font-size="9.5" fill="#4a4a4f" text-anchor="middle">读法：查询在任一对等节点内 接入→解析→分析→优化→执行、读 MergeTree 不可变 Part；写入直接落新 Part，后台 merge 偿还；Keeper 仲裁复制/DDL，Distributed 跨 shard 汇聚</text>
 </svg>

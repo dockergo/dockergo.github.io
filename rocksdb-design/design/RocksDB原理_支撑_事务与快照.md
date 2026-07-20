@@ -1,6 +1,6 @@
 # RocksDB 原理 · 支撑主线 · 事务与快照（MVCC）
 
-> **定位**：属"状态与一致性能力域"。管多版本并发控制的基础（SequenceNumber + 内部键）、一致性快照（Snapshot）、以及可选的事务层（悲观/乐观 + 2PC）。被【读取路径】用于取一致版本、被【接触面】的 Snapshot/事务 API 依赖。是 RocksDB 提供隔离与原子性的核心。源码基准 **RocksDB 11.7.0**（`db/dbformat.h`, `utilities/transactions/`）。
+> **定位**：属"状态与一致性能力域"。管多版本并发控制的基础（SequenceNumber + 内部键）、一致性快照（Snapshot）、以及可选的事务层（悲观/乐观 + 2PC）。被【读取路径】用于取一致版本、被【接触面】的 Snapshot/事务 API 依赖。是 RocksDB 提供隔离与原子性的核心。源码基准 **RocksDB 11.x**（`db/dbformat.h`, `utilities/transactions/`；正文行号锚点基于可克隆的 `v11.1.2` tag 逐一核实）。
 
 RocksDB 的多版本不是靠锁，而是靠**每次写获得的全局递增 SequenceNumber**：内部键 = 用户键 + seq + 类型。读在某个 seq 快照下天然看到该时刻的一致视图。在此之上，事务层（可选）提供加锁/冲突检测/2PC。
 
@@ -10,7 +10,7 @@ RocksDB 的多版本不是靠锁，而是靠**每次写获得的全局递增 Seq
 
 ![RocksDB MVCC · seq + 内部键实现多版本](RocksDB原理_事务_01MVCC.svg)
 
-每条写从 `VersionSet` 拿一个全局递增的 **SequenceNumber**。存储的**内部键** = `用户键 + seq(7字节) + 类型(1字节)`，同一用户键的多版本按 seq 降序相邻排列。读时给定一个 seq 上界（快照），归并时只取"seq ≤ 快照且最大"的那个版本——这就是 MVCC：读看到写发生时刻的一致视图，读写不互斥。类型（Value/Delete/Merge/SingleDelete…）区分这是值、墓碑还是合并操作数。
+每条写从 `VersionSet` 拿一个全局递增的 **SequenceNumber**（`using SequenceNumber = uint64_t`，`include/rocksdb/types.h:22`）。存储的**内部键** = `用户键 + seq(7字节) + 类型(1字节)`（尾部固定 8 字节，`kNumInternalBytes = 8`，`db/dbformat.h:134`；seq 与类型由 `PackSequenceAndType`，`db/dbformat.h:181` 打包进一个 uint64），同一用户键的多版本按 seq 降序相邻排列。读时给定一个 seq 上界（快照），归并时只取"seq ≤ 快照且最大"的那个版本——这就是 MVCC：读看到写发生时刻的一致视图，读写不互斥。类型（`enum ValueType`，`db/dbformat.h:41`：`kTypeValue=0x1`、`kTypeDeletion=0x0`、`kTypeMerge=0x2`…）区分这是值、墓碑还是合并操作数。
 
 ---
 
@@ -18,7 +18,7 @@ RocksDB 的多版本不是靠锁，而是靠**每次写获得的全局递增 Seq
 
 ![RocksDB Snapshot · 钉 seq 做一致读](RocksDB原理_事务_02Snapshot.svg)
 
-`GetSnapshot` 返回一个 **Snapshot**（`db/snapshot_impl.h`），本质是钉住当前的 SequenceNumber。之后带 `ReadOptions::snapshot` 的读都以该 seq 为上界——无论期间有多少新写，都看不到 seq 更大的版本，得到一致视图。Snapshot 的另一作用：**保护旧版本不被 Compaction 提前回收**——Compaction 丢墓碑/旧值时要检查"是否还有存活 Snapshot 需要它"，最老 Snapshot 之后的版本都得留。用完必须 `ReleaseSnapshot`，否则拖住旧版本回收、涨空间。
+`GetSnapshot`（`DBImpl::GetSnapshot`，`db/db_impl/db_impl.cc:4277`）返回一个 **Snapshot**（`class SnapshotImpl`，`db/snapshot_impl.h:23`），本质是钉住当前的 SequenceNumber（并挂进 `SnapshotList` 双向链）。之后带 `ReadOptions::snapshot` 的读都以该 seq 为上界——无论期间有多少新写，都看不到 seq 更大的版本，得到一致视图。Snapshot 的另一作用：**保护旧版本不被 Compaction 提前回收**——Compaction 丢墓碑/旧值时要检查"是否还有存活 Snapshot 需要它"（取 `SnapshotList` 里最老 seq），最老 Snapshot 之后的版本都得留。用完必须 `ReleaseSnapshot`，否则拖住旧版本回收、涨空间。
 
 ## 三、事务：悲观、乐观与 2PC
 
@@ -26,9 +26,9 @@ RocksDB 的多版本不是靠锁，而是靠**每次写获得的全局递增 Seq
 
 可选事务层（`TransactionDB`）构建在 WriteBatch + Snapshot 之上：
 
-- **悲观事务**（`PessimisticTransaction`）：写前加行锁（point lock，冲突则等待/超时），Commit 时释放。锁管理器维护 key→事务的锁表。适合高冲突。
-- **乐观事务**（`OptimisticTransactionDB`）：不加锁，事务内写缓存进 WriteBatch，Commit 时检查"读过/写过的 key 自事务开始有没有被别人改"（比较 seq），冲突则整体失败重试。适合低冲突。
-- **2PC**（Prepare/Commit）：Prepare 把 batch 写 WAL（带 prepare 标记）但不落 MemTable，Commit 再落——支持跨系统协调（如 MyRocks 与 binlog）。WritePrepared/WriteUnprepared 是不同的 2PC 策略。
+- **悲观事务**（`PessimisticTransaction`，`utilities/transactions/pessimistic_transaction.h:36`）：写前加行锁（`TryLock`，`utilities/transactions/pessimistic_transaction.cc:1138`，point lock，冲突则等待/超时），Commit 时释放。锁管理器维护 key→事务的锁表。适合高冲突。
+- **乐观事务**（`OptimisticTransactionDB`）：不加锁，事务内写缓存进 WriteBatch，Commit 时 `CheckTransactionForConflicts`（`utilities/transactions/optimistic_transaction.cc:192`）检查"读过/写过的 key 自事务开始有没有被别人改"（比较 seq），冲突则整体失败重试。适合低冲突。
+- **2PC**（Prepare/Commit）：`PessimisticTransaction::Prepare`（`utilities/transactions/pessimistic_transaction.cc:590`，内部 `WriteCommittedTxn::PrepareInternal` `:640`）把 batch 写 WAL（带 prepare 标记）但延后落 MemTable，Commit 再落——支持跨系统协调（如 MyRocks 与 binlog）。WritePrepared/WriteUnprepared 是不同的 2PC 策略。
 
 ## 拓展 · 事务相关要点
 

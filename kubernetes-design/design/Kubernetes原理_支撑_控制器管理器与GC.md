@@ -6,7 +6,18 @@
 
 ![编排与GC](Kubernetes原理_支撑_控制器管理器与GC_01编排与GC.svg)
 
-**控制器编排**：controller-manager 启动时 `NewControllerDescriptors`（controllermanager.go:248）注册全部控制器（Deployment/ReplicaSet/Node/Job/PV/GC…），共用一个 SharedInformerFactory（同一资源只 List+Watch 一次）。**高可用靠 leader 选举**：多副本时用 `leaderelection`（:51、LeaderCallbacks:315）竞争一个 Lease 锁，**只有 leader 真正运行控制器循环**，其余待命——避免多实例同时 reconcile 同一对象产生冲突。**垃圾回收（GC）**：K8s 的删除不是控制器一个个手动删下游。GC 控制器（garbagecollector.go）在内存里维护一张**对象依赖图**——边就是 `ownerReferences`（子对象 metadata 里指向 owner）。当一个 owner 被删，GC 沿图找到所有孤儿子对象 `attemptToDeleteItem`（:342）级联删除（如删 Deployment → 删其 ReplicaSet → 删 Pod）；`absentOwnerCache`（:73）缓存"已确认不存在的 owner"避免反复查。**删除传播策略**：`Foreground`（先删下游、owner 最后消失）/ `Background`（owner 先删、GC 后台清下游）/ `Orphan`（保留下游、只删 owner）。**finalizers**：对象 metadata 里的 finalizer 列表让删除**可阻塞**——API Server 收到删除只是打上 `deletionTimestamp`，对象要等所有 finalizer 被对应控制器处理并移除后才真正消失（用于删除前做外部资源清理，如释放云盘、注销 LB）。GC + finalizer 共同保证"删除"这件事也在声明式 + reconcile 框架内正确收敛。
+**控制器编排**：controller-manager 启动时 `NewControllerDescriptors`（`cmd/kube-controller-manager/app/controllermanager.go:495`）注册全部控制器（Deployment/ReplicaSet/Node/Job/PV/GC…），由 `StartControllers`（controllermanager.go:662）逐个拉起，共用一个 SharedInformerFactory（同一资源只 List+Watch 一次）。**高可用靠 leader 选举**：多副本时在 `Run`（controllermanager.go:180）里用 `leaderelection`（controllermanager.go:51 导入、`LeaderCallbacks`:315）竞争一个 Lease 锁，`OnStartedLeading`（:316）里才真正 `StartControllers`，其余实例待命、`leaderelection lost`（:328）即退出——避免多实例同时 reconcile 同一对象产生冲突。**垃圾回收（GC）**：K8s 的删除不是控制器一个个手动删下游。GC 控制器（`pkg/controller/garbagecollector/garbagecollector.go`）由 `GraphBuilder`（`.../garbagecollector/graph_builder.go:78`）消费所有资源的 informer 事件，在内存里维护一张**对象依赖图** `uidToNode`（graph_builder.go:109）——边就是 `ownerReferences`（子对象 metadata 里指向 owner）。`processGraphChanges`（graph_builder.go:678）持续更新图；当一个 owner 被删，GC 的 `attemptToDeleteWorker`（garbagecollector.go:317）→ `attemptToDeleteItem`（garbagecollector.go:498）沿图级联删除孤儿子对象（如删 Deployment → 删其 ReplicaSet → 删 Pod）；`absentOwnerCache`（graph_builder.go:115，容量 500 见 :160）缓存"已确认不存在的 owner"避免反复查 API Server。**删除传播策略**：`attemptToDeleteItem` 里据请求选 `Foreground`（garbagecollector.go:622，先删下游、owner 最后消失）/ `Background`（:638，owner 先删、GC 后台清下游）/ `Orphan`（:632，保留下游、只删 owner）。**finalizers**：对象 metadata 里的 finalizer 列表让删除**可阻塞**——API Server 收到删除只是打上 `deletionTimestamp`，对象要等所有 finalizer 被对应控制器处理并移除后才真正消失（Foreground 用 `FinalizerDeleteDependents`:653、Orphan 用 `FinalizerOrphanDependents`:754）。GC + finalizer 共同保证"删除"这件事也在声明式 + reconcile 框架内正确收敛。
+
+## 深化 · 级联删除的图算法与失败路径
+
+GC 的正确性来自"依赖图 + 虚拟节点 + 双队列"的协作，几个易被忽视的机制与坑：
+
+- **虚拟节点（virtual node）**：某对象声明了 owner，但 owner 还没被 informer 观察到时，`GraphBuilder` 先建一个"虚拟" owner 节点占位（graph_builder.go:410 附近注释），待真身出现或确认不存在再修正——避免"引用了尚未入图的 owner"时误判为孤儿。
+- **absentOwnerCache 防抖**：确认某 owner 确实不存在后写入 `absentOwnerCache`（graph_builder.go:115），后续同引用直接判孤儿，不再打 API Server 查询——大规模删除时这是省 API 调用的关键。
+- **Foreground 的两段式**：Foreground 删除时先给 owner 打上 `FinalizerDeleteDependents`（garbagecollector.go:653），owner 进入 `deletingDependents` 状态；GC 把它的每个下游加入删除队列（:657 注释），**下游全删净后才移除 owner 的 finalizer**，owner 这才真正消失——保证"看到 owner 还在就代表下游没删完"。
+- **Orphan 的解绑**：Orphan 策略经 `runAttemptToOrphanWorker`（garbagecollector.go:706）把下游的对应 ownerReference 摘除、再移除 owner 的 `FinalizerOrphanDependents`（:754），使子对象成为无主对象被保留。
+- **典型故障——卡 Terminating**：对象 `deletionTimestamp` 已置、却迟迟不消失，几乎总是某个 finalizer 对应的控制器没跑/没把自己摘除；GC 本身不会删有未完成 finalizer 的对象。强删（`--force --grace-period=0`）会绕过 finalizer，可能遗留外部资源泄漏，应先排查控制器健康。
+- **discovery 抖动**：GC 靠 `Sync`（garbagecollector.go:175）周期性发现集群所有资源类型（含 CRD）重建 monitors；API 资源列表拉取失败会让新类型的对象暂时不被 GC 覆盖，需关注 controller-manager 的 discovery 错误日志。
 
 ## 深化 · 删除传播策略
 

@@ -14,6 +14,7 @@
 import os
 import re
 import html
+import json
 import base64
 import argparse
 
@@ -85,31 +86,7 @@ CAT_ORDER = [
 #   两条覆盖铁律：① 图上每个模块都有热区 ② 每条主线都被某热区覆盖（未覆盖者自动兜底成 chip）。
 # ===================================================================== #
 PANO_NAME = "Nginx原理_全景主线框架"
-ARCH_W, ARCH_H = 1020, 680  # 必须与 ARCH_SVG_NAME 的 viewBox 一致
 # (x, y, w, h, 主线name) —— 坐标取自总架构 SVG 的真实 rect（viewBox 1020×680）
-ARCH_HOTSPOTS = [
-    # 标题条 → 全景总览
-    (0, 0, 1020, 44, "Nginx原理_全景主线框架"),
-    # master 进程带 + 4 子模块（读配置/fork/信号/cache mgr）
-    (48, 88, 220, 46, "Nginx原理_接触面_配置指令"),      # 读配置/绑定端口
-    (280, 88, 220, 46, "Nginx原理_支撑_进程与事件模型"),  # fork worker
-    (512, 88, 220, 46, "Nginx原理_接触面_信号控制"),      # 接信号
-    (744, 88, 226, 46, "Nginx原理_支撑_代理缓存"),        # 派生 cache manager/loader
-    # worker 事件循环带
-    (30, 162, 700, 230, "Nginx原理_支撑_进程与事件模型"),
-    # 模块生态带
-    (746, 162, 244, 230, "Nginx原理_支撑_模块体系"),
-    # 请求流水线带 + 阶段子模块
-    (48, 446, 150, 64, "Nginx原理_支撑_进程与事件模型"),  # 连接接入
-    (214, 446, 180, 64, "Nginx原理_支撑_HTTP阶段处理"),   # 11 阶段
-    (410, 446, 180, 64, "Nginx原理_支撑_HTTP阶段处理"),   # content handler
-    (606, 446, 180, 64, "Nginx原理_支撑_HTTP阶段处理"),   # filter 链
-    (802, 446, 168, 64, "Nginx原理_支撑_日志与限流"),     # 发送 + LOG
-    # 反向代理带 + 子模块
-    (48, 582, 300, 64, "Nginx原理_支撑_upstream负载均衡"),
-    (364, 582, 300, 64, "Nginx原理_支撑_代理缓存"),
-    (680, 582, 290, 64, "Nginx原理_支撑_upstream负载均衡"),
-]
 # 无独立架构区域的主线（图上无 rect）→ 底部 chip 兜底，保证主线→可达
 ARCH_ALWAYS_CHIP = [
     "Nginx原理_支撑_内存池与缓冲",
@@ -122,6 +99,27 @@ HOME_DESC = ("Nginx 核心原理设计文档库的离线交互图谱——高性
              "master-worker 多进程 + 事件驱动(epoll)+ 模块化流水线(11 阶段 handler/filter)。"
              "11 条主线、手绘原理图，全部回 nginx 源码核实。点击项目总架构图任意模块即可下钻到对应主线。")
 ARCH_SVG_NAME = "Nginx原理_全景_02总架构.svg"
+_ARCH_SVG_TEXT = open(os.path.join(_DESIGN_DIR, ARCH_SVG_NAME), encoding="utf-8").read()
+def _parse_arch_hotspots(svg_text):
+    """从架构 SVG 的 data-tid rect 派生热区 5 元组 + viewBox 宽高(除数恒用本图 viewBox)。"""
+    import xml.etree.ElementTree as _ET
+    vb = re.search(r'viewBox="[\d.]+ [\d.]+ ([\d.]+) ([\d.]+)"', svg_text)
+    vbw, vbh = float(vb.group(1)), float(vb.group(2))
+    root = _ET.fromstring(svg_text); hots = []
+    def walk(el, dx, dy):
+        m = re.search(r'translate\(\s*([-\d.]+)(?:[,\s]+([-\d.]+))?', el.get("transform") or "")
+        if m:
+            dx += float(m.group(1))
+            if m.group(2): dy += float(m.group(2))
+        if el.tag.rsplit("}", 1)[-1] == "rect" and el.get("data-tid"):
+            hots.append((float(el.get("x", 0)) + dx, float(el.get("y", 0)) + dy,
+                         float(el.get("width", 0)), float(el.get("height", 0)),
+                         el.get("data-tid")))
+        for c in el:
+            walk(c, dx, dy)
+    walk(root, 0.0, 0.0)
+    return hots, vbw, vbh
+ARCH_HOTSPOTS, ARCH_W, ARCH_H = _parse_arch_hotspots(_ARCH_SVG_TEXT)
 
 # ===================================================================== #
 # 二、md 解析 —— 从每篇 design 文档抽取结构化内容
@@ -359,7 +357,9 @@ header{position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:14px
   padding:12px 22px;background:color-mix(in srgb,var(--c-bg) 82%,transparent);
   backdrop-filter:saturate(160%) blur(14px);border-bottom:1px solid var(--c-border)}
 .logo{display:flex;align-items:center;gap:9px;cursor:pointer;font-weight:700;font-size:15px;text-decoration:none;color:inherit}
-.logo:hover .homeico{color:var(--c-brand)}
+.logo:hover .homeico{display:inline-grid;place-items:center;width:38px;height:38px;border-radius:50%;border:1px solid var(--c-line);background:var(--c-panel);color:var(--c-ink2);transition:color .15s} a:hover .homeico,.logo:hover .homeico,.homelink:hover .homeico{color:var(--c-brand);border-color:var(--c-brand)}
+.nn-n{fill:var(--c-ink2)}.nn-h{fill:var(--c-brand)}.nn-e{stroke:var(--c-line);stroke-width:1.4}
+.tt-ico{font-size:16px;line-height:1}.tt-sun{display:none}:root[data-theme="light"] .tt-moon{display:none}:root[data-theme="light"] .tt-sun{display:inline}
 .homeico{display:inline-flex;color:var(--c-ink2);transition:color .15s}
 .logo .dot{width:11px;height:11px;border-radius:3px;background:linear-gradient(135deg,var(--c-brand),var(--c-amber))}
 .logo .sub{font-weight:500;color:var(--c-ink2);font-size:12px}
@@ -370,7 +370,7 @@ header{position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:14px
 .wrap{max-width:1180px;margin:0 auto;padding:30px 22px 80px}
 .navmap-hint{color:var(--c-ink3);font-size:12px;margin:18px 2px 0;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
 .navmap-hint b{color:var(--c-brand);font-weight:700}
-.arch-wrap{position:relative;margin-top:12px;background:var(--c-card);border:1px solid var(--c-border);border-radius:16px;padding:14px;overflow:hidden}
+.arch-wrap{position:relative;margin-top:12px;background:var(--c-card);border:1px solid var(--c-border);border-radius:16px;padding:0;overflow:hidden}.msearch{position:relative;display:flex;align-items:center;gap:8px;width:min(300px,38vw);padding:0 12px;height:38px;border-radius:19px;border:1px solid var(--c-line);background:var(--c-panel);color:var(--c-ink2);margin-right:12px}.msearch svg{flex:none;opacity:.7}.msearch input{flex:1;border:0;background:transparent;color:var(--c-ink);outline:0;font-size:13px}.msearch kbd{flex:none;font:600 11px monospace;color:var(--c-ink3);border:1px solid var(--c-line);border-radius:5px;padding:1px 6px}.mq-list{position:absolute;top:44px;left:0;right:0;z-index:60;background:var(--c-card);border:1px solid var(--c-line);border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.18);overflow:hidden;display:none}.mq-list.on{display:block}.mq-item{display:block;width:100%;text-align:left;border:0;background:transparent;cursor:pointer;padding:9px 14px;color:var(--c-ink);font-size:13px;border-bottom:1px solid var(--c-line)}.mq-item:last-child{border-bottom:0}.mq-item:hover,.mq-item.sel{background:color-mix(in srgb,var(--c-brand) 12%,transparent)}.mq-item .s{display:block;color:var(--c-ink3);font-size:11px;margin-top:2px}
 .arch-wrap img{width:100%;display:block;border-radius:8px}
 html:not([data-theme="light"]) .arch-wrap img{filter:invert(.92) hue-rotate(180deg) saturate(.85)}
 .arch-hot{position:absolute;border:0;background:transparent;cursor:pointer;padding:0;border-radius:6px;transition:.12s;z-index:2}
@@ -442,21 +442,22 @@ b{color:var(--c-ink);font-weight:700}
 APP_JS = r"""
 (function(){
   var root=document.documentElement;
-  var saved=localStorage.getItem('nginx-atlas-theme');
+  var saved=localStorage.getItem('atlas-nav-theme');
   if(saved) root.setAttribute('data-theme',saved);
   function toggleTheme(){
     var cur=root.getAttribute('data-theme')==='light'?'':'light';
     if(cur) root.setAttribute('data-theme',cur); else root.removeAttribute('data-theme');
-    localStorage.setItem('nginx-atlas-theme',cur);
-    var b=document.getElementById('themeBtn'); if(b) b.textContent=cur==='light'?'☀':'☾';
+    localStorage.setItem('atlas-nav-theme',cur);
+    
   }
   var tb=document.getElementById('themeBtn');
-  if(tb){tb.onclick=toggleTheme; tb.textContent=root.getAttribute('data-theme')==='light'?'☀':'☾';}
+  if(tb){tb.onclick=toggleTheme;}
 
   var home=document.getElementById('home'), panes=document.getElementById('panes');
   function showHome(){home.style.display='block';panes.style.display='none';
     document.querySelectorAll('.pane').forEach(function(p){p.classList.remove('on')});
     window.scrollTo(0,0);}
+  window.openMain=function(mid,idx){return openMain(mid,idx);};
   function openMain(mid,idx){
     home.style.display='none';panes.style.display='block';
     document.querySelectorAll('.pane').forEach(function(p){p.classList.toggle('on',p.dataset.mid===mid)});
@@ -484,6 +485,36 @@ APP_JS = r"""
   function done(){var lo=document.getElementById('lo');if(lo){lo.classList.add('hide');setTimeout(function(){if(lo&&lo.parentNode)lo.parentNode.removeChild(lo);},500);}}
   requestAnimationFrame(function(){requestAnimationFrame(function(){setTimeout(done,120);});});
   setTimeout(done,4000);
+})();
+
+/* 模块搜索:过滤本项目主线,回车/点击下钻 */
+(function(){
+  var MS=window.__MAINS__||[], mq=document.getElementById('mq'), list=document.getElementById('mqlist');
+  if(!mq||!list) return;
+  var sel=-1, cur=[];
+  function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  function render(){
+    var q=mq.value.trim().toLowerCase();
+    cur = !q ? [] : MS.filter(function(m){return (m.t+' '+m.s+' '+m.mid).toLowerCase().indexOf(q)>=0;}).slice(0,8);
+    if(!cur.length){ list.className='mq-list'; list.innerHTML=''; return; }
+    sel=0;
+    list.innerHTML=cur.map(function(m,i){return '<button class="mq-item'+(i===0?' sel':'')+'" data-mid="'+esc(m.mid)+'"><b>'+esc(m.t)+'</b><span class="s">'+esc(m.s)+'</span></button>';}).join('');
+    list.className='mq-list on';
+  }
+  function go(mid){ mq.value=''; list.className='mq-list'; list.innerHTML=''; if(typeof window.openMain==='function') window.openMain(mid,0); }
+  mq.addEventListener('input',render);
+  mq.addEventListener('keydown',function(e){
+    if(!cur.length){ if(e.key==='Escape') mq.blur(); return; }
+    if(e.key==='ArrowDown'){e.preventDefault();sel=(sel+1)%cur.length;}
+    else if(e.key==='ArrowUp'){e.preventDefault();sel=(sel-1+cur.length)%cur.length;}
+    else if(e.key==='Enter'){e.preventDefault();go(cur[sel].mid);return;}
+    else if(e.key==='Escape'){list.className='mq-list';mq.blur();return;}
+    else return;
+    [].forEach.call(list.children,function(el,i){el.className='mq-item'+(i===sel?' sel':'');});
+  });
+  list.addEventListener('click',function(e){var b=e.target.closest('.mq-item'); if(b) go(b.dataset.mid);});
+  document.addEventListener('keydown',function(e){ if(e.key==='/'&&document.activeElement!==mq){e.preventDefault();mq.focus();} });
+  document.addEventListener('click',function(e){ if(!e.target.closest('.msearch')){list.className='mq-list';} });
 })();
 """
 
@@ -514,9 +545,10 @@ def build_html():
   <div class="lo-s" style="font-size:11px;opacity:.7">短暂空白属正常装载，非内容缺失</div>
 </div>
 <header>
-  <a class="logo" id="logo" href="../index.html" title="返回导航主页"><span class="homeico" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg></span></a>
+  <a class="logo" id="logo" href="../index.html" title="返回导航主页"><span class="homeico" aria-hidden="true" style="width:38px;height:38px;border-radius:50%;border:1px solid var(--c-line);background:var(--c-panel);color:var(--c-ink2);display:inline-grid;place-items:center;text-decoration:none"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg></span></a><div class="brand-intro" style="display:flex;flex-direction:column;align-items:flex-start;margin-left:12px;min-width:0;max-width:min(60vw,760px)"><div style="font-size:15px;font-weight:600;color:var(--c-ink);line-height:1.3">Nginx · 核心原理图谱</div><span style="margin-top:3px;font-size:11.5px;color:var(--c-ink3);line-height:1.5;text-align:left">事件驱动 master-worker 反向代理:1 master 管控 + N 单线程 worker,每 worker 一条 epoll 循环非阻塞多路复用海量连接。</span></div>
   <div class="spacer"></div>
-  <a href="https://github.com/nginx/nginx" target="_blank" rel="noopener" title="GitHub 源码仓库" style="display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:9px;border:1px solid var(--c-line);color:var(--c-ink2);text-decoration:none;margin-right:8px"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.7.5.5 5.7.5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.2.8-.6v-2c-3.2.7-3.9-1.4-3.9-1.4-.5-1.3-1.3-1.7-1.3-1.7-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.7 1.3 3.4 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.8 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.3 1.2a11.4 11.4 0 0 1 6 0C17.3 4.7 18.3 5 18.3 5c.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.5-2.7 5.5-5.3 5.8.4.4.8 1.1.8 2.2v3.3c0 .4.2.7.8.6 4.6-1.5 7.9-5.8 7.9-10.9C23.5 5.7 18.3.5 12 .5z"/></svg></a><a href="https://nginx.org" target="_blank" rel="noopener" title="项目官网" style="display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:9px;border:1px solid var(--c-line);color:var(--c-ink2);text-decoration:none;margin-right:8px"><img src="data:image/svg+xml;base64,PHN2ZyBmaWxsPSIjMDA5NjM5IiByb2xlPSJpbWciIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48dGl0bGU+TkdJTlg8L3RpdGxlPjxwYXRoIGQ9Ik0xMiAwTDEuNjA1IDZ2MTJMMTIgMjRsMTAuMzk1LTZWNkwxMiAwem02IDE2LjU5YzAgLjcwNS0uNjQ2IDEuMjktMS41MjkgMS4yOS0uNjMxIDAtMS4zNTEtLjI1NS0xLjgwMS0uODFsLTYtNy4xNDF2Ni42NmMwIC43MjEtLjU3IDEuMjktMS4yNzQgMS4yOUg3LjMyYy0uNzIxIDAtMS4yOS0uNi0xLjI5LTEuMjlWNy40MWMwLS43MDUuNjMtMS4yOSAxLjUtMS4yOS42NDYgMCAxLjM4LjI1NSAxLjgzLjgxbDUuOTcgNy4xNDFWNy40MWMwLS43MjEuNi0xLjI5IDEuMjktMS4yOWguMDc1Yy43MiAwIDEuMjkuNiAxLjI5IDEuMjl2OS4xOEgxOHoiLz48L3N2Zz4=" width="18" height="18" alt="官网" style="display:block"/></a><button id="themeBtn" title="切换主题" aria-label="切换主题" style="width:38px;height:38px;border-radius:50%;border:1px solid var(--c-line);background:var(--c-panel);color:var(--c-ink2);cursor:pointer;display:inline-grid;place-items:center;font-size:16px;flex:none">☾</button>
+  <label class="msearch"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input id="mq" type="text" placeholder="搜索模块 / 主线…" autocomplete="off" aria-label="搜索模块"/><kbd>/</kbd><div id="mqlist" class="mq-list"></div></label>
+  <a href="https://github.com/nginx/nginx" target="_blank" rel="noopener" title="GitHub 源码仓库" style="display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:50%;border:1px solid var(--c-line);color:var(--c-ink2);text-decoration:none;margin-right:8px"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.7.5.5 5.7.5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.2.8-.6v-2c-3.2.7-3.9-1.4-3.9-1.4-.5-1.3-1.3-1.7-1.3-1.7-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.7 1.3 3.4 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.8 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.3 1.2a11.4 11.4 0 0 1 6 0C17.3 4.7 18.3 5 18.3 5c.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.5-2.7 5.5-5.3 5.8.4.4.8 1.1.8 2.2v3.3c0 .4.2.7.8.6 4.6-1.5 7.9-5.8 7.9-10.9C23.5 5.7 18.3.5 12 .5z"/></svg></a><a href="https://nginx.org" target="_blank" rel="noopener" title="项目官网" style="display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:50%;border:1px solid var(--c-line);color:var(--c-ink2);text-decoration:none;margin-right:8px"><img src="data:image/svg+xml;base64,PHN2ZyBmaWxsPSIjMDA5NjM5IiByb2xlPSJpbWciIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48dGl0bGU+TkdJTlg8L3RpdGxlPjxwYXRoIGQ9Ik0xMiAwTDEuNjA1IDZ2MTJMMTIgMjRsMTAuMzk1LTZWNkwxMiAwem02IDE2LjU5YzAgLjcwNS0uNjQ2IDEuMjktMS41MjkgMS4yOS0uNjMxIDAtMS4zNTEtLjI1NS0xLjgwMS0uODFsLTYtNy4xNDF2Ni42NmMwIC43MjEtLjU3IDEuMjktMS4yNzQgMS4yOUg3LjMyYy0uNzIxIDAtMS4yOS0uNi0xLjI5LTEuMjlWNy40MWMwLS43MDUuNjMtMS4yOSAxLjUtMS4yOS42NDYgMCAxLjM4LjI1NSAxLjgzLjgxbDUuOTcgNy4xNDFWNy40MWMwLS43MjEuNi0xLjI5IDEuMjktMS4yOWguMDc1Yy43MiAwIDEuMjkuNiAxLjI5IDEuMjl2OS4xOEgxOHoiLz48L3N2Zz4=" width="18" height="18" alt="官网" style="display:block"/></a><button id="themeBtn" title="切换深色 / 浅色主题" aria-label="切换主题" style="width:38px;height:38px;border-radius:50%;border:1px solid var(--c-line);background:var(--c-panel);color:var(--c-ink2);cursor:pointer;display:inline-grid;place-items:center;font-size:16px;flex:none"><span class="tt-ico tt-moon">☾</span><span class="tt-ico tt-sun">☀</span></button>
 </header>
 <div class="wrap">
   <div id="home">
@@ -527,11 +559,12 @@ def build_html():
     {panes}
   </div>
 </div>
+<script>window.__MAINS__={mains};</script>
 <script>{js}</script>
 </body>
 </html>""".format(
         sub=esc(BRAND_SUB), n=total_svg,
-        css=CSS, archnav=archnav, panes=build_panes(), js=APP_JS)
+        css=CSS, archnav=archnav, mains=json.dumps([{"mid":n,"t":ct,"s":sub} for n,_c,_ic,ct,sub in MAINLINES],ensure_ascii=False), panes=build_panes(), js=APP_JS)
 
 
 if __name__ == "__main__":

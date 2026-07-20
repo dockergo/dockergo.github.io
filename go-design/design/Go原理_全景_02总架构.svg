@@ -1,146 +1,161 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="980" height="520" viewBox="0 0 980 520" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="548" viewBox="0 0 1080 548" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
   <defs>
     <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
       <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
     </filter>
-    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
-    </marker>
+    <marker id="aB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#5b7db1"/></marker>
+    <marker id="aH" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+    <marker id="aS" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#c99a3a"/></marker>
   </defs>
-  <rect width="980" height="520" fill="#fbfbfd"/>
-  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">总架构 · 从 .go 源到一个 goroutine 在跑</text>
-  <text x="30" y="48" font-size="11" fill="#6e6e73">一条纵贯线：编译期工具链把源程序静态编译进单一二进制 → 运行期 runtime 引导并把 goroutine 调度到 M×P 上　源码基准 go1.26.4</text>
+  <rect width="1080" height="548" fill="#fbfbfd"/>
+
+  <!-- ===== 标题带（panorama 全景热区：透明 rect 覆盖标题） ===== -->
+  <rect x="24" y="8" width="1032" height="46" rx="10" fill="none" data-tid="panorama" data-lab="全景 · 主线框架"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">总架构 · 多视角透视：一边是「怎么编译」，一边是「怎么调度」</text>
+  <text x="30" y="47" font-size="10.5" fill="#6e6e73">左右两区各自成脊：编译期把 .go 源静态编译进单一二进制 · 运行期 runtime 把 goroutine 调度到 M×P　源码基准 go1.26</text>
+
+  <!-- ===== 图例：三型语义路径 ===== -->
+  <line x1="40" y1="70" x2="70" y2="70" stroke="#5b7db1" stroke-width="1.8" marker-end="url(#aB)"/>
+  <text x="76" y="74" font-size="10.5" fill="#3a3a3c">编译流水 build</text>
+  <line x1="230" y1="70" x2="260" y2="70" stroke="#2f9e6e" stroke-width="1.8" marker-end="url(#aH)"/>
+  <text x="266" y="74" font-size="10.5" fill="#3a3a3c">运行期热路径 Hot</text>
+  <line x1="430" y1="70" x2="460" y2="70" stroke="#c99a3a" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#aS)"/>
+  <text x="466" y="74" font-size="10.5" fill="#3a3a3c">GC / 后台 State（虚线）</text>
+  <text x="1056" y="74" font-size="10" fill="#a1a1a6" text-anchor="end">框=主线可下钻 · 横切特性：栈 / defer / 接口 / 泛型</text>
 
   <!-- ================= COMPILE ZONE ================= -->
-  <rect x="24" y="62" width="932" height="200" rx="14" fill="#f4f7fc" stroke="#d5e0f0"/>
-  <text x="40" y="82" font-size="12" font-weight="600" fill="#1b2a4a">编译期 · 工具链　离线 · 多进程并行 · 可缓存</text>
+  <rect x="24" y="84" width="1032" height="172" rx="14" fill="#f4f7fc" stroke="#d5e0f0"/>
+  <text x="40" y="104" font-size="12" font-weight="600" fill="#1b2a4a">编译期 · 工具链</text>
+  <text x="132" y="104" font-size="10" fill="#7b93b8">离线 · 多进程并行 · 可缓存 · 产物即单一自包含二进制</text>
 
-  <!-- C1 source -->
-  <rect x="40" y="92" width="104" height="156" rx="11" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)" data-tid="frontend" data-lab="源程序→前端"/>
-  <text x="52" y="118" font-size="12" font-weight="600" fill="#1d1d1f">源程序</text>
-  <text x="52" y="134" font-size="9" fill="#6e6e73">.go 源文件</text>
-  <text x="52" y="164" font-size="9.5" fill="#3a3a3c">包 / 导入</text>
-  <text x="52" y="184" font-size="9.5" fill="#3a3a3c">函数 / 类型</text>
-  <text x="52" y="204" font-size="9.5" fill="#3a3a3c">声明 / 语句</text>
-  <line x1="146" y1="170" x2="160" y2="170" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <!-- C1 源程序 -->
+  <rect x="40" y="118" width="120" height="82" rx="11" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)" data-tid="frontend" data-lab="编译前端"/>
+  <text x="54" y="152" font-size="12" font-weight="600" fill="#1d1d1f">源程序</text>
+  <text x="54" y="171" font-size="9.5" fill="#6e6e73">.go 源文件</text>
 
-  <!-- C2 frontend -->
-  <rect x="162" y="92" width="192" height="156" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)" data-tid="frontend" data-lab="编译前端"/>
-  <text x="174" y="118" font-size="12.5" font-weight="600" fill="#1b2a4a">gc 前端</text>
-  <text x="174" y="134" font-size="9" fill="#5b7db1">cmd/compile · 前端</text>
-  <rect x="172" y="144" width="172" height="28" rx="7" fill="#ffffff" stroke="#cfe0f2"/>
-  <text x="182" y="162" font-size="10" fill="#1b2a4a">syntax.Parse → AST</text>
-  <rect x="172" y="176" width="172" height="28" rx="7" fill="#ffffff" stroke="#cfe0f2"/>
-  <text x="182" y="194" font-size="10" fill="#1b2a4a">types2 类型检查</text>
-  <rect x="172" y="208" width="172" height="28" rx="7" fill="#ffffff" stroke="#cfe0f2"/>
-  <text x="182" y="226" font-size="10" fill="#1b2a4a">noder 建 Unified IR</text>
-  <line x1="356" y1="170" x2="370" y2="170" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <!-- C2 gc 前端 -->
+  <rect x="176" y="118" width="200" height="82" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)" data-tid="frontend" data-lab="编译前端"/>
+  <text x="190" y="152" font-size="12.5" font-weight="600" fill="#1b2a4a">gc 前端</text>
+  <text x="190" y="171" font-size="9.5" fill="#5b7db1">syntax → types2 → Unified IR</text>
 
-  <!-- C3 mid/backend -->
-  <rect x="372" y="92" width="222" height="156" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)" data-tid="ssa" data-lab="SSA后端"/>
-  <text x="384" y="118" font-size="12.5" font-weight="600" fill="#1b2a4a">SSA 中后端</text>
-  <text x="384" y="134" font-size="9" fill="#5b7db1">cmd/compile · 机器无关 → 机器相关</text>
-  <rect x="382" y="144" width="202" height="24" rx="7" fill="#ffffff" stroke="#cfe0f2" data-tid="escape" data-lab="逃逸分析"/>
-  <text x="392" y="160" font-size="10" fill="#1b2a4a">逃逸分析 · 定栈 / 堆</text>
-  <rect x="382" y="172" width="202" height="24" rx="7" fill="#ffffff" stroke="#cfe0f2" data-tid="escape" data-lab="内联"/>
-  <text x="392" y="188" font-size="10" fill="#1b2a4a">内联 inl · 跨函数展开</text>
-  <rect x="382" y="200" width="202" height="24" rx="7" fill="#eef3fb" stroke="#bcd0ec"/>
-  <text x="392" y="216" font-size="10" fill="#1b2a4a">buildssa → ~60 遍 SSA pass</text>
-  <rect x="382" y="228" width="202" height="20" rx="6" fill="#fdf6ec" stroke="#f0dcaf"/>
-  <text x="392" y="242" font-size="9.5" fill="#6b4e16">genssa → 机器码</text>
-  <line x1="596" y1="170" x2="610" y2="170" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <!-- C3 SSA 中后端（含 escape 子块） -->
+  <rect x="392" y="118" width="248" height="82" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)" data-tid="ssa" data-lab="SSA 后端"/>
+  <text x="406" y="150" font-size="12.5" font-weight="600" fill="#1b2a4a">SSA 中后端</text>
+  <text x="516" y="150" font-size="9.5" fill="#5b7db1">~60 遍 pass → 机器码</text>
+  <rect x="404" y="162" width="224" height="28" rx="7" fill="#ffffff" stroke="#cfe0f2" data-tid="escape" data-lab="逃逸分析与内联"/>
+  <text x="416" y="181" font-size="10" fill="#1b2a4a">逃逸分析 · 内联　定栈 / 堆</text>
 
-  <!-- C4 linker -->
-  <rect x="612" y="92" width="170" height="156" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)" data-tid="gocmd" data-lab="链接器"/>
-  <text x="624" y="118" font-size="12.5" font-weight="600" fill="#1b2a4a">链接器</text>
-  <text x="624" y="134" font-size="9" fill="#5b7db1">cmd/link · ld.Main</text>
-  <rect x="622" y="144" width="150" height="28" rx="7" fill="#ffffff" stroke="#cfe0f2"/>
-  <text x="632" y="162" font-size="10" fill="#1b2a4a">死代码 flood fill</text>
-  <rect x="622" y="176" width="150" height="28" rx="7" fill="#ffffff" stroke="#cfe0f2"/>
-  <text x="632" y="194" font-size="10" fill="#1b2a4a">符号布局 / 重定位</text>
-  <rect x="622" y="208" width="150" height="28" rx="7" fill="#ffffff" stroke="#cfe0f2"/>
-  <text x="632" y="226" font-size="10" fill="#1b2a4a">pclntab 生成</text>
-  <line x1="784" y1="170" x2="798" y2="170" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <!-- C4 链接器 -->
+  <rect x="656" y="118" width="176" height="82" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)" data-tid="gocmd" data-lab="go 命令与链接"/>
+  <text x="670" y="152" font-size="12.5" font-weight="600" fill="#1b2a4a">链接器</text>
+  <text x="670" y="171" font-size="9.5" fill="#5b7db1">死代码消除 · pclntab</text>
 
-  <!-- C5 binary (amber artifact) -->
-  <rect x="800" y="92" width="140" height="156" rx="11" fill="#fdf6ec" stroke="#f0dcaf" filter="url(#soft)" data-tid="gocmd" data-lab="单一二进制"/>
-  <text x="812" y="118" font-size="11.5" font-weight="600" fill="#6b4e16">单一可执行文件</text>
-  <text x="812" y="134" font-size="9" fill="#a9822f">自包含二进制</text>
-  <text x="812" y="162" font-size="9.5" fill="#6b4e16">runtime · GC</text>
-  <text x="812" y="180" font-size="9.5" fill="#6b4e16">调度器 全链接入</text>
-  <text x="812" y="198" font-size="9.5" fill="#6b4e16">无 VM · 无解释器</text>
-  <text x="812" y="216" font-size="9.5" fill="#6b4e16">无部署依赖</text>
+  <!-- C5 单一二进制（产物） -->
+  <rect x="848" y="118" width="192" height="82" rx="11" fill="#fdf6ec" stroke="#f0dcaf" filter="url(#soft)" data-tid="gocmd" data-lab="go 命令与链接"/>
+  <text x="862" y="152" font-size="12" font-weight="600" fill="#6b4e16">单一可执行文件</text>
+  <text x="862" y="171" font-size="9.5" fill="#a9822f">runtime 全链接入 · 无 VM</text>
 
-  <!-- ================= handoff cable ================= -->
-  <path d="M870,248 L870,274 L90,274 L90,316" fill="none" stroke="#b8b8bf" stroke-width="1.6" marker-end="url(#ar)"/>
-  <rect x="416" y="264" width="148" height="20" rx="10" fill="#ffffff" stroke="#d0d0d6"/>
-  <text x="490" y="278" font-size="9.5" fill="#6e6e73" text-anchor="middle">交付 → OS exec 加载运行</text>
+  <!-- 泛型横切带 -->
+  <rect x="40" y="210" width="1000" height="32" rx="9" fill="#f0ecfb" stroke="#d3c6ef" data-tid="generics" data-lab="泛型实现"/>
+  <text x="54" y="230" font-size="11" font-weight="600" fill="#4a2e78">泛型实例化</text>
+  <text x="148" y="230" font-size="9.5" fill="#6b52a3">GCShape 归形 + 运行期字典 · 编译期展开（非擦除）</text>
+
+  <!-- build 流水：编译 5 段（实线蓝） -->
+  <g stroke="#5b7db1" stroke-width="1.8" fill="none">
+    <line x1="160" y1="159" x2="174" y2="159" marker-end="url(#aB)"/>
+    <line x1="376" y1="159" x2="390" y2="159" marker-end="url(#aB)"/>
+    <line x1="640" y1="159" x2="654" y2="159" marker-end="url(#aB)"/>
+    <line x1="832" y1="159" x2="846" y2="159" marker-end="url(#aB)"/>
+  </g>
+
+  <!-- ================= 交付：编译 → 运行 边界（虚线 State） ================= -->
+  <path d="M944,256 L944,270 L99,270 L99,318" fill="none" stroke="#c99a3a" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#aS)"/>
+  <rect x="450" y="260" width="184" height="20" rx="10" fill="#fffaf0" stroke="#ecd9ad"/>
+  <text x="542" y="274" font-size="9.5" fill="#8a6d1f" text-anchor="middle">交付 → OS exec 加载运行</text>
 
   <!-- ================= RUNTIME ZONE ================= -->
-  <rect x="24" y="290" width="932" height="206" rx="14" fill="#f3faf5" stroke="#cfe6d6"/>
-  <text x="40" y="310" font-size="12" font-weight="600" fill="#1d4a2b">运行期 · runtime　单进程内 · GC 托管 · GMP 用户态 M:N 调度</text>
+  <rect x="24" y="286" width="1032" height="246" rx="14" fill="#f3faf5" stroke="#cfe6d6"/>
+  <text x="40" y="306" font-size="12" font-weight="600" fill="#1d4a2b">运行期 · runtime</text>
+  <text x="132" y="306" font-size="10" fill="#5fa07a">单进程内 · GC 托管 · GMP 用户态 M:N —— 编译进每个二进制的那套纪律</text>
 
-  <!-- R1 OS load -->
-  <rect x="40" y="318" width="100" height="160" rx="11" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)" data-tid="gmp" data-lab="OS加载→runtime启动"/>
-  <text x="52" y="344" font-size="12" font-weight="600" fill="#1d1d1f">OS 加载</text>
-  <text x="52" y="360" font-size="9" fill="#6e6e73">exec</text>
-  <text x="52" y="388" font-size="9.5" fill="#3a3a3c">映射段 / 入口</text>
-  <text x="52" y="408" font-size="9.5" fill="#3a3a3c">跳入 _rt0</text>
-  <text x="52" y="428" font-size="9.5" fill="#3a3a3c">runtime 启动</text>
-  <line x1="142" y1="398" x2="154" y2="398" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <!-- Row1 · 引导 → 调度 主脊（实线绿 Hot） -->
+  <rect x="40" y="320" width="118" height="88" rx="11" fill="#eef7f0" stroke="#bfe0c8" filter="url(#soft)" data-tid="gmp" data-lab="GMP 调度"/>
+  <text x="54" y="352" font-size="12" font-weight="600" fill="#1d4a2b">OS 加载</text>
+  <text x="54" y="372" font-size="9.5" fill="#4a8c60">exec → _rt0</text>
 
-  <!-- R2 runtime boot (green) -->
-  <rect x="156" y="318" width="176" height="160" rx="11" fill="#eef7f0" stroke="#bfe0c8" filter="url(#soft)" data-tid="gmp" data-lab="runtime引导·schedinit"/>
-  <text x="168" y="344" font-size="12.5" font-weight="600" fill="#1d4a2b">runtime 引导</text>
-  <text x="168" y="360" font-size="9" fill="#4a8c60">rt0_go → schedinit</text>
-  <rect x="166" y="368" width="156" height="24" rx="7" fill="#ffffff" stroke="#cbe6d3"/>
-  <text x="176" y="384" font-size="10" fill="#1d4a2b">创建 g0 / m0</text>
-  <rect x="166" y="396" width="156" height="24" rx="7" fill="#ffffff" stroke="#cbe6d3"/>
-  <text x="176" y="412" font-size="10" fill="#1d4a2b">初始化 P × GOMAXPROCS</text>
-  <rect x="166" y="424" width="156" height="24" rx="7" fill="#ffffff" stroke="#cbe6d3"/>
-  <text x="176" y="440" font-size="10" fill="#1d4a2b">schedinit 调度器</text>
-  <rect x="166" y="452" width="156" height="20" rx="6" fill="#eef3fb" stroke="#bcd0ec"/>
-  <text x="176" y="466" font-size="9.5" fill="#1b2a4a">启动 sysmon（不占 P）</text>
-  <line x1="334" y1="398" x2="346" y2="398" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <rect x="174" y="320" width="196" height="88" rx="11" fill="#eef7f0" stroke="#bfe0c8" filter="url(#soft)" data-tid="gmp" data-lab="GMP 调度"/>
+  <text x="188" y="352" font-size="12.5" font-weight="600" fill="#1d4a2b">runtime 引导</text>
+  <text x="188" y="372" font-size="9.5" fill="#4a8c60">g0 / m0 · P×GOMAXPROCS</text>
 
-  <!-- R3 main goroutine (green) -->
-  <rect x="348" y="318" width="120" height="160" rx="11" fill="#eef7f0" stroke="#bfe0c8" filter="url(#soft)" data-tid="lifecycle" data-lab="main goroutine"/>
-  <text x="360" y="344" font-size="11.5" font-weight="600" fill="#1d4a2b">main goroutine</text>
-  <text x="360" y="360" font-size="9" fill="#4a8c60">runtime.main</text>
-  <text x="360" y="388" font-size="9.5" fill="#1d4a2b">造首个 G 起跑</text>
-  <text x="360" y="408" font-size="9.5" fill="#1d4a2b">被调度选中</text>
-  <text x="360" y="428" font-size="9.5" fill="#1d4a2b">→ 用户 main.main</text>
-  <line x1="470" y1="398" x2="482" y2="398" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <rect x="386" y="320" width="150" height="88" rx="11" fill="#eef7f0" stroke="#bfe0c8" filter="url(#soft)" data-tid="lifecycle" data-lab="goroutine 生命周期"/>
+  <text x="400" y="352" font-size="11.5" font-weight="600" fill="#1d4a2b">main goroutine</text>
+  <text x="400" y="372" font-size="9.5" fill="#4a8c60">runtime.main → main.main</text>
 
-  <!-- R4 go stmt (green) -->
-  <rect x="484" y="318" width="142" height="160" rx="11" fill="#eef7f0" stroke="#bfe0c8" filter="url(#soft)" data-tid="lifecycle" data-lab="go语句·newproc"/>
-  <text x="496" y="344" font-size="12.5" font-weight="600" fill="#1d4a2b">go 语句</text>
-  <text x="496" y="360" font-size="9" fill="#4a8c60">newproc 造 G</text>
-  <text x="496" y="388" font-size="9.5" fill="#1d4a2b">新建 G（2KB 栈）</text>
-  <text x="496" y="408" font-size="9.5" fill="#1d4a2b">入 P 本地 runq</text>
-  <text x="496" y="428" font-size="9.5" fill="#1d4a2b">满则甩半入全局</text>
-  <line x1="628" y1="398" x2="640" y2="398" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <rect x="552" y="320" width="150" height="88" rx="11" fill="#eef7f0" stroke="#bfe0c8" filter="url(#soft)" data-tid="lifecycle" data-lab="goroutine 生命周期"/>
+  <text x="566" y="352" font-size="12.5" font-weight="600" fill="#1d4a2b">go 语句</text>
+  <text x="566" y="372" font-size="9.5" fill="#4a8c60">newproc 造 G · 2KB 栈</text>
 
-  <!-- R5 GMP scheduler (blue) -->
-  <rect x="642" y="318" width="150" height="160" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)" data-tid="gmp" data-lab="GMP调度器"/>
-  <text x="654" y="344" font-size="12.5" font-weight="600" fill="#1b2a4a">GMP 调度器</text>
-  <text x="654" y="360" font-size="8.5" fill="#5b7db1">schedule / findRunnable</text>
-  <text x="654" y="388" font-size="9.5" fill="#1b2a4a">派 G → M×P 执行</text>
-  <text x="654" y="408" font-size="9.5" fill="#1b2a4a">本地 → 全局 → 偷取</text>
-  <text x="654" y="428" font-size="9.5" fill="#1b2a4a">阻塞则 park / handoff</text>
-  <line x1="794" y1="398" x2="806" y2="398" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <rect x="718" y="320" width="224" height="88" rx="11" fill="#eef7f0" stroke="#bfe0c8" filter="url(#soft)" data-tid="gmp" data-lab="GMP 调度"/>
+  <text x="732" y="352" font-size="12.5" font-weight="600" fill="#1d4a2b">GMP 调度器</text>
+  <text x="732" y="372" font-size="9.5" fill="#4a8c60">M:N · 本地 / 全局 / 偷取</text>
 
-  <!-- R6 runtime services -->
-  <rect x="808" y="318" width="132" height="160" rx="11" fill="#f6f6f7" stroke="#e2e2e7" filter="url(#soft)"/>
-  <text x="820" y="344" font-size="11.5" font-weight="600" fill="#1d1d1f">运行时服务</text>
-  <text x="820" y="360" font-size="9" fill="#6e6e73">goroutine 运行中</text>
-  <rect x="818" y="366" width="112" height="32" rx="7" fill="#fdf6ec" stroke="#f0dcaf" data-tid="alloc" data-lab="内存分配器"/>
-  <text x="828" y="380" font-size="10" font-weight="600" fill="#6b4e16">mallocgc</text>
-  <text x="828" y="392" font-size="8.5" fill="#a9822f">堆对象分配</text>
-  <rect x="818" y="402" width="112" height="32" rx="7" fill="#eef7f0" stroke="#bfe0c8" data-tid="gc" data-lab="垃圾回收"/>
-  <text x="828" y="416" font-size="10" font-weight="600" fill="#1d4a2b">GC 并发回收</text>
-  <text x="828" y="428" font-size="8.5" fill="#4a8c60">三色标记 · 写屏障</text>
-  <rect x="818" y="438" width="112" height="32" rx="7" fill="#eef3fb" stroke="#bcd0ec" data-tid="concur" data-lab="并发原语"/>
-  <text x="828" y="452" font-size="10" font-weight="600" fill="#1b2a4a">channel 同步</text>
-  <text x="828" y="464" font-size="8.5" fill="#5b7db1">park / goready</text>
+  <!-- sysmon（后台，虚线 State） -->
+  <rect x="950" y="320" width="90" height="88" rx="11" fill="#eef7f0" stroke="#bfe0c8" stroke-dasharray="5 3" data-tid="gmp" data-lab="GMP 调度"/>
+  <text x="964" y="352" font-size="11.5" font-weight="600" fill="#1d4a2b">sysmon</text>
+  <text x="964" y="372" font-size="9" fill="#4a8c60">后台监控·抢占</text>
+
+  <!-- Hot 主脊连线（实线绿） -->
+  <g stroke="#2f9e6e" stroke-width="1.8" fill="none">
+    <line x1="158" y1="364" x2="172" y2="364" marker-end="url(#aH)"/>
+    <line x1="370" y1="364" x2="384" y2="364" marker-end="url(#aH)"/>
+    <line x1="536" y1="364" x2="550" y2="364" marker-end="url(#aH)"/>
+    <line x1="702" y1="364" x2="716" y2="364" marker-end="url(#aH)"/>
+  </g>
+  <!-- 后台：调度器 ↔ sysmon（虚线 State） -->
+  <line x1="942" y1="364" x2="948" y2="364" stroke="#c99a3a" stroke-width="1.6" stroke-dasharray="5 3" fill="none" marker-end="url(#aS)"/>
+
+  <!-- 触发总线：运行中的 G 按需触发机制群 -->
+  <text x="40" y="426" font-size="10.5" font-weight="600" fill="#4a8c60">运行中的 G 按需触发 ↓ 机制群（编译进二进制，无外部依赖）</text>
+  <line x1="830" y1="408" x2="830" y2="424" stroke="#2f9e6e" stroke-width="1.8" fill="none"/>
+  <line x1="120" y1="424" x2="960" y2="424" stroke="#2f9e6e" stroke-width="1.6" fill="none"/>
+  <g stroke="#2f9e6e" stroke-width="1.6" fill="none">
+    <line x1="120" y1="424" x2="120" y2="438" marker-end="url(#aH)"/>
+    <line x1="288" y1="424" x2="288" y2="438" marker-end="url(#aH)"/>
+    <line x1="624" y1="424" x2="624" y2="438" marker-end="url(#aH)"/>
+    <line x1="792" y1="424" x2="792" y2="438" marker-end="url(#aH)"/>
+    <line x1="960" y1="424" x2="960" y2="438" marker-end="url(#aH)"/>
+  </g>
+  <!-- GC 例外：后台并发（虚线 State） -->
+  <line x1="456" y1="424" x2="456" y2="438" stroke="#c99a3a" stroke-width="1.6" stroke-dasharray="5 3" fill="none" marker-end="url(#aS)"/>
+
+  <!-- Row2 · runtime 机制群 -->
+  <!-- 栈管理 stack -->
+  <rect x="40" y="440" width="160" height="80" rx="11" fill="#eef7f0" stroke="#bfe0c8" filter="url(#soft)" data-tid="stack" data-lab="栈管理"/>
+  <text x="54" y="472" font-size="11.5" font-weight="600" fill="#1d4a2b">栈管理</text>
+  <text x="54" y="492" font-size="9" fill="#4a8c60">连续栈 · copystack 搬迁</text>
+
+  <!-- 内存分配器 alloc -->
+  <rect x="208" y="440" width="160" height="80" rx="11" fill="#fdf6ec" stroke="#f0dcaf" filter="url(#soft)" data-tid="alloc" data-lab="内存分配器"/>
+  <text x="222" y="472" font-size="11.5" font-weight="600" fill="#6b4e16">内存分配器</text>
+  <text x="222" y="492" font-size="9" fill="#a9822f">mcache→mcentral→mheap</text>
+
+  <!-- 垃圾回收 gc（后台并发） -->
+  <rect x="376" y="440" width="160" height="80" rx="11" fill="#eef7f0" stroke="#bfe0c8" filter="url(#soft)" data-tid="gc" data-lab="垃圾回收"/>
+  <text x="390" y="472" font-size="11.5" font-weight="600" fill="#1d4a2b">垃圾回收</text>
+  <text x="390" y="492" font-size="9" fill="#4a8c60">并发三色 · 写屏障（后台）</text>
+
+  <!-- 并发原语 concur -->
+  <rect x="544" y="440" width="160" height="80" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)" data-tid="concur" data-lab="并发原语"/>
+  <text x="558" y="472" font-size="11.5" font-weight="600" fill="#1b2a4a">并发原语</text>
+  <text x="558" y="492" font-size="9" fill="#5b7db1">channel · park / goready</text>
+
+  <!-- defer/panic/recover -->
+  <rect x="712" y="440" width="160" height="80" rx="11" fill="#f6f6f7" stroke="#e2e2e7" filter="url(#soft)" data-tid="defer" data-lab="defer/panic/recover"/>
+  <text x="726" y="472" font-size="11" font-weight="600" fill="#1d1d1f">defer/panic/recover</text>
+  <text x="726" y="492" font-size="9" fill="#6e6e73">延迟调用 · 栈展开</text>
+
+  <!-- 接口与反射 iface -->
+  <rect x="880" y="440" width="160" height="80" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)" data-tid="iface" data-lab="接口与反射"/>
+  <text x="894" y="472" font-size="11.5" font-weight="600" fill="#1b2a4a">接口与反射</text>
+  <text x="894" y="492" font-size="9" fill="#5b7db1">itab 动态分派</text>
 </svg>

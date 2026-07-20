@@ -14,6 +14,17 @@
 
 高层意图经**多级控制器逐层翻译**，每级只管自己那层的期望与实际：**Deployment 控制器** 不直接管 Pod——它据 `spec.replicas` 与滚动策略维护若干 **ReplicaSet**（`rolloutRolling`:677 / `rolloutRecreate`；新版本建新 RS、逐步调整新旧 RS 副本数实现滚动升级）。**ReplicaSet 控制器**（replica_set.go）只干一件事：让"贴合 selector 的 Pod 数"等于 `spec.replicas`——`manageReplicas`（:569）算 `diff := len(filteredPods) - int(*(rs.Spec.Replicas))`（:570），diff<0 就创建 Pod、diff>0 就删多余的；`syncReplicaSet`（:675）末尾 `calculateStatus`（:725）写回 status。**归属靠 ownerReferences**：RS 的 owner 是 Deployment、Pod 的 owner 是 RS；控制器用 `GetControllerOf` + ControllerRefManager 做**领养/弃养**（getReplicaSetsForDeployment 里 `ClaimReplicaSets`）——一个对象只被一个控制器拥有，避免多控制器抢管。**跨层唤醒**：RS 变化经 informer 事件把它的 owner Deployment 重新入队（addReplicaSet→enqueueDeployment），于是"底层实际变了→上层重算"形成闭环。这条级联链是 K8s "抽象分层、各司其职"的范本，也是 GC 级联删除的对象图基础。
 
+## 深化 · expectations 与失败路径（为什么不会重复创建）
+
+reconcile 的幂等在"创建 Pod"这类**异步生效**动作上有个陷阱：控制器创建了 N 个 Pod，但 informer 缓存要过一会儿才看到这 N 个新 Pod；若此时又被唤醒 reconcile，会误以为"还差 N 个"而再建一批。K8s 用 **expectations 机制**解决：
+
+- **期望登记**：RS 控制器在 `manageReplicas`（`pkg/controller/replicaset/replica_set.go:569`）算出 `diff := len(filteredPods) - *rs.Spec.Replicas`（replica_set.go:570）后，创建前先 `expectations.ExpectCreations(logger, rsKey, diff)`（replica_set.go:587）登记"我预期会看到 diff 个创建"。
+- **观察销账**：Pod 创建事件到来时 `expectations.CreationObserved`（replica_set.go:405）递减，删除事件 `DeletionObserved`（replica_set.go:536）同理。
+- **门禁**：下一轮 `syncReplicaSet`（replica_set.go:675）开头 `rsNeedsSync := rsc.expectations.SatisfiedExpectations(logger, key)`（replica_set.go:696）——**只有预期已被观察满足（或超时）才真正 manageReplicas**，否则本轮只更新 status 不再建/删，从根上杜绝"缓存滞后导致的重复创建"。
+- **慢启动防雪崩**：批量创建走 `slowStartBatch(diff, controller.SlowStartInitialBatchSize=1, ...)`（replica_set.go:597，常量见 `controller_utils.go:85`），批大小 1→2→4 指数递增；某批失败即停止，避免一次性把 API Server 打爆。单轮创建/删除还受 `burstReplicas`（默认 `BurstReplicas=500`，replica_set.go:68/580）截断。
+- **领养冲突**：`getReplicaSetsForDeployment`（`pkg/controller/deployment/deployment_controller.go:525`）经 `ClaimReplicaSets`（deployment_controller.go:549）用 `GetControllerOf`（:229）确认归属；若 selector 命中了别的控制器已拥有的对象，**不会强抢**，避免两个控制器互相拉扯同一 Pod。
+- **重试上限**：`handleErr`（deployment_controller.go:500）在 `NumRequeues(key) < maxRetries=15`（:511/:58）内指数退避重入队，超限 `Forget` 并告警——**放弃的是"这个 key 的本次重试"，不是对象本身**；下次事件/resync 仍会重新拉起。
+
 ## 深化 · 通用控制器骨架七步
 
 | 步 | 动作 | 代码锚点 |

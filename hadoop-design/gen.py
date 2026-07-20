@@ -14,6 +14,7 @@
 import os
 import re
 import html
+import json
 import base64
 import argparse
 
@@ -87,41 +88,7 @@ CAT_ORDER = [
 #   两条覆盖铁律：① 图上每个模块都有热区 ② 每条主线都被某热区覆盖（未覆盖者自动兜底成 chip）。
 # ===================================================================== #
 PANO_NAME = "Hadoop原理_全景主线框架"
-ARCH_W, ARCH_H = 1040, 780  # 必须与 ARCH_SVG_NAME 的 viewBox 一致
 # (x, y, w, h, 主线name) —— 一个模块可拆多行热区，一条主线可被多个区域指向
-ARCH_HOTSPOTS = [
-    # 顶部说明条 → 全景总览
-    (30, 44, 980, 40, "Hadoop原理_全景主线框架"),
-    # 接触面 band
-    (40, 114, 232, 42, "Hadoop原理_接口_FileSystem与Shell"),   # FileSystem API
-    (284, 114, 232, 42, "Hadoop原理_接口_FileSystem与Shell"),  # fs shell
-    (528, 114, 232, 42, "Hadoop原理_接口_YARN应用提交"),        # YARN Client
-    (772, 114, 228, 42, "Hadoop原理_支撑_MapReduce执行"),       # MapReduce Job
-    # NameNode 盒子
-    (44, 202, 452, 28, "Hadoop原理_支撑_NameNode命名空间与元数据"),   # 标题
-    (60, 234, 420, 36, "Hadoop原理_支撑_NameNode命名空间与元数据"),   # 命名空间树
-    (60, 276, 420, 36, "Hadoop原理_支撑_NameNode命名空间与元数据"),   # FsImage+EditLog
-    (60, 318, 420, 48, "Hadoop原理_支撑_块放置与复制策略"),           # BlockManager
-    # HA 盒子
-    (512, 202, 484, 28, "Hadoop原理_支撑_HA高可用"),   # 标题
-    (528, 234, 452, 34, "Hadoop原理_支撑_HA高可用"),   # Standby
-    (528, 274, 452, 34, "Hadoop原理_支撑_HA高可用"),   # JournalNode
-    (528, 314, 452, 52, "Hadoop原理_支撑_HA高可用"),   # ZKFC
-    # 心跳/块汇报 strip
-    (44, 388, 952, 24, "Hadoop原理_支撑_心跳与块汇报对账"),
-    # DataNode / pipeline row
-    (44, 418, 476, 38, "Hadoop原理_支撑_DataNode块存储"),
-    (528, 418, 468, 38, "Hadoop原理_支撑_Pipeline写数据流"),
-    # ResourceManager
-    (60, 540, 420, 46, "Hadoop原理_支撑_YARN资源调度"),   # Scheduler
-    (60, 592, 420, 46, "Hadoop原理_支撑_YARN资源调度"),   # ApplicationsManager
-    # MapReduce on YARN
-    (512, 508, 484, 70, "Hadoop原理_支撑_MapReduce执行"),
-    # 运维 strip
-    (512, 586, 484, 52, "Hadoop原理_支撑_Balancer与Federation"),
-    # NodeManager row
-    (44, 676, 952, 72, "Hadoop原理_支撑_YARN资源调度"),
-]
 # 没有独立架构区域、需底部 chip 兜底的主线（本项目 12 主线全部落在图上 → 空）
 ARCH_ALWAYS_CHIP = []
 
@@ -130,6 +97,27 @@ BRAND_SUB = "Apache Hadoop"
 HOME_DESC = ("Apache Hadoop（HDFS + YARN + MapReduce）核心原理设计文档库的离线交互图谱——家族 4 分布式存储/文件系统。"
              "12 条主线、25 张手绘原理图，全部回本地源码核实（commit 6f5d1374）。点击项目总架构图任意模块即可下钻到对应主线。")
 ARCH_SVG_NAME = "Hadoop原理_全景_02总架构.svg"
+_ARCH_SVG_TEXT = open(os.path.join(_DESIGN_DIR, ARCH_SVG_NAME), encoding="utf-8").read()
+def _parse_arch_hotspots(svg_text):
+    """从架构 SVG 的 data-tid rect 派生热区 5 元组 + viewBox 宽高(除数恒用本图 viewBox)。"""
+    import xml.etree.ElementTree as _ET
+    vb = re.search(r'viewBox="[\d.]+ [\d.]+ ([\d.]+) ([\d.]+)"', svg_text)
+    vbw, vbh = float(vb.group(1)), float(vb.group(2))
+    root = _ET.fromstring(svg_text); hots = []
+    def walk(el, dx, dy):
+        m = re.search(r'translate\(\s*([-\d.]+)(?:[,\s]+([-\d.]+))?', el.get("transform") or "")
+        if m:
+            dx += float(m.group(1))
+            if m.group(2): dy += float(m.group(2))
+        if el.tag.rsplit("}", 1)[-1] == "rect" and el.get("data-tid"):
+            hots.append((float(el.get("x", 0)) + dx, float(el.get("y", 0)) + dy,
+                         float(el.get("width", 0)), float(el.get("height", 0)),
+                         el.get("data-tid")))
+        for c in el:
+            walk(c, dx, dy)
+    walk(root, 0.0, 0.0)
+    return hots, vbw, vbh
+ARCH_HOTSPOTS, ARCH_W, ARCH_H = _parse_arch_hotspots(_ARCH_SVG_TEXT)
 
 # ===================================================================== #
 # 二、md 解析 —— 从每篇 design 文档抽取结构化内容
@@ -368,7 +356,9 @@ header{position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:14px
   padding:12px 22px;background:color-mix(in srgb,var(--c-bg) 82%,transparent);
   backdrop-filter:saturate(160%) blur(14px);border-bottom:1px solid var(--c-border)}
 .logo{display:flex;align-items:center;gap:9px;cursor:pointer;font-weight:700;font-size:15px;text-decoration:none;color:inherit}
-.logo:hover .homeico{color:var(--c-brand)}
+.logo:hover .homeico{display:inline-grid;place-items:center;width:38px;height:38px;border-radius:50%;border:1px solid var(--c-line);background:var(--c-panel);color:var(--c-ink2);transition:color .15s} a:hover .homeico,.logo:hover .homeico,.homelink:hover .homeico{color:var(--c-brand);border-color:var(--c-brand)}
+.nn-n{fill:var(--c-ink2)}.nn-h{fill:var(--c-brand)}.nn-e{stroke:var(--c-line);stroke-width:1.4}
+.tt-ico{font-size:16px;line-height:1}.tt-sun{display:none}:root[data-theme="light"] .tt-moon{display:none}:root[data-theme="light"] .tt-sun{display:inline}
 .homeico{display:inline-flex;color:var(--c-ink2);transition:color .15s}
 .logo .dot{width:11px;height:11px;border-radius:3px;background:linear-gradient(135deg,var(--c-brand),var(--c-amber))}
 .logo .sub{font-weight:500;color:var(--c-ink2);font-size:12px}
@@ -379,7 +369,7 @@ header{position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:14px
 .wrap{max-width:1180px;margin:0 auto;padding:30px 22px 80px}
 .navmap-hint{color:var(--c-ink3);font-size:12px;margin:18px 2px 0;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
 .navmap-hint b{color:var(--c-brand);font-weight:700}
-.arch-wrap{position:relative;margin-top:12px;background:var(--c-card);border:1px solid var(--c-border);border-radius:16px;padding:14px;overflow:hidden}
+.arch-wrap{position:relative;margin-top:12px;background:var(--c-card);border:1px solid var(--c-border);border-radius:16px;padding:0;overflow:hidden}.msearch{position:relative;display:flex;align-items:center;gap:8px;width:min(300px,38vw);padding:0 12px;height:38px;border-radius:19px;border:1px solid var(--c-line);background:var(--c-panel);color:var(--c-ink2);margin-right:12px}.msearch svg{flex:none;opacity:.7}.msearch input{flex:1;border:0;background:transparent;color:var(--c-ink);outline:0;font-size:13px}.msearch kbd{flex:none;font:600 11px monospace;color:var(--c-ink3);border:1px solid var(--c-line);border-radius:5px;padding:1px 6px}.mq-list{position:absolute;top:44px;left:0;right:0;z-index:60;background:var(--c-card);border:1px solid var(--c-line);border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.18);overflow:hidden;display:none}.mq-list.on{display:block}.mq-item{display:block;width:100%;text-align:left;border:0;background:transparent;cursor:pointer;padding:9px 14px;color:var(--c-ink);font-size:13px;border-bottom:1px solid var(--c-line)}.mq-item:last-child{border-bottom:0}.mq-item:hover,.mq-item.sel{background:color-mix(in srgb,var(--c-brand) 12%,transparent)}.mq-item .s{display:block;color:var(--c-ink3);font-size:11px;margin-top:2px}
 .arch-wrap img{width:100%;display:block;border-radius:8px}
 html:not([data-theme="light"]) .arch-wrap img{filter:invert(.92) hue-rotate(180deg) saturate(.85)}
 .arch-hot{position:absolute;border:0;background:transparent;cursor:pointer;padding:0;border-radius:6px;transition:.12s;z-index:2}
@@ -451,21 +441,22 @@ b{color:var(--c-ink);font-weight:700}
 APP_JS = r"""
 (function(){
   var root=document.documentElement;
-  var saved=localStorage.getItem('hadoop-atlas-theme');
+  var saved=localStorage.getItem('atlas-nav-theme');
   if(saved) root.setAttribute('data-theme',saved);
   function toggleTheme(){
     var cur=root.getAttribute('data-theme')==='light'?'':'light';
     if(cur) root.setAttribute('data-theme',cur); else root.removeAttribute('data-theme');
-    localStorage.setItem('hadoop-atlas-theme',cur);
-    var b=document.getElementById('themeBtn'); if(b) b.textContent=cur==='light'?'☀':'☾';
+    localStorage.setItem('atlas-nav-theme',cur);
+    
   }
   var tb=document.getElementById('themeBtn');
-  if(tb){tb.onclick=toggleTheme; tb.textContent=root.getAttribute('data-theme')==='light'?'☀':'☾';}
+  if(tb){tb.onclick=toggleTheme;}
 
   var home=document.getElementById('home'), panes=document.getElementById('panes');
   function showHome(){home.style.display='block';panes.style.display='none';
     document.querySelectorAll('.pane').forEach(function(p){p.classList.remove('on')});
     window.scrollTo(0,0);}
+  window.openMain=function(mid,idx){return openMain(mid,idx);};
   function openMain(mid,idx){
     home.style.display='none';panes.style.display='block';
     document.querySelectorAll('.pane').forEach(function(p){p.classList.toggle('on',p.dataset.mid===mid)});
@@ -493,6 +484,36 @@ APP_JS = r"""
   function done(){var lo=document.getElementById('lo');if(lo){lo.classList.add('hide');setTimeout(function(){if(lo&&lo.parentNode)lo.parentNode.removeChild(lo);},500);}}
   requestAnimationFrame(function(){requestAnimationFrame(function(){setTimeout(done,120);});});
   setTimeout(done,4000);
+})();
+
+/* 模块搜索:过滤本项目主线,回车/点击下钻 */
+(function(){
+  var MS=window.__MAINS__||[], mq=document.getElementById('mq'), list=document.getElementById('mqlist');
+  if(!mq||!list) return;
+  var sel=-1, cur=[];
+  function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  function render(){
+    var q=mq.value.trim().toLowerCase();
+    cur = !q ? [] : MS.filter(function(m){return (m.t+' '+m.s+' '+m.mid).toLowerCase().indexOf(q)>=0;}).slice(0,8);
+    if(!cur.length){ list.className='mq-list'; list.innerHTML=''; return; }
+    sel=0;
+    list.innerHTML=cur.map(function(m,i){return '<button class="mq-item'+(i===0?' sel':'')+'" data-mid="'+esc(m.mid)+'"><b>'+esc(m.t)+'</b><span class="s">'+esc(m.s)+'</span></button>';}).join('');
+    list.className='mq-list on';
+  }
+  function go(mid){ mq.value=''; list.className='mq-list'; list.innerHTML=''; if(typeof window.openMain==='function') window.openMain(mid,0); }
+  mq.addEventListener('input',render);
+  mq.addEventListener('keydown',function(e){
+    if(!cur.length){ if(e.key==='Escape') mq.blur(); return; }
+    if(e.key==='ArrowDown'){e.preventDefault();sel=(sel+1)%cur.length;}
+    else if(e.key==='ArrowUp'){e.preventDefault();sel=(sel-1+cur.length)%cur.length;}
+    else if(e.key==='Enter'){e.preventDefault();go(cur[sel].mid);return;}
+    else if(e.key==='Escape'){list.className='mq-list';mq.blur();return;}
+    else return;
+    [].forEach.call(list.children,function(el,i){el.className='mq-item'+(i===sel?' sel':'');});
+  });
+  list.addEventListener('click',function(e){var b=e.target.closest('.mq-item'); if(b) go(b.dataset.mid);});
+  document.addEventListener('keydown',function(e){ if(e.key==='/'&&document.activeElement!==mq){e.preventDefault();mq.focus();} });
+  document.addEventListener('click',function(e){ if(!e.target.closest('.msearch')){list.className='mq-list';} });
 })();
 """
 
@@ -523,9 +544,10 @@ def build_html():
   <div class="lo-s" style="font-size:11px;opacity:.7">短暂空白属正常装载，非内容缺失</div>
 </div>
 <header>
-  <a class="logo" id="logo" href="../index.html" title="返回导航主页"><span class="homeico" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg></span></a>
+  <a class="logo" id="logo" href="../index.html" title="返回导航主页"><span class="homeico" aria-hidden="true" style="width:38px;height:38px;border-radius:50%;border:1px solid var(--c-line);background:var(--c-panel);color:var(--c-ink2);display:inline-grid;place-items:center;text-decoration:none"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg></span></a><div class="brand-intro" style="display:flex;flex-direction:column;align-items:flex-start;margin-left:12px;min-width:0;max-width:min(60vw,760px)"><div style="font-size:15px;font-weight:600;color:var(--c-ink);line-height:1.3">Hadoop HDFS · 核心原理图谱</div><span style="margin-top:3px;font-size:11.5px;color:var(--c-ink3);line-height:1.5;text-align:left">分布式文件系统 HDFS:NameNode 管元数据 + DataNode 存块副本,大文件切块 + 多副本容错,一次写多次读。</span></div>
   <div class="spacer"></div>
-  <a href="https://github.com/apache/hadoop" target="_blank" rel="noopener" title="GitHub 源码仓库" style="display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:9px;border:1px solid var(--c-line);color:var(--c-ink2);text-decoration:none;margin-right:8px"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.7.5.5 5.7.5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.2.8-.6v-2c-3.2.7-3.9-1.4-3.9-1.4-.5-1.3-1.3-1.7-1.3-1.7-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.7 1.3 3.4 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.8 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.3 1.2a11.4 11.4 0 0 1 6 0C17.3 4.7 18.3 5 18.3 5c.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.5-2.7 5.5-5.3 5.8.4.4.8 1.1.8 2.2v3.3c0 .4.2.7.8.6 4.6-1.5 7.9-5.8 7.9-10.9C23.5 5.7 18.3.5 12 .5z"/></svg></a><a href="https://hadoop.apache.org" target="_blank" rel="noopener" title="项目官网" style="display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:9px;border:1px solid var(--c-line);color:var(--c-ink2);text-decoration:none;margin-right:8px"><img src="data:image/svg+xml;base64,PHN2ZyBmaWxsPSIjNjZDQ0ZGIiByb2xlPSJpbWciIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48dGl0bGU+QXBhY2hlIEhhZG9vcDwvdGl0bGU+PHBhdGggZD0iTTEyLjA5OCAzLjAxYy0xLjEzMy4yNzctMS40NjYuNDc0LTEuODQyIDEuNzg3LjQ3OC0uOTYyLjg0LTEuMzE1IDEuODQyLTEuNzg3em0zLjIyOC4wNzZjLS44MzQtLjA1My0xLjcxNS4xNzctMi43NTYuNjE1YTMuOTcgMy45NyAwIDAwLTEuMTk5Ljc2Yy0uMzEuMjg3LS41NzYuNjItLjg2NiAxLjAwNmExLjMxMiAxLjMxMiAwIDAwLS40NjguMDk1IDEuODY4IDEuODY4IDAgMDAtLjUzOS4zNTZjLS4xNDEuMTI0LS4yOC4yNTItLjQxNi4zODN2LjAwMmMtLjEyMy4xMi0uMjQ0LjI0MS0uMzYzLjM2NS0uOTQ1LjE1Mi0xLjcyLjMyLTIuNDEuNTg4YTYuMzE0IDYuMzE0IDAgMDAtMS45NyAxLjIxN2MtLjI1Mi4yMjItLjQ4Mi40NjktLjY4Ny43MzZhNS40MzUgNS40MzUgMCAwMC0uNTAzLjgwM2MtLjEzLjE0Mi0uMjYuMjg4LS4zOTkuNDE0YTEuNDUgMS40NSAwIDAxLS40NDEuMjg1Yy0uMDkzLjAzNS0uMTMzLjA1OC0uMTM3LjA1Ni0uMDA0LS4wMDEtLjAwOC0uMDMzLS4wMTItLjA0Ny4yMzUtLjIxLjI2Ny0uNTUuMjg5LS44Ni4wMy4wMzQuMDUzLjA2OC4wODIuMTEzLjAzMS4wNDcuMDYyLjA5NS4xLjE0MmwuMTU4LjIuMDU1LS4yNDljLjA0Ni0uMjA4LjA4MS0uNDg0LjAyNy0uNzI0LS4wMzQtLjE1My0uMTE3LS4zMTUtLjIzNS0uMzkzbC4wMzYtLjA5Yy4wNC0uMS4wOC0uMjA0LjExNS0uMzAzbC4wNjktLjE5My0uMjA0LjAzNWMtLjI3LjA0Ny0uODUyLjM2Ni0xLjI2MS43OTEtLjE1Mi4xNTgtLjI4NC4zMy0uMzcuNTE0YS45ODQuOTg0IDAgMDAtLjA5My41OS45MS45MSAwIDAwLjI3Mi40OThjLjAzLjEyLjA1OC4yMjMuMDg3LjMxNi4wMzMuMTA0LjA2OC4xOTguMTEyLjI5LjExOS4yNDcuMzEuMzk4LjUyOS40NjguMTgyLjA1OS4zNjkuMDY2LjU2Ni4wMmEzLjgzIDMuODMgMCAwMC0uMDcyLjY5IDguOTExIDguOTExIDAgMDAuMDcgMS4zOTRjLjAxMy4wOTMuMDI4LjE4NC4wNDUuMjc1bC0uMTA3LjI5MS0uMTY2LjQ1NS0uMzcuMzY1LS4zNDMuMzRhOS4yMiA5LjIyIDAgMDEtLjA4Mi4wOGMtLjIzMi4yMjQtLjI3OS4yNy0uMjEzLjY2Mi4wNC4yNDEuMTE5LjQ4NC4yNDIuNzIuMTE0LjIxNi4yNjcuNDI3LjQ2My42MjQuMjQ1LjI0NS42NDcuNTUgMS4wNjYuNzEuMjQ1LjA5Mi40ODguMTM4LjcyMy4wOTdsLS4wMzkuMTFhNC4wNDYgNC4wNDYgMCAwMS0uMTIzLjNjLS4yODUuNjI0LjAwOC45NS40NjMgMS4xNTguMjI3LjEwNC40OTcuMTczLjc0OC4yMzhsLjE2OC4wNDVjLjI5OC4wOC44MTIuMjI4IDEuMjgxLjI1OC41MTMuMDMzLjk3NC0uMDczIDEuMDk4LS41MzMuMDQ5LS4xODIuMDc4LS4zMjIuMDktLjQ1OWEyLjMzIDIuMzMgMCAwMC0uMDEtLjQwNmMuMTQ0LS4zMi4yMS0uNDIzLjMxNi0uNTc4bC4wNTMtLjA4Yy4xMTUtLjE3LjE2OC0uMjkuMTg4LS40MjYuMDE4LS4xMzEuMDA0LS4yNjItLjAyLS40NjFsLS4wMTEtLjA4NGE2LjgyMiA2LjgyMiAwIDAwMS4zMzguMDVsLS4xMTguMDYxLS4wNTUuMDNjLS4zOTUuMjAzLS40MTMuNTg3LS4yODkuOTg0LjExMi4zNTcuMzQzLjcyMy40ODcuOTQ1LjMwMy40NjcuNTkyLjg2MS45NDMgMS4wNzYuMzY4LjIyNi43ODYuMjUzIDEuMzI4LS4wNC4yNzYtLjE1LjM2My0uMzAyLjQ4LS41MDcuMDM4LS4wNjYuMDgtLjEzMy4xMjYtLjIwNC4xMDEtLjA1LjM4Mi0uMjk2LjY3LS41MzRsLjI5Ni0uMjQyYy4wNzMuMDUzLjE2NC4wOS4yNy4xMTUuMTQuMDM0LjMwNS4wNS41MDQuMDY1LjE0OS4wMS42MzUuMDEuOTQ5LjAxaC4yMjdjLjMyNC4wMDEuNTg1LS4wMTYuNzgzLS4xMjguMjEtLjExOS4zMzQtLjMzMS4zNjEtLjcxYTEuMjggMS4yOCAwIDAwLS4wMDgtLjM3OC45NDYuOTQ2IDAgMDAtLjEzNi0uMzEybC0uMDE0LS41MDItLjAxNi0uNTIxYTIuMzcyIDIuMzcyIDAgMDAtLjA2OC0uNTM2IDMuNTU4IDMuNTU4IDAgMDAtLjE4LS41MDVjLS4wNTMtLjEyNy0uMDk2LS4yNDUtLjEzOC0uMzZhNS43NTYgNS43NTYgMCAwMC0uMjI5LS41NDdsLjAxOC0uMTIzLjE4MS4xNzQuMjY2LjI1OGMuMjAzLjE5Ni4zOS4zNzMuNjA3LjUwMi4yMjYuMTMzLjQ3OS4yMS44MDcuMTk1YTEuOTI1IDEuOTI1IDAgMDAxLjAxNi0uMzg1Yy4yOTMtLjIxNi41MjgtLjUwOS42MjctLjgzMmwuMDg0LS4yNzkuMDctLjIyNWMuNDgyLjA4Mi45OTguMTEgMS40OTguMDU3YTMuNyAzLjcgMCAwMDEuMzUxLS4zODkgMy40MDYgMy40MDYgMCAwMDEuMzUtMS4zM2guMDAydi0uMDAyYy4zNTUtLjYxNi41NTUtMS4zNC42My0yLjA4OC4wNjItLjU5OS4wMjgtMS40MTUtLjA5Ny0yLjItLjExLS43MDEtLjI5NS0xLjM4LS41NS0xLjg3YS43MzYuNzM2IDAgMDAtLjEzNy0uMTc4IDEuNDEzIDEuNDEzIDAgMDAtLjUxLS4zMWMtLjIwNi0uMDctLjQyMi0uMDg0LS41OTQuMDA2YS40ODUuNDg1IDAgMDAtLjEyMy4wOSAyLjc5MyAyLjc5MyAwIDAwLS4zLjM4OGMtLjEwNi4xNTMtLjIxLjMwNy0uMzM3LjQxNC0uMTQ5LjEyOC0uMzI3LjIwMi0uNTAyLjI3MmEzLjQ1NCAzLjQ1NCAwIDAwLS4yNjEtLjUwOCA0LjgxIDQuODEgMCAwMC0uMzk5LS41NCAyLjIxIDIuMjEgMCAwMC0uMzY1LS4zNDkgNS4zNTcgNS4zNTcgMCAwMC0uNDEtLjI3NWMtLjQwNy0uMjU1LS43NTQtLjU1OS0xLjEwOC0uODctLjE2LS4xNC0uMzIzLS4yODItLjQ4Mi0uNDEzLS44NDItLjY5NS0xLjYyOC0xLjAzMS0yLjQ2OS0xLjA4NHptLTQuMTI5LjAwNGMtLjU3LjEzNy0uNjguMjQ1LS44NTEuODA0LjI3My0uNDEuNDMtLjU0NS44NTEtLjgwNHptMy45NTIuNDY1Yy44MjktLjAwMSAxLjU4Ny4zMDMgMi40MzEgMS4wMTMuNDEyLjM0Ny43NzQuNjg0IDEuMTkyLjk4My0uMTUyLjAxMy0uMjgzLjA0LS40NTUuMTA3LjIxLS4wNC40NTEgMCAuNjcuMDQuMDYuMDM5LjEyNC4wNzguMTg5LjExNi4yOTUuMTc0LjQ2My4yNy42NjIuNTQ3LjIxLjI5NC4zODYuNTg5LjU0MS45MTItLjEwMS0uMDM2LS4xODYtLjA2Ny0uMjYyLS4wOWEuNTY2LjU2NiAwIDAwLS41MzMuMDM0bC0uMDEyLjAwNmMtLjE2My4wNzktLjQxNi4xNy0uNTg2LjE5N2EuNy43IDAgMDAuNDA1LS4wMDYuNTY1LjU2NSAwIDAwLS4wMTguNTM5LjI2OS4yNjkgMCAwMS0uMDItLjEyLjIyOC4yMjggMCAwMS4yNDktLjIwOC4yMzMuMjMzIDAgMDEuMTg3LjMzYy0uMTE3LjAyLS4yMzMuMDU1LS4zNTMuMWE0LjQxIDQuNDEgMCAwMC0uMjM3LjA5NSAzLjcyMiAzLjcyMiAwIDAxMS4wODQtLjAyYy4wMjUuMTE3LjA1LjI0LjA3My4zNjZsLS4xMzcuMDEtLjAxMi4wMDJjLS4xNzQtLjE0LS4zNjctLjExNy0uNjMzLS4wNTctLjgwNi4xODQtLjYxNy42MzctLjk4OCAxLjMxOC4zODUtLjQ3LjM1Ny0uOTYyLjk4NC0xLjExLjE0Ny0uMDM2LjI0Ny0uMDc4LjM0Ni0uMDYzLS4xNzguMDktLjMzMy4yMzctLjM5NC40MS0uMTczLjQ4Ni0uMDY1Ljg5NS0uMjU0IDEuMzUuMjM0LS40MDcuMjQ5LS44MDIuNDU5LTEuMjMuMDc1LS4xNTMuMzU0LS40LjUyNS0uNDAzbC4xNC0uMDAyYy4wNDIuMjcuMDY4LjUzOS4wNTIuNzYxYTguNTM1IDguNTM1IDAgMDEtLjE5OCAxLjI0Yy4yMTMtLjI3Mi4zMS0uODUuNDAzLTEuMjU3LjA5Ny0uNDI0LjA3LS45MzQtLjAxNC0xLjM4OS0uMTE3LS42MjUuNTI3LS41MjIuOS0uODE2LjI3NS0uMjE3LjQ2My0uNTY0LjcxNS0uODA5LjI1LS4yNDMuNjQ0LjExNC43NDIuMzUyLjQyNiAxLjAzLjYyIDIuNjUuNTA4IDMuNjktLjEyNiAxLjE2NC0uNjkgMi40MzctMS43MTkgMy4wMS0xLjMxLjczMi0yLjg1NC4yODUtNC4xNTYtLjE1NC0uMjc4LS4wOTMtLjQ3LS4yMjktLjcxNS0uMzgyLjA2Ny4zLjA5Ny42MTUuMDA4LjkxNC0uMTQuNDc0LS4zNjcgMS4yNTEuMjc3IDEuMzk0LjI0Ni4wNTUuMzU3LjA0OC43MDQtLjEzYTEuMyAxLjMgMCAwMS0uNjE2LjAxMS4zOTcuMzk3IDAgMDEtLjMxNC0uMjczYy4wNi4wNDQuMTYuMDY2LjMzLjEwNy40NzguMTE1LjkzMi0uMTE0IDEuMDIxLS40NDUuMDUyLS4xOTQuMDQzLS4yOTUuMTUzLS41NTkuMDk5LjAzLjIwMi4wNTkuMzA2LjA4NGwtLjE3Ny41NzhjLS4xNTQuNTAxLS43NTIuOTA0LTEuMjguODk1LS40ODgtLjAwOS0uNzk3LS4zMTQtMS4xMzQtLjYxM2wtLjY3OC0uNmE1LjIyOCA1LjIyOCAwIDAxLTEuNjU4LS44MzRjLjQuNDcyLjY3My43MzIgMS4yMzIuOTY3LS4wODEuODMtLjM3IDEuNDM2LS42MTUgMi4yMy0uMTExLjM2LS45OTEgMS44LTEuMjM0IDEuOTQtLjE3NC4xLTEuMjYgMS4wMTYtMS40NjUgMS4xMzYtLjE1My4yMDMtLjI4Ny40ODMtLjUxNi42MDQtLjY5OC4zNy0xLjE0OC0uMzM5LTEuNTIzLS45MzYtLjE3MS0uMjcyLS42NDUtMS4wNTQtLjIzLTEuMjczLjM5LS4yMDguNjEtLjM1NyAxLjAwOS0uNjIuMDU5LjEwOC4xNTkuMjEyLjIyNS4zMmwtLjA0My0uMzUyYTIuNzUyIDIuNzUyIDAgMDEtLjAwOC0uNTk2Yy4wMTYtLjIwNi4wMy0uNDEzLjA0Ny0uNjItLjA2LjIxLS4xNzkuNDItLjIzOS42My0uMDI0LjA4NC0uMDQ1LjE1Mi0uMDU2LjIxNGE3LjA1IDcuMDUgMCAwMS0yLjY4Mi4wMzQgMTYuNzYgMTYuNzYgMCAwMC0uMTg1LS45MjZjLS4wMTguMjc4LS4wMDcgMS4wNDctLjAwOCAxLjQ3Ni0uMDAxLjMzMy0uMDE2LjQ0OC0uMTg4LjczMS0uMTYuMjY1LS4yMjguMzI1LS40NTMuNzczLjAxOS4yODMuMDE5LjQ3LS4wNTcuNzM5LS4xMjUuNDQ2LTEuMzg2LjA5OC0xLjcxOC4wMDctLjQxLS4xMTItMS4yNTYtLjI3OC0xLjA0My0uODI0LjE4Ny0uNDguMzA3LS45ODYuMzk4LTEuNjU4LS43NS0xLjA4LTEuNDQ4LTIuNTYtMS41ODItMy44NzMtLjEwNC0xLjAxOS0uMDQtMS42NDYuMTgtMi4yNy4zNS0uOTg3LjgzNy0xLjg0MyAxLjYyLTIuNTNDNS43NzggNy44OSA2Ljc2NyA3LjUxNiA4LjMxNiA3LjI4Yy0uMzczLjQxNy0uNzQxLjg1OC0xLjE0MyAxLjMzLS40MDYuNDc5LS42NDguOTYzLS45MDYgMS40ODctLjM1Ny43MjItLjM0OC45OTYuMTI1IDEuNjMuNDA3LjU0Ny42MjcuNzk0LjgwNCAxLjMyOC0uMTQ2LjMwMy0uMi41Ni0uMjUuOTczLjUuNTQ1Ljg3LjkxOCAxLjM1NCAxLjAzMy40NzUuMTEzLjg3Mi4wOTMgMS4yOTctLjEyNS45NDQtLjQ4MiAxLjgxNi0xLjEwNyAyLjg4LTEuMTMyLjQ5My0xLjIxMS40NDQtMi4yMjIuMjA4LTMuMzkzLS4xNjItLjgtLjIyNy0xLjU1Ny0uMjc4LTIuMzczLS4yLjg0LS4yMzYgMS41NzctLjA4OCAyLjQxNC4xOCAxLjAwOC4zMTggMi4xMjQtLjE4IDMuMDEtLjk2Mi4wNzMtMS43ODguNjU4LTIuNjU1IDEuMTA3LS4zNS4xOC0uNzEyLjE5OC0xLjA5OC4wOTItLjM1OC0uMDk4LS42LS4zMzQtLjk4Ni0uNzgtLjAwNi0uNDQ2LjA5NS0uNjUzLjMtMS4wNTguMzMtLjY1LjY5NS0xLjI1NSAxLjA5NC0xLjg5NC0uNDkuNTktLjk1MyAxLjA4NC0xLjMzOCAxLjY3Ny0uMTQ3LS40MTktLjM1OC0uNjMzLS43MDctMS4xMDUtLjM0LS40NjEtLjM3NS0uNjYyLS4xMi0xLjE5Ni4yNTUtLjUzNi40NzItMS4wMDguOTA3LTEuNDc4Ljc1My0uODEzIDEuNDQzLTEuNzE3IDIuMjY2LTIuNTE4LjQ0Ny0uNDM0LjYyOC0uNDIgMS4yMi0uNTFhMjAuNzY4IDIwLjc2OCAwIDAwMS42MDYtLjMxIDIyLjUgMjIuNSAwIDAxLTEuNTUzLjA4aC0uMDE1Yy41MDYtLjY0Ni43OTktMS4wMDYgMS42Mi0xLjM2My45NS0uNDEyIDEuNzM4LS42NTIgMi40Ny0uNjUyem0uNTU2IDIuNzljLTEuMTAxLjI3Ni0xLjMwNy43MzktMS4xNjYgMS40NS4xMjEtLjUzNS4zMzUtMS4wNSAxLjE2Ni0xLjQ1em0tMy4yNjMuMDYxYy0uNDQ2LjA1LS44OS4wOTYtMS4zMzYuMTM5LS4zNzUuMDM1LS40MzYuMDMtLjcwMi4yOTMtLjQwMy4zOTktLjc5NCAxLjc2OC0uOTIgMi4zMTYuMTk4LS40NTUuNjktMS43MjkgMS4wNjktMi4wNTMuMTA1LS4wOS4xOC0uMTQzLjI1OC0uMTgzLS4yNzEuNDU1LS4yNTIuNTY2LS4xNTcgMS4xNzYuMDgxLS42Mi4yOTUtLjg1OS42NDctMS4zMmE5LjI4NyA5LjI4NyAwIDAwMS4xNC0uMzY4em0xMC4yMjYuMDUzYy0uMjU1LjUxNy0uNjUuOTUtMS4xODUgMS4yMTUtLjI4OC4xNDItLjQ3LjA5My0uNzkxLjA2Mi4zMjYuMDk0LjUzMy4yMS44NTMuMDk2LjY1Mi0uMjMzLjk2Ny0uNzU2IDEuMTIzLTEuMzczem0tMi4yOC44MzRjLjAyMy4wNDcuMDQ2LjA5Ni4wNjcuMTQ0YS42MDIuNjAyIDAgMDAtLjA1LjA0MS41NzIuNTcyIDAgMDAtLjEyNi0uMTgxbC4xMS0uMDA0em0tMy4yNi40Yy0uMzYuMTY2LS43NzkuMTI2LTEuMDg3LjMzNC0uMjcxLjE4NC0uNjQ2Ljc2NC0uOTIyIDEuMDEuMi0uMDc4LjM5NC0uMjEyLjU3LS4zNTQuMDAyLjIyLjEwMS40MjYuMjcuNTY1YS4zMS4zMSAwIDAxLjA5Mi0uNDkyLjMxMi4zMTIgMCAwMS40MzIuMTkxYy0uMTQ4LjExLS4yODQuMjM4LS4zOTcuMzg3YTEuNjY2IDEuNjY2IDAgMDAtLjI0LjQ0IDQuMjIyIDQuMjIyIDAgMDEyLjAwMi0xLjI5NGMtLjItLjAwMy0uNDM3LjAzNC0uNjc4LjExNGEuNzMyLjczMiAwIDAwLS40ODItLjYxNGMuMTYtLjA4NS4zMTYtLjE3NS40NC0uMjg3em0tMS4wNDIgMS42NGEuNzM1LjczNSAwIDAxLS4xMjUtLjA4My4zNS4zNSAwIDAwLjEyNS4wODR6TTEuMzIgOC4zNGMtLjk1My42NzItMS4xOS45NzgtMS4wNjIgMi4zMzhDLjM1MiA5LjYwOC41NiA5LjE0NSAxLjMyIDguMzR6bS0uODA4LjQwNGMtLjQ4Mi4zMzYtLjU0NS40NzUtLjUgMS4wNTkuMTA1LS40ODIuMjAzLS42NjQuNS0xLjA1OXptMS43NzkuMTk1Yy0uMDcuMTUtLjExOC4yNjQtLjE1Mi4zODEtLjE0Ny41MDguMDY2Ljk2Mi0uMzk1IDEuMzMuMjE3LjQzOC4yMDcuNjEyLjcxMS40MS4xOTUtLjA3OC4zNTUtLjE4Ny40OTgtLjMxNi0uMDcuMTgtLjEzMy4zNjEtLjE5MS41NDVsLS4wMy4wOTRjLS4zNi4xNTMtLjgzNC4yNS0xLjAxNS0uMTNhMy40NTggMy40NTggMCAwMS0uMjAzLS41OTVjLS41OTQtLjYxNS4yOTQtMS40MjcuNzc3LTEuNzE5em0uMTIzLjI3NmMuMTIzLjA3MS4xNTYuMi4xNy4zNzUtLjA3My0uMDc0LS4xMzItLjEyMi0uMjI3LS4xMTIuMDA4LS4wNi4wMTktLjExOS4wMzQtLjE3Ny4wMDctLjAzLjAxNC0uMDU4LjAyMy0uMDg2em0xNC44NyAzLjI2N2MtLjEzMS4wMjItLjM2NS4wNy0uNDk1LjA5Mi0uMzQ4LjA1OS0uMzg3LjE0Mi0uNDQxLjQ4NGwtLjA4Ni41MjRhOS4xNiA5LjE2IDAgMDEuMjI4LS41NjhjLjA4NC0uMTg0LjEzMi0uMjAyLjMxLS4zLjEyNy0uMDY4LjM1Ny0uMTYzLjQ4My0uMjMyem0tMTQuNDcgMi40Yy4yNzQuOTQ2LjczOCAxLjg3NiAxLjI1NSAyLjY1N3YuMDE0YS45OTMuOTkzIDAgMDEtLjE0OS4zNjljLS4zNjkuNDkzLTEuMzA2LS4yMy0xLjU3OC0uNTA4LS4yOTctLjMwMy0uNDk2LS42NjItLjU0My0uOTk4LS4wMzQtLjI0Ni0uMDAxLS4yNTIuMTctLjQyNmwuNjkzLS43MDEuMTUzLS40MDZ6bTEyLjQwNS42MmMuMDU2LjE4My4xMDEuMzY0LjE4My41NTguMTM4LjMyNi4yMDUuNTI2LjIxNS44NzVsLjAzMiAxLjEwNmMuMTE3LjIwNi4xMzYuMjQ5LjExNS40ODQtLjA0My40ODEtLjIwMy41MTMtLjYyNS41MDYtLjE5Mi0uMDAzLS45NTctLjAwNy0xLjE1LS4wMjMtLjI3NC0uMDI0LS40MjktLjA1LS41MTItLjExMi40My0uMzE2IDEuMTYyLTEuNjE5IDEuMzA0LTIuMDY4LjE1MS0uNDc0LjMxNS0uODg4LjQzOC0xLjMyNnoiLz48L3N2Zz4=" width="18" height="18" alt="官网" style="display:block"/></a><button id="themeBtn" title="切换主题" aria-label="切换主题" style="width:38px;height:38px;border-radius:50%;border:1px solid var(--c-line);background:var(--c-panel);color:var(--c-ink2);cursor:pointer;display:inline-grid;place-items:center;font-size:16px;flex:none">☾</button>
+  <label class="msearch"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input id="mq" type="text" placeholder="搜索模块 / 主线…" autocomplete="off" aria-label="搜索模块"/><kbd>/</kbd><div id="mqlist" class="mq-list"></div></label>
+  <a href="https://github.com/apache/hadoop" target="_blank" rel="noopener" title="GitHub 源码仓库" style="display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:50%;border:1px solid var(--c-line);color:var(--c-ink2);text-decoration:none;margin-right:8px"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.7.5.5 5.7.5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.2.8-.6v-2c-3.2.7-3.9-1.4-3.9-1.4-.5-1.3-1.3-1.7-1.3-1.7-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.7 1.3 3.4 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.8 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.3 1.2a11.4 11.4 0 0 1 6 0C17.3 4.7 18.3 5 18.3 5c.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.5-2.7 5.5-5.3 5.8.4.4.8 1.1.8 2.2v3.3c0 .4.2.7.8.6 4.6-1.5 7.9-5.8 7.9-10.9C23.5 5.7 18.3.5 12 .5z"/></svg></a><a href="https://hadoop.apache.org" target="_blank" rel="noopener" title="项目官网" style="display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:50%;border:1px solid var(--c-line);color:var(--c-ink2);text-decoration:none;margin-right:8px"><img src="data:image/svg+xml;base64,PHN2ZyBmaWxsPSIjNjZDQ0ZGIiByb2xlPSJpbWciIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48dGl0bGU+QXBhY2hlIEhhZG9vcDwvdGl0bGU+PHBhdGggZD0iTTEyLjA5OCAzLjAxYy0xLjEzMy4yNzctMS40NjYuNDc0LTEuODQyIDEuNzg3LjQ3OC0uOTYyLjg0LTEuMzE1IDEuODQyLTEuNzg3em0zLjIyOC4wNzZjLS44MzQtLjA1My0xLjcxNS4xNzctMi43NTYuNjE1YTMuOTcgMy45NyAwIDAwLTEuMTk5Ljc2Yy0uMzEuMjg3LS41NzYuNjItLjg2NiAxLjAwNmExLjMxMiAxLjMxMiAwIDAwLS40NjguMDk1IDEuODY4IDEuODY4IDAgMDAtLjUzOS4zNTZjLS4xNDEuMTI0LS4yOC4yNTItLjQxNi4zODN2LjAwMmMtLjEyMy4xMi0uMjQ0LjI0MS0uMzYzLjM2NS0uOTQ1LjE1Mi0xLjcyLjMyLTIuNDEuNTg4YTYuMzE0IDYuMzE0IDAgMDAtMS45NyAxLjIxN2MtLjI1Mi4yMjItLjQ4Mi40NjktLjY4Ny43MzZhNS40MzUgNS40MzUgMCAwMC0uNTAzLjgwM2MtLjEzLjE0Mi0uMjYuMjg4LS4zOTkuNDE0YTEuNDUgMS40NSAwIDAxLS40NDEuMjg1Yy0uMDkzLjAzNS0uMTMzLjA1OC0uMTM3LjA1Ni0uMDA0LS4wMDEtLjAwOC0uMDMzLS4wMTItLjA0Ny4yMzUtLjIxLjI2Ny0uNTUuMjg5LS44Ni4wMy4wMzQuMDUzLjA2OC4wODIuMTEzLjAzMS4wNDcuMDYyLjA5NS4xLjE0MmwuMTU4LjIuMDU1LS4yNDljLjA0Ni0uMjA4LjA4MS0uNDg0LjAyNy0uNzI0LS4wMzQtLjE1My0uMTE3LS4zMTUtLjIzNS0uMzkzbC4wMzYtLjA5Yy4wNC0uMS4wOC0uMjA0LjExNS0uMzAzbC4wNjktLjE5My0uMjA0LjAzNWMtLjI3LjA0Ny0uODUyLjM2Ni0xLjI2MS43OTEtLjE1Mi4xNTgtLjI4NC4zMy0uMzcuNTE0YS45ODQuOTg0IDAgMDAtLjA5My41OS45MS45MSAwIDAwLjI3Mi40OThjLjAzLjEyLjA1OC4yMjMuMDg3LjMxNi4wMzMuMTA0LjA2OC4xOTguMTEyLjI5LjExOS4yNDcuMzEuMzk4LjUyOS40NjguMTgyLjA1OS4zNjkuMDY2LjU2Ni4wMmEzLjgzIDMuODMgMCAwMC0uMDcyLjY5IDguOTExIDguOTExIDAgMDAuMDcgMS4zOTRjLjAxMy4wOTMuMDI4LjE4NC4wNDUuMjc1bC0uMTA3LjI5MS0uMTY2LjQ1NS0uMzcuMzY1LS4zNDMuMzRhOS4yMiA5LjIyIDAgMDEtLjA4Mi4wOGMtLjIzMi4yMjQtLjI3OS4yNy0uMjEzLjY2Mi4wNC4yNDEuMTE5LjQ4NC4yNDIuNzIuMTE0LjIxNi4yNjcuNDI3LjQ2My42MjQuMjQ1LjI0NS42NDcuNTUgMS4wNjYuNzEuMjQ1LjA5Mi40ODguMTM4LjcyMy4wOTdsLS4wMzkuMTFhNC4wNDYgNC4wNDYgMCAwMS0uMTIzLjNjLS4yODUuNjI0LjAwOC45NS40NjMgMS4xNTguMjI3LjEwNC40OTcuMTczLjc0OC4yMzhsLjE2OC4wNDVjLjI5OC4wOC44MTIuMjI4IDEuMjgxLjI1OC41MTMuMDMzLjk3NC0uMDczIDEuMDk4LS41MzMuMDQ5LS4xODIuMDc4LS4zMjIuMDktLjQ1OWEyLjMzIDIuMzMgMCAwMC0uMDEtLjQwNmMuMTQ0LS4zMi4yMS0uNDIzLjMxNi0uNTc4bC4wNTMtLjA4Yy4xMTUtLjE3LjE2OC0uMjkuMTg4LS40MjYuMDE4LS4xMzEuMDA0LS4yNjItLjAyLS40NjFsLS4wMTEtLjA4NGE2LjgyMiA2LjgyMiAwIDAwMS4zMzguMDVsLS4xMTguMDYxLS4wNTUuMDNjLS4zOTUuMjAzLS40MTMuNTg3LS4yODkuOTg0LjExMi4zNTcuMzQzLjcyMy40ODcuOTQ1LjMwMy40NjcuNTkyLjg2MS45NDMgMS4wNzYuMzY4LjIyNi43ODYuMjUzIDEuMzI4LS4wNC4yNzYtLjE1LjM2My0uMzAyLjQ4LS41MDcuMDM4LS4wNjYuMDgtLjEzMy4xMjYtLjIwNC4xMDEtLjA1LjM4Mi0uMjk2LjY3LS41MzRsLjI5Ni0uMjQyYy4wNzMuMDUzLjE2NC4wOS4yNy4xMTUuMTQuMDM0LjMwNS4wNS41MDQuMDY1LjE0OS4wMS42MzUuMDEuOTQ5LjAxaC4yMjdjLjMyNC4wMDEuNTg1LS4wMTYuNzgzLS4xMjguMjEtLjExOS4zMzQtLjMzMS4zNjEtLjcxYTEuMjggMS4yOCAwIDAwLS4wMDgtLjM3OC45NDYuOTQ2IDAgMDAtLjEzNi0uMzEybC0uMDE0LS41MDItLjAxNi0uNTIxYTIuMzcyIDIuMzcyIDAgMDAtLjA2OC0uNTM2IDMuNTU4IDMuNTU4IDAgMDAtLjE4LS41MDVjLS4wNTMtLjEyNy0uMDk2LS4yNDUtLjEzOC0uMzZhNS43NTYgNS43NTYgMCAwMC0uMjI5LS41NDdsLjAxOC0uMTIzLjE4MS4xNzQuMjY2LjI1OGMuMjAzLjE5Ni4zOS4zNzMuNjA3LjUwMi4yMjYuMTMzLjQ3OS4yMS44MDcuMTk1YTEuOTI1IDEuOTI1IDAgMDAxLjAxNi0uMzg1Yy4yOTMtLjIxNi41MjgtLjUwOS42MjctLjgzMmwuMDg0LS4yNzkuMDctLjIyNWMuNDgyLjA4Mi45OTguMTEgMS40OTguMDU3YTMuNyAzLjcgMCAwMDEuMzUxLS4zODkgMy40MDYgMy40MDYgMCAwMDEuMzUtMS4zM2guMDAydi0uMDAyYy4zNTUtLjYxNi41NTUtMS4zNC42My0yLjA4OC4wNjItLjU5OS4wMjgtMS40MTUtLjA5Ny0yLjItLjExLS43MDEtLjI5NS0xLjM4LS41NS0xLjg3YS43MzYuNzM2IDAgMDAtLjEzNy0uMTc4IDEuNDEzIDEuNDEzIDAgMDAtLjUxLS4zMWMtLjIwNi0uMDctLjQyMi0uMDg0LS41OTQuMDA2YS40ODUuNDg1IDAgMDAtLjEyMy4wOSAyLjc5MyAyLjc5MyAwIDAwLS4zLjM4OGMtLjEwNi4xNTMtLjIxLjMwNy0uMzM3LjQxNC0uMTQ5LjEyOC0uMzI3LjIwMi0uNTAyLjI3MmEzLjQ1NCAzLjQ1NCAwIDAwLS4yNjEtLjUwOCA0LjgxIDQuODEgMCAwMC0uMzk5LS41NCAyLjIxIDIuMjEgMCAwMC0uMzY1LS4zNDkgNS4zNTcgNS4zNTcgMCAwMC0uNDEtLjI3NWMtLjQwNy0uMjU1LS43NTQtLjU1OS0xLjEwOC0uODctLjE2LS4xNC0uMzIzLS4yODItLjQ4Mi0uNDEzLS44NDItLjY5NS0xLjYyOC0xLjAzMS0yLjQ2OS0xLjA4NHptLTQuMTI5LjAwNGMtLjU3LjEzNy0uNjguMjQ1LS44NTEuODA0LjI3My0uNDEuNDMtLjU0NS44NTEtLjgwNHptMy45NTIuNDY1Yy44MjktLjAwMSAxLjU4Ny4zMDMgMi40MzEgMS4wMTMuNDEyLjM0Ny43NzQuNjg0IDEuMTkyLjk4My0uMTUyLjAxMy0uMjgzLjA0LS40NTUuMTA3LjIxLS4wNC40NTEgMCAuNjcuMDQuMDYuMDM5LjEyNC4wNzguMTg5LjExNi4yOTUuMTc0LjQ2My4yNy42NjIuNTQ3LjIxLjI5NC4zODYuNTg5LjU0MS45MTItLjEwMS0uMDM2LS4xODYtLjA2Ny0uMjYyLS4wOWEuNTY2LjU2NiAwIDAwLS41MzMuMDM0bC0uMDEyLjAwNmMtLjE2My4wNzktLjQxNi4xNy0uNTg2LjE5N2EuNy43IDAgMDAuNDA1LS4wMDYuNTY1LjU2NSAwIDAwLS4wMTguNTM5LjI2OS4yNjkgMCAwMS0uMDItLjEyLjIyOC4yMjggMCAwMS4yNDktLjIwOC4yMzMuMjMzIDAgMDEuMTg3LjMzYy0uMTE3LjAyLS4yMzMuMDU1LS4zNTMuMWE0LjQxIDQuNDEgMCAwMC0uMjM3LjA5NSAzLjcyMiAzLjcyMiAwIDAxMS4wODQtLjAyYy4wMjUuMTE3LjA1LjI0LjA3My4zNjZsLS4xMzcuMDEtLjAxMi4wMDJjLS4xNzQtLjE0LS4zNjctLjExNy0uNjMzLS4wNTctLjgwNi4xODQtLjYxNy42MzctLjk4OCAxLjMxOC4zODUtLjQ3LjM1Ny0uOTYyLjk4NC0xLjExLjE0Ny0uMDM2LjI0Ny0uMDc4LjM0Ni0uMDYzLS4xNzguMDktLjMzMy4yMzctLjM5NC40MS0uMTczLjQ4Ni0uMDY1Ljg5NS0uMjU0IDEuMzUuMjM0LS40MDcuMjQ5LS44MDIuNDU5LTEuMjMuMDc1LS4xNTMuMzU0LS40LjUyNS0uNDAzbC4xNC0uMDAyYy4wNDIuMjcuMDY4LjUzOS4wNTIuNzYxYTguNTM1IDguNTM1IDAgMDEtLjE5OCAxLjI0Yy4yMTMtLjI3Mi4zMS0uODUuNDAzLTEuMjU3LjA5Ny0uNDI0LjA3LS45MzQtLjAxNC0xLjM4OS0uMTE3LS42MjUuNTI3LS41MjIuOS0uODE2LjI3NS0uMjE3LjQ2My0uNTY0LjcxNS0uODA5LjI1LS4yNDMuNjQ0LjExNC43NDIuMzUyLjQyNiAxLjAzLjYyIDIuNjUuNTA4IDMuNjktLjEyNiAxLjE2NC0uNjkgMi40MzctMS43MTkgMy4wMS0xLjMxLjczMi0yLjg1NC4yODUtNC4xNTYtLjE1NC0uMjc4LS4wOTMtLjQ3LS4yMjktLjcxNS0uMzgyLjA2Ny4zLjA5Ny42MTUuMDA4LjkxNC0uMTQuNDc0LS4zNjcgMS4yNTEuMjc3IDEuMzk0LjI0Ni4wNTUuMzU3LjA0OC43MDQtLjEzYTEuMyAxLjMgMCAwMS0uNjE2LjAxMS4zOTcuMzk3IDAgMDEtLjMxNC0uMjczYy4wNi4wNDQuMTYuMDY2LjMzLjEwNy40NzguMTE1LjkzMi0uMTE0IDEuMDIxLS40NDUuMDUyLS4xOTQuMDQzLS4yOTUuMTUzLS41NTkuMDk5LjAzLjIwMi4wNTkuMzA2LjA4NGwtLjE3Ny41NzhjLS4xNTQuNTAxLS43NTIuOTA0LTEuMjguODk1LS40ODgtLjAwOS0uNzk3LS4zMTQtMS4xMzQtLjYxM2wtLjY3OC0uNmE1LjIyOCA1LjIyOCAwIDAxLTEuNjU4LS44MzRjLjQuNDcyLjY3My43MzIgMS4yMzIuOTY3LS4wODEuODMtLjM3IDEuNDM2LS42MTUgMi4yMy0uMTExLjM2LS45OTEgMS44LTEuMjM0IDEuOTQtLjE3NC4xLTEuMjYgMS4wMTYtMS40NjUgMS4xMzYtLjE1My4yMDMtLjI4Ny40ODMtLjUxNi42MDQtLjY5OC4zNy0xLjE0OC0uMzM5LTEuNTIzLS45MzYtLjE3MS0uMjcyLS42NDUtMS4wNTQtLjIzLTEuMjczLjM5LS4yMDguNjEtLjM1NyAxLjAwOS0uNjIuMDU5LjEwOC4xNTkuMjEyLjIyNS4zMmwtLjA0My0uMzUyYTIuNzUyIDIuNzUyIDAgMDEtLjAwOC0uNTk2Yy4wMTYtLjIwNi4wMy0uNDEzLjA0Ny0uNjItLjA2LjIxLS4xNzkuNDItLjIzOS42My0uMDI0LjA4NC0uMDQ1LjE1Mi0uMDU2LjIxNGE3LjA1IDcuMDUgMCAwMS0yLjY4Mi4wMzQgMTYuNzYgMTYuNzYgMCAwMC0uMTg1LS45MjZjLS4wMTguMjc4LS4wMDcgMS4wNDctLjAwOCAxLjQ3Ni0uMDAxLjMzMy0uMDE2LjQ0OC0uMTg4LjczMS0uMTYuMjY1LS4yMjguMzI1LS40NTMuNzczLjAxOS4yODMuMDE5LjQ3LS4wNTcuNzM5LS4xMjUuNDQ2LTEuMzg2LjA5OC0xLjcxOC4wMDctLjQxLS4xMTItMS4yNTYtLjI3OC0xLjA0My0uODI0LjE4Ny0uNDguMzA3LS45ODYuMzk4LTEuNjU4LS43NS0xLjA4LTEuNDQ4LTIuNTYtMS41ODItMy44NzMtLjEwNC0xLjAxOS0uMDQtMS42NDYuMTgtMi4yNy4zNS0uOTg3LjgzNy0xLjg0MyAxLjYyLTIuNTNDNS43NzggNy44OSA2Ljc2NyA3LjUxNiA4LjMxNiA3LjI4Yy0uMzczLjQxNy0uNzQxLjg1OC0xLjE0MyAxLjMzLS40MDYuNDc5LS42NDguOTYzLS45MDYgMS40ODctLjM1Ny43MjItLjM0OC45OTYuMTI1IDEuNjMuNDA3LjU0Ny42MjcuNzk0LjgwNCAxLjMyOC0uMTQ2LjMwMy0uMi41Ni0uMjUuOTczLjUuNTQ1Ljg3LjkxOCAxLjM1NCAxLjAzMy40NzUuMTEzLjg3Mi4wOTMgMS4yOTctLjEyNS45NDQtLjQ4MiAxLjgxNi0xLjEwNyAyLjg4LTEuMTMyLjQ5My0xLjIxMS40NDQtMi4yMjIuMjA4LTMuMzkzLS4xNjItLjgtLjIyNy0xLjU1Ny0uMjc4LTIuMzczLS4yLjg0LS4yMzYgMS41NzctLjA4OCAyLjQxNC4xOCAxLjAwOC4zMTggMi4xMjQtLjE4IDMuMDEtLjk2Mi4wNzMtMS43ODguNjU4LTIuNjU1IDEuMTA3LS4zNS4xOC0uNzEyLjE5OC0xLjA5OC4wOTItLjM1OC0uMDk4LS42LS4zMzQtLjk4Ni0uNzgtLjAwNi0uNDQ2LjA5NS0uNjUzLjMtMS4wNTguMzMtLjY1LjY5NS0xLjI1NSAxLjA5NC0xLjg5NC0uNDkuNTktLjk1MyAxLjA4NC0xLjMzOCAxLjY3Ny0uMTQ3LS40MTktLjM1OC0uNjMzLS43MDctMS4xMDUtLjM0LS40NjEtLjM3NS0uNjYyLS4xMi0xLjE5Ni4yNTUtLjUzNi40NzItMS4wMDguOTA3LTEuNDc4Ljc1My0uODEzIDEuNDQzLTEuNzE3IDIuMjY2LTIuNTE4LjQ0Ny0uNDM0LjYyOC0uNDIgMS4yMi0uNTFhMjAuNzY4IDIwLjc2OCAwIDAwMS42MDYtLjMxIDIyLjUgMjIuNSAwIDAxLTEuNTUzLjA4aC0uMDE1Yy41MDYtLjY0Ni43OTktMS4wMDYgMS42Mi0xLjM2My45NS0uNDEyIDEuNzM4LS42NTIgMi40Ny0uNjUyem0uNTU2IDIuNzljLTEuMTAxLjI3Ni0xLjMwNy43MzktMS4xNjYgMS40NS4xMjEtLjUzNS4zMzUtMS4wNSAxLjE2Ni0xLjQ1em0tMy4yNjMuMDYxYy0uNDQ2LjA1LS44OS4wOTYtMS4zMzYuMTM5LS4zNzUuMDM1LS40MzYuMDMtLjcwMi4yOTMtLjQwMy4zOTktLjc5NCAxLjc2OC0uOTIgMi4zMTYuMTk4LS40NTUuNjktMS43MjkgMS4wNjktMi4wNTMuMTA1LS4wOS4xOC0uMTQzLjI1OC0uMTgzLS4yNzEuNDU1LS4yNTIuNTY2LS4xNTcgMS4xNzYuMDgxLS42Mi4yOTUtLjg1OS42NDctMS4zMmE5LjI4NyA5LjI4NyAwIDAwMS4xNC0uMzY4em0xMC4yMjYuMDUzYy0uMjU1LjUxNy0uNjUuOTUtMS4xODUgMS4yMTUtLjI4OC4xNDItLjQ3LjA5My0uNzkxLjA2Mi4zMjYuMDk0LjUzMy4yMS44NTMuMDk2LjY1Mi0uMjMzLjk2Ny0uNzU2IDEuMTIzLTEuMzczem0tMi4yOC44MzRjLjAyMy4wNDcuMDQ2LjA5Ni4wNjcuMTQ0YS42MDIuNjAyIDAgMDAtLjA1LjA0MS41NzIuNTcyIDAgMDAtLjEyNi0uMTgxbC4xMS0uMDA0em0tMy4yNi40Yy0uMzYuMTY2LS43NzkuMTI2LTEuMDg3LjMzNC0uMjcxLjE4NC0uNjQ2Ljc2NC0uOTIyIDEuMDEuMi0uMDc4LjM5NC0uMjEyLjU3LS4zNTQuMDAyLjIyLjEwMS40MjYuMjcuNTY1YS4zMS4zMSAwIDAxLjA5Mi0uNDkyLjMxMi4zMTIgMCAwMS40MzIuMTkxYy0uMTQ4LjExLS4yODQuMjM4LS4zOTcuMzg3YTEuNjY2IDEuNjY2IDAgMDAtLjI0LjQ0IDQuMjIyIDQuMjIyIDAgMDEyLjAwMi0xLjI5NGMtLjItLjAwMy0uNDM3LjAzNC0uNjc4LjExNGEuNzMyLjczMiAwIDAwLS40ODItLjYxNGMuMTYtLjA4NS4zMTYtLjE3NS40NC0uMjg3em0tMS4wNDIgMS42NGEuNzM1LjczNSAwIDAxLS4xMjUtLjA4My4zNS4zNSAwIDAwLjEyNS4wODR6TTEuMzIgOC4zNGMtLjk1My42NzItMS4xOS45NzgtMS4wNjIgMi4zMzhDLjM1MiA5LjYwOC41NiA5LjE0NSAxLjMyIDguMzR6bS0uODA4LjQwNGMtLjQ4Mi4zMzYtLjU0NS40NzUtLjUgMS4wNTkuMTA1LS40ODIuMjAzLS42NjQuNS0xLjA1OXptMS43NzkuMTk1Yy0uMDcuMTUtLjExOC4yNjQtLjE1Mi4zODEtLjE0Ny41MDguMDY2Ljk2Mi0uMzk1IDEuMzMuMjE3LjQzOC4yMDcuNjEyLjcxMS40MS4xOTUtLjA3OC4zNTUtLjE4Ny40OTgtLjMxNi0uMDcuMTgtLjEzMy4zNjEtLjE5MS41NDVsLS4wMy4wOTRjLS4zNi4xNTMtLjgzNC4yNS0xLjAxNS0uMTNhMy40NTggMy40NTggMCAwMS0uMjAzLS41OTVjLS41OTQtLjYxNS4yOTQtMS40MjcuNzc3LTEuNzE5em0uMTIzLjI3NmMuMTIzLjA3MS4xNTYuMi4xNy4zNzUtLjA3My0uMDc0LS4xMzItLjEyMi0uMjI3LS4xMTIuMDA4LS4wNi4wMTktLjExOS4wMzQtLjE3Ny4wMDctLjAzLjAxNC0uMDU4LjAyMy0uMDg2em0xNC44NyAzLjI2N2MtLjEzMS4wMjItLjM2NS4wNy0uNDk1LjA5Mi0uMzQ4LjA1OS0uMzg3LjE0Mi0uNDQxLjQ4NGwtLjA4Ni41MjRhOS4xNiA5LjE2IDAgMDEuMjI4LS41NjhjLjA4NC0uMTg0LjEzMi0uMjAyLjMxLS4zLjEyNy0uMDY4LjM1Ny0uMTYzLjQ4My0uMjMyem0tMTQuNDcgMi40Yy4yNzQuOTQ2LjczOCAxLjg3NiAxLjI1NSAyLjY1N3YuMDE0YS45OTMuOTkzIDAgMDEtLjE0OS4zNjljLS4zNjkuNDkzLTEuMzA2LS4yMy0xLjU3OC0uNTA4LS4yOTctLjMwMy0uNDk2LS42NjItLjU0My0uOTk4LS4wMzQtLjI0Ni0uMDAxLS4yNTIuMTctLjQyNmwuNjkzLS43MDEuMTUzLS40MDZ6bTEyLjQwNS42MmMuMDU2LjE4My4xMDEuMzY0LjE4My41NTguMTM4LjMyNi4yMDUuNTI2LjIxNS44NzVsLjAzMiAxLjEwNmMuMTE3LjIwNi4xMzYuMjQ5LjExNS40ODQtLjA0My40ODEtLjIwMy41MTMtLjYyNS41MDYtLjE5Mi0uMDAzLS45NTctLjAwNy0xLjE1LS4wMjMtLjI3NC0uMDI0LS40MjktLjA1LS41MTItLjExMi40My0uMzE2IDEuMTYyLTEuNjE5IDEuMzA0LTIuMDY4LjE1MS0uNDc0LjMxNS0uODg4LjQzOC0xLjMyNnoiLz48L3N2Zz4=" width="18" height="18" alt="官网" style="display:block"/></a><button id="themeBtn" title="切换深色 / 浅色主题" aria-label="切换主题" style="width:38px;height:38px;border-radius:50%;border:1px solid var(--c-line);background:var(--c-panel);color:var(--c-ink2);cursor:pointer;display:inline-grid;place-items:center;font-size:16px;flex:none"><span class="tt-ico tt-moon">☾</span><span class="tt-ico tt-sun">☀</span></button>
 </header>
 <div class="wrap">
   <div id="home">
@@ -536,11 +558,12 @@ def build_html():
     {panes}
   </div>
 </div>
+<script>window.__MAINS__={mains};</script>
 <script>{js}</script>
 </body>
 </html>""".format(
         sub=esc(BRAND_SUB), n=total_svg,
-        css=CSS, archnav=archnav, panes=build_panes(), js=APP_JS)
+        css=CSS, archnav=archnav, mains=json.dumps([{"mid":n,"t":ct,"s":sub} for n,_c,_ic,ct,sub in MAINLINES],ensure_ascii=False), panes=build_panes(), js=APP_JS)
 
 
 if __name__ == "__main__":

@@ -1,101 +1,90 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="710" viewBox="0 0 1040 710"
-     font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="648" viewBox="0 0 1080 648" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
   <defs>
-    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
-    </filter>
-    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
-    </marker>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="aRecv" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#0a84ff"/></marker>
+    <marker id="aSend" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#e8730f"/></marker>
+    <marker id="aFb" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#7c5fe6"/></marker>
   </defs>
-  <rect width="1040" height="710" fill="#fbfbfd"/>
-  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">quic-go 总架构 · Go 分层：应用/http3 → Transport(拥有 socket) → Conn(run goroutine 事件循环) → wire/crypto → sendQueue → UDP</text>
+  <rect width="1080" height="648" fill="#fbfbfd"/>
 
-  <!-- powers 条 -->
-  <rect x="30" y="46" width="980" height="42" rx="11" fill="#f6f6f8" stroke="#e2e2e7" data-tid="quic-go原理_全景主线框架" data-lab="全景"/>
-  <text x="46" y="63" font-size="10.5" font-weight="600" fill="#1d1d1f">纯 Go 实现</text>
-  <text x="112" y="63" font-size="10" fill="#494950">驱动 caddy · syncthing · Cloudflare 等 —— QUIC(RFC 9000) + HTTP/3(RFC 9114) 的 Go 实现</text>
-  <text x="46" y="81" font-size="9" fill="#86868b">与 quiche 的分水岭：quic-go <tspan font-weight="600">自带 net.PacketConn 与 goroutine 事件循环（batteries-included）</tspan>，非 sans-IO / 非回调抽象</text>
+  <!-- ===== 标题带 ===== -->
+  <text x="24" y="30" font-size="14" font-weight="600" fill="#1d1d1f">quic-go 总架构 · 多视角透视：batteries-included，收发双向都汇聚到每连接唯一的 run goroutine</text>
+  <text x="24" y="47" font-size="10.5" fill="#6e6e73">分层脊：应用/http3 → Conn 事件循环 → 收发引擎 → wire/crypto → Transport(拥有 socket) → UDP　·　自带 socket + goroutine（非 sans-IO）</text>
 
-  <!-- ① 应用 + http3 -->
-  <rect x="30" y="100" width="980" height="74" rx="14" fill="#f4eefb" stroke="#d9c9ef" filter="url(#soft)"/>
-  <rect x="30" y="100" width="980" height="34" fill="none" stroke="none" data-tid="quic-go原理_支撑_HTTP3与QPACK" data-lab="HTTP/3·QPACK 层"/>
-  <text x="48" y="118" font-size="11.5" font-weight="600" fill="#3c1361">① 应用层 + http3 包（HTTP/3 语义 · QPACK 头压缩 · 请求映射到 QUIC 流）</text>
-  <rect x="48" y="140" width="300" height="26" rx="7" fill="#ffffff" stroke="#d9c9ef" data-tid="quic-go原理_接口_HTTP与流" data-lab="http3.Server"/><text x="198" y="157" font-size="8.5" fill="#3c1361" text-anchor="middle">http3.Server.ServeQUICConn (server.go:238)</text>
-  <rect x="360" y="140" width="300" height="26" rx="7" fill="#ffffff" stroke="#d9c9ef" data-tid="quic-go原理_接口_HTTP与流" data-lab="http3.Transport"/><text x="510" y="157" font-size="8.5" fill="#3c1361" text-anchor="middle">http3.Transport.RoundTrip (transport.go:289)</text>
-  <rect x="672" y="140" width="320" height="26" rx="7" fill="#ffffff" stroke="#d9c9ef" data-tid="quic-go原理_接口_会话与连接" data-lab="应用读写流"/><text x="832" y="157" font-size="8.5" fill="#3c1361" text-anchor="middle">应用：OpenStream / AcceptStream 读写 []byte</text>
+  <!-- ===== 图例：三型语义路径 ===== -->
+  <line x1="34" y1="66" x2="64" y2="66" stroke="#0a84ff" stroke-width="1.8" marker-end="url(#aRecv)"/>
+  <text x="70" y="70" font-size="10.5" fill="#3a3a3c">入向 recv（自底向上：socket → app Read）</text>
+  <line x1="392" y1="66" x2="422" y2="66" stroke="#e8730f" stroke-width="1.8" marker-end="url(#aSend)"/>
+  <text x="428" y="70" font-size="10.5" fill="#3a3a3c">出向 send（自顶向下：app Write → socket）</text>
+  <line x1="740" y1="66" x2="770" y2="66" stroke="#7c5fe6" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#aFb)"/>
+  <text x="776" y="70" font-size="10.5" fill="#3a3a3c">反馈 / 控制（ACK → cwnd · 流控）</text>
+  <text x="1056" y="70" font-size="10" fill="#a1a1a6" text-anchor="end">框 = 主线可下钻</text>
 
-  <!-- ② Transport -->
-  <rect x="30" y="188" width="980" height="60" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
-  <text x="48" y="206" font-size="11.5" font-weight="600" fill="#1b2a4a">② Transport（transport.go:56）：拥有 UDP socket、跑 listen 读 goroutine、按 Connection ID 分流；服务端 Listener/baseServer 把入口关卡合在这层</text>
-  <rect x="48" y="214" width="440" height="28" rx="7" fill="#ffffff" stroke="#bcd0ec" data-tid="quic-go原理_接口_事件循环与IO" data-lab="listen 读循环"/><text x="268" y="232" font-size="8.5" fill="#1b2a4a" text-anchor="middle">listen 读循环(:527) → packetHandlerMap.Get(:767) 按 CID demux</text>
-  <rect x="520" y="214" width="470" height="28" rx="7" fill="#fbeaea" stroke="#e7c3c3" data-tid="quic-go原理_支撑_可靠性与抗攻击" data-lab="Retry/token"/><text x="755" y="232" font-size="8.5" fill="#7a2a2a" text-anchor="middle">服务端 baseServer：validateToken(:663) / sendRetry · 3× 放大限制</text>
+  <!-- ===== 方向轨 ===== -->
+  <text x="100" y="86" font-size="10" font-weight="700" fill="#0a84ff" text-anchor="middle">↑ 入向 recv</text>
+  <text x="980" y="86" font-size="10" font-weight="700" fill="#e8730f" text-anchor="middle">出向 send ↓</text>
+  <line x1="100" y1="520" x2="100" y2="98" stroke="#0a84ff" stroke-width="2" marker-end="url(#aRecv)"/>
+  <line x1="980" y1="98" x2="980" y2="520" stroke="#e8730f" stroke-width="2" marker-end="url(#aSend)"/>
 
-  <!-- ③ Conn 左 -->
-  <rect x="30" y="262" width="486" height="150" rx="14" fill="#eafaf1" stroke="#bce6cd" filter="url(#soft)"/>
-  <text x="48" y="286" font-size="12" font-weight="600" fill="#0f5132">③ Conn（connection.go:124）：每连接一个 run goroutine 事件循环</text>
-  <rect x="48" y="300" width="210" height="28" rx="7" fill="#ffffff" stroke="#bce6cd" data-tid="quic-go原理_接口_事件循环与IO" data-lab="run 循环"/><text x="153" y="318" font-size="8.5" fill="#0f5132" text-anchor="middle">run select 循环 (:563)</text>
-  <rect x="288" y="300" width="210" height="28" rx="7" fill="#ffffff" stroke="#bce6cd" data-tid="quic-go原理_接口_会话与连接" data-lab="streams_map"/><text x="393" y="318" font-size="8.5" fill="#0f5132" text-anchor="middle">streams_map / OpenStream(:2900)</text>
-  <rect x="48" y="338" width="210" height="28" rx="7" fill="#ffffff" stroke="#bce6cd" data-tid="quic-go原理_支撑_流与流量控制" data-lab="flow controller"/><text x="153" y="356" font-size="8.5" fill="#0f5132" text-anchor="middle">flow controller 两级窗口</text>
-  <rect x="288" y="338" width="210" height="28" rx="7" fill="#ffffff" stroke="#bce6cd" data-tid="quic-go原理_支撑_连接管理与迁移" data-lab="connID/path"/><text x="393" y="356" font-size="8.5" fill="#0f5132" text-anchor="middle">connIDManager / path 迁移</text>
-  <text x="48" y="392" font-size="9" fill="#3f8f66">AcceptStream(:2885) 阻塞取流 · handlePackets(:1002) 收包驱动状态机</text>
+  <!-- ===== ⑥ 应用 + http3 ===== -->
+  <rect x="140" y="92" width="800" height="56" rx="12" fill="#f4eefb" stroke="#d9c9ef" filter="url(#soft)"/>
+  <text x="156" y="111" font-size="11.5" font-weight="600" fill="#3c1361">⑥ 应用 · http3 包（HTTP/3 语义）</text>
+  <g font-size="9" text-anchor="middle">
+    <rect x="156" y="118" width="378" height="24" rx="7" fill="#fff" stroke="#d9c9ef" data-tid="quic-go原理_接口_HTTP与流" data-lab="http3 Server/Transport"/><text x="345" y="134" fill="#3c1361">http3 Server / Transport · 请求 ↔ QUIC 流</text>
+    <rect x="546" y="118" width="378" height="24" rx="7" fill="#fff" stroke="#d9c9ef" data-tid="quic-go原理_支撑_HTTP3与QPACK" data-lab="QPACK"/><text x="735" y="134" fill="#3c1361">QPACK 头压缩 · OpenStream / AcceptStream</text>
+  </g>
 
-  <!-- ④ Conn 右 发送/接收 -->
-  <rect x="528" y="262" width="482" height="150" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
-  <text x="546" y="286" font-size="12" font-weight="600" fill="#1d1d1f">④ 发送 / 接收路径（组包 · 丢包 · 拥塞 · 发送 goroutine）</text>
-  <rect x="546" y="300" width="220" height="28" rx="7" fill="#fff7e6" stroke="#e8cf9a" data-tid="quic-go原理_支撑_包与帧编解码" data-lab="packet_packer"/><text x="656" y="318" font-size="8.5" fill="#5a3410" text-anchor="middle">packet_packer 组包(:333)</text>
-  <rect x="778" y="300" width="214" height="28" rx="7" fill="#eef3fb" stroke="#bcd0ec" data-tid="quic-go原理_支撑_丢包检测与恢复" data-lab="sentPacketHandler"/><text x="885" y="318" font-size="8.5" fill="#1b2a4a" text-anchor="middle">sentPacketHandler 丢包(:252)</text>
-  <rect x="546" y="338" width="220" height="28" rx="7" fill="#eafaf1" stroke="#bce6cd" data-tid="quic-go原理_支撑_拥塞控制" data-lab="cubicSender"/><text x="656" y="356" font-size="8.5" fill="#0f5132" text-anchor="middle">cubicSender 拥塞(:143)</text>
-  <rect x="778" y="338" width="214" height="28" rx="7" fill="#ffffff" stroke="#e2e2e7" data-tid="quic-go原理_接口_事件循环与IO" data-lab="sendQueue"/><text x="885" y="356" font-size="8.5" fill="#1d1d1f" text-anchor="middle">sendQueue.Run goroutine(:77)</text>
-  <text x="546" y="392" font-size="9" fill="#494950">triggerSending(:2448) 攒帧成包 → sendQueue 异步写 socket</text>
+  <!-- ===== ⑤ 会话 / 连接 Conn（枢纽） ===== -->
+  <rect x="140" y="156" width="800" height="84" rx="12" fill="#eafaf1" stroke="#bce6cd" filter="url(#soft)"/>
+  <text x="156" y="175" font-size="11.5" font-weight="600" fill="#0f5132">⑤ 会话 / 连接 Conn · 每连接一个 run goroutine 事件循环（状态只在此改，跨 goroutine 走 channel 免锁）</text>
+  <g font-size="8.5" text-anchor="middle">
+    <rect x="156" y="184" width="184" height="46" rx="8" fill="#fff" stroke="#bce6cd" data-tid="quic-go原理_接口_会话与连接" data-lab="streams_map"/><text x="248" y="204" font-size="9.5" font-weight="600" fill="#0f5132">会话 / 多流</text><text x="248" y="220" fill="#3f8f66">streams_map · 按流分发</text>
+    <rect x="350" y="184" width="184" height="46" rx="8" fill="#fff" stroke="#bce6cd" data-tid="quic-go原理_支撑_流与流量控制" data-lab="两级流控"/><text x="442" y="204" font-size="9.5" font-weight="600" fill="#0f5132">流量控制</text><text x="442" y="220" fill="#3f8f66">两级窗口（连接 + 流）</text>
+    <rect x="544" y="184" width="184" height="46" rx="8" fill="#fff" stroke="#bce6cd" data-tid="quic-go原理_支撑_连接管理与迁移" data-lab="connID/迁移"/><text x="636" y="204" font-size="9.5" font-weight="600" fill="#0f5132">连接管理</text><text x="636" y="220" fill="#3f8f66">connID · 路径验证 / 迁移</text>
+    <rect x="738" y="184" width="186" height="46" rx="8" fill="#e8fff4" stroke="#a5ddca" data-tid="quic-go原理_接口_事件循环与IO" data-lab="run 循环"/><text x="831" y="204" font-size="9.5" font-weight="700" fill="#0f5132">run 事件循环</text><text x="831" y="220" fill="#3f8f66">select · triggerSending</text>
+  </g>
 
-  <!-- ⑤ wire 左 + crypto 右 -->
-  <rect x="30" y="426" width="486" height="120" rx="14" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
-  <text x="48" y="450" font-size="12" font-weight="600" fill="#5a3410">⑤ wire 线格式（字节 ↔ 帧）</text>
-  <rect x="48" y="462" width="210" height="68" rx="9" fill="#ffffff" stroke="#e8cf9a" data-tid="quic-go原理_支撑_包与帧编解码" data-lab="frame_parser"/><text x="153" y="490" font-size="9" font-weight="600" fill="#5a3410" text-anchor="middle">frame_parser 解析</text><text x="153" y="508" font-size="8" fill="#93762e" text-anchor="middle">packet_unpacker 解包</text>
-  <rect x="270" y="462" width="228" height="68" rx="9" fill="#ffffff" stroke="#e8cf9a" data-tid="quic-go原理_支撑_包与帧编解码" data-lab="quicvarint"/><text x="384" y="490" font-size="9" font-weight="600" fill="#5a3410" text-anchor="middle">quicvarint 变长整数</text><text x="384" y="508" font-size="8" fill="#93762e" text-anchor="middle">STREAM/ACK/CRYPTO… 20+ 帧</text>
+  <!-- ===== ④ 收发引擎 ===== -->
+  <rect x="140" y="248" width="800" height="88" rx="12" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="156" y="267" font-size="11.5" font-weight="600" fill="#1d1d1f">④ 收发引擎 · 出站攒帧成包 / 入站逐帧驱动状态机（记账 · 拥塞）</text>
+  <g font-size="8.5" text-anchor="middle">
+    <rect x="156" y="276" width="249" height="52" rx="8" fill="#fff7e6" stroke="#e8cf9a" data-tid="quic-go原理_支撑_包与帧编解码" data-lab="packer/unpacker"/><text x="280" y="298" font-size="9.5" font-weight="600" fill="#5a3410">组包 / 解包</text><text x="280" y="315" fill="#93762e">packet_packer / packet_unpacker</text>
+    <rect x="415" y="276" width="249" height="52" rx="8" fill="#eef3fb" stroke="#bcd0ec" data-tid="quic-go原理_支撑_丢包检测与恢复" data-lab="丢包检测"/><text x="539" y="298" font-size="9.5" font-weight="600" fill="#1b2a4a">sentPacketHandler</text><text x="539" y="315" fill="#5b7db1">记账 · 丢包判定 / 重传</text>
+    <rect x="674" y="276" width="250" height="52" rx="8" fill="#eafaf1" stroke="#bce6cd" data-tid="quic-go原理_支撑_拥塞控制" data-lab="拥塞控制"/><text x="799" y="298" font-size="9.5" font-weight="600" fill="#0f5132">cubicSender</text><text x="799" y="315" fill="#3f8f66">拥塞控制 · Cubic / Reno 内置</text>
+  </g>
+  <!-- 反馈闭环：ACK → cwnd -->
+  <path d="M664,290 C669,290 674,290 674,290" fill="none"/>
+  <line x1="664" y1="290" x2="674" y2="290" stroke="#7c5fe6" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#aFb)"/>
+  <text x="669" y="345" font-size="8" fill="#7c5fe6" text-anchor="middle">ACK 反馈 → 更新 cwnd</text>
 
-  <rect x="528" y="426" width="482" height="120" rx="14" fill="#f3f7fc" stroke="#cfe0f2" filter="url(#soft)"/>
-  <text x="546" y="450" font-size="12" font-weight="600" fill="#274a78">⑥ crypto 握手加密（TLS 1.3 内嵌 · Go 标准库 crypto/tls）</text>
-  <rect x="546" y="462" width="220" height="68" rx="9" fill="#ffffff" stroke="#cfe0f2" data-tid="quic-go原理_支撑_TLS握手与加密" data-lab="crypto_setup"/><text x="656" y="490" font-size="9" font-weight="600" fill="#274a78" text-anchor="middle">crypto_setup (:28)</text><text x="656" y="508" font-size="8" fill="#5b7db1" text-anchor="middle">Initial/Handshake/1-RTT 三级</text>
-  <rect x="778" y="462" width="214" height="68" rx="9" fill="#ffffff" stroke="#cfe0f2" data-tid="quic-go原理_支撑_TLS握手与加密" data-lab="updatable_aead"/><text x="885" y="490" font-size="9" font-weight="600" fill="#274a78" text-anchor="middle">updatable_aead</text><text x="885" y="508" font-size="8" fill="#5b7db1" text-anchor="middle">AEAD 封解 + 密钥轮换</text>
+  <!-- ===== ③ wire + crypto ===== -->
+  <rect x="140" y="344" width="800" height="64" rx="12" fill="#fff7e6" stroke="#f0dcae" filter="url(#soft)"/>
+  <text x="156" y="363" font-size="11.5" font-weight="600" fill="#5a3410">③ wire 线格式 + crypto 握手加密（字节 ↔ 帧 · TLS 1.3 内嵌）</text>
+  <g font-size="8.5" text-anchor="middle">
+    <rect x="156" y="372" width="378" height="28" rx="8" fill="#fff" stroke="#f0dcae" data-tid="quic-go原理_支撑_包与帧编解码" data-lab="frame_parser"/><text x="345" y="390" fill="#5a3410">frame_parser · quicvarint 变长整数 · STREAM/ACK/CRYPTO… 20+ 帧</text>
+    <rect x="546" y="372" width="378" height="28" rx="8" fill="#f3f7fc" stroke="#cfe0f2" data-tid="quic-go原理_支撑_TLS握手与加密" data-lab="crypto_setup/AEAD"/><text x="735" y="390" fill="#274a78">crypto_setup：Initial/Handshake/1-RTT · AEAD 封解 + 密钥轮换</text>
+  </g>
 
-  <!-- ⑦ IO 底座 -->
-  <rect x="30" y="560" width="980" height="44" rx="12" fill="#f5f5f7" stroke="#d2d2d7" filter="url(#soft)" data-tid="quic-go原理_接口_事件循环与IO" data-lab="IO 底座"/>
-  <text x="520" y="580" font-size="11" font-weight="600" fill="#1d1d1f" text-anchor="middle">⑦ IO 底座：net.PacketConn（真实 UDP socket，由 Transport 拥有） · time.Timer 定时器</text>
-  <text x="520" y="596" font-size="8.5" fill="#6e6e73" text-anchor="middle">quic-go 自管 socket 与 goroutine —— 与 sans-IO 库(Cloudflare quiche) / 回调抽象库(Google QUICHE) 的根本差异</text>
+  <!-- ===== ② Transport 入口 ===== -->
+  <rect x="140" y="416" width="800" height="56" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="156" y="435" font-size="11.5" font-weight="600" fill="#1b2a4a">② Transport · 拥有 UDP socket，按 Connection ID 分流（服务端把入口关卡合在这层）</text>
+  <g font-size="8.5" text-anchor="middle">
+    <rect x="156" y="442" width="378" height="24" rx="7" fill="#fff" stroke="#bcd0ec" data-tid="quic-go原理_接口_事件循环与IO" data-lab="listen 读循环/CID demux"/><text x="345" y="458" fill="#1b2a4a">listen 读循环 → packetHandlerMap 按 CID demux 路由到 Conn</text>
+    <rect x="546" y="442" width="378" height="24" rx="7" fill="#fbeaea" stroke="#e7c3c3" data-tid="quic-go原理_支撑_可靠性与抗攻击" data-lab="Retry/放大限制"/><text x="735" y="458" fill="#7a2a2a">服务端 Retry / token 校验 · 3× 放大限制</text>
+  </g>
 
-  <!-- 跨层主数据流：双箭头=收发双向；配动词短语 -->
-  <!-- ①↔② 应用/http3 ↔ Transport -->
-  <path d="M520,174 L520,188" stroke="#9a9aa2" stroke-width="1.6" fill="none" marker-start="url(#ar)" marker-end="url(#ar)"/>
-  <text x="530" y="185" font-size="8.5" fill="#86868b">① http3 请求 ↔ QUIC 流；Conn 建于 Transport 之上</text>
-  <!-- ②↔③④ Transport ↔ Conn（CID 分流） -->
-  <path d="M520,248 L520,262" stroke="#9a9aa2" stroke-width="1.6" fill="none" marker-start="url(#ar)" marker-end="url(#ar)"/>
-  <text x="530" y="259" font-size="8.5" fill="#86868b">② 按 Connection ID demux，把包路由到对应 Conn</text>
-  <!-- ③↔⑤ Conn ↔ wire（字节↔帧） -->
-  <path d="M273,412 L273,426" stroke="#9a9aa2" stroke-width="1.6" fill="none" marker-start="url(#ar)" marker-end="url(#ar)"/>
-  <text x="30" y="421" font-size="8.5" fill="#86868b">wire：packet_unpacker 解包 / packet_packer 组包（字节 ↔ 帧）</text>
-  <!-- ④↔⑥ 发送接收 ↔ crypto（AEAD） -->
-  <path d="M769,412 L769,426" stroke="#9a9aa2" stroke-width="1.6" fill="none" marker-start="url(#ar)" marker-end="url(#ar)"/>
-  <text x="560" y="421" font-size="8.5" fill="#86868b">crypto：AEAD 封装 / 解密 + 头保护</text>
-  <!-- ⑤↔⑦ / ⑥↔⑦ 与 socket 的收发触点（方向性单箭头） -->
-  <path d="M273,560 L273,546" stroke="#9a9aa2" stroke-width="1.6" fill="none" marker-end="url(#ar)"/>
-  <text x="30" y="556" font-size="8.5" fill="#86868b">↑ 入站：listen 从 socket 读入 UDP 净荷</text>
-  <path d="M769,546 L769,560" stroke="#9a9aa2" stroke-width="1.6" fill="none" marker-end="url(#ar)"/>
-  <text x="560" y="556" font-size="8.5" fill="#86868b">↓ 出站：sendQueue 异步写 socket 发出</text>
+  <!-- ===== ① IO 底座 ===== -->
+  <rect x="140" y="480" width="800" height="44" rx="12" fill="#f5f5f7" stroke="#d2d2d7" filter="url(#soft)" data-tid="quic-go原理_接口_事件循环与IO" data-lab="IO 底座"/>
+  <text x="540" y="500" font-size="11" font-weight="600" fill="#1d1d1f" text-anchor="middle">① IO 底座 · net.PacketConn 真实 UDP socket（Transport 拥有）+ time.Timer</text>
+  <text x="540" y="516" font-size="8.5" fill="#6e6e73" text-anchor="middle">自管 socket 与 goroutine —— batteries-included，与 sans-IO（Cloudflare quiche）/ 回调抽象库（Google QUICHE）的根本差异</text>
 
-  <!-- run ↔ streams_map：单 goroutine 调度收发流 -->
-  <path d="M258,314 L288,314" stroke="#9a9aa2" stroke-width="1.6" fill="none" marker-start="url(#ar)" marker-end="url(#ar)"/>
-  <text x="273" y="309" font-size="7.5" fill="#86868b" text-anchor="middle">调度收发流</text>
+  <!-- ===== 读法 ===== -->
+  <rect x="24" y="536" width="1032" height="96" rx="12" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="40" y="556" font-size="9" fill="#86868b">读法 · 蓝 = 入向 recv（自底向上）；橙 = 出向 send（自顶向下）；紫虚线 = 反馈 / 控制。收发双向都汇聚到每连接唯一的 run goroutine。</text>
+  <text x="40" y="578" font-size="9" fill="#494950">出站：应用 Write → run triggerSending → 拥塞 / 流控 / 放大门禁 → framer 攒帧 → packer 组包 + AEAD 封装 → sentPacketHandler 记账 → sendQueue 异步写 socket</text>
+  <text x="40" y="598" font-size="9" fill="#494950">入站：listen 读 UDP → 按 CID demux → run handlePackets → 去头保护 + AEAD 解密 → frame_parser 逐帧 → STREAM 帧交 ReceiveStream（frame_sorter 重排）→ 用户 Read</text>
+  <text x="40" y="618" font-size="8.5" fill="#6e6e73">机制：连接状态只在 run 单 goroutine 内修改、跨 goroutine 仅经 channel（天然免锁）；丢包判定 包序阈值 3 / 时间阈值；拥塞仅内置 Cubic / Reno。</text>
 
-  <!-- ACK 反馈闭环（虚线）：sentPacketHandler → cubicSender -->
-  <path d="M778,314 L772,314 L772,352 L766,352" stroke="#b8b8bf" stroke-width="1.4" stroke-dasharray="5 4" fill="none" marker-end="url(#ar)"/>
-  <text x="700" y="336" font-size="7.5" fill="#93762e" text-anchor="middle">ACK 反馈 → 更新 cwnd</text>
-
-  <!-- 读法 / 数据流总结条 -->
-  <rect x="30" y="616" width="980" height="84" rx="12" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
-  <text x="46" y="634" font-size="8.5" fill="#86868b">读法 · 实线双箭头 = 收发双向主数据流；虚线 = 反馈 / 异步信号。全部路径最终汇聚到每连接唯一的 run goroutine。</text>
-  <text x="46" y="653" font-size="9" fill="#494950">出站：应用 Write → 流发缓冲 → run triggerSending → 拥塞/流控/放大门禁 → framer 攒帧 → packet_packer 组包 + AEAD 封装 → sentPacketHandler 记账 → sendQueue 异步写 socket</text>
-  <text x="46" y="672" font-size="9" fill="#494950">入站：listen 读 UDP → packetHandlerMap 按 CID demux → run handlePackets → 去头保护 + AEAD 解密 → frame_parser 逐帧 → STREAM 帧交 ReceiveStream（frame_sorter 重排）→ 用户 Read</text>
-  <text x="46" y="691" font-size="8.5" fill="#6e6e73">机制：连接状态只在 run 单 goroutine 内修改、跨 goroutine 仅经 channel（天然免锁）；丢包判定 包序阈值 3 / 时间阈值 9·8，重传另用新包号；拥塞仅内置 Cubic/Reno。</text>
+  <!-- 标题带热区（全景可下钻） -->
+  <rect x="0" y="0" width="1080" height="56" fill="none" stroke="none" data-tid="quic-go原理_全景主线框架" data-lab="全景主线框架"/>
 </svg>

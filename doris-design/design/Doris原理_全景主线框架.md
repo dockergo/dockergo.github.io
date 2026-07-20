@@ -76,6 +76,26 @@
 
 ---
 
+## 主线源码入口速查（jdolap-engine 核实）
+
+> 全景篇的作用是索引，这里把每条主线锚到源码入口，供下钻。FE 前缀 `fe/fe-core/src/main/java/org/apache/doris/`，BE 前缀 `be/src/`。
+
+| 主线 | 源码入口 |
+|---|---|
+| 接口主线（DDL/DML/DQL/DCL 共入口） | 连接层 `qe/ConnectProcessor.java:95`（`handleQuery`:181）→ 语句执行 `qe/StmtExecutor.java:171`（`execute`:481） |
+| 优化技术（Nereids） | `nereids/NereidsPlanner.java:111`（`plan`:138）→ CBO `nereids/jobs/executor/Optimizer.java:37`（`execute`:48） |
+| 执行引擎 | FE 侧分布式调度 `qe/Coordinator.java:176`（`exec`:683）→ BE 侧 `pipeline/pipeline_fragment_context.h:52` `PipelineFragmentContext` |
+| 存储引擎 | `olap/storage_engine.h:231` `class StorageEngine` |
+| 元数据 | `catalog/Env.java:344` `class Env`；复制日志 `persist/EditLog.java:127` |
+| 事务一致性 | `transaction/GlobalTransactionMgr.java:162` → `transaction/DatabaseTransactionMgr.java:313`（`beginTransaction`） |
+| 资源与负载 | `resource/workloadgroup/WorkloadGroupMgr.java:64` |
+| 集群自愈 | 巡检 `clone/TabletChecker.java:66` → 调度 `clone/TabletScheduler.java:103` |
+| 后台任务 | Compaction 生产者 `olap/olap_server.cpp:647`；元数据 Checkpoint `master/Checkpoint.java:53` |
+
+> 各主线的详细源码锚点见对应支撑篇的「源码锚点」小节。
+
+---
+
 ## 一句话总纲
 
 **Doris 的主线是"能力域 × 执行时机"双维网：纵向 4 条接口主线（DDL/DML/DQL/DCL）面向用户，横切 8 条支撑主线——底座（元数据、存储）、计算（优化、执行）、保障（事务、资源、自愈）、异步载体（后台任务）。**

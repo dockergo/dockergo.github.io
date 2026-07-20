@@ -1,76 +1,104 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="820" viewBox="0 0 1080 820" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="630" viewBox="0 0 1080 630" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
   <defs>
     <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
-    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+    <marker id="aHot" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+    <marker id="aState" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#c99a3a"/></marker>
+    <marker id="aCtl" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#5b7db1"/></marker>
+    <marker id="aBg" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#8a5cae"/></marker>
   </defs>
-  <rect width="1080" height="820" fill="#fbfbfd"/>
-  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">RocksDB 核心原理 · 总架构图</text>
-  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">嵌入宿主进程的 LSM 引擎:写往内存+WAL 追加,后台 Flush/Compaction 落盘整理,读跨内存与多层 SST 归并</text>
+  <rect width="1080" height="630" fill="#fbfbfd"/>
 
-  <!-- host layer (embedded lib 的"生态层":非 RocksDB,是链接它的宿主与底层环境) -->
-  <rect x="30" y="64" width="1020" height="66" rx="12" fill="#f4f2ee" stroke="#e3ddd2" stroke-dasharray="6 4"/>
-  <text x="46" y="84" font-size="11" font-weight="700" fill="#6e6357">宿主进程与运行环境（非 RocksDB · 库链接进它、并发/事务边界/分布式由它负责）</text>
-  <g text-anchor="middle" font-size="8.8">
-    <rect x="46" y="94" width="235" height="30" rx="8" fill="#fbf6ef" stroke="#e6d8c4"/><text x="163" y="113" fill="#5a3410">宿主应用 MySQL·MyRocks / TiKV / CockroachDB / Kafka Streams</text>
-    <rect x="291" y="94" width="200" height="30" rx="8" fill="#fbf6ef" stroke="#e6d8c4"/><text x="391" y="113" fill="#5a3410">语言绑定 C++ / Java(JNI) / C API</text>
-    <rect x="501" y="94" width="230" height="30" rx="8" fill="#fbf6ef" stroke="#e6d8c4"/><text x="616" y="113" fill="#5a3410">Env 抽象:文件系统 / 线程 / 时钟(可插拔)</text>
-    <rect x="741" y="94" width="295" height="30" rx="8" fill="#fbf6ef" stroke="#e6d8c4"/><text x="888" y="113" fill="#5a3410">底层存储:本地磁盘 / SSD / (插件)对象存储</text>
+  <!-- ===== 标题带 ===== -->
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">RocksDB 总架构 · 多视角透视：嵌入宿主的一棵磁盘 LSM-tree + 一套 KV API</text>
+  <text x="30" y="47" font-size="10.5" fill="#6e6e73">分层脊：KV API → 写路径（内存+WAL 追加）→ LSM 多层 SST → 读路径（跨层归并）；后台 Compaction 整理　源码基准 11.x</text>
+
+  <!-- ===== 图例：四型语义路径 ===== -->
+  <line x1="40" y1="62" x2="70" y2="62" stroke="#2f9e6e" stroke-width="1.8" marker-end="url(#aHot)"/>
+  <text x="76" y="66" font-size="10.5" fill="#3a3a3c">Hot 前台读写（append / 归并）</text>
+  <line x1="290" y1="62" x2="320" y2="62" stroke="#c99a3a" stroke-width="1.8" marker-end="url(#aState)"/>
+  <text x="326" y="66" font-size="10.5" fill="#3a3a3c">State 落盘 / 换版本（Flush→SST · Version）</text>
+  <line x1="600" y1="62" x2="630" y2="62" stroke="#5b7db1" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#aCtl)"/>
+  <text x="636" y="66" font-size="10.5" fill="#3a3a3c">MVCC 一致视图（seq/Snapshot 虚线）</text>
+  <line x1="850" y1="62" x2="880" y2="62" stroke="#8a5cae" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#aBg)"/>
+  <text x="886" y="66" font-size="10.5" fill="#3a3a3c">后台 Compaction（虚线）</text>
+  <text x="1040" y="78" font-size="10" fill="#a1a1a6" text-anchor="end">框 = 主线可下钻</text>
+
+  <!-- ===== 宿主进程边界（非 RocksDB） ===== -->
+  <rect x="24" y="82" width="1032" height="30" rx="10" fill="#f4f2ee" stroke="#e3ddd2" stroke-dasharray="6 4"/>
+  <text x="40" y="101" font-size="10" fill="#6e6357">宿主进程（非 RocksDB · 链接本库）· MySQL/MyRocks · TiKV · CockroachDB —— 并发 / 事务边界 / 分布式复制由宿主负责</text>
+
+  <!-- ===== ① KV API 接触面 ===== -->
+  <rect x="24" y="120" width="1032" height="44" rx="14" fill="#f6f0fb" stroke="#dcc6ee" filter="url(#soft)" data-tid="kvapi" data-lab="KV API 接触面"/>
+  <text x="40" y="140" font-size="12" font-weight="600" fill="#5a2a82">KV API 接触面</text>
+  <text x="40" y="156" font-size="9.5" fill="#8a5cae">Put / Delete / Merge / WriteBatch　·　Get / MultiGet / NewIterator　·　ColumnFamily / Snapshot / Options</text>
+
+  <!-- ===== ② 写路径（Hot，前台追加式） ===== -->
+  <rect x="24" y="172" width="1032" height="96" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="40" y="192" font-size="12" font-weight="600" fill="#1b2a4a">写路径 · 前台追加式（永不原地更新）</text>
+  <g text-anchor="middle" font-size="10">
+    <rect x="40" y="204" width="190" height="56" rx="9" fill="#fff" stroke="#cfe0f2" data-tid="write" data-lab="WriteThread 分组"/><text x="135" y="226" fill="#1b2a4a" font-weight="600">WriteThread 分组</text><text x="135" y="244" fill="#5b7db1" font-size="9">leader 攒批 · 共享 seq</text>
+    <rect x="242" y="204" width="190" height="56" rx="9" fill="#fff" stroke="#cfe0f2" data-tid="wal" data-lab="WAL 顺序追加"/><text x="337" y="226" fill="#1b2a4a" font-weight="600">WAL 顺序追加</text><text x="337" y="244" fill="#5b7db1" font-size="9">崩溃可恢复（可 fsync）</text>
+    <rect x="444" y="204" width="190" height="56" rx="9" fill="#fff" stroke="#cfe0f2" data-tid="write" data-lab="活跃 MemTable"/><text x="539" y="226" fill="#1b2a4a" font-weight="600">活跃 MemTable</text><text x="539" y="244" fill="#5b7db1" font-size="9">跳表有序 · 写满转只读</text>
+    <rect x="646" y="204" width="170" height="56" rx="9" fill="#fff" stroke="#cfe0f2" data-tid="write" data-lab="immutable MemTable"/><text x="731" y="226" fill="#1b2a4a" font-weight="600">immutable</text><text x="731" y="244" fill="#5b7db1" font-size="9">只读 · 排队待 Flush</text>
+    <rect x="828" y="204" width="212" height="56" rx="9" fill="#fdf3e5" stroke="#f0d9b5" data-tid="flush" data-lab="Flush → L0 SST"/><text x="934" y="226" fill="#7a5a1e" font-weight="600">Flush → L0 SST</text><text x="934" y="244" fill="#b08535" font-size="9">后台落成不可变文件</text>
+  </g>
+  <g fill="none" stroke="#2f9e6e" stroke-width="1.6">
+    <line x1="230" y1="232" x2="242" y2="232" marker-end="url(#aHot)"/>
+    <line x1="432" y1="232" x2="444" y2="232" marker-end="url(#aHot)"/>
+    <line x1="634" y1="232" x2="646" y2="232" marker-end="url(#aHot)"/>
+    <line x1="816" y1="232" x2="828" y2="232" marker-end="url(#aHot)"/>
   </g>
 
-  <!-- API entry -->
-  <rect x="30" y="140" width="1020" height="44" rx="12" fill="#f4eefb" stroke="#d9c7ec" data-tid="kvapi" data-lab="KV API 接触面"/>
-  <text x="46" y="167" font-size="10.5" fill="#3d2a5a"><tspan font-weight="700">KV API 接触面</tspan>　Put / Delete / Merge / WriteBatch · Get / MultiGet / NewIterator · ColumnFamily / Snapshot / Options</text>
-
-  <!-- write path (left) -->
-  <rect x="30" y="196" width="500" height="300" rx="16" fill="#eef3fb" stroke="#bcd0ec"/>
-  <text x="46" y="218" font-size="12" font-weight="700" fill="#1b2a4a">写路径（前台 · 追加式）</text>
-  <rect x="46" y="230" width="220" height="56" rx="9" fill="#f3f7fc" stroke="#cfe0f2" filter="url(#soft)" data-tid="write" data-lab="WriteThread 分组"/><text x="156" y="251" text-anchor="middle" font-size="9.5" font-weight="600" fill="#274a78">WriteThread 分组</text><text x="156" y="268" text-anchor="middle" font-size="8" fill="#5b7db1">leader-follower 攒批,共享 seq</text>
-  <rect x="286" y="230" width="228" height="56" rx="9" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)" data-tid="wal" data-lab="WAL 顺序追加"/><text x="400" y="251" text-anchor="middle" font-size="9.5" font-weight="600" fill="#5a3410">WAL 顺序追加</text><text x="400" y="268" text-anchor="middle" font-size="8" fill="#93762e">log::Writer,崩溃可恢复(可 fsync)</text>
-  <rect x="46" y="296" width="468" height="56" rx="9" fill="#f5faf6" stroke="#cfe6d5" filter="url(#soft)" data-tid="write" data-lab="活跃 MemTable(跳表)"/><text x="280" y="317" text-anchor="middle" font-size="9.5" font-weight="600" fill="#2c5a3a">活跃 MemTable（跳表 InlineSkipList,按内部键有序）</text><text x="280" y="334" text-anchor="middle" font-size="8" fill="#2f6f4f">MemTable::Add 插入;写满 write_buffer_size 转 immutable</text>
-  <rect x="46" y="362" width="468" height="48" rx="9" fill="#eef3fb" stroke="#bcd0ec" data-tid="write" data-lab="immutable MemTable"/><text x="280" y="382" text-anchor="middle" font-size="9.5" font-weight="600" fill="#1b2a4a">immutable MemTable(只读,待 Flush)</text><text x="280" y="398" text-anchor="middle" font-size="8" fill="#5b7db1">FlushScheduler 排队,后台线程落盘</text>
-  <rect x="46" y="420" width="468" height="60" rx="9" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)" data-tid="flush" data-lab="Flush → L0 SST"/><text x="280" y="440" text-anchor="middle" font-size="9.5" font-weight="600" fill="#5a3410">Flush → L0 SST（不可变文件）</text><text x="280" y="457" text-anchor="middle" font-size="8" fill="#93762e">FlushJob:MemTable 迭代器 → TableBuilder → BlockBasedTable</text><text x="280" y="471" text-anchor="middle" font-size="8" fill="#93762e">写完经 VersionEdit 装进新 Version</text>
-  <line x1="266" y1="258" x2="286" y2="258" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
-  <line x1="280" y1="286" x2="280" y2="296" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
-  <line x1="280" y1="352" x2="280" y2="362" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
-  <line x1="280" y1="410" x2="280" y2="420" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
-
-  <!-- LSM tree (right) -->
-  <rect x="546" y="196" width="504" height="300" rx="16" fill="#fff7e6" stroke="#e8cf9a"/>
-  <text x="562" y="218" font-size="12" font-weight="700" fill="#5a3410">磁盘上的 LSM-tree（多层有序 SST）</text>
-  <text x="562" y="236" font-size="8.5" fill="#93762e">后台 Compaction 逐层归并;L0 可重叠,L1+ 层内非重叠且全局有序</text>
-  <g text-anchor="middle" font-size="8.5">
-    <rect x="562" y="246" width="472" height="34" rx="8" fill="#fef2e0" stroke="#e8cf9a" data-tid="sst" data-lab="L0 层 SST"/><text x="798" y="267" fill="#5a3410">L0：多个可重叠 SST（刚从 Flush 落下,按 seq 新旧）</text>
-    <rect x="562" y="286" width="472" height="30" rx="8" fill="#fdf6ea" stroke="#efdcb4" data-tid="sst" data-lab="L1 层 SST"/><text x="798" y="305" fill="#93762e">L1：层内 key 非重叠、有序（Compaction 产出）</text>
-    <rect x="562" y="322" width="472" height="30" rx="8" fill="#fdf6ea" stroke="#efdcb4" data-tid="sst" data-lab="L2 层 SST"/><text x="798" y="341" fill="#93762e">L2：每层容量约为上层 10×</text>
-    <rect x="562" y="358" width="472" height="30" rx="8" fill="#fdf6ea" stroke="#efdcb4" data-tid="sst" data-lab="Ln 层 SST"/><text x="798" y="377" fill="#93762e">… Ln：最大最老数据</text>
+  <!-- ===== ③ LSM 磁盘分层带 ===== -->
+  <rect x="24" y="278" width="1032" height="120" rx="14" fill="#fdf3e5" stroke="#f0d9b5" filter="url(#soft)"/>
+  <text x="40" y="298" font-size="12" font-weight="600" fill="#7a5a1e">磁盘上的 LSM-tree · 多层有序 SST（L0 可重叠；L1+ 层内非重叠、全局有序）</text>
+  <g font-size="9" fill="#7a5a1e">
+    <rect x="40" y="306" width="556" height="20" rx="6" fill="#fef2e0" stroke="#e8cf9a" data-tid="sst" data-lab="L0 层 SST"/><text x="52" y="320">L0：多个可重叠 SST（刚从 Flush 落下，按 seq 新旧）</text>
+    <rect x="72" y="330" width="524" height="18" rx="6" fill="#fdf6ea" stroke="#efdcb4"/><text x="84" y="343" fill="#b08535">L1：层内 key 非重叠、有序</text>
+    <rect x="104" y="352" width="492" height="18" rx="6" fill="#fdf6ea" stroke="#efdcb4"/><text x="116" y="365" fill="#b08535">L2：容量约为上层 10×</text>
+    <rect x="136" y="374" width="460" height="18" rx="6" fill="#fdf6ea" stroke="#efdcb4"/><text x="148" y="387" fill="#b08535">… Ln：最大最老数据</text>
   </g>
-  <rect x="562" y="396" width="230" height="84" rx="9" fill="#fff" stroke="#e8cf9a" data-tid="compaction" data-lab="Compaction(后台归并)"/><text x="677" y="416" text-anchor="middle" font-size="9.5" font-weight="600" fill="#5a3410">Compaction（后台）</text><text x="677" y="434" text-anchor="middle" font-size="8" fill="#93762e">CompactionPicker 选文件</text><text x="677" y="449" text-anchor="middle" font-size="8" fill="#93762e">CompactionJob 归并输出</text><text x="677" y="466" text-anchor="middle" font-size="8" fill="#93762e">丢墓碑/旧版本(按 snapshot)</text>
-  <rect x="802" y="396" width="232" height="84" rx="9" fill="#fff" stroke="#e8cf9a" data-tid="sst" data-lab="SST = BlockBasedTable"/><text x="918" y="416" text-anchor="middle" font-size="9.5" font-weight="600" fill="#5a3410">每个 SST = BlockBasedTable</text><text x="918" y="434" text-anchor="middle" font-size="8" fill="#93762e">data blocks + index + filter</text><text x="918" y="449" text-anchor="middle" font-size="8" fill="#93762e">+ metaindex + footer</text><text x="918" y="466" text-anchor="middle" font-size="8" fill="#93762e">布隆过滤器 → Get 短路</text>
+  <rect x="612" y="306" width="204" height="84" rx="9" fill="#fdf9f0" stroke="#efe3cd" data-tid="compaction" data-lab="Compaction 后台归并"/><text x="714" y="332" text-anchor="middle" font-size="10.5" font-weight="600" fill="#7a5a1e">Compaction（后台）</text><text x="714" y="352" text-anchor="middle" font-size="9" fill="#b08535">选文件逐层归并</text><text x="714" y="368" text-anchor="middle" font-size="9" fill="#b08535">丢墓碑 / 旧版本</text><text x="714" y="384" text-anchor="middle" font-size="9" fill="#b08535">写放大换写吞吐</text>
+  <rect x="828" y="306" width="212" height="84" rx="9" fill="#fff" stroke="#f0d9b5" data-tid="sst" data-lab="SST = BlockBasedTable"/><text x="934" y="332" text-anchor="middle" font-size="10.5" font-weight="600" fill="#7a5a1e">SST = BlockBasedTable</text><text x="934" y="352" text-anchor="middle" font-size="9" fill="#b08535">data + index + filter</text><text x="934" y="368" text-anchor="middle" font-size="9" fill="#b08535">+ metaindex + footer</text><text x="934" y="384" text-anchor="middle" font-size="9" fill="#b08535">布隆过滤器 → Get 短路</text>
 
-  <line x1="530" y1="450" x2="546" y2="440" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/><text x="538" y="432" font-size="7.5" fill="#93762e">Flush 落 L0</text>
-
-  <!-- read path band -->
-  <rect x="30" y="508" width="1020" height="96" rx="14" fill="#f5faf6" stroke="#cfe6d5"/>
-  <text x="46" y="530" font-size="12" font-weight="700" fill="#12402a">读路径（前台 · 跨内存与多层 SST 归并,按 SequenceNumber 取一致版本）</text>
-  <g text-anchor="middle" font-size="8.5">
-    <rect x="46" y="542" width="150" height="48" rx="8" fill="#eef3fb" stroke="#bcd0ec" data-tid="read" data-lab="① 活跃 MemTable"/><text x="121" y="562" font-weight="600" fill="#1b2a4a">① 活跃 MemTable</text><text x="121" y="578" fill="#5b7db1">最新写,最先查</text>
-    <rect x="216" y="542" width="150" height="48" rx="8" fill="#eef3fb" stroke="#bcd0ec" data-tid="read" data-lab="② immutable MemTable"/><text x="291" y="562" font-weight="600" fill="#1b2a4a">② immutable MemTable</text><text x="291" y="578" fill="#5b7db1">待 flush 的只读</text>
-    <rect x="386" y="542" width="180" height="48" rx="8" fill="#fdf6ea" stroke="#efdcb4" data-tid="read" data-lab="③ L0..Ln SST 逐层"/><text x="476" y="562" font-weight="600" fill="#5a3410">③ L0..Ln SST 逐层</text><text x="476" y="578" fill="#93762e">布隆短路 + block cache</text>
-    <rect x="586" y="542" width="200" height="48" rx="8" fill="#f5faf6" stroke="#cfe6d5" data-tid="read" data-lab="SuperVersion 一致视图"/><text x="686" y="562" font-weight="600" fill="#2c5a3a">SuperVersion 钉住一致视图</text><text x="686" y="578" fill="#2f6f4f">{mutable+immutable+Version}</text>
-    <rect x="806" y="542" width="228" height="48" rx="8" fill="#faf4fb" stroke="#e2d2ee" data-tid="txn" data-lab="按 seq 取版本(MVCC)"/><text x="920" y="562" font-weight="600" fill="#5a3d78">按 seq 取版本(MVCC)</text><text x="920" y="578" fill="#7a5a95">找到即停,跳墓碑</text>
+  <!-- ===== ④ 读路径（Hot，跨层归并） ===== -->
+  <rect x="24" y="408" width="1032" height="84" rx="14" fill="#eafaf1" stroke="#b8e6cd" filter="url(#soft)"/>
+  <text x="40" y="428" font-size="12" font-weight="600" fill="#1c6b45">读路径 · 跨内存与多层 SST 归并（按 SequenceNumber 取一致版本）</text>
+  <g text-anchor="middle" font-size="10">
+    <rect x="40" y="438" width="232" height="44" rx="9" fill="#fff" stroke="#b8e6cd" data-tid="read" data-lab="① 活跃 MemTable"/><text x="156" y="458" fill="#1c6b45" font-weight="600">① 活跃 MemTable</text><text x="156" y="474" fill="#3a9b6e" font-size="9">最新写，最先查</text>
+    <rect x="284" y="438" width="232" height="44" rx="9" fill="#fff" stroke="#b8e6cd" data-tid="read" data-lab="② immutable MemTable"/><text x="400" y="458" fill="#1c6b45" font-weight="600">② immutable MemTable</text><text x="400" y="474" fill="#3a9b6e" font-size="9">待 flush 的只读</text>
+    <rect x="528" y="438" width="232" height="44" rx="9" fill="#fff" stroke="#b8e6cd" data-tid="read" data-lab="③ L0..Ln SST 逐层"/><text x="644" y="458" fill="#1c6b45" font-weight="600">③ L0..Ln SST 逐层</text><text x="644" y="474" fill="#3a9b6e" font-size="9">布隆短路 + block cache</text>
+    <rect x="772" y="438" width="268" height="44" rx="9" fill="#fff" stroke="#b8e6cd" data-tid="read" data-lab="SuperVersion 一致视图"/><text x="906" y="458" fill="#1c6b45" font-weight="600">SuperVersion 一致视图</text><text x="906" y="474" fill="#3a9b6e" font-size="9">钉住 mem + imm + Version</text>
   </g>
-  <line x1="196" y1="566" x2="216" y2="566" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
-  <line x1="366" y1="566" x2="386" y2="566" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <g fill="none" stroke="#2f9e6e" stroke-width="1.6">
+    <line x1="272" y1="460" x2="284" y2="460" marker-end="url(#aHot)"/>
+    <line x1="516" y1="460" x2="528" y2="460" marker-end="url(#aHot)"/>
+    <line x1="760" y1="460" x2="772" y2="460" marker-end="url(#aHot)"/>
+  </g>
 
-  <!-- state layer -->
-  <rect x="30" y="616" width="1020" height="62" rx="12" fill="#eafaf1" stroke="#bfe0cd" data-tid="version" data-lab="VersionSet + MANIFEST"/>
-  <text x="46" y="638" font-size="11" font-weight="700" fill="#12402a">状态与一致性（横切）</text>
-  <text x="46" y="658" font-size="9" fill="#2f6f4f">VersionSet + MANIFEST 记录活跃 SST 集合并原子换版本 · WAL 保崩溃恢复 · SequenceNumber + 内部键实现多版本与快照 · Column Family 共享 WAL 各自成树</text>
-  <text x="46" y="672" font-size="8.5" fill="#a1a1a6">配套详见依赖矩阵(接触面×能力域)与依赖关系图。</text>
+  <!-- ===== ⑤ 状态与一致性（横切） ===== -->
+  <rect x="24" y="502" width="1032" height="72" rx="14" fill="#eef7f4" stroke="#bfe0d5"/>
+  <text x="40" y="522" font-size="12" font-weight="600" fill="#12574a">状态与一致性 · 横切读写与整理</text>
+  <g text-anchor="middle" font-size="10">
+    <rect x="40" y="532" width="330" height="36" rx="9" fill="#fff" stroke="#bfe0d5" data-tid="version" data-lab="VersionSet + MANIFEST"/><text x="150" y="555" fill="#12574a" font-weight="600">VersionSet + MANIFEST</text><text x="300" y="555" fill="#3a8f78" font-size="9">原子换版本 · 记录活跃 SST</text>
+    <rect x="382" y="532" width="300" height="36" rx="9" fill="#fff" stroke="#bfe0d5" data-tid="wal" data-lab="WAL 崩溃恢复"/><text x="470" y="555" fill="#12574a" font-weight="600">WAL 崩溃恢复</text><text x="610" y="555" fill="#3a8f78" font-size="9">重放重建 MemTable</text>
+    <rect x="694" y="532" width="346" height="36" rx="9" fill="#fff" stroke="#bfe0d5" data-tid="txn" data-lab="SequenceNumber / Snapshot"/><text x="800" y="555" fill="#12574a" font-weight="600">seq / Snapshot（MVCC）</text><text x="960" y="555" fill="#3a8f78" font-size="9">内部键取一致版本</text>
+  </g>
 
-  <!-- takeaway -->
-  <rect x="30" y="690" width="1020" height="60" rx="12" fill="#f7f7f9" stroke="#ececf1"/>
-  <text x="46" y="712" font-size="11" font-weight="700" fill="#1d1d1f"></text>
-  <text x="46" y="732" font-size="9.5" fill="#4b4b50">左=写(往内存+WAL 追加,后台 Flush 落 L0)、右=磁盘 LSM(后台 Compaction 逐层整理)、中带=读(跨内存与多层 SST 归并)。</text>
-  <text x="46" y="746" font-size="9" fill="#b1483a">与分布式数据库不同:无 server/网络/SQL,是链接进宿主的单机存储库;并发/分布式在顶部"宿主进程"层。</text>
+  <!-- ===== 语义分型连线 ===== -->
+  <!-- State：Flush → L0（落盘） -->
+  <line x1="934" y1="260" x2="934" y2="278" stroke="#c99a3a" stroke-width="1.8" marker-end="url(#aState)"/>
+  <!-- 后台：Compaction 逐层归并 -->
+  <line x1="620" y1="330" x2="608" y2="330" stroke="#8a5cae" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#aBg)"/>
+  <line x1="620" y1="360" x2="608" y2="360" stroke="#8a5cae" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#aBg)"/>
+  <!-- Hot：LSM SST → 读路径 -->
+  <line x1="644" y1="398" x2="644" y2="408" stroke="#2f9e6e" stroke-width="1.8" marker-end="url(#aHot)"/>
+  <!-- State：LSM → VersionSet（登记 SST 集合） -->
+  <line x1="150" y1="398" x2="150" y2="502" stroke="#c99a3a" stroke-width="1.4" stroke-dasharray="2 3" opacity="0.55"/>
+  <!-- Control：seq/Snapshot → SuperVersion（钉住一致视图） -->
+  <line x1="906" y1="502" x2="906" y2="492" stroke="#5b7db1" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#aCtl)"/>
+
+  <!-- ===== 读法 ===== -->
+  <rect x="24" y="584" width="1032" height="30" rx="8" fill="#f7f7f9" stroke="#ececef"/>
+  <text x="540" y="603" font-size="9.5" fill="#4a4a4f" text-anchor="middle">读法：写只往内存 MemTable + WAL 追加，满了 Flush 成不可变 L0 SST；读跨内存与多层 SST 归并、布隆短路、按 seq 取版本；后台 Compaction 逐层整理，VersionSet 原子换版本</text>
 </svg>

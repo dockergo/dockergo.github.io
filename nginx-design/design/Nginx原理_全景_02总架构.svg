@@ -1,96 +1,202 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="900" viewBox="0 0 1020 900"
-  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="900" viewBox="0 0 1020 900" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
   <defs>
-    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
-    </filter>
-    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
-    </marker>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="aHot" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#0a84ff"/></marker>
+    <marker id="aCtl" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#7c5fe6"/></marker>
+    <marker id="aState" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#0f9e8e"/></marker>
+    <marker id="aFail" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#e8730f"/></marker>
   </defs>
+
   <rect width="1020" height="900" fill="#fbfbfd"/>
-  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">nginx 总架构 · master-worker 进程 + 事件驱动 + 模块流水线</text>
-  <rect x="0" y="0" width="1020" height="44" fill="none" pointer-events="none" data-tid="Nginx原理_全景主线框架" data-lab="全景总览"/>
 
-  <!-- master -->
-  <rect x="30" y="50" width="960" height="96" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
-  <text x="48" y="74" font-size="12.5" font-weight="600" fill="#1b2a4a">master 进程 · 不处理请求，只管控（ngx_master_process_cycle，process_cycle.c:74）</text>
-  <rect x="48" y="88" width="220" height="46" rx="9" fill="#ffffff" stroke="#bcd0ec" data-tid="Nginx原理_接触面_配置指令" data-lab="读配置/绑定端口"/><text x="158" y="108" font-size="10" fill="#1b2a4a" text-anchor="middle">读配置 / 绑定监听端口</text><text x="158" y="124" font-size="8.5" fill="#5b7db1" text-anchor="middle">特权操作在此完成</text>
-  <rect x="280" y="88" width="220" height="46" rx="9" fill="#ffffff" stroke="#bcd0ec" data-tid="Nginx原理_支撑_进程与事件模型" data-lab="fork worker"/><text x="390" y="108" font-size="10" fill="#1b2a4a" text-anchor="middle">fork worker 进程</text><text x="390" y="124" font-size="8.5" fill="#5b7db1" text-anchor="middle">start_worker_processes:336</text>
-  <rect x="512" y="88" width="220" height="46" rx="9" fill="#ffffff" stroke="#bcd0ec" data-tid="Nginx原理_接触面_信号控制" data-lab="接信号 reload/quit"/><text x="622" y="108" font-size="10" fill="#1b2a4a" text-anchor="middle">接信号：reload/reopen/quit</text><text x="622" y="124" font-size="8.5" fill="#5b7db1" text-anchor="middle">监控并重启挂掉的 worker</text>
-  <rect x="744" y="88" width="226" height="46" rx="9" fill="#fff7e6" stroke="#f0dcae" data-tid="Nginx原理_支撑_代理缓存" data-lab="cache manager/loader"/><text x="857" y="108" font-size="10" fill="#7a4d00" text-anchor="middle">派生 cache manager/loader</text><text x="857" y="124" font-size="8.5" fill="#9a7328" text-anchor="middle">专职后台进程</text>
+  <!-- ===== 标题条 ===== -->
+  <rect x="0" y="0" width="1020" height="48" fill="#f4f5f7" stroke="#e6e6eb"/>
+  <text x="24" y="30" font-size="15" font-weight="700" fill="#1d1d1f">nginx 总架构 · 事件驱动 master-worker 反向代理</text>
+  <text x="392" y="30" font-size="11.5" fill="#8a8a90">1 master 管控 + N 单线程 worker · 每 worker 一条 epoll 事件循环非阻塞多路复用海量连接（C10K）</text>
 
-  <!-- workers -->
-  <rect x="30" y="162" width="700" height="230" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)" data-tid="Nginx原理_支撑_进程与事件模型" data-lab="worker 事件循环"/>
-  <text x="48" y="186" font-size="12.5" font-weight="600" fill="#1d1d1f">worker 进程（多个，各自独立事件循环，共享监听套接字）</text>
+  <!-- ===== ① 顶部 clients + 共享 listen ===== -->
+  <rect x="24" y="60" width="972" height="42" rx="10" fill="#eef0f3" stroke="#d2d6dd"/>
+  <text x="44" y="86" font-size="11" font-weight="700" fill="#33373e">clients</text>
+  <text x="130" y="86" font-size="10" fill="#8a8a90">海量并发连接 → 共享 listen sockets（fork 前已 open，N 个 worker 继承同一组监听 fd）</text>
 
-  <rect x="48" y="200" width="320" height="176" rx="11" fill="#f6f9fd" stroke="#cfe0f2"/>
-  <text x="208" y="222" font-size="11" font-weight="600" fill="#1b2a4a" text-anchor="middle">worker #1 · 事件循环</text>
-  <rect x="64" y="234" width="288" height="34" rx="8" fill="#eafaf1" stroke="#bce6cd"/><text x="208" y="256" font-size="9.5" fill="#0f5132" text-anchor="middle">epoll_wait 拿就绪事件（epoll_module.c:784）</text>
-  <rect x="64" y="274" width="288" height="34" rx="8" fill="#ffffff" stroke="#cfe0f2"/><text x="208" y="296" font-size="9.5" fill="#1b2a4a" text-anchor="middle">accept 新连接 / 读写已连接</text>
-  <rect x="64" y="314" width="288" height="34" rx="8" fill="#f4eefb" stroke="#d9c9ef"/><text x="208" y="336" font-size="9.5" fill="#3c1361" text-anchor="middle">跑 HTTP 阶段 → handler/filter</text>
-  <text x="208" y="366" font-size="8.5" fill="#5b7db1" text-anchor="middle">process_events_and_timers（event.c:195）</text>
+  <!-- ===== master 管控条（Control · 信号） ===== -->
+  <rect x="24" y="116" width="972" height="52" rx="11" fill="#eef0f3" stroke="#d2d6dd" filter="url(#soft)" data-tid="Nginx原理_接触面_信号控制"/>
+  <rect x="24" y="116" width="4" height="52" rx="2" fill="#7c5fe6"/>
+  <text x="44" y="137" font-size="11.5" font-weight="700" fill="#1d1d1f">master 进程 · 只监控 / 转信号，不碰请求</text>
+  <text x="44" y="156" font-size="9.5" fill="#5b6470">ngx_master_process_cycle:74 · HUP 重载(新配置零停机) · USR2 换二进制 · reap 崩溃 worker 重生</text>
+  <text x="976" y="137" font-size="9.5" fill="#7c5fe6" text-anchor="end" font-weight="600">Control</text>
 
-  <rect x="384" y="200" width="330" height="176" rx="11" fill="#f6f9fd" stroke="#cfe0f2"/>
-  <text x="549" y="222" font-size="11" font-weight="600" fill="#1b2a4a" text-anchor="middle">worker #2 … #N（对称）</text>
-  <text x="549" y="250" font-size="9.5" fill="#5b7db1" text-anchor="middle">accept_mutex 或 SO_REUSEPORT</text>
-  <text x="549" y="268" font-size="9.5" fill="#5b7db1" text-anchor="middle">决定谁接新连接（event.c:53）</text>
-  <text x="549" y="296" font-size="9.5" fill="#5b7db1" text-anchor="middle">worker 数通常 = CPU 核数</text>
-  <text x="549" y="320" font-size="9.5" fill="#5b7db1" text-anchor="middle">进程间无共享请求状态</text>
-  <text x="549" y="344" font-size="9.5" fill="#5b7db1" text-anchor="middle">共享内存仅存缓存索引/限流计数</text>
+  <!-- ===== 单 worker 工业剖面 大框 ===== -->
+  <rect x="24" y="188" width="972" height="512" rx="16" fill="#ffffff" stroke="#d0d0d6" filter="url(#soft)" data-tid="Nginx原理_支撑_进程与事件模型"/>
+  <text x="44" y="212" font-size="12" font-weight="700" fill="#1d1d1f">放大任一 worker · 事件循环引擎（ngx_worker_process_cycle:699 → ngx_process_events_and_timers:195）</text>
 
-  <!-- 模块生态 -->
-  <rect x="746" y="162" width="244" height="230" rx="14" fill="#f4eefb" stroke="#d9c9ef" filter="url(#soft)" data-tid="Nginx原理_支撑_模块体系" data-lab="模块生态"/>
-  <text x="764" y="186" font-size="12" font-weight="600" fill="#3c1361">模块生态</text>
-  <rect x="764" y="200" width="208" height="40" rx="8" fill="#ffffff" stroke="#d9c9ef"/><text x="868" y="225" font-size="9.5" fill="#3c1361" text-anchor="middle">core / event / conf 模块</text>
-  <rect x="764" y="248" width="208" height="40" rx="8" fill="#ffffff" stroke="#d9c9ef"/><text x="868" y="273" font-size="9.5" fill="#3c1361" text-anchor="middle">http / stream / mail 模块</text>
-  <rect x="764" y="296" width="208" height="40" rx="8" fill="#ffffff" stroke="#d9c9ef"/><text x="868" y="321" font-size="9.5" fill="#3c1361" text-anchor="middle">handler / filter / upstream</text>
-  <text x="764" y="360" font-size="8.5" fill="#7a5aa8">编译期静态链接（或动态 .so）</text>
-  <text x="764" y="376" font-size="8.5" fill="#7a5aa8">指令注册进配置解析</text>
+  <!-- 事件循环 心脏（Hot 中心） -->
+  <rect x="360" y="226" width="300" height="66" rx="11" fill="#e9f2ff" stroke="#a9ccf5" filter="url(#soft)" data-tid="Nginx原理_支撑_进程与事件模型"/>
+  <rect x="360" y="226" width="4" height="66" rx="2" fill="#0a84ff"/>
+  <text x="380" y="247" font-size="11" font-weight="700" fill="#0a3d78">事件循环心脏 · epoll_wait</text>
+  <text x="378" y="265" font-size="9" fill="#2a5a92">ngx_epoll_process_events:800 EPOLLET 边缘触发</text>
+  <text x="378" y="281" font-size="8.5" fill="#4a7ab0">就绪即 rev/wev->handler(ev) 分派 · instance 位防陈旧</text>
 
-  <!-- 数据流 -->
-  <rect x="30" y="408" width="960" height="120" rx="14" fill="#eafaf1" stroke="#bce6cd" filter="url(#soft)"/>
-  <text x="48" y="432" font-size="12.5" font-weight="600" fill="#0f5132">一个请求在 worker 内的流水线</text>
-  <rect x="48" y="446" width="150" height="64" rx="10" fill="#ffffff" stroke="#bce6cd" data-tid="Nginx原理_支撑_进程与事件模型" data-lab="连接接入"/><text x="123" y="472" font-size="10" font-weight="600" fill="#0f5132" text-anchor="middle">连接接入</text><text x="123" y="490" font-size="8.5" fill="#3f8f66" text-anchor="middle">读请求行/头</text>
-  <rect x="214" y="446" width="180" height="64" rx="10" fill="#ffffff" stroke="#bce6cd" data-tid="Nginx原理_支撑_HTTP阶段处理" data-lab="11 阶段处理"/><text x="304" y="472" font-size="10" font-weight="600" fill="#0f5132" text-anchor="middle">11 阶段处理</text><text x="304" y="490" font-size="8.5" fill="#3f8f66" text-anchor="middle">rewrite/access/content</text>
-  <rect x="410" y="446" width="180" height="64" rx="10" fill="#ffffff" stroke="#bce6cd" data-tid="Nginx原理_支撑_HTTP阶段处理" data-lab="content handler"/><text x="500" y="472" font-size="10" font-weight="600" fill="#0f5132" text-anchor="middle">content handler</text><text x="500" y="490" font-size="8.5" fill="#3f8f66" text-anchor="middle">静态文件 / proxy_pass</text>
-  <rect x="606" y="446" width="180" height="64" rx="10" fill="#ffffff" stroke="#bce6cd" data-tid="Nginx原理_支撑_HTTP阶段处理" data-lab="filter 链"/><text x="696" y="472" font-size="10" font-weight="600" fill="#0f5132" text-anchor="middle">filter 链</text><text x="696" y="490" font-size="8.5" fill="#3f8f66" text-anchor="middle">gzip/chunked/header</text>
-  <rect x="802" y="446" width="168" height="64" rx="10" fill="#ffffff" stroke="#bce6cd" data-tid="Nginx原理_支撑_日志与限流" data-lab="发送 + LOG"/><text x="886" y="472" font-size="10" font-weight="600" fill="#0f5132" text-anchor="middle">发送 + LOG</text><text x="886" y="490" font-size="8.5" fill="#3f8f66" text-anchor="middle">写回客户端 · 记日志</text>
-  <line x1="198" y1="478" x2="214" y2="478" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
-  <line x1="394" y1="478" x2="410" y2="478" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
-  <line x1="590" y1="478" x2="606" y2="478" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
-  <line x1="786" y1="478" x2="802" y2="478" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <!-- 左 Control 栏：accept_mutex + config -->
+  <rect x="44" y="226" width="150" height="120" rx="11" fill="#eef0f3" stroke="#d2d6dd" filter="url(#soft)" data-tid="Nginx原理_支撑_进程与事件模型"/>
+  <rect x="44" y="226" width="4" height="120" rx="2" fill="#7c5fe6"/>
+  <text x="62" y="247" font-size="10.5" font-weight="700" fill="#1d1d1f">accept_mutex</text>
+  <text x="60" y="266" font-size="8.5" fill="#5b6470">共享内存锁 · trylock</text>
+  <text x="60" y="281" font-size="8.5" fill="#5b6470">同刻仅一 worker 监听</text>
+  <text x="60" y="296" font-size="8.5" fill="#5b6470">→ 防惊群</text>
+  <text x="60" y="316" font-size="8.5" fill="#5b6470">accept_disabled 忙则</text>
+  <text x="60" y="330" font-size="8.5" fill="#5b6470">让锁 → 连接均摊</text>
 
-  <!-- 后端 -->
-  <rect x="30" y="544" width="960" height="118" rx="14" fill="#fff7e6" stroke="#f0dcae" filter="url(#soft)"/>
-  <text x="48" y="568" font-size="12.5" font-weight="600" fill="#7a4d00">反向代理时：worker → upstream 后端</text>
-  <rect x="48" y="582" width="300" height="64" rx="10" fill="#ffffff" stroke="#f0dcae" data-tid="Nginx原理_支撑_upstream负载均衡" data-lab="负载均衡选 peer"/><text x="198" y="606" font-size="10" font-weight="600" fill="#7a4d00" text-anchor="middle">upstream 负载均衡选 peer</text><text x="198" y="626" font-size="8.5" fill="#9a7328" text-anchor="middle">round robin / ip_hash / least_conn</text>
-  <rect x="364" y="582" width="300" height="64" rx="10" fill="#ffffff" stroke="#f0dcae" data-tid="Nginx原理_支撑_代理缓存" data-lab="proxy 缓存命中"/><text x="514" y="606" font-size="10" font-weight="600" fill="#7a4d00" text-anchor="middle">proxy 缓存命中则直返</text><text x="514" y="626" font-size="8.5" fill="#9a7328" text-anchor="middle">未命中转后端并回填</text>
-  <rect x="680" y="582" width="290" height="64" rx="10" fill="#eef3fb" stroke="#bcd0ec" data-tid="Nginx原理_支撑_upstream负载均衡" data-lab="后端服务器"/><text x="825" y="606" font-size="10" font-weight="600" fill="#1b2a4a" text-anchor="middle">后端服务器（app/其他 nginx）</text><text x="825" y="626" font-size="8.5" fill="#5b7db1" text-anchor="middle">HTTP/FastCGI/gRPC/uwsgi</text>
-  <line x1="348" y1="614" x2="364" y2="614" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
-  <line x1="664" y1="614" x2="680" y2="614" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <rect x="44" y="358" width="150" height="96" rx="11" fill="#eef0f3" stroke="#d2d6dd" filter="url(#soft)" data-tid="Nginx原理_接触面_配置指令"/>
+  <rect x="44" y="358" width="4" height="96" rx="2" fill="#7c5fe6"/>
+  <text x="62" y="379" font-size="10.5" font-weight="700" fill="#1d1d1f">config 指令表</text>
+  <text x="60" y="398" font-size="8.5" fill="#5b6470">ngx_conf_parse:158</text>
+  <text x="60" y="413" font-size="8.5" fill="#5b6470">每模块 commands[]</text>
+  <text x="60" y="428" font-size="8.5" fill="#5b6470">cmd->set 回调落配置</text>
+  <text x="60" y="443" font-size="8" fill="#8a8a90">指令即插件</text>
 
-  <line x1="380" y1="146" x2="380" y2="162" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
-  <text x="396" y="158" font-size="9" fill="#86868b">fork</text>
-  <line x1="500" y1="392" x2="500" y2="408" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
-  <line x1="500" y1="528" x2="500" y2="544" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+  <!-- Hot 横向主轨：accept → 解析 → 11 阶段 → content → filter → sendfile -->
+  <text x="220" y="378" font-size="10" font-weight="600" fill="#0a84ff">Hot 主轨 · 一条 worker 交错推进上万请求</text>
 
-  <!-- ===== 补画 1：SSL/TLS · 连接入口的加密终止层（原仅兜底 chip 可达）===== -->
-  <text x="40" y="674" font-size="8.5" fill="#6b6bb0">https：连接接入后先在事件循环内完成 TLS 握手 / 终止，再进 HTTP 流水线</text>
-  <path d="M48,478 L14,478 L14,730 L30,730" fill="none" stroke="#a9b0e0" stroke-width="1.2" stroke-dasharray="5 4" marker-end="url(#ar)"/>
-  <rect x="30" y="680" width="960" height="100" rx="14" fill="#eef0fb" stroke="#c6cbeb" filter="url(#soft)" data-tid="Nginx原理_支撑_SSL_TLS" data-lab="TLS握手/终止"/>
-  <text x="48" y="701" font-size="12.5" font-weight="600" fill="#2c2f6b">TLS 终止 · 握手嵌进事件循环（连接入口的加密边界，event/ngx_event_openssl.c）</text>
-  <rect x="48" y="712" width="222" height="58" rx="9" fill="#ffffff" stroke="#c6cbeb"/><text x="159" y="732" font-size="9.5" font-weight="600" fill="#2c2f6b" text-anchor="middle">SNI 选证书</text><text x="159" y="748" font-size="8.5" fill="#6b6bb0" text-anchor="middle">ClientHello 带 SNI 域名</text><text x="159" y="762" font-size="8" fill="#9a9ad0" text-anchor="middle">一 IP 多域名各自证书</text>
-  <rect x="282" y="712" width="222" height="58" rx="9" fill="#ffffff" stroke="#c6cbeb"/><text x="393" y="732" font-size="9.5" font-weight="600" fill="#2c2f6b" text-anchor="middle">非阻塞握手</text><text x="393" y="748" font-size="8.5" fill="#6b6bb0" text-anchor="middle">握手返 AGAIN 挂起等事件</text><text x="393" y="762" font-size="8" fill="#9a9ad0" text-anchor="middle">慢握手不占 worker</text>
-  <rect x="516" y="712" width="222" height="58" rx="9" fill="#ffffff" stroke="#c6cbeb"/><text x="627" y="732" font-size="9.5" font-weight="600" fill="#2c2f6b" text-anchor="middle">复用与优化</text><text x="627" y="748" font-size="8.5" fill="#6b6bb0" text-anchor="middle">session ticket / cache 复用</text><text x="627" y="762" font-size="8" fill="#9a9ad0" text-anchor="middle">OCSP stapling · TLS1.3/0-RTT</text>
-  <rect x="750" y="712" width="222" height="58" rx="9" fill="#ffffff" stroke="#c6cbeb"/><text x="861" y="732" font-size="9.5" font-weight="600" fill="#2c2f6b" text-anchor="middle">TLS 终止</text><text x="861" y="748" font-size="8.5" fill="#6b6bb0" text-anchor="middle">解密后明文转后端</text><text x="861" y="762" font-size="8" fill="#9a9ad0" text-anchor="middle">客户端⇄nginx 为加密边界</text>
+  <rect x="220" y="388" width="118" height="58" rx="9" fill="#e9f2ff" stroke="#a9ccf5"/>
+  <rect x="220" y="388" width="4" height="58" rx="2" fill="#0a84ff"/>
+  <text x="236" y="408" font-size="9.5" font-weight="700" fill="#0a3d78">accept + 解析</text>
+  <text x="234" y="424" font-size="8" fill="#4a7ab0">event_accept:21</text>
+  <text x="234" y="437" font-size="8" fill="#4a7ab0">process_request_line</text>
 
-  <!-- ===== 补画 2：内存池与缓冲 · 底层支撑（原仅兜底 chip 可达）===== -->
-  <text x="40" y="792" font-size="8.5" fill="#5a6b82">底层支撑：请求相关分配挂请求池，请求结束一次 destroy_pool 整池回收；buffer 链以引用传递、file buf 走 sendfile 零拷贝</text>
-  <rect x="30" y="796" width="960" height="96" rx="14" fill="#f1f3f6" stroke="#cfd6e0" filter="url(#soft)" data-tid="Nginx原理_支撑_内存池与缓冲" data-lab="内存池/零拷贝"/>
-  <text x="48" y="817" font-size="12.5" font-weight="600" fill="#33404f">内存池与缓冲 · 连接底座（被 HTTP 阶段 / 模块 / upstream 广泛依赖）</text>
-  <rect x="48" y="828" width="222" height="56" rx="9" fill="#ffffff" stroke="#cfd6e0"/><text x="159" y="847" font-size="9.5" font-weight="600" fill="#33404f" text-anchor="middle">内存池分配</text><text x="159" y="863" font-size="8.5" fill="#5a6b82" text-anchor="middle">小块 palloc 指针 bump</text><text x="159" y="877" font-size="8" fill="#93a0b2" text-anchor="middle">大块 malloc 挂链 · palloc.c:123</text>
-  <rect x="282" y="828" width="222" height="56" rx="9" fill="#ffffff" stroke="#cfd6e0"/><text x="393" y="847" font-size="9.5" font-weight="600" fill="#33404f" text-anchor="middle">生命周期回收</text><text x="393" y="863" font-size="8.5" fill="#5a6b82" text-anchor="middle">请求分配挂请求池</text><text x="393" y="877" font-size="8" fill="#93a0b2" text-anchor="middle">结束整池回收 · palloc.c:47</text>
-  <rect x="516" y="828" width="222" height="56" rx="9" fill="#ffffff" stroke="#cfd6e0"/><text x="627" y="847" font-size="9.5" font-weight="600" fill="#33404f" text-anchor="middle">缓冲链零拷贝</text><text x="627" y="863" font-size="8.5" fill="#5a6b82" text-anchor="middle">chain 传引用不复制 body</text><text x="627" y="877" font-size="8" fill="#93a0b2" text-anchor="middle">file buf 走 sendfile · ngx_buf.h</text>
-  <rect x="750" y="828" width="222" height="56" rx="9" fill="#ffffff" stroke="#cfd6e0"/><text x="861" y="847" font-size="9.5" font-weight="600" fill="#33404f" text-anchor="middle">共享内存 slab</text><text x="861" y="863" font-size="8.5" fill="#5a6b82" text-anchor="middle">跨 worker 缓存/限流计数</text><text x="861" y="877" font-size="8" fill="#93a0b2" text-anchor="middle">core/ngx_slab.c</text>
+  <rect x="352" y="388" width="150" height="58" rx="9" fill="#e9f2ff" stroke="#a9ccf5" filter="url(#soft)" data-tid="Nginx原理_支撑_HTTP阶段处理"/>
+  <rect x="352" y="388" width="4" height="58" rx="2" fill="#0a84ff"/>
+  <text x="368" y="408" font-size="9.5" font-weight="700" fill="#0a3d78">11 阶段相位引擎</text>
+  <text x="366" y="424" font-size="8" fill="#4a7ab0">run_phases:884 · checker 驱动</text>
+  <text x="366" y="437" font-size="8" fill="#4a7ab0">POST_READ…ACCESS…CONTENT…LOG</text>
+
+  <rect x="516" y="388" width="144" height="58" rx="9" fill="#e9f2ff" stroke="#a9ccf5" data-tid="Nginx原理_支撑_HTTP阶段处理"/>
+  <rect x="516" y="388" width="4" height="58" rx="2" fill="#0a84ff"/>
+  <text x="532" y="408" font-size="9.5" font-weight="700" fill="#0a3d78">content handler</text>
+  <text x="530" y="424" font-size="8" fill="#4a7ab0">CONTENT 相位产内容</text>
+  <text x="530" y="437" font-size="8" fill="#4a7ab0">静态文件 / 反代 / 应用</text>
+
+  <rect x="674" y="388" width="150" height="58" rx="9" fill="#e9f2ff" stroke="#a9ccf5" filter="url(#soft)" data-tid="Nginx原理_支撑_模块体系"/>
+  <rect x="674" y="388" width="4" height="58" rx="2" fill="#0a84ff"/>
+  <text x="690" y="408" font-size="9.5" font-weight="700" fill="#0a3d78">header/body filter 双链</text>
+  <text x="688" y="424" font-size="8" fill="#4a7ab0">gzip/chunked/range 链式叠加</text>
+  <text x="688" y="437" font-size="8" fill="#4a7ab0">top_body_filter → write_filter</text>
+
+  <rect x="838" y="388" width="140" height="58" rx="9" fill="#e6f4f1" stroke="#b9dfd8" filter="url(#soft)" data-tid="Nginx原理_支撑_内存池与缓冲"/>
+  <rect x="838" y="388" width="4" height="58" rx="2" fill="#0f9e8e"/>
+  <text x="854" y="408" font-size="9.5" font-weight="700" fill="#0f6b5e">sendfile 零拷贝</text>
+  <text x="852" y="424" font-size="8" fill="#2f6f5f">linux_sendfile_chain:50</text>
+  <text x="852" y="437" font-size="8" fill="#2f6f5f">页缓存→socket 出</text>
+
+  <!-- upstream 支线（Hot 反代） -->
+  <rect x="352" y="470" width="308" height="70" rx="10" fill="#e9f2ff" stroke="#a9ccf5" filter="url(#soft)" data-tid="Nginx原理_支撑_upstream负载均衡"/>
+  <rect x="352" y="470" width="4" height="70" rx="2" fill="#0a84ff"/>
+  <text x="372" y="491" font-size="10.5" font-weight="700" fill="#0a3d78">upstream 反向代理支线（非阻塞连后端）</text>
+  <text x="370" y="509" font-size="8.5" fill="#2a5a92">connect:1563 → send_request → process_header:2451 → send_response:3268</text>
+  <text x="370" y="525" font-size="8.5" fill="#4a7ab0">平滑加权 RR（current_weight 累加取最大）· upstream_next:4591 故障切下一 peer</text>
+
+  <!-- SSL/TLS（Hot 前置） -->
+  <rect x="674" y="470" width="150" height="70" rx="10" fill="#eef0f3" stroke="#d2d6dd" data-tid="Nginx原理_支撑_SSL_TLS"/>
+  <rect x="674" y="470" width="4" height="70" rx="2" fill="#8a8a90"/>
+  <text x="690" y="491" font-size="10" font-weight="700" fill="#1d1d1f">SSL / TLS</text>
+  <text x="688" y="509" font-size="8.5" fill="#5b6470">握手事件回调驱动</text>
+  <text x="688" y="525" font-size="8.5" fill="#5b6470">终止加密 → 明文入相位</text>
+
+  <!-- 右 State 栏：内存池 + 缓存 + 限流 + 定时器 -->
+  <rect x="838" y="226" width="140" height="120" rx="11" fill="#e6f4f1" stroke="#b9dfd8" filter="url(#soft)" data-tid="Nginx原理_支撑_内存池与缓冲"/>
+  <rect x="838" y="226" width="4" height="120" rx="2" fill="#0f9e8e"/>
+  <text x="856" y="247" font-size="10.5" font-weight="700" fill="#0f6b5e">每请求内存池</text>
+  <text x="854" y="266" font-size="8.5" fill="#2f6f5f">create_pool:19</text>
+  <text x="854" y="281" font-size="8.5" fill="#2f6f5f">palloc 指针碰撞 O(1)</text>
+  <text x="854" y="296" font-size="8.5" fill="#2f6f5f">大块走 large 链</text>
+  <text x="854" y="316" font-size="8.5" fill="#2f6f5f">请求结束 destroy_pool</text>
+  <text x="854" y="330" font-size="8" fill="#4c8567">整体回收 · 免碎片</text>
+  <text x="976" y="240" font-size="9.5" fill="#0f9e8e" text-anchor="end" font-weight="600">State</text>
+
+  <rect x="838" y="470" width="140" height="70" rx="11" fill="#e6f4f1" stroke="#b9dfd8" data-tid="Nginx原理_支撑_代理缓存"/>
+  <rect x="838" y="470" width="4" height="70" rx="2" fill="#0f9e8e"/>
+  <text x="856" y="491" font-size="10" font-weight="700" fill="#0f6b5e">proxy cache</text>
+  <text x="854" y="509" font-size="8.5" fill="#2f6f5f">共享内存 rbtree 索引</text>
+  <text x="854" y="525" font-size="8.5" fill="#2f6f5f">响应体落磁盘 · 后台淘汰</text>
+
+  <rect x="674" y="560" width="150" height="66" rx="11" fill="#e6f4f1" stroke="#b9dfd8" data-tid="Nginx原理_支撑_日志与限流"/>
+  <rect x="674" y="560" width="4" height="66" rx="2" fill="#0f9e8e"/>
+  <text x="690" y="581" font-size="10" font-weight="700" fill="#0f6b5e">limit_req 限流 + 日志</text>
+  <text x="688" y="599" font-size="8.5" fill="#2f6f5f">leaky bucket · excess 衰减</text>
+  <text x="688" y="615" font-size="8.5" fill="#2f6f5f">跨 worker 共享内存 + shmtx</text>
+
+  <rect x="838" y="560" width="140" height="66" rx="11" fill="#e6f4f1" stroke="#b9dfd8" data-tid="Nginx原理_支撑_进程与事件模型"/>
+  <rect x="838" y="560" width="4" height="66" rx="2" fill="#0f9e8e"/>
+  <text x="856" y="581" font-size="10" font-weight="700" fill="#0f6b5e">定时器红黑树</text>
+  <text x="854" y="599" font-size="8.5" fill="#2f6f5f">取最左最近到期</text>
+  <text x="854" y="615" font-size="8.5" fill="#2f6f5f">= epoll_wait 超时 O(log n)</text>
+
+  <!-- 缓存/负载均衡 第二 tid（覆盖率：cache×2, upstream×2） -->
+  <rect x="352" y="560" width="308" height="66" rx="11" fill="#fdf2ea" stroke="#f0cdaa" filter="url(#soft)" data-tid="Nginx原理_支撑_代理缓存"/>
+  <rect x="352" y="560" width="4" height="66" rx="2" fill="#e8730f"/>
+  <text x="372" y="581" font-size="10" font-weight="700" fill="#8a4a12">缓存命中直接回吐 · upstream 二次分流</text>
+  <text x="370" y="599" font-size="8.5" fill="#a8641e">cache HIT → 免回源；MISS → upstream 取 + 落缓存</text>
+  <text x="370" y="615" font-size="8.5" fill="#b5793a" data-tid="Nginx原理_支撑_upstream负载均衡">peer 健康 → RR 均衡；失败 → next 重试其它后端</text>
+
+  <!-- 左下 Failure 栏 -->
+  <rect x="44" y="470" width="290" height="156" rx="12" fill="#fdf2ea" stroke="#f0cdaa" filter="url(#soft)"/>
+  <rect x="44" y="470" width="4" height="156" rx="2" fill="#e8730f"/>
+  <text x="64" y="491" font-size="10.5" font-weight="700" fill="#8a4a12">Failure · 故障与过载</text>
+  <text x="62" y="512" font-size="9" fill="#a8641e">worker 崩溃 → master reap 重生</text>
+  <text x="62" y="530" font-size="9" fill="#a8641e">后端失败 → upstream_next 切 peer</text>
+  <text x="62" y="548" font-size="9" fill="#a8641e">超时 → timer rbtree 触发 handler</text>
+  <text x="62" y="566" font-size="9" fill="#a8641e">过载 → accept_disabled + limit_req 拒</text>
+  <text x="62" y="590" font-size="9" font-weight="600" fill="#c0392b">⚠ 任一阻塞调用卡死整条 worker</text>
+  <text x="62" y="607" font-size="8.5" fill="#b5793a">磁盘/DNS/CPU 密集 → thread_pool / AIO 外移</text>
+  <text x="322" y="622" font-size="9.5" fill="#e8730f" text-anchor="end" font-weight="600">Failure Path</text>
+
+  <!-- ===================== 连线 五路径 ===================== -->
+  <!-- Control 紫虚：master → worker框；accept_mutex/config → 事件循环 -->
+  <g stroke="#7c5fe6" stroke-width="1.6" stroke-dasharray="6 4" fill="none">
+    <path d="M510,168 L510,224" marker-end="url(#aCtl)"/>
+    <path d="M194,286 L358,262" marker-end="url(#aCtl)"/>
+  </g>
+  <text x="518" y="184" font-size="8" fill="#7c5fe6">HUP/USR2 管控</text>
+  <text x="200" y="250" font-size="8" fill="#7c5fe6">抢锁才监听</text>
+
+  <!-- clients → worker（Hot 入） -->
+  <line x1="300" y1="102" x2="420" y2="186" stroke="#0a84ff" stroke-width="2.2" fill="none" marker-end="url(#aHot)"/>
+
+  <!-- 事件循环 → accept+解析（Hot 下钻主轨） -->
+  <line x1="420" y1="292" x2="360" y2="388" stroke="#0a84ff" stroke-width="2.2" fill="none" marker-end="url(#aHot)"/>
+
+  <!-- Hot 横向流水线 -->
+  <g stroke="#0a84ff" stroke-width="2.2" fill="none">
+    <line x1="338" y1="417" x2="350" y2="417" marker-end="url(#aHot)"/>
+    <line x1="502" y1="417" x2="514" y2="417" marker-end="url(#aHot)"/>
+    <line x1="660" y1="417" x2="672" y2="417" marker-end="url(#aHot)"/>
+    <line x1="824" y1="417" x2="836" y2="417" marker-end="url(#aHot)"/>
+  </g>
+
+  <!-- content → upstream 支线（Hot） -->
+  <line x1="540" y1="446" x2="500" y2="470" stroke="#0a84ff" stroke-width="1.8" fill="none" marker-end="url(#aHot)"/>
+
+  <!-- State 青：内存池/定时器 服务事件循环 -->
+  <g stroke="#0f9e8e" stroke-width="1.6" fill="none">
+    <line x1="836" y1="286" x2="662" y2="262" marker-end="url(#aState)"/>
+    <path d="M908,560 L908,470" marker-end="url(#aState)"/>
+  </g>
+  <text x="690" y="278" font-size="8" fill="#0f9e8e">池/缓冲服务请求</text>
+
+  <!-- Failure 橙虚：worker → master reap 回环 -->
+  <path d="M60,470 L60,168" stroke="#e8730f" stroke-width="1.6" stroke-dasharray="3 3" fill="none" marker-end="url(#aFail)"/>
+  <text x="66" y="200" font-size="8" fill="#e8730f">崩溃 → master 重生</text>
+
+  <!-- ===== 底部 铭牌：设计张力 + 五路径图例 ===== -->
+  <rect x="24" y="716" width="972" height="60" rx="11" fill="#f4f5f7" stroke="#e6e6eb"/>
+  <text x="44" y="738" font-size="10.5" font-weight="700" fill="#1d1d1f">核心设计张力 · 单线程 worker 全异步非阻塞换 C10K 高并发（纪律：绝不阻塞）</text>
+  <text x="44" y="758" font-size="9" fill="#5b6470">任一同步磁盘/DNS/CPU 密集调用都会卡死整条 worker → thread_pool/AIO 外移。次级：master-worker 隔离换零停机热重载，共享状态(accept_mutex/cache/limit_req)靠 shmem+锁协调。</text>
+
+  <g font-size="9.5" fill="#5b6470">
+    <line x1="560" y1="730" x2="586" y2="730" stroke="#0a84ff" stroke-width="2.2"/><text x="592" y="733">Hot 请求主轨</text>
+    <line x1="700" y1="730" x2="726" y2="730" stroke="#0f9e8e" stroke-width="1.6"/><text x="732" y="733">State 池/缓存/定时</text>
+    <line x1="560" y1="750" x2="586" y2="750" stroke="#7c5fe6" stroke-width="1.6" stroke-dasharray="6 4"/><text x="592" y="753">Control 信号/锁/配置</text>
+    <line x1="700" y1="750" x2="726" y2="750" stroke="#e8730f" stroke-width="1.6" stroke-dasharray="3 3"/><text x="732" y="753">Failure 崩溃/切后端</text>
+    <text x="860" y="740" font-size="8.5" fill="#a1a1a6">Opt：EPOLLET · 防惊群 · 内存池碰撞 · sendfile · 加权 RR</text>
+  </g>
 </svg>

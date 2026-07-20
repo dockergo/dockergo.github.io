@@ -1,6 +1,6 @@
 # Kubernetes 核心原理 · 全景主线框架
 
-> **定位**：家族 3（编排 / 控制平面）范例。全库总纲——用"接触面 × 能力域 × 执行时机"三维把 K8s 拆成可导航的主线，并点出灵魂：**声明式期望态 + reconcile 控制循环让实际状态持续向期望收敛**。核实基准（pin：kubernetes `v1.32.0`，因超大仓浅克隆超时，改用 `raw.githubusercontent.com` 按 tag 定向抓核心 Go 文件 `grep -n`）：`pkg/controller/deployment/deployment_controller.go`、`staging/src/k8s.io/client-go/tools/cache/shared_informer.go`、`staging/src/k8s.io/apiserver/pkg/server/config.go`。
+> **定位**：家族 3（编排 / 控制平面）范例。全库总纲——用"接触面 × 能力域 × 执行时机"三维把 K8s 拆成可导航的主线，并点出灵魂：**声明式期望态 + reconcile 控制循环让实际状态持续向期望收敛**。核实基准（pin：kubernetes `v1.32.0`，本地 blobless 全量克隆 `git clone --filter=blob:none --branch v1.32.0` 后按 `grep -n` 逐处核实行号）：`pkg/controller/deployment/deployment_controller.go`、`staging/src/k8s.io/client-go/tools/cache/shared_informer.go`、`staging/src/k8s.io/apiserver/pkg/server/config.go`、`pkg/scheduler/schedule_one.go`、`pkg/kubelet/kubelet.go`。
 
 ## 一、双维模型：接触面 × 能力域
 
@@ -12,13 +12,13 @@ K8s 的外部**接触面**只有一个：**声明式 API 资源**——用户经
 
 ![总架构](Kubernetes原理_全景_02总架构.svg)
 
-**控制面（Control Plane）**：`kube-apiserver` 是唯一读写 etcd 的组件、所有交互的枢纽（REST + watch）；`etcd` 存全量声明态；`kube-controller-manager` 内嵌几十个控制器（Deployment/ReplicaSet/Node/GC…），各跑 reconcile 循环；`kube-scheduler` 只做一件事——给未绑定的 Pod 选节点。**节点面（Node）**：`kubelet` 在每台机器上把"分给我的 Pod"变成真实容器（经 CRI 调 containerd）；`kube-proxy` 把 Service 抽象落成本机转发规则（iptables/IPVS）。**关键约束**：组件间**不直接互相调用**，全部经 API Server 读写对象、经 watch 收变更——这是 K8s 松耦合、可扩展的根基。控制器发现"期望≠实际"就动作，动作又写回对象，触发新一轮 watch。
+**控制面（Control Plane）**：`kube-apiserver` 是唯一读写 etcd 的组件、所有交互的枢纽（REST + watch，写请求过滤器链见 `staging/src/k8s.io/apiserver/pkg/server/config.go:1004` 的 `DefaultBuildHandlerChain`）；`etcd` 存全量声明态（REST 存储 `.../registry/generic/registry/store.go:446` Create / :617 Update）；`kube-controller-manager` 内嵌几十个控制器（Deployment/ReplicaSet/Node/GC…，注册于 `cmd/kube-controller-manager/app/controllermanager.go:495`），各跑 reconcile 循环；`kube-scheduler` 只做一件事——给未绑定的 Pod 选节点（`pkg/scheduler/schedule_one.go:411` schedulePod）。**节点面（Node）**：`kubelet` 在每台机器上把"分给我的 Pod"变成真实容器（`pkg/kubelet/kubelet.go:2387` syncLoop，经 CRI 调 containerd）；`kube-proxy` 把 Service 抽象落成本机转发规则（`pkg/proxy/iptables/proxier.go:799` syncProxyRules，iptables/IPVS）。**关键约束**：组件间**不直接互相调用**，全部经 API Server 读写对象、经 watch 收变更——这是 K8s 松耦合、可扩展的根基。控制器发现"期望≠实际"就动作，动作又写回对象，触发新一轮 watch。
 
 ## 三、贯穿主线：reconcile 控制循环（灵魂）
 
 ![reconcile贯穿环](Kubernetes原理_全景_03reconcile贯穿环.svg)
 
-**一切控制器都是同一个骨架**：`Informer` 经 Watch 把对象缓存到本地 `Indexer`（`shared_informer.go` Run:471 建 `DeltaFIFO`、Process:486 交 `HandleDeltas`），事件只是**唤醒**——把对象 key 塞进 `workqueue`（`deployment_controller.go` enqueue）；worker 从队列取 key（processNextWorkItem:487，`queue.Get`:488），调 `syncHandler`（:494，即 `syncDeployment`:590）；syncHandler 读缓存里的**当前完整状态**、对比 `spec`、执行差异动作、写回 API Server；出错经 `handleErr`（:500）按指数退避 `AddRateLimited` 重入队（`maxRetries=15`:58），成功则 `Forget`。这叫 **level-triggered（水平触发）**：不关心"发生了什么事件"，只关心"现在和期望差多少"——丢事件不致命，下次 resync（`minimumResyncPeriod=1s`:579）会全量重算。这条环横切所有能力域，是 K8s 自愈、最终一致的本质。
+**一切控制器都是同一个骨架**：`Informer` 经 Watch 把对象缓存到本地 `Indexer`（`shared_informer.go:459` Run 内建 `DeltaFIFO`（shared_informer.go:471）、`Process: s.HandleDeltas`（shared_informer.go:486）→ `HandleDeltas`（shared_informer.go:638）），事件只是**唤醒**——把对象 key 塞进 `workqueue`（`deployment_controller.go:400` enqueue）；worker 从队列取 key（`deployment_controller.go:487` processNextWorkItem、`queue.Get`:488），调 `syncHandler`（deployment_controller.go:494，即 `syncDeployment`:590）；syncHandler 读缓存里的**当前完整状态**、对比 `spec`、执行差异动作、写回 API Server；出错经 `handleErr`（deployment_controller.go:500）按指数退避 `AddRateLimited` 重入队（`maxRetries=15`，deployment_controller.go:58/:511），成功则 `Forget`。这叫 **level-triggered（水平触发）**：不关心"发生了什么事件"，只关心"现在和期望差多少"——丢事件不致命，下次 resync（`minimumResyncPeriod=1s`，shared_informer.go:579）会全量重算。这条环横切所有能力域，是 K8s 自愈、最终一致的本质。
 
 ## 四、依赖矩阵：接触面 × 能力域
 

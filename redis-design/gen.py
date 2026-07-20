@@ -87,24 +87,49 @@ CAT_ORDER = [("pano", "全景"), ("iface", "接触面主线 · 数据类型命�
 # 落地页 = design/Redis原理_全景_02总架构.svg(base64 内联),其上覆盖透明 .arch-hot 按钮;
 # 点某模块 → 复用 sel(key) 打开对应主题面板。未在图上直接标注的主题走 .arch-chip 兜底。
 _ARCH_SVG = "Redis原理_全景_02总架构.svg"
-_ARCH_VBW, _ARCH_VBH = 1080, 640  # 总架构 SVG viewBox(无 <g transform>,坐标→百分比直接换算,无偏移)
 
-# (x, y, w, h, key):矩形坐标取自该 SVG 的模块 <rect>,key = 该模块所属主题
-_ARCH_HOTSPOTS = [
-    (30, 146, 1020, 90, "net"),      # 接入层整条 · 单线程事件循环(ae/RESP/命令表/call/IO 线程)
-    (46, 284, 300, 76, "object"),    # 键空间 dict:key → redisObject(对象与编码)
-    (374, 312, 100, 38, "string"),   # String
-    (484, 312, 100, 38, "hash"),     # Hash/Set 编码
-    (594, 312, 100, 38, "list"),     # List
-    (704, 312, 110, 38, "setzset"),  # ZSet
-    (824, 312, 100, 38, "setzset"),  # Set(int) —— 同属 Set/ZSet 集合主题
-    (934, 312, 90, 38, "stream"),    # Stream
-    (46, 420, 230, 70, "mem"),       # 内存管理 · 过期与淘汰
-    (286, 420, 230, 38, "rdb"),      # 持久化(上半)· RDB
-    (286, 458, 230, 32, "aof"),      # 持久化(下半)· AOF
-    (526, 420, 230, 70, "repl"),     # 复制
-    (766, 420, 270, 70, "cluster"),  # 集群与高可用
-]
+
+def _design_text(name):
+    """读取 design/ 下文件的原始文本(缺文件→空串,不炸全局)。"""
+    path = os.path.join(DESIGN_DIR, name)
+    if not os.path.isfile(path):
+        return ""
+    with open(path, encoding="utf-8") as f:
+        return f.read()
+
+
+# 架构热区从总架构 SVG 的 data-tid 矩形自动派生(SVG = 唯一真源,消除双真源漂移)。
+# 每条热区 = (x, y, w, h, key, lab):坐标取自带 data-tid 的 <rect>,key = data-tid = 所属主题。
+import re as _re_hot
+import xml.etree.ElementTree as _ET_hot
+
+
+def _parse_arch_hotspots(svg_text):
+    vb = _re_hot.search(r'viewBox="[\d.]+\s+[\d.]+\s+([\d.]+)\s+([\d.]+)"', svg_text or "")
+    if not vb:
+        return [], 1080.0, 640.0
+    vbw, vbh = float(vb.group(1)), float(vb.group(2))
+    root = _ET_hot.fromstring(svg_text)
+    hots = []
+
+    def walk(el, dx, dy):
+        m = _re_hot.search(r'translate\(\s*([-\d.]+)(?:[,\s]+([-\d.]+))?', el.get("transform") or "")
+        if m:
+            dx += float(m.group(1))
+            if m.group(2):
+                dy += float(m.group(2))
+        if el.tag.rsplit("}", 1)[-1] == "rect" and el.get("data-tid"):
+            hots.append((float(el.get("x", 0)) + dx, float(el.get("y", 0)) + dy,
+                         float(el.get("width", 0)), float(el.get("height", 0)),
+                         el.get("data-tid"), el.get("data-lab") or ""))
+        for c in el:
+            walk(c, dx, dy)
+
+    walk(root, 0.0, 0.0)
+    return hots, vbw, vbh
+
+
+_ARCH_HOTSPOTS, _ARCH_VBW, _ARCH_VBH = _parse_arch_hotspots(_design_text(_ARCH_SVG))
 
 
 def _build_arch_nav():
@@ -113,14 +138,14 @@ def _build_arch_nav():
         return (f'<div class="missing">缺架构图:{_ARCH_SVG}</div>', "")
     label = {t["key"]: t["label"] for t in THEMES}
     hs = []
-    for (x, y, w, h, key) in _ARCH_HOTSPOTS:
+    for (x, y, w, h, key, _lab) in _ARCH_HOTSPOTS:
         lab = _html_escape(label.get(key, key))
         hs.append(
             '<button class="arch-hot" style="left:{lp:.4f}%;top:{tp:.4f}%;width:{wp:.4f}%;height:{hp:.4f}%" '
             'data-k="{k}" title="{lab}"><span class="arch-hot-lab">{lab}</span></button>'.format(
                 lp=x / _ARCH_VBW * 100, tp=y / _ARCH_VBH * 100,
                 wp=w / _ARCH_VBW * 100, hp=h / _ARCH_VBH * 100, k=key, lab=lab))
-    depicted = {key for (_, _, _, _, key) in _ARCH_HOTSPOTS}
+    depicted = {t[4] for t in _ARCH_HOTSPOTS}
     chips = [
         '<button class="arch-chip" data-k="{k}">{lab}</button>'.format(k=t["key"], lab=_html_escape(t["label"]))
         for t in THEMES if t["key"] not in depicted
@@ -338,14 +363,15 @@ html:not([data-theme="light"]) .arch-img{filter:invert(.9) hue-rotate(180deg) sa
 .hgroup{display:inline-flex;align-items:center;gap:12px}
 .homelink{display:inline-flex;align-items:center;margin-right:10px;text-decoration:none;color:var(--c-ink2)}
 .homelink:hover{color:var(--c-brand)}
-.homeico{display:inline-flex}
+.homeico{display:inline-grid;place-items:center;width:38px;height:38px;border-radius:50%;border:1px solid var(--c-line);background:var(--c-panel);color:var(--c-ink2);transition:color .15s}.msearch{position:relative;display:flex;align-items:center;gap:8px;width:min(280px,32vw);padding:0 12px;height:38px;border-radius:19px;border:1px solid var(--c-line);background:var(--c-panel);color:var(--c-ink2);margin-right:12px}.msearch svg{flex:none;opacity:.7}.msearch input{flex:1;border:0;background:transparent;color:var(--c-ink);outline:0;font-size:13px}.msearch kbd{flex:none;font:600 11px monospace;color:var(--c-ink3);border:1px solid var(--c-line);border-radius:5px;padding:1px 6px}.mq-list{position:absolute;top:44px;right:0;width:min(320px,80vw);z-index:60;background:var(--c-panel);border:1px solid var(--c-line);border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.28);overflow:hidden;display:none}.mq-list.on{display:block}.mq-item{display:block;width:100%;text-align:left;border:0;background:transparent;cursor:pointer;padding:9px 14px;color:var(--c-ink);font-size:13px;border-bottom:1px solid var(--c-line)}.mq-item:last-child{border-bottom:0}.mq-item:hover,.mq-item.sel{background:var(--c-hover,rgba(120,120,140,.14))} a:hover .homeico,.logo:hover .homeico,.homelink:hover .homeico{color:var(--c-brand);border-color:var(--c-brand)}
+.nn-n{fill:var(--c-ink2)}.nn-h{fill:var(--c-brand)}.nn-e{stroke:var(--c-line);stroke-width:1.4}
 .back-portal{display:inline-flex;align-items:center;padding:7px 14px;border-radius:9px;border:1px solid var(--c-line);background:var(--c-panel);color:var(--c-ink2);font-size:12.5px;font-weight:500;text-decoration:none;flex:none}
 .back-portal:hover{border-color:var(--c-brand);color:var(--c-brand)}
 </style></head><body>
 <header>
-  <a class="homelink" href="../index.html" title="返回导航主页"><span class="homeico" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg></span></a><span class="brand">Redis 原理<span class="dim">内存数据结构存储图谱</span></span>
+  <a class="homelink" href="../index.html" title="返回导航主页"><span class="homeico" aria-hidden="true" style="width:38px;height:38px;border-radius:50%;border:1px solid var(--c-line);background:var(--c-panel);color:var(--c-ink2);display:inline-grid;place-items:center;text-decoration:none"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg></span></a><div class="brand-intro" style="display:flex;flex-direction:column;align-items:flex-start;margin-left:12px;min-width:0;max-width:min(60vw,760px)"><div style="font-size:15px;font-weight:600;color:var(--c-ink);line-height:1.3">Redis · 核心原理图谱</div><span style="margin-top:3px;font-size:11.5px;color:var(--c-ink3);line-height:1.5;text-align:left">内存数据结构存储:单线程事件循环处理命令,对象编码随规模自适应,RDB/AOF 持久化,主从 + 集群分片。</span></div>
   <span class="hgroup">
-  <a href="https://github.com/redis/redis" target="_blank" rel="noopener" title="GitHub 源码仓库" style="display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:9px;border:1px solid var(--c-line);color:var(--c-ink2);text-decoration:none;margin-right:8px"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.7.5.5 5.7.5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.2.8-.6v-2c-3.2.7-3.9-1.4-3.9-1.4-.5-1.3-1.3-1.7-1.3-1.7-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.7 1.3 3.4 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.8 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.3 1.2a11.4 11.4 0 0 1 6 0C17.3 4.7 18.3 5 18.3 5c.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.5-2.7 5.5-5.3 5.8.4.4.8 1.1.8 2.2v3.3c0 .4.2.7.8.6 4.6-1.5 7.9-5.8 7.9-10.9C23.5 5.7 18.3.5 12 .5z"/></svg></a><a href="https://redis.io" target="_blank" rel="noopener" title="项目官网" style="display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:9px;border:1px solid var(--c-line);color:var(--c-ink2);text-decoration:none;margin-right:8px"><img src="data:image/svg+xml;base64,PHN2ZyBmaWxsPSIjRkY0NDM4IiByb2xlPSJpbWciIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48dGl0bGU+UmVkaXM8L3RpdGxlPjxwYXRoIGQ9Ik0yMi43MSAxMy4xNDVjLTEuNjYgMi4wOTItMy40NTIgNC40ODMtNy4wMzggNC40ODMtMy4yMDMgMC00LjM5Ny0yLjgyNS00LjQ4LTUuMTIuNzAxIDEuNDg0IDIuMDczIDIuNjg1IDQuMjE0IDIuNjMgNC4xMTctLjEzMyA2Ljk0LTMuODUyIDYuOTQtNy4yMzkgMC00LjA1LTMuMDIyLTYuOTcyLTguMjY4LTYuOTcyLTMuNzUyIDAtOC40IDEuNDI4LTExLjQ1NSAzLjY4NUMyLjU5IDYuOTM3IDMuODg1IDkuOTU4IDQuMzUgOS42MjZjMi42NDgtMS45MDQgNC43NDgtMy4xMyA2Ljc4NC0zLjc0NEM4LjEyIDkuMjQ0Ljg4NiAxNy4wNSAwIDE4LjQyNWMuMSAxLjI2MSAxLjY2IDQuNjQ4IDIuNDI0IDQuNjQ4LjIzMiAwIC40MzEtLjEzMy42NjQtLjM2NWExMDAuNDkgMTAwLjQ5IDAgMCAwIDUuNTQtNi43NjVjLjIyMiAzLjEwNCAxLjc0OCA2Ljg5OCA2LjAxNCA2Ljg5OCAzLjgxOSAwIDcuNjA0LTIuNzU2IDkuMzMtOC45NjUuMi0uNzY0LS43My0xLjM2MS0xLjI2MS0uNzN6bS00LjM0OS01LjAxM2MwIDEuOTU5LTEuOTI2IDIuOTIyLTMuNjg1IDIuOTIyLS45NDEgMC0xLjY2NC0uMjQ3LTIuMjM1LS41NjggMS4wNTEtMS41OTIgMi4wOTItMy4yMjUgMy4yMS00Ljk3MyAxLjk3Mi4zMzQgMi43MSAxLjQzIDIuNzEgMi42MTl6Ii8+PC9zdmc+" width="18" height="18" alt="官网" style="display:block"/></a><button class="theme-toggle" id="tt" aria-label="切换主题">☾</button></span>
+  <a href="https://github.com/redis/redis" target="_blank" rel="noopener" title="GitHub 源码仓库" style="display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:50%;border:1px solid var(--c-line);color:var(--c-ink2);text-decoration:none;margin-right:8px"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.7.5.5 5.7.5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.2.8-.6v-2c-3.2.7-3.9-1.4-3.9-1.4-.5-1.3-1.3-1.7-1.3-1.7-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.7 1.3 3.4 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.8 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.3 1.2a11.4 11.4 0 0 1 6 0C17.3 4.7 18.3 5 18.3 5c.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.5-2.7 5.5-5.3 5.8.4.4.8 1.1.8 2.2v3.3c0 .4.2.7.8.6 4.6-1.5 7.9-5.8 7.9-10.9C23.5 5.7 18.3.5 12 .5z"/></svg></a><a href="https://redis.io" target="_blank" rel="noopener" title="项目官网" style="display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:50%;border:1px solid var(--c-line);color:var(--c-ink2);text-decoration:none;margin-right:8px"><img src="data:image/svg+xml;base64,PHN2ZyBmaWxsPSIjRkY0NDM4IiByb2xlPSJpbWciIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48dGl0bGU+UmVkaXM8L3RpdGxlPjxwYXRoIGQ9Ik0yMi43MSAxMy4xNDVjLTEuNjYgMi4wOTItMy40NTIgNC40ODMtNy4wMzggNC40ODMtMy4yMDMgMC00LjM5Ny0yLjgyNS00LjQ4LTUuMTIuNzAxIDEuNDg0IDIuMDczIDIuNjg1IDQuMjE0IDIuNjMgNC4xMTctLjEzMyA2Ljk0LTMuODUyIDYuOTQtNy4yMzkgMC00LjA1LTMuMDIyLTYuOTcyLTguMjY4LTYuOTcyLTMuNzUyIDAtOC40IDEuNDI4LTExLjQ1NSAzLjY4NUMyLjU5IDYuOTM3IDMuODg1IDkuOTU4IDQuMzUgOS42MjZjMi42NDgtMS45MDQgNC43NDgtMy4xMyA2Ljc4NC0zLjc0NEM4LjEyIDkuMjQ0Ljg4NiAxNy4wNSAwIDE4LjQyNWMuMSAxLjI2MSAxLjY2IDQuNjQ4IDIuNDI0IDQuNjQ4LjIzMiAwIC40MzEtLjEzMy42NjQtLjM2NWExMDAuNDkgMTAwLjQ5IDAgMCAwIDUuNTQtNi43NjVjLjIyMiAzLjEwNCAxLjc0OCA2Ljg5OCA2LjAxNCA2Ljg5OCAzLjgxOSAwIDcuNjA0LTIuNzU2IDkuMzMtOC45NjUuMi0uNzY0LS43My0xLjM2MS0xLjI2MS0uNzN6bS00LjM0OS01LjAxM2MwIDEuOTU5LTEuOTI2IDIuOTIyLTMuNjg1IDIuOTIyLS45NDEgMC0xLjY2NC0uMjQ3LTIuMjM1LS41NjggMS4wNTEtMS41OTIgMi4wOTItMy4yMjUgMy4yMS00Ljk3MyAxLjk3Mi4zMzQgMi43MSAxLjQzIDIuNzEgMi42MTl6Ii8+PC9zdmc+" width="18" height="18" alt="官网" style="display:block"/></a><label class="msearch"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input id="mq" type="text" placeholder="搜索模块 / 主线…" autocomplete="off" aria-label="搜索模块"/><kbd>/</kbd><div id="mqlist" class="mq-list"></div></label><button class="theme-toggle" id="tt" aria-label="切换主题">☾</button></span>
 </header>
 <nav class="crumb" id="crumb">
   <button class="crumb-home" id="crumbHome">← 总架构图</button>
@@ -364,7 +390,7 @@ html:not([data-theme="light"]) .arch-img{filter:invert(.9) hue-rotate(180deg) sa
 </section>
 <main id="main">__PANELS__</main>
 <script>
-(function(){ var KEY="redis-atlas-theme", r=document.documentElement;
+(function(){ var KEY="atlas-nav-theme", r=document.documentElement;
   function apply(t){ if(t==="light") r.setAttribute("data-theme","light"); else r.removeAttribute("data-theme"); }
   var s="dark"; try{ s=localStorage.getItem(KEY)||"dark"; }catch(e){} apply(s);
   document.getElementById("tt").onclick=function(){
@@ -398,6 +424,46 @@ html:not([data-theme="light"]) .arch-img{filter:invert(.9) hue-rotate(180deg) sa
   var h=location.hash.replace("#","");
   if(h && panels.some(function(p){return p.dataset.k===h;})) sel(h); else showHome();
 })();
+
+/* 模块搜索(DOM-scrape 通用法:读现有 nav 项,过滤后 dispatch click) */
+(function(){
+  var mq=document.getElementById('mq'), list=document.getElementById('mqlist');
+  if(!mq||!list) return;
+  function items(){
+    return [].slice.call(document.querySelectorAll('[data-k]')).map(function(el){
+      var lab=(el.getAttribute('title')||el.textContent||'').trim().replace(/\s+/g,' ');
+      return {el:el, lab:lab};
+    }).filter(function(x){return x.lab && x.lab.length<40;});
+  }
+  var sel=-1, cur=[];
+  function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  function render(){
+    var q=mq.value.trim().toLowerCase();
+    var seen={};
+    cur = !q ? [] : items().filter(function(x){
+      if(seen[x.lab])return false; if(x.lab.toLowerCase().indexOf(q)<0)return false; seen[x.lab]=1; return true;
+    }).slice(0,8);
+    if(!cur.length){ list.className='mq-list'; list.innerHTML=''; return; }
+    sel=0;
+    list.innerHTML=cur.map(function(x,i){return '<button class="mq-item'+(i===0?' sel':'')+'" data-i="'+i+'">'+esc(x.lab)+'</button>';}).join('');
+    list.className='mq-list on';
+  }
+  function go(i){ mq.value=''; list.className='mq-list'; list.innerHTML=''; if(cur[i]) cur[i].el.click(); window.scrollTo(0,0); }
+  mq.addEventListener('input',render);
+  mq.addEventListener('keydown',function(e){
+    if(!cur.length){ if(e.key==='Escape') mq.blur(); return; }
+    if(e.key==='ArrowDown'){e.preventDefault();sel=(sel+1)%cur.length;}
+    else if(e.key==='ArrowUp'){e.preventDefault();sel=(sel-1+cur.length)%cur.length;}
+    else if(e.key==='Enter'){e.preventDefault();go(sel);return;}
+    else if(e.key==='Escape'){list.className='mq-list';mq.blur();return;}
+    else return;
+    [].forEach.call(list.children,function(el,i){el.className='mq-item'+(i===sel?' sel':'');});
+  });
+  list.addEventListener('click',function(e){var b=e.target.closest('.mq-item'); if(b) go(+b.dataset.i);});
+  document.addEventListener('keydown',function(e){ if(e.key==='/'&&document.activeElement!==mq){e.preventDefault();mq.focus();} });
+  document.addEventListener('click',function(e){ if(!e.target.closest('.msearch')){list.className='mq-list';} });
+})();
+
 </script></body></html>
 """
 

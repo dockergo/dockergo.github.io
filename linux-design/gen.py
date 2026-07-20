@@ -827,42 +827,33 @@ _THEME_BY_ID = {th["id"]: th for th in THEMES}
 # 热区坐标取自 SVG 各模块 rect;SVG 主体包在 <g transform="translate(0,70)"> 内,
 # 故除“外部数据生态/接入层”外的模块 y 需 +70 才是根坐标。viewBox 1080×850。
 import base64 as _b64
-_ARCH_SVG_B64 = open(
+_ARCH_SVG_TEXT = open(
     os.path.join(_DESIGN_DIR, "Linux原理_全景_02总架构.svg"),
     encoding="utf-8").read()
-_ARCH_SVG_B64 = _b64.b64encode(_ARCH_SVG_B64.encode("utf-8")).decode("ascii")
+_ARCH_SVG_B64 = _b64.b64encode(_ARCH_SVG_TEXT.encode("utf-8")).decode("ascii")
 
-# (x, y, w, h, theme_id, 标签)  y 已加上 +70 组偏移
-_ARCH_HOTSPOTS = [
-    # Linux 总架构 SVG:viewBox 1000×500,无 <g translate> 偏移,坐标直接取自各模块 rect。
-    # 内部 theme tid ↔ Linux 子系统:qlife=系统调用接触面, opttech=进程调度, compaction=网络,
-    # storageformat=虚拟内存, transaction=VFS, metadata=块层, workload=中断, tabletsched=同步,
-    # load=cgroup, schemachange=设备驱动。
-    # 用户态 + 系统调用带(rect y=48/108)→ 系统调用接触面
-    (30,  48,  880, 100, "qlife",         "系统调用接触面"),
-    # 进程调度(rect x=48 y=188 w=400)
-    (48,  188, 400, 42,  "opttech",       "进程调度"),
-    # 网络协议栈(rect x=492 y=188 w=400)
-    (492, 188, 400, 42,  "compaction",    "网络协议栈"),
-    # 虚拟内存(rect x=48 y=238 w=256)
-    (48,  238, 256, 42,  "storageformat", "虚拟内存"),
-    # VFS 与文件系统(rect x=318 y=238 w=256)
-    (318, 238, 256, 42,  "transaction",   "VFS 文件系统"),
-    # 块层与 IO(rect x=588 y=238 w=304)
-    (588, 238, 304, 42,  "metadata",      "块层 IO"),
-    # 中断与软中断(rect x=48 y=288 w=256)
-    (48,  288, 256, 42,  "workload",      "中断与软中断"),
-    # 同步原语(rect x=318 y=288 w=256)
-    (318, 288, 256, 42,  "tabletsched",   "同步原语"),
-    # cgroup 与 namespace(rect x=588 y=288 w=304)
-    (588, 288, 304, 42,  "load",          "cgroup 与 namespace"),
-    # 设备驱动(rect x=30 y=388 w=880)
-    (30,  388, 880, 38,  "schemachange",  "设备驱动模型"),
-]
+# --- 架构热区改为从总架构 SVG 的 data-tid 派生（单一真源，避免坐标漂移）---
+import re as _re_hot, xml.etree.ElementTree as _ET_hot
+def _parse_arch_hotspots(svg_text):
+    vb=_re_hot.search(r'viewBox="[\d.]+\s+[\d.]+\s+([\d.]+)\s+([\d.]+)"',svg_text)
+    vbw,vbh=float(vb.group(1)),float(vb.group(2))
+    root=_ET_hot.fromstring(svg_text); hots=[]
+    def walk(el,dx,dy):
+        m=_re_hot.search(r'translate\(\s*([-\d.]+)(?:[,\s]+([-\d.]+))?',el.get("transform") or "")
+        if m:
+            dx+=float(m.group(1))
+            if m.group(2): dy+=float(m.group(2))
+        if el.tag.rsplit("}",1)[-1]=="rect" and el.get("data-tid"):
+            hots.append((float(el.get("x",0))+dx,float(el.get("y",0))+dy,float(el.get("width",0)),float(el.get("height",0)),el.get("data-tid"),el.get("data-lab") or ""))
+        for c in el: walk(c,dx,dy)
+    walk(root,0.0,0.0); return hots,vbw,vbh
+
+# 热区从总架构 SVG 的 data-tid/data-lab 派生（tuple 为 6 元 (x,y,w,h,tid,lab)）
+_ARCH_HOTSPOTS, _ARCH_VBW, _ARCH_VBH = _parse_arch_hotspots(_ARCH_SVG_TEXT)
 _arch_hotspots_html = "\n".join(
     '<button class="arch-hot" style="left:{lp:.4f}%;top:{tp:.4f}%;width:{wp:.4f}%;height:{hp:.4f}%" '
     'data-theme-id="{tid}" title="{lab} → {ttitle}"><span class="arch-hot-lab">{lab}</span></button>'.format(
-        lp=x/1000*100, tp=y/500*100, wp=w/1000*100, hp=h/500*100,
+        lp=x/_ARCH_VBW*100, tp=y/_ARCH_VBH*100, wp=w/_ARCH_VBW*100, hp=h/_ARCH_VBH*100,
         tid=tid, lab=lab, ttitle=_THEME_BY_ID[tid]["title"])
     for (x, y, w, h, tid, lab) in _ARCH_HOTSPOTS)
 
@@ -2426,11 +2417,12 @@ body{background:var(--c-bg)}
 header{padding:16px 30px 14px;border-bottom:1px solid var(--c-line);display:flex;align-items:center;justify-content:space-between;
   background:color-mix(in srgb, var(--c-bg2) 82%, transparent);backdrop-filter:saturate(180%) blur(24px);-webkit-backdrop-filter:saturate(180%) blur(24px)}
 .theme-toggle{width:38px;height:38px;border-radius:50%;border:1px solid var(--c-line);background:var(--c-panel);
-  color:var(--c-ink2);cursor:pointer;display:grid;place-items:center;font-size:16px;transition:all .2s ease;flex-shrink:0}
+  color:var(--c-ink2);cursor:pointer;display:grid;place-items:center;font-size:16px;transition:all .2s ease;flex-shrink:0}.msearch{position:relative;display:flex;align-items:center;gap:8px;width:min(300px,34vw);padding:0 12px;height:38px;border-radius:19px;border:1px solid var(--c-line);background:var(--c-panel);color:var(--c-ink2);margin-left:auto;margin-right:12px}.msearch svg{flex:none;opacity:.7}.msearch input{flex:1;border:0;background:transparent;color:var(--c-ink);outline:0;font-size:13px}.msearch kbd{flex:none;font:600 11px var(--mono,monospace);color:var(--c-ink3);border:1px solid var(--c-line);border-radius:5px;padding:1px 6px}.mq-list{position:absolute;top:44px;left:0;right:0;z-index:60;background:var(--c-panel);border:1px solid var(--c-line);border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.28);overflow:hidden;display:none}.mq-list.on{display:block}.mq-item{display:block;width:100%;text-align:left;border:0;background:transparent;cursor:pointer;padding:9px 14px;color:var(--c-ink);font-size:13px;border-bottom:1px solid var(--c-line)}.mq-item:last-child{border-bottom:0}.mq-item:hover,.mq-item.sel{background:var(--c-hover,rgba(120,120,140,.14))}.mq-item .s{display:block;color:var(--c-ink3);font-size:11px;margin-top:2px}
 .theme-toggle:hover{border-color:var(--c-ink3);color:var(--c-ink);background:var(--c-hover)}
 .homeico{display:inline-flex;color:var(--c-ink2);transition:color .15s}
+.nn-n{fill:var(--c-ink2)}.nn-h{fill:var(--c-brand)}.nn-e{stroke:var(--c-line);stroke-width:1.4}
 .brand[href]{text-decoration:none;cursor:pointer}
-.brand[href]:hover .homeico{color:var(--c-brand)}
+.brand[href]:hover .homeico{display:inline-grid;place-items:center;width:38px;height:38px;border-radius:50%;border:1px solid var(--c-line);background:var(--c-panel);color:var(--c-ink2);transition:color .15s} a:hover .homeico,.logo:hover .homeico,.homelink:hover .homeico{color:var(--c-brand);border-color:var(--c-brand)}
 .back-portal{display:inline-flex;align-items:center;margin-left:auto;margin-right:12px;padding:7px 14px;border-radius:9px;border:1px solid var(--c-line);background:var(--c-panel);color:var(--c-ink2);font-size:12.5px;font-weight:500;text-decoration:none;transition:all .15s}
 .back-portal:hover{border-color:var(--c-brand);color:var(--c-brand);background:var(--c-hover)}
 .theme-toggle .tt-ico{grid-area:1/1;transition:opacity .2s,transform .3s}
@@ -2439,13 +2431,9 @@ header{padding:16px 30px 14px;border-bottom:1px solid var(--c-line);display:flex
 :root[data-theme="light"] .theme-toggle .tt-sun{opacity:1;transform:none}
 :root[data-theme="light"] .theme-toggle .tt-moon{opacity:0;transform:rotate(90deg) scale(.5)}
 .brand{display:flex;align-items:center;gap:13px}
-.logo{width:34px;height:34px;border-radius:9px;flex-shrink:0;
-  background:conic-gradient(from 210deg,var(--brand),var(--brand2),var(--accent),var(--brand));
-  box-shadow:0 3px 10px -2px rgba(0,113,227,.5);position:relative}
-.logo::after{content:"";position:absolute;inset:5px;border-radius:5px;background:#fff;
-  box-shadow:inset 0 0 0 1.5px rgba(0,0,0,.06)}
-.logo::before{content:"◆";position:absolute;inset:0;display:grid;place-items:center;
-  color:var(--brand);font-size:12px;z-index:1}
+.logo{width:34px;height:34px;flex-shrink:0;display:grid;place-items:center;position:relative;text-decoration:none}
+
+
 h1{margin:0;font-size:19px;font-weight:600;letter-spacing:-.02em;color:var(--c-ink)}
 h1 .dim{color:var(--c-ink3);font-weight:400;font-size:13px;margin-left:9px;letter-spacing:0}
 .sub{margin:5px 0 0 47px;font-size:12px;color:var(--c-ink3);line-height:1.5}
@@ -2479,16 +2467,19 @@ h1 .dim{color:var(--c-ink3);font-weight:400;font-size:13px;margin-left:9px;lette
 
 
 /* ---- Stage (Apple 浅色画布 · 图节点浅 tint + 深色字) ---- */
-.stage{flex:1;position:relative;overflow:hidden;
+.stage{flex:1;position:relative;overflow:hidden;display:flex!important;flex-direction:column;min-height:0;
   background:
     radial-gradient(circle at center, var(--cv-dot,rgba(0,0,0,.05)) 1px, transparent 1px) 0 0/28px 28px,
     radial-gradient(1100px 560px at 88% -14%, rgba(0,113,227,.05), transparent 60%),
     radial-gradient(900px 520px at 2% 112%, rgba(122,90,240,.045), transparent 58%),
     var(--cv-bg,#f0f0f3);
   box-shadow:inset 0 1px 0 rgba(0,0,0,.05)}
-.scroll{position:absolute;inset:0;overflow:auto;padding:34px}
+.scroll{position:relative!important;inset:auto!important;flex:1;width:100%;min-height:0;overflow:auto;padding:34px}
 .pane{display:none}
 .pane.active{display:flex;justify-content:center;align-items:flex-start;min-height:100%}
+/* 下钻页(垂直 tab 文档)块级贴顶,规避画布式 flex 居中顶部空白;隐藏冗余空 mmout */
+.pane.active:has(.do-paneflow){display:block}
+.do-paneflow ~ .mmout{display:none}
 .mmout{transform-origin:top center;transition:transform .12s ease}
 /* 嵌套/多图视图(renderNested 注入 .do-paneflow 到 .mmout)需占满宽度,否则 flex 居中会随子内容缩放导致切 tab 宽度剧烈波动 */
 .mmout:has(.do-paneflow){width:100%;align-self:stretch;transform:none!important}
@@ -2498,7 +2489,7 @@ h1 .dim{color:var(--c-ink3);font-weight:400;font-size:13px;margin-left:9px;lette
 .do-paneflow{display:flex;flex-direction:column;width:100%;min-width:0}
 .dataorg-wrap{display:flex;align-items:stretch;width:100%;background:var(--c-panel2);
   border:1px solid var(--c-line);border-radius:18px;box-shadow:var(--c-shadow-md);overflow:hidden;min-height:520px}
-.do-nav-col{flex:0 0 210px;background:var(--c-panel2);border-right:1px solid var(--c-line);padding:14px 12px}
+.do-nav-col{flex:0 0 240px;background:var(--c-panel2);border-right:1px solid var(--c-line);padding:14px 12px}
 .do-nav-sticky{position:sticky;top:14px;display:flex;flex-direction:column;gap:4px}
 .do-nav{display:flex;flex-direction:row;align-items:center;gap:9px;text-align:left;cursor:pointer;position:relative;
   background:transparent;border:1px solid transparent;border-radius:10px;
@@ -2510,7 +2501,7 @@ h1 .dim{color:var(--c-ink3);font-weight:400;font-size:13px;margin-left:9px;lette
 .do-nav .do-nav-n{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;
   width:20px;height:20px;border-radius:6px;background:color-mix(in srgb,var(--c-brand) 12%,transparent);
   font:700 11px/1 var(--mono);color:var(--c-brand)}
-.do-nav .do-nav-t{flex:1 1 auto;min-width:0;font:600 12.5px/1.3 var(--sans);white-space:normal;overflow-wrap:break-word;word-break:normal}
+.do-nav .do-nav-t{flex:1 1 auto;min-width:0;font:600 12.5px/1.3 var(--sans);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .do-nav.active .do-nav-n{background:var(--c-brand);color:#fff}
 .do-nav.active .do-nav-t{color:var(--cv-ink,#1d1d1f)}
 .do-stage{flex:1 1 0;min-width:0;position:relative;z-index:1;background:var(--cv-bg,#f5f5f7);overflow:hidden}
@@ -2852,9 +2843,11 @@ html:not([data-theme="light"]) .svg-walk-img{filter:invert(.9) hue-rotate(180deg
 <div id="app">
   <header>
     <a class="brand" id="brandHome" href="../index.html" title="返回导航主页">
-      <div class="logo"><span class="homeico" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg></span></div>
+      <div class="logo"><span class="homeico" aria-hidden="true" style="width:38px;height:38px;border-radius:50%;border:1px solid var(--c-line);background:var(--c-panel);color:var(--c-ink2);display:inline-grid;place-items:center;text-decoration:none"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg></span></div>
     </a>
-    <a href="https://github.com/torvalds/linux" target="_blank" rel="noopener" title="GitHub 源码仓库" style="margin-left:auto;display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:9px;border:1px solid var(--c-line);color:var(--c-ink2);text-decoration:none;margin-right:8px"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.7.5.5 5.7.5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.2.8-.6v-2c-3.2.7-3.9-1.4-3.9-1.4-.5-1.3-1.3-1.7-1.3-1.7-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.7 1.3 3.4 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.8 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.3 1.2a11.4 11.4 0 0 1 6 0C17.3 4.7 18.3 5 18.3 5c.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.5-2.7 5.5-5.3 5.8.4.4.8 1.1.8 2.2v3.3c0 .4.2.7.8.6 4.6-1.5 7.9-5.8 7.9-10.9C23.5 5.7 18.3.5 12 .5z"/></svg></a><a href="https://kernel.org" target="_blank" rel="noopener" title="项目官网" style="display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:9px;border:1px solid var(--c-line);color:var(--c-ink2);text-decoration:none;margin-right:8px"><img src="data:image/svg+xml;base64,PHN2ZyBmaWxsPSIjRkNDNjI0IiByb2xlPSJpbWciIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48dGl0bGU+TGludXg8L3RpdGxlPjxwYXRoIGQ9Ik0xMi41MDQgMGMtLjE1NSAwLS4zMTUuMDA4LS40OC4wMjEtNC4yMjYuMzMzLTMuMTA1IDQuODA3LTMuMTcgNi4yOTgtLjA3NiAxLjA5Mi0uMyAxLjk1My0xLjA1IDMuMDItLjg4NSAxLjA1MS0yLjEyNyAyLjc1LTIuNzE2IDQuNTIxLS4yNzguODMyLS40MSAxLjY4NC0uMjg3IDIuNDg5YS40MjQuNDI0IDAgMDAtLjExLjEzNWMtLjI2LjI2OC0uNDUuNi0uNjYzLjgzOS0uMTk5LjE5OS0uNDg1LjI2Ny0uNzk3LjQtLjMxMy4xMzYtLjY1OC4yNjktLjg2NC42OC0uMDkuMTg5LS4xMzYuMzk0LS4xMzIuNjAyIDAgLjE5OS4wMjcuNC4wNTUuNTM2LjA1OC4zOTkuMTE2LjcyOC4wNC45Ny0uMjQ5LjY4LS4yOCAxLjE0NS0uMTA2IDEuNDg0LjE3NC4zMzQuNTM1LjQ3Ljk0LjYwMS44MS4yIDEuOTEuMTM1IDIuNzc0LjYuOTI2LjQ2NiAxLjg2Ni42NyAyLjYxNi40Ny41MjYtLjExNi45Ny0uNDY0IDEuMjA4LS45NDYuNTg3LS4wMDMgMS4yMy0uMjY5IDIuMjYtLjMzNC42OTktLjA1OCAxLjU3NC4yNjcgMi41NzcuMi4wMjUuMTM0LjA2My4xOTguMTE0LjMzM2wuMDAzLjAwM2MuMzkxLjc3OCAxLjExMyAxLjEzMiAxLjg4NCAxLjA3MS43NzEtLjA2IDEuNTkyLS41MzYgMi4yNTctMS4zMDYuNjMxLS43NjUgMS42ODMtMS4wODQgMi4zNzgtMS41MDMuMzQ4LS4xOTkuNjI5LS40NjkuNjQ5LS44NTMuMDIzLS40LS4yLS44MTEtLjcxNC0xLjM3NnYtLjA5N2wtLjAwMy0uMDAzYy0uMTctLjItLjI1LS41MzUtLjMzOC0uOTI2LS4wODUtLjQwMS0uMTgyLS43ODYtLjQ5Mi0xLjA0NmgtLjAwM2MtLjA1OS0uMDU0LS4xMjMtLjA2Ny0uMTg4LS4xMzVhLjM1Ny4zNTcgMCAwMC0uMTktLjA2NGMuNDMxLTEuMjc4LjI2NC0yLjU1LS4xNzMtMy42OTQtLjUzMy0xLjQxLTEuNDY1LTIuNjM4LTIuMTc1LTMuNDgzLS43OTYtMS4wMDUtMS41NzYtMS45NTctMS41Ni0zLjM2OC4wMjYtMi4xNTIuMjM2LTYuMTMzLTMuNTQ0LTYuMTM5em0uNTI5IDMuNDA1aC4wMTNjLjIxMyAwIC4zOTYuMDYyLjU4NC4xOTguMTkuMTM1LjMzLjMzMi40MzguNTMzLjEwNS4yNTkuMTU4LjQ1OS4xNjYuNzI0IDAtLjAyLjAwNi0uMDQuMDA2LS4wNnYuMTA1YS4wODYuMDg2IDAgMDEtLjAwNC0uMDIxbC0uMDA0LS4wMjRhMS44MDcgMS44MDcgMCAwMS0uMTUuNzA2Ljk1My45NTMgMCAwMS0uMjEzLjMzNS43MS43MSAwIDAwLS4wODgtLjA0MmMtLjEwNC0uMDQ1LS4xOTgtLjA2NC0uMjg0LS4xMzNhMS4zMTIgMS4zMTIgMCAwMC0uMjItLjA2NmMuMDUtLjA2LjE0Ni0uMTMzLjE4My0uMTk4LjA1My0uMTI4LjA4Mi0uMjY0LjA4OC0uNDAydi0uMDJhMS4yMSAxLjIxIDAgMDAtLjA2MS0uNGMtLjA0NS0uMTM0LS4xMDEtLjItLjE4My0uMzMzLS4wODQtLjA2Ni0uMTY3LS4xMzItLjI2Ny0uMTMyaC0uMDE2Yy0uMDkzIDAtLjE3Ni4wMy0uMjYyLjEzMmEuOC44IDAgMDAtLjIwNS4zMzQgMS4xOCAxLjE4IDAgMDAtLjA5LjR2LjAxOWMuMDAyLjA4OS4wMDguMTc5LjAyLjI2Ny0uMTkzLS4wNjctLjQzOC0uMTM1LS42MDctLjIwMmExLjYzNSAxLjYzNSAwIDAxLS4wMTgtLjJ2LS4wMmExLjc3MiAxLjc3MiAwIDAxLjE1LS43NjhjLjA4Mi0uMjIuMjMyLS40MDYuNDMtLjUzM2EuOTg1Ljk4NSAwIDAxLjU5NC0uMnptLTIuOTYyLjA1OWguMDM2Yy4xNDIgMCAuMjcuMDQ4LjM5OS4xMzUuMTQ2LjEyOS4yNjQuMjg4LjM0NC40NjUuMDkuMTk5LjE0LjQuMTUzLjY2N3YuMDA0Yy4wMDcuMTM0LjAwNi4yLS4wMDIuMjY2di4wOGMtLjAzLjAwNy0uMDU2LjAxOC0uMDgzLjAyNC0uMTUyLjA1NS0uMjc0LjEzNS0uMzkzLjIuMDEyLS4wOS4wMTMtLjE4LjAwMy0uMjY3di0uMDE1Yy0uMDEyLS4xMzMtLjA0LS4yLS4wODItLjMzM2EuNjEzLjYxMyAwIDAwLS4xNjYtLjI2Ny4yNDguMjQ4IDAgMDAtLjE4My0uMDY0aC0uMDIxYy0uMDcxLjAwNi0uMTMuMDQtLjE4Ni4xMzJhLjU1Mi41NTIgMCAwMC0uMTIuMjcuOTQ0Ljk0NCAwIDAwLS4wMjMuMzN2LjAxNWMuMDEyLjEzNS4wMzcuMi4wOC4zMzQuMDQ2LjEzNC4wOTguMi4xNjYuMjY4LjAxLjAwOS4wMi4wMTguMDM0LjAyNC0uMDcuMDU3LS4xMTcuMDctLjE3Ni4xMzZhLjMwNC4zMDQgMCAwMS0uMTMxLjA2OCAyLjYyIDIuNjIgMCAwMS0uMjc1LS40MDIgMS43NzIgMS43NzIgMCAwMS0uMTU1LS42NjcgMS43NTkgMS43NTkgMCAwMS4wOC0uNjY4IDEuNDMgMS40MyAwIDAxLjI4My0uNTM1Yy4xMjgtLjEzMy4yNi0uMi40MTgtLjJ6bTEuMzcgMS43MDZjLjMzMiAwIC43MzMuMDY1IDEuMjE2LjM5OS4yOTMuMi41MjMuMjY5IDEuMDUyLjQ2OGguMDAzYy4yNTUuMTM2LjQwNS4yNjYuNDc4LjM5OXYtLjEzMWEuNTcxLjU3MSAwIDAxLjAxNi40N2MtLjEyMy4zMS0uNTE2LjY0My0xLjA2My44NDJ2LjAwMmMtLjI2OC4xMzUtLjUwMS4zMzMtLjc3NS40NjUtLjI3Ni4xMzUtLjU4OC4yOTItMS4wMTIuMjY3YTEuMTM5IDEuMTM5IDAgMDEtLjQ0OC0uMDY3IDMuNTY2IDMuNTY2IDAgMDEtLjMyMi0uMTk4Yy0uMTk1LS4xMzUtLjM2My0uMzMyLS42MTItLjQ2NXYtLjAwNWgtLjAwNWMtLjQtLjI0Ni0uNjE2LS41MTItLjY4Ni0uNzEtLjA3LS4yNjgtLjAwNS0uNDcuMTkzLS42LjIyNC0uMTM1LjM4LS4yNzEuNDgzLS4zMzYuMTA0LS4wNzQuMTQzLS4xMDIuMTc2LS4xMzFoLjAwMnYtLjAwM2MuMTY5LS4yMDIuNDM2LS40Ny44MzktLjYwMS4xMzktLjAzNi4yOTQtLjA2NS40NjYtLjA2NXptMi44IDIuMTQyYy4zNTggMS40MTcgMS4xOTYgMy40NzUgMS43MzUgNC40NzMuMjg2LjUzNC44NTUgMS42NTkgMS4xMDIgMy4wMjQuMTU2LS4wMDUuMzMuMDE4LjUxMy4wNjQuNjQ2LTEuNjcxLS41NDYtMy40NjctMS4wODktMy45NjYtLjIyLS4yLS4yMzItLjMzNS0uMTIzLS4zMzUuNTkuNTM0IDEuMzY1IDEuNTcyIDEuNjQ2IDIuNzU3LjEzLjUzNS4xNiAxLjEwNC4wMjEgMS42Ny4wNjcuMDI4LjEzNS4wNi4yMDUuMDY3IDEuMDMyLjUzNCAxLjQxMy45MzggMS4yMyAxLjUzN3YtLjA0M2MtLjA2LS4wMDMtLjEyIDAtLjE4IDBoLS4wMTZjLjE1MS0uNDY3LS4xODItLjgyNS0xLjA2NS0xLjIyNC0uOTE1LS40LTEuNjQ2LS4zMzYtMS43Ny40NjUtLjAwOC4wNDMtLjAxMy4wNjYtLjAxOC4xMzUtLjA2OC4wMjMtLjEzOS4wNTMtLjIwOS4wNjQtLjQzLjI2OC0uNjYyLjY2OS0uNzkzIDEuMTg3LS4xMy41MzMtLjE3IDEuMTU2LS4yMDUgMS44Njl2LjAwM2MtLjAyLjMzNC0uMTcuODM4LS4zMTkgMS4zNS0xLjUgMS4wNzItMy41OCAxLjUzOC01LjM0OC4zMzRhMi42NDUgMi42NDUgMCAwMC0uNDAyLS41MzMgMS40NSAxLjQ1IDAgMDAtLjI3NS0uMzMzYy4xODIgMCAuMzM4LS4wMy40NjUtLjA2N2EuNjE1LjYxNSAwIDAwLjMxNC0uMzM0Yy4xMDgtLjI2NyAwLS42OTctLjM0NS0xLjE2My0uMzQ1LS40NjctLjkzMS0uOTk1LTEuNzg4LTEuNTIxLS42My0uNC0uOTg2LS44Ny0xLjE1LTEuMzk2LS4xNjUtLjUzNC0uMTQzLTEuMDg1LS4wMTUtMS42NDUuMjQ1LTEuMDcuODczLTIuMTEgMS4yNzQtMi43NjMuMTA3LS4wNjUuMDM3LjEzNS0uNDA4Ljk3NC0uMzk2Ljc1MS0xLjE0IDIuNDk3LS4xMjIgMy44NTRhOC4xMjMgOC4xMjMgMCAwMS42NDctMi44NzZjLjU2NC0xLjI3OCAxLjc0My0zLjUwNCAxLjgzNi01LjI2OC4wNDguMDM2LjIxNy4xMzUuMjg5LjIwMi4yMTguMTMzLjM4LjMzMy41OS40NjUuMjEuMjAxLjQ3Ny4zMzUuODc2LjMzNS4wMzkuMDAzLjA3NS4wMDYuMTEuMDA2LjQxMiAwIC43My0uMTM0Ljk5Ny0uMjY4LjI5LS4xMzQuNTItLjMzNC43NC0uNGguMDA1Yy40NjctLjEzNS44MzUtLjQwMiAxLjA0NC0uN3ptMi4xODUgOC45NThjLjAzNy42LjM0MyAxLjI0NS44ODIgMS4zNzcuNTg4LjEzNCAxLjQzNC0uMzMzIDEuNzkxLS43NjVsLjIxMS0uMDFjLjMxNS0uMDA3LjU3Ny4wMS44NDcuMjY4bC4wMDMuMDAzYy4yMDguMTk5LjMwNS41My4zOTEuODc2LjA4NS40LjE1NC43OC40MDkgMS4wNjYuNDg2LjUyNy42NDUuOTA2LjYzNiAxLjE0bC4wMDMtLjAwN3YuMDE4bC0uMDAzLS4wMTJjLS4wMTUuMjYyLS4xODUuMzk2LS40OTguNTk1LS42My40MDEtMS43NDYuNzEyLTIuNDU3IDEuNTctLjYxOC43MzctMS4zNyAxLjE0LTIuMDM2IDEuMTkxLS42NjQuMDUzLTEuMjM3LS4yLTEuNTc0LS44OThsLS4wMDUtLjAwM2MtLjIxLS40LS4xMi0xLjAyNS4wNTYtMS42OS4xNzYtLjY2OC40MjgtMS4zNDQuNDYzLTEuODk3LjAzNy0uNzE0LjA3Ni0xLjMzNS4xOTUtMS44MTQuMTItLjQ2NS4zMDgtLjc5Ny42NDEtLjk4NGwuMDQ1LS4wMjJ6bS0xMC44MTQuMDQ5aC4wMWMuMDUzIDAgLjEwNS4wMDUuMTU3LjAxNC4zNzYuMDU1LjcwNi4zMzMgMS4wMjMuNzUybC45MSAxLjY2NC4wMDMuMDAzYy4yNDMuNTMzLjc1NCAxLjA2NCAxLjE4OSAxLjYzNy40MzQuNTk4Ljc3IDEuMTMxLjcyOSAxLjU3di4wMDZjLS4wNTcuNzQ0LS40OCAxLjE0OC0xLjEyNSAxLjI5NC0uNjQ1LjEzNS0xLjUyLjAwMi0yLjM5NS0uNDY0LS45NjgtLjUzNi0yLjExOC0uNDY5LTIuODU3LS42MDItLjM2OS0uMDY2LS42MS0uMi0uNzIzLS40LS4xMS0uMi0uMTEzLS42MDIuMTIzLTEuMjN2LS4wMDRsLjAwMi0uMDAzYy4xMTctLjMzNC4wMy0uNzUyLS4wMjctMS4xMTgtLjA1NS0uNDAxLS4wODMtLjcxLjA0My0uOTQuMTYtLjMzNC4zOTYtLjQuNjktLjUzMy4yOTQtLjEzNS42NC0uMjAyLjkxNS0uNDdoLjAwMnYtLjAwMmMuMjU2LS4yNjguNDQ1LS42MDEuNjY4LS44MzguMTktLjIwMS4zOC0uMzM2LjY2My0uMzM2em03LjE1OS05LjA3NGMtLjQzNS4yMDEtLjk0NS41MzUtMS40ODguNTM1LS41NDIgMC0uOTctLjI2Ny0xLjI4LS40NjYtLjE1NC0uMTM0LS4yOC0uMjY4LS4zNzMtLjMzNS0uMTY0LS4xMzQtLjE0NC0uMzMzLS4wNzQtLjMzMy4xMDkuMDE2LjEyOS4xMzQuMTk5LjIuMDk2LjA2Ni4yMTUuMi4zNi4zMzMuMjkyLjIuNjguNDY3IDEuMTY3LjQ2Ny40ODUgMCAxLjA1My0uMjY3IDEuMzk4LS40NjYuMTk1LS4xMzUuNDQ1LS4zMzQuNjQ4LS40NjcuMTU2LS4xMzYuMTQ5LS4yNjcuMjc5LS4yNjcuMTI4LjAxNi4wMzQuMTM0LS4xNDcuMzMyYTguMDk3IDguMDk3IDAgMDEtLjY5LjQ2OHptLTEuMDgyLTEuNTgzVjUuNjRjLS4wMDYtLjAyLjAxMy0uMDQyLjAyOS0uMDUuMDc0LS4wNDMuMTgtLjAyNy4yNi4wMDQuMDYzIDAgLjE2LjA2Ny4xNS4xMzUtLjAwNi4wNDktLjA4NS4wNjYtLjEzNS4wNjYtLjA1NSAwLS4wOTItLjA0My0uMTQxLS4wNjgtLjA1Mi0uMDE4LS4xNDYtLjAwOC0uMTYzLS4wNjV6bS0uNTUxIDBjLS4wMi4wNTgtLjExMy4wNDktLjE2Ni4wNjYtLjA0Ny4wMjUtLjA4Ni4wNjgtLjE0LjA2OC0uMDUgMC0uMTMtLjAyLS4xMzYtLjA2OC0uMDEtLjA2Ni4wODgtLjEzMy4xNS0uMTMzLjA4LS4wMzEuMTg0LS4wNDcuMjU5LS4wMDUuMDE5LjAwOS4wMzYuMDMuMDMuMDV2LjAyaC4wMDN6Ii8+PC9zdmc+" width="18" height="18" alt="官网" style="display:block"/></a><button class="theme-toggle" id="themeToggle" title="切换深色 / 浅色主题" aria-label="切换主题">
+    <div class="brand-intro" style="display:flex;flex-direction:column;align-items:flex-start;margin-left:12px;min-width:0;max-width:min(60vw,760px)"><div style="font-size:15px;font-weight:600;color:var(--c-ink);line-height:1.3">Linux Kernel · 核心原理图谱</div><span style="margin-top:3px;font-size:11.5px;color:var(--c-ink3);line-height:1.5;text-align:left">宏内核操作系统:系统调用唯一接触面 → 进程调度/内存/VFS/网络/块层子系统同址直调 → 支撑机制托底 → 硬件。母隐喻本体。</span></div>
+    <label class="msearch"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input id="mq" type="text" placeholder="搜索模块 / 主线…" autocomplete="off" aria-label="搜索模块"/><kbd>/</kbd><div id="mqlist" class="mq-list"></div></label>
+    <a href="https://github.com/torvalds/linux" target="_blank" rel="noopener" title="GitHub 源码仓库" style="margin-left:auto;display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:50%;border:1px solid var(--c-line);color:var(--c-ink2);text-decoration:none;margin-right:8px"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.7.5.5 5.7.5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.2.8-.6v-2c-3.2.7-3.9-1.4-3.9-1.4-.5-1.3-1.3-1.7-1.3-1.7-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.7 1.3 3.4 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.8 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.3 1.2a11.4 11.4 0 0 1 6 0C17.3 4.7 18.3 5 18.3 5c.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.5-2.7 5.5-5.3 5.8.4.4.8 1.1.8 2.2v3.3c0 .4.2.7.8.6 4.6-1.5 7.9-5.8 7.9-10.9C23.5 5.7 18.3.5 12 .5z"/></svg></a><a href="https://kernel.org" target="_blank" rel="noopener" title="项目官网" style="display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:50%;border:1px solid var(--c-line);color:var(--c-ink2);text-decoration:none;margin-right:8px"><img src="data:image/svg+xml;base64,PHN2ZyBmaWxsPSIjRkNDNjI0IiByb2xlPSJpbWciIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48dGl0bGU+TGludXg8L3RpdGxlPjxwYXRoIGQ9Ik0xMi41MDQgMGMtLjE1NSAwLS4zMTUuMDA4LS40OC4wMjEtNC4yMjYuMzMzLTMuMTA1IDQuODA3LTMuMTcgNi4yOTgtLjA3NiAxLjA5Mi0uMyAxLjk1My0xLjA1IDMuMDItLjg4NSAxLjA1MS0yLjEyNyAyLjc1LTIuNzE2IDQuNTIxLS4yNzguODMyLS40MSAxLjY4NC0uMjg3IDIuNDg5YS40MjQuNDI0IDAgMDAtLjExLjEzNWMtLjI2LjI2OC0uNDUuNi0uNjYzLjgzOS0uMTk5LjE5OS0uNDg1LjI2Ny0uNzk3LjQtLjMxMy4xMzYtLjY1OC4yNjktLjg2NC42OC0uMDkuMTg5LS4xMzYuMzk0LS4xMzIuNjAyIDAgLjE5OS4wMjcuNC4wNTUuNTM2LjA1OC4zOTkuMTE2LjcyOC4wNC45Ny0uMjQ5LjY4LS4yOCAxLjE0NS0uMTA2IDEuNDg0LjE3NC4zMzQuNTM1LjQ3Ljk0LjYwMS44MS4yIDEuOTEuMTM1IDIuNzc0LjYuOTI2LjQ2NiAxLjg2Ni42NyAyLjYxNi40Ny41MjYtLjExNi45Ny0uNDY0IDEuMjA4LS45NDYuNTg3LS4wMDMgMS4yMy0uMjY5IDIuMjYtLjMzNC42OTktLjA1OCAxLjU3NC4yNjcgMi41NzcuMi4wMjUuMTM0LjA2My4xOTguMTE0LjMzM2wuMDAzLjAwM2MuMzkxLjc3OCAxLjExMyAxLjEzMiAxLjg4NCAxLjA3MS43NzEtLjA2IDEuNTkyLS41MzYgMi4yNTctMS4zMDYuNjMxLS43NjUgMS42ODMtMS4wODQgMi4zNzgtMS41MDMuMzQ4LS4xOTkuNjI5LS40NjkuNjQ5LS44NTMuMDIzLS40LS4yLS44MTEtLjcxNC0xLjM3NnYtLjA5N2wtLjAwMy0uMDAzYy0uMTctLjItLjI1LS41MzUtLjMzOC0uOTI2LS4wODUtLjQwMS0uMTgyLS43ODYtLjQ5Mi0xLjA0NmgtLjAwM2MtLjA1OS0uMDU0LS4xMjMtLjA2Ny0uMTg4LS4xMzVhLjM1Ny4zNTcgMCAwMC0uMTktLjA2NGMuNDMxLTEuMjc4LjI2NC0yLjU1LS4xNzMtMy42OTQtLjUzMy0xLjQxLTEuNDY1LTIuNjM4LTIuMTc1LTMuNDgzLS43OTYtMS4wMDUtMS41NzYtMS45NTctMS41Ni0zLjM2OC4wMjYtMi4xNTIuMjM2LTYuMTMzLTMuNTQ0LTYuMTM5em0uNTI5IDMuNDA1aC4wMTNjLjIxMyAwIC4zOTYuMDYyLjU4NC4xOTguMTkuMTM1LjMzLjMzMi40MzguNTMzLjEwNS4yNTkuMTU4LjQ1OS4xNjYuNzI0IDAtLjAyLjAwNi0uMDQuMDA2LS4wNnYuMTA1YS4wODYuMDg2IDAgMDEtLjAwNC0uMDIxbC0uMDA0LS4wMjRhMS44MDcgMS44MDcgMCAwMS0uMTUuNzA2Ljk1My45NTMgMCAwMS0uMjEzLjMzNS43MS43MSAwIDAwLS4wODgtLjA0MmMtLjEwNC0uMDQ1LS4xOTgtLjA2NC0uMjg0LS4xMzNhMS4zMTIgMS4zMTIgMCAwMC0uMjItLjA2NmMuMDUtLjA2LjE0Ni0uMTMzLjE4My0uMTk4LjA1My0uMTI4LjA4Mi0uMjY0LjA4OC0uNDAydi0uMDJhMS4yMSAxLjIxIDAgMDAtLjA2MS0uNGMtLjA0NS0uMTM0LS4xMDEtLjItLjE4My0uMzMzLS4wODQtLjA2Ni0uMTY3LS4xMzItLjI2Ny0uMTMyaC0uMDE2Yy0uMDkzIDAtLjE3Ni4wMy0uMjYyLjEzMmEuOC44IDAgMDAtLjIwNS4zMzQgMS4xOCAxLjE4IDAgMDAtLjA5LjR2LjAxOWMuMDAyLjA4OS4wMDguMTc5LjAyLjI2Ny0uMTkzLS4wNjctLjQzOC0uMTM1LS42MDctLjIwMmExLjYzNSAxLjYzNSAwIDAxLS4wMTgtLjJ2LS4wMmExLjc3MiAxLjc3MiAwIDAxLjE1LS43NjhjLjA4Mi0uMjIuMjMyLS40MDYuNDMtLjUzM2EuOTg1Ljk4NSAwIDAxLjU5NC0uMnptLTIuOTYyLjA1OWguMDM2Yy4xNDIgMCAuMjcuMDQ4LjM5OS4xMzUuMTQ2LjEyOS4yNjQuMjg4LjM0NC40NjUuMDkuMTk5LjE0LjQuMTUzLjY2N3YuMDA0Yy4wMDcuMTM0LjAwNi4yLS4wMDIuMjY2di4wOGMtLjAzLjAwNy0uMDU2LjAxOC0uMDgzLjAyNC0uMTUyLjA1NS0uMjc0LjEzNS0uMzkzLjIuMDEyLS4wOS4wMTMtLjE4LjAwMy0uMjY3di0uMDE1Yy0uMDEyLS4xMzMtLjA0LS4yLS4wODItLjMzM2EuNjEzLjYxMyAwIDAwLS4xNjYtLjI2Ny4yNDguMjQ4IDAgMDAtLjE4My0uMDY0aC0uMDIxYy0uMDcxLjAwNi0uMTMuMDQtLjE4Ni4xMzJhLjU1Mi41NTIgMCAwMC0uMTIuMjcuOTQ0Ljk0NCAwIDAwLS4wMjMuMzN2LjAxNWMuMDEyLjEzNS4wMzcuMi4wOC4zMzQuMDQ2LjEzNC4wOTguMi4xNjYuMjY4LjAxLjAwOS4wMi4wMTguMDM0LjAyNC0uMDcuMDU3LS4xMTcuMDctLjE3Ni4xMzZhLjMwNC4zMDQgMCAwMS0uMTMxLjA2OCAyLjYyIDIuNjIgMCAwMS0uMjc1LS40MDIgMS43NzIgMS43NzIgMCAwMS0uMTU1LS42NjcgMS43NTkgMS43NTkgMCAwMS4wOC0uNjY4IDEuNDMgMS40MyAwIDAxLjI4My0uNTM1Yy4xMjgtLjEzMy4yNi0uMi40MTgtLjJ6bTEuMzcgMS43MDZjLjMzMiAwIC43MzMuMDY1IDEuMjE2LjM5OS4yOTMuMi41MjMuMjY5IDEuMDUyLjQ2OGguMDAzYy4yNTUuMTM2LjQwNS4yNjYuNDc4LjM5OXYtLjEzMWEuNTcxLjU3MSAwIDAxLjAxNi40N2MtLjEyMy4zMS0uNTE2LjY0My0xLjA2My44NDJ2LjAwMmMtLjI2OC4xMzUtLjUwMS4zMzMtLjc3NS40NjUtLjI3Ni4xMzUtLjU4OC4yOTItMS4wMTIuMjY3YTEuMTM5IDEuMTM5IDAgMDEtLjQ0OC0uMDY3IDMuNTY2IDMuNTY2IDAgMDEtLjMyMi0uMTk4Yy0uMTk1LS4xMzUtLjM2My0uMzMyLS42MTItLjQ2NXYtLjAwNWgtLjAwNWMtLjQtLjI0Ni0uNjE2LS41MTItLjY4Ni0uNzEtLjA3LS4yNjgtLjAwNS0uNDcuMTkzLS42LjIyNC0uMTM1LjM4LS4yNzEuNDgzLS4zMzYuMTA0LS4wNzQuMTQzLS4xMDIuMTc2LS4xMzFoLjAwMnYtLjAwM2MuMTY5LS4yMDIuNDM2LS40Ny44MzktLjYwMS4xMzktLjAzNi4yOTQtLjA2NS40NjYtLjA2NXptMi44IDIuMTQyYy4zNTggMS40MTcgMS4xOTYgMy40NzUgMS43MzUgNC40NzMuMjg2LjUzNC44NTUgMS42NTkgMS4xMDIgMy4wMjQuMTU2LS4wMDUuMzMuMDE4LjUxMy4wNjQuNjQ2LTEuNjcxLS41NDYtMy40NjctMS4wODktMy45NjYtLjIyLS4yLS4yMzItLjMzNS0uMTIzLS4zMzUuNTkuNTM0IDEuMzY1IDEuNTcyIDEuNjQ2IDIuNzU3LjEzLjUzNS4xNiAxLjEwNC4wMjEgMS42Ny4wNjcuMDI4LjEzNS4wNi4yMDUuMDY3IDEuMDMyLjUzNCAxLjQxMy45MzggMS4yMyAxLjUzN3YtLjA0M2MtLjA2LS4wMDMtLjEyIDAtLjE4IDBoLS4wMTZjLjE1MS0uNDY3LS4xODItLjgyNS0xLjA2NS0xLjIyNC0uOTE1LS40LTEuNjQ2LS4zMzYtMS43Ny40NjUtLjAwOC4wNDMtLjAxMy4wNjYtLjAxOC4xMzUtLjA2OC4wMjMtLjEzOS4wNTMtLjIwOS4wNjQtLjQzLjI2OC0uNjYyLjY2OS0uNzkzIDEuMTg3LS4xMy41MzMtLjE3IDEuMTU2LS4yMDUgMS44Njl2LjAwM2MtLjAyLjMzNC0uMTcuODM4LS4zMTkgMS4zNS0xLjUgMS4wNzItMy41OCAxLjUzOC01LjM0OC4zMzRhMi42NDUgMi42NDUgMCAwMC0uNDAyLS41MzMgMS40NSAxLjQ1IDAgMDAtLjI3NS0uMzMzYy4xODIgMCAuMzM4LS4wMy40NjUtLjA2N2EuNjE1LjYxNSAwIDAwLjMxNC0uMzM0Yy4xMDgtLjI2NyAwLS42OTctLjM0NS0xLjE2My0uMzQ1LS40NjctLjkzMS0uOTk1LTEuNzg4LTEuNTIxLS42My0uNC0uOTg2LS44Ny0xLjE1LTEuMzk2LS4xNjUtLjUzNC0uMTQzLTEuMDg1LS4wMTUtMS42NDUuMjQ1LTEuMDcuODczLTIuMTEgMS4yNzQtMi43NjMuMTA3LS4wNjUuMDM3LjEzNS0uNDA4Ljk3NC0uMzk2Ljc1MS0xLjE0IDIuNDk3LS4xMjIgMy44NTRhOC4xMjMgOC4xMjMgMCAwMS42NDctMi44NzZjLjU2NC0xLjI3OCAxLjc0My0zLjUwNCAxLjgzNi01LjI2OC4wNDguMDM2LjIxNy4xMzUuMjg5LjIwMi4yMTguMTMzLjM4LjMzMy41OS40NjUuMjEuMjAxLjQ3Ny4zMzUuODc2LjMzNS4wMzkuMDAzLjA3NS4wMDYuMTEuMDA2LjQxMiAwIC43My0uMTM0Ljk5Ny0uMjY4LjI5LS4xMzQuNTItLjMzNC43NC0uNGguMDA1Yy40NjctLjEzNS44MzUtLjQwMiAxLjA0NC0uN3ptMi4xODUgOC45NThjLjAzNy42LjM0MyAxLjI0NS44ODIgMS4zNzcuNTg4LjEzNCAxLjQzNC0uMzMzIDEuNzkxLS43NjVsLjIxMS0uMDFjLjMxNS0uMDA3LjU3Ny4wMS44NDcuMjY4bC4wMDMuMDAzYy4yMDguMTk5LjMwNS41My4zOTEuODc2LjA4NS40LjE1NC43OC40MDkgMS4wNjYuNDg2LjUyNy42NDUuOTA2LjYzNiAxLjE0bC4wMDMtLjAwN3YuMDE4bC0uMDAzLS4wMTJjLS4wMTUuMjYyLS4xODUuMzk2LS40OTguNTk1LS42My40MDEtMS43NDYuNzEyLTIuNDU3IDEuNTctLjYxOC43MzctMS4zNyAxLjE0LTIuMDM2IDEuMTkxLS42NjQuMDUzLTEuMjM3LS4yLTEuNTc0LS44OThsLS4wMDUtLjAwM2MtLjIxLS40LS4xMi0xLjAyNS4wNTYtMS42OS4xNzYtLjY2OC40MjgtMS4zNDQuNDYzLTEuODk3LjAzNy0uNzE0LjA3Ni0xLjMzNS4xOTUtMS44MTQuMTItLjQ2NS4zMDgtLjc5Ny42NDEtLjk4NGwuMDQ1LS4wMjJ6bS0xMC44MTQuMDQ5aC4wMWMuMDUzIDAgLjEwNS4wMDUuMTU3LjAxNC4zNzYuMDU1LjcwNi4zMzMgMS4wMjMuNzUybC45MSAxLjY2NC4wMDMuMDAzYy4yNDMuNTMzLjc1NCAxLjA2NCAxLjE4OSAxLjYzNy40MzQuNTk4Ljc3IDEuMTMxLjcyOSAxLjU3di4wMDZjLS4wNTcuNzQ0LS40OCAxLjE0OC0xLjEyNSAxLjI5NC0uNjQ1LjEzNS0xLjUyLjAwMi0yLjM5NS0uNDY0LS45NjgtLjUzNi0yLjExOC0uNDY5LTIuODU3LS42MDItLjM2OS0uMDY2LS42MS0uMi0uNzIzLS40LS4xMS0uMi0uMTEzLS42MDIuMTIzLTEuMjN2LS4wMDRsLjAwMi0uMDAzYy4xMTctLjMzNC4wMy0uNzUyLS4wMjctMS4xMTgtLjA1NS0uNDAxLS4wODMtLjcxLjA0My0uOTQuMTYtLjMzNC4zOTYtLjQuNjktLjUzMy4yOTQtLjEzNS42NC0uMjAyLjkxNS0uNDdoLjAwMnYtLjAwMmMuMjU2LS4yNjguNDQ1LS42MDEuNjY4LS44MzguMTktLjIwMS4zOC0uMzM2LjY2My0uMzM2em03LjE1OS05LjA3NGMtLjQzNS4yMDEtLjk0NS41MzUtMS40ODguNTM1LS41NDIgMC0uOTctLjI2Ny0xLjI4LS40NjYtLjE1NC0uMTM0LS4yOC0uMjY4LS4zNzMtLjMzNS0uMTY0LS4xMzQtLjE0NC0uMzMzLS4wNzQtLjMzMy4xMDkuMDE2LjEyOS4xMzQuMTk5LjIuMDk2LjA2Ni4yMTUuMi4zNi4zMzMuMjkyLjIuNjguNDY3IDEuMTY3LjQ2Ny40ODUgMCAxLjA1My0uMjY3IDEuMzk4LS40NjYuMTk1LS4xMzUuNDQ1LS4zMzQuNjQ4LS40NjcuMTU2LS4xMzYuMTQ5LS4yNjcuMjc5LS4yNjcuMTI4LjAxNi4wMzQuMTM0LS4xNDcuMzMyYTguMDk3IDguMDk3IDAgMDEtLjY5LjQ2OHptLTEuMDgyLTEuNTgzVjUuNjRjLS4wMDYtLjAyLjAxMy0uMDQyLjAyOS0uMDUuMDc0LS4wNDMuMTgtLjAyNy4yNi4wMDQuMDYzIDAgLjE2LjA2Ny4xNS4xMzUtLjAwNi4wNDktLjA4NS4wNjYtLjEzNS4wNjYtLjA1NSAwLS4wOTItLjA0My0uMTQxLS4wNjgtLjA1Mi0uMDE4LS4xNDYtLjAwOC0uMTYzLS4wNjV6bS0uNTUxIDBjLS4wMi4wNTgtLjExMy4wNDktLjE2Ni4wNjYtLjA0Ny4wMjUtLjA4Ni4wNjgtLjE0LjA2OC0uMDUgMC0uMTMtLjAyLS4xMzYtLjA2OC0uMDEtLjA2Ni4wODgtLjEzMy4xNS0uMTMzLjA4LS4wMzEuMTg0LS4wNDcuMjU5LS4wMDUuMDE5LjAwOS4wMzYuMDMuMDMuMDV2LjAyaC4wMDN6Ii8+PC9zdmc+" width="18" height="18" alt="官网" style="display:block"/></a><button class="theme-toggle" id="themeToggle" title="切换深色 / 浅色主题" aria-label="切换主题">
       <span class="tt-ico tt-moon">☾</span><span class="tt-ico tt-sun">☀</span>
     </button>
   </header>
@@ -2887,7 +2880,6 @@ html:not([data-theme="light"]) .svg-walk-img{filter:invert(.9) hue-rotate(180deg
         </div>
       </div>
       </div>
-    </div>
     <div class="scroll" id="scroll">__TAB_PANES__</div>
     <aside class="vguide collapsed" id="vguide">
       <button class="vguide-collapse" id="vguideCollapse" title="折叠/展开">▸</button>
@@ -2902,6 +2894,7 @@ html:not([data-theme="light"]) .svg-walk-img{filter:invert(.9) hue-rotate(180deg
         </div>
       </div>
     </aside>
+    </div>
   </div>
 </div>
 
@@ -2944,7 +2937,7 @@ const MM_THEME_DARK = {
 function isDarkTheme(){
   /* 优先读 DOM 属性;首屏 initMermaid 早于主题 apply 时 DOM 尚无属性,回退读 localStorage */
   if(document.documentElement.hasAttribute('data-theme')) return document.documentElement.getAttribute('data-theme') !== 'light';
-  try{ return localStorage.getItem('doris-atlas-theme') !== 'light'; }catch(e){ return true; }
+  try{ return localStorage.getItem('atlas-nav-theme') !== 'light'; }catch(e){ return true; }
 }
 function initMermaid(){
   mermaid.initialize({
@@ -6358,7 +6351,7 @@ function activateTab(t){
   scale=1; stopFlow();
   // 表格类视图(术语/对比/失败/瓶颈):无数据流 → 隐藏播放按钮
   const TABLE_TABS={glossary:1,compare:1,failure:1,bottleneck:1,archcompare:1,mvcompare:1,optcompare:1,idxpano:1,optgoal:1,optaxis:1,optlifecycle:1,optgranularity:1,optoperator:1,optworkload:1,optobserve:1,qlifevars:1,qlifeterms:1};
-  document.getElementById('flowPlay').style.display=TABLE_TABS[t.dataset.tab]?'none':'';
+  var _isDoc=!!document.querySelector('.pane.active .do-paneflow');['zoomOut','zoomReset','zoomIn','fitBtn'].forEach(function(id){var el=document.getElementById(id);if(el)el.style.display=_isDoc?'none':'';});document.getElementById('flowPlay').style.display=(_isDoc||TABLE_TABS[t.dataset.tab])?'none':'';
   renderGuide(t.dataset.tab);
 }
 document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{activateTab(t);renderPane(t.dataset.tab);});
@@ -6375,7 +6368,7 @@ document.getElementById('brandHome').onclick=showHome;
 
 /* ---- theme toggle (深色默认;localStorage 记忆) ---- */
 (function(){
-  const KEY='doris-atlas-theme';
+  const KEY='atlas-nav-theme';
   const root=document.documentElement;
   function apply(t){ if(t==='light') root.setAttribute('data-theme','light'); else root.removeAttribute('data-theme'); }
   let saved='dark';
@@ -6527,6 +6520,37 @@ showHome();
   function done(){ ov.classList.add('lo-hidden'); setTimeout(function(){ if(ov&&ov.parentNode) ov.parentNode.removeChild(ov); },600); }
   requestAnimationFrame(function(){ requestAnimationFrame(function(){ setTimeout(done,180); }); });
   setTimeout(done,4000);
+
+/* 模块搜索:过滤 THEMES,回车/点击 openTheme 下钻 */
+(function(){
+  var mq=document.getElementById('mq'), list=document.getElementById('mqlist');
+  if(!mq||!list||typeof THEMES==='undefined') return;
+  var sel=-1, cur=[];
+  function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  function render(){
+    var q=mq.value.trim().toLowerCase();
+    cur = !q ? [] : THEMES.filter(function(m){return ((m.title||'')+' '+(m.desc||'')+' '+(m.id||'')).toLowerCase().indexOf(q)>=0;}).slice(0,8);
+    if(!cur.length){ list.className='mq-list'; list.innerHTML=''; return; }
+    sel=0;
+    list.innerHTML=cur.map(function(m,i){return '<button class="mq-item'+(i===0?' sel':'')+'" data-id="'+esc(m.id)+'"><b>'+esc(m.title||m.id)+'</b><span class="s">'+esc((m.desc||'').slice(0,52))+'</span></button>';}).join('');
+    list.className='mq-list on';
+  }
+  function go(id){ mq.value=''; list.className='mq-list'; list.innerHTML=''; if(typeof openTheme==='function') openTheme(id); }
+  mq.addEventListener('input',render);
+  mq.addEventListener('keydown',function(e){
+    if(!cur.length){ if(e.key==='Escape') mq.blur(); return; }
+    if(e.key==='ArrowDown'){e.preventDefault();sel=(sel+1)%cur.length;}
+    else if(e.key==='ArrowUp'){e.preventDefault();sel=(sel-1+cur.length)%cur.length;}
+    else if(e.key==='Enter'){e.preventDefault();go(cur[sel].id);return;}
+    else if(e.key==='Escape'){list.className='mq-list';mq.blur();return;}
+    else return;
+    [].forEach.call(list.children,function(el,i){el.className='mq-item'+(i===sel?' sel':'');});
+  });
+  list.addEventListener('click',function(e){var b=e.target.closest('.mq-item'); if(b) go(b.dataset.id);});
+  document.addEventListener('keydown',function(e){ if(e.key==='/'&&document.activeElement!==mq){e.preventDefault();mq.focus();} });
+  document.addEventListener('click',function(e){ if(!e.target.closest('.msearch')){list.className='mq-list';} });
+})();
+
 })();
 """
 

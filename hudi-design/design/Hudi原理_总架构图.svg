@@ -1,130 +1,113 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="900" viewBox="0 0 1080 900" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="646" viewBox="0 0 1080 646" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
   <defs>
     <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
-    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+    <marker id="aHot" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+    <marker id="aState" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#c99a3a"/></marker>
+    <marker id="aCtl" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#5b7db1"/></marker>
+    <marker id="aBg" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#8a5cae"/></marker>
   </defs>
-  <rect width="1080" height="900" fill="#fbfbfd"/>
-  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Hudi 核心原理 · 总架构图</text>
-  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">事务性数据湖表格式(upsert 导向)：时间线是真相，索引把记录键路由到文件组，COW/MOR 两种表类型，表服务后台维护</text>
-  <rect x="0" y="0" width="1080" height="60" fill="none" stroke="none" data-tid="Hudi原理_全景主线框架" data-lab="全景"/>
+  <rect width="1080" height="646" fill="#fbfbfd"/>
 
-  <!-- compute engines (external) -->
-  <rect x="30" y="64" width="1020" height="44" rx="13" fill="#f4f2ee" stroke="#e3ddd2" stroke-dasharray="6 4"/>
-  <text x="46" y="82" font-size="11" font-weight="700" fill="#6e6357">计算引擎（非 Hudi · 经 write client 读写）</text>
-  <g text-anchor="middle" font-size="8.8">
-    <rect x="360" y="70" width="330" height="16" rx="5" fill="#fbf6ef" stroke="#e6d8c4"/><text x="525" y="82" fill="#5a3410">Spark（DataSource + SparkRDDWriteClient）</text>
-    <rect x="700" y="70" width="334" height="16" rx="5" fill="#fbf6ef" stroke="#e6d8c4"/><text x="867" y="82" fill="#5a3410">Flink（sink/source + FLINK_STATE 索引）</text>
+  <!-- ===== 标题带 ===== -->
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">Hudi 总架构 · 多视角透视：时间线是真相，索引把键路由到文件组，COW / MOR 双表型</text>
+  <text x="30" y="47" font-size="10.5" fill="#6e6e73">分层脊：接入（write client）→ 写入流水（索引 / 时间线）→ 存储表模型（base / log）→ 表服务后台　源码基准 1.0.x</text>
+
+  <!-- ===== 图例：四型语义路径 ===== -->
+  <line x1="40" y1="66" x2="68" y2="66" stroke="#2f9e6e" stroke-width="1.8" marker-end="url(#aHot)"/>
+  <text x="74" y="70" font-size="10.5" fill="#3a3a3c">写入数据流 Hot</text>
+  <line x1="228" y1="66" x2="256" y2="66" stroke="#c99a3a" stroke-width="1.8" marker-end="url(#aState)"/>
+  <text x="262" y="70" font-size="10.5" fill="#3a3a3c">落盘 · instant 定序 State</text>
+  <line x1="470" y1="66" x2="498" y2="66" stroke="#5b7db1" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#aCtl)"/>
+  <text x="504" y="70" font-size="10.5" fill="#3a3a3c">并发 / catalog Control（虚线）</text>
+  <line x1="738" y1="66" x2="766" y2="66" stroke="#8a5cae" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#aBg)"/>
+  <text x="772" y="70" font-size="10.5" fill="#3a3a3c">表服务后台 bg（虚线）</text>
+  <text x="1056" y="70" font-size="10" fill="#a1a1a6" text-anchor="end">框 = 主线可下钻</text>
+
+  <!-- 全景下钻热区（覆盖标题 / 图例带） -->
+  <rect x="0" y="0" width="1080" height="58" fill="none" stroke="none" data-tid="Hudi原理_全景主线框架" data-lab="全景"/>
+
+  <!-- ===== 接入面 ===== -->
+  <rect x="24" y="84" width="1032" height="76" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="40" y="104" font-size="11.5" font-weight="600" fill="#1b2a4a">接入面 · 计算引擎经 write client 读写（Hudi 只管元数据与写读逻辑，不执行查询）</text>
+  <g text-anchor="middle" font-size="9">
+    <rect x="40" y="116" width="296" height="38" rx="9" fill="#f4f2ee" stroke="#e3ddd2" stroke-dasharray="6 4"/><text x="188" y="134" fill="#6e6357" font-weight="600">Spark（外部）</text><text x="188" y="148" fill="#8a7d6c" font-size="8.5">DataSource + SparkRDDWriteClient</text>
+    <rect x="352" y="116" width="296" height="38" rx="9" fill="#f4f2ee" stroke="#e3ddd2" stroke-dasharray="6 4"/><text x="500" y="134" fill="#6e6357" font-weight="600">Flink（外部）</text><text x="500" y="148" fill="#8a7d6c" font-size="8.5">sink · source + FLINK_STATE 索引</text>
+    <rect x="664" y="116" width="392" height="38" rx="9" fill="#fff" stroke="#bcd0ec" data-tid="Hudi原理_接触面_表读写API" data-lab="表读写 API"/><text x="860" y="133" fill="#1b2a4a" font-weight="600">表读写 API 接触面</text><text x="860" y="148" fill="#5b7db1" font-size="8.5">写 upsert / insert / delete · 读 快照 / 读优化 / 增量</text>
   </g>
 
-  <!-- API 接触面 -->
-  <rect x="30" y="120" width="1020" height="44" rx="13" fill="#f4eefb" stroke="#d9c7ec" data-tid="Hudi原理_接触面_表读写API" data-lab="表读写 API"/>
-  <text x="46" y="147" font-size="11" fill="#3d2a5a"><tspan font-weight="700">表读写 API 接触面</tspan>　写：upsert / insert / bulk_insert / delete　读：快照 / 读优化 / 增量查</text>
-
-  <!-- 写入路径 (left) -->
-  <rect x="30" y="178" width="326" height="252" rx="16" fill="#fff7e6" stroke="#e8cf9a" data-tid="Hudi原理_支撑_写入路径与upsert" data-lab="写入路径与 upsert"/>
-  <text x="46" y="200" font-size="11.5" font-weight="700" fill="#5a3410">写入路径与 upsert</text>
-  <g text-anchor="middle" font-size="8.2">
-    <rect x="44" y="210" width="298" height="34" rx="8" fill="#fef2e0" stroke="#e8cf9a"/><text x="193" y="225" font-weight="600" fill="#5a3410">startCommit 开时间线 instant</text><text x="193" y="238" fill="#93762e">preWrite 预处理</text>
-    <rect x="44" y="252" width="298" height="34" rx="8" fill="#fef2e0" stroke="#e8cf9a"/><text x="193" y="267" font-weight="600" fill="#5a3410">索引 tagLocation：键→文件组</text><text x="193" y="280" fill="#93762e">命中→更新 · 未命中→插入</text>
-    <rect x="44" y="294" width="298" height="34" rx="8" fill="#fef2e0" stroke="#e8cf9a"/><text x="193" y="309" font-weight="600" fill="#5a3410">bucket 路由 UPDATE / INSERT</text><text x="193" y="322" fill="#93762e">SmallFile 塞入小文件</text>
-    <rect x="44" y="336" width="298" height="36" rx="8" fill="#eafaf1" stroke="#bfe0cd"/><text x="193" y="352" font-weight="600" fill="#12402a">写 handle：COW 重写 / MOR 追加 log</text><text x="193" y="366" fill="#2f6f4f">marker 标记产物（失败回滚）</text>
-    <rect x="44" y="380" width="298" height="32" rx="8" fill="#fff" stroke="#e8cf9a"/><text x="193" y="400" fill="#93762e">全部写完 → 提交，instant 转 COMPLETED</text>
+  <!-- ===== 写入流水（核心） ===== -->
+  <rect x="24" y="172" width="1032" height="168" rx="14" fill="#fdf9f0" stroke="#efe3cd" filter="url(#soft)"/>
+  <text x="40" y="192" font-size="11.5" font-weight="600" fill="#7a5a1e">写入流水（核心）· 一次 upsert 主链：路由 → 定位 → 定序提交</text>
+  <!-- Col1 写入路径 -->
+  <rect x="40" y="204" width="320" height="126" rx="10" fill="#fff7e6" stroke="#e8cf9a" data-tid="Hudi原理_支撑_写入路径与upsert" data-lab="写入路径与 upsert"/>
+  <text x="200" y="224" font-size="10.5" font-weight="600" fill="#5a3410" text-anchor="middle">写入路径与 upsert</text>
+  <g text-anchor="middle" font-size="8.8" fill="#5a3410">
+    <rect x="52" y="234" width="296" height="26" rx="7" fill="#fef2e0" stroke="#e8cf9a"/><text x="200" y="251">startCommit 开时间线 instant</text>
+    <rect x="52" y="266" width="296" height="26" rx="7" fill="#fef2e0" stroke="#e8cf9a"/><text x="200" y="283">索引 tagLocation：键 → 文件组</text>
+    <rect x="52" y="298" width="296" height="26" rx="7" fill="#eafaf1" stroke="#bfe0cd"/><text x="200" y="315" fill="#12402a">写 handle：COW 重写 / MOR 追加 log</text>
+  </g>
+  <!-- Col2 索引 -->
+  <rect x="376" y="204" width="300" height="126" rx="10" fill="#f4eefb" stroke="#d9c7ec" data-tid="Hudi原理_支撑_索引" data-lab="索引"/>
+  <text x="526" y="224" font-size="10.5" font-weight="600" fill="#3d2a5a" text-anchor="middle">索引</text>
+  <g text-anchor="middle" font-size="8.8" fill="#3d2a5a">
+    <rect x="388" y="234" width="276" height="26" rx="7" fill="#faf4fb" stroke="#e2d2ee"/><text x="526" y="251">Bloom / Simple / Bucket / Record</text>
+    <rect x="388" y="266" width="276" height="26" rx="7" fill="#faf4fb" stroke="#e2d2ee"/><text x="526" y="283">分区内 vs 全局（isGlobal）</text>
+    <rect x="388" y="298" width="276" height="26" rx="7" fill="#faf4fb" stroke="#e2d2ee"/><text x="526" y="315">upsert 免全表扫的地基</text>
+  </g>
+  <!-- Col3 时间线 -->
+  <rect x="692" y="204" width="364" height="126" rx="10" fill="#eef3fb" stroke="#bcd0ec" data-tid="Hudi原理_支撑_时间线" data-lab="时间线（核心）"/>
+  <text x="874" y="224" font-size="10.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">时间线（核心 · 真相）· .hoodie</text>
+  <g text-anchor="middle" font-size="8.8" fill="#1b2a4a">
+    <rect x="704" y="234" width="340" height="26" rx="7" fill="#f3f7fc" stroke="#cfe0f2"/><text x="874" y="251">HoodieInstant：动作 × 状态</text>
+    <rect x="704" y="266" width="340" height="26" rx="7" fill="#f3f7fc" stroke="#cfe0f2"/><text x="874" y="283">REQUESTED → INFLIGHT → COMPLETED</text>
+    <rect x="704" y="298" width="340" height="26" rx="7" fill="#e7f0fb" stroke="#b9d2ef"/><text x="874" y="315">instant time 单调全序 · 仅 COMPLETED 可见</text>
   </g>
 
-  <!-- 索引 (middle tall) -->
-  <rect x="368" y="178" width="248" height="252" rx="16" fill="#f4eefb" stroke="#d9c7ec" data-tid="Hudi原理_支撑_索引" data-lab="索引"/>
-  <text x="384" y="200" font-size="11.5" font-weight="700" fill="#3d2a5a">索引</text>
-  <g text-anchor="middle" font-size="8.2">
-    <rect x="382" y="210" width="220" height="44" rx="8" fill="#faf4fb" stroke="#e2d2ee"/><text x="492" y="228" font-weight="600" fill="#3d2a5a">记录键 → 文件组位置</text><text x="492" y="242" fill="#7a5a95">高效 upsert 的地基（免全表扫）</text>
-    <rect x="382" y="262" width="220" height="40" rx="8" fill="#faf4fb" stroke="#e2d2ee"/><text x="492" y="279" font-weight="600" fill="#3d2a5a">Bloom / Simple / Bucket</text><text x="492" y="293" fill="#7a5a95">RECORD_LEVEL（元数据表）</text>
-    <rect x="382" y="310" width="220" height="40" rx="8" fill="#faf4fb" stroke="#e2d2ee"/><text x="492" y="327" font-weight="600" fill="#3d2a5a">分区内 vs 全局（isGlobal）</text><text x="492" y="341" fill="#7a5a95">一致性哈希桶可动态调</text>
-    <rect x="382" y="358" width="220" height="54" rx="8" fill="#fff" stroke="#d9c7ec"/><text x="492" y="378" fill="#7a5a95">Hudi 相对 append 导向</text><text x="492" y="392" fill="#7a5a95">Iceberg 的本质差异</text>
+  <!-- ===== 存储与表模型 ===== -->
+  <rect x="24" y="352" width="1032" height="104" rx="14" fill="#f5faf6" stroke="#cfe6d5" filter="url(#soft)"/>
+  <text x="40" y="372" font-size="11.5" font-weight="600" fill="#12402a">存储与表模型 · 命名即元数据（对象存储 / HDFS：base parquet + log avro）</text>
+  <g text-anchor="middle" font-size="9">
+    <rect x="40" y="384" width="320" height="60" rx="9" fill="#eafaf1" stroke="#bfe0cd" data-tid="Hudi原理_支撑_文件布局" data-lab="文件布局"/><text x="200" y="408" fill="#12402a" font-weight="600" font-size="10.5">文件布局</text><text x="200" y="426" fill="#2f6f4f" font-size="8.8">FileGroup → FileSlice · base + log</text>
+    <rect x="376" y="384" width="320" height="60" rx="9" fill="#fef2e0" stroke="#efdcb4" data-tid="Hudi原理_支撑_表类型COW与MOR" data-lab="表类型 COW / MOR"/><text x="536" y="408" fill="#5a3410" font-weight="600" font-size="10.5">表类型 COW / MOR</text><text x="536" y="426" fill="#93762e" font-size="8.8">COW 重写(读快) · MOR 追加 log(写快)</text>
+    <rect x="712" y="384" width="344" height="60" rx="9" fill="#eef3fb" stroke="#bcd0ec" data-tid="Hudi原理_支撑_MoR读合并" data-lab="MoR 读合并"/><text x="884" y="408" fill="#1b2a4a" font-weight="600" font-size="10.5">MoR 读合并</text><text x="884" y="426" fill="#5b7db1" font-size="8.8">合并 base + log 按 instant · 三视图</text>
   </g>
 
-  <!-- 时间线 (right, core) -->
-  <rect x="628" y="178" width="422" height="252" rx="16" fill="#eef3fb" stroke="#bcd0ec" data-tid="Hudi原理_支撑_时间线" data-lab="时间线（核心）"/>
-  <text x="644" y="200" font-size="11.5" font-weight="700" fill="#1b2a4a">时间线（核心 · 灵魂 · 表的真相）· .hoodie</text>
-  <g text-anchor="middle" font-size="8.3">
-    <rect x="644" y="210" width="390" height="52" rx="8" fill="#f3f7fc" stroke="#cfe0f2"/><text x="839" y="230" font-weight="600" fill="#274a78">HoodieInstant：动作 × 状态</text><text x="839" y="245" fill="#5b7db1">commit/deltacommit/compaction/clean/rollback</text><text x="839" y="257" fill="#5b7db1">× REQUESTED → INFLIGHT → COMPLETED</text>
-    <rect x="644" y="270" width="390" height="40" rx="8" fill="#f3f7fc" stroke="#cfe0f2"/><text x="839" y="287" font-weight="600" fill="#274a78">instant time 单调定序（全序）</text><text x="839" y="301" fill="#5b7db1">文件片按 base instant 归位</text>
-    <rect x="644" y="318" width="390" height="42" rx="8" fill="#e7f0fb" stroke="#b9d2ef"/><text x="839" y="336" font-weight="600" fill="#1b2a4a">决定可见性 / 增量起点 / 回滚点</text><text x="839" y="351" fill="#5b7db1">只有 COMPLETED 的文件片可见</text>
-    <rect x="644" y="368" width="390" height="44" rx="8" fill="#fff" stroke="#bcd0ec"/><text x="839" y="386" fill="#5b7db1">不可变；过滤产新视图。</text><text x="839" y="400" fill="#5b7db1">被所有主线依赖</text>
+  <!-- ===== 表服务后台 & 并发治理 ===== -->
+  <rect x="24" y="468" width="1032" height="92" rx="14" fill="#f7f2fb" stroke="#ddd0ec" filter="url(#soft)"/>
+  <text x="40" y="488" font-size="11.5" font-weight="600" fill="#4a2f78">表服务后台 &amp; 并发治理 · 不阻塞写入主链</text>
+  <g text-anchor="middle" font-size="9">
+    <rect x="40" y="500" width="496" height="48" rx="9" fill="#faf4fb" stroke="#e2d2ee" data-tid="Hudi原理_支撑_表服务" data-lab="表服务"/><text x="288" y="521" fill="#5a3d78" font-weight="600" font-size="10.5">表服务（后台）</text><text x="288" y="538" fill="#7a5a95" font-size="8.8">compaction 合 log→base · cleaning 清旧 slice · clustering 重排</text>
+    <rect x="560" y="500" width="496" height="48" rx="9" fill="#f3ecfb" stroke="#ddd0ec" data-tid="Hudi原理_支撑_并发控制与元数据" data-lab="并发控制与元数据"/><text x="808" y="521" fill="#4a2f78" font-weight="600" font-size="10.5">并发控制与元数据</text><text x="808" y="538" fill="#6e4f95" font-size="8.8">OCC / NBCC + marker 冲突检测 · metadata table · catalog 同步</text>
   </g>
 
-  <!-- 文件布局 + 表类型 -->
-  <rect x="30" y="444" width="510" height="72" rx="14" fill="#f5faf6" stroke="#cfe6d5" data-tid="Hudi原理_支撑_文件布局" data-lab="文件布局"/>
-  <text x="46" y="466" font-size="11" font-weight="700" fill="#12402a">文件布局</text>
-  <g text-anchor="middle" font-size="8.2">
-    <rect x="46" y="474" width="230" height="34" rx="7" fill="#eafaf1" stroke="#bfe0cd"/><text x="161" y="490" fill="#12402a">FileGroup → FileSlice</text><text x="161" y="503" fill="#2f6f4f">partitionPath + fileId（身份）</text>
-    <rect x="286" y="474" width="244" height="34" rx="7" fill="#e6f7ee" stroke="#bfe0cd"/><text x="408" y="490" fill="#12402a">base + log · 命名即元数据</text><text x="408" y="503" fill="#2f6f4f">分区目录 · bootstrap</text>
-  </g>
-  <rect x="552" y="444" width="498" height="72" rx="14" fill="#fdf6ea" stroke="#efdcb4" data-tid="Hudi原理_支撑_表类型COW与MOR" data-lab="表类型 COW / MOR"/>
-  <text x="568" y="466" font-size="11" font-weight="700" fill="#5a3410">表类型（COW / MOR）</text>
-  <g text-anchor="middle" font-size="8.2">
-    <rect x="568" y="474" width="228" height="34" rx="7" fill="#fef2e0" stroke="#efdcb4"/><text x="682" y="490" fill="#5a3410">COW：重写文件（写慢读快）</text><text x="682" y="503" fill="#93762e">slice 只有 base</text>
-    <rect x="806" y="474" width="228" height="34" rx="7" fill="#fdf3e2" stroke="#efdcb4"/><text x="920" y="490" fill="#5a3410">MOR：写 log（写快读时合并）</text><text x="920" y="503" fill="#93762e">slice = base + log，需 compaction</text>
-  </g>
+  <!-- ===== 语义分型连线 ===== -->
+  <!-- Hot：接入 → 写入流水 -->
+  <line x1="200" y1="160" x2="200" y2="172" stroke="#2f9e6e" stroke-width="1.8" marker-end="url(#aHot)"/>
+  <text x="206" y="169" font-size="7" fill="#2f9e6e">upsert</text>
+  <!-- Hot：写入路径 → 索引（tag） -->
+  <line x1="360" y1="279" x2="376" y2="279" stroke="#2f9e6e" stroke-width="1.8" marker-end="url(#aHot)"/>
+  <text x="360" y="274" font-size="6.6" fill="#2f9e6e">tag</text>
+  <!-- Hot：索引 → 时间线（提交） -->
+  <line x1="676" y1="279" x2="692" y2="279" stroke="#2f9e6e" stroke-width="1.8" marker-end="url(#aHot)"/>
+  <text x="674" y="274" font-size="6.6" fill="#2f9e6e">提交</text>
+  <!-- State：写入路径 → 文件布局（落盘） -->
+  <line x1="200" y1="340" x2="200" y2="384" stroke="#c99a3a" stroke-width="1.8" marker-end="url(#aState)"/>
+  <text x="206" y="366" font-size="7" fill="#b0902e">写 base / log</text>
+  <!-- State：时间线 → MoR 读合并（slice 归位） -->
+  <line x1="874" y1="340" x2="874" y2="384" stroke="#c99a3a" stroke-width="1.8" marker-end="url(#aState)"/>
+  <text x="880" y="366" font-size="7" fill="#b0902e">slice 归位</text>
+  <!-- Bg：表服务 → 存储（compaction 合并，向上维护） -->
+  <line x1="300" y1="468" x2="300" y2="456" stroke="#8a5cae" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#aBg)"/>
+  <text x="306" y="465" font-size="7" fill="#8a5cae">compaction 合并</text>
+  <!-- Control：并发治理 → 时间线（OCC 定序校验，右缘回连） -->
+  <polyline points="1056,500 1068,500 1068,240 1056,240" stroke="#5b7db1" stroke-width="1.4" stroke-dasharray="5 3" fill="none" marker-end="url(#aCtl)"/>
+  <text x="1052" y="330" font-size="7" fill="#5b7db1" text-anchor="end">OCC 定序校验</text>
 
-  <!-- MoR 读合并 + 表服务 -->
-  <rect x="30" y="530" width="510" height="66" rx="14" fill="#eef3fb" stroke="#bcd0ec" data-tid="Hudi原理_支撑_MoR读合并" data-lab="MoR 读合并"/>
-  <text x="46" y="552" font-size="11" font-weight="700" fill="#1b2a4a">MoR 读合并</text>
-  <text x="46" y="571" font-size="8.6" fill="#5b7db1">HoodieMergedLogRecordReader 合并 base + log（同键按 instant 序）</text>
-  <text x="46" y="587" font-size="8.6" fill="#5b7db1">三视图：快照（合并）/ 读优化（仅 base）/ 增量（instant 区间）</text>
-  <rect x="552" y="530" width="498" height="66" rx="14" fill="#faf4fb" stroke="#e2d2ee" data-tid="Hudi原理_支撑_表服务" data-lab="表服务"/>
-  <text x="568" y="552" font-size="11" font-weight="700" fill="#5a3d78">表服务（后台）</text>
-  <text x="568" y="571" font-size="8.6" fill="#7a5a95">compaction（合 log 进 base）· cleaning（清旧 slice）</text>
-  <text x="568" y="587" font-size="8.6" fill="#7a5a95">clustering（replacecommit 重排布局）</text>
+  <!-- ===== 贯穿层 instant time ===== -->
+  <rect x="24" y="572" width="1032" height="28" rx="8" fill="#f0f0f4" stroke="#d2d2d7"/>
+  <text x="540" y="590" font-size="10" font-weight="600" fill="#48484a" text-anchor="middle">贯穿层 · instant time（单调时间戳）横切 时间线 / 文件片 / MoR 合并 —— 全表按 instant 定序</text>
 
-  <!-- 并发控制与元数据 -->
-  <rect x="30" y="610" width="1020" height="58" rx="14" fill="#f7f2fb" stroke="#ddd0ec" data-tid="Hudi原理_支撑_并发控制与元数据" data-lab="并发控制与元数据"/>
-  <text x="46" y="632" font-size="11" font-weight="700" fill="#4a2f78">并发控制与元数据</text>
-  <text x="46" y="652" font-size="8.7" fill="#6e4f95">OCC/NBCC + 锁 provider + marker（(partition,fileId) 交集检测冲突）· metadata table（files/col_stats/bloom/record_index）· catalog 同步（HiveSync→HMS/Glue）· .hoodie 表自描述</text>
-
-  <!-- 存储 -->
-  <rect x="30" y="682" width="1020" height="48" rx="14" fill="#fdf6ea" stroke="#efdcb4"/>
-  <text x="46" y="703" font-size="11" font-weight="700" fill="#5a3410">数据文件（对象存储 / HDFS）· base file（parquet/hfile/orc）+ log file（avro/parquet block）</text>
-  <text x="46" y="720" font-size="8.5" fill="#93762e">Hudi 不执行查询：由计算引擎读；MOR 读时合并 base + log</text>
-
-  <!-- ============ 数据流连线 ============ -->
-  <!-- 写入主流水（实线）：引擎→API→写入→(tag 索引 · 提交时间线)→落文件 -->
-  <g stroke="#9a9aa0" stroke-width="1.6" fill="none">
-    <line x1="540" y1="108" x2="540" y2="120" marker-end="url(#ar)"/>
-    <line x1="150" y1="164" x2="150" y2="178" marker-end="url(#ar)"/>
-    <line x1="356" y1="300" x2="368" y2="300" marker-end="url(#ar)"/>
-    <line x1="616" y1="300" x2="628" y2="300" marker-end="url(#ar)"/>
-    <line x1="150" y1="430" x2="150" y2="444" marker-end="url(#ar)"/>
-    <line x1="492" y1="430" x2="492" y2="444" marker-end="url(#ar)"/>
-    <line x1="800" y1="430" x2="800" y2="444" marker-end="url(#ar)"/>
-    <line x1="540" y1="668" x2="540" y2="682" marker-end="url(#ar)"/>
-  </g>
-  <text x="548" y="117" font-size="7" fill="#86868b">经 write client 读写</text>
-  <text x="156" y="174" font-size="7" fill="#6b6b70">写：upsert / insert / delete</text>
-  <text x="352" y="295" font-size="6.6" fill="#86868b">tag</text>
-  <text x="614" y="295" font-size="6.6" fill="#86868b">提交</text>
-  <text x="156" y="440" font-size="7" fill="#5a3410">写 base/log 文件</text>
-  <text x="426" y="440" font-size="7" fill="#3d2a5a">键→file group</text>
-  <text x="730" y="440" font-size="7" fill="#1b2a4a">slice 按 instant 归位</text>
-  <text x="548" y="678" font-size="7" fill="#86868b">落对象存储 / HDFS</text>
-  <!-- 读路径（实线 · 蓝）：API 经左侧入读；文件按 slice 合并 base+log -->
-  <g stroke="#4a72a8" stroke-width="1.3" fill="none">
-    <polyline points="60,164 18,176 18,553 30,553" marker-end="url(#ar)"/>
-    <line x1="120" y1="516" x2="120" y2="530" marker-end="url(#ar)"/>
-  </g>
-  <text x="3" y="360" font-size="7.5" font-weight="700" fill="#4a72a8">读路径</text>
-  <text x="126" y="527" font-size="7" fill="#4a72a8">读 base+log 合并</text>
-  <!-- 表服务维护（虚线 · 异步）：compaction 合 log 进 base -->
-  <g stroke="#b0902e" stroke-width="1.2" fill="none" stroke-dasharray="4 3">
-    <line x1="800" y1="530" x2="800" y2="518" marker-end="url(#ar)"/>
-  </g>
-  <text x="694" y="527" font-size="7" fill="#b0902e">compaction 合 log→base</text>
-
-  <!-- pervasive instant time -->
-  <rect x="30" y="744" width="1020" height="40" rx="12" fill="#f0f0f4" stroke="#d2d2d7"/>
-  <text x="540" y="769" font-size="10" font-weight="700" text-anchor="middle" fill="#48484a">贯穿层 · instant time（单调时间戳）—— 时间线 / 文件片 / MoR 合并都按 instant 序，横切写入 / 存储 / 读合并</text>
-
-  <!--  -->
-  <rect x="30" y="798" width="1020" height="72" rx="12" fill="#f7f7f9" stroke="#ececf1"/>
-  <text x="46" y="820" font-size="11" font-weight="700" fill="#1d1d1f"></text>
-  <text x="46" y="840" font-size="8.7" fill="#6e6e73">上＝引擎（外部）+ 表 API；中左＝写入路径；中＝索引；中右＝时间线（核心真相）；</text>
-  <text x="46" y="856" font-size="8.7" fill="#6e6e73">中下＝文件布局 + 表类型 + MoR 读合并 + 表服务；下＝并发控制与元数据 + 数据文件。Hudi 只管元数据 + 写读逻辑。</text>
+  <!-- ===== 读法 ===== -->
+  <rect x="24" y="608" width="1032" height="30" rx="8" fill="#f7f7f9" stroke="#ececef"/>
+  <text x="540" y="627" font-size="10" fill="#4a4a4f" text-anchor="middle">读法：引擎经 API upsert → 索引定位文件组 → 写 base / log 并在时间线提交 instant；读按 slice 合并 base + log，表服务后台异步 compaction</text>
 </svg>

@@ -1,92 +1,106 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="800" viewBox="0 0 1080 800" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="800" viewBox="0 0 1080 800"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
   <defs>
-    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
-    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1" stdDeviation="3" flood-color="#1d1d1f" flood-opacity="0.06"/></filter>
+    <filter id="glow" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <marker id="ar-hot" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#0a84ff"/></marker>
+    <marker id="ar-ctrl" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#a78bfa"/></marker>
+    <marker id="ar-state" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#1aa89a"/></marker>
+    <marker id="ar-fail" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#e0742a"/></marker>
   </defs>
+
   <rect width="1080" height="800" fill="#fbfbfd"/>
-  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Kafka 核心原理 · 总架构图</text>
-  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">分布式事件流平台:生产者追加分区日志,副本 ISR 复制保容错,消费者按位点顺序读,KRaft 共识管元数据(替代 ZooKeeper)</text>
 
-  <!-- clients -->
-  <rect x="30" y="64" width="1020" height="56" rx="13" fill="#f4eefb" stroke="#d9c7ec" data-tid="api" data-lab="生产/消费 API"/>
-  <text x="46" y="84" font-size="11" font-weight="700" fill="#5a3d78">生产/消费 API 接触面</text>
-  <g text-anchor="middle" font-size="8.8">
-    <rect x="46" y="92" width="490" height="24" rx="7" fill="#faf4fb" stroke="#e2d2ee"/><text x="291" y="108" fill="#5a3d78">Producer:send 攒批(RecordAccumulator)→ 按分区发,acks 定确认</text>
-    <rect x="546" y="92" width="488" height="24" rx="7" fill="#faf4fb" stroke="#e2d2ee"/><text x="790" y="108" fill="#5a3d78">Consumer:poll/fetch 顺序读 → 提交位点(KIP-848 组协调)</text>
-  </g>
+  <text x="30" y="32" font-size="16" font-weight="700" fill="#1d1d1f">Kafka · 分布式提交日志剖面 <tspan font-size="11" font-weight="500" fill="#86868b">数据面 broker + 元数据面 KRaft</tspan></text>
+  <text x="30" y="54" font-size="11" fill="#6e6e73">设计张力：顺序日志的<tspan font-weight="600" fill="#1d1d1f">简单高吞吐</tspan> vs 副本/消费组的<tspan font-weight="600" fill="#1d1d1f">一致性协调</tspan> —— 分区内严格有序 + ISR 复制 + KRaft 共识管元数据</text>
 
-  <!-- broker cluster -->
-  <rect x="30" y="134" width="700" height="380" rx="16" fill="#fff7e6" stroke="#e8cf9a"/>
-  <text x="46" y="156" font-size="12" font-weight="700" fill="#5a3410">Broker 集群（数据面 · process.roles=broker）</text>
+  <!-- ① 生产/消费 API 接触面 -->
+  <rect x="30" y="66" width="1020" height="58" rx="11" fill="#f5f5f7" stroke="#d8d8dc" filter="url(#soft)" data-tid="api" data-lab="生产/消费 API"/>
+  <text x="46" y="86" font-size="11" font-weight="600" fill="#1d1d1f">① 生产 / 消费 API 接触面</text>
+  <rect x="46" y="94" width="492" height="24" rx="7" fill="#fbfbfd" stroke="#d8d8dc"/><text x="292" y="110" font-size="8.8" fill="#6e6e73" text-anchor="middle">Producer:send 攒批(RecordAccumulator)→ 按分区发 · acks 定确认</text>
+  <rect x="548" y="94" width="486" height="24" rx="7" fill="#fbfbfd" stroke="#d8d8dc"/><text x="791" y="110" font-size="8.8" fill="#6e6e73" text-anchor="middle">Consumer:poll/fetch 顺序读 → 提交位点(KIP-848 组协调)</text>
 
-  <!-- network layer -->
-  <rect x="46" y="168" width="668" height="66" rx="10" fill="#fef2e0" stroke="#e8cf9a" filter="url(#soft)" data-tid="net" data-lab="网络与请求处理(Reactor+Purgatory)"/>
-  <text x="60" y="188" font-size="9.5" font-weight="600" fill="#5a3410">网络与请求处理(Reactor + Purgatory)</text>
+  <!-- ② Broker 集群(数据面) -->
+  <rect x="30" y="140" width="700" height="380" rx="16" fill="#f7f8fa" stroke="#dfe2e8"/>
+  <text x="46" y="163" font-size="12" font-weight="700" fill="#1d1d1f">② Broker 集群 · 数据面 <tspan font-size="8.5" fill="#a1a1a6">process.roles=broker</tspan></text>
+
+  <rect x="46" y="174" width="668" height="64" rx="10" fill="#f5f5f7" stroke="#d8d8dc" filter="url(#soft)" data-tid="net" data-lab="网络与请求处理"/>
+  <text x="60" y="193" font-size="9.8" font-weight="600" fill="#1d1d1f">网络与请求处理 · Reactor + Purgatory</text>
   <g text-anchor="middle" font-size="8">
-    <rect x="60" y="198" width="200" height="28" rx="6" fill="#fff" stroke="#e8cf9a"/><text x="160" y="216" fill="#5a3410">Acceptor/Processor(收发)</text>
-    <rect x="270" y="198" width="200" height="28" rx="6" fill="#fff" stroke="#e8cf9a"/><text x="370" y="216" fill="#5a3410">KafkaApis 分派</text>
-    <rect x="480" y="198" width="220" height="28" rx="6" fill="#fff" stroke="#e8cf9a"/><text x="590" y="216" fill="#5a3410">Purgatory 延迟操作(等 ISR/数据)</text>
+    <rect x="60" y="202" width="200" height="28" rx="6" fill="#fbfbfd" stroke="#d8d8dc"/><text x="160" y="219" fill="#6e6e73">Acceptor / Processor 收发</text>
+    <rect x="270" y="202" width="200" height="28" rx="6" fill="#fbfbfd" stroke="#d8d8dc"/><text x="370" y="219" fill="#6e6e73">KafkaApis 分派</text>
+    <rect x="480" y="202" width="220" height="28" rx="6" fill="#fbfbfd" stroke="#d8d8dc"/><text x="590" y="219" fill="#6e6e73">Purgatory 延迟操作(等 ISR/数据)</text>
   </g>
 
-  <!-- partition log + replication -->
-  <rect x="46" y="244" width="668" height="150" rx="10" fill="#fef2e0" stroke="#e8cf9a" filter="url(#soft)"/>
-  <text x="60" y="264" font-size="9.5" font-weight="600" fill="#5a3410">日志存储 + 副本与 ISR</text>
-  <g text-anchor="middle" font-size="8">
-    <rect x="60" y="274" width="315" height="110" rx="8" fill="#fff" stroke="#e8cf9a" data-tid="log" data-lab="日志存储 · Partition Leader"/><text x="217" y="292" font-weight="600" fill="#5a3410">Partition Leader(UnifiedLog)</text><text x="217" y="308" fill="#93762e">追加 active LogSegment</text><rect x="74" y="316" width="287" height="18" rx="4" fill="#fdf6ea"/><text x="217" y="329" fill="#93762e">.log + .index + .timeindex(稀疏)</text><rect x="74" y="338" width="287" height="18" rx="4" fill="#fdf6ea"/><text x="217" y="351" fill="#93762e">retention 删除 / compaction 压缩</text><text x="217" y="374" fill="#93762e">零拷贝 sendfile 给消费者</text>
-    <rect x="385" y="274" width="315" height="110" rx="8" fill="#fff" stroke="#e8cf9a" data-tid="repl" data-lab="副本与 ISR · Follower"/><text x="542" y="292" font-weight="600" fill="#5a3410">Follower 副本(ISR)</text><text x="542" y="308" fill="#93762e">pull 复制 Leader 日志</text><rect x="399" y="316" width="287" height="18" rx="4" fill="#fdf6ea"/><text x="542" y="329" fill="#93762e">ISR=跟上的副本集</text><rect x="399" y="338" width="287" height="18" rx="4" fill="#fdf6ea"/><text x="542" y="351" fill="#93762e">HW=ISR 最小 LEO(可见边界)</text><text x="542" y="374" fill="#93762e">acks=all + min.insync 保不丢</text>
+  <rect x="46" y="248" width="668" height="152" rx="10" fill="#f5f5f7" stroke="#d8d8dc" filter="url(#soft)"/>
+  <text x="60" y="267" font-size="9.8" font-weight="600" fill="#1d1d1f">日志存储 + 副本与 ISR <tspan font-size="8" fill="#1aa89a">State</tspan></text>
+  <rect x="60" y="276" width="316" height="116" rx="8" fill="#fbfbfd" stroke="#d8d8dc" data-tid="log" data-lab="日志存储 · Partition Leader"/>
+  <text x="218" y="296" font-size="9" font-weight="600" fill="#1d1d1f" text-anchor="middle">Partition Leader · UnifiedLog</text>
+  <text x="218" y="313" font-size="8" fill="#6e6e73" text-anchor="middle">append active LogSegment(顺序写)</text>
+  <text x="218" y="330" font-size="8" fill="#6e6e73" text-anchor="middle">.log + .index + .timeindex(稀疏)</text>
+  <text x="218" y="347" font-size="8" fill="#6e6e73" text-anchor="middle">retention 删除 / compaction 压缩</text>
+  <text x="218" y="368" font-size="8" fill="#8a8a90" text-anchor="middle">零拷贝 sendfile 给消费者(Opt)</text>
+  <text x="218" y="384" font-size="7.5" fill="#a1a1a6" text-anchor="middle">UnifiedLog.scala</text>
+  <rect x="386" y="276" width="316" height="116" rx="8" fill="#fbfbfd" stroke="#d8d8dc" data-tid="repl" data-lab="副本与 ISR · Follower"/>
+  <text x="544" y="296" font-size="9" font-weight="600" fill="#1d1d1f" text-anchor="middle">Follower 副本 · ISR</text>
+  <text x="544" y="313" font-size="8" fill="#6e6e73" text-anchor="middle">pull 复制 Leader 日志</text>
+  <text x="544" y="330" font-size="8" fill="#6e6e73" text-anchor="middle">ISR = 跟上的副本集</text>
+  <text x="544" y="347" font-size="8" fill="#6e6e73" text-anchor="middle">HW = ISR 最小 LEO(可见边界)</text>
+  <text x="544" y="368" font-size="8" fill="#6e6e73" text-anchor="middle">acks=all + min.insync 保不丢</text>
+  <text x="544" y="384" font-size="7.5" fill="#e0742a" text-anchor="middle">ISR 收缩→unclean 选举风险(Fail)</text>
+  <line x1="376" y1="334" x2="386" y2="334" stroke="#1aa89a" stroke-width="1.5" marker-end="url(#ar-state)"/>
+
+  <rect x="46" y="410" width="668" height="98" rx="10" fill="#f5f5f7" stroke="#d8d8dc" filter="url(#soft)"/>
+  <text x="60" y="429" font-size="9.8" font-weight="600" fill="#1d1d1f">协调器(在 Broker 上) <tspan font-size="8" fill="#a78bfa">Control</tspan></text>
+  <rect x="60" y="438" width="320" height="60" rx="8" fill="#fbfbfd" stroke="#d8d8dc" data-tid="group" data-lab="消费者组协调器"/>
+  <text x="220" y="458" font-size="8.8" font-weight="600" fill="#1d1d1f" text-anchor="middle">GroupCoordinator 消费者组</text>
+  <text x="220" y="474" font-size="8" fill="#6e6e73" text-anchor="middle">rebalance(KIP-848 服务端分配)</text>
+  <text x="220" y="490" font-size="8" fill="#6e6e73" text-anchor="middle">位点存 __consumer_offsets</text>
+  <rect x="390" y="438" width="312" height="60" rx="8" fill="#fbfbfd" stroke="#d8d8dc" data-tid="txn" data-lab="事务协调器"/>
+  <text x="546" y="458" font-size="8.8" font-weight="600" fill="#1d1d1f" text-anchor="middle">TransactionCoordinator 事务</text>
+  <text x="546" y="474" font-size="8" fill="#6e6e73" text-anchor="middle">PID/epoch · commit/abort 标记</text>
+  <text x="546" y="490" font-size="8" fill="#6e6e73" text-anchor="middle">幂等 + 事务 = EOS 恰好一次</text>
+
+  <!-- ③ KRaft 控制器 quorum(元数据面) -->
+  <rect x="746" y="140" width="304" height="380" rx="16" fill="#f7f8fa" stroke="#c9b8ec"/>
+  <text x="762" y="163" font-size="12" font-weight="700" fill="#7c5cd6">③ KRaft 控制器 quorum</text>
+  <text x="762" y="180" font-size="8.3" fill="#9a86c9">元数据面 · process.roles=controller · Control</text>
+  <rect x="762" y="190" width="272" height="88" rx="9" fill="#fbfbfd" stroke="#d8d8dc" data-tid="kraft" data-lab="QuorumController"/>
+  <text x="898" y="211" font-size="9.5" font-weight="600" text-anchor="middle" fill="#1d1d1f">QuorumController</text>
+  <text x="776" y="230" font-size="8" fill="#6e6e73">单线程事件队列处理元数据变更</text>
+  <text x="776" y="246" font-size="8" fill="#6e6e73">prepareAppend → replay → 复制</text>
+  <text x="776" y="264" font-size="7.5" fill="#a1a1a6">metadata/controller/QuorumController</text>
+  <rect x="762" y="286" width="272" height="80" rx="9" fill="#fbfbfd" stroke="#d8d8dc" data-tid="kraft" data-lab="KafkaRaftClient 共识"/>
+  <text x="898" y="307" font-size="9.5" font-weight="600" text-anchor="middle" fill="#1d1d1f">KafkaRaftClient · Raft 共识</text>
+  <text x="776" y="326" font-size="8" fill="#6e6e73">选主 + 多数派提交</text>
+  <text x="776" y="342" font-size="8" fill="#6e6e73">元数据日志 = __cluster_metadata</text>
+  <text x="776" y="358" font-size="8" fill="#a1a1a6">单分区,与数据日志同构</text>
+  <rect x="762" y="374" width="272" height="130" rx="9" fill="#fbfbfd" stroke="#d8d8dc" data-tid="kraft" data-lab="元数据传播"/>
+  <text x="898" y="395" font-size="9.5" font-weight="600" text-anchor="middle" fill="#1d1d1f">元数据传播</text>
+  <text x="776" y="415" font-size="8" fill="#6e6e73">MetadataLoader(Raft Listener)</text>
+  <text x="776" y="431" font-size="8" fill="#6e6e73">→ 不可变 MetadataImage</text>
+  <text x="776" y="447" font-size="8" fill="#6e6e73">→ 扇出各 Broker</text>
+  <text x="776" y="467" font-size="8" fill="#6e6e73">Broker:KRaftMetadataCache</text>
+  <text x="776" y="483" font-size="8" fill="#8a8a90">setImage 无锁应用(Opt)</text>
+
+  <g filter="url(#glow)">
+    <line x1="380" y1="124" x2="380" y2="174" stroke="#0a84ff" stroke-width="2" marker-end="url(#ar-hot)"/>
+    <line x1="380" y1="238" x2="380" y2="248" stroke="#0a84ff" stroke-width="2" marker-end="url(#ar-hot)"/>
   </g>
-  <line x1="375" y1="330" x2="385" y2="330" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <path d="M746,330 C726,330 726,207 714,207" fill="none" stroke="#a78bfa" stroke-width="1.5" stroke-dasharray="6 4" marker-end="url(#ar-ctrl)"/>
+  <text x="694" y="150" font-size="8" fill="#7c5cd6" text-anchor="end">元数据扇出</text>
 
-  <!-- coordinators -->
-  <rect x="46" y="404" width="668" height="98" rx="10" fill="#e6f7ee" stroke="#bfe0cd"/>
-  <text x="60" y="424" font-size="9.5" font-weight="600" fill="#12402a">协调器(在 Broker 上)</text>
-  <g text-anchor="middle" font-size="8">
-    <rect x="60" y="434" width="320" height="58" rx="8" fill="#eafaf1" stroke="#bfe0cd" data-tid="group" data-lab="消费者组协调器"/><text x="220" y="454" font-weight="600" fill="#12402a">消费者组协调器 GroupCoordinator</text><text x="220" y="470" fill="#2f6f4f">rebalance(KIP-848 服务端分配)</text><text x="220" y="484" fill="#2f6f4f">位点存 __consumer_offsets</text>
-    <rect x="390" y="434" width="310" height="58" rx="8" fill="#eafaf1" stroke="#bfe0cd" data-tid="txn" data-lab="事务协调器"/><text x="545" y="454" font-weight="600" fill="#12402a">事务协调器 TransactionCoordinator</text><text x="545" y="470" fill="#2f6f4f">PID/epoch · commit/abort 标记</text><text x="545" y="484" fill="#2f6f4f">幂等 + 事务 = EOS</text>
+  <text x="46" y="540" font-size="9" fill="#0a84ff">Hot 主链:Producer → 网络层 → Leader 顺序 append → ISR 复制到 HW → Consumer 从 Leader 零拷贝顺序读(按位点)</text>
+
+  <rect x="30" y="560" width="1020" height="76" rx="12" fill="#f5f5f7" stroke="#d8d8dc"/>
+  <text x="48" y="582" font-size="10.5" font-weight="700" fill="#1d1d1f">核心设计张力 · 顺序日志简单高吞吐 vs 副本/消费组一致性协调</text>
+  <text x="48" y="602" font-size="9" fill="#6e6e73">分区内严格有序是简单性根基;跨副本一致靠 ISR+HW+acks;消费进度靠组协调+位点;元数据一致由 KRaft 共识兜底(替代 ZooKeeper)。</text>
+  <g font-size="8.5" fill="#6e6e73">
+    <line x1="560" y1="622" x2="586" y2="622" stroke="#0a84ff" stroke-width="2"/><text x="592" y="625">Hot 日志主轨</text>
+    <line x1="690" y1="622" x2="716" y2="622" stroke="#1aa89a" stroke-width="1.5"/><text x="722" y="625">State ISR/HW</text>
+    <line x1="820" y1="622" x2="846" y2="622" stroke="#a78bfa" stroke-width="1.5" stroke-dasharray="6 4"/><text x="852" y="625">Control 元数据/协调</text>
+    <line x1="980" y1="622" x2="1006" y2="622" stroke="#e0742a" stroke-width="1.5" stroke-dasharray="3 3"/><text x="1012" y="625">Failure</text>
   </g>
 
-  <!-- KRaft controller quorum -->
-  <rect x="746" y="134" width="304" height="380" rx="16" fill="#eef3fb" stroke="#bcd0ec" data-tid="kraft" data-lab="KRaft 控制器 quorum(元数据)"/>
-  <text x="762" y="156" font-size="12" font-weight="700" fill="#1b2a4a">KRaft 控制器 quorum</text>
-  <text x="762" y="174" font-size="8.3" fill="#5b7db1">(元数据面 · process.roles=controller)</text>
-  <rect x="762" y="184" width="272" height="90" rx="9" fill="#f3f7fc" stroke="#cfe0f2" filter="url(#soft)"/>
-  <text x="898" y="206" font-size="9.5" font-weight="600" text-anchor="middle" fill="#274a78">QuorumController</text>
-  <text x="776" y="226" font-size="8" fill="#5b7db1">单线程事件队列处理元数据变更</text>
-  <text x="776" y="242" font-size="8" fill="#5b7db1">prepareAppend→replay→复制</text>
-  <text x="776" y="260" font-size="8" fill="#5b7db1">metadata/controller/QuorumController</text>
-  <rect x="762" y="284" width="272" height="80" rx="9" fill="#f3f7fc" stroke="#cfe0f2" filter="url(#soft)"/>
-  <text x="898" y="306" font-size="9.5" font-weight="600" text-anchor="middle" fill="#274a78">KafkaRaftClient(Raft 共识)</text>
-  <text x="776" y="326" font-size="8" fill="#5b7db1">选主 + 多数派提交</text>
-  <text x="776" y="344" font-size="8" fill="#5b7db1">元数据日志 = __cluster_metadata</text>
-  <text x="776" y="358" font-size="8" fill="#5b7db1">(单分区,与数据日志同构)</text>
-  <rect x="762" y="374" width="272" height="128" rx="9" fill="#e7f0fb" stroke="#b9d2ef"/>
-  <text x="898" y="396" font-size="9.5" font-weight="600" text-anchor="middle" fill="#1b2a4a">元数据传播</text>
-  <text x="776" y="416" font-size="8" fill="#5b7db1">MetadataLoader(Raft Listener)</text>
-  <text x="776" y="432" font-size="8" fill="#5b7db1">→ 不可变 MetadataImage</text>
-  <text x="776" y="448" font-size="8" fill="#5b7db1">→ 扇出各 Broker</text>
-  <text x="776" y="468" font-size="8" fill="#5b7db1">Broker: KRaftMetadataCache</text>
-  <text x="776" y="484" font-size="8" fill="#5b7db1">setImage 无锁应用</text>
-
-  <line x1="746" y1="330" x2="714" y2="330" stroke="#c9b6de" stroke-width="1.4" stroke-dasharray="5 4" marker-end="url(#ar)"/>
-  <text x="620" y="324" font-size="7.5" fill="#7a5a95">元数据下发</text>
-
-  <!-- flow arrows client->broker -->
-  <line x1="291" y1="120" x2="291" y2="134" stroke="#86868b" stroke-width="1.6" marker-end="url(#ar)"/>
-  <line x1="600" y1="120" x2="600" y2="134" stroke="#86868b" stroke-width="1.6" marker-end="url(#ar)"/>
-
-  <!-- semantics + pervasive -->
-  <rect x="30" y="526" width="1020" height="56" rx="12" fill="#f7f7f9" stroke="#ececf1"/>
-  <text x="46" y="548" font-size="11" font-weight="700" fill="#1d1d1f"></text>
-  <text x="46" y="568" font-size="8.8" fill="#6e6e73">上=生产/消费 API;左大块=Broker 数据面(网络→日志+副本→协调器);右=KRaft 元数据面(控制器 quorum + 传播)。数据面与元数据面职责分离。</text>
-
-  <rect x="30" y="594" width="1020" height="46" rx="12" fill="#f0f0f4" stroke="#d2d2d7"/>
-  <text x="540" y="621" font-size="10" font-weight="700" text-anchor="middle" fill="#48484a">贯穿层 · offset(位点)+ HW(高水位) —— offset 是日志地址,HW 是已复制到 ISR 的可见边界,横切存储/复制/消费</text>
-
-  <!-- three declarations -->
-  <rect x="30" y="652" width="1020" height="120" rx="13" fill="#eafaf1" stroke="#bfe0cd"/>
-  <text x="46" y="674" font-size="11" font-weight="700" fill="#12402a">三条贯穿声明</text>
-  <text x="46" y="696" font-size="9" fill="#2f6f4f">① 一切是分区的追加日志:无随机写、无 update-in-place;顺序写 + 页缓存 + 零拷贝是高吞吐根基</text>
-  <text x="46" y="716" font-size="9" fill="#2f6f4f">② 容错靠副本 ISR:Leader/Follower 复制,HW + acks=all + min.insync.replicas 定义"写成功且不丢",非共享存储</text>
-  <text x="46" y="736" font-size="9" fill="#2f6f4f">③ KRaft 用共识管元数据(4.x 立身之本):ZooKeeper 已移除,元数据本身是一条 Raft 复制的事件日志</text>
-  <text x="46" y="758" font-size="8.5" fill="#b1483a">· 与数据库不同:无查询优化/事务表;与 KV 不同:无随机读写。它是"把日志做到极致"的流平台。</text>
+  <text x="30" y="656" font-size="9" fill="#a1a1a6">Kafka(KRaft 模式)· 所有机制回本地源码核实 · 不变量:分区内偏移单调、HW≤LEO、__consumer_offsets 幂等提交</text>
 </svg>

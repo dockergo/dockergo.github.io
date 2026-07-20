@@ -826,37 +826,34 @@ _THEME_BY_ID = {th["id"]: th for th in THEMES}
 # 热区坐标取自 SVG 各模块 rect;SVG 主体包在 <g transform="translate(0,70)"> 内,
 # 故除“外部数据生态/接入层”外的模块 y 需 +70 才是根坐标。viewBox 1080×850。
 import base64 as _b64
-_ARCH_SVG_B64 = open(
+_ARCH_SVG_TEXT = open(
     os.path.join(_DESIGN_DIR, "Trino原理_总架构图.svg"),
     encoding="utf-8").read()
-_ARCH_SVG_B64 = _b64.b64encode(_ARCH_SVG_B64.encode("utf-8")).decode("ascii")
+_ARCH_SVG_B64 = _b64.b64encode(_ARCH_SVG_TEXT.encode("utf-8")).decode("ascii")
 
-# (x, y, w, h, theme_id, 标签)  y 已加上 +70 组偏移
-_ARCH_HOTSPOTS = [
-    # 坐标取自 Trino原理_总架构图.svg(viewBox 1080×880)。coordinator 编排链行 rect y=208;
-    # 集群守护行 y=300;安全入口 y=386;worker 集群 x=690;底部外部数据生态 y=452。
-    # 接口主线 DQL/DCL 未在架构图直接标注 → 作为 chip 出现(见 _ARCH_ALWAYS_CHIP)。
-    # coordinator 编排链(前台):规划/优化 → 优化能力域;切分/分发 + 调度
-    (306, 208, 118, 58, "tabletsched",   "规划/优化"),
-    (436, 208, 118, 58, "execengine",    "执行(worker 侧内核)"),
-    # 集群守护行(rect y=300):资源组 → 调度与资源;集群内存仲裁 → 内存管理
-    (46,  300, 196, 52, "transaction",   "资源组/调度"),
-    (254, 300, 196, 52, "metadata",      "集群内存仲裁"),
-    # 安全入口(rect y=386)→ DCL
-    (46,  386, 608, 36, "dcl",           "安全 · 认证+访问控制"),
-    # worker 集群(rect x=690 y=132 w=360 h=300):执行/交换/连接器读
-    (690, 300, 328, 52, "compaction",    "Exchange 数据交换"),
-    (690, 362, 328, 52, "storageformat", "连接器读写(PageSource)"),
-    (706, 216, 316, 76, "execengine",    "Task/Driver/Operator 执行"),
-    # 容错(FTE)贴在 Exchange/spooling 语义上
-    (690, 132, 360, 46, "workload",      "Worker 集群(FTE 可重试)"),
-    # 元数据与 Catalog(底座):底部外部数据生态经连接器接入 → 元数据路由
-    (30,  452, 1020, 86, "opttech",      "外部数据生态 · Catalog 接入"),
-]
+# 热区从总架构 SVG 里带 data-tid 的 rect 自动派生(单一真源)——坐标/viewBox 直接读 SVG,
+# 避免手写坐标与图形脱节。data-tid 沿用本项目 THEMES 内的真实 id(部分沿用 doris 模板名)。
+import re as _re_hot, xml.etree.ElementTree as _ET_hot
+def _parse_arch_hotspots(svg_text):
+    vb = _re_hot.search(r'viewBox="[\d.]+\s+[\d.]+\s+([\d.]+)\s+([\d.]+)"', svg_text)
+    vbw, vbh = float(vb.group(1)), float(vb.group(2))
+    root = _ET_hot.fromstring(svg_text); hots = []
+    def walk(el, dx, dy):
+        m = _re_hot.search(r'translate\(\s*([-\d.]+)(?:[,\s]+([-\d.]+))?', el.get("transform") or "")
+        if m:
+            dx += float(m.group(1))
+            if m.group(2): dy += float(m.group(2))
+        if el.tag.rsplit("}", 1)[-1] == "rect" and el.get("data-tid"):
+            hots.append((float(el.get("x", 0)) + dx, float(el.get("y", 0)) + dy,
+                         float(el.get("width", 0)), float(el.get("height", 0)),
+                         el.get("data-tid"), el.get("data-lab") or ""))
+        for c in el: walk(c, dx, dy)
+    walk(root, 0.0, 0.0); return hots, vbw, vbh
+_ARCH_HOTSPOTS, _ARCH_VBW, _ARCH_VBH = _parse_arch_hotspots(_ARCH_SVG_TEXT)
 _arch_hotspots_html = "\n".join(
     '<button class="arch-hot" style="left:{lp:.4f}%;top:{tp:.4f}%;width:{wp:.4f}%;height:{hp:.4f}%" '
     'data-theme-id="{tid}" title="{lab} → {ttitle}"><span class="arch-hot-lab">{lab}</span></button>'.format(
-        lp=x/1080*100, tp=y/880*100, wp=w/1080*100, hp=h/880*100,
+        lp=x/_ARCH_VBW*100, tp=y/_ARCH_VBH*100, wp=w/_ARCH_VBW*100, hp=h/_ARCH_VBH*100,
         tid=tid, lab=lab, ttitle=_THEME_BY_ID[tid]["title"])
     for (x, y, w, h, tid, lab) in _ARCH_HOTSPOTS)
 
@@ -2418,11 +2415,12 @@ body{background:var(--c-bg)}
 header{padding:16px 30px 14px;border-bottom:1px solid var(--c-line);display:flex;align-items:center;justify-content:space-between;
   background:color-mix(in srgb, var(--c-bg2) 82%, transparent);backdrop-filter:saturate(180%) blur(24px);-webkit-backdrop-filter:saturate(180%) blur(24px)}
 .theme-toggle{width:38px;height:38px;border-radius:50%;border:1px solid var(--c-line);background:var(--c-panel);
-  color:var(--c-ink2);cursor:pointer;display:grid;place-items:center;font-size:16px;transition:all .2s ease;flex-shrink:0}
+  color:var(--c-ink2);cursor:pointer;display:grid;place-items:center;font-size:16px;transition:all .2s ease;flex-shrink:0}.msearch{position:relative;display:flex;align-items:center;gap:8px;width:min(300px,34vw);padding:0 12px;height:38px;border-radius:19px;border:1px solid var(--c-line);background:var(--c-panel);color:var(--c-ink2);margin-left:auto;margin-right:12px}.msearch svg{flex:none;opacity:.7}.msearch input{flex:1;border:0;background:transparent;color:var(--c-ink);outline:0;font-size:13px}.msearch kbd{flex:none;font:600 11px var(--mono,monospace);color:var(--c-ink3);border:1px solid var(--c-line);border-radius:5px;padding:1px 6px}.mq-list{position:absolute;top:44px;left:0;right:0;z-index:60;background:var(--c-panel);border:1px solid var(--c-line);border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.28);overflow:hidden;display:none}.mq-list.on{display:block}.mq-item{display:block;width:100%;text-align:left;border:0;background:transparent;cursor:pointer;padding:9px 14px;color:var(--c-ink);font-size:13px;border-bottom:1px solid var(--c-line)}.mq-item:last-child{border-bottom:0}.mq-item:hover,.mq-item.sel{background:var(--c-hover,rgba(120,120,140,.14))}.mq-item .s{display:block;color:var(--c-ink3);font-size:11px;margin-top:2px}
 .theme-toggle:hover{border-color:var(--c-ink3);color:var(--c-ink);background:var(--c-hover)}
 .homeico{display:inline-flex;color:var(--c-ink2);transition:color .15s}
+.nn-n{fill:var(--c-ink2)}.nn-h{fill:var(--c-brand)}.nn-e{stroke:var(--c-line);stroke-width:1.4}
 .brand[href]{text-decoration:none;cursor:pointer}
-.brand[href]:hover .homeico{color:var(--c-brand)}
+.brand[href]:hover .homeico{display:inline-grid;place-items:center;width:38px;height:38px;border-radius:50%;border:1px solid var(--c-line);background:var(--c-panel);color:var(--c-ink2);transition:color .15s} a:hover .homeico,.logo:hover .homeico,.homelink:hover .homeico{color:var(--c-brand);border-color:var(--c-brand)}
 .back-portal{display:inline-flex;align-items:center;margin-left:auto;margin-right:12px;padding:7px 14px;border-radius:9px;border:1px solid var(--c-line);background:var(--c-panel);color:var(--c-ink2);font-size:12.5px;font-weight:500;text-decoration:none;transition:all .15s}
 .back-portal:hover{border-color:var(--c-brand);color:var(--c-brand);background:var(--c-hover)}
 .theme-toggle .tt-ico{grid-area:1/1;transition:opacity .2s,transform .3s}
@@ -2431,13 +2429,9 @@ header{padding:16px 30px 14px;border-bottom:1px solid var(--c-line);display:flex
 :root[data-theme="light"] .theme-toggle .tt-sun{opacity:1;transform:none}
 :root[data-theme="light"] .theme-toggle .tt-moon{opacity:0;transform:rotate(90deg) scale(.5)}
 .brand{display:flex;align-items:center;gap:13px}
-.logo{width:34px;height:34px;border-radius:9px;flex-shrink:0;
-  background:conic-gradient(from 210deg,var(--brand),var(--brand2),var(--accent),var(--brand));
-  box-shadow:0 3px 10px -2px rgba(0,113,227,.5);position:relative}
-.logo::after{content:"";position:absolute;inset:5px;border-radius:5px;background:#fff;
-  box-shadow:inset 0 0 0 1.5px rgba(0,0,0,.06)}
-.logo::before{content:"◆";position:absolute;inset:0;display:grid;place-items:center;
-  color:var(--brand);font-size:12px;z-index:1}
+.logo{width:34px;height:34px;flex-shrink:0;display:grid;place-items:center;position:relative;text-decoration:none}
+
+
 h1{margin:0;font-size:19px;font-weight:600;letter-spacing:-.02em;color:var(--c-ink)}
 h1 .dim{color:var(--c-ink3);font-weight:400;font-size:13px;margin-left:9px;letter-spacing:0}
 .sub{margin:5px 0 0 47px;font-size:12px;color:var(--c-ink3);line-height:1.5}
@@ -2471,16 +2465,19 @@ h1 .dim{color:var(--c-ink3);font-weight:400;font-size:13px;margin-left:9px;lette
 
 
 /* ---- Stage (Apple 浅色画布 · 图节点浅 tint + 深色字) ---- */
-.stage{flex:1;position:relative;overflow:hidden;
+.stage{flex:1;position:relative;overflow:hidden;display:flex!important;flex-direction:column;min-height:0;
   background:
     radial-gradient(circle at center, var(--cv-dot,rgba(0,0,0,.05)) 1px, transparent 1px) 0 0/28px 28px,
     radial-gradient(1100px 560px at 88% -14%, rgba(0,113,227,.05), transparent 60%),
     radial-gradient(900px 520px at 2% 112%, rgba(122,90,240,.045), transparent 58%),
     var(--cv-bg,#f0f0f3);
   box-shadow:inset 0 1px 0 rgba(0,0,0,.05)}
-.scroll{position:absolute;inset:0;overflow:auto;padding:34px}
+.scroll{position:relative!important;inset:auto!important;flex:1;width:100%;min-height:0;overflow:auto;padding:34px}
 .pane{display:none}
 .pane.active{display:flex;justify-content:center;align-items:flex-start;min-height:100%}
+/* 下钻页(垂直 tab 文档)块级贴顶,规避画布式 flex 居中顶部空白;隐藏冗余空 mmout */
+.pane.active:has(.do-paneflow){display:block}
+.do-paneflow ~ .mmout{display:none}
 .mmout{transform-origin:top center;transition:transform .12s ease}
 /* 嵌套/多图视图(renderNested 注入 .do-paneflow 到 .mmout)需占满宽度,否则 flex 居中会随子内容缩放导致切 tab 宽度剧烈波动 */
 .mmout:has(.do-paneflow){width:100%;align-self:stretch;transform:none!important}
@@ -2490,7 +2487,7 @@ h1 .dim{color:var(--c-ink3);font-weight:400;font-size:13px;margin-left:9px;lette
 .do-paneflow{display:flex;flex-direction:column;width:100%;min-width:0}
 .dataorg-wrap{display:flex;align-items:stretch;width:100%;background:var(--c-panel2);
   border:1px solid var(--c-line);border-radius:18px;box-shadow:var(--c-shadow-md);overflow:hidden;min-height:520px}
-.do-nav-col{flex:0 0 210px;background:var(--c-panel2);border-right:1px solid var(--c-line);padding:14px 12px}
+.do-nav-col{flex:0 0 240px;background:var(--c-panel2);border-right:1px solid var(--c-line);padding:14px 12px}
 .do-nav-sticky{position:sticky;top:14px;display:flex;flex-direction:column;gap:4px}
 .do-nav{display:flex;flex-direction:row;align-items:center;gap:9px;text-align:left;cursor:pointer;position:relative;
   background:transparent;border:1px solid transparent;border-radius:10px;
@@ -2502,7 +2499,7 @@ h1 .dim{color:var(--c-ink3);font-weight:400;font-size:13px;margin-left:9px;lette
 .do-nav .do-nav-n{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;
   width:20px;height:20px;border-radius:6px;background:color-mix(in srgb,var(--c-brand) 12%,transparent);
   font:700 11px/1 var(--mono);color:var(--c-brand)}
-.do-nav .do-nav-t{flex:1 1 auto;min-width:0;font:600 12.5px/1.3 var(--sans);white-space:normal;overflow-wrap:break-word;word-break:normal}
+.do-nav .do-nav-t{flex:1 1 auto;min-width:0;font:600 12.5px/1.3 var(--sans);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .do-nav.active .do-nav-n{background:var(--c-brand);color:#fff}
 .do-nav.active .do-nav-t{color:var(--cv-ink,#1d1d1f)}
 .do-stage{flex:1 1 0;min-width:0;position:relative;z-index:1;background:var(--cv-bg,#f5f5f7);overflow:hidden}
@@ -2844,9 +2841,11 @@ html:not([data-theme="light"]) .svg-walk-img{filter:invert(.9) hue-rotate(180deg
 <div id="app">
   <header>
     <a class="brand" id="brandHome" href="../index.html" title="返回导航主页">
-      <div class="logo"><span class="homeico" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg></span></div>
+      <div class="logo"><span class="homeico" aria-hidden="true" style="width:38px;height:38px;border-radius:50%;border:1px solid var(--c-line);background:var(--c-panel);color:var(--c-ink2);display:inline-grid;place-items:center;text-decoration:none"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg></span></div>
     </a>
-    <a href="https://github.com/trinodb/trino" target="_blank" rel="noopener" title="GitHub 源码仓库" style="margin-left:auto;display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:9px;border:1px solid var(--c-line);color:var(--c-ink2);text-decoration:none;margin-right:8px"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.7.5.5 5.7.5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.2.8-.6v-2c-3.2.7-3.9-1.4-3.9-1.4-.5-1.3-1.3-1.7-1.3-1.7-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.7 1.3 3.4 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.8 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.3 1.2a11.4 11.4 0 0 1 6 0C17.3 4.7 18.3 5 18.3 5c.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.5-2.7 5.5-5.3 5.8.4.4.8 1.1.8 2.2v3.3c0 .4.2.7.8.6 4.6-1.5 7.9-5.8 7.9-10.9C23.5 5.7 18.3.5 12 .5z"/></svg></a><a href="https://trino.io" target="_blank" rel="noopener" title="项目官网" style="display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:9px;border:1px solid var(--c-line);color:var(--c-ink2);text-decoration:none;margin-right:8px"><img src="data:image/svg+xml;base64,PHN2ZyBmaWxsPSIjREQwMEExIiByb2xlPSJpbWciIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48dGl0bGU+VHJpbm88L3RpdGxlPjxwYXRoIGQ9Ik0xNC4xMjQgMTYuODUyOWEuMTYxNS4xNjE1IDAgMSAxIC4xNTc2LjE2MTQuMTU3Ny4xNTc3IDAgMCAxLS4xNTc2LS4xNjE0em0tNS42MDctLjE1NzZhLjE2MTQuMTYxNCAwIDEgMCAwIC4zMjI4LjE2MTQuMTYxNCAwIDAgMCAwLS4zMjI4em0xMC4xMzQxLS42NjQ4djEuOTg2OWMtLjAzMS41Nzg4LS41MjQgMS4wMjM3LTEuMTAyOS45OTU0aC0uMzg0M2E1LjA1OTYgNS4wNTk2IDAgMCAxLTEuMTI5OCAxLjcxNzguMzE5Mi4zMTkyIDAgMCAwIDAgLjQ2NWwuMjM4Mi4yMTkxYS4zMDM2LjMwMzYgMCAwIDEgLjAzODUuNDMwNGMtMS4xMjYgMS4zODM1LTIuOTY2OSAyLjE1MjEtNS4wNDk4IDIuMTUyMWE2LjU3NSA2LjU3NSAwIDAgMS00LjgxOTItMS44OTg1Yy0uMDAyOS0uMDAzMi0uMDA1OS0uMDA2My0uMDA4Ny0uMDA5NmEuNjMwMi42MzAyIDAgMCAxIC4wNTQ4LS44ODk2Yy4xMzctLjEyNjUuMTM3MS0uMzQ2MiAwLS40NzI3YTQuOTQ0IDQuOTQ0IDAgMCAxLTEuMTI2LTEuNzE0aC0uMzQ5N2MtLjU3OTcuMDI4NC0xLjA3MzctLjQxNi0xLjEwNjgtLjk5NTR2LTEuOTg2OWMuMDM1MS0uNTc3OS41Mjg2LTEuMDIgMS4xMDY4LS45OTE1aC4yNzI4YTUuNzY0OCA1Ljc2NDggMCAwIDEgMi4wNzkxLTMuMDkzNmMtLjQyMjctMS4wOTkxLTEuMTUyOS0zLjI1NTEtMS4yMjYtNS4wMDc1QzYuMDIyOSA0LjQ3MDUgNi4yMTg5LjA3OCA3LjgyNTMuMDAxYzEuNjA2NC0uMDc2OCAxLjM3MTkgNC4wMjc1IDEuMDk5MSA2LjY5NDZhMzIuNzMyIDMyLjczMiAwIDAgMC0uMTIzIDQuNDUwMyA2Ljk5NCA2Ljk5NCAwIDAgMSAyLjQ4MjYtLjQzMDQgNy4yNDE0IDcuMjQxNCAwIDAgMSAxLjczNzEuMjA3NWMuMjYxNC0xLjI2ODIuODc2Mi0zLjU3NCAyLjAyOTItNS4xOTU4IDEuNjcxNy0yLjM1MiAzLjQzNTctNC43ODA4IDQuNjExNi00LjEwMDYgMS4xNzYuNjgwMi0uMzA3NCAzLjEzOTgtMS4zMjk3IDQuNDI3Mi0xLjAyMjIgMS4yODc0LTIuNzg2MiAzLjIwODktMy4zNzQyIDQuMjI3NC0uMjExNC4zODQzLS40MzA0LjgwMzItLjU5NTYgMS4xNTI5YTUuNzM3NSA1LjczNzUgMCAwIDEgMi45MTY5IDMuNjEyNWguMDczdi0yLjMwNThhLjMwNzUuMzA3NSAwIDAgMC0uMTgwNi0uMjg0NC45MTQ4LjkxNDggMCAwIDEtLjU1NzMtLjgxNDggMS4wMTg0IDEuMDE4NCAwIDAgMSAuOTA0NS0uOTA0NGMuNTU5My0uMDU5OCAxLjA2MS4zNDUyIDEuMTIwOC45MDQ0YS45MTg3LjkxODcgMCAwIDEtLjU1MzQuODE0OC4zMDc0LjMwNzQgMCAwIDAtLjE2OTEuMjg0NHYyLjE1MjJhLjMxMTMuMzExMyAwIDAgMCAuMTY5MS4yODA1Ljk3MjQuOTcyNCAwIDAgMSAuNTY0OC44NTd6bS0xLjAyMjItMy45NzM3YS40MzQ1LjQzNDUgMCAwIDAgLjQ2MTItLjQxNTEuNDE1MS40MTUxIDAgMSAwLS40NjEyLjQxNTF6bS0uNDIyNyAzLjQ3NzljLjA5NzguNDc5NC4xNDguOTY3Mi4xNDk4IDEuNDU2NXYuMzY1MWguNDExM2EuMzIyOC4zMjI4IDAgMCAwIC4zMjI4LS4zMTl2LTEuMDA2OWMtLjAxMTEtLjI5NjctLjI3MzMtLjUyNTYtLjU2ODgtLjQ5NTdoLS4zMTUxem0tMy43Mjc4LTQuNDgxLjYxMS4yMzgzYTM2LjYwNDYgMzYuNjA0NiAwIDAgMSAyLjM4MjgtMy44NjYxYzEuMjg3NC0xLjcyNTUgMi4zMzY1LTMuNTgxNyAxLjg3MTUtMy44Njk5LS40NjUtLjI4ODMtMS42MTc5IDEuMjI5Ny0yLjc3MDggMy4xMDlhMzQuODk3OCAzNC44OTc4IDAgMCAwLTIuMDk0NSA0LjM4ODd6bS00LjA1NDQuNjcyNi4wMTU0IDEuMzMzNWMtLjAwMzkuMjAwNy4xODgxLjM1ODcuMzg0My4zMTUyYTYuNDMxNyA2LjQzMTcgMCAwIDEgMS40NTY1LS4xNjUzIDUuOTk1IDUuOTk1IDAgMCAxIDEuNDUyNy4xNzI5Yy4xOTU2LjAzOTguMzg1My0uMTE1My4zODQzLS4zMTUxdi0xLjM0MTJhLjMxOS4zMTkgMCAwIDAtLjI0MjEtLjMxMTMgNi42NjQgNi42NjQgMCAwIDAtMS42MDI2LS4xODQ1IDYuNzA5MyA2LjcwOTMgMCAwIDAtMS42MDI1LjE4NDUuMzE4OC4zMTg4IDAgMCAwLS4yNDYuMzExM3ptMS43MDYzIDYuODYzN3YuMzg0M2EuNjg3OC42ODc4IDAgMCAxLS40OTk2LjI2OWMtLjMwNzQgMC0uNTM4LS40MTg5LS41MzgtLjQxODlhLjA3My4wNzMgMCAwIDAtLjEtLjAzMDdsLS4wMDI0LjAwMTNhLjA2OTMuMDY5MyAwIDAgMC0uMDI0NS4wOTQ3Yy4wMTE1LjAyMzEuMjgwNi40OTU3LjY2NDkuNDk1N2EuNzE0NC43MTQ0IDAgMCAwIC4zODQzLS4xMjY4LjMyNjcuMzI2NyAwIDAgMSAuMzYxMiAwIC44MzMyLjgzMzIgMCAwIDAgLjQ3MjcuMTM0NS45NTcuOTU3IDAgMCAwIC42NTcyLS40ODAzLjA2OTIuMDY5MiAwIDAgMC0uMDI2OS0uMDk2MS4wNjkyLjA2OTIgMCAwIDAtLjA5OTkuMDI2OWMwIC4wMjMxLS4yMTkxLjM4NDMtLjU0MTkuNDA3NGEuODAzNi44MDM2IDAgMCAxLS41NzY1LS4yNjl2LS4zODQzYS4zMTU0LjMxNTQgMCAwIDEgLjEyNjgtLjI1MzdjLjE5Ni0uMTQ5OS40MTUtLjM5NTguNDE1LS40OTE5YS41MzguNTM4IDAgMCAwLS41NzY0LS40MTg5Yy0uMzc2NiAwLS42NTMzLjI0OTgtLjY1MzMuNDU3MyAwIC4xMzQ1LjI1MzYuMzM4Mi40MjI3LjQ2MTJhLjMyMjYuMzIyNiAwIDAgMSAuMTM0Ni4yMzgzek03Ljc4MyAxMS42NDU1bC41NzY1LS4zMDc0Yy0uMDE5Mi0xLjEyNi0uMDM0Ni0zLjE0MzYgMC00LjU0MjUuMDUzOC0yLjAzNjguMTUzNy00LjU3MzItLjUyMjYtNC41NDYzUzYuNjg3NyA0LjIyODUgNi45NDkgNy4wMDdhMzMuMDU2MiAzMy4wNTYyIDAgMCAwIC44MzQgNC42Mzg1em0tMy4zMDUgNS4zOTE5YS4zMTkuMzE5IDAgMCAwIC4zMTkuMzE5aC4zOTk3YTMuMDQ2IDMuMDQ2IDAgMCAxIDAtLjM2NTEgNy41NDYgNy41NDYgMCAwIDEgLjE0NjEtMS40NTY1Yy0uMDQ5My4wMDAyLS4zNC4wMDA1LS4zODY2LS4wMDIxYS40ODgxLjQ4ODEgMCAwIDAtLjQ3ODEuNDk3OXYxLjAwNjh6bS45MTg0IDEuNDcxOGE1LjMyNTQgNS4zMjU0IDAgMCAxLS4xMjMtLjU1NzMuMzIyOC4zMjI4IDAgMCAwLS4zMTktLjI3MjhoLS40OTU3Yy4wMDA3LjAxNjMtLjAwMTUuMzQuMDAwOS4zNTVhLjUxODguNTE4OCAwIDAgMCAuNTUyNi40ODI3bC4zODQyLS4wMDc2em0xMC4xMjY1IDIuOTE3LS4wODg0LS4wODA3YS4zMjI5LjMyMjkgMCAwIDAtLjM4NDMtLjAyNjkgNi45ODIzIDYuOTgyMyAwIDAgMS0zLjgwNDYgMS4wMDY4IDYuOTk1IDYuOTk1IDAgMCAxLTMuNzkzMi0xLjAwNjguMzIyOC4zMjI4IDAgMCAwLS4zODQzLjAyNjlsLS4wODg0LjA4MDdhLjMxNTQuMzE1NCAwIDAgMCAwIC40NTczIDYuMDMwNSA2LjAzMDUgMCAwIDAgNC4yOTI3IDEuNTk4OCA2LjA0NTMgNi4wNDUzIDAgMCAwIDQuMjg4OS0xLjU5ODguMzE1LjMxNSAwIDAgMC0uMDM4NC0uNDU3M3ptMS40NDg4LTQuNDE1OGMwLTIuNDU1Ny0xLjE1MjktNC4zMjczLTMuMDI0NS01LjIyNjYtLjIwODEtLjEwMjItLjQ2NzMuMDU5NC0uNDY1LjI5MjF2MS4zMjk3YS4zMjY5LjMyNjkgMCAwIDAgLjIwMzcuMjk2YzEuNzMzMi43MTA5IDIuOTI4NCAyLjE4NjYgMi45Mjg0IDMuODc3NiAwIDIuMjcxMi0yLjE1NTkgMy44MDg1LTUuMzQxOSAzLjgwODUtMy4xODU5IDAtNS4zNDE5LTEuNTQxMS01LjM0MTktMy44MDg1IDAtMS42OTEgMS4xOTUyLTMuMTY2NyAyLjkyODQtMy44Nzc2YS4zMTkuMzE5IDAgMCAwIC4yMDM3LS4yOTZ2LTEuMzIyYy4wMDQ4LS4yMzE1LS4yNTM2LS4zOTYzLS40NjEyLS4yOTIxLTEuODg3Ljg4MzktMy4wMzk5IDIuNzY3LTMuMDM5OSA1LjIwNzMgMCAyLjk4OTkgMi4yODY2IDQuOTk2IDUuNzEwOCA0Ljk5NiAzLjQyODIuMDAwMSA1LjY5OTQtMi4wMDk4IDUuNjk5NC00Ljk4NDR6bS04LjYwODQtLjUzOGgtLjAwMzhhLjU4NDIuNTg0MiAwIDEgMCAuMDAzOCAwem01LjE2MTQuNTkxOWMuMDA2My4zMjI2LjI2MTUuNTc4OS41ODQuNTcyNWEuNTg0Mi41ODQyIDAgMSAwLS41ODQtLjU3MjV6bTQuNTY5Mi42MjI1aC0uNDk5NmEuMzIyNy4zMjI3IDAgMCAwLS4zMTUxLjI3MjhjLS4wMzQ2LjE3My0uMDc2OC4zNzY2LS4xMjY4LjU1NzMuMDE2My4wMDA3LjM4NjEtLjAwMTQuNDAxMi4wMDA5YS41MTg4LjUxODggMCAwIDAgLjUzNjYtLjUwMDRsLjAwMzctLjMzMDZ6Ii8+PC9zdmc+" width="18" height="18" alt="官网" style="display:block"/></a><button class="theme-toggle" id="themeToggle" title="切换深色 / 浅色主题" aria-label="切换主题">
+    <div class="brand-intro" style="display:flex;flex-direction:column;align-items:flex-start;margin-left:12px;min-width:0;max-width:min(60vw,760px)"><div style="font-size:15px;font-weight:600;color:var(--c-ink);line-height:1.3">Trino · 核心原理图谱</div><span style="margin-top:3px;font-size:11.5px;color:var(--c-ink3);line-height:1.5;text-align:left">分布式 SQL 查询引擎:Coordinator 编译 + 迭代规则优化,Stage/Task/Split 分布式流水,连接器联邦查询多源。</span></div>
+    <label class="msearch"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input id="mq" type="text" placeholder="搜索模块 / 主线…" autocomplete="off" aria-label="搜索模块"/><kbd>/</kbd><div id="mqlist" class="mq-list"></div></label>
+    <a href="https://github.com/trinodb/trino" target="_blank" rel="noopener" title="GitHub 源码仓库" style="margin-left:auto;display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:50%;border:1px solid var(--c-line);color:var(--c-ink2);text-decoration:none;margin-right:8px"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.7.5.5 5.7.5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.2.8-.6v-2c-3.2.7-3.9-1.4-3.9-1.4-.5-1.3-1.3-1.7-1.3-1.7-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.7 1.3 3.4 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.8 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.3 1.2a11.4 11.4 0 0 1 6 0C17.3 4.7 18.3 5 18.3 5c.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.5-2.7 5.5-5.3 5.8.4.4.8 1.1.8 2.2v3.3c0 .4.2.7.8.6 4.6-1.5 7.9-5.8 7.9-10.9C23.5 5.7 18.3.5 12 .5z"/></svg></a><a href="https://trino.io" target="_blank" rel="noopener" title="项目官网" style="display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:50%;border:1px solid var(--c-line);color:var(--c-ink2);text-decoration:none;margin-right:8px"><img src="data:image/svg+xml;base64,PHN2ZyBmaWxsPSIjREQwMEExIiByb2xlPSJpbWciIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48dGl0bGU+VHJpbm88L3RpdGxlPjxwYXRoIGQ9Ik0xNC4xMjQgMTYuODUyOWEuMTYxNS4xNjE1IDAgMSAxIC4xNTc2LjE2MTQuMTU3Ny4xNTc3IDAgMCAxLS4xNTc2LS4xNjE0em0tNS42MDctLjE1NzZhLjE2MTQuMTYxNCAwIDEgMCAwIC4zMjI4LjE2MTQuMTYxNCAwIDAgMCAwLS4zMjI4em0xMC4xMzQxLS42NjQ4djEuOTg2OWMtLjAzMS41Nzg4LS41MjQgMS4wMjM3LTEuMTAyOS45OTU0aC0uMzg0M2E1LjA1OTYgNS4wNTk2IDAgMCAxLTEuMTI5OCAxLjcxNzguMzE5Mi4zMTkyIDAgMCAwIDAgLjQ2NWwuMjM4Mi4yMTkxYS4zMDM2LjMwMzYgMCAwIDEgLjAzODUuNDMwNGMtMS4xMjYgMS4zODM1LTIuOTY2OSAyLjE1MjEtNS4wNDk4IDIuMTUyMWE2LjU3NSA2LjU3NSAwIDAgMS00LjgxOTItMS44OTg1Yy0uMDAyOS0uMDAzMi0uMDA1OS0uMDA2My0uMDA4Ny0uMDA5NmEuNjMwMi42MzAyIDAgMCAxIC4wNTQ4LS44ODk2Yy4xMzctLjEyNjUuMTM3MS0uMzQ2MiAwLS40NzI3YTQuOTQ0IDQuOTQ0IDAgMCAxLTEuMTI2LTEuNzE0aC0uMzQ5N2MtLjU3OTcuMDI4NC0xLjA3MzctLjQxNi0xLjEwNjgtLjk5NTR2LTEuOTg2OWMuMDM1MS0uNTc3OS41Mjg2LTEuMDIgMS4xMDY4LS45OTE1aC4yNzI4YTUuNzY0OCA1Ljc2NDggMCAwIDEgMi4wNzkxLTMuMDkzNmMtLjQyMjctMS4wOTkxLTEuMTUyOS0zLjI1NTEtMS4yMjYtNS4wMDc1QzYuMDIyOSA0LjQ3MDUgNi4yMTg5LjA3OCA3LjgyNTMuMDAxYzEuNjA2NC0uMDc2OCAxLjM3MTkgNC4wMjc1IDEuMDk5MSA2LjY5NDZhMzIuNzMyIDMyLjczMiAwIDAgMC0uMTIzIDQuNDUwMyA2Ljk5NCA2Ljk5NCAwIDAgMSAyLjQ4MjYtLjQzMDQgNy4yNDE0IDcuMjQxNCAwIDAgMSAxLjczNzEuMjA3NWMuMjYxNC0xLjI2ODIuODc2Mi0zLjU3NCAyLjAyOTItNS4xOTU4IDEuNjcxNy0yLjM1MiAzLjQzNTctNC43ODA4IDQuNjExNi00LjEwMDYgMS4xNzYuNjgwMi0uMzA3NCAzLjEzOTgtMS4zMjk3IDQuNDI3Mi0xLjAyMjIgMS4yODc0LTIuNzg2MiAzLjIwODktMy4zNzQyIDQuMjI3NC0uMjExNC4zODQzLS40MzA0LjgwMzItLjU5NTYgMS4xNTI5YTUuNzM3NSA1LjczNzUgMCAwIDEgMi45MTY5IDMuNjEyNWguMDczdi0yLjMwNThhLjMwNzUuMzA3NSAwIDAgMC0uMTgwNi0uMjg0NC45MTQ4LjkxNDggMCAwIDEtLjU1NzMtLjgxNDggMS4wMTg0IDEuMDE4NCAwIDAgMSAuOTA0NS0uOTA0NGMuNTU5My0uMDU5OCAxLjA2MS4zNDUyIDEuMTIwOC45MDQ0YS45MTg3LjkxODcgMCAwIDEtLjU1MzQuODE0OC4zMDc0LjMwNzQgMCAwIDAtLjE2OTEuMjg0NHYyLjE1MjJhLjMxMTMuMzExMyAwIDAgMCAuMTY5MS4yODA1Ljk3MjQuOTcyNCAwIDAgMSAuNTY0OC44NTd6bS0xLjAyMjItMy45NzM3YS40MzQ1LjQzNDUgMCAwIDAgLjQ2MTItLjQxNTEuNDE1MS40MTUxIDAgMSAwLS40NjEyLjQxNTF6bS0uNDIyNyAzLjQ3NzljLjA5NzguNDc5NC4xNDguOTY3Mi4xNDk4IDEuNDU2NXYuMzY1MWguNDExM2EuMzIyOC4zMjI4IDAgMCAwIC4zMjI4LS4zMTl2LTEuMDA2OWMtLjAxMTEtLjI5NjctLjI3MzMtLjUyNTYtLjU2ODgtLjQ5NTdoLS4zMTUxem0tMy43Mjc4LTQuNDgxLjYxMS4yMzgzYTM2LjYwNDYgMzYuNjA0NiAwIDAgMSAyLjM4MjgtMy44NjYxYzEuMjg3NC0xLjcyNTUgMi4zMzY1LTMuNTgxNyAxLjg3MTUtMy44Njk5LS40NjUtLjI4ODMtMS42MTc5IDEuMjI5Ny0yLjc3MDggMy4xMDlhMzQuODk3OCAzNC44OTc4IDAgMCAwLTIuMDk0NSA0LjM4ODd6bS00LjA1NDQuNjcyNi4wMTU0IDEuMzMzNWMtLjAwMzkuMjAwNy4xODgxLjM1ODcuMzg0My4zMTUyYTYuNDMxNyA2LjQzMTcgMCAwIDEgMS40NTY1LS4xNjUzIDUuOTk1IDUuOTk1IDAgMCAxIDEuNDUyNy4xNzI5Yy4xOTU2LjAzOTguMzg1My0uMTE1My4zODQzLS4zMTUxdi0xLjM0MTJhLjMxOS4zMTkgMCAwIDAtLjI0MjEtLjMxMTMgNi42NjQgNi42NjQgMCAwIDAtMS42MDI2LS4xODQ1IDYuNzA5MyA2LjcwOTMgMCAwIDAtMS42MDI1LjE4NDUuMzE4OC4zMTg4IDAgMCAwLS4yNDYuMzExM3ptMS43MDYzIDYuODYzN3YuMzg0M2EuNjg3OC42ODc4IDAgMCAxLS40OTk2LjI2OWMtLjMwNzQgMC0uNTM4LS40MTg5LS41MzgtLjQxODlhLjA3My4wNzMgMCAwIDAtLjEtLjAzMDdsLS4wMDI0LjAwMTNhLjA2OTMuMDY5MyAwIDAgMC0uMDI0NS4wOTQ3Yy4wMTE1LjAyMzEuMjgwNi40OTU3LjY2NDkuNDk1N2EuNzE0NC43MTQ0IDAgMCAwIC4zODQzLS4xMjY4LjMyNjcuMzI2NyAwIDAgMSAuMzYxMiAwIC44MzMyLjgzMzIgMCAwIDAgLjQ3MjcuMTM0NS45NTcuOTU3IDAgMCAwIC42NTcyLS40ODAzLjA2OTIuMDY5MiAwIDAgMC0uMDI2OS0uMDk2MS4wNjkyLjA2OTIgMCAwIDAtLjA5OTkuMDI2OWMwIC4wMjMxLS4yMTkxLjM4NDMtLjU0MTkuNDA3NGEuODAzNi44MDM2IDAgMCAxLS41NzY1LS4yNjl2LS4zODQzYS4zMTU0LjMxNTQgMCAwIDEgLjEyNjgtLjI1MzdjLjE5Ni0uMTQ5OS40MTUtLjM5NTguNDE1LS40OTE5YS41MzguNTM4IDAgMCAwLS41NzY0LS40MTg5Yy0uMzc2NiAwLS42NTMzLjI0OTgtLjY1MzMuNDU3MyAwIC4xMzQ1LjI1MzYuMzM4Mi40MjI3LjQ2MTJhLjMyMjYuMzIyNiAwIDAgMSAuMTM0Ni4yMzgzek03Ljc4MyAxMS42NDU1bC41NzY1LS4zMDc0Yy0uMDE5Mi0xLjEyNi0uMDM0Ni0zLjE0MzYgMC00LjU0MjUuMDUzOC0yLjAzNjguMTUzNy00LjU3MzItLjUyMjYtNC41NDYzUzYuNjg3NyA0LjIyODUgNi45NDkgNy4wMDdhMzMuMDU2MiAzMy4wNTYyIDAgMCAwIC44MzQgNC42Mzg1em0tMy4zMDUgNS4zOTE5YS4zMTkuMzE5IDAgMCAwIC4zMTkuMzE5aC4zOTk3YTMuMDQ2IDMuMDQ2IDAgMCAxIDAtLjM2NTEgNy41NDYgNy41NDYgMCAwIDEgLjE0NjEtMS40NTY1Yy0uMDQ5My4wMDAyLS4zNC4wMDA1LS4zODY2LS4wMDIxYS40ODgxLjQ4ODEgMCAwIDAtLjQ3ODEuNDk3OXYxLjAwNjh6bS45MTg0IDEuNDcxOGE1LjMyNTQgNS4zMjU0IDAgMCAxLS4xMjMtLjU1NzMuMzIyOC4zMjI4IDAgMCAwLS4zMTktLjI3MjhoLS40OTU3Yy4wMDA3LjAxNjMtLjAwMTUuMzQuMDAwOS4zNTVhLjUxODguNTE4OCAwIDAgMCAuNTUyNi40ODI3bC4zODQyLS4wMDc2em0xMC4xMjY1IDIuOTE3LS4wODg0LS4wODA3YS4zMjI5LjMyMjkgMCAwIDAtLjM4NDMtLjAyNjkgNi45ODIzIDYuOTgyMyAwIDAgMS0zLjgwNDYgMS4wMDY4IDYuOTk1IDYuOTk1IDAgMCAxLTMuNzkzMi0xLjAwNjguMzIyOC4zMjI4IDAgMCAwLS4zODQzLjAyNjlsLS4wODg0LjA4MDdhLjMxNTQuMzE1NCAwIDAgMCAwIC40NTczIDYuMDMwNSA2LjAzMDUgMCAwIDAgNC4yOTI3IDEuNTk4OCA2LjA0NTMgNi4wNDUzIDAgMCAwIDQuMjg4OS0xLjU5ODguMzE1LjMxNSAwIDAgMC0uMDM4NC0uNDU3M3ptMS40NDg4LTQuNDE1OGMwLTIuNDU1Ny0xLjE1MjktNC4zMjczLTMuMDI0NS01LjIyNjYtLjIwODEtLjEwMjItLjQ2NzMuMDU5NC0uNDY1LjI5MjF2MS4zMjk3YS4zMjY5LjMyNjkgMCAwIDAgLjIwMzcuMjk2YzEuNzMzMi43MTA5IDIuOTI4NCAyLjE4NjYgMi45Mjg0IDMuODc3NiAwIDIuMjcxMi0yLjE1NTkgMy44MDg1LTUuMzQxOSAzLjgwODUtMy4xODU5IDAtNS4zNDE5LTEuNTQxMS01LjM0MTktMy44MDg1IDAtMS42OTEgMS4xOTUyLTMuMTY2NyAyLjkyODQtMy44Nzc2YS4zMTkuMzE5IDAgMCAwIC4yMDM3LS4yOTZ2LTEuMzIyYy4wMDQ4LS4yMzE1LS4yNTM2LS4zOTYzLS40NjEyLS4yOTIxLTEuODg3Ljg4MzktMy4wMzk5IDIuNzY3LTMuMDM5OSA1LjIwNzMgMCAyLjk4OTkgMi4yODY2IDQuOTk2IDUuNzEwOCA0Ljk5NiAzLjQyODIuMDAwMSA1LjY5OTQtMi4wMDk4IDUuNjk5NC00Ljk4NDR6bS04LjYwODQtLjUzOGgtLjAwMzhhLjU4NDIuNTg0MiAwIDEgMCAuMDAzOCAwem01LjE2MTQuNTkxOWMuMDA2My4zMjI2LjI2MTUuNTc4OS41ODQuNTcyNWEuNTg0Mi41ODQyIDAgMSAwLS41ODQtLjU3MjV6bTQuNTY5Mi42MjI1aC0uNDk5NmEuMzIyNy4zMjI3IDAgMCAwLS4zMTUxLjI3MjhjLS4wMzQ2LjE3My0uMDc2OC4zNzY2LS4xMjY4LjU1NzMuMDE2My4wMDA3LjM4NjEtLjAwMTQuNDAxMi4wMDA5YS41MTg4LjUxODggMCAwIDAgLjUzNjYtLjUwMDRsLjAwMzctLjMzMDZ6Ii8+PC9zdmc+" width="18" height="18" alt="官网" style="display:block"/></a><button class="theme-toggle" id="themeToggle" title="切换深色 / 浅色主题" aria-label="切换主题">
       <span class="tt-ico tt-moon">☾</span><span class="tt-ico tt-sun">☀</span>
     </button>
   </header>
@@ -2879,7 +2878,6 @@ html:not([data-theme="light"]) .svg-walk-img{filter:invert(.9) hue-rotate(180deg
         </div>
       </div>
       </div>
-    </div>
     <div class="scroll" id="scroll">__TAB_PANES__</div>
     <aside class="vguide collapsed" id="vguide">
       <button class="vguide-collapse" id="vguideCollapse" title="折叠/展开">▸</button>
@@ -2894,6 +2892,7 @@ html:not([data-theme="light"]) .svg-walk-img{filter:invert(.9) hue-rotate(180deg
         </div>
       </div>
     </aside>
+    </div>
   </div>
 </div>
 
@@ -2936,7 +2935,7 @@ const MM_THEME_DARK = {
 function isDarkTheme(){
   /* 优先读 DOM 属性;首屏 initMermaid 早于主题 apply 时 DOM 尚无属性,回退读 localStorage */
   if(document.documentElement.hasAttribute('data-theme')) return document.documentElement.getAttribute('data-theme') !== 'light';
-  try{ return localStorage.getItem('doris-atlas-theme') !== 'light'; }catch(e){ return true; }
+  try{ return localStorage.getItem('atlas-nav-theme') !== 'light'; }catch(e){ return true; }
 }
 function initMermaid(){
   mermaid.initialize({
@@ -6350,7 +6349,7 @@ function activateTab(t){
   scale=1; stopFlow();
   // 表格类视图(术语/对比/失败/瓶颈):无数据流 → 隐藏播放按钮
   const TABLE_TABS={glossary:1,compare:1,failure:1,bottleneck:1,archcompare:1,mvcompare:1,optcompare:1,idxpano:1,optgoal:1,optaxis:1,optlifecycle:1,optgranularity:1,optoperator:1,optworkload:1,optobserve:1,qlifevars:1,qlifeterms:1};
-  document.getElementById('flowPlay').style.display=TABLE_TABS[t.dataset.tab]?'none':'';
+  var _isDoc=!!document.querySelector('.pane.active .do-paneflow');['zoomOut','zoomReset','zoomIn','fitBtn'].forEach(function(id){var el=document.getElementById(id);if(el)el.style.display=_isDoc?'none':'';});document.getElementById('flowPlay').style.display=(_isDoc||TABLE_TABS[t.dataset.tab])?'none':'';
   renderGuide(t.dataset.tab);
 }
 document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{activateTab(t);renderPane(t.dataset.tab);});
@@ -6367,7 +6366,7 @@ document.getElementById('brandHome').onclick=showHome;
 
 /* ---- theme toggle (深色默认;localStorage 记忆) ---- */
 (function(){
-  const KEY='doris-atlas-theme';
+  const KEY='atlas-nav-theme';
   const root=document.documentElement;
   function apply(t){ if(t==='light') root.setAttribute('data-theme','light'); else root.removeAttribute('data-theme'); }
   let saved='dark';
@@ -6519,6 +6518,37 @@ showHome();
   function done(){ ov.classList.add('lo-hidden'); setTimeout(function(){ if(ov&&ov.parentNode) ov.parentNode.removeChild(ov); },600); }
   requestAnimationFrame(function(){ requestAnimationFrame(function(){ setTimeout(done,180); }); });
   setTimeout(done,4000);
+
+/* 模块搜索:过滤 THEMES,回车/点击 openTheme 下钻 */
+(function(){
+  var mq=document.getElementById('mq'), list=document.getElementById('mqlist');
+  if(!mq||!list||typeof THEMES==='undefined') return;
+  var sel=-1, cur=[];
+  function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  function render(){
+    var q=mq.value.trim().toLowerCase();
+    cur = !q ? [] : THEMES.filter(function(m){return ((m.title||'')+' '+(m.desc||'')+' '+(m.id||'')).toLowerCase().indexOf(q)>=0;}).slice(0,8);
+    if(!cur.length){ list.className='mq-list'; list.innerHTML=''; return; }
+    sel=0;
+    list.innerHTML=cur.map(function(m,i){return '<button class="mq-item'+(i===0?' sel':'')+'" data-id="'+esc(m.id)+'"><b>'+esc(m.title||m.id)+'</b><span class="s">'+esc((m.desc||'').slice(0,52))+'</span></button>';}).join('');
+    list.className='mq-list on';
+  }
+  function go(id){ mq.value=''; list.className='mq-list'; list.innerHTML=''; if(typeof openTheme==='function') openTheme(id); }
+  mq.addEventListener('input',render);
+  mq.addEventListener('keydown',function(e){
+    if(!cur.length){ if(e.key==='Escape') mq.blur(); return; }
+    if(e.key==='ArrowDown'){e.preventDefault();sel=(sel+1)%cur.length;}
+    else if(e.key==='ArrowUp'){e.preventDefault();sel=(sel-1+cur.length)%cur.length;}
+    else if(e.key==='Enter'){e.preventDefault();go(cur[sel].id);return;}
+    else if(e.key==='Escape'){list.className='mq-list';mq.blur();return;}
+    else return;
+    [].forEach.call(list.children,function(el,i){el.className='mq-item'+(i===sel?' sel':'');});
+  });
+  list.addEventListener('click',function(e){var b=e.target.closest('.mq-item'); if(b) go(b.dataset.id);});
+  document.addEventListener('keydown',function(e){ if(e.key==='/'&&document.activeElement!==mq){e.preventDefault();mq.focus();} });
+  document.addEventListener('click',function(e){ if(!e.target.closest('.msearch')){list.className='mq-list';} });
+})();
+
 })();
 """
 

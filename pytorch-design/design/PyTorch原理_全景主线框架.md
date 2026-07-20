@@ -1,6 +1,6 @@
 # PyTorch 核心原理 · 全景主线框架
 
-> 统领全部原理文档：PyTorch 的 **3 条接口主线（张量编程 / 自动微分 / 建模与训练）+ 8 条支撑能力域**，既无遗漏也无越界。核实基准 = 官方源码 `pytorch/src`（`commit 6d0950b`）。PyTorch 是**深度学习框架 —— 张量计算 + 自动微分库**，在方法论原型库里属**新家族**，走"接触面 × 能力域 × 执行时机"元模式判型。灵魂三条：**eager 动态图（define-by-run）**、**Dispatcher 分层分发**、**Autograd 反向引擎**。
+> 统领全部原理文档：PyTorch 的 **3 条接口主线（张量编程 / 自动微分 / 建模与训练）+ 8 条支撑能力域**，既无遗漏也无越界。核实基准 = 官方源码 `pytorch/pytorch` **v2.13.0**（HEAD `cf30153`；下文所有 `文件:行号` 锚点均对此 tag 核对）。PyTorch 是**深度学习框架 —— 张量计算 + 自动微分库**，在方法论原型库里属**新家族**，走"接触面 × 能力域 × 执行时机"元模式判型。灵魂三条：**eager 动态图（define-by-run）**、**Dispatcher 分层分发**、**Autograd 反向引擎**。
 
 ## 〇、与数据库/引擎家族的心智对照（读前必看）
 
@@ -57,12 +57,12 @@ PyTorch 不是数据系统，先立几条认知：
 |---|---|---|---|
 | 表示 | **张量与存储** | TensorImpl/Storage/stride/view/dtype/device | `c10/core/TensorImpl.h:510` |
 | 表示 | **Dispatcher 分发** | 按 DispatchKey 分层选 kernel（灵魂） | `aten/src/ATen/core/dispatch/Dispatcher.h:71` |
-| 表示 | **ATen 算子库** | ~2000 算子 schema、structured kernel | `aten/src/ATen/native/` |
-| 表示 | **设备后端与内存** | CPU/CUDA kernel、CachingAllocator、stream | `c10/cuda/CUDACachingAllocator.cpp` |
+| 表示 | **ATen 算子库** | ~2000 算子 schema、structured kernel | `aten/src/ATen/native/native_functions.yaml:536` |
+| 表示 | **设备后端与内存** | CPU/CUDA kernel、CachingAllocator、stream | `c10/cuda/CUDACachingAllocator.cpp:1722`（malloc） |
 | 计算 | **自动微分引擎** | 反向图 Node/Edge、backward 遍历 | `torch/csrc/autograd/engine.cpp:1294` |
-| 计算 | **编译栈** | Dynamo→AOTAutograd→Inductor | `torch/_dynamo/`、`torch/_inductor/` |
-| 扩展 | **分布式训练** | ProcessGroup、DDP、FSDP、collective | `torch/distributed/`、`torch/nn/parallel/distributed.py` |
-| 扩展 | **数据加载** | DataLoader、Dataset、多 worker 预取 | `torch/utils/data/` |
+| 计算 | **编译栈** | Dynamo→AOTAutograd→Inductor | `torch/_dynamo/convert_frame.py:1633`、`torch/_inductor/compile_fx.py:2685` |
+| 扩展 | **分布式训练** | ProcessGroup、DDP、FSDP、collective | `torch/nn/parallel/distributed.py:466`、`c10d/reducer.cpp:895` |
+| 扩展 | **数据加载** | DataLoader、Dataset、多 worker 预取 | `torch/utils/data/dataloader.py:149` |
 
 ---
 

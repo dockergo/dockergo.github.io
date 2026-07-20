@@ -6,7 +6,17 @@
 
 ![反射器到工作队列](Kubernetes原理_支撑_Informer与Watch_01反射器到工作队列.svg)
 
-数据流五级流水线：① **Reflector**（reflector.go）先 `ListAndWatch`（:348）——一次全量 LIST 拿到起始 `resourceVersion`，之后从该 rv 起 WATCH（watch:418）持续收增量；断线用最新 rv 续传，"too old" 则回退重列。② **DeltaFIFO**（delta_fifo.go:101）：Reflector 把 ADDED/MODIFIED/DELETED 转成 Delta（类型 Added:164/Updated:165/Deleted:166/Sync/Replaced）按对象 key 排队；`Replace`（:636）在重列时对账——为缓存中已消失的对象补发 Deleted。③ **Pop + HandleDeltas**：informer 的控制器 `processLoop`（controller.go:193）不断 `Pop`（delta_fifo.go:576），交给 `HandleDeltas`（shared_informer.go:638 → `processDeltas`:643），**先更新本地 Indexer 缓存、再分发通知**。④ **sharedProcessor.distribute**（:779）把通知投给每个 listener；`processorListener` 用两条 goroutine（`pop`:936 环形缓冲兜积压 + `run`:966 调 handler）串行、不阻塞地回调 `OnAdd/OnUpdate/OnDelete`。⑤ 控制器的 handler 通常**只做一件事**：算出对象 key `Add` 进 **workqueue**——真正的业务在 worker 里跑（见 reconcile 篇）。**Shared 的意义**：同一资源多个控制器共用一个 informer（一份 List+Watch、一份缓存），省 API Server 压力。
+数据流五级流水线：① **Reflector**（`staging/src/k8s.io/client-go/tools/cache/reflector.go`）在 `Run`（reflector.go:312）里反复调 `ListAndWatch`（reflector.go:348）——先一次全量 LIST（`list`:502，起始 `resourceVersion` 由 `relistResourceVersion`:504 给出）拿到基线，之后从该 rv 起 `watch`（reflector.go:418）持续收增量；v1.32 若开启 `WatchListClient` 特性则走 `watchList`（reflector.go:627）用流式 LIST 建一致快照，省内存峰值。断线用最新 rv 续传，遇 `isExpiredError`（reflector.go:475/548，即 "too old resource version" 410）则回退重列。② **DeltaFIFO**（`.../cache/delta_fifo.go:101`）：Reflector 把 ADDED/MODIFIED/DELETED 经 `queueActionLocked`（delta_fifo.go:439）转成 Delta（类型 `Added`:164 / `Updated`:165 / `Deleted`:166 / `Replaced`:173 / `Sync`:175）按对象 key 排队；`Replace`（delta_fifo.go:636）在重列时对账——为缓存中已消失的对象补发 Deleted。③ **Pop + HandleDeltas**：informer 的控制器 `processLoop`（`.../cache/controller.go:193`）不断 `Pop`（delta_fifo.go:576），交给 `HandleDeltas`（`.../cache/shared_informer.go:638`）→ `processDeltas`（controller.go:541），**先更新本地 Indexer 缓存、再分发通知**。④ **sharedProcessor.distribute**（shared_informer.go:779）把通知投给每个 listener；`processorListener` 用两条 goroutine（`pop`:936 环形缓冲兜积压 + `run`:966 调 handler）串行、不阻塞地回调 `OnAdd/OnUpdate/OnDelete`。⑤ 控制器的 handler 通常**只做一件事**：算出对象 key `Add` 进 **workqueue**——真正的业务在 worker 里跑（见 reconcile 篇）。**Shared 的意义**：同一资源多个控制器共用一个 informer（一份 List+Watch、一份缓存），省 API Server 压力。
+
+## 深化 · 断链、积压与最终一致的失败路径
+
+Informer 的可靠性全靠"重列对账 + 背压 + resync 兜底"三件套：
+
+- **watch 断链续传**：`watch`（reflector.go:418）里 watch channel 关闭属正常，用最后收到事件的 rv 重新发起 watch，不回退到 LIST；只有 `isExpiredError`（reflector.go:475）——服务端 watch cache 已淘汰该 rv（410 Gone）——才触发 `list`（reflector.go:502）全量重列。
+- **重列对账**：重列后 `Replace`（delta_fifo.go:636）用新列表和本地缓存做差集，**为期间被删、watch 又没收到 Deleted 的对象补发 Deleted**，保证缓存不残留幽灵对象——这是"丢事件也最终一致"的关键。
+- **listener 背压**：`processorListener.pop`（shared_informer.go:936）用一个可增长的 `pendingNotifications` 环形缓冲吸收突发事件，`run`（shared_informer.go:966）串行消费；若 handler 慢，积压只在本 listener 内涨，**不阻塞 DeltaFIFO 也不阻塞其他 listener**。但缓冲无限增长会吃内存——handler 必须"快进快出、只入队 key"。
+- **resync 兜底**：`minimumResyncPeriod = 1s`（shared_informer.go:579），周期到时对全量缓存对象重发 Update（`Sync` 类型），即便没有任何真实变更也让控制器重算一次差异——**这就是 level-triggered 能自愈"漏处理"的底层机制**。resync 只走本地缓存、不打 API Server。
+- **首次同步屏障**：`HasSynced`（shared_informer.go:909）在初始 LIST 全部分发完前为 false，控制器应 `WaitForCacheSync` 后再启动 worker，避免"缓存还没热就 reconcile"导致误删。
 
 ## 深化 · 五级流水线职责
 
@@ -22,8 +32,8 @@
 
 | 机制 | 默认 | 来源 |
 |---|---|---|
-| 指数退避 | 基 5ms、上限 1000s（`5ms·2^n`） | `DefaultTypedControllerRateLimiter` |
-| 全局令牌桶 | 10 qps、突发 100 | `rate.NewLimiter(10, 100)` |
+| 指数退避 | 基 5ms、上限 1000s（`5ms·2^n`） | `default_rate_limiters.go:52` |
+| 全局令牌桶 | 10 qps、突发 100 | `default_rate_limiters.go:54`（`rate.NewLimiter(10,100)`） |
 | 去重 | 同 key 处理中不重复入队 | workqueue 语义 |
 | resync | 最小 1s（`minimumResyncPeriod`） | shared_informer.go:579 |
 

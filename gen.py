@@ -75,7 +75,6 @@ LAYER_MAP = {
     "etcd": "coord", "zookeeper": "coord", "raft": "coord",
     # Runtime:语言运行时/执行模型/内存纪律
     "go": "runtime", "rust": "runtime", "linux": "runtime",
-    "react": "runtime", "gin": "runtime", "gorm": "runtime", "spring-boot": "runtime",
 }
 
 
@@ -125,14 +124,6 @@ META = {
            "lc": "linear-gradient(135deg,#00add8,#5dc9e2)"},
     "rust": {"name": "Rust", "init": "RS", "desc": "系统级语言 · 所有权",
              "lc": "linear-gradient(135deg,#dea584,#b7410e)"},
-    "react": {"name": "React", "init": "RC", "desc": "前端 UI 框架",
-              "lc": "linear-gradient(135deg,#38bdf8,#61dafb)"},
-    "gin": {"name": "Gin", "init": "GI", "desc": "Go Web 框架",
-            "lc": "linear-gradient(135deg,#00add8,#5dc9e2)"},
-    "gorm": {"name": "GORM", "init": "GM", "desc": "Go ORM",
-             "lc": "linear-gradient(135deg,#e25a1c,#f6832b)"},
-    "spring-boot": {"name": "Spring Boot", "init": "SB", "desc": "Java 应用框架",
-                    "lc": "linear-gradient(135deg,#6db33f,#8bc34a)"},
     "pytorch": {"name": "PyTorch", "init": "PT", "desc": "深度学习框架",
                 "lc": "linear-gradient(135deg,#ee4c2c,#f6832b)"},
     "tensorflow": {"name": "TensorFlow", "init": "TF", "desc": "深度学习框架",
@@ -542,6 +533,243 @@ def build_svg(projects):
             '<marker id="flow-opt-arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 Z" class="arrow-opt"/></marker>'
             '</defs>{body}</svg>').format(w=_CW, h=total_h, body="".join(body))
 
+# ══════════════════════════════════════════════════════════════════ #
+# 多视角导航:每个视角 = 一套分层骨架 + 项目子集映射。
+#   lens 1 = 冯诺依曼×控制面(dual-axis,复用 build_svg);
+#   lens 2-4 = 竖直分层栈(stack,build_stack_svg 通用渲染)。
+#   一个项目可出现在多个视角(各视角是独立剖面),这是正确的。
+# ══════════════════════════════════════════════════════════════════ #
+LENSES = [
+    {"id": "vonneumann", "label": "冯诺依曼", "group": "理论视角", "kind": "stack",
+     "kicker": "VON NEUMANN ARCHITECTURE · 计算机体系结构",
+     "title": "I/O → 控制器 → 运算器 → 主存 → 外存 → 运行时",
+     "position": "回答「一个计算系统怎样把请求变成结果」:请求从 I/O 进入,控制器决定做什么,运算器执行,主存/外存承载状态,运行时是底座。",
+     "subtitle": "冯诺依曼体系结构(1945)自上而下的数据通路 · 各层项目实现该层机制 · 点击下钻",
+     "flow": "hot",
+     "tiers": [
+         ("vn_io", "I/O · 输入输出", "北向接入 · 网关 · TLS · 编解码 · 传输", ["traefik", "nginx", "quic-go", "quiche", "ffmpeg"], "#0a84ff"),
+         ("vn_ctrl", "控制器 · Control Unit", "调度 / 编排 / 共识 —— 决定「做什么、在哪做」", ["kubernetes", "ray", "spark", "flink", "etcd", "zookeeper", "raft"], "#a78bfa"),
+         ("vn_alu", "运算器 · ALU", "查询/向量化 · 训练推理 · 算子流水 —— 实际计算", ["doris", "clickhouse", "starrocks", "trino", "duckdb", "pytorch", "tensorflow", "vllm", "milvus"], "#0a84ff"),
+         ("vn_mem", "主存 · Memory", "内存结构 · 索引 · 事务 · 状态后端", ["redis", "rocksdb", "postgres", "neo4j"], "#2dd4bf"),
+         ("vn_store", "外存 · Storage", "日志 · 表格式 · 列存文件 · 分布式文件系统", ["kafka", "fluss", "hudi", "iceberg", "orc", "hadoop"], "#2dd4bf"),
+         ("vn_rt", "运行时 · Substrate", "语言运行时 · GC · 调度纪律 · 内核", ["go", "rust", "linux"], "#8a8a90"),
+     ]},
+    {"id": "tcpip", "label": "TCP/IP 网络栈", "group": "理论视角", "kind": "stack",
+     "kicker": "TCP/IP PROTOCOL STACK · 网络协议分层",
+     "title": "应用层 L7 → 传输层 L4 → 网络/链路 · OS",
+     "position": "回答「一个字节怎样在网络上可靠送达」:严格按 TCP/IP 四层模型归位,只收真正实现协议栈层次的项目(共识/存储类不属于本视角)。",
+     "subtitle": "TCP/IP 分层模型 · 请求自上而下穿栈 · 仅含协议栈成员 · 点击下钻",
+     "flow": "hot",
+     "tiers": [
+         ("net_app", "应用层 · L7 Application", "HTTP/1·2·3 · 反向代理 · 消息协议端点", ["nginx", "traefik", "kafka"], "#0a84ff"),
+         ("net_tp", "传输层 · L4 Transport", "QUIC/TCP · 流控 · 拥塞控制 · 丢包恢复", ["quic-go", "quiche"], "#2dd4bf"),
+         ("net_os", "网络/链路 · L3-L2 · OS", "内核协议栈 · 路由 · netpoll/epoll · 零拷贝", ["linux", "go"], "#8a8a90"),
+     ]},
+    {"id": "aiml", "label": "AI / ML", "group": "领域视角", "kind": "stack",
+     "kicker": "AI / ML PIPELINE · 机器学习系统",
+     "title": "数据/检索 → 训练 → 推理服务 → 分布式调度 → 底座",
+     "position": "回答「一个模型怎样从数据训练出来、再高吞吐地对外服务」:数据流自上而下贯穿训练与推理两段。",
+     "subtitle": "机器学习系统剖面 · 从张量到 token · 点击下钻",
+     "flow": "hot",
+     "tiers": [
+         ("ai_data", "数据 / 向量检索", "向量库 · ANN 检索 · 特征/嵌入存储", ["milvus"], "#2dd4bf"),
+         ("ai_train", "训练框架 · Training", "自动微分 · 计算图 · 算子分发到设备", ["pytorch", "tensorflow"], "#0a84ff"),
+         ("ai_infer", "推理服务 · Serving", "KV 缓存分块 · 连续批处理 · 高吞吐 token", ["vllm"], "#0a84ff"),
+         ("ai_dist", "分布式调度 · Scale", "task/actor · 参数分片 · 集群资源调度", ["ray"], "#a78bfa"),
+         ("ai_rt", "运行时底座 · Substrate", "语言运行时 · 内存/并发/GPU 边界", ["rust", "go", "linux"], "#8a8a90"),
+     ]},
+    {"id": "bigdata", "label": "大数据", "group": "领域视角", "kind": "stack",
+     "kicker": "BIG DATA STACK · 数据密集系统",
+     "title": "采集 → 存储/表格式 → 计算 → 查询 → 协调",
+     "position": "回答「海量数据怎样从进入到被分析」:数据自上而下流经采集、落盘、批流计算、查询,协调层横向保障一致性。",
+     "subtitle": "数据密集系统剖面 · 从日志到分析 · 点击下钻",
+     "flow": "hot",
+     "tiers": [
+         ("bd_ingest", "采集 / 日志总线", "顺序日志 · 流式接入 · CDC", ["kafka", "fluss"], "#0a84ff"),
+         ("bd_store", "存储 / 表格式 / 文件", "表格式 · 列存文件 · 分布式文件系统", ["iceberg", "hudi", "orc", "hadoop"], "#2dd4bf"),
+         ("bd_compute", "计算引擎 · Compute", "DAG · shuffle · 有状态流 · 容错重算", ["spark", "flink"], "#a78bfa"),
+         ("bd_query", "查询引擎 · Query", "MPP · 向量化 · CBO · 联邦 · 嵌入式", ["doris", "clickhouse", "starrocks", "trino", "duckdb"], "#0a84ff"),
+         ("bd_coord", "协调 · Coordination", "元数据 · 选主 · 集群成员一致性", ["zookeeper", "etcd", "raft"], "#8a8a90"),
+     ]},
+    {"id": "memhier", "label": "存储层级", "group": "理论视角", "kind": "stack",
+     "kicker": "MEMORY / STORAGE HIERARCHY · 存储层级",
+     "title": "内存态 → 本地引擎 → 页+日志 → 表格式/文件 → 分布式/远端",
+     "position": "回答「数据放在离 CPU 多远、如何在层级间搬运」:越往下容量越大、延迟越高,是所有数据系统的物理约束轴。",
+     "subtitle": "经典存储层级(register→cache→RAM→disk→远端)投影到数据系统 · 点击下钻",
+     "flow": "state",
+     "tiers": [
+         ("mh_mem", "内存态 · In-Memory", "纯内存结构 · 微秒级 · 断电即失", ["redis", "milvus"], "#2dd4bf"),
+         ("mh_local", "本地引擎 · Local Engine", "内存+本地盘 LSM/向量化 · 单机", ["rocksdb", "duckdb"], "#0a84ff"),
+         ("mh_page", "页 + 日志 · Page & WAL", "缓冲页 + 预写日志 · 持久单机存储", ["postgres", "neo4j"], "#a78bfa"),
+         ("mh_file", "表格式 / 列存文件", "不可变文件 + 元数据 · 对象存储之上", ["iceberg", "hudi", "orc"], "#2dd4bf"),
+         ("mh_dist", "分布式 / 远端", "多副本分布式文件 · 顺序日志 · 网络访问", ["hadoop", "kafka", "fluss"], "#8a8a90"),
+     ]},
+    {"id": "consistency", "label": "一致性模型", "group": "理论视角", "kind": "stack",
+     "kicker": "CONSISTENCY MODELS · 一致性谱系",
+     "title": "线性一致/共识 → ACID 事务 → 快照隔离 → 顺序日志 → 最终一致",
+     "position": "回答「并发下系统给多强的正确性保证」:自上而下一致性递减、可用性/吞吐递增,是分布式设计的核心权衡轴。",
+     "subtitle": "从线性一致(CP)到最终一致(AP)的一致性谱系 · 点击下钻",
+     "flow": "ctrl",
+     "tiers": [
+         ("cs_lin", "线性一致 / 共识 · CP", "Raft/ZAB 多数派 · 强一致元数据存储", ["etcd", "zookeeper", "raft"], "#a78bfa"),
+         ("cs_acid", "ACID 事务 · Serializable", "MVCC + WAL · 事务隔离级别", ["postgres", "doris"], "#0a84ff"),
+         ("cs_snap", "快照隔离 · Snapshot", "表级快照 + 乐观提交 · 时间旅行", ["iceberg", "hudi"], "#2dd4bf"),
+         ("cs_log", "顺序日志 / ISR", "分区内有序 + 副本同步 · at-least/exactly-once", ["kafka", "fluss", "flink"], "#0a84ff"),
+         ("cs_evt", "最终一致 / 副本 · AP", "异步复制 · 读己所写弱保证", ["redis", "rocksdb"], "#8a8a90"),
+     ]},
+    {"id": "cloudnative", "label": "云原生", "group": "领域视角", "kind": "stack",
+     "kicker": "CLOUD NATIVE STACK · 云原生",
+     "title": "编排/控制平面 → 入口/网关 → 协调/共识 → 容器运行时底座",
+     "position": "回答「服务怎样被编排、路由、协调地跑在集群上」:声明式控制平面驱动,入口接流量,协调层保状态一致。",
+     "subtitle": "云原生控制/数据面剖面 · CNCF 分层视角 · 点击下钻",
+     "flow": "ctrl",
+     "tiers": [
+         ("cn_ctrl", "编排 / 控制平面", "声明式 reconcile · 资源调度 · 分布式执行", ["kubernetes", "ray", "spark"], "#a78bfa"),
+         ("cn_ingress", "入口 / 网关 / 边缘", "反向代理 · 动态路由 · TLS · 服务发现", ["traefik", "nginx"], "#0a84ff"),
+         ("cn_coord", "协调 / 共识 · 状态存储", "集群状态真相 · 选主 · 配置中心", ["etcd", "zookeeper", "raft"], "#2dd4bf"),
+         ("cn_rt", "容器运行时 · 底座", "语言运行时 · 内核 cgroup/namespace", ["go", "rust", "linux"], "#8a8a90"),
+     ]},
+    {"id": "dbkernel", "label": "数据库内核", "group": "领域视角", "kind": "stack",
+     "kicker": "DATABASE KERNEL · 数据库内核",
+     "title": "查询前端 → MPP 执行 → 事务存储引擎 → 图/向量特化",
+     "position": "回答「一条查询在数据库内核里流经哪些部件」:按各库最具代表性的内核层归位(解析规划 / 执行 / 存储 / 特化)。",
+     "subtitle": "关系/分析/图/向量数据库内核部件剖面 · 点击下钻",
+     "flow": "hot",
+     "tiers": [
+         ("db_front", "查询前端 · 解析/规划/优化", "SQL 解析 · CBO · 联邦下推 · 嵌入式", ["trino", "duckdb"], "#0a84ff"),
+         ("db_exec", "执行引擎 · MPP/向量化", "向量化算子 · pipeline · shuffle · MPP", ["doris", "clickhouse", "starrocks"], "#0a84ff"),
+         ("db_store", "事务存储引擎 · Page/LSM", "MVCC + WAL · LSM · 缓冲池 · Compaction", ["postgres", "rocksdb"], "#a78bfa"),
+         ("db_spec", "特化模型 · 图/向量", "图遍历免索引邻接 · ANN 向量检索", ["neo4j", "milvus"], "#2dd4bf"),
+     ]},
+]
+
+
+def build_stack_svg(lens, projects):
+    """总线脊接线图:左侧层号栅栏 + 中央竖向总线脊,每层模块经端口接入总线,
+    信号沿脊自上而下逐层步进。类 OSI/系统总线工程图——有接线、有端口、有方向。"""
+    global LAYER_ITEMS, LAYER_COLOR
+    tiers = lens["tiers"]
+    by_key = {p["key"]: p for p in projects}
+    LAYER_ITEMS = {tk: [by_key[k] for k in keys if k in by_key] for tk, _t, _s, keys, _c in tiers}
+    LAYER_COLOR = {tk: c for tk, _t, _s, _keys, c in tiers}
+
+    GUT_X = 44                        # 左号栏起点
+    SPINE_X = 250                     # 总线脊 x(号栏与模块道之间)
+    LANE_X, LANE_W = 296, 826         # 模块道
+    Y1, VGAP, PAD = 208, 30, 20
+    NODEH, ROWG, NG = _NODEH, _ROWG, _NG
+
+    band = {}
+    y = Y1
+    for tk, _t, _s, keys, _c in tiers:
+        mods = [by_key[k] for k in keys if k in by_key]
+        n = len(mods)
+        cols = min(5, max(1, n))
+        rows = max(1, -(-n // cols))
+        grid_h = rows * (NODEH + ROWG) - ROWG
+        h = max(70, grid_h) + PAD * 2
+        band[tk] = (y, h, cols, mods)
+        y += h + VGAP
+    last_bottom = y - VGAP
+    total_h = last_bottom + 96
+
+    body = ['<rect class="frame" x="{x}" y="{y}" width="{w}" height="{h}" rx="28"/>'.format(
+        x=_FRAME_X, y=_FRAME_Y, w=_FRAME_W, h=total_h - 2 * _FRAME_Y)]
+    body.append('<text class="map-kicker" x="70" y="72">%s</text>' % _esc(lens["kicker"]))
+    body.append('<text class="map-title" x="70" y="106">%s</text>' % _esc(lens["title"]))
+    body.append('<text class="map-subtitle" x="70" y="130">%s</text>' % _esc(lens["subtitle"]))
+    if lens.get("position"):
+        body.append('<rect class="lens-pos-bg" x="66" y="150" width="1054" height="30" rx="8"/>')
+        body.append('<text class="lens-pos" x="82" y="170">%s</text>' % _esc(lens["position"]))
+
+    order = [t[0] for t in tiers]
+    centers = {tk: band[tk][0] + band[tk][1] / 2 for tk in order}
+    flow = "flow-" + lens.get("flow", "hot")
+
+    # ── OSI 分层栅:每层间一条发丝分隔线(号栏..模块道右缘) ──
+    body.append('<g class="osi-grid">')
+    for i in range(1, len(order)):
+        gy = (band[order[i - 1]][0] + band[order[i - 1]][1] + band[order[i]][0]) / 2
+        body.append('<line class="osi-line" x1="{x1}" y1="{y}" x2="{x2}" y2="{y}"/>'.format(
+            x1=GUT_X, y=gy, x2=LANE_X + LANE_W))
+    # 号栏与模块道的竖向分界(总线所在通道)
+    body.append('<line class="osi-vline" x1="{x}" y1="{y1}" x2="{x}" y2="{y2}"/>'.format(
+        x=SPINE_X + 22, y1=band[order[0]][0] - 6, y2=last_bottom + 6))
+    body.append('</g>')
+
+    # ── 总线脊:自顶层端口到底层端口,分段下行箭头(信号步进) ──
+    body.append('<g class="machine-rails">')
+    for a, b in zip(order, order[1:]):
+        body.append(_flow_path(flow, [(SPINE_X, centers[a]), (SPINE_X, centers[b])]))
+    body.append('</g>')
+
+    # ── 逐层:号栏(层号+名+副) · 端口 · 接入线 · 模块道 ──
+    for i, (tk, ttitle, tsub, _keys, accent) in enumerate(tiers):
+        yy, h, cols, mods = band[tk]
+        cy = centers[tk]
+        # 层号栏
+        body.append('<text class="layer-num" x="{x}" y="{y:.0f}">{n:02d}</text>'.format(x=GUT_X + 8, y=cy - 6, n=i + 1))
+        body.append('<text class="layer-title" x="{x}" y="{y:.0f}">{t}</text>'.format(x=GUT_X + 8, y=cy + 14, t=_esc(ttitle)))
+        body.append('<text class="layer-sub" x="{x}" y="{y:.0f}">{s}</text>'.format(x=GUT_X + 8, y=cy + 30, s=_esc(tsub[:34])))
+        # 端口(脊上的接入点)+ 接入线(脊 → 模块道)
+        body.append('<circle class="bus-port" cx="{x}" cy="{y:.1f}" r="5" style="--accent:{c}"/>'.format(x=SPINE_X, y=cy, c=accent))
+        body.append('<line class="bus-stub" x1="{x1}" y1="{y:.1f}" x2="{x2}" y2="{y:.1f}" style="--accent:{c}"/>'.format(
+            x1=SPINE_X + 5, y=cy, x2=LANE_X - 4, c=accent))
+        # 模块道:网格居中
+        card_w = (LANE_W - (cols - 1) * NG) / cols
+        rows = max(1, -(-len(mods) // cols))
+        grid_h = rows * (NODEH + ROWG) - ROWG
+        gy0 = yy + (h - grid_h) / 2
+        for j, m in enumerate(mods):
+            r, c = divmod(j, cols)
+            nx = LANE_X + c * (card_w + NG)
+            ny = gy0 + r * (NODEH + ROWG)
+            body.append(_node(m, nx, ny, card_w, accent))
+    return ('<svg class="atlas-lens" data-lens="{lid}" xmlns="http://www.w3.org/2000/svg" '
+            'viewBox="0 0 {w} {h}" width="100%" role="img" aria-label="{lab} 架构视角 · 点击下钻">'
+            '<defs>'
+            '<filter id="soft" x="-20%" y="-20%" width="140%" height="140%">'
+            '<feDropShadow dx="0" dy="10" stdDeviation="18" flood-color="#000" flood-opacity="0.18"/></filter>'
+            '<marker id="flow-hot-arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 Z" class="arrow-hot"/></marker>'
+            '<marker id="flow-ctrl-arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 Z" class="arrow-ctrl"/></marker>'
+            '<marker id="flow-state-arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 Z" class="arrow-state"/></marker>'
+            '<marker id="flow-opt-arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 Z" class="arrow-opt"/></marker>'
+            '</defs>{body}</svg>').format(lid=lens["id"], lab=_esc(lens["label"]), w=_CW, h=total_h, body="".join(body))
+
+
+def build_all_lenses(projects):
+    """渲染全部视角 SVG,包进可切换容器;首个默认显示。"""
+    out = []
+    for i, lens in enumerate(LENSES):
+        svg = build_svg(projects) if lens["kind"] == "dual" else build_stack_svg(lens, projects)
+        out.append('<div class="lens-view{act}" data-lens="{lid}">{svg}</div>'.format(
+            act=" on" if i == 0 else "", lid=lens["id"], svg=svg))
+    return "".join(out)
+
+
+def build_lens_switch():
+    """顶栏 segmented 视角切换器,按 理论框架视角 / 领域视角 两类分组。"""
+    groups = []
+    seen = []
+    for l in LENSES:
+        g = l.get("group", "")
+        if g not in seen:
+            seen.append(g)
+    idx = 0
+    parts = []
+    for g in seen:
+        segs = []
+        for l in LENSES:
+            if l.get("group", "") != g:
+                continue
+            segs.append('<button class="lens-seg{act}" data-lens="{lid}" role="tab">{lab}</button>'.format(
+                act=" on" if idx == 0 else "", lid=l["id"], lab=_esc(l["label"])))
+            idx += 1
+        parts.append('<span class="lens-grp"><span class="lens-grp-lab">{g}</span><span class="lens-grp-segs">{segs}</span></span>'.format(
+            g=_esc(g), segs="".join(segs)))
+    return '<div class="lens-switch" role="tablist" aria-label="架构视角">%s</div>' % "".join(parts)
+
+
 def _search_index(projects):
     idx = []
     layer_title = {k: t for k, t, *_ in LAYERS}
@@ -557,7 +785,8 @@ def _search_index(projects):
 def build_html(projects):
     agg = aggregate(projects)
     return (TEMPLATE
-            .replace("__SVG__", build_svg(projects))
+            .replace("__SVG__", build_all_lenses(projects))
+            .replace("__LENSSWITCH__", build_lens_switch())
             .replace("__INDEX__", json.dumps(_search_index(projects), ensure_ascii=False))
             .replace("__AGG__", json.dumps(agg, ensure_ascii=False))
             .replace("__UPDATED__", agg["updated"] or "—"))
@@ -615,6 +844,25 @@ body{font-family:var(--sans);color:var(--c-ink);min-height:100vh;-webkit-font-sm
 .search:focus-within{border-color:var(--c-brand);box-shadow:0 0 0 3px color-mix(in srgb,var(--c-brand) 16%,transparent)}
 .search svg{color:var(--c-ink3);flex:none}
 .search input{flex:1;min-width:0;border:0;background:transparent;color:var(--c-ink);font-size:13.5px;outline:none;font-family:var(--sans)}
+.lens-switch{position:absolute;left:50%;transform:translateX(-50%);display:inline-flex;gap:14px;padding:6px 8px;border-radius:12px;background:var(--c-panel);border:1px solid var(--c-line)}
+.lens-grp{display:inline-flex;flex-direction:column;gap:4px}
+.lens-grp+.lens-grp{padding-left:14px;border-left:1px solid var(--c-line)}
+.lens-grp-lab{font:600 10px var(--sans);color:var(--c-ink3);letter-spacing:.06em;white-space:nowrap;padding-left:2px}
+.lens-grp-segs{display:inline-flex;gap:2px}
+.lens-seg{border:0;background:transparent;color:var(--c-ink2);cursor:pointer;font:600 12px var(--sans);padding:5px 12px;border-radius:8px;white-space:nowrap;transition:.15s}
+.lens-seg:hover{color:var(--c-ink)}
+.lens-seg.on{background:var(--c-brand);color:#fff}
+.lens-view{display:none}
+.lens-view.on{display:block}
+.lens-pos-bg{fill:color-mix(in srgb,var(--c-brand) 7%,transparent);stroke:color-mix(in srgb,var(--c-brand) 22%,transparent);stroke-width:1}
+.lens-pos{fill:var(--c-ink2);font:500 12px var(--sans)}
+.osi-line{stroke:var(--c-line);stroke-width:1;opacity:.6}
+.osi-vline{stroke:var(--c-line);stroke-width:1;stroke-dasharray:2 4;opacity:.5}
+.layer-num{fill:var(--c-ink3);font:700 20px var(--mono,monospace);opacity:.55}
+.layer-title{fill:var(--c-ink);font:700 13px var(--sans)}
+.layer-sub{fill:var(--c-ink3);font:500 10px var(--sans)}
+.bus-port{fill:var(--c-bg);stroke:var(--accent,#0a84ff);stroke-width:2.5}
+.bus-stub{stroke:var(--accent,#0a84ff);stroke-width:1.5;opacity:.7}
 .search kbd{font-family:var(--mono);font-size:11px;color:var(--c-ink3);border:1px solid var(--c-line2);
   border-radius:6px;padding:1px 6px;background:var(--c-panel2);flex:none}
 .tt{flex:none;width:38px;height:38px;border-radius:50%;border:1px solid var(--c-line);
@@ -705,6 +953,7 @@ footer{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;margin
     </svg>
   </span>
   <span class="brand">核心原理图谱</span>
+  __LENSSWITCH__
   <label class="search">
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
     <input id="q" type="text" placeholder="搜索项目 / 关键词…" autocomplete="off" aria-label="搜索项目"/>
@@ -731,6 +980,16 @@ footer{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;margin
   var s="dark"; try{ s=localStorage.getItem(KEY)||"dark"; }catch(e){} ap(s);
   var tt=document.getElementById("tt");
   if(tt) tt.onclick=function(){ var n=r.getAttribute("data-theme")==="light"?"dark":"light"; ap(n); try{localStorage.setItem(KEY,n);}catch(e){} };
+  // 视角切换:segmented → 显示对应 lens-view,隐藏其余
+  (function(){
+    var segs=[].slice.call(document.querySelectorAll(".lens-seg"));
+    var views=[].slice.call(document.querySelectorAll(".lens-view"));
+    function show(lid){
+      segs.forEach(function(b){ b.classList.toggle("on", b.dataset.lens===lid); });
+      views.forEach(function(v){ v.classList.toggle("on", v.dataset.lens===lid); });
+    }
+    segs.forEach(function(b){ b.onclick=function(){ show(b.dataset.lens); }; });
+  })();
   // 底部一行细描述(数值弱化,不与图争视觉)
   document.getElementById("stats").textContent=AGG.projects+" 项目 · "+AGG.accessible+" 可交互 · "+AGG.layers+" 机制节点 · "+AGG.svg+" 图 · "+AGG.md+" 篇 · 更新 __UPDATED__";
   // 搜索 → 图上 flash 高亮(非过滤成列表)

@@ -90,6 +90,26 @@
 
 ---
 
+## 源码锚点（jdolap-engine 核实）
+
+> FE 路径前缀 `fe/fe-core/src/main/java/org/apache/doris/transaction/`；BE 路径前缀 `be/src/olap/`。
+
+| 机制 | 源码位置 | 说明 |
+|---|---|---|
+| Begin 入口 | `GlobalTransactionMgr.java:162` → `DatabaseTransactionMgr.java:313` `beginTransaction` | 登记 txn_id / Label，初始状态置 `PREPARE`（`TransactionState.java:334`） |
+| Label 幂等去重 | `DatabaseTransactionMgr.java:343` `unprotectedGetTxnIdsByLabel`（:220） | 同 requestId 抛 `DuplicatedRequestException`（:361）、Label 已被非中止事务占用抛 `LabelAlreadyUsedException`（:364） |
+| 状态机枚举（2PC） | `TransactionStatus.java:21-26` | `UNKNOWN/PREPARE/COMMITTED/VISIBLE/ABORTED/PRECOMMITTED`；切换入口 `TransactionState.java:512` `setTransactionStatus` |
+| PRECOMMITTED（外部 2PC） | `DatabaseTransactionMgr.java:405` `preCommitTransaction2PC` | 落盘但不可见的中间态，供外部框架 checkpoint 绑定 |
+| Commit + quorum 校验 | `DatabaseTransactionMgr.java:775` `commitTransaction` | 每 Tablet 成功副本不足 `loadRequiredReplicaNum` 抛 `TabletQuorumFailedException`（:651） |
+| Publish 翻牌可见 | `DatabaseTransactionMgr.java:1111` `finishTransaction`；quorum 复核 `finishCheckQuorumReplicas`（:1372） | COMMITTED→VISIBLE 的可见开关 |
+| Publish 后台派发 | `PublishVersionDaemon.java:90` `publishVersion` → :108 `traverseReadyTxnAndDispatchPublishVersionTask` | FE 周期扫描 ready 事务、下发 PublishVersionTask |
+| BE 执行 Publish | `engine_publish_version_task.cpp:97` `EnginePublishVersionTask::execute` | BE 侧应用版本；主键表在此算 Delete Bitmap（埋点 :60 `tablet_publish_delete_bitmap`） |
+| Abort / 回滚 | `DatabaseTransactionMgr.java:1747` `abortTransaction`、:1793 `abortTransaction2PC` | 失败或超时回滚 |
+| MVCC Version | `olap_common.h:227` `struct Version{first,second}`；版本链裁剪 `version_graph.h:60` `capture_consistent_versions` | 读快照锁定一个 Version 沿版本链取一致集合 |
+| 主键 Delete Bitmap | `tablet_meta.h:418` `class DeleteBitmap` | Publish 时标记被覆盖行，实现主键 MVCC 可见性 |
+
+---
+
 ## 一句话总纲
 
 **事务与一致性靠 Version 连接两条线：写事务原子提交、经 Publish Version 翻牌可见；读快照锁定一个 Version 读到底、不受并发写影响。**

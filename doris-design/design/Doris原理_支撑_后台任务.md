@@ -84,6 +84,24 @@
 
 ---
 
+## 源码锚点（jdolap-engine 核实）
+
+> BE 路径前缀 `be/src/olap/`；FE 路径前缀 `fe/fe-core/src/main/java/org/apache/doris/`。
+
+| 任务 | 源码位置 | 说明 |
+|---|---|---|
+| Compaction 生产者线程 | `olap_server.cpp:647` `StorageEngine::_compaction_tasks_producer_callback` → `_generate_compaction_tasks`（:717） | 周期扫 Tablet 挑候选、按分数排序提交 |
+| Compaction 限速错峰 | `olap_server.cpp:585` `_adjust_compaction_thread_num` | 动态调压缩线程数，避免抢占前台资源 |
+| Cumulative Point / 分层 | `cumulative_compaction_policy.cpp:46` `SizeBasedCumulativeCompactionPolicy::calculate_cumulative_point` | size_based 默认策略推进 cumulative_point |
+| Compaction 执行 | `compaction.cpp:567` `CompactionMixin::execute_compact` → `execute_compact_impl`（:637） | 合并入口 |
+| Rowset 归并 | `compaction.cpp:256` `Compaction::merge_input_rowsets` → `Merger::vertical_merge_rowsets`（:292）/ `vmerge_rowsets`（:301） | Vertical 按列分组降内存 |
+| Statistics 自动收集 | `statistics/StatisticsAutoCollector.java:53`，周期 `runAfterCatalogReady`（:70）→ `collect`（:93） | 定期采样喂 CBO |
+| MV Refresh | `job/extensions/mtmv/MTMVTask.java:94`，`run`（:181）→ `generateRefreshMode`（:243） | 判全量 / 分区增量刷新 |
+| Checkpoint dump Image | `master/Checkpoint.java:53`，`runAfterCatalogReady`（:80）→ `env.saveImage`（:149） | 回放 Journal 生成新 Image |
+| 截断旧 EditLog / 清理 | `master/Checkpoint.java:298` `editLog.deleteJournals`；`MetaCleaner.clean`（:317） | 防元数据膨胀 |
+
+---
+
 ## 一句话总纲
 
 **后台任务用异步守护把写入与维护成本移出关键路径：Compaction 降读放大、MV Refresh 保新鲜、Statistics 喂优化器、Replica Repair 保可用、Checkpoint 与 Cleanup 防膨胀。**

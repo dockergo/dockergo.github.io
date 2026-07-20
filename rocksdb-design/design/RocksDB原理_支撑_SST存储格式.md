@@ -1,6 +1,6 @@
 # RocksDB 原理 · 支撑主线 · SST 存储格式
 
-> **定位**：属"读侧能力域"、后台产物。管数据在磁盘上的物理格式：BlockBasedTable（.sst 文件）的块布局。被【Flush】/【Compaction】写出、被【读取路径】读入、块由【缓存】缓存。它是 LSM 落盘数据的最终形态。源码基准 **RocksDB 11.7.0**（`table/block_based/`）。
+> **定位**：属"读侧能力域"、后台产物。管数据在磁盘上的物理格式：BlockBasedTable（.sst 文件）的块布局。被【Flush】/【Compaction】写出、被【读取路径】读入、块由【缓存】缓存。它是 LSM 落盘数据的最终形态。源码基准 **RocksDB 11.x**（`table/block_based/`；正文行号锚点基于可克隆的 `v11.1.2` tag 逐一核实）。
 
 SST（Sorted String Table）是不可变、内部有序的磁盘文件。RocksDB 默认用 **BlockBasedTable**：把有序 KV 切成一个个 **data block**，配 **index block** 定位、**filter block** 短路，末尾 **footer** 指路。读一个 key 的路径是 footer → index → 目标 data block，通常一两次 IO。
 
@@ -10,7 +10,7 @@ SST（Sorted String Table）是不可变、内部有序的磁盘文件。RocksDB
 
 ![RocksDB SST 布局 · data/index/filter/footer](RocksDB原理_SST_01布局.svg)
 
-一个 .sst 文件从头到尾：**data blocks**（有序 KV，每块默认 4KB，可压缩）→ **filter block**（布隆过滤器）→ **index block**（每个 data block 一条索引：该块最大 key → 块偏移）→ **metaindex block**（指向 filter/属性等元块）→ **footer**（固定尾部：指向 metaindex 与 index 的偏移 + magic + 校验类型）。读取先读固定 footer，拿到 index 位置，二分 index 找到目标 data block，再（经 filter 短路后）读该 block。
+一个 .sst 文件从头到尾（写端 `BlockBasedTableBuilder::Add`/`Finish`，`table/block_based/block_based_table_builder.cc:1520`）：**data blocks**（有序 KV，每块默认 4KB，可压缩）→ **filter block**（布隆过滤器）→ **index block**（每个 data block 一条索引：该块最大 key → 块偏移）→ **metaindex block**（指向 filter/属性等元块）→ **footer**（固定尾部：指向 metaindex 与 index 的 BlockHandle 偏移 + magic number + 校验类型）。读取先读固定 footer（`Footer::DecodeFrom`，`table/format.cc:330`，靠 `kBlockBasedTableMagicNumber` 识别表类型，见 `table/format.cc:176`），拿到 index 位置，二分 index 找到目标 data block，再（经 filter 短路后）读该 block。
 
 ---
 
@@ -18,7 +18,7 @@ SST（Sorted String Table）是不可变、内部有序的磁盘文件。RocksDB
 
 ![RocksDB Block 内部 · restart 点 + 前缀压缩](RocksDB原理_SST_02Block.svg)
 
-data block 内的 KV 也是有序的，用**前缀压缩**省空间：相邻 key 常有公共前缀（如 `user:1001`、`user:1002`），只存"与上一条的公共前缀长度 + 剩余后缀"。但全靠前缀压缩就无法二分，于是每隔若干条设一个 **restart point**（存完整 key、记偏移），块尾存 restart 点数组。查找时先在 restart 点上二分定位到区间，再在区间内线性扫。这样兼得空间与查找效率。
+data block 内的 KV 也是有序的（写端 `BlockBuilder::Add`，`table/block_based/block_builder.cc:220`），用**前缀压缩**省空间：相邻 key 常有公共前缀（如 `user:1001`、`user:1002`），只存"与上一条的公共前缀长度 `shared` + 剩余后缀"（`shared` 计算在 `table/block_based/block_builder.cc:279` 一带）。但全靠前缀压缩就无法二分，于是每隔 `block_restart_interval`（默认 16）条设一个 **restart point**（存完整 key、记偏移；restart 数组初始化见 `block_builder.cc:105`），块尾存 restart 点数组。查找时先在 restart 点上二分定位到区间，再在区间内顺序解前缀扫。这样兼得空间与查找效率。
 
 ---
 
@@ -26,8 +26,8 @@ data block 内的 KV 也是有序的，用**前缀压缩**省空间：相邻 key
 
 ![RocksDB Filter/Index 类型 · full/partitioned](RocksDB原理_SST_03FilterIndex.svg)
 
-- **Filter block**：full filter（整文件一个布隆，默认）或 **partitioned filter**（分块，按需入 cache，大文件省内存）；算法 bloom 或更省的 ribbon。让 Get 在读 data block 前就判"一定不在"。
-- **Index block**：binary search（默认，每 data block 一条）、hash index（点查前缀加速）、或 **partitioned index**（索引分块，超大文件避免索引本身过大常驻）。
+- **Filter block**：full filter（整文件一个布隆，默认 `FullFilterBlockReader`，读端 `KeyMayMatch` 在 `table/block_based/full_filter_block.cc:94`）或 **partitioned filter**（分块，`PartitionedFilterBlockReader`，`table/block_based/partitioned_filter_block.h:150`，按需入 cache，大文件省内存）；算法 bloom（默认 `FastLocalBloomBitsBuilder`，`table/block_based/filter_policy.cc`）或更省的 ribbon。让 Get 在读 data block 前就判"一定不在"。
+- **Index block**：binary search（默认，每 data block 一条）、hash index（点查前缀加速）、或 **partitioned index**（索引分块，`PartitionIndexReader`，`table/block_based/partitioned_index_reader.h:15`，超大文件避免索引本身过大常驻）。
 - **压缩**：每个 data block 独立压缩（Snappy/LZ4/ZSTD…），`compression_per_level` 可分层设（上层快压、底层重压省空间）。读时按块解压，配合 block cache 缓存解压后的块。
 
 ## 拓展 · SST 关键开关

@@ -6,7 +6,17 @@
 
 ![PVC到CSI](Kubernetes原理_支撑_存储_01PVC到CSI.svg)
 
-**声明与供给分离**：用户只写 PVC（容量、访问模式、StorageClass）；PV 是实际存储资源（可由管理员静态创建，或动态供给）。**PV 控制器**（pv_controller.go）跑经典 reconcile：`syncClaim`（:237）对未绑定的 PVC → `findBestMatchForClaim`（:343）在现有 PV 里找容量/模式匹配的最优 PV，找到就 `bind`（:395，双向写 PVC.spec.volumeName 与 PV.spec.claimRef）；找不到且 PVC 指定了 StorageClass，则 `provisionClaim`（:376）触发**动态供给**——按 StorageClass 调对应 provisioner（多为外部 CSI provisioner）在后端（云盘/NFS/Ceph…）真实创建一块存储、生成 PV、再绑定。`syncBoundClaim`（:492）维护已绑定关系。**挂载到 Pod（CSI 三段）**：Pod 调度到节点后，① **Provision**（建卷，上一步）；② **Attach**（AttachDetach 控制器把卷挂到节点，如云盘 attach 到 VM）；③ **Mount**（kubelet 经节点上的 CSI driver 把卷 mount 进 Pod 容器目录）。**回收策略**：PVC 删除后按 PV 的 `reclaimPolicy` 处理——`Delete`（连底层存储一起删）或 `Retain`（保留数据待人工处理）。整条链把"存储生命周期"纳入了声明式 + reconcile 框架。
+**声明与供给分离**：用户只写 PVC（容量、访问模式、StorageClass）；PV 是实际存储资源（可由管理员静态创建，或动态供给）。**PV 控制器**（`pkg/controller/volume/persistentvolume/pv_controller.go`）跑经典 reconcile：`syncClaim`（pv_controller.go:237）按 PVC 是否已绑分流到 `syncUnboundClaim`（pv_controller.go:331）；未绑的 PVC → `findBestMatchForClaim`（调用于 pv_controller.go:343，实现见 `.../persistentvolume/index.go:110` → `findByClaim`:75，在有序索引里按容量/访问模式找最小可满足 PV）；找到就 `bind`（调用于 pv_controller.go:395，实现 pv_controller.go:1094，内部 `bindVolumeToClaim`:996 写 PV.spec.claimRef、`bindClaimToVolume`:1037 写 PVC.spec.volumeName，**双向引用**）；找不到且 PVC 指定了 StorageClass，则 `provisionClaim`（调用于 pv_controller.go:376，实现 pv_controller.go:1576 → `provisionClaimOperation`:1616 / 外部 provisioner 走 `provisionClaimOperationExternal`:1822）触发**动态供给**——按 StorageClass 调对应 provisioner（多为外部 CSI provisioner）在后端（云盘/NFS/Ceph…）真实创建一块存储、生成 PV、再绑定。`syncBoundClaim`（pv_controller.go:492）维护已绑定关系、检测卷丢失。**挂载到 Pod（CSI 三段）**：Pod 调度到节点后，① **Provision**（建卷，上一步）；② **Attach**（AttachDetach 控制器把卷挂到节点，如云盘 attach 到 VM）；③ **Mount**（kubelet 经节点上的 CSI driver 把卷 mount 进 Pod 容器目录）。**回收策略**：PVC 删除后按 PV 的 `reclaimPolicy` 处理——`Delete`（连底层存储一起删）或 `Retain`（保留数据待人工处理）。整条链把"存储生命周期"纳入了声明式 + reconcile 框架。
+
+## 深化 · 绑定竞态、延迟绑定与挂载失败路径
+
+存储链条的每一段都可能失败或竞争，控制器靠"双向引用 + 状态复检 + 逐层重试"收敛：
+
+- **双向绑定的原子补齐**：`bind`（pv_controller.go:1094）分别写 PV.claimRef（`bindVolumeToClaim`:996）与 PVC.volumeName（`bindClaimToVolume`:1037）两步，非事务；若中途只写成功一边，下轮 `syncClaim`（pv_controller.go:237）/`syncVolume`（pv_controller.go:562）会检测到"一边绑了一边没绑"并补齐另一边——**最终一致而非强一致**。
+- **抢绑竞争**：多个 PVC 可能同时 `findBestMatchForClaim`（index.go:110）选中同一 PV，只有第一个成功写 claimRef 的胜出，其余在下轮发现该 PV 已被别人 claim（`syncVolume`:562 里校验 claimRef）而回退重新找——乐观并发在存储里的体现。
+- **WaitForFirstConsumer 延迟绑定**：StorageClass 设此模式时，`findBestMatchForClaim`（index.go:110）带 `delayBinding=true`，PV 控制器**不立即绑定**，而是等调度器决定 Pod 落哪个节点后再按节点拓扑选卷——避免"卷在 A 区、Pod 被调度到 B 区"的死锁。
+- **动态供给失败**：`provisionClaimOperation`（pv_controller.go:1616）调 provisioner 建卷失败（配额不足、后端故障）→ PVC 停在 Pending 并打 event，控制器按退避重试；外部 CSI provisioner 路径 `provisionClaimOperationExternal`（pv_controller.go:1822）则由外部组件 watch PVC 完成。
+- **Attach/Mount 卡住**：Attach 失败（云 API 限流、节点已满 attach 上限）或 Mount 超时会让 Pod 卡 `ContainerCreating`；kubelet 侧 `WaitForAttachAndMount` 阻塞并在下轮 SyncPod 重试（见 kubelet 篇）。**删除的逆序**：删 Pod 时必须先 Unmount→Detach 再回收卷，顺序错会导致卷泄漏或数据损坏。
 
 ## 深化 · 存储对象职责
 

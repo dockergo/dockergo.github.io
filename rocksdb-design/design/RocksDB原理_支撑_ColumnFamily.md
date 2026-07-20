@@ -1,6 +1,6 @@
 # RocksDB 原理 · 支撑主线 · Column Family
 
-> **定位**：属"组织能力域"。管把一个 DB 划成多个独立键空间：各 CF 有自己的 MemTable/SST/Version（可独立配置 compaction/压缩），但**共享同一份 WAL** 以保证跨 CF 写的原子性。被【接触面】的 CF API 依赖，与【写入路径】【版本】【WAL】深度联动。源码基准 **RocksDB 11.7.0**（`db/column_family.cc`）。
+> **定位**：属"组织能力域"。管把一个 DB 划成多个独立键空间：各 CF 有自己的 MemTable/SST/Version（可独立配置 compaction/压缩），但**共享同一份 WAL** 以保证跨 CF 写的原子性。被【接触面】的 CF API 依赖，与【写入路径】【版本】【WAL】深度联动。源码基准 **RocksDB 11.x**（`db/column_family.cc`；正文行号锚点基于可克隆的 `v11.1.2` tag 逐一核实）。
 
 一个 RocksDB 实例默认有一个 `default` CF。Column Family 让你在同一个 DB（同一份 WAL、同一恢复单元）里划出多个逻辑独立的键空间——像"一个库里的多张表"，各自调优，但共享事务边界。
 
@@ -10,7 +10,7 @@
 
 ![RocksDB Column Family · 各自 LSM,共享 WAL](RocksDB原理_CF_01全景.svg)
 
-每个 CF（`ColumnFamilyData`）拥有**独立**的：活跃/immutable MemTable、SST 文件与 Version（各自一棵 LSM 树）、以及 `ColumnFamilyOptions`（可各设 compaction_style、compression、write_buffer_size、comparator、merge_operator…）。但所有 CF **共享**：同一份 WAL、同一个 SequenceNumber 空间、同一恢复流程。`ColumnFamilySet` 管理一个 DB 的所有 CF。
+每个 CF（`class ColumnFamilyData`，`db/column_family.h:298`）拥有**独立**的：活跃/immutable MemTable、SST 文件与 Version（各自一棵 LSM 树）、以及 `ColumnFamilyOptions`（可各设 compaction_style、compression、write_buffer_size、comparator、merge_operator…）。但所有 CF **共享**：同一份 WAL、同一个 SequenceNumber 空间、同一恢复流程。`class ColumnFamilySet`（`db/column_family.h:734`）管理一个 DB 的所有 CF；换 SuperVersion 走 `ColumnFamilyData::InstallSuperVersion`（`db/column_family.cc:1414`）。
 
 ---
 
@@ -18,13 +18,13 @@
 
 ![RocksDB CF 共享 WAL · 跨 CF 原子性](RocksDB原理_CF_02共享WAL.svg)
 
-一个 WriteBatch 可同时写多个 CF（每条记录带 CF id），`DB::Write` 把整批写进**同一条 WAL 记录**、共享一个 seq 基准——因此**跨 CF 写也是原子的**（要么全可见要么全不可见）。这是共享 WAL 的核心价值：多个键空间的更新能在一个事务里原子完成（如 MyRocks 用不同 CF 存不同索引，一次 DML 原子更新主键 CF 与二级索引 CF）。代价：一个 WAL 要等所有相关 CF 的 MemTable 都 flush 才可删（见【WAL】【Flush】）。
+一个 WriteBatch 可同时写多个 CF（每条记录带 CF id，编码见 `WriteBatchInternal::Put`，`db/write_batch.cc:852`），`DB::Write` 把整批写进**同一条 WAL 记录**、共享一个 seq 基准——因此**跨 CF 写也是原子的**（要么全可见要么全不可见）。这是共享 WAL 的核心价值：多个键空间的更新能在一个事务里原子完成（如 MyRocks 用不同 CF 存不同索引，一次 DML 原子更新主键 CF 与二级索引 CF）。代价：一个 WAL 要等所有相关 CF 的 MemTable 都 flush 才可删（`DBImpl::FindObsoleteFiles`，`db/db_impl/db_impl_files.cc:124` 取各 CF 最小 log number，见【WAL】【Flush】）。
 
 ## 三、每 CF 独立调优
 
 ![RocksDB CF 独立调优 · 各设 options](RocksDB原理_CF_03独立调优.svg)
 
-不同数据有不同访问模式，CF 让你分别优化：热点小数据 CF 用大 block cache、快压缩；冷归档 CF 用 ZSTD 重压缩、FIFO/Universal compaction；不同 key 分布用不同 comparator 或 prefix_extractor。MyRocks/TiKV 等大量用 CF 把不同用途数据隔离调优。CF 的创建/删除也经 VersionEdit 记录进 MANIFEST（元数据一致）。
+不同数据有不同访问模式，CF 让你分别优化：热点小数据 CF 用大 block cache、快压缩；冷归档 CF 用 ZSTD 重压缩、FIFO/Universal compaction；不同 key 分布用不同 comparator 或 prefix_extractor。MyRocks/TiKV 等大量用 CF 把不同用途数据隔离调优。CF 的创建/删除也经 `VersionEdit`（`db/version_edit.h:693`，含 `is_column_family_add_`/`_drop_` 标记）经 `LogAndApply`（`db/version_set.cc:6469`）记录进 MANIFEST（元数据一致，恢复时重建同一组 CF）；创建入口 `DBImpl::CreateColumnFamilyImpl`（`db/db_impl/db_impl.cc:3757`）→ `ColumnFamilySet::CreateColumnFamily`（`db/column_family.cc:1848`）。
 
 ## 拓展 · Column Family 要点
 

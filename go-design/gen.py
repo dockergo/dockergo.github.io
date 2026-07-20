@@ -58,32 +58,50 @@ CAT_DESC = {
 }
 
 # ---- 总架构导航：架构图热区 ------------------------------------------------
-# 唯一导航主页 = 总架构 SVG（design/Go原理_全景_02总架构.svg，viewBox 0 0 980 520，
-# 无 <g transform>）＋透明热区叠加。坐标直接取自 SVG 顶层模块 <rect>，
-# 百分比 = 坐标 ÷ 980 / ÷ 520。点击热区下钻到对应主线面板。
+# 唯一导航主页 = 总架构 SVG（design/Go原理_全景_02总架构.svg）＋透明热区叠加。
+# 热区从 SVG 派生（唯一真源）：遍历带 data-tid 的 <rect>，累加 <g transform=translate>
+# 偏移得根坐标；除数用 viewBox 实际宽高。消除「SVG 与硬编码坐标双真源」漂移。
+# stack/defer/iface/generics 是横切语言特性、图上无对应方块，走 chip 兜底不画框。
 ARCH_SVG = "Go原理_全景_02总架构.svg"
-ARCH_VIEW_W = 980.0
-ARCH_VIEW_H = 520.0
-# (x, y, w, h, tid) —— tid 为该模块矩形所描绘的主线
-ARCH_HOTSPOTS = [
-    # 编译期 · COMPILE ZONE
-    (40,  92, 104, 156, "frontend"),  # C1 源程序（前端消费的输入）
-    (162, 92, 192, 156, "frontend"),  # C2 gc 前端：syntax/types2/noder
-    (372, 92, 222,  50, "ssa"),       # C3 “SSA 中后端”标题带
-    (382, 144, 202, 52, "escape"),    # C3 逃逸分析 + 内联 两行
-    (382, 200, 202, 48, "ssa"),       # C3 buildssa ~60 pass + genssa
-    (612, 92, 170, 156, "gocmd"),     # C4 链接器 cmd/link
-    (800, 92, 140, 156, "gocmd"),     # C5 单一可执行文件（go/link 产物）
-    # 运行期 · RUNTIME ZONE
-    (40,  318, 100, 160, "gmp"),      # R1 OS 加载 → runtime 启动
-    (156, 318, 176, 160, "gmp"),      # R2 runtime 引导 · schedinit · sysmon
-    (348, 318, 120, 160, "lifecycle"),# R3 main goroutine
-    (484, 318, 142, 160, "lifecycle"),# R4 go 语句 newproc 造 G
-    (642, 318, 150, 160, "gmp"),      # R5 GMP 调度器 schedule/findRunnable
-    (818, 366, 112,  32, "alloc"),    # R6 mallocgc 堆对象分配
-    (818, 402, 112,  32, "gc"),       # R6 GC 并发回收
-    (818, 438, 112,  32, "concur"),   # R6 channel 同步 park/goready
-]
+
+import re as _re_hot
+import xml.etree.ElementTree as _ET_hot
+
+
+def _parse_arch_hotspots(svg_text):
+    vb = _re_hot.search(
+        r'viewBox="[\d.]+\s+[\d.]+\s+([\d.]+)\s+([\d.]+)"', svg_text)
+    vbw, vbh = float(vb.group(1)), float(vb.group(2))
+    root = _ET_hot.fromstring(svg_text)
+    hots = []
+
+    def walk(el, dx, dy):
+        m = _re_hot.search(
+            r'translate\(\s*([-\d.]+)(?:[,\s]+([-\d.]+))?',
+            el.get("transform") or "")
+        if m:
+            dx += float(m.group(1))
+            if m.group(2):
+                dy += float(m.group(2))
+        if el.tag.rsplit("}", 1)[-1] == "rect" and el.get("data-tid"):
+            hots.append((
+                float(el.get("x", 0)) + dx, float(el.get("y", 0)) + dy,
+                float(el.get("width", 0)), float(el.get("height", 0)),
+                el.get("data-tid"), el.get("data-lab") or ""))
+        for c in el:
+            walk(c, dx, dy)
+
+    walk(root, 0.0, 0.0)
+    return hots, vbw, vbh
+
+
+with open(os.path.join(DESIGN_DIR, ARCH_SVG), encoding="utf-8") as _f_arch:
+    _ARCH_SVG_TEXT = _f_arch.read()
+_ARCH_HOTSPOTS_FULL, ARCH_VIEW_W, ARCH_VIEW_H = _parse_arch_hotspots(
+    _ARCH_SVG_TEXT)
+# 消费端沿用 5 元 (x, y, w, h, tid)；标签由 MAINLINES 提供
+ARCH_HOTSPOTS = [(x, y, w, h, tid)
+                 for (x, y, w, h, tid, _lab) in _ARCH_HOTSPOTS_FULL]
 
 
 def _read(path):
@@ -159,23 +177,30 @@ def esc(s):
 
 
 def build_panel(tid, doc):
-    """一条主线的内容面板：图走查（每图一块）+ 要点小节。"""
-    blocks = []
-    for i, (alt, svg) in enumerate(doc["figs"]):
-        b64 = _b64_svg(svg)
-        if not b64:
-            blocks.append(f'<div class="fig missing">缺图：{esc(svg)}</div>')
-            continue
-        cap = esc(alt or svg)
-        blocks.append(
-            f'<figure class="fig">'
-            f'<img class="fig-img" loading="lazy" alt="{cap}" '
-            f'src="data:image/svg+xml;base64,{b64}"/>'
-            f'<figcaption>{cap}</figcaption></figure>'
-        )
-    figs_html = "\n".join(blocks) if blocks else '<div class="fig missing">（本主线暂无图）</div>'
+    """一条主线的内容面板：doris 式垂直 tab —— 左 nav 列（每图一节 + 末尾要点），
+    右内容区，点 tab 只显当前一节。避免大端平铺、一屏聚焦一个要点。"""
+    navs = []      # 左侧垂直 tab 按钮
+    secs = []      # 右侧内容节（同序，只有 active 显示）
+    idx = 0
 
-    # 要点小节
+    for (alt, svg) in doc["figs"]:
+        b64 = _b64_svg(svg)
+        cap = esc(alt or svg)
+        active = " active" if idx == 0 else ""
+        navs.append(
+            f'<button class="vt-nav{active}" data-sec="{tid}-{idx}">'
+            f'<span class="vt-n">{idx+1}</span><span class="vt-t">{cap}</span></button>'
+        )
+        if b64:
+            body = (f'<figure class="fig"><img class="fig-img" loading="lazy" alt="{cap}" '
+                    f'src="data:image/svg+xml;base64,{b64}"/>'
+                    f'<figcaption>{cap}</figcaption></figure>')
+        else:
+            body = f'<div class="fig missing">缺图：{esc(svg)}</div>'
+        secs.append(f'<section class="vt-sec{active}" id="{tid}-{idx}">{body}</section>')
+        idx += 1
+
+    # 要点小节（并成最后一个垂直 tab）
     tips = doc["tips"]
     tip_parts = []
     if tips.get("定位"):
@@ -186,14 +211,28 @@ def build_panel(tid, doc):
         tip_parts.append(f'<div class="tip"><h4>调优要点</h4>{_list_html(tips["调优"])}</div>')
     if tips.get("误区"):
         tip_parts.append(f'<div class="tip"><h4>常见误区与工程要点</h4>{_list_html(tips["误区"])}</div>')
-    tips_html = ('<div class="tips">' + "\n".join(tip_parts) + "</div>") if tip_parts else ""
+    if tip_parts:
+        active = " active" if idx == 0 else ""
+        navs.append(
+            f'<button class="vt-nav{active}" data-sec="{tid}-{idx}">'
+            f'<span class="vt-n">·</span><span class="vt-t">要点 · 定位与调优</span></button>'
+        )
+        secs.append(
+            f'<section class="vt-sec{active}" id="{tid}-{idx}">'
+            f'<div class="tips">{"".join(tip_parts)}</div></section>'
+        )
+        idx += 1
+
+    if not navs:  # 空主线兜底
+        secs = ['<section class="vt-sec active"><div class="fig missing">（本主线暂无内容）</div></section>']
+        navs = ['<button class="vt-nav active" data-sec="none"><span class="vt-n">·</span><span class="vt-t">概览</span></button>']
 
     return (
         f'<section class="panel" data-tid="{tid}">'
         f'<div class="panel-head"><h2>{esc(doc["title"])}</h2>'
         f'<span class="fig-count">{len(doc["figs"])} 图</span></div>'
-        f'<div class="figs">{figs_html}</div>'
-        f'{tips_html}</section>'
+        f'<div class="vt-wrap"><nav class="vt-navcol">{"".join(navs)}</nav>'
+        f'<div class="vt-stage">{"".join(secs)}</div></div></section>'
     )
 
 
@@ -246,6 +285,11 @@ def build_arch_home(docs_by_tid):
             continue
         chips.append(f'<button class="arch-chip" data-tid="{tid}">{esc(label)}</button>')
     chips_html = "".join(chips)
+    # 全部主线均有热区时,chip 兜底整块隐藏(不再残留空「其余主线」标题)
+    chips_wrap = (
+        '<div class="arch-chips-wrap"><span class="arch-chips-hd">其余主线</span>'
+        f'<div class="arch-chips">{chips_html}</div></div>'
+    ) if chips else ""
 
     if b64:
         img = ('<img class="arch-img" '
@@ -258,16 +302,14 @@ def build_arch_home(docs_by_tid):
         '<section class="panel arch-panel active" data-tid="home">'
         f'<div class="arch-wrap"><div class="arch-stage">{img}'
         f'{"".join(hot_html)}</div></div>'
-        '<div class="arch-chips-wrap"><span class="arch-chips-hd">其余主线</span>'
-        f'<div class="arch-chips">{chips_html}</div></div>'
+        f'{chips_wrap}'
         '</section>'
     )
 
-    # tab：架构总览 + 14 条主线（保留原 tab 机制，可随时回主页）
-    tabs = ['<button class="tab" data-tid="home">架构总览</button>']
-    for tid, _f, label, _c in MAINLINES:
-        tabs.append(f'<button class="tab" data-tid="{tid}">{esc(label)}</button>')
-    return home, "\n".join(tabs)
+    # 导航即架构图本身：不再平铺全主线横条。仅保留一个「← 返回架构图」，
+    # 仅在下钻到某主线面板时出现（home 主页隐藏），回到唯一导航底图。
+    tabs = '<button class="tab-back" data-tid="home">← 返回架构图</button>'
+    return home, tabs
 
 
 def build_html():
@@ -292,6 +334,8 @@ def build_html():
         .replace("__TOTAL_DOCS__", str(total_docs))
         .replace("__TOTAL_FIGS__", str(total_figs))
         .replace("__FIRST_TID__", first_tid)
+        # 热区匹配根治：渲染盒宽高比从 SVG viewBox 派生，永不与 data-tid 派生坐标漂移
+        .replace("__ARCH_ASPECT__", f"{ARCH_VIEW_W:g}/{ARCH_VIEW_H:g}")
     )
 
 
@@ -341,7 +385,7 @@ a{color:var(--c-brand);text-decoration:none}
 header{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:14px;
   padding:12px 22px;background:var(--c-bg);border-bottom:1px solid var(--c-line)}
 .brand{display:flex;align-items:center;gap:11px}
-.brand .mark{width:34px;height:34px;border-radius:9px;
+.brand .mark{width:38px;height:38px;border-radius:50%;
   background:linear-gradient(135deg,#5fd08a,#5aa7f0);display:flex;align-items:center;
   justify-content:center;color:#fff;font-weight:700;font-size:17px}
 .brand .tt{font-size:15px;font-weight:600}
@@ -352,7 +396,8 @@ header{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:14px
   font-size:12.5px;font-weight:500;cursor:pointer;transition:all .15s}
 .homelink{display:inline-flex;align-items:center;margin-right:10px;text-decoration:none;color:var(--c-ink2)}
 .homelink:hover{color:var(--c-brand)}
-.homeico{display:inline-flex}
+.homeico{display:inline-grid;place-items:center;width:38px;height:38px;border-radius:50%;border:1px solid var(--c-line);background:var(--c-panel);color:var(--c-ink2);transition:color .15s}.msearch{position:relative;display:flex;align-items:center;gap:8px;width:min(280px,32vw);padding:0 12px;height:38px;border-radius:19px;border:1px solid var(--c-line);background:var(--c-panel);color:var(--c-ink2);margin-right:12px}.msearch svg{flex:none;opacity:.7}.msearch input{flex:1;border:0;background:transparent;color:var(--c-ink);outline:0;font-size:13px}.msearch kbd{flex:none;font:600 11px monospace;color:var(--c-ink3);border:1px solid var(--c-line);border-radius:5px;padding:1px 6px}.mq-list{position:absolute;top:44px;right:0;width:min(320px,80vw);z-index:60;background:var(--c-panel);border:1px solid var(--c-line);border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.28);overflow:hidden;display:none}.mq-list.on{display:block}.mq-item{display:block;width:100%;text-align:left;border:0;background:transparent;cursor:pointer;padding:9px 14px;color:var(--c-ink);font-size:13px;border-bottom:1px solid var(--c-line)}.mq-item:last-child{border-bottom:0}.mq-item:hover,.mq-item.sel{background:var(--c-hover,rgba(120,120,140,.14))} a:hover .homeico,.logo:hover .homeico,.homelink:hover .homeico{color:var(--c-brand);border-color:var(--c-brand)}
+.nn-n{fill:var(--c-ink2)}.nn-h{fill:var(--c-brand)}.nn-e{stroke:var(--c-line);stroke-width:1.4}
 
 .back-home:hover{border-color:var(--c-brand);color:var(--c-brand);background:var(--c-hover)}
 .theme-toggle{width:38px;height:38px;border-radius:50%;border:1px solid var(--c-line);
@@ -382,9 +427,9 @@ header{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:14px
 .arch-intro h2{margin:0 0 6px;font-size:20px;font-weight:600}
 .arch-intro p{margin:0;font-size:13px;line-height:1.7;color:var(--c-ink2);max-width:900px}
 .arch-wrap{background:var(--c-panel);border:1px solid var(--c-line);border-radius:16px;
-  padding:16px;box-shadow:var(--c-shadow-sm)}
-.arch-stage{position:relative;width:100%;max-width:980px;margin:0 auto;
-  aspect-ratio:980/520}
+  padding:0;box-shadow:var(--c-shadow-sm);overflow:hidden}
+.arch-stage{position:relative;width:100%;max-width:1080px;margin:0 auto;
+  aspect-ratio:__ARCH_ASPECT__}
 .arch-img{display:block;width:100%;height:auto;border-radius:10px;filter:var(--cv-filter)}
 .arch-hot{position:absolute;border:0;margin:0;padding:0;cursor:pointer;
   background:transparent;border-radius:9px;transition:background .15s,box-shadow .15s;
@@ -405,11 +450,11 @@ header{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:14px
 .arch-chip:hover{border-color:var(--c-brand);color:var(--c-brand);background:var(--c-hover)}
 
 .main{flex:1;min-width:0;padding:22px 30px 60px}
-.tabs{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:20px}
-.tab{padding:6px 13px;border-radius:999px;border:1px solid var(--c-line);
-  background:var(--c-panel);color:var(--c-ink2);font-size:12.5px;cursor:pointer;transition:all .13s}
-.tab:hover{border-color:var(--c-ink3);color:var(--c-ink)}
-.tab.active{background:var(--c-brand);border-color:var(--c-brand);color:#fff}
+.tabs{display:flex;margin-bottom:20px}
+.tab-back{display:none;padding:7px 15px;border-radius:999px;border:1px solid var(--c-line);
+  background:var(--c-panel);color:var(--c-ink2);font-size:13px;cursor:pointer;transition:all .13s}
+.tab-back.show{display:inline-flex;align-items:center;gap:6px}
+.tab-back:hover{border-color:var(--c-brand);color:var(--c-brand)}
 
 .panel{display:none;animation:fade .3s ease}
 .panel.active{display:block}
@@ -419,6 +464,25 @@ header{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:14px
 .panel-head h2{margin:0;font-size:20px;font-weight:600}
 .fig-count{font-size:12px;color:var(--c-ink3);padding:2px 10px;border-radius:999px;
   background:var(--c-panel2);border:1px solid var(--c-line)}
+
+/* ===== 垂直 tab（doris 式：左 nav 列 + 右内容，点切只显一节） ===== */
+.vt-wrap{display:flex;align-items:flex-start;gap:22px;min-width:0}
+.vt-navcol{flex:0 0 236px;position:sticky;top:16px;display:flex;flex-direction:column;gap:4px}
+.vt-nav{display:flex;align-items:flex-start;gap:10px;width:100%;text-align:left;
+  padding:11px 13px;border:1px solid transparent;border-radius:11px;background:transparent;
+  color:var(--c-ink2);font-size:12.5px;line-height:1.45;cursor:pointer;transition:all .13s}
+.vt-nav:hover{background:var(--c-panel2)}
+.vt-nav.active{background:var(--c-panel);border-color:var(--c-line);color:var(--c-ink);
+  box-shadow:var(--c-shadow-sm)}
+.vt-n{flex:none;width:20px;height:20px;border-radius:6px;display:grid;place-items:center;
+  font-size:11px;font-weight:700;background:var(--c-panel2);color:var(--c-ink3)}
+.vt-nav.active .vt-n{background:var(--c-brand);color:#fff}
+.vt-t{flex:1;min-width:0}
+.vt-stage{flex:1;min-width:0}
+.vt-sec{display:none;animation:fade .25s ease}
+.vt-sec.active{display:block}
+@media(max-width:820px){.vt-wrap{flex-direction:column}.vt-navcol{position:static;flex:none;width:100%;
+  flex-direction:row;flex-wrap:wrap}.vt-nav{width:auto}}
 
 .figs{display:flex;flex-direction:column;gap:22px}
 .fig{margin:0;background:var(--c-panel);border:1px solid var(--c-line);border-radius:14px;
@@ -449,25 +513,16 @@ footer{padding:22px 30px;color:var(--c-ink3);font-size:11.5px;border-top:1px sol
   <div class="txt">正在装载核心原理图谱…</div><div class="bar"><i></i></div></div>
 
 <header>
-  <a class="homelink" href="../index.html" title="返回导航主页"><span class="homeico" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg></span></a>
+  <a class="homelink" href="../index.html" title="返回导航主页"><span class="homeico" aria-hidden="true" style="width:38px;height:38px;border-radius:50%;border:1px solid var(--c-line);background:var(--c-panel);color:var(--c-ink2);display:inline-grid;place-items:center;text-decoration:none"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg></span></a>
   <div class="brand">
-    <div class="mark">Go</div>
     <div><div class="tt">Go 语言 · 核心原理图谱</div>
-    <span class="sub">编译期工具链 + 运行期 runtime · 源码基准 go1.26.4</span></div>
+    <span class="sub">运行时底座:GMP 调度器把 goroutine 复用到 OS 线程,并发三色标记 GC,netpoll 非阻塞 IO,channel 做 CSP 通信 —— 运行时纪律而非语言语法。</span></div>
   </div>
   <div class="spacer"></div>
-  <a href="https://github.com/golang/go" target="_blank" rel="noopener" title="GitHub 源码仓库" style="display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:9px;border:1px solid var(--c-line);color:var(--c-ink2);text-decoration:none;margin-right:8px"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.7.5.5 5.7.5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.2.8-.6v-2c-3.2.7-3.9-1.4-3.9-1.4-.5-1.3-1.3-1.7-1.3-1.7-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.7 1.3 3.4 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.8 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.3 1.2a11.4 11.4 0 0 1 6 0C17.3 4.7 18.3 5 18.3 5c.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.5-2.7 5.5-5.3 5.8.4.4.8 1.1.8 2.2v3.3c0 .4.2.7.8.6 4.6-1.5 7.9-5.8 7.9-10.9C23.5 5.7 18.3.5 12 .5z"/></svg></a><a href="https://go.dev" target="_blank" rel="noopener" title="项目官网" style="display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:9px;border:1px solid var(--c-line);color:var(--c-ink2);text-decoration:none;margin-right:8px"><img src="data:image/svg+xml;base64,PHN2ZyBmaWxsPSIjMDBBREQ4IiByb2xlPSJpbWciIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48dGl0bGU+R288L3RpdGxlPjxwYXRoIGQ9Ik0xLjgxMSAxMC4yMzFjLS4wNDcgMC0uMDU4LS4wMjMtLjAzNS0uMDU5bC4yNDYtLjMxNWMuMDIzLS4wMzUuMDgxLS4wNTguMTI4LS4wNThoNC4xNzJjLjA0NiAwIC4wNTguMDM1LjAzNS4wN2wtLjE5OS4zMDNjLS4wMjMuMDM2LS4wODIuMDctLjExNy4wN3pNLjA0NyAxMS4zMDZjLS4wNDcgMC0uMDU5LS4wMjMtLjAzNS0uMDU4bC4yNDUtLjMxNmMuMDIzLS4wMzUuMDgyLS4wNTguMTI5LS4wNThoNS4zMjhjLjA0NyAwIC4wNy4wMzUuMDU4LjA3bC0uMDkzLjI4Yy0uMDEyLjA0Ny0uMDU4LjA3LS4xMDUuMDd6bTIuODI4IDEuMDc1Yy0uMDQ3IDAtLjA1OS0uMDM1LS4wMzUtLjA3bC4xNjMtLjI5MmMuMDIzLS4wMzUuMDctLjA3LjExNy0uMDdoMi4zMzdjLjA0NyAwIC4wNy4wMzUuMDcuMDgybC0uMDIzLjI4YzAgLjA0Ny0uMDQ3LjA4Mi0uMDgyLjA4MnptMTIuMTI5LTIuMzZjLS43MzYuMTg3LTEuMjM5LjMyNy0xLjk2My41MTQtLjE3Ni4wNDYtLjE4Ny4wNTgtLjM0LS4xMTctLjE3NC0uMTk5LS4zMDMtLjMyNy0uNTQ4LS40NDQtLjczNy0uMzYyLTEuNDUtLjI1Ny0yLjExNS4xNzUtLjc5NS41MTQtMS4yMDQgMS4yNzQtMS4xOTIgMi4yMi4wMTEuOTM1LjY1NCAxLjcwNiAxLjU3NyAxLjgzNS43OTUuMTA1IDEuNDYtLjE3NSAxLjk4Ny0uNzcuMTA1LS4xMy4xOTgtLjI3LjMxNS0uNDM0SDEwLjQ3Yy0uMjQ1IDAtLjMwNC0uMTUyLS4yMjItLjM1LjE1Mi0uMzYyLjQzMi0uOTcuNTk2LTEuMjc0YS4zMTUuMzE1IDAgMDEuMjkyLS4xODdoNC4yNTNjLS4wMjMuMzE2LS4wMjMuNjMxLS4wNy45NDdhNC45ODMgNC45ODMgMCAwMS0uOTU4IDIuMjljLS44NDEgMS4xMS0xLjk0IDEuOC0zLjMzIDEuOTg2LTEuMTQ1LjE1Mi0yLjIwOS0uMDctMy4xNDMtLjc3LS44NjUtLjY1NS0xLjM1Ni0xLjUyLTEuNDg0LTIuNTk1LS4xNTItMS4yNzQuMjIyLTIuNDE5Ljk5My0zLjQyNC44My0xLjA4NiAxLjkyOC0xLjc3NiAzLjI3Mi0yLjAyIDEuMDk4LS4yIDIuMTUtLjA3IDMuMDk2LjU3MS42Mi40MSAxLjA2My45NyAxLjM1NiAxLjY0OC4wNy4xMDUuMDIzLjE2NC0uMTE3LjJtMy44NjggNi40NjFjLTEuMDY0LS4wMjQtMi4wMzQtLjMyOC0yLjg1Mi0xLjAyOWEzLjY2NSAzLjY2NSAwIDAxLTEuMjYyLTIuMjU1Yy0uMjEtMS4zMi4xNTItMi40ODkuOTQ3LTMuNTI5Ljg1My0xLjEyMiAxLjg4MS0xLjcwNiAzLjI3Mi0xLjk1IDEuMTkyLS4yMSAyLjMxNC0uMDk1IDMuMzMuNTk1LjkyMy42MyAxLjQ5NiAxLjQ4NCAxLjY0OCAyLjYwNS4xOTggMS41NzgtLjI1NyAyLjg2My0xLjM0NCAzLjk2Mi0uNzcxLjc4My0xLjcxOCAxLjI3My0yLjgwNSAxLjQ5NS0uMzE1LjA2LS42My4wNy0uOTM0LjEwNnptMi43OC00LjcyYy0uMDExLS4xNTMtLjAxMS0uMjctLjAzNC0uMzg3LS4yMS0xLjE1Ny0xLjI3NC0xLjgxLTIuMzg0LTEuNTU0LTEuMDg3LjI0NS0xLjc4OC45MzUtMi4wNDUgMi4wMzMtLjIxLjkxMi4yMzQgMS44MzUgMS4wNzUgMi4yMS42NDMuMjggMS4yODUuMjQ0IDEuOTA1LS4wNy45MjMtLjQ4IDEuNDI1LTEuMjI4IDEuNDg0LTIuMjMzeiIvPjwvc3ZnPg==" width="18" height="18" alt="官网" style="display:block"/></a><button class="theme-toggle" id="themeToggle" title="切换深色 / 浅色" aria-label="切换主题">
+  <a href="https://github.com/golang/go" target="_blank" rel="noopener" title="GitHub 源码仓库" style="display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:50%;border:1px solid var(--c-line);color:var(--c-ink2);text-decoration:none;margin-right:8px"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.7.5.5 5.7.5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.2.8-.6v-2c-3.2.7-3.9-1.4-3.9-1.4-.5-1.3-1.3-1.7-1.3-1.7-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.7 1.3 3.4 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.8 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.3 1.2a11.4 11.4 0 0 1 6 0C17.3 4.7 18.3 5 18.3 5c.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.5-2.7 5.5-5.3 5.8.4.4.8 1.1.8 2.2v3.3c0 .4.2.7.8.6 4.6-1.5 7.9-5.8 7.9-10.9C23.5 5.7 18.3.5 12 .5z"/></svg></a><a href="https://go.dev" target="_blank" rel="noopener" title="项目官网" style="display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:50%;border:1px solid var(--c-line);color:var(--c-ink2);text-decoration:none;margin-right:8px"><img src="data:image/svg+xml;base64,PHN2ZyBmaWxsPSIjMDBBREQ4IiByb2xlPSJpbWciIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48dGl0bGU+R288L3RpdGxlPjxwYXRoIGQ9Ik0xLjgxMSAxMC4yMzFjLS4wNDcgMC0uMDU4LS4wMjMtLjAzNS0uMDU5bC4yNDYtLjMxNWMuMDIzLS4wMzUuMDgxLS4wNTguMTI4LS4wNThoNC4xNzJjLjA0NiAwIC4wNTguMDM1LjAzNS4wN2wtLjE5OS4zMDNjLS4wMjMuMDM2LS4wODIuMDctLjExNy4wN3pNLjA0NyAxMS4zMDZjLS4wNDcgMC0uMDU5LS4wMjMtLjAzNS0uMDU4bC4yNDUtLjMxNmMuMDIzLS4wMzUuMDgyLS4wNTguMTI5LS4wNThoNS4zMjhjLjA0NyAwIC4wNy4wMzUuMDU4LjA3bC0uMDkzLjI4Yy0uMDEyLjA0Ny0uMDU4LjA3LS4xMDUuMDd6bTIuODI4IDEuMDc1Yy0uMDQ3IDAtLjA1OS0uMDM1LS4wMzUtLjA3bC4xNjMtLjI5MmMuMDIzLS4wMzUuMDctLjA3LjExNy0uMDdoMi4zMzdjLjA0NyAwIC4wNy4wMzUuMDcuMDgybC0uMDIzLjI4YzAgLjA0Ny0uMDQ3LjA4Mi0uMDgyLjA4MnptMTIuMTI5LTIuMzZjLS43MzYuMTg3LTEuMjM5LjMyNy0xLjk2My41MTQtLjE3Ni4wNDYtLjE4Ny4wNTgtLjM0LS4xMTctLjE3NC0uMTk5LS4zMDMtLjMyNy0uNTQ4LS40NDQtLjczNy0uMzYyLTEuNDUtLjI1Ny0yLjExNS4xNzUtLjc5NS41MTQtMS4yMDQgMS4yNzQtMS4xOTIgMi4yMi4wMTEuOTM1LjY1NCAxLjcwNiAxLjU3NyAxLjgzNS43OTUuMTA1IDEuNDYtLjE3NSAxLjk4Ny0uNzcuMTA1LS4xMy4xOTgtLjI3LjMxNS0uNDM0SDEwLjQ3Yy0uMjQ1IDAtLjMwNC0uMTUyLS4yMjItLjM1LjE1Mi0uMzYyLjQzMi0uOTcuNTk2LTEuMjc0YS4zMTUuMzE1IDAgMDEuMjkyLS4xODdoNC4yNTNjLS4wMjMuMzE2LS4wMjMuNjMxLS4wNy45NDdhNC45ODMgNC45ODMgMCAwMS0uOTU4IDIuMjljLS44NDEgMS4xMS0xLjk0IDEuOC0zLjMzIDEuOTg2LTEuMTQ1LjE1Mi0yLjIwOS0uMDctMy4xNDMtLjc3LS44NjUtLjY1NS0xLjM1Ni0xLjUyLTEuNDg0LTIuNTk1LS4xNTItMS4yNzQuMjIyLTIuNDE5Ljk5My0zLjQyNC44My0xLjA4NiAxLjkyOC0xLjc3NiAzLjI3Mi0yLjAyIDEuMDk4LS4yIDIuMTUtLjA3IDMuMDk2LjU3MS42Mi40MSAxLjA2My45NyAxLjM1NiAxLjY0OC4wNy4xMDUuMDIzLjE2NC0uMTE3LjJtMy44NjggNi40NjFjLTEuMDY0LS4wMjQtMi4wMzQtLjMyOC0yLjg1Mi0xLjAyOWEzLjY2NSAzLjY2NSAwIDAxLTEuMjYyLTIuMjU1Yy0uMjEtMS4zMi4xNTItMi40ODkuOTQ3LTMuNTI5Ljg1My0xLjEyMiAxLjg4MS0xLjcwNiAzLjI3Mi0xLjk1IDEuMTkyLS4yMSAyLjMxNC0uMDk1IDMuMzMuNTk1LjkyMy42MyAxLjQ5NiAxLjQ4NCAxLjY0OCAyLjYwNS4xOTggMS41NzgtLjI1NyAyLjg2My0xLjM0NCAzLjk2Mi0uNzcxLjc4My0xLjcxOCAxLjI3My0yLjgwNSAxLjQ5NS0uMzE1LjA2LS42My4wNy0uOTM0LjEwNnptMi43OC00LjcyYy0uMDExLS4xNTMtLjAxMS0uMjctLjAzNC0uMzg3LS4yMS0xLjE1Ny0xLjI3NC0xLjgxLTIuMzg0LTEuNTU0LTEuMDg3LjI0NS0xLjc4OC45MzUtMi4wNDUgMi4wMzMtLjIxLjkxMi4yMzQgMS44MzUgMS4wNzUgMi4yMS42NDMuMjggMS4yODUuMjQ0IDEuOTA1LS4wNy45MjMtLjQ4IDEuNDI1LTEuMjI4IDEuNDg0LTIuMjMzeiIvPjwvc3ZnPg==" width="18" height="18" alt="官网" style="display:block"/></a><label class="msearch"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input id="mq" type="text" placeholder="搜索模块 / 主线…" autocomplete="off" aria-label="搜索模块"/><kbd>/</kbd><div id="mqlist" class="mq-list"></div></label><button class="theme-toggle" id="themeToggle" title="切换深色 / 浅色" aria-label="切换主题">
     <span class="tt-moon">☾</span><span class="tt-sun">☀</span>
   </button>
 </header>
-
-<div class="stats">
-  <span class="stat-pill"><b>__TOTAL_DOCS__</b> 条主线</span>
-  <span class="stat-pill"><b>__TOTAL_FIGS__</b> 张原理图</span>
-  <span class="stat-pill">2 大家族</span>
-  <span class="spacer" style="flex:1"></span>
-  <span>图表优先 · 每条事实回 go1.26.4 源码核实</span>
-</div>
 
 <div class="layout">
   <main class="main">
@@ -483,23 +538,23 @@ footer{padding:22px 30px;color:var(--c-ink3);font-size:11.5px;border-top:1px sol
   var FIRST="__FIRST_TID__";
   // 主题：localStorage 记忆，深色默认
   var saved=null;
-  try{saved=localStorage.getItem("go-design-theme");}catch(e){}
+  try{saved=localStorage.getItem("atlas-nav-theme");}catch(e){}
   if(saved==="light")document.documentElement.setAttribute("data-theme","light");
   var tt=document.getElementById("themeToggle");
   tt.onclick=function(){
     var light=document.documentElement.getAttribute("data-theme")==="light";
     if(light){document.documentElement.removeAttribute("data-theme");}
     else{document.documentElement.setAttribute("data-theme","light");}
-    try{localStorage.setItem("go-design-theme",light?"dark":"light");}catch(e){}
+    try{localStorage.setItem("atlas-nav-theme",light?"dark":"light");}catch(e){}
   };
   // 选中某主线（home = 架构总览主页）
   function select(tid){
     var panels=document.querySelectorAll(".panel");
     for(var i=0;i<panels.length;i++)
       panels[i].classList.toggle("active",panels[i].dataset.tid===tid);
-    var tabs=document.querySelectorAll(".tab");
-    for(var k=0;k<tabs.length;k++)
-      tabs[k].classList.toggle("active",tabs[k].dataset.tid===tid);
+    // 「← 返回架构图」仅在下钻到主线面板时出现，home 主页隐藏
+    var back=document.querySelector(".tab-back");
+    if(back)back.classList.toggle("show",tid!=="home");
     try{history.replaceState(null,"","#"+tid);}catch(e){}
     document.querySelector(".main").scrollTop=0;
     window.scrollTo(0,0);
@@ -510,20 +565,39 @@ footer{padding:22px 30px;color:var(--c-ink3);font-size:11.5px;border-top:1px sol
       els[i].onclick=function(){select(this.dataset.tid);};
     }
   }
-  // 架构图热区 / chip 兜底 / 顶部 tab 共用同一开面板路径
-  bind(".arch-hot");bind(".arch-chip");bind(".tab");
-  // 初始：URL hash 或架构总览主页
+  // 架构图热区 / 返回按钮 共用同一开面板路径
+  bind(".arch-hot");bind(".tab-back");
+  // 垂直 tab：点左侧 nav 只显对应节（限本 .vt-wrap 组内）
+  (function(){
+    var navs=document.querySelectorAll(".vt-nav");
+    for(var i=0;i<navs.length;i++){
+      navs[i].onclick=function(){
+        var wrap=this.closest(".vt-wrap");if(!wrap)return;
+        var ns=wrap.querySelectorAll(".vt-nav"),ss=wrap.querySelectorAll(".vt-sec");
+        for(var j=0;j<ns.length;j++)ns[j].classList.remove("active");
+        for(var k=0;k<ss.length;k++)ss[k].classList.remove("active");
+        this.classList.add("active");
+        var sec=document.getElementById(this.dataset.sec);
+        if(sec)sec.classList.add("active");
+        wrap.scrollIntoView({block:"nearest"});
+      };
+    }
+  })();
+  // 主线 tid 序（去重，按热区在图上的 DOM 顺序）——键盘/URL 导航依据
+  function tidOrder(){
+    var seen={},ids=[],hs=document.querySelectorAll(".arch-hot");
+    for(var i=0;i<hs.length;i++){var t=hs[i].dataset.tid;if(t&&!seen[t]){seen[t]=1;ids.push(t);}}
+    return ids;
+  }
+  // 初始：URL hash 命中某主线则下钻，否则架构总览主页
   var hash=(location.hash||"").replace("#","");
-  var valid=false;
-  var tabsAll=document.querySelectorAll(".tab");
-  for(var i=0;i<tabsAll.length;i++)if(tabsAll[i].dataset.tid===hash)valid=true;
-  select(valid?hash:FIRST);
-  // 键盘：左右切主线（沿 tab 顺序，含架构总览）
+  var order=tidOrder();
+  select(order.indexOf(hash)>=0?hash:"home");
+  // 键盘：左右在各主线间切换（沿热区顺序）
   document.addEventListener("keydown",function(e){
     if(e.target.tagName==="INPUT"||e.target.tagName==="TEXTAREA")return;
     if(e.key!=="ArrowLeft"&&e.key!=="ArrowRight")return;
-    var ids=[];var it=document.querySelectorAll(".tab");
-    for(var i=0;i<it.length;i++)ids.push(it[i].dataset.tid);
+    var ids=tidOrder();
     var cur=(location.hash||"").replace("#","");
     var idx=ids.indexOf(cur);if(idx<0)idx=0;
     idx+=(e.key==="ArrowRight"?1:-1);
@@ -535,6 +609,46 @@ footer{padding:22px 30px;color:var(--c-ink3);font-size:11.5px;border-top:1px sol
   setTimeout(function(){boot.classList.add("hide");
     setTimeout(function(){boot.style.display="none";},450);},260);
 })();
+
+/* 模块搜索(DOM-scrape 通用法:读现有 nav 项,过滤后 dispatch click) */
+(function(){
+  var mq=document.getElementById('mq'), list=document.getElementById('mqlist');
+  if(!mq||!list) return;
+  function items(){
+    return [].slice.call(document.querySelectorAll('[data-tid]')).map(function(el){
+      var lab=(el.getAttribute('title')||el.textContent||'').trim().replace(/\s+/g,' ');
+      return {el:el, lab:lab};
+    }).filter(function(x){return x.lab && x.lab.length<40;});
+  }
+  var sel=-1, cur=[];
+  function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  function render(){
+    var q=mq.value.trim().toLowerCase();
+    var seen={};
+    cur = !q ? [] : items().filter(function(x){
+      if(seen[x.lab])return false; if(x.lab.toLowerCase().indexOf(q)<0)return false; seen[x.lab]=1; return true;
+    }).slice(0,8);
+    if(!cur.length){ list.className='mq-list'; list.innerHTML=''; return; }
+    sel=0;
+    list.innerHTML=cur.map(function(x,i){return '<button class="mq-item'+(i===0?' sel':'')+'" data-i="'+i+'">'+esc(x.lab)+'</button>';}).join('');
+    list.className='mq-list on';
+  }
+  function go(i){ mq.value=''; list.className='mq-list'; list.innerHTML=''; if(cur[i]) cur[i].el.click(); window.scrollTo(0,0); }
+  mq.addEventListener('input',render);
+  mq.addEventListener('keydown',function(e){
+    if(!cur.length){ if(e.key==='Escape') mq.blur(); return; }
+    if(e.key==='ArrowDown'){e.preventDefault();sel=(sel+1)%cur.length;}
+    else if(e.key==='ArrowUp'){e.preventDefault();sel=(sel-1+cur.length)%cur.length;}
+    else if(e.key==='Enter'){e.preventDefault();go(sel);return;}
+    else if(e.key==='Escape'){list.className='mq-list';mq.blur();return;}
+    else return;
+    [].forEach.call(list.children,function(el,i){el.className='mq-item'+(i===sel?' sel':'');});
+  });
+  list.addEventListener('click',function(e){var b=e.target.closest('.mq-item'); if(b) go(+b.dataset.i);});
+  document.addEventListener('keydown',function(e){ if(e.key==='/'&&document.activeElement!==mq){e.preventDefault();mq.focus();} });
+  document.addEventListener('click',function(e){ if(!e.target.closest('.msearch')){list.className='mq-list';} });
+})();
+
 </script>
 </body>
 </html>

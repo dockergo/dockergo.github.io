@@ -101,6 +101,23 @@
 
 ---
 
+## 源码锚点（jdolap-engine 核实）
+
+> FE 路径前缀 `fe/fe-core/src/main/java/org/apache/doris/`。认证与鉴权是执行线两个时点。
+
+| 环节 | 源码位置 | 说明 |
+|---|---|---|
+| Authentication 认证 | `mysql/privilege/Auth.java:94`，`checkPassword`（:187）/ `checkPlainPassword`（:227） | 连接握手校验身份 |
+| LDAP 对接 | `mysql/privilege/Auth.java:115` `LdapManager`，`getRolesByUserWithLdap`（:245） | 内置密码之外接企业目录 + 角色映射 |
+| Authorization 鉴权分级 | `mysql/privilege/AccessControllerManager.java:59`；`checkGlobalPriv`（:187）/ `checkDbPriv`（:234）/ `checkTblPriv`（:244）/ `checkResourcePriv`（:292）/ `checkWorkloadGroupPriv`（:318） | 按 op + scope 逐级判权 |
+| 可插拔鉴权器 | `AccessControllerManager.java:83` `InternalAccessController`（默认）；`getAccessControllerOrDefault`（:119） | 支持 Catalog 级自定义 Access Controller |
+| 权限谓词（op 位） | `mysql/privilege/PrivPredicate.java:95` SELECT、:62 LOAD、:54 ADMIN、:50 GRANT | wanted 权限位定义 |
+| GRANT / REVOKE / 用户角色 | `Auth.java:635` `grantRoleCommand`→`grantInternal`（:636）；`createUser`（:477）、`createRole`（:1033） | Master 改内存权限元数据并写 EditLog |
+| Row Policy 行级安全 | `policy/PolicyMgr.java:114` `createPolicy`；查询期 `getUserPolicies`（:358） | 匹配行策略注入过滤条件 |
+| Workload Group 限流 | `resource/workloadgroup/WorkloadGroupMgr.java:64`；`getWorkloadGroup`（:143）+ `getWorkloadGroupNameAndCheckPriv`（:185） | 取组并做 USAGE 鉴权，施加并发/内存/排队约束 |
+
+---
+
 ## 一句话总纲
 
 **数据控制分两条线：定义线把权限与资源规则当作元数据、经 EditLog 复制全集群一致生效；执行线对每条请求先 Authentication、再按 op+scope Authorization、再分 Workload Group 施加内存/并发/超时约束地执行，最后 Audit。**

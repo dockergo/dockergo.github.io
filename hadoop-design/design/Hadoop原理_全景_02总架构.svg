@@ -1,147 +1,126 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="780" viewBox="0 0 1040 780"
-     font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="720" viewBox="0 0 1080 720" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
   <defs>
-    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
-    </filter>
-    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
-    </marker>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="aHot" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+    <marker id="aState" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#c99a3a"/></marker>
+    <marker id="aCtl" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#5b7db1"/></marker>
   </defs>
-  <rect width="1040" height="780" fill="#fbfbfd"/>
-  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">Apache Hadoop 总架构 · 存储平面(HDFS) + 计算平面(YARN/MapReduce) · 主控管元数据、数据分块多副本</text>
+  <rect width="1080" height="720" fill="#fbfbfd"/>
 
-  <!-- 顶部说明条 -->
-  <rect x="30" y="44" width="980" height="40" rx="11" fill="#f6f6f8" stroke="#e2e2e7" data-tid="Hadoop原理_全景主线框架" data-lab="全景总览"/>
-  <text x="46" y="61" font-size="10.5" font-weight="600" fill="#1d1d1f">家族 4 · 分布式存储/文件系统</text>
-  <text x="240" y="61" font-size="10" fill="#494950">灵魂 = NameNode 元数据(FsImage + EditLog) + DataNode 块存储 + 心跳/块汇报对账;YARN 在其上做资源调度、MapReduce 是计算范式</text>
-  <text x="46" y="77" font-size="9" fill="#86868b">核实基准:apache/hadoop commit 6f5d1374 · 块 128MB · 副本 3 · 心跳 3s · 全量块汇报 6h</text>
+  <!-- ===== 标题带 ===== -->
+  <text x="30" y="28" font-size="14" font-weight="600" fill="#1d1d1f">Hadoop 总架构 · 多视角透视：主控管元数据，数据节点存块；HDFS 存储面 + YARN 计算面</text>
+  <text x="30" y="45" font-size="10.5" fill="#6e6e73">两平面各一主控：NameNode / ResourceManager 只管元数据与调度；DataNode / NodeManager 干活。块 128MB · 副本 3 · 心跳 3s　源码基准 Apache Hadoop 3.x</text>
 
-  <!-- 接触面 band -->
-  <text x="30" y="106" font-size="10.5" font-weight="600" fill="#3c1361">接触面 · 外部如何与 Hadoop 交互</text>
-  <rect x="40" y="114" width="232" height="42" rx="9" fill="#f4eefb" stroke="#d9c9ef" filter="url(#soft)" data-tid="Hadoop原理_接口_FileSystem与Shell" data-lab="FileSystem API"/>
-  <text x="156" y="132" font-size="10.5" font-weight="600" fill="#3c1361" text-anchor="middle">FileSystem API</text>
-  <text x="156" y="148" font-size="8.5" fill="#7c5aa6" text-anchor="middle">DistributedFileSystem / FSDataOutputStream</text>
-  <rect x="284" y="114" width="232" height="42" rx="9" fill="#f4eefb" stroke="#d9c9ef" filter="url(#soft)" data-tid="Hadoop原理_接口_FileSystem与Shell" data-lab="fs shell"/>
-  <text x="400" y="132" font-size="10.5" font-weight="600" fill="#3c1361" text-anchor="middle">fs shell</text>
-  <text x="400" y="148" font-size="8.5" fill="#7c5aa6" text-anchor="middle">hdfs dfs -put / -get(FsShell)</text>
-  <rect x="528" y="114" width="232" height="42" rx="9" fill="#f4eefb" stroke="#d9c9ef" filter="url(#soft)" data-tid="Hadoop原理_接口_YARN应用提交" data-lab="YARN Client"/>
-  <text x="644" y="132" font-size="10.5" font-weight="600" fill="#3c1361" text-anchor="middle">YARN Client</text>
-  <text x="644" y="148" font-size="8.5" fill="#7c5aa6" text-anchor="middle">提交应用 → ResourceManager</text>
-  <rect x="772" y="114" width="228" height="42" rx="9" fill="#f4eefb" stroke="#d9c9ef" filter="url(#soft)" data-tid="Hadoop原理_支撑_MapReduce执行" data-lab="MapReduce Job"/>
-  <text x="886" y="132" font-size="10.5" font-weight="600" fill="#3c1361" text-anchor="middle">MapReduce Job</text>
-  <text x="886" y="148" font-size="8.5" fill="#7c5aa6" text-anchor="middle">Job.submit → MRAppMaster</text>
+  <!-- ===== 图例：三型语义路径 ===== -->
+  <line x1="40" y1="64" x2="70" y2="64" stroke="#2f9e6e" stroke-width="1.8" marker-end="url(#aHot)"/>
+  <text x="76" y="68" font-size="10.5" fill="#3a3a3c">数据流 Hot（客户端直连 DataNode）</text>
+  <line x1="300" y1="64" x2="330" y2="64" stroke="#c99a3a" stroke-width="1.8" marker-end="url(#aState)"/>
+  <text x="336" y="68" font-size="10.5" fill="#3a3a3c">副本 pipeline State（DN→DN 流水）</text>
+  <line x1="560" y1="64" x2="590" y2="64" stroke="#5b7db1" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#aCtl)"/>
+  <text x="596" y="68" font-size="10.5" fill="#3a3a3c">心跳 / 块汇报 / 元数据 RPC Control（虚线）</text>
+  <text x="1056" y="68" font-size="10" fill="#a1a1a6" text-anchor="end">框 = 主线可下钻</text>
 
-  <!-- HDFS 平面容器 -->
-  <rect x="30" y="172" width="980" height="292" rx="14" fill="#f3f7fc" stroke="#cfe0f2"/>
-  <text x="46" y="192" font-size="12" font-weight="600" fill="#1b2a4a">HDFS · 分布式文件系统(存储平面)</text>
+  <!-- ===== 接触面 ===== -->
+  <rect x="24" y="82" width="1032" height="52" rx="13" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="40" y="102" font-size="11.5" font-weight="600" fill="#5a3d78">接触面 · 外部如何用 Hadoop</text>
+  <text x="40" y="119" font-size="9" fill="#8a6db0">客户端一次访问分两路：找 NameNode 要元数据、直连 DataNode 搬字节</text>
+  <g text-anchor="middle" font-size="9">
+    <rect x="470" y="92" width="180" height="32" rx="8" fill="#fff" stroke="#e2d2ee" data-tid="Hadoop原理_接口_FileSystem与Shell" data-lab="FileSystem API / fs shell"/><text x="560" y="112" fill="#5a3d78">FileSystem API / fs shell</text>
+    <rect x="660" y="92" width="180" height="32" rx="8" fill="#fff" stroke="#e2d2ee" data-tid="Hadoop原理_接口_YARN应用提交" data-lab="YARN Client"/><text x="750" y="112" fill="#5a3d78">YARN Client · 提交应用</text>
+    <rect x="850" y="92" width="190" height="32" rx="8" fill="#fff" stroke="#e2d2ee" data-tid="Hadoop原理_支撑_MapReduce执行" data-lab="MapReduce Job"/><text x="945" y="112" fill="#5a3d78">MapReduce Job · Job.submit</text>
+  </g>
 
-  <!-- NameNode -->
-  <rect x="44" y="202" width="452" height="176" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
-  <text x="62" y="224" font-size="12" font-weight="600" fill="#1b2a4a">NameNode(主控 · 单一命名空间权威)</text>
-  <rect x="60" y="234" width="420" height="36" rx="8" fill="#ffffff" stroke="#bcd0ec" data-tid="Hadoop原理_支撑_NameNode命名空间与元数据" data-lab="命名空间树"/>
-  <text x="270" y="250" font-size="9.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">命名空间树 · FSDirectory / INode(全内存)</text>
-  <text x="270" y="264" font-size="8.5" fill="#5b7db1" text-anchor="middle">文件→块列表、目录、权限、租约 LeaseManager</text>
-  <rect x="60" y="276" width="420" height="36" rx="8" fill="#ffffff" stroke="#bcd0ec" data-tid="Hadoop原理_支撑_NameNode命名空间与元数据" data-lab="FsImage+EditLog"/>
-  <text x="270" y="292" font-size="9.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">元数据持久化 · FsImage + EditLog</text>
-  <text x="270" y="306" font-size="8.5" fill="#5b7db1" text-anchor="middle">快照 + 预写日志;检查点合并(FSImageFormatProtobuf)</text>
-  <rect x="60" y="318" width="420" height="48" rx="8" fill="#e7eefb" stroke="#bcd0ec" data-tid="Hadoop原理_支撑_块放置与复制策略" data-lab="BlockManager"/>
-  <text x="270" y="337" font-size="9.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">BlockManager · 块↔DataNode 映射(重建于内存)</text>
-  <text x="270" y="353" font-size="8.5" fill="#5b7db1" text-anchor="middle">块放置策略 + 复制/纠删监控 RedundancyMonitor</text>
+  <!-- ===== HDFS 存储面 ===== -->
+  <rect x="24" y="146" width="1032" height="268" rx="16" fill="#f3f7fc" stroke="#d3e2f2"/>
+  <text x="40" y="166" font-size="11.5" font-weight="600" fill="#1b2a4a">HDFS 存储面</text>
+
+  <!-- NameNode 控制 -->
+  <rect x="60" y="176" width="450" height="146" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="74" y="196" font-size="11" font-weight="600" fill="#1b2a4a">控制面 · NameNode（元数据权威 · 不存数据）</text>
+  <g text-anchor="middle" font-size="9">
+    <rect x="74" y="204" width="422" height="34" rx="8" fill="#fff" stroke="#bcd0ec" data-tid="Hadoop原理_支撑_NameNode命名空间与元数据" data-lab="命名空间树"/><text x="285" y="219" font-weight="600" fill="#1b2a4a">命名空间树 · FSDirectory / INode（全内存）</text><text x="285" y="232" fill="#5b7db1" font-size="8">文件→块列表 · 目录 · 租约</text>
+    <rect x="74" y="242" width="422" height="34" rx="8" fill="#fff" stroke="#bcd0ec" data-tid="Hadoop原理_支撑_NameNode命名空间与元数据" data-lab="FsImage+EditLog"/><text x="285" y="257" font-weight="600" fill="#1b2a4a">元数据持久化 · FsImage + EditLog</text><text x="285" y="270" fill="#5b7db1" font-size="8">快照 + 预写日志 · 先日志后内存</text>
+    <rect x="74" y="280" width="422" height="34" rx="8" fill="#e7eefb" stroke="#bcd0ec" data-tid="Hadoop原理_支撑_块放置与复制策略" data-lab="BlockManager"/><text x="285" y="295" font-weight="600" fill="#1b2a4a">BlockManager · 块↔DataNode 映射</text><text x="285" y="308" fill="#5b7db1" font-size="8">块放置 · 一近两远 · 复制监控</text>
+  </g>
 
   <!-- HA -->
-  <rect x="512" y="202" width="484" height="176" rx="13" fill="#eafaf1" stroke="#bce6cd" filter="url(#soft)"/>
-  <text x="530" y="224" font-size="12" font-weight="600" fill="#0f5132">HA 高可用(Active / Standby 双 NameNode)</text>
-  <rect x="528" y="234" width="452" height="34" rx="8" fill="#ffffff" stroke="#bce6cd" data-tid="Hadoop原理_支撑_HA高可用" data-lab="Standby NN"/>
-  <text x="754" y="255" font-size="9" fill="#0f5132" text-anchor="middle">Standby NameNode · EditLogTailer 追日志、StandbyCheckpointer 做检查点</text>
-  <rect x="528" y="274" width="452" height="34" rx="8" fill="#ffffff" stroke="#bce6cd" data-tid="Hadoop原理_支撑_HA高可用" data-lab="JournalNode"/>
-  <text x="754" y="295" font-size="9" fill="#0f5132" text-anchor="middle">JournalNode 仲裁(JN×3):EditLog 写多数派(QuorumJournalManager)</text>
-  <rect x="528" y="314" width="452" height="52" rx="8" fill="#e6f6ee" stroke="#bce6cd" data-tid="Hadoop原理_支撑_HA高可用" data-lab="ZKFC 切换"/>
-  <text x="754" y="334" font-size="9" font-weight="600" fill="#0f5132" text-anchor="middle">ZKFC + ZooKeeper · 健康监控 + 自动故障切换</text>
-  <text x="754" y="352" font-size="8.5" fill="#3f8f66" text-anchor="middle">抢锁选主、fencing 防脑裂;DataNode 同时向两 NN 汇报</text>
+  <rect x="524" y="176" width="510" height="146" rx="13" fill="#eafaf1" stroke="#b8e6cd" filter="url(#soft)"/>
+  <text x="538" y="196" font-size="11" font-weight="600" fill="#1c6b45">HA · Active / Standby 双 NameNode</text>
+  <g text-anchor="middle" font-size="8.5">
+    <rect x="538" y="204" width="482" height="32" rx="8" fill="#fff" stroke="#b8e6cd" data-tid="Hadoop原理_支撑_HA高可用" data-lab="Standby NN"/><text x="779" y="224" fill="#1c6b45">Standby NN · 追 EditLog + 做检查点</text>
+    <rect x="538" y="242" width="482" height="32" rx="8" fill="#fff" stroke="#b8e6cd" data-tid="Hadoop原理_支撑_HA高可用" data-lab="JournalNode"/><text x="779" y="262" fill="#1c6b45">JournalNode×3 · EditLog 写多数派</text>
+    <rect x="538" y="280" width="482" height="34" rx="8" fill="#e6f7ee" stroke="#a8dfc0" data-tid="Hadoop原理_支撑_HA高可用" data-lab="ZKFC 切换"/><text x="779" y="295" font-weight="600" fill="#1c6b45">ZKFC + ZooKeeper · 选主切换</text><text x="779" y="308" fill="#3a9b6e" font-size="8">fencing 防脑裂 · DN 双报</text>
+  </g>
 
   <!-- 心跳/块汇报 对账 strip -->
-  <rect x="44" y="388" width="952" height="24" rx="7" fill="#fff4e0" stroke="#f0dcae" data-tid="Hadoop原理_支撑_心跳与块汇报对账" data-lab="心跳 + 块汇报对账"/>
-  <text x="520" y="404" font-size="9.5" font-weight="600" fill="#7a4d00" text-anchor="middle">DataNode ⇄ NameNode 心跳(3s,携命令) + 块汇报(全量 6h / 增量即时) → 对账内存块映射</text>
+  <rect x="60" y="330" width="974" height="24" rx="7" fill="#fff4e0" stroke="#f0dcae" data-tid="Hadoop原理_支撑_心跳与块汇报对账" data-lab="心跳 + 块汇报对账"/>
+  <text x="547" y="346" font-size="9" font-weight="600" fill="#7a4d00" text-anchor="middle">DataNode ⇄ NameNode 心跳(3s · 携命令) + 块汇报(全量 6h / 增量即时) → 对账内存块映射</text>
 
-  <!-- DataNodes row -->
-  <rect x="44" y="418" width="476" height="38" rx="9" fill="#fff7e6" stroke="#f0dcae" filter="url(#soft)" data-tid="Hadoop原理_支撑_DataNode块存储" data-lab="DataNode 块存储"/>
-  <text x="282" y="435" font-size="10" font-weight="600" fill="#7a4d00" text-anchor="middle">DataNode ×N · 块存储 FsDatasetImpl</text>
-  <text x="282" y="449" font-size="8.5" fill="#9a7328" text-anchor="middle">block 文件 + .meta 校验和;finalized / rbw 目录;块扫描</text>
-  <rect x="528" y="418" width="468" height="38" rx="9" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)" data-tid="Hadoop原理_支撑_Pipeline写数据流" data-lab="Pipeline 写数据流"/>
-  <text x="762" y="435" font-size="10" font-weight="600" fill="#7a4d00" text-anchor="middle">pipeline 写:client → DN1 → DN2 → DN3</text>
-  <text x="762" y="449" font-size="8.5" fill="#9a7328" text-anchor="middle">packet 流水 + ack 反向回传;DataXceiver.writeBlock</text>
+  <!-- DataNode 数据 -->
+  <rect x="60" y="360" width="450" height="42" rx="10" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)" data-tid="Hadoop原理_支撑_DataNode块存储" data-lab="DataNode 块存储"/>
+  <text x="285" y="378" font-size="10" font-weight="600" fill="#5a3410" text-anchor="middle">数据面 · DataNode ×N · 块存储</text>
+  <text x="285" y="393" font-size="8.5" fill="#93762e" text-anchor="middle">block + .meta 校验和 · FsDatasetImpl 多卷</text>
+  <rect x="524" y="360" width="510" height="42" rx="10" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)" data-tid="Hadoop原理_支撑_Pipeline写数据流" data-lab="Pipeline 写数据流"/>
+  <text x="779" y="378" font-size="10" font-weight="600" fill="#5a3410" text-anchor="middle">Pipeline 写 · client → DN1 → DN2 → DN3</text>
+  <text x="779" y="393" font-size="8.5" fill="#93762e" text-anchor="middle">packet 流水 + ack 反向回传 · 副本落地</text>
 
-  <!-- 连线 DN->NN(心跳/块汇报,虚线旁路) -->
-  <path d="M270,418 L270,412" stroke="#c7a76a" stroke-width="1.3" stroke-dasharray="3,3" fill="none" marker-end="url(#ar)"/>
-  <path d="M270,388 L270,368" stroke="#c7a76a" stroke-width="1.3" stroke-dasharray="3,3" fill="none" marker-end="url(#ar)"/>
-  <text x="290" y="382" font-size="8" fill="#9a7328">心跳↑/复制命令↓</text>
+  <!-- ===== YARN 计算面 ===== -->
+  <rect x="24" y="426" width="1032" height="246" rx="16" fill="#f5faf6" stroke="#dfeae2"/>
+  <text x="40" y="446" font-size="11.5" font-weight="600" fill="#1b2a4a">YARN 计算面</text>
 
-  <!-- YARN 平面容器 -->
-  <rect x="30" y="478" width="980" height="286" rx="14" fill="#f5faf6" stroke="#e2ece5"/>
-  <text x="46" y="498" font-size="12" font-weight="600" fill="#1b2a4a">YARN · 资源管理与调度(计算平面) + MapReduce 计算范式</text>
-
-  <!-- ResourceManager -->
-  <rect x="44" y="508" width="452" height="150" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
-  <text x="62" y="530" font-size="12" font-weight="600" fill="#1b2a4a">ResourceManager(集群资源仲裁)</text>
-  <rect x="60" y="540" width="420" height="46" rx="8" fill="#ffffff" stroke="#bcd0ec" data-tid="Hadoop原理_支撑_YARN资源调度" data-lab="Scheduler"/>
-  <text x="270" y="559" font-size="9.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">Scheduler · CapacityScheduler / FairScheduler</text>
-  <text x="270" y="575" font-size="8.5" fill="#5b7db1" text-anchor="middle">按队列/容量分配 Container(纯分配、不监控应用)</text>
-  <rect x="60" y="592" width="420" height="46" rx="8" fill="#ffffff" stroke="#bcd0ec" data-tid="Hadoop原理_支撑_YARN资源调度" data-lab="ApplicationsManager"/>
-  <text x="270" y="611" font-size="9.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">ApplicationsManager · 管 AM 生命周期</text>
-  <text x="270" y="627" font-size="8.5" fill="#5b7db1" text-anchor="middle">受理提交、启动首个 Container 跑 ApplicationMaster</text>
+  <!-- ResourceManager 控制 -->
+  <rect x="60" y="456" width="450" height="120" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="74" y="476" font-size="11" font-weight="600" fill="#1b2a4a">控制面 · ResourceManager（资源仲裁）</text>
+  <g text-anchor="middle" font-size="9">
+    <rect x="74" y="486" width="422" height="38" rx="8" fill="#fff" stroke="#bcd0ec" data-tid="Hadoop原理_支撑_YARN资源调度" data-lab="Scheduler"/><text x="285" y="504" font-weight="600" fill="#1b2a4a">Scheduler · Capacity / Fair</text><text x="285" y="518" fill="#5b7db1" font-size="8">按队列分配 Container · 纯分配不监控</text>
+    <rect x="74" y="530" width="422" height="38" rx="8" fill="#fff" stroke="#bcd0ec" data-tid="Hadoop原理_支撑_YARN资源调度" data-lab="ApplicationsManager"/><text x="285" y="548" font-weight="600" fill="#1b2a4a">ApplicationsManager · 管 AM 生命周期</text><text x="285" y="562" fill="#5b7db1" font-size="8">受理提交 · 启动首个 Container 跑 AM</text>
+  </g>
 
   <!-- MapReduce + 运维 -->
-  <rect x="512" y="508" width="484" height="70" rx="13" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)" data-tid="Hadoop原理_支撑_MapReduce执行" data-lab="MapReduce on YARN"/>
-  <text x="530" y="530" font-size="12" font-weight="600" fill="#1d1d1f">MapReduce on YARN</text>
-  <text x="530" y="550" font-size="9" fill="#494950">MRAppMaster 作为 AM 向 RM 申请 Container、调度 Map/Reduce Task</text>
-  <text x="530" y="567" font-size="8.5" fill="#86868b">Map(本地读 HDFS 块)→ shuffle → Reduce;计算就近数据</text>
+  <rect x="524" y="456" width="510" height="56" rx="13" fill="#fff" stroke="#e2e2e7" filter="url(#soft)" data-tid="Hadoop原理_支撑_MapReduce执行" data-lab="MapReduce on YARN"/>
+  <text x="538" y="477" font-size="11" font-weight="600" fill="#1d1d1f">MapReduce on YARN · MRAppMaster 是一种 AM</text>
+  <text x="538" y="497" font-size="8.5" fill="#86868b">Map（就近读 HDFS 块）→ shuffle → Reduce · 计算贴数据</text>
+  <rect x="524" y="520" width="510" height="56" rx="13" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)" data-tid="Hadoop原理_支撑_Balancer与Federation" data-lab="Balancer / Federation"/>
+  <text x="538" y="541" font-size="11" font-weight="600" fill="#5a3410">运维扩展 · Balancer / Federation(RBF)</text>
+  <text x="538" y="561" font-size="8.5" fill="#93762e">Balancer 均衡 DN 利用率 · Router 挂多命名空间横向扩展</text>
 
-  <!-- 运维 strip -->
-  <rect x="512" y="586" width="484" height="52" rx="13" fill="#fff7e6" stroke="#f0dcae" filter="url(#soft)" data-tid="Hadoop原理_支撑_Balancer与Federation" data-lab="Balancer / Federation"/>
-  <text x="530" y="608" font-size="11" font-weight="600" fill="#7a4d00">运维扩展:Balancer · Federation(Router-RBF)</text>
-  <text x="530" y="626" font-size="8.5" fill="#9a7328">Balancer 均衡各 DN 利用率;Router 挂载多命名空间横向扩展</text>
+  <!-- NodeManager 数据 -->
+  <rect x="60" y="586" width="300" height="56" rx="11" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)" data-tid="Hadoop原理_支撑_YARN资源调度" data-lab="NodeManager"/>
+  <text x="210" y="606" font-size="10" font-weight="600" fill="#5a3410" text-anchor="middle">数据面 · NodeManager #1</text>
+  <text x="210" y="627" font-size="8.5" fill="#93762e" text-anchor="middle">Container：AM = MRAppMaster</text>
+  <rect x="372" y="586" width="300" height="56" rx="11" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)" data-tid="Hadoop原理_支撑_YARN资源调度" data-lab="NodeManager"/>
+  <text x="522" y="606" font-size="10" font-weight="600" fill="#5a3410" text-anchor="middle">NodeManager #2</text>
+  <text x="522" y="627" font-size="8.5" fill="#93762e" text-anchor="middle">Container：Map / Reduce Task</text>
+  <rect x="684" y="586" width="350" height="56" rx="11" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)" data-tid="Hadoop原理_支撑_YARN资源调度" data-lab="NodeManager"/>
+  <text x="859" y="606" font-size="10" font-weight="600" fill="#5a3410" text-anchor="middle">NodeManager #3</text>
+  <text x="859" y="627" font-size="8.5" fill="#93762e" text-anchor="middle">Container：Reduce Task</text>
 
-  <!-- NodeManager row -->
-  <rect x="44" y="676" width="308" height="72" rx="11" fill="#fff7e6" stroke="#f0dcae" filter="url(#soft)" data-tid="Hadoop原理_支撑_YARN资源调度" data-lab="NodeManager"/>
-  <text x="198" y="696" font-size="10" font-weight="600" fill="#7a4d00" text-anchor="middle">NodeManager #1</text>
-  <rect x="60" y="704" width="276" height="34" rx="7" fill="#fdf6ea" stroke="#efdcb4"/>
-  <text x="198" y="725" font-size="8.5" fill="#7a4d00" text-anchor="middle">Container: AM = MRAppMaster</text>
-  <rect x="366" y="676" width="308" height="72" rx="11" fill="#fff7e6" stroke="#f0dcae" filter="url(#soft)" data-tid="Hadoop原理_支撑_YARN资源调度" data-lab="NodeManager"/>
-  <text x="520" y="696" font-size="10" font-weight="600" fill="#7a4d00" text-anchor="middle">NodeManager #2</text>
-  <rect x="382" y="704" width="276" height="34" rx="7" fill="#fdf6ea" stroke="#efdcb4"/>
-  <text x="520" y="725" font-size="8.5" fill="#7a4d00" text-anchor="middle">Container: Map / Reduce Task</text>
-  <rect x="688" y="676" width="308" height="72" rx="11" fill="#fff7e6" stroke="#f0dcae" filter="url(#soft)" data-tid="Hadoop原理_支撑_YARN资源调度" data-lab="NodeManager"/>
-  <text x="842" y="696" font-size="10" font-weight="600" fill="#7a4d00" text-anchor="middle">NodeManager #3</text>
-  <rect x="704" y="704" width="276" height="34" rx="7" fill="#fdf6ea" stroke="#efdcb4"/>
-  <text x="842" y="725" font-size="8.5" fill="#7a4d00" text-anchor="middle">Container: Reduce Task</text>
+  <!-- ===== 语义分型连线 ===== -->
+  <!-- Control：元数据 RPC → NameNode -->
+  <path d="M560,134 L560,158 L285,158 L285,176" stroke="#5b7db1" stroke-width="1.6" stroke-dasharray="5 3" fill="none" marker-end="url(#aCtl)"/>
+  <text x="360" y="153" font-size="8" fill="#5b7db1">元数据 RPC：create / open / addBlock</text>
+  <!-- Hot：数据字节直连 DataNode（绕开 NameNode） -->
+  <path d="M470,134 L470,142 L42,142 L42,381 L60,381" stroke="#2f9e6e" stroke-width="1.6" fill="none" marker-end="url(#aHot)"/>
+  <text x="66" y="153" font-size="8" fill="#2f9e6e">数据字节直连 DataNode（绕 NameNode）</text>
+  <!-- Control：心跳↑ / 块汇报 → 对账 → BlockManager -->
+  <line x1="270" y1="360" x2="270" y2="354" stroke="#5b7db1" stroke-width="1.4" stroke-dasharray="4 3" marker-end="url(#aCtl)"/>
+  <line x1="270" y1="330" x2="270" y2="316" stroke="#5b7db1" stroke-width="1.4" stroke-dasharray="4 3" marker-end="url(#aCtl)"/>
+  <text x="278" y="326" font-size="8" fill="#5b7db1">心跳 / 块汇报</text>
+  <!-- State：DataNode → Pipeline 副本流水复制 -->
+  <line x1="510" y1="381" x2="524" y2="381" stroke="#c99a3a" stroke-width="1.8" marker-end="url(#aState)"/>
+  <!-- Control：提交应用 → ResourceManager -->
+  <path d="M750,124 L750,132 L1044,132 L1044,436 L285,436 L285,456" stroke="#5b7db1" stroke-width="1.6" stroke-dasharray="5 3" fill="none" marker-end="url(#aCtl)"/>
+  <text x="200" y="452" font-size="8" fill="#5b7db1">提交应用 submitApplication</text>
+  <!-- Control：RM ↔ NodeManager 分配容器 / 心跳注册 -->
+  <line x1="300" y1="576" x2="300" y2="586" stroke="#5b7db1" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#aCtl)"/>
+  <text x="308" y="583" font-size="8" fill="#5b7db1">分配 / 启动容器</text>
+  <line x1="150" y1="586" x2="150" y2="576" stroke="#5b7db1" stroke-width="1.4" stroke-dasharray="4 3" marker-end="url(#aCtl)"/>
+  <text x="90" y="583" font-size="8" fill="#5b7db1">心跳注册</text>
+  <!-- Hot：数据本地性 Map 就近读 HDFS 块（跨平面） -->
+  <line x1="540" y1="426" x2="540" y2="402" stroke="#2f9e6e" stroke-width="1.6" marker-end="url(#aHot)"/>
+  <text x="548" y="418" font-size="8" fill="#2f9e6e">数据本地性：Map 就近读 HDFS 块</text>
 
-  <!-- 连线 NM->RM(节点心跳/注册,虚线) + RM->NM(分配启动Container,实线) -->
-  <path d="M270,676 L270,662" stroke="#8fae86" stroke-width="1.3" stroke-dasharray="3,3" fill="none" marker-end="url(#ar)"/>
-  <path d="M230,658 L230,676" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
-  <text x="250" y="670" font-size="8" fill="#a1a1a6" text-anchor="middle">↓分配/启动AM ↑心跳注册</text>
-
-  <!-- ===== 主数据流/调用连线(补) ===== -->
-  <!-- HDFS: 元数据RPC 客户端 → NameNode -->
-  <path d="M400,156 L400,202" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
-  <text x="410" y="184" font-size="8" fill="#a1a1a6">元数据RPC:create/open/addBlock</text>
-  <!-- HDFS: 数据字节 客户端直连 DataNode(绕NameNode) -->
-  <path d="M156,156 L156,163 L37,163 L37,437 L44,437" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
-  <text x="112" y="177" font-size="8" fill="#a1a1a6" text-anchor="middle">数据字节直连DataNode(绕NameNode)</text>
-  <!-- HDFS: DataNode 间副本流水复制 -->
-  <path d="M520,437 L528,437" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
-  <text x="548" y="470" font-size="8" fill="#a1a1a6" text-anchor="middle">DN间副本流水复制</text>
-
-  <!-- YARN: 客户端提交应用 → ResourceManager -->
-  <path d="M644,156 L644,168 L1003,168 L1003,493 L270,493 L270,508" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
-  <text x="820" y="163" font-size="8" fill="#a1a1a6" text-anchor="middle">提交应用 submitApplication</text>
-  <!-- YARN: AM 启动任务 Container -->
-  <path d="M352,712 L366,712" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
-  <text x="450" y="672" font-size="8" fill="#a1a1a6" text-anchor="middle">AM启动任务Container(startContainers)</text>
-  <!-- YARN: Map → Reduce shuffle -->
-  <path d="M674,712 L688,712" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
-  <text x="740" y="672" font-size="8" fill="#a1a1a6" text-anchor="middle">shuffle Map→Reduce</text>
-  <!-- 跨平面: MapReduce 数据本地性 就近读 HDFS 块 -->
-  <path d="M600,508 L600,470 L282,470 L282,456" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
-  <text x="415" y="466" font-size="8" fill="#a1a1a6" text-anchor="middle">数据本地性:Map就近读HDFS块</text>
+  <!-- ===== 读法 ===== -->
+  <rect x="24" y="684" width="1032" height="28" rx="8" fill="#f7f7f9" stroke="#ececef" data-tid="Hadoop原理_全景主线框架" data-lab="全景读法"/>
+  <text x="540" y="702" font-size="10" fill="#4a4a4f" text-anchor="middle">读法：写入先向 NameNode 要块位置（元数据 RPC）→ 客户端把字节直连 DataNode，DN1→DN2→DN3 流水复制三副本；DataNode 靠心跳 + 块汇报让 NameNode 对账。YARN 同构：RM 仲裁、NM 跑 Container。</text>
 </svg>
