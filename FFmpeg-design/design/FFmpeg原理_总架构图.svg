@@ -1,154 +1,124 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="800" viewBox="0 0 1080 800" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="800" viewBox="0 0 1080 800"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
   <defs>
-    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
-    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1" stdDeviation="3" flood-color="#1d1d1f" flood-opacity="0.06"/></filter>
+    <filter id="glow" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <marker id="ar-hot" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#0a84ff"/></marker>
+    <marker id="ar-ctrl" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#a78bfa"/></marker>
+    <marker id="ar-state" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#1aa89a"/></marker>
+    <marker id="ar-fail" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#e0742a"/></marker>
   </defs>
+
   <rect width="1080" height="800" fill="#fbfbfd"/>
 
-  <!-- 标题条 (0,0,1080,58) -->
-  <rect data-tid="FFmpeg原理_全景主线框架" data-lab="全景框架" x="0" y="0" width="1080" height="58" fill="none" stroke="none"/>
-  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">FFmpeg 总架构图 —— 多媒体处理管线：packet/frame 流经 demux→decode→filter→encode→mux</text>
-  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">顶接触面(CLI/API)·中五段管线主干·核心数据结构载体·底四能力域(库分层/格式/内存/滤镜) · 点击任意模块下钻</text>
+  <rect data-tid="FFmpeg原理_全景主线框架" data-lab="全景主线框架" x="0" y="0" width="1080" height="66" fill="none" stroke="none"/>
+  <text x="30" y="32" font-size="16" font-weight="700" fill="#1d1d1f">FFmpeg · 多媒体处理管线剖面 <tspan font-size="11" font-weight="500" fill="#86868b">packet/frame 流经的六库分层</tspan></text>
+  <text x="30" y="54" font-size="11" fill="#6e6e73">设计张力：统一转码管线的<tspan font-weight="600" fill="#1d1d1f">通用</tspan> vs 容器/编解码器的<tspan font-weight="600" fill="#1d1d1f">爆炸多样</tspan> —— demux→decode→filter→encode→mux 五段 + 时间戳贯穿 + 引用计数零拷贝</text>
 
-  <!-- ① 接触面 (30,92,1020,62) purple -->
-  <rect data-tid="FFmpeg原理_接触面_命令行与API" data-lab="接触面" x="30" y="92" width="1020" height="62" rx="13" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
-  <text x="50" y="118" font-size="12.5" font-weight="600" fill="#4a2c6f">接触面 · 命令行 ffmpeg（用户转码） + libav* C API（开发者集成）</text>
-  <text x="50" y="140" font-size="10" fill="#7a5aa0">ffmpeg -i in.mp4 -vf scale out.webm ｜ avformat_open_input → avcodec send/receive → av_write_frame ｜ CLI 是 API 封装</text>
+  <!-- ① 接触面 -->
+  <rect data-tid="FFmpeg原理_接触面_命令行与API" data-lab="命令行与 API" x="30" y="78" width="1020" height="56" rx="11" fill="#f5f5f7" stroke="#d8d8dc" filter="url(#soft)"/>
+  <text x="46" y="98" font-size="11.5" font-weight="600" fill="#1d1d1f">① 接触面 · 命令行 ffmpeg(用户转码) + libav* C API(开发者集成)</text>
+  <text x="46" y="118" font-size="9.5" fill="#6e6e73" font-family="monospace">ffmpeg -i in.mp4 -vf scale out.webm　｜　avformat_open_input → avcodec send/receive → av_write_frame　·　CLI = API 封装</text>
 
-  <!-- ② 五段管线主干 y=176 h=92 -->
-  <!-- demux/容器 (30,176,200,92) amber -->
-  <rect data-tid="FFmpeg原理_支撑_容器格式" data-lab="demux 容器" x="30" y="176" width="200" height="92" rx="12" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
-  <text x="130" y="204" font-size="12" font-weight="600" text-anchor="middle" fill="#5a3410">demux 拆容器</text>
-  <text x="130" y="226" font-size="9" text-anchor="middle" fill="#93762e">libavformat</text>
-  <text x="130" y="244" font-size="9" text-anchor="middle" fill="#93762e">av_read_frame</text>
-  <text x="130" y="260" font-size="9" text-anchor="middle" fill="#93762e">→ AVPacket</text>
-  <!-- decode (250,176,190,92) green -->
-  <rect data-tid="FFmpeg原理_支撑_编解码管线" data-lab="decode 解码" x="250" y="176" width="190" height="92" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
-  <text x="345" y="204" font-size="12" font-weight="600" text-anchor="middle" fill="#12402a">decode 解码</text>
-  <text x="345" y="226" font-size="9" text-anchor="middle" fill="#2f6f4f">libavcodec</text>
-  <text x="345" y="244" font-size="9" text-anchor="middle" fill="#2f6f4f">send_packet/</text>
-  <text x="345" y="260" font-size="9" text-anchor="middle" fill="#2f6f4f">receive_frame</text>
-  <!-- filter (460,176,190,92) blue -->
-  <rect data-tid="FFmpeg原理_支撑_滤镜图" data-lab="filter 滤镜" x="460" y="176" width="190" height="92" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
-  <text x="555" y="204" font-size="12" font-weight="600" text-anchor="middle" fill="#1b2a4a">filter 滤镜</text>
-  <text x="555" y="226" font-size="9" text-anchor="middle" fill="#5b7db1">libavfilter</text>
-  <text x="555" y="244" font-size="9" text-anchor="middle" fill="#5b7db1">AVFilterGraph</text>
-  <text x="555" y="260" font-size="9" text-anchor="middle" fill="#5b7db1">(可选)</text>
-  <!-- encode (670,176,190,92) green -->
-  <rect data-tid="FFmpeg原理_支撑_编解码管线" data-lab="encode 编码" x="670" y="176" width="190" height="92" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
-  <text x="765" y="204" font-size="12" font-weight="600" text-anchor="middle" fill="#12402a">encode 编码</text>
-  <text x="765" y="226" font-size="9" text-anchor="middle" fill="#2f6f4f">libavcodec</text>
-  <text x="765" y="244" font-size="9" text-anchor="middle" fill="#2f6f4f">send_frame/</text>
-  <text x="765" y="260" font-size="9" text-anchor="middle" fill="#2f6f4f">receive_packet</text>
-  <!-- mux/容器 (880,176,170,92) amber -->
-  <rect data-tid="FFmpeg原理_支撑_容器格式" data-lab="mux 容器" x="880" y="176" width="170" height="92" rx="12" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
-  <text x="965" y="204" font-size="12" font-weight="600" text-anchor="middle" fill="#5a3410">mux 封容器</text>
-  <text x="965" y="226" font-size="9" text-anchor="middle" fill="#93762e">libavformat</text>
-  <text x="965" y="244" font-size="9" text-anchor="middle" fill="#93762e">interleaved</text>
-  <text x="965" y="260" font-size="9" text-anchor="middle" fill="#93762e">write_frame</text>
-  <!-- 管线箭头 -->
-  <path d="M230,222 L250,222" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
-  <path d="M440,222 L460,222" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
-  <path d="M650,222 L670,222" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
-  <path d="M860,222 L880,222" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <!-- ② 五段管线主干(Hot) -->
+  <rect x="30" y="150" width="1020" height="132" rx="14" fill="none" stroke="#0a84ff" stroke-opacity="0.4" stroke-dasharray="6 4"/>
+  <circle cx="46" cy="170" r="3.5" fill="#0a84ff"/>
+  <text x="58" y="174" font-size="11.5" font-weight="600" fill="#1b5fb0">② 五段处理管线 · Hot 主轨(一帧的旅程)</text>
 
-  <!-- ③ 核心数据结构带 (30,292,1020,70) blue -->
-  <rect data-tid="FFmpeg原理_支撑_核心数据结构" data-lab="核心数据结构" x="30" y="292" width="1020" height="70" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
-  <text x="50" y="318" font-size="12" font-weight="600" fill="#1b2a4a">核心数据结构 · packet/frame 是管线流动的载体</text>
-  <text x="50" y="340" font-size="9.5" fill="#5b7db1">AVPacket(压缩包 pts/dts/buf/size)｜AVFrame(原始帧 data[8]/linesize/format)｜上下文 AVFormatContext 持 N 个 AVStream + AVCodecContext</text>
-  <text x="50" y="356" font-size="9" fill="#8aa4c8">packet 的 stream_index 索引到 stream · stream 的 codecpar 初始化 CodecContext · 数据轻量流动、上下文承载配置</text>
+  <rect data-tid="FFmpeg原理_支撑_容器格式" data-lab="demux 拆容器" x="46" y="186" width="182" height="84" rx="9" fill="#f5f5f7" stroke="#d8d8dc" filter="url(#soft)"/>
+  <text x="137" y="208" font-size="11" font-weight="600" text-anchor="middle" fill="#1d1d1f">demux 拆容器</text>
+  <text x="137" y="227" font-size="8.5" text-anchor="middle" fill="#6e6e73">libavformat</text>
+  <text x="137" y="242" font-size="8.5" text-anchor="middle" fill="#6e6e73">av_read_frame → AVPacket</text>
+  <text x="137" y="260" font-size="8" text-anchor="middle" fill="#a1a1a6">压缩数据 + PTS/DTS</text>
 
-  <!-- ④~⑦ 能力域带 y=386 h=92 -->
-  <!-- 库分层 (30,386,245,92) -->
-  <rect data-tid="FFmpeg原理_支撑_库分层" data-lab="库分层" x="30" y="386" width="245" height="92" rx="12" fill="#ffffff" stroke="#e4e4ea" filter="url(#soft)"/>
-  <text x="152" y="412" font-size="11.5" font-weight="600" text-anchor="middle" fill="#1d1d1f">库分层</text>
-  <text x="152" y="434" font-size="8.5" text-anchor="middle" fill="#6e6e73">六库：format/codec/filter</text>
-  <text x="152" y="450" font-size="8.5" text-anchor="middle" fill="#6e6e73">util/swscale/swresample</text>
-  <text x="152" y="466" font-size="8.5" text-anchor="middle" fill="#86868b">单向依赖 · util 在底</text>
-  <!-- 像素采样格式 (285,386,245,92) -->
-  <rect data-tid="FFmpeg原理_支撑_像素与采样格式" data-lab="像素与采样格式" x="285" y="386" width="245" height="92" rx="12" fill="#ffffff" stroke="#e4e4ea" filter="url(#soft)"/>
-  <text x="407" y="412" font-size="11.5" font-weight="600" text-anchor="middle" fill="#1d1d1f">像素与采样格式</text>
-  <text x="407" y="434" font-size="8.5" text-anchor="middle" fill="#6e6e73">AVPixelFormat(YUV/RGB)</text>
-  <text x="407" y="450" font-size="8.5" text-anchor="middle" fill="#6e6e73">AVSampleFormat</text>
-  <text x="407" y="466" font-size="8.5" text-anchor="middle" fill="#86868b">swscale/swresample 转换</text>
-  <!-- 引用计数硬件 (540,386,245,92) -->
-  <rect data-tid="FFmpeg原理_支撑_引用计数与硬件加速" data-lab="引用计数与硬件加速" x="540" y="386" width="245" height="92" rx="12" fill="#ffffff" stroke="#e4e4ea" filter="url(#soft)"/>
-  <text x="662" y="412" font-size="11.5" font-weight="600" text-anchor="middle" fill="#1d1d1f">引用计数与硬件加速</text>
-  <text x="662" y="434" font-size="8.5" text-anchor="middle" fill="#6e6e73">AVBufferRef 零拷贝共享</text>
-  <text x="662" y="450" font-size="8.5" text-anchor="middle" fill="#6e6e73">写时复制 make_writable</text>
-  <text x="662" y="466" font-size="8.5" text-anchor="middle" fill="#86868b">hwaccel GPU 帧留显存</text>
-  <!-- 滤镜图 (795,386,255,92) -->
-  <rect data-tid="FFmpeg原理_支撑_滤镜图" data-lab="滤镜图" x="795" y="386" width="255" height="92" rx="12" fill="#ffffff" stroke="#e4e4ea" filter="url(#soft)"/>
-  <text x="922" y="412" font-size="11.5" font-weight="600" text-anchor="middle" fill="#1d1d1f">滤镜图</text>
-  <text x="922" y="434" font-size="8.5" text-anchor="middle" fill="#6e6e73">AVFilterGraph 有向图</text>
-  <text x="922" y="450" font-size="8.5" text-anchor="middle" fill="#6e6e73">buffersrc→中间→buffersink</text>
-  <text x="922" y="466" font-size="8.5" text-anchor="middle" fill="#86868b">scale/crop/overlay</text>
+  <rect data-tid="FFmpeg原理_支撑_编解码管线" data-lab="decode 解码" x="238" y="186" width="176" height="84" rx="9" fill="#f5f5f7" stroke="#d8d8dc" filter="url(#soft)"/>
+  <text x="326" y="208" font-size="11" font-weight="600" text-anchor="middle" fill="#1d1d1f">decode 解码</text>
+  <text x="326" y="227" font-size="8.5" text-anchor="middle" fill="#6e6e73">libavcodec</text>
+  <text x="326" y="242" font-size="8.5" text-anchor="middle" fill="#6e6e73">send_packet / receive_frame</text>
+  <text x="326" y="260" font-size="8" text-anchor="middle" fill="#a1a1a6">→ AVFrame(原始像素/采样)</text>
 
-  <!-- 贯穿层说明 -->
-  <rect x="30" y="500" width="1020" height="54" rx="12" fill="#fbeaea" stroke="#e6b8b8" filter="url(#soft)"/>
-  <text x="50" y="524" font-size="11" font-weight="600" fill="#7a2a2a">贯穿层 · AVBufferRef 引用计数横切所有 packet/frame</text>
-  <text x="50" y="543" font-size="9" fill="#a05a5a">packet/frame 的数据都是引用计数缓冲 · 管线各段共享同一 buffer 零拷贝 · av_buffer_ref 增引用而非复制、归零才释放 · 大幅省内存拷贝</text>
+  <rect data-tid="FFmpeg原理_支撑_滤镜图" data-lab="filter 滤镜图" x="424" y="186" width="176" height="84" rx="9" fill="#f5f5f7" stroke="#d8d8dc" filter="url(#soft)"/>
+  <text x="512" y="208" font-size="11" font-weight="600" text-anchor="middle" fill="#1d1d1f">filter 滤镜</text>
+  <text x="512" y="227" font-size="8.5" text-anchor="middle" fill="#6e6e73">libavfilter · AVFilterGraph</text>
+  <text x="512" y="242" font-size="8.5" text-anchor="middle" fill="#6e6e73">scale/crop/overlay(可选)</text>
+  <text x="512" y="260" font-size="8" text-anchor="middle" fill="#a1a1a6">帧图变换,buffersrc→buffersink</text>
 
-  <!-- 三条贯穿声明 -->
-  <text x="30" y="592" font-size="12" font-weight="700" fill="#1d1d1f">三条贯穿声明（FFmpeg 区别于单一编解码器/播放器）</text>
-  <g>
-    <rect x="30" y="606" width="336" height="150" rx="12" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
-    <text x="50" y="630" font-size="10.5" font-weight="600" fill="#4a2c6f">① 一切是 packet/frame 流经的管线</text>
-    <text x="50" y="652" font-size="9" fill="#7a5aa0">AVPacket(压缩)/AVFrame(原始)在</text>
-    <text x="50" y="668" font-size="9" fill="#7a5aa0">demux→decode→filter→encode→mux</text>
-    <text x="50" y="684" font-size="9" fill="#7a5aa0">各段流动 · 转码就是这条管线</text>
-    <text x="50" y="700" font-size="9" fill="#7a5aa0">每段变换 packet/frame</text>
-    <text x="50" y="724" font-size="8.5" fill="#9a7ac0">纯 remux 可跳过 decode/encode</text>
-    <text x="50" y="742" font-size="8.5" fill="#9a7ac0">只重封装、无损极快</text>
+  <rect data-tid="FFmpeg原理_支撑_编解码管线" data-lab="encode 编码" x="610" y="186" width="176" height="84" rx="9" fill="#f5f5f7" stroke="#d8d8dc" filter="url(#soft)"/>
+  <text x="698" y="208" font-size="11" font-weight="600" text-anchor="middle" fill="#1d1d1f">encode 编码</text>
+  <text x="698" y="227" font-size="8.5" text-anchor="middle" fill="#6e6e73">libavcodec</text>
+  <text x="698" y="242" font-size="8.5" text-anchor="middle" fill="#6e6e73">send_frame / receive_packet</text>
+  <text x="698" y="260" font-size="8" text-anchor="middle" fill="#a1a1a6">→ AVPacket(重新压缩)</text>
 
-    <rect x="378" y="606" width="336" height="150" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
-    <text x="398" y="630" font-size="10.5" font-weight="600" fill="#12402a">② 库分层 + send/receive 解耦</text>
-    <text x="398" y="652" font-size="9" fill="#2f6f4f">六库各司其职(format 管容器、</text>
-    <text x="398" y="668" font-size="9" fill="#2f6f4f">codec 管编解码…)· 现代编解码</text>
-    <text x="398" y="684" font-size="9" fill="#2f6f4f">用 send/receive API 解耦数据流</text>
-    <text x="398" y="700" font-size="9" fill="#2f6f4f">(送 packet 收 frame,可 1:N/N:1)</text>
-    <text x="398" y="724" font-size="8.5" fill="#4a8a63">不是一次性 decode 回调</text>
-    <text x="398" y="742" font-size="8.5" fill="#4a8a63">自然处理 B 帧/延迟</text>
+  <rect data-tid="FFmpeg原理_支撑_容器格式" data-lab="mux 封容器" x="796" y="186" width="238" height="84" rx="9" fill="#f5f5f7" stroke="#d8d8dc" filter="url(#soft)"/>
+  <text x="915" y="208" font-size="11" font-weight="600" text-anchor="middle" fill="#1d1d1f">mux 封容器</text>
+  <text x="915" y="227" font-size="8.5" text-anchor="middle" fill="#6e6e73">libavformat · av_interleaved_write_frame</text>
+  <text x="915" y="242" font-size="8.5" text-anchor="middle" fill="#6e6e73">按 DTS 交织多流 → 写出</text>
+  <text x="915" y="260" font-size="8" text-anchor="middle" fill="#a1a1a6">时间戳 rescale 到输出时基</text>
 
-    <rect x="726" y="606" width="324" height="150" rx="12" fill="#fbeaea" stroke="#e6b8b8" filter="url(#soft)"/>
-    <text x="746" y="630" font-size="10.5" font-weight="600" fill="#7a2a2a">③ AVBufferRef 引用计数零拷贝</text>
-    <text x="746" y="652" font-size="9" fill="#a05a5a">packet/frame 数据是引用计数缓冲</text>
-    <text x="746" y="668" font-size="9" fill="#a05a5a">av_buffer_ref 增引用而非复制</text>
-    <text x="746" y="684" font-size="9" fill="#a05a5a">av_buffer_unref 减引用归零才释放</text>
-    <text x="746" y="700" font-size="9" fill="#a05a5a">管线各段/多引用共享同一份数据</text>
-    <text x="746" y="724" font-size="8.5" fill="#c07a7a">一帧 1080p≈3MB · 深拷贝会爆内存</text>
-    <text x="746" y="742" font-size="8.5" fill="#c07a7a">零拷贝是 FFmpeg 高效核心</text>
+  <!-- Hot 主轨箭头(蓝实线发光) -->
+  <g filter="url(#glow)">
+    <line x1="228" y1="228" x2="238" y2="228" stroke="#0a84ff" stroke-width="2" marker-end="url(#ar-hot)"/>
+    <line x1="414" y1="228" x2="424" y2="228" stroke="#0a84ff" stroke-width="2" marker-end="url(#ar-hot)"/>
+    <line x1="600" y1="228" x2="610" y2="228" stroke="#0a84ff" stroke-width="2" marker-end="url(#ar-hot)"/>
+    <line x1="786" y1="228" x2="796" y2="228" stroke="#0a84ff" stroke-width="2" marker-end="url(#ar-hot)"/>
+    <line x1="540" y1="134" x2="540" y2="150" stroke="#0a84ff" stroke-width="2" marker-end="url(#ar-hot)"/>
   </g>
 
-  <!-- ===== 模块间数据流 / 调用连线（本轮深化：只补连线与机制标注，不改模块） ===== -->
-  <g>
-    <!-- 接触面 驱动 demux：API 打开输入源、驱动读包（实线=数据流入口） -->
-    <path d="M130,154 L130,176" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
-    <text x="137" y="169" font-size="7.5" fill="#a1a1a6">avformat_open_input 打开输入</text>
+  <!-- ③ 核心数据结构(State 载体) -->
+  <rect data-tid="FFmpeg原理_支撑_核心数据结构" data-lab="核心数据结构" x="30" y="298" width="620" height="118" rx="14" fill="#f5f5f7" stroke="#d8d8dc" filter="url(#soft)"/>
+  <text x="46" y="320" font-size="11.5" font-weight="600" fill="#1d1d1f">③ 核心数据结构 · 流经管线的载体 <tspan font-size="8.5" fill="#1aa89a">State</tspan></text>
+  <rect x="46" y="330" width="192" height="74" rx="8" fill="#fbfbfd" stroke="#d8d8dc"/>
+  <text x="142" y="351" font-size="9.5" font-weight="600" text-anchor="middle" fill="#1d1d1f">AVPacket</text>
+  <text x="142" y="368" font-size="8" text-anchor="middle" fill="#6e6e73">压缩数据单元</text>
+  <text x="142" y="383" font-size="8" text-anchor="middle" fill="#6e6e73">demux/encode 产出</text>
+  <text x="142" y="398" font-size="7.5" text-anchor="middle" fill="#a1a1a6">pts/dts/stream_index</text>
+  <rect x="246" y="330" width="192" height="74" rx="8" fill="#fbfbfd" stroke="#d8d8dc"/>
+  <text x="342" y="351" font-size="9.5" font-weight="600" text-anchor="middle" fill="#1d1d1f">AVFrame</text>
+  <text x="342" y="368" font-size="8" text-anchor="middle" fill="#6e6e73">原始像素 / 采样</text>
+  <text x="342" y="383" font-size="8" text-anchor="middle" fill="#6e6e73">decode/filter 产出</text>
+  <text x="342" y="398" font-size="7.5" text-anchor="middle" fill="#a1a1a6">data[]/linesize[]/pts</text>
+  <rect x="446" y="330" width="188" height="74" rx="8" fill="#fbfbfd" stroke="#d8d8dc"/>
+  <text x="540" y="351" font-size="9.5" font-weight="600" text-anchor="middle" fill="#1d1d1f">AVStream / AVCodecContext</text>
+  <text x="540" y="368" font-size="8" text-anchor="middle" fill="#6e6e73">流参数 + 编解码器实例</text>
+  <text x="540" y="383" font-size="8" text-anchor="middle" fill="#6e6e73">time_base 时基</text>
+  <text x="540" y="398" font-size="7.5" text-anchor="middle" fill="#a1a1a6">承载 PTS/DTS 换算</text>
 
-    <!-- 五段主链：已有箭头上方标 packet/frame 交替流动 -->
-    <text x="240" y="215" font-size="8" text-anchor="middle" fill="#a1a1a6">pkt</text>
-    <text x="450" y="215" font-size="8" text-anchor="middle" fill="#a1a1a6">frm</text>
-    <text x="660" y="215" font-size="8" text-anchor="middle" fill="#a1a1a6">frm</text>
-    <text x="870" y="215" font-size="8" text-anchor="middle" fill="#a1a1a6">pkt</text>
+  <!-- ④ 引用计数 + 硬件加速(Opt) -->
+  <rect data-tid="FFmpeg原理_支撑_引用计数与硬件加速" data-lab="引用计数与硬件加速" x="666" y="298" width="384" height="118" rx="14" fill="#f5f5f7" stroke="#d8d8dc" filter="url(#soft)"/>
+  <text x="682" y="320" font-size="11.5" font-weight="600" fill="#1d1d1f">④ 引用计数 + 硬件加速 <tspan font-size="8.5" fill="#8a8a90">Opt</tspan></text>
+  <rect x="682" y="330" width="352" height="34" rx="8" fill="#fbfbfd" stroke="#d8d8dc"/>
+  <text x="858" y="351" font-size="8.8" text-anchor="middle" fill="#6e6e73">AVBufferRef 引用计数 · av_frame_ref 浅拷贝共享缓冲(零拷贝)</text>
+  <rect x="682" y="370" width="352" height="34" rx="8" fill="#fbfbfd" stroke="#d8d8dc"/>
+  <text x="858" y="391" font-size="8.8" text-anchor="middle" fill="#6e6e73">hwaccel:VAAPI/NVDEC/VideoToolbox · AVHWFramesContext 帧留 GPU</text>
 
-    <!-- remux 旁路：纯重封装跳过 decode/filter/encode（虚线=旁路） -->
-    <path d="M130,268 L130,283 L965,283 L965,268" stroke="#c7c7cc" stroke-width="1.4" fill="none" stroke-dasharray="4 3" marker-end="url(#ar)"/>
-    <text x="547" y="279" font-size="8" text-anchor="middle" fill="#a1a1a6">remux 直传 · 跳过 decode/filter/encode</text>
-
-    <!-- 核心数据结构 → 各能力域：归属/约束（虚线） -->
-    <path d="M152,362 L152,386" stroke="#c7c7cc" stroke-width="1.3" fill="none" stroke-dasharray="4 3" marker-end="url(#ar)"/>
-    <text x="158" y="377" font-size="7.5" fill="#a1a1a6">packet/frame 定义于库</text>
-    <path d="M407,362 L407,386" stroke="#c7c7cc" stroke-width="1.3" fill="none" stroke-dasharray="4 3" marker-end="url(#ar)"/>
-    <text x="413" y="377" font-size="7.5" fill="#a1a1a6">frame.format 存格式</text>
-    <path d="M662,362 L662,386" stroke="#c7c7cc" stroke-width="1.3" fill="none" stroke-dasharray="4 3" marker-end="url(#ar)"/>
-    <text x="668" y="377" font-size="7.5" fill="#a1a1a6">buf 引用计数共享</text>
-    <path d="M922,362 L922,386" stroke="#c7c7cc" stroke-width="1.3" fill="none" stroke-dasharray="4 3" marker-end="url(#ar)"/>
-    <text x="928" y="377" font-size="7.5" fill="#a1a1a6">AVFrame 为滤镜对象</text>
-
-    <!-- 图例 -->
-    <text x="30" y="492" font-size="9" fill="#a1a1a6">连线：实线 = 数据流（packet/frame 在管线流动）　虚线 = 旁路 / 归属约束　｜　pkt=AVPacket · frm=AVFrame</text>
+  <!-- ⑤ 库分层(底座) -->
+  <rect data-tid="FFmpeg原理_支撑_库分层" data-lab="库分层" x="30" y="432" width="1020" height="96" rx="14" fill="#f5f5f7" stroke="#d8d8dc" filter="url(#soft)"/>
+  <text x="46" y="454" font-size="11.5" font-weight="600" fill="#1d1d1f">⑤ 六库分层 · 上层调用下层</text>
+  <g text-anchor="middle" font-size="8.5">
+    <rect x="46" y="464" width="150" height="52" rx="8" fill="#fbfbfd" stroke="#d8d8dc"/><text x="121" y="484" font-weight="600" fill="#1d1d1f">libavformat</text><text x="121" y="500" fill="#6e6e73">封装/解封装</text>
+    <rect x="204" y="464" width="150" height="52" rx="8" fill="#fbfbfd" stroke="#d8d8dc"/><text x="279" y="484" font-weight="600" fill="#1d1d1f">libavcodec</text><text x="279" y="500" fill="#6e6e73">编解码器</text>
+    <rect x="362" y="464" width="150" height="52" rx="8" fill="#fbfbfd" stroke="#d8d8dc"/><text x="437" y="484" font-weight="600" fill="#1d1d1f">libavfilter</text><text x="437" y="500" fill="#6e6e73">滤镜图</text>
+    <rect x="520" y="464" width="160" height="52" rx="8" fill="#fbfbfd" stroke="#d8d8dc" data-tid="FFmpeg原理_支撑_像素与采样格式" data-lab="像素与采样格式"/><text x="600" y="484" font-weight="600" fill="#1d1d1f">libswscale/swresample</text><text x="600" y="500" fill="#6e6e73">像素/采样格式转换</text>
+    <rect x="688" y="464" width="150" height="52" rx="8" fill="#fbfbfd" stroke="#d8d8dc"/><text x="763" y="484" font-weight="600" fill="#1d1d1f">libavutil</text><text x="763" y="500" fill="#6e6e73">公共工具/内存</text>
+    <rect x="846" y="464" width="188" height="52" rx="8" fill="#fbfbfd" stroke="#d8d8dc"/><text x="940" y="484" font-weight="600" fill="#1d1d1f">libavdevice</text><text x="940" y="500" fill="#6e6e73">采集/播放设备 I/O</text>
   </g>
 
-  <text x="30" y="784" font-size="9" fill="#a1a1a6">源码基准 FFmpeg(git 1588bce) · 六库分层 libav* C · 顶接触面→中五段管线→核心数据结构→底能力域,引用计数贯穿全程</text>
+  <!-- State:数据结构 → 管线(载体上行) -->
+  <line x1="340" y1="298" x2="340" y2="282" stroke="#1aa89a" stroke-width="1.5" marker-end="url(#ar-state)"/>
+  <text x="352" y="294" font-size="8" fill="#1aa89a">载体</text>
+  <!-- Opt:硬件加速 → decode/encode -->
+  <path d="M858,298 C858,284 720,284 698,272" fill="none" stroke="#8a8a90" stroke-width="1.2" stroke-dasharray="1 3" marker-end="url(#ar-hot)"/>
+  <text x="820" y="290" font-size="8" fill="#8a8a90">GPU 编解码</text>
+
+  <!-- 图例铭牌(五路径) -->
+  <rect x="30" y="546" width="1020" height="66" rx="12" fill="#f5f5f7" stroke="#d8d8dc"/>
+  <text x="48" y="568" font-size="10.5" font-weight="700" fill="#1d1d1f">核心设计张力 · 统一管线通用 vs 容器/编解码器爆炸多样</text>
+  <text x="48" y="588" font-size="9" fill="#6e6e73">五段管线是通用骨架;多样性收进可插拔 demuxer/decoder/encoder/muxer;时间戳(PTS/DTS + time_base)贯穿全程保音画同步;引用计数让帧在段间零拷贝流动。</text>
+  <g font-size="8.5" fill="#6e6e73">
+    <line x1="560" y1="606" x2="586" y2="606" stroke="#0a84ff" stroke-width="2"/><text x="592" y="609">Hot 管线主轨</text>
+    <line x1="700" y1="606" x2="726" y2="606" stroke="#1aa89a" stroke-width="1.5"/><text x="732" y="609">State 数据载体</text>
+    <line x1="840" y1="606" x2="866" y2="606" stroke="#8a8a90" stroke-width="1.2" stroke-dasharray="1 3"/><text x="872" y="609">Opt 零拷贝/硬件加速</text>
+  </g>
+
+  <text x="30" y="636" font-size="9" fill="#a1a1a6">FFmpeg · 所有机制回本地源码核实 · 不变量:PTS/DTS 单调 + time_base 换算无损 · AVBufferRef 计数归零才释放</text>
 </svg>

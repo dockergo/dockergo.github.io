@@ -436,9 +436,6 @@ THEMES = [
     {"id": "overallarch", "icon": "◇", "title": "全景框架", "cat": "appendix", "ord": 1,
      "desc": "全库地图:双维模型(能力域×执行时机)· 总架构图(嵌入宿主 + 写路径/LSM/读路径)· 依赖矩阵(接触面×能力域)· 能力域依赖关系图",
      "tabs": ["panowalk"]},
-    {"id": "refolap", "icon": "▦", "title": "存储引擎对比", "cat": "appendix", "ord": 2,
-     "desc": "RocksDB vs LevelDB / B-Tree(InnoDB) / WiscKey / TiKV —— 嵌入式 LSM KV 库与其它存储引擎的设计取舍横向对比",
-     "tabs": ["compare"]},
 ]
 
 # tid -> themeId(供跨视图跳转时定位所属主题)

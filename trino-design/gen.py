@@ -743,9 +743,6 @@ THEMES = [
     {"id": "overallarch", "icon": "◇", "title": "架构与部署", "cat": "appendix", "ord": 1,
      "desc": "全景框架:双维模型(能力域×执行时机)· 总架构图(coordinator–worker + 外部数据生态)· 物理部署视图 · 依赖矩阵(接口×能力域)· 能力域依赖关系",
      "tabs": ["panowalk"]},
-    {"id": "refolap", "icon": "▦", "title": "OLAP 引擎对比", "cat": "appendix", "ord": 2,
-     "desc": "Trino vs Doris / ClickHouse / StarRocks / Spark / DuckDB —— 联邦查询引擎 vs 存算一体的设计取舍横向对比",
-     "tabs": ["compare"]},
 ]
 
 # tid -> themeId(供跨视图跳转时定位所属主题)

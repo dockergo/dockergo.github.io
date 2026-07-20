@@ -751,9 +751,6 @@ THEMES = [
     {"id": "overallarch", "icon": "◇", "title": "架构与部署", "cat": "appendix", "ord": 1,
      "desc": "全景框架 + 部署形态合一:双维模型(能力域×执行时机)· 总架构图(位置即语义)· 物理部署视图(Shard/Replica/Keeper)· 依赖矩阵(接口主线×能力域)· 能力域依赖关系 · 部署形态物理布局对比",
      "tabs": ["panowalk"]},
-    {"id": "refolap", "icon": "▦", "title": "OLAP 引擎对比", "cat": "appendix", "ord": 2,
-     "desc": "ClickHouse vs Doris / StarRocks / Spark / Trino / DuckDB —— 设计取舍横向对比",
-     "tabs": ["compare"]},
 ]
 
 # tid -> themeId(供跨视图跳转时定位所属主题)

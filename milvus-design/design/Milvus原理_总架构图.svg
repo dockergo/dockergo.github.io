@@ -1,112 +1,138 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="800" viewBox="0 0 1080 800" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="800" viewBox="0 0 1080 800"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
   <defs>
-    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
-    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1" stdDeviation="3" flood-color="#1d1d1f" flood-opacity="0.06"/></filter>
+    <filter id="glow" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <marker id="ar-hot" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#0a84ff"/></marker>
+    <marker id="ar-ctrl" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#a78bfa"/></marker>
+    <marker id="ar-state" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#1aa89a"/></marker>
+    <marker id="ar-fail" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#e0742a"/></marker>
   </defs>
-  <rect width="1080" height="800" fill="#fbfbfd"/>
-  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Milvus 核心原理 · 总架构图</text>
-  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">分布式向量数据库:存算分离,写入日志驱动(streaming WAL),ANN 检索(knowhere),全局 TSO 一致性;数据在对象存储</text>
 
-  <!-- API -->
-  <rect x="30" y="64" width="1020" height="46" rx="13" fill="#f4eefb" stroke="#d9c7ec" data-tid="Milvus原理_接触面_向量CRUD与检索API" data-lab="向量CRUD/检索API"/>
-  <text x="46" y="92" font-size="11" fill="#3d2a5a"><tspan font-weight="700">向量 CRUD + ANN 检索 API</tspan>　insert / delete / upsert · search(topK 最近邻)· query　—— 经 Proxy 接入</text>
+  <rect width="1080" height="800" fill="#fbfbfd"/>
+
+  <rect data-tid="Milvus原理_全景主线框架" data-lab="全景主线框架" x="0" y="0" width="1080" height="60" fill="none" stroke="none"/>
+  <text x="30" y="30" font-size="16" font-weight="700" fill="#1d1d1f">Milvus · 分布式向量数据库剖面 <tspan font-size="11" font-weight="500" fill="#86868b">存算分离 · 日志驱动 · ANN 检索</tspan></text>
+  <text x="30" y="52" font-size="11" fill="#6e6e73">设计张力：写入的<tspan font-weight="600" fill="#1d1d1f">实时可见</tspan> vs 检索的<tspan font-weight="600" fill="#1d1d1f">索引高效</tspan> —— streaming WAL 先落地、后台异步建索引;计算无状态,存储共享对象存储</text>
+
+  <!-- ① API 接触面 -->
+  <rect data-tid="Milvus原理_接触面_向量CRUD与检索API" data-lab="向量 CRUD/检索 API" x="30" y="66" width="1020" height="42" rx="10" fill="#f5f5f7" stroke="#d8d8dc" filter="url(#soft)"/>
+  <text x="46" y="84" font-size="11" font-weight="600" fill="#1d1d1f">① 向量 CRUD + ANN 检索 API</text>
+  <text x="46" y="100" font-size="9" fill="#6e6e73">insert / delete / upsert · search(topK 最近邻)· query　—— 经 Proxy 接入</text>
 
   <!-- Proxy -->
-  <rect x="30" y="124" width="1020" height="40" rx="12" fill="#e7f0fb" stroke="#b9d2ef" data-tid="Milvus原理_支撑_分布式架构" data-lab="Proxy接入"/>
-  <text x="540" y="149" font-size="10.5" font-weight="700" text-anchor="middle" fill="#1b2a4a">Proxy（接入层 · 无状态 · 路由 + 聚合结果）</text>
+  <rect data-tid="Milvus原理_支撑_分布式架构" data-lab="Proxy 接入" x="30" y="116" width="1020" height="34" rx="9" fill="#f5f5f7" stroke="#d8d8dc" filter="url(#soft)"/>
+  <text x="540" y="138" font-size="10.5" font-weight="600" text-anchor="middle" fill="#1d1d1f">Proxy · 接入层(无状态 · 路由 + 聚合结果 + 领全局 ts)</text>
 
-  <!-- MixCoord (right column) -->
-  <rect x="746" y="178" width="304" height="330" rx="16" fill="#eef3fb" stroke="#bcd0ec"/>
-  <text x="762" y="200" font-size="11.5" font-weight="700" fill="#1b2a4a">MixCoord(统管)</text>
-  <text x="762" y="218" font-size="8" fill="#5b7db1">内嵌 root/data/query/streaming coord</text>
-  <g font-size="8">
-    <rect x="762" y="228" width="272" height="56" rx="8" fill="#f3f7fc" stroke="#cfe0f2"/><rect x="762" y="228" width="272" height="26" fill="none" data-tid="Milvus原理_支撑_元数据" data-lab="RootCoord·DDL元数据/RBAC"/><rect x="762" y="254" width="272" height="30" fill="none" data-tid="Milvus原理_支撑_一致性与时间" data-lab="RootCoord·TSO时间戳/HLC"/><text x="776" y="248" font-weight="600" fill="#274a78">RootCoord</text><text x="776" y="264" fill="#5b7db1">DDL 元数据 · RBAC · TSO 时间戳</text><text x="776" y="278" fill="#5b7db1">全局单调时钟(HLC)</text>
-    <rect x="762" y="292" width="272" height="52" rx="8" fill="#f3f7fc" stroke="#cfe0f2" data-tid="Milvus原理_支撑_段与生命周期" data-lab="DataCoord·段/flush"/><text x="776" y="312" font-weight="600" fill="#274a78">DataCoord</text><text x="776" y="328" fill="#5b7db1">段管理 · compaction · flush · 索引</text>
-    <rect x="762" y="352" width="272" height="52" rx="8" fill="#f3f7fc" stroke="#cfe0f2" data-tid="Milvus原理_支撑_分布式架构" data-lab="QueryCoord·副本/均衡"/><text x="776" y="372" font-weight="600" fill="#274a78">QueryCoord</text><text x="776" y="388" fill="#5b7db1">副本管理 · 负载均衡 · target</text>
-    <rect x="762" y="412" width="272" height="52" rx="8" fill="#e7f0fb" stroke="#b9d2ef" data-tid="Milvus原理_支撑_写入路径" data-lab="StreamingCoord·PChannel"/><text x="776" y="432" font-weight="600" fill="#1b2a4a">StreamingCoord</text><text x="776" y="448" fill="#5b7db1">PChannel→StreamingNode 分配</text>
-    <rect x="762" y="472" width="272" height="28" rx="7" fill="#fff" stroke="#bcd0ec" data-tid="Milvus原理_支撑_元数据" data-lab="元数据存 etcd/tikv"/><text x="898" y="490" text-anchor="middle" fill="#5b7db1">元数据存 etcd / tikv</text>
+  <!-- ② 写入路径(Hot 写) -->
+  <rect x="30" y="162" width="340" height="336" rx="14" fill="#f7f8fa" stroke="#dfe2e8"/>
+  <circle cx="46" cy="182" r="3.5" fill="#0a84ff"/>
+  <text x="58" y="186" font-size="11" font-weight="600" fill="#1b5fb0">② 写入路径 · Hot(日志驱动)</text>
+  <rect data-tid="Milvus原理_支撑_写入路径" data-lab="streaming WAL" x="46" y="196" width="308" height="46" rx="8" fill="#f5f5f7" stroke="#d8d8dc" filter="url(#soft)"/>
+  <text x="200" y="215" font-size="9.5" font-weight="600" text-anchor="middle" fill="#1d1d1f">streaming WAL(按 vchannel 分片)</text>
+  <text x="200" y="231" font-size="8.5" text-anchor="middle" fill="#6e6e73">Pulsar / Kafka / woodpecker 为底</text>
+  <rect data-tid="Milvus原理_支撑_写入路径" data-lab="消费/路由" x="46" y="250" width="308" height="42" rx="8" fill="#f5f5f7" stroke="#d8d8dc"/>
+  <text x="200" y="268" font-size="9.5" font-weight="600" text-anchor="middle" fill="#1d1d1f">StreamingNode/DataNode 消费</text>
+  <text x="200" y="283" font-size="8.5" text-anchor="middle" fill="#6e6e73">Flusher 按 vchannel 路由</text>
+  <rect data-tid="Milvus原理_支撑_写入路径" data-lab="WriteBuffer" x="46" y="300" width="308" height="42" rx="8" fill="#f5f5f7" stroke="#d8d8dc"/>
+  <text x="200" y="318" font-size="9.5" font-weight="600" text-anchor="middle" fill="#1d1d1f">WriteBuffer(insert/delta/stats)</text>
+  <text x="200" y="333" font-size="8.5" text-anchor="middle" fill="#6e6e73">SyncManager 序列化</text>
+  <rect x="46" y="350" width="308" height="42" rx="8" fill="#fbfbfd" stroke="#d8d8dc"/>
+  <text x="200" y="368" font-size="9.5" font-weight="600" text-anchor="middle" fill="#1aa89a">binlog + delta log(State)</text>
+  <text x="200" y="383" font-size="8.5" text-anchor="middle" fill="#6e6e73">列式,落对象存储</text>
+  <rect data-tid="Milvus原理_支撑_段与生命周期" data-lab="段 growing→sealed" x="46" y="400" width="308" height="86" rx="8" fill="#f5f5f7" stroke="#d8d8dc" filter="url(#soft)"/>
+  <text x="200" y="420" font-size="9.5" font-weight="600" text-anchor="middle" fill="#1d1d1f">段生命周期</text>
+  <text x="200" y="438" font-size="8.5" text-anchor="middle" fill="#6e6e73">growing(内存可变)→ sealed(封存)</text>
+  <text x="200" y="454" font-size="8.5" text-anchor="middle" fill="#6e6e73">→ flushed → 异步建索引</text>
+  <text x="200" y="472" font-size="8" text-anchor="middle" fill="#8a8a90">后台 compaction 合并小段(Opt)</text>
+  <g filter="url(#glow)">
+    <line x1="200" y1="242" x2="200" y2="250" stroke="#0a84ff" stroke-width="2" marker-end="url(#ar-hot)"/>
+    <line x1="200" y1="292" x2="200" y2="300" stroke="#0a84ff" stroke-width="2" marker-end="url(#ar-hot)"/>
+  </g>
+  <line x1="200" y1="342" x2="200" y2="350" stroke="#1aa89a" stroke-width="1.5" marker-end="url(#ar-state)"/>
+  <line x1="200" y1="392" x2="200" y2="400" stroke="#1aa89a" stroke-width="1.5" marker-end="url(#ar-state)"/>
+
+  <!-- ③ 读/检索路径(Hot 读) -->
+  <rect x="386" y="162" width="344" height="336" rx="14" fill="#f7f8fa" stroke="#dfe2e8"/>
+  <circle cx="402" cy="182" r="3.5" fill="#0a84ff"/>
+  <text x="414" y="186" font-size="11" font-weight="600" fill="#1b5fb0">③ 读/检索路径 · Hot(QueryNode)</text>
+  <rect data-tid="Milvus原理_支撑_向量索引与检索" data-lab="加载 sealed + knowhere 索引" x="402" y="196" width="312" height="46" rx="8" fill="#f5f5f7" stroke="#d8d8dc" filter="url(#soft)"/>
+  <text x="558" y="215" font-size="9.5" font-weight="600" text-anchor="middle" fill="#1d1d1f">加载 sealed 段 + knowhere 索引</text>
+  <text x="558" y="231" font-size="8.5" text-anchor="middle" fill="#6e6e73">从对象存储拉;QueryNode 无状态</text>
+  <rect data-tid="Milvus原理_支撑_向量索引与检索" data-lab="ANN 向量检索 segcore" x="402" y="250" width="312" height="54" rx="8" fill="#f5f5f7" stroke="#d8d8dc" filter="url(#soft)"/>
+  <text x="558" y="269" font-size="9.5" font-weight="600" text-anchor="middle" fill="#1d1d1f">ANN 向量检索(C++ segcore)</text>
+  <text x="558" y="285" font-size="8.5" text-anchor="middle" fill="#6e6e73">HNSW/IVF/DiskANN/FLAT · L2/IP/COSINE</text>
+  <text x="558" y="299" font-size="8" text-anchor="middle" fill="#a1a1a6">cgo 调 knowhere</text>
+  <rect data-tid="Milvus原理_支撑_向量索引与检索" data-lab="标量 bitset 预过滤" x="402" y="312" width="312" height="42" rx="8" fill="#f5f5f7" stroke="#d8d8dc"/>
+  <text x="558" y="330" font-size="9.5" font-weight="600" text-anchor="middle" fill="#1d1d1f">标量过滤 bitset 预过滤</text>
+  <text x="558" y="345" font-size="8.5" text-anchor="middle" fill="#6e6e73">FilterBitsNode → ANN 遍历内跳过</text>
+  <rect data-tid="Milvus原理_支撑_一致性与时间" data-lab="等 tSafe 追 guaranteeTs" x="402" y="362" width="312" height="44" rx="8" fill="#f5f5f7" stroke="#d8d8dc"/>
+  <text x="558" y="381" font-size="9.5" font-weight="600" text-anchor="middle" fill="#7c5cd6">一致性:等 tSafe 追上 guaranteeTs</text>
+  <text x="558" y="396" font-size="8.5" text-anchor="middle" fill="#6e6e73">看一致快照(时间戳 MVCC)</text>
+  <rect data-tid="Milvus原理_支撑_段与生命周期" data-lab="growing 段暴力搜" x="402" y="414" width="312" height="36" rx="8" fill="#fbfbfd" stroke="#d8d8dc"/>
+  <text x="558" y="437" font-size="8.8" text-anchor="middle" fill="#e0742a">growing 段/未建索引段 → 暴力搜(Failure 退化)</text>
+  <g filter="url(#glow)">
+    <line x1="558" y1="242" x2="558" y2="250" stroke="#0a84ff" stroke-width="2" marker-end="url(#ar-hot)"/>
+    <line x1="558" y1="304" x2="558" y2="312" stroke="#0a84ff" stroke-width="2" marker-end="url(#ar-hot)"/>
   </g>
 
-  <!-- write path (left) -->
-  <rect x="30" y="178" width="340" height="330" rx="16" fill="#fff7e6" stroke="#e8cf9a"/>
-  <text x="46" y="200" font-size="11.5" font-weight="700" fill="#5a3410">写入路径(日志驱动)</text>
-  <g font-size="8" text-anchor="middle">
-    <rect x="46" y="212" width="308" height="50" rx="8" fill="#fef2e0" stroke="#e8cf9a" data-tid="Milvus原理_支撑_写入路径" data-lab="streaming WAL"/><text x="200" y="232" font-weight="600" fill="#5a3410">streaming WAL(按 vchannel 分片)</text><text x="200" y="248" fill="#93762e">Pulsar/Kafka/woodpecker 为底</text>
-    <rect x="46" y="270" width="308" height="50" rx="8" fill="#fef2e0" stroke="#e8cf9a" data-tid="Milvus原理_支撑_写入路径" data-lab="消费/路由"/><text x="200" y="290" font-weight="600" fill="#5a3410">StreamingNode/DataNode 消费</text><text x="200" y="306" fill="#93762e">Flusher 按 vchannel 路由</text>
-    <rect x="46" y="328" width="308" height="50" rx="8" fill="#fef2e0" stroke="#e8cf9a" data-tid="Milvus原理_支撑_写入路径" data-lab="WriteBuffer"/><text x="200" y="348" font-weight="600" fill="#5a3410">WriteBuffer(insert/delta/stats)</text><text x="200" y="364" fill="#93762e">SyncManager 序列化</text>
-    <rect x="46" y="386" width="308" height="50" rx="8" fill="#eafaf1" stroke="#bfe0cd" data-tid="Milvus原理_支撑_写入路径" data-lab="binlog+delta log"/><text x="200" y="406" font-weight="600" fill="#12402a">binlog + delta log</text><text x="200" y="422" fill="#2f6f4f">列式,落对象存储</text>
-    <rect x="46" y="444" width="308" height="52" rx="8" fill="#fff" stroke="#e8cf9a" data-tid="Milvus原理_支撑_段与生命周期" data-lab="段 growing→sealed"/><text x="200" y="464" fill="#5a3410">段:growing(内存可变)→ sealed(封存)</text><text x="200" y="480" fill="#93762e">→ flushed → 异步建索引</text>
-  </g>
-  <line x1="200" y1="262" x2="200" y2="270" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
-  <line x1="200" y1="320" x2="200" y2="328" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
-  <line x1="200" y1="378" x2="200" y2="386" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <!-- ④ MixCoord(Control 统管) -->
+  <rect x="746" y="162" width="304" height="336" rx="14" fill="#f7f8fa" stroke="#c9b8ec"/>
+  <text x="762" y="184" font-size="11.5" font-weight="700" fill="#7c5cd6">④ MixCoord · 统管 <tspan font-size="8" fill="#9a86c9">Control</tspan></text>
+  <text x="762" y="200" font-size="8" fill="#9a86c9">内嵌 root/data/query/streaming coord</text>
+  <rect data-tid="Milvus原理_支撑_元数据" data-lab="RootCoord · DDL/RBAC/TSO" x="762" y="210" width="272" height="52" rx="8" fill="#f5f5f7" stroke="#d8d8dc"/>
+  <text x="776" y="229" font-size="9" font-weight="600" fill="#1d1d1f">RootCoord</text>
+  <text x="776" y="245" font-size="8" fill="#6e6e73">DDL 元数据 · RBAC · TSO 时间戳</text>
+  <text x="776" y="258" font-size="8" fill="#a1a1a6">全局单调时钟(HLC)</text>
+  <rect data-tid="Milvus原理_支撑_段与生命周期" data-lab="DataCoord · 段/flush" x="762" y="268" width="272" height="44" rx="8" fill="#f5f5f7" stroke="#d8d8dc"/>
+  <text x="776" y="287" font-size="9" font-weight="600" fill="#1d1d1f">DataCoord</text>
+  <text x="776" y="303" font-size="8" fill="#6e6e73">段管理 · compaction · flush · 索引</text>
+  <rect data-tid="Milvus原理_支撑_分布式架构" data-lab="QueryCoord · 副本/均衡" x="762" y="318" width="272" height="44" rx="8" fill="#f5f5f7" stroke="#d8d8dc"/>
+  <text x="776" y="337" font-size="9" font-weight="600" fill="#1d1d1f">QueryCoord</text>
+  <text x="776" y="353" font-size="8" fill="#6e6e73">副本管理 · 负载均衡 · target</text>
+  <rect data-tid="Milvus原理_支撑_写入路径" data-lab="StreamingCoord · PChannel" x="762" y="368" width="272" height="44" rx="8" fill="#f5f5f7" stroke="#d8d8dc"/>
+  <text x="776" y="387" font-size="9" font-weight="600" fill="#1d1d1f">StreamingCoord</text>
+  <text x="776" y="403" font-size="8" fill="#6e6e73">PChannel → StreamingNode 分配</text>
+  <rect data-tid="Milvus原理_支撑_元数据" data-lab="元数据存 etcd/tikv" x="762" y="418" width="272" height="34" rx="8" fill="#fbfbfd" stroke="#d8d8dc"/>
+  <text x="898" y="439" font-size="8.5" text-anchor="middle" fill="#6e6e73">元数据存 etcd / tikv</text>
+  <text x="762" y="474" font-size="8" fill="#a1a1a6">coord 下发调度 → 各 Node(紫虚线控制)</text>
 
-  <!-- query path (middle) -->
-  <rect x="386" y="178" width="344" height="330" rx="16" fill="#f5faf6" stroke="#cfe6d5"/>
-  <text x="402" y="200" font-size="11.5" font-weight="700" fill="#12402a">读/检索路径(QueryNode)</text>
-  <g font-size="8" text-anchor="middle">
-    <rect x="402" y="212" width="312" height="50" rx="8" fill="#eafaf1" stroke="#bfe0cd" data-tid="Milvus原理_支撑_向量索引与检索" data-lab="加载sealed+knowhere索引"/><text x="558" y="232" font-weight="600" fill="#12402a">加载 sealed 段 + knowhere 索引</text><text x="558" y="248" fill="#2f6f4f">从对象存储拉;无状态</text>
-    <rect x="402" y="270" width="312" height="58" rx="8" fill="#eafaf1" stroke="#bfe0cd" data-tid="Milvus原理_支撑_向量索引与检索" data-lab="ANN向量检索(segcore)"/><text x="558" y="290" font-weight="600" fill="#12402a">ANN 向量检索(C++ segcore)</text><text x="558" y="306" fill="#2f6f4f">HNSW/IVF/DiskANN/FLAT</text><text x="558" y="320" fill="#2f6f4f">度量 L2/IP/COSINE · cgo 调 knowhere</text>
-    <rect x="402" y="336" width="312" height="52" rx="8" fill="#e6f7ee" stroke="#bfe0cd" data-tid="Milvus原理_支撑_向量索引与检索" data-lab="标量bitset预过滤"/><text x="558" y="356" font-weight="600" fill="#12402a">标量过滤 bitset 预过滤</text><text x="558" y="372" fill="#2f6f4f">FilterBitsNode→ANN 遍历内跳过</text>
-    <rect x="402" y="396" width="312" height="52" rx="8" fill="#faf4fb" stroke="#e2d2ee" data-tid="Milvus原理_支撑_一致性与时间" data-lab="等tSafe追guaranteeTs"/><text x="558" y="416" font-weight="600" fill="#5a3d78">一致性:等 tSafe 追上 guaranteeTs</text><text x="558" y="432" fill="#7a5a95">看一致快照(时间戳 MVCC)</text>
-    <rect x="402" y="456" width="312" height="40" rx="8" fill="#fff" stroke="#cfe6d5" data-tid="Milvus原理_支撑_段与生命周期" data-lab="growing段暴力搜"/><text x="558" y="480" fill="#2f6f4f">growing 段/未建索引段 → 暴力搜</text>
-  </g>
+  <!-- Control 紫虚:MixCoord → 写/读 Node -->
+  <path d="M746,300 C726,300 726,260 372,260" fill="none" stroke="#a78bfa" stroke-width="1.4" stroke-dasharray="6 4" marker-end="url(#ar-ctrl)"/>
+  <path d="M746,340 C734,340 734,270 716,270" fill="none" stroke="#a78bfa" stroke-width="1.4" stroke-dasharray="6 4" marker-end="url(#ar-ctrl)"/>
 
-  <!-- object storage -->
-  <rect x="30" y="524" width="1020" height="56" rx="14" fill="#fdf6ea" stroke="#efdcb4" data-tid="Milvus原理_支撑_分布式架构" data-lab="对象存储·共享持久层"/>
-  <text x="46" y="546" font-size="11" font-weight="700" fill="#5a3410">对象存储(S3 / MinIO)· 存算分离的共享持久层</text>
-  <text x="46" y="566" font-size="8.8" fill="#93762e">所有段 binlog + delta log + 索引文件在此;计算节点(Query/Data)无状态,挂了重新加载;存储与计算独立弹性扩容</text>
-
-  <!-- flow arrows -->
-  <line x1="370" y1="343" x2="386" y2="290" stroke="#9db0c9" stroke-width="1.2" stroke-dasharray="4 3" marker-end="url(#ar)"/>
-  <line x1="200" y1="508" x2="200" y2="524" stroke="#86868b" stroke-width="1.4" marker-end="url(#ar)"/>
-  <line x1="558" y1="524" x2="558" y2="508" stroke="#86868b" stroke-width="1.4" marker-end="url(#ar)"/>
-  <line x1="540" y1="164" x2="540" y2="178" stroke="#86868b" stroke-width="1.6" marker-end="url(#ar)"/>
-
-  <!-- semantics + pervasive -->
-  <rect x="30" y="596" width="1020" height="52" rx="12" fill="#f7f7f9" stroke="#ececf1" data-tid="Milvus原理_全景主线框架" data-lab=""/>
-  <text x="46" y="618" font-size="11" font-weight="700" fill="#1d1d1f"></text>
-  <text x="46" y="638" font-size="8.8" fill="#6e6e73">上=API+Proxy;左=写入路径(WAL→binlog);中=读检索(ANN+过滤+一致性);右=MixCoord 统管+etcd;底=对象存储共享持久层。计算无状态、存储共享。</text>
-
-  <rect x="30" y="662" width="1020" height="44" rx="12" fill="#f0f0f4" stroke="#d2d2d7" data-tid="Milvus原理_支撑_一致性与时间" data-lab="贯穿层·timestamp/TSO"/>
-  <text x="540" y="689" font-size="10" font-weight="700" text-anchor="middle" fill="#48484a">贯穿层 · timestamp(HLC 全局 TSO)—— 每操作领全局单调 ts,读按 guaranteeTs 等 tSafe 看一致快照,段/binlog 按 ts 版本化,横切写入/一致性/段</text>
-
-  <!-- declarations -->
-  <rect x="30" y="720" width="1020" height="66" rx="13" fill="#eafaf1" stroke="#bfe0cd" data-tid="Milvus原理_全景主线框架" data-lab="三条贯穿声明"/>
-  <text x="46" y="740" font-size="10" font-weight="700" fill="#12402a">三条贯穿声明</text>
-  <text x="46" y="758" font-size="8.5" fill="#2f6f4f">① 一切围绕 ANN 向量检索(knowhere,标量 bitset 预过滤)　② 存算分离 + 日志驱动(streaming WAL→异步 binlog,类比 Kafka 分区日志)</text>
-  <text x="46" y="774" font-size="8.5" fill="#2f6f4f">③ 时间戳驱动一致性(全局 TSO 定序 + guaranteeTs 等 tSafe;一致性级别=选不同 guaranteeTs)　—— 不做 SQL join,核心是相似度检索</text>
-
-  <!-- ==== 补充连线：跨模块数据流(实线) + 控制/调度(虚线) ==== -->
-  <!-- 图例 -->
-  <g font-size="8">
-    <line x1="852" y1="40" x2="874" y2="40" stroke="#86868b" stroke-width="1.4" marker-end="url(#ar)"/><text x="879" y="43" fill="#86868b">数据流</text>
-    <line x1="852" y1="53" x2="874" y2="53" stroke="#9db0c9" stroke-width="1.1" stroke-dasharray="4 3" marker-end="url(#ar)"/><text x="879" y="56" fill="#86868b">控制/调度</text>
+  <!-- Hot: API→Proxy→两路径 -->
+  <g filter="url(#glow)">
+    <line x1="540" y1="108" x2="540" y2="116" stroke="#0a84ff" stroke-width="2" marker-end="url(#ar-hot)"/>
+    <line x1="200" y1="150" x2="200" y2="162" stroke="#0a84ff" stroke-width="2" marker-end="url(#ar-hot)"/>
+    <line x1="558" y1="150" x2="558" y2="162" stroke="#0a84ff" stroke-width="2" marker-end="url(#ar-hot)"/>
   </g>
 
-  <!-- 数据流：API → Proxy → 工作面 -->
-  <line x1="540" y1="110" x2="540" y2="124" stroke="#86868b" stroke-width="1.3" marker-end="url(#ar)"/>
-  <text x="547" y="121" font-size="6.8" fill="#8a8a8f">接入</text>
-  <line x1="200" y1="164" x2="200" y2="178" stroke="#86868b" stroke-width="1.4" marker-end="url(#ar)"/>
-  <text x="120" y="175" font-size="6.8" fill="#8a8a8f">insert/delete 写请求</text>
-  <text x="548" y="175" font-size="6.8" fill="#8a8a8f">search/query 检索</text>
-  <line x1="660" y1="178" x2="660" y2="164" stroke="#86868b" stroke-width="1.2" stroke-dasharray="4 3" marker-end="url(#ar)"/>
-  <text x="667" y="175" font-size="6.8" fill="#8a8a8f">topK 结果回聚</text>
+  <!-- ⑤ 对象存储(共享持久层 State) -->
+  <rect data-tid="Milvus原理_支撑_分布式架构" data-lab="对象存储 · 共享持久层" x="30" y="512" width="1020" height="52" rx="12" fill="#f5f5f7" stroke="#d8d8dc" filter="url(#soft)"/>
+  <text x="46" y="534" font-size="11" font-weight="700" fill="#1d1d1f">⑤ 对象存储(S3 / MinIO)· 存算分离的共享持久层 <tspan font-size="8.5" fill="#1aa89a">State</tspan></text>
+  <text x="46" y="553" font-size="8.8" fill="#6e6e73">所有段 binlog + delta log + 索引文件在此;计算节点(Query/Data)无状态,挂了重新加载;存储与计算独立弹性扩容</text>
+  <!-- 写落存储 / 读拉存储(State 青) -->
+  <line x1="200" y1="486" x2="200" y2="512" stroke="#1aa89a" stroke-width="1.5" marker-end="url(#ar-state)"/>
+  <line x1="558" y1="512" x2="558" y2="450" stroke="#1aa89a" stroke-width="1.5" marker-end="url(#ar-state)"/>
+  <text x="212" y="504" font-size="8" fill="#1aa89a">binlog 落盘</text>
+  <text x="570" y="504" font-size="8" fill="#1aa89a">拉段/索引</text>
 
-  <!-- 数据流：底部持久层 写下沉 / 读加载 -->
-  <text x="52" y="519" font-size="7" fill="#7a6a3e">binlog/delta 落盘</text>
-  <text x="430" y="505" font-size="7" fill="#2f6f4f">加载 sealed 段+索引</text>
+  <!-- ⑥ 贯穿层 · TSO 时间戳(Control 定序) -->
+  <rect data-tid="Milvus原理_支撑_一致性与时间" data-lab="贯穿层 · TSO 时间戳" x="30" y="574" width="1020" height="44" rx="12" fill="#f3f0fb" stroke="#d6cdf0"/>
+  <text x="540" y="595" font-size="9.8" font-weight="700" text-anchor="middle" fill="#5b3ea6">贯穿层 · timestamp(HLC 全局 TSO)</text>
+  <text x="540" y="611" font-size="8.3" text-anchor="middle" fill="#7a5a95">每操作领全局单调 ts · 读按 guaranteeTs 等 tSafe 看一致快照 · 段/binlog 按 ts 版本化 —— 横切写入/一致性/段</text>
 
-  <!-- L61 旁路标注：growing 段经 WAL 实时可见 -->
-  <text x="379" y="410" font-size="6.8" fill="#6f83a3" text-anchor="middle" transform="rotate(-90 379 410)">WAL·growing 实时可见</text>
+  <!-- 图例铭牌(五路径) -->
+  <rect x="30" y="632" width="1020" height="70" rx="12" fill="#f5f5f7" stroke="#d8d8dc"/>
+  <text x="48" y="654" font-size="10.5" font-weight="700" fill="#1d1d1f">核心设计张力 · 写入实时可见 vs 检索索引高效(+ 存算分离弹性)</text>
+  <text x="48" y="673" font-size="8.8" fill="#6e6e73">写入先入 WAL 立即可查(growing 段暴力搜),后台异步 flush+建索引转 sealed 段(ANN 高效);两条热路径分离,计算无状态、存储共享对象存储 → 独立弹性扩容。</text>
+  <g font-size="8.5" fill="#6e6e73">
+    <line x1="560" y1="692" x2="586" y2="692" stroke="#0a84ff" stroke-width="2"/><text x="592" y="695">Hot 写/读路径</text>
+    <line x1="686" y1="692" x2="712" y2="692" stroke="#1aa89a" stroke-width="1.5"/><text x="718" y="695">State 段/存储</text>
+    <line x1="806" y1="692" x2="832" y2="692" stroke="#a78bfa" stroke-width="1.5" stroke-dasharray="6 4"/><text x="838" y="695">Control coord/TSO</text>
+    <line x1="946" y1="692" x2="972" y2="692" stroke="#e0742a" stroke-width="1.5" stroke-dasharray="3 3"/><text x="978" y="695">Failure 退化</text>
+  </g>
 
-  <!-- 控制平面：MixCoord → 各工作面(虚线) -->
-  <line x1="746" y1="256" x2="731" y2="256" stroke="#9db0c9" stroke-width="1.1" stroke-dasharray="4 3" marker-end="url(#ar)"/>
-  <text x="740" y="256" font-size="6.8" fill="#6f83a3" text-anchor="middle" transform="rotate(-90 740 256)">TSO·元数据·DDL</text>
-  <line x1="746" y1="378" x2="731" y2="378" stroke="#9db0c9" stroke-width="1.1" stroke-dasharray="4 3" marker-end="url(#ar)"/>
-  <text x="740" y="378" font-size="6.8" fill="#6f83a3" text-anchor="middle" transform="rotate(-90 740 378)">副本·负载均衡</text>
-  <line x1="830" y1="508" x2="830" y2="524" stroke="#9db0c9" stroke-width="1.1" stroke-dasharray="4 3" marker-end="url(#ar)"/>
-  <text x="840" y="519" font-size="7" fill="#6f83a3">compaction/GC 调度</text>
-  <path d="M750,508 L750,517 L300,517 L300,508" fill="none" stroke="#9db0c9" stroke-width="1.1" stroke-dasharray="4 3" marker-end="url(#ar)"/>
-  <text x="330" y="514" font-size="7" fill="#6f83a3">段/flush·PChannel 调度</text>
+  <text x="30" y="724" font-size="9" fill="#a1a1a6">Milvus · 所有机制回本地源码核实 · 不变量:ts 全局单调 · guaranteeTs≤tSafe 才可读 · sealed 段不可变</text>
 </svg>

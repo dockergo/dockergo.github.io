@@ -58,8 +58,7 @@ LAYER_ORDER = [k for k, *_ in LAYERS]
 # 系统本就跨层;此处取其**主导机制**落位。新增项目补一条即在母图上落位。
 LAYER_MAP = {
     # Ingress:入口/路由/TLS/负载均衡/传输
-    "traefik": "ingress", "nginx": "ingress", "quic-go": "ingress",
-    "quiche": "ingress", "ffmpeg": "ingress",
+    "nginx": "ingress", "ffmpeg": "ingress",
     # Schedule:编排/调度/资源
     "kubernetes": "schedule", "ray": "schedule", "spark": "schedule", "flink": "schedule",
     # Execute:查询执行/向量化/训练推理
@@ -69,7 +68,7 @@ LAYER_MAP = {
     # State:内存/索引/事务/状态后端/图
     "redis": "state", "rocksdb": "state", "postgres": "state", "neo4j": "state",
     # Persist:日志/表格式/列存/分布式文件
-    "kafka": "persist", "fluss": "persist", "hudi": "persist",
+    "kafka": "persist", "hudi": "persist",
     "iceberg": "persist", "orc": "persist", "hadoop": "persist",
     # Coordinate:共识/选主/控制面状态
     "etcd": "coord", "zookeeper": "coord", "raft": "coord",
@@ -116,8 +115,6 @@ META = {
                    "lc": "linear-gradient(135deg,#326ce5,#5b8cff)"},
     "nginx": {"name": "Nginx", "init": "NG", "desc": "Web 服务器 / 反向代理",
               "lc": "linear-gradient(135deg,#2f8f5e,#4ade80)"},
-    "traefik": {"name": "Traefik", "init": "TK", "desc": "云原生反向代理 / 网关",
-                "lc": "linear-gradient(135deg,#2dd4a7,#38bdf8)"},
     "linux": {"name": "Linux Kernel", "init": "LX", "desc": "操作系统内核",
               "lc": "linear-gradient(135deg,#5a5a64,#7a8494)"},
     "go": {"name": "Go 语言", "init": "GO", "desc": "语言核心原理 · 编译期 + 运行期",
@@ -140,12 +137,6 @@ META = {
              "lc": "linear-gradient(135deg,#f59e0b,#fcd34d)"},
     "orc": {"name": "Apache ORC", "init": "OR", "desc": "列式存储文件格式",
             "lc": "linear-gradient(135deg,#8e8e93,#b0b0b5)"},
-    "fluss": {"name": "Fluss", "init": "FS", "desc": "流式存储",
-              "lc": "linear-gradient(135deg,#38bdf8,#4dd0e1)"},
-    "quic-go": {"name": "quic-go", "init": "QG", "desc": "Go QUIC 实现",
-                "lc": "linear-gradient(135deg,#4ade80,#2dd4a7)"},
-    "quiche": {"name": "quiche", "init": "QC", "desc": "Rust QUIC/HTTP3 实现",
-               "lc": "linear-gradient(135deg,#4ade80,#38bdf8)"},
     "ffmpeg": {"name": "FFmpeg", "init": "FF", "desc": "多媒体编解码",
                "lc": "linear-gradient(135deg,#4ade80,#5dc9e2)"},
 }
@@ -547,11 +538,11 @@ LENSES = [
      "subtitle": "冯诺依曼体系结构(1945)自上而下的数据通路 · 各层项目实现该层机制 · 点击下钻",
      "flow": "hot",
      "tiers": [
-         ("vn_io", "I/O · 输入输出", "北向接入 · 网关 · TLS · 编解码 · 传输", ["traefik", "nginx", "quic-go", "quiche", "ffmpeg"], "#0a84ff"),
+         ("vn_io", "I/O · 输入输出", "北向接入 · 网关 · TLS · 编解码 · 传输", ["nginx", "ffmpeg"], "#0a84ff"),
          ("vn_ctrl", "控制器 · Control Unit", "调度 / 编排 / 共识 —— 决定「做什么、在哪做」", ["kubernetes", "ray", "spark", "flink", "etcd", "zookeeper", "raft"], "#a78bfa"),
          ("vn_alu", "运算器 · ALU", "查询/向量化 · 训练推理 · 算子流水 —— 实际计算", ["doris", "clickhouse", "starrocks", "trino", "duckdb", "pytorch", "tensorflow", "vllm", "milvus"], "#0a84ff"),
          ("vn_mem", "主存 · Memory", "内存结构 · 索引 · 事务 · 状态后端", ["redis", "rocksdb", "postgres", "neo4j"], "#2dd4bf"),
-         ("vn_store", "外存 · Storage", "日志 · 表格式 · 列存文件 · 分布式文件系统", ["kafka", "fluss", "hudi", "iceberg", "orc", "hadoop"], "#2dd4bf"),
+         ("vn_store", "外存 · Storage", "日志 · 表格式 · 列存文件 · 分布式文件系统", ["kafka", "hudi", "iceberg", "orc", "hadoop"], "#2dd4bf"),
          ("vn_rt", "运行时 · Substrate", "语言运行时 · GC · 调度纪律 · 内核", ["go", "rust", "linux"], "#8a8a90"),
      ]},
     {"id": "tcpip", "label": "TCP/IP 网络栈", "group": "理论视角", "kind": "stack",
@@ -561,8 +552,7 @@ LENSES = [
      "subtitle": "TCP/IP 分层模型 · 请求自上而下穿栈 · 仅含协议栈成员 · 点击下钻",
      "flow": "hot",
      "tiers": [
-         ("net_app", "应用层 · L7 Application", "HTTP/1·2·3 · 反向代理 · 消息协议端点", ["nginx", "traefik", "kafka"], "#0a84ff"),
-         ("net_tp", "传输层 · L4 Transport", "QUIC/TCP · 流控 · 拥塞控制 · 丢包恢复", ["quic-go", "quiche"], "#2dd4bf"),
+         ("net_app", "应用层 · L7 Application", "HTTP/1·2·3 · 反向代理 · 消息协议端点", ["nginx", "kafka"], "#0a84ff"),
          ("net_os", "网络/链路 · L3-L2 · OS", "内核协议栈 · 路由 · netpoll/epoll · 零拷贝", ["linux", "go"], "#8a8a90"),
      ]},
     {"id": "aiml", "label": "AI / ML", "group": "领域视角", "kind": "stack",
@@ -585,7 +575,7 @@ LENSES = [
      "subtitle": "数据密集系统剖面 · 从日志到分析 · 点击下钻",
      "flow": "hot",
      "tiers": [
-         ("bd_ingest", "采集 / 日志总线", "顺序日志 · 流式接入 · CDC", ["kafka", "fluss"], "#0a84ff"),
+         ("bd_ingest", "采集 / 日志总线", "顺序日志 · 流式接入 · CDC", ["kafka"], "#0a84ff"),
          ("bd_store", "存储 / 表格式 / 文件", "表格式 · 列存文件 · 分布式文件系统", ["iceberg", "hudi", "orc", "hadoop"], "#2dd4bf"),
          ("bd_compute", "计算引擎 · Compute", "DAG · shuffle · 有状态流 · 容错重算", ["spark", "flink"], "#a78bfa"),
          ("bd_query", "查询引擎 · Query", "MPP · 向量化 · CBO · 联邦 · 嵌入式", ["doris", "clickhouse", "starrocks", "trino", "duckdb"], "#0a84ff"),
@@ -602,7 +592,7 @@ LENSES = [
          ("mh_local", "本地引擎 · Local Engine", "内存+本地盘 LSM/向量化 · 单机", ["rocksdb", "duckdb"], "#0a84ff"),
          ("mh_page", "页 + 日志 · Page & WAL", "缓冲页 + 预写日志 · 持久单机存储", ["postgres", "neo4j"], "#a78bfa"),
          ("mh_file", "表格式 / 列存文件", "不可变文件 + 元数据 · 对象存储之上", ["iceberg", "hudi", "orc"], "#2dd4bf"),
-         ("mh_dist", "分布式 / 远端", "多副本分布式文件 · 顺序日志 · 网络访问", ["hadoop", "kafka", "fluss"], "#8a8a90"),
+         ("mh_dist", "分布式 / 远端", "多副本分布式文件 · 顺序日志 · 网络访问", ["hadoop", "kafka"], "#8a8a90"),
      ]},
     {"id": "consistency", "label": "一致性模型", "group": "理论视角", "kind": "stack",
      "kicker": "CONSISTENCY MODELS · 一致性谱系",
@@ -614,7 +604,7 @@ LENSES = [
          ("cs_lin", "线性一致 / 共识 · CP", "Raft/ZAB 多数派 · 强一致元数据存储", ["etcd", "zookeeper", "raft"], "#a78bfa"),
          ("cs_acid", "ACID 事务 · Serializable", "MVCC + WAL · 事务隔离级别", ["postgres", "doris"], "#0a84ff"),
          ("cs_snap", "快照隔离 · Snapshot", "表级快照 + 乐观提交 · 时间旅行", ["iceberg", "hudi"], "#2dd4bf"),
-         ("cs_log", "顺序日志 / ISR", "分区内有序 + 副本同步 · at-least/exactly-once", ["kafka", "fluss", "flink"], "#0a84ff"),
+         ("cs_log", "顺序日志 / ISR", "分区内有序 + 副本同步 · at-least/exactly-once", ["kafka", "flink"], "#0a84ff"),
          ("cs_evt", "最终一致 / 副本 · AP", "异步复制 · 读己所写弱保证", ["redis", "rocksdb"], "#8a8a90"),
      ]},
     {"id": "cloudnative", "label": "云原生", "group": "领域视角", "kind": "stack",
@@ -625,7 +615,7 @@ LENSES = [
      "flow": "ctrl",
      "tiers": [
          ("cn_ctrl", "编排 / 控制平面", "声明式 reconcile · 资源调度 · 分布式执行", ["kubernetes", "ray", "spark"], "#a78bfa"),
-         ("cn_ingress", "入口 / 网关 / 边缘", "反向代理 · 动态路由 · TLS · 服务发现", ["traefik", "nginx"], "#0a84ff"),
+         ("cn_ingress", "入口 / 网关 / 边缘", "反向代理 · 动态路由 · TLS · 服务发现", ["nginx"], "#0a84ff"),
          ("cn_coord", "协调 / 共识 · 状态存储", "集群状态真相 · 选主 · 配置中心", ["etcd", "zookeeper", "raft"], "#2dd4bf"),
          ("cn_rt", "容器运行时 · 底座", "语言运行时 · 内核 cgroup/namespace", ["go", "rust", "linux"], "#8a8a90"),
      ]},
@@ -847,8 +837,8 @@ body{font-family:var(--sans);color:var(--c-ink);min-height:100vh;-webkit-font-sm
 .lens-switch{position:absolute;left:50%;transform:translateX(-50%);display:inline-flex;gap:14px;padding:6px 8px;border-radius:12px;background:var(--c-panel);border:1px solid var(--c-line)}
 .lens-grp{display:inline-flex;flex-direction:column;gap:4px}
 .lens-grp+.lens-grp{padding-left:14px;border-left:1px solid var(--c-line)}
-.lens-grp-lab{font:600 10px var(--sans);color:var(--c-ink3);letter-spacing:.06em;white-space:nowrap;padding-left:2px}
-.lens-grp-segs{display:inline-flex;gap:2px}
+.lens-grp-lab{font:600 10px var(--sans);color:var(--c-ink3);letter-spacing:.06em;white-space:nowrap;text-align:center}
+.lens-grp-segs{display:flex;gap:2px;justify-content:center}
 .lens-seg{border:0;background:transparent;color:var(--c-ink2);cursor:pointer;font:600 12px var(--sans);padding:5px 12px;border-radius:8px;white-space:nowrap;transition:.15s}
 .lens-seg:hover{color:var(--c-ink)}
 .lens-seg.on{background:var(--c-brand);color:#fff}

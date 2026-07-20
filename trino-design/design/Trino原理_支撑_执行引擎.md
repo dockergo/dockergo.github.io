@@ -8,9 +8,9 @@
 
 ## 一、Processors 执行模型与 Driver 泵
 
-`Operator` 是一个协作式状态机，核心方法都不阻塞线程：`isBlocked` 返回 future（未就绪即让出）、`needsInput`/`addInput(Page)` 收输入、`getOutput` 出输出（无则 null）、`finish`/`isFinished` 收尾、`startMemoryRevoke`/`finishMemoryRevoke` 溢写钩子。`OperatorFactory` 是 pipeline 的蓝图，`createOperator` 每 Driver 一次、`duplicate` 克隆出并行 pipeline。源算子 `SourceOperator` 扩展契约接收 `Split`（`addSplit`/`noMoreSplits`），无上游。
+`Operator` 是一个协作式状态机（`core/trino-main/.../operator/Operator.java:21`），核心方法都不阻塞线程：`isBlocked` 返回 future（未就绪即让出，`:33`）、`needsInput`（`:41`）/`addInput(Page)`（`:47`）收输入、`getOutput` 出输出（无则 null，`:53`）、`finish`（`:88`）/`isFinished` 收尾、`startMemoryRevoke`（`:72`）/`finishMemoryRevoke` 溢写钩子。`OperatorFactory` 是 pipeline 的蓝图，`createOperator` 每 Driver 一次、`duplicate` 克隆出并行 pipeline。源算子 `SourceOperator` 扩展契约接收 `Split`（`addSplit`/`noMoreSplits`），无上游。
 
-`Driver.processInternal` 持独占锁单线程运行：先 `processNewSources` 把新 split 喂给源算子，再遍历相邻算子对——`current` 未完成且 `next.needsInput` 时 `page=current.getOutput`，非空则 `next.addInput(page)`，front-to-back 一次一个 Page；`current` 完成则 `next.finish` 并关闭已完成的前缀；都阻塞时收集各算子 `isBlocked` future，首个就绪再继续。**Operator 契约与 Driver 泵的详图见【DQL】Driver 泵篇（同一机制，不重复出图）。**
+`Driver.processInternal`（`core/trino-main/.../operator/Driver.java:372`）持独占锁单线程运行：先 `processNewSources`（`Driver.java:378`）把新 split 喂给源算子，再遍历相邻算子对（`Driver.java:390` for 循环）——`current` 未完成且 `next.needsInput` 时 `page=current.getOutput`（`:402`），非空则 `next.addInput(page)`（`:407`），front-to-back 一次一个 Page；`current` 完成则 `next.finish` 并关闭已完成的前缀；都阻塞时收集各算子 `isBlocked` future，首个就绪再继续。**Operator 契约与 Driver 泵的详图见【DQL】Driver 泵篇（同一机制，不重复出图）。**
 
 ---
 

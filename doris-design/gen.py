@@ -757,9 +757,6 @@ THEMES = [
     {"id": "diagnosis", "icon": "⧉", "title": "问题与诊断", "cat": "appendix", "ord": 2,
      "desc": "EXPLAIN 看计划(一条 SQL 五阶段计划树演变)· Profile 透视(五段格式 × 采集聚合逻辑)· 诊断原理(慢 SQL 反查源码闭环)· 常见问题(写侧失败恢复 + 读侧瓶颈)",
      "tabs": ["explaincmd", "profileview", "diagprin", "commonqa"]},
-    {"id": "refolap", "icon": "▦", "title": "OLAP 引擎对比", "cat": "appendix", "ord": 3,
-     "desc": "Doris vs ClickHouse / StarRocks / Spark / Trino / DuckDB —— 设计取舍横向对比",
-     "tabs": ["compare"]},
 ]
 
 # tid -> themeId(供跨视图跳转时定位所属主题)

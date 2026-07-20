@@ -749,9 +749,6 @@ THEMES = [
     {"id": "overallarch", "icon": "◇", "title": "全景框架", "cat": "appendix", "ord": 1,
      "desc": "全库地图:双维模型(能力域×执行时机)· 总架构图(FE/BE + 两存储形态)· 存算一体 vs 存算分离 · 依赖矩阵(接口×能力域)· 能力域依赖关系图",
      "tabs": ["panowalk"]},
-    {"id": "refolap", "icon": "▦", "title": "存算引擎对比", "cat": "appendix", "ord": 2,
-     "desc": "StarRocks vs Doris(同源) / ClickHouse / Trino —— 存算分离 + 持久化主键索引的设计取舍横向对比",
-     "tabs": ["compare"]},
 ]
 
 # tid -> themeId(供跨视图跳转时定位所属主题)

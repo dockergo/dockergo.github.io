@@ -414,9 +414,6 @@ THEMES = [
     {"id": "overallarch", "icon": "◇", "title": "全景框架", "cat": "appendix", "ord": 1,
      "desc": "全景框架:双维模型(能力域×执行时机)· 总架构图(Broker 数据面 + KRaft 元数据面)· 依赖矩阵 · 能力域依赖关系",
      "tabs": ["panowalk"]},
-    {"id": "refolap", "icon": "▦", "title": "流平台对比", "cat": "appendix", "ord": 2,
-     "desc": "Kafka vs Pulsar / RabbitMQ / RocketMQ —— 分区追加日志 + 副本 ISR + KRaft 的设计取舍横向对比",
-     "tabs": ["compare"]},
 ]
 
 # tid -> themeId(供跨视图跳转时定位所属主题)

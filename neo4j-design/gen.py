@@ -409,9 +409,6 @@ THEMES = [
     {"id": "overallarch", "icon": "◇", "title": "全景框架", "cat": "appendix", "ord": 1,
      "desc": "全景框架:双维模型(能力域×执行时机)· 总架构图(Cypher→规划→存储→页缓存/WAL)· 依赖矩阵 · 能力域依赖关系",
      "tabs": ["panowalk"]},
-    {"id": "refolap", "icon": "▦", "title": "数据库对比", "cat": "appendix", "ord": 2,
-     "desc": "Neo4j vs 关系库(PostgreSQL)/ 文档库(MongoDB)/ 其它图库 —— 免索引邻接原生图库 vs 套图 API 的设计取舍横向对比",
-     "tabs": ["compare"]},
 ]
 
 # tid -> themeId(供跨视图跳转时定位所属主题)
