@@ -1,0 +1,146 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="500" viewBox="0 0 1000 500" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1" stdDeviation="3" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="aHot" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#0a84ff"/></marker>
+    <marker id="aCtl" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#7c5fe6"/></marker>
+    <marker id="aState" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#0f9e8e"/></marker>
+    <marker id="aFail" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#e8730f"/></marker>
+  </defs>
+
+  <rect width="1000" height="500" fill="#fbfbfd"/>
+
+  <!-- ===== 标题条 ===== -->
+  <rect x="0" y="0" width="1000" height="40" fill="#f4f5f7" stroke="#e6e6eb"/>
+  <text x="20" y="26" font-size="13.5" font-weight="700" fill="#1d1d1f">Linux 总架构 · 宏内核（母隐喻本体：万物运行其上的那台计算机器）</text>
+  <text x="470" y="26" font-size="10" fill="#8a8a90">系统调用唯一接触面 → 八大子系统同址直调 → 支撑机制托底 → 硬件</text>
+
+  <!-- ===== ① 接触面 · 系统调用带（Hot 入口） ===== -->
+  <rect x="24" y="48" width="952" height="68" rx="10" fill="#e9f2ff" stroke="#a9ccf5" filter="url(#soft)" data-tid="qlife" data-lab="系统调用接触面"/>
+  
+  <text x="42" y="68" font-size="11.5" font-weight="700" fill="#0a3d78">① 接触面 · 系统调用（用户态陷入内核的唯一合法入口）</text>
+  <text x="42" y="86" font-size="9" fill="#2a5a92">用户进程 syscall 指令 → entry_SYSCALL_64 → do_syscall_64</text>
+  <text x="42" y="102" font-size="9" fill="#4a7ab0">按号分派 x64_sys_call（array_index_nospec 防 Spectre）· 进出各一次 user/kernel 态切换栅栏</text>
+  <text x="958" y="68" font-size="9" fill="#0a84ff" text-anchor="end" font-weight="600">Hot 入口</text>
+
+  <!-- ===== ② 核心子系统带 · 两行六柱（同址直调） ===== -->
+  <text x="28" y="128" font-size="9.5" font-weight="600" fill="#8a8a90">② 核心子系统</text>
+
+  <!-- row A -->
+  <rect x="24" y="130" width="309" height="62" rx="9" fill="#e9f2ff" stroke="#a9ccf5" filter="url(#soft)" data-tid="opttech" data-lab="进程调度"/>
+  
+  <text x="40" y="149" font-size="10.5" font-weight="700" fill="#0a3d78">进程调度 · EEVDF（内核心脏）</text>
+  <text x="38" y="165" font-size="8.5" fill="#2a5a92">__schedule → pick_next_task_fair</text>
+  <text x="38" y="180" font-size="8.5" fill="#4a7ab0">pick_eevdf → context_switch · 每 CPU rq · sched_class 多态</text>
+
+  <rect x="345" y="130" width="309" height="62" rx="9" fill="#eef0f3" stroke="#d2d6dd" filter="url(#soft)" data-tid="execengine" data-lab="进程与任务管理"/>
+  
+  <text x="361" y="149" font-size="10.5" font-weight="700" fill="#1d1d1f">进程与任务管理</text>
+  <text x="359" y="165" font-size="8.5" fill="#5b6470">task_struct（PCB）= 万挂载点</text>
+  <text x="359" y="180" font-size="8.5" fill="#5b6470">fork kernel_clone / exec / exit 生命周期</text>
+
+  <rect x="666" y="130" width="309" height="62" rx="9" fill="#e6f4f1" stroke="#b9dfd8" filter="url(#soft)" data-tid="storageformat" data-lab="虚拟内存"/>
+  
+  <text x="682" y="149" font-size="10.5" font-weight="700" fill="#0f6b5e">虚拟内存</text>
+  <text x="680" y="165" font-size="8.5" fill="#2f6f5f">mm_struct/VMA · 缺页 handle_mm_fault</text>
+  <text x="680" y="180" font-size="8.5" fill="#4c8567">per-VMA RCU 无锁快路径 · 按需建页表</text>
+
+  <!-- row B -->
+  <rect x="24" y="200" width="309" height="62" rx="9" fill="#e6f4f1" stroke="#b9dfd8" filter="url(#soft)" data-tid="transaction" data-lab="VFS 文件系统"/>
+  
+  <text x="40" y="219" font-size="10.5" font-weight="700" fill="#0f6b5e">VFS 文件系统</text>
+  <text x="38" y="235" font-size="8.5" fill="#2f6f5f">file/inode/dentry 三件套统一接口</text>
+  <text x="38" y="250" font-size="8.5" fill="#4c8567">vfs_read/write → page cache → 块层</text>
+
+  <rect x="345" y="200" width="309" height="62" rx="9" fill="#e9f2ff" stroke="#a9ccf5" filter="url(#soft)" data-tid="compaction" data-lab="网络协议栈"/>
+  
+  <text x="361" y="219" font-size="10.5" font-weight="700" fill="#0a3d78">网络协议栈</text>
+  <text x="359" y="235" font-size="8.5" fill="#2a5a92">NIC 中断 → net_rx_action → NAPI poll</text>
+  <text x="359" y="250" font-size="8.5" fill="#4a7ab0">协议逐层 → socket · sk_buff 零拷贝穿层</text>
+
+  <rect x="666" y="200" width="309" height="62" rx="9" fill="#e9f2ff" stroke="#a9ccf5" filter="url(#soft)" data-tid="metadata" data-lab="块层 IO"/>
+  
+  <text x="682" y="219" font-size="10.5" font-weight="700" fill="#0a3d78">块层 IO</text>
+  <text x="680" y="235" font-size="8.5" fill="#2a5a92">submit_bio → blk-mq 多队列</text>
+  <text x="680" y="250" font-size="8.5" fill="#4a7ab0">per-CPU 软队列 → 硬队列 → 驱动 DMA</text>
+
+  <!-- ===== ③ 支撑机制带 · 五柱横贯托底 ===== -->
+  <text x="28" y="276" font-size="9.5" font-weight="600" fill="#8a8a90">③ 支撑机制 · 横贯托底（同址直调换来的竞争/时序/隔离由此遏制）</text>
+
+  <rect x="24" y="278" width="182" height="62" rx="9" fill="#e6f4f1" stroke="#b9dfd8" data-tid="workload" data-lab="中断与软中断"/>
+  
+  <text x="38" y="297" font-size="10" font-weight="700" fill="#0f6b5e">中断与软中断</text>
+  <text x="36" y="313" font-size="8" fill="#2f6f5f">硬中断上半部→raise softirq</text>
+  <text x="36" y="327" font-size="8" fill="#4c8567">__do_softirq 批处理下半部</text>
+
+  <rect x="216" y="278" width="182" height="62" rx="9" fill="#eef0f3" stroke="#d2d6dd" data-tid="tabletsched" data-lab="同步原语"/>
+  
+  <text x="230" y="297" font-size="10" font-weight="700" fill="#1d1d1f">同步原语</text>
+  <text x="228" y="313" font-size="8" fill="#5b6470">spinlock/mutex/rwsem</text>
+  <text x="228" y="327" font-size="8" fill="#5b6470">RCU 读无锁写延后回收</text>
+
+  <rect x="408" y="278" width="182" height="62" rx="9" fill="#eef0f3" stroke="#d2d6dd" data-tid="dcl" data-lab="时间与定时器"/>
+  
+  <text x="422" y="297" font-size="10" font-weight="700" fill="#1d1d1f">时间与定时器</text>
+  <text x="420" y="313" font-size="8" fill="#5b6470">tick→jiffies→时间片记账</text>
+  <text x="420" y="327" font-size="8" fill="#5b6470">timer wheel（粗）+ hrtimer（细）</text>
+
+  <rect x="600" y="278" width="182" height="62" rx="9" fill="#eef0f3" stroke="#d2d6dd" data-tid="schemachange" data-lab="设备驱动模型"/>
+  
+  <text x="614" y="297" font-size="10" font-weight="700" fill="#1d1d1f">设备驱动模型</text>
+  <text x="612" y="313" font-size="8" fill="#5b6470">device/driver/bus 三元</text>
+  <text x="612" y="327" font-size="8" fill="#5b6470">match→probe 自动绑定</text>
+
+  <rect x="792" y="278" width="184" height="62" rx="9" fill="#eef0f3" stroke="#d2d6dd" data-tid="load" data-lab="cgroup 与 namespace"/>
+  
+  <text x="806" y="297" font-size="10" font-weight="700" fill="#1d1d1f">cgroup 与 namespace</text>
+  <text x="804" y="313" font-size="8" fill="#5b6470">cgroup 配额（用多少）</text>
+  <text x="804" y="327" font-size="8" fill="#5b6470">namespace 视图隔离 = 容器基石</text>
+
+  <!-- ===== ④ 硬件带 ===== -->
+  <rect x="24" y="354" width="952" height="46" rx="9" fill="#eef0f3" stroke="#d2d6dd"/>
+  <text x="42" y="374" font-size="11" font-weight="700" fill="#33373e">④ 硬件 · CPU / MMU / NIC / 磁盘 / 时钟</text>
+  <text x="42" y="391" font-size="8.5" fill="#8a8a90">向上以中断进（NIC/磁盘/时钟）· 以驱动 probe 绑定 · MMU 承页表 · CPU 承 context_switch</text>
+  <text x="958" y="374" font-size="9" fill="#8a8a90" text-anchor="end">最底层介质</text>
+
+  <!-- ===================== 连线 五路径 ===================== -->
+  <!-- Hot 主脊：syscall → 核心子系统 → 硬件 -->
+  <g stroke="#0a84ff" stroke-width="2" fill="none">
+    <line x1="178" y1="116" x2="178" y2="128" marker-end="url(#aHot)"/>
+    <line x1="500" y1="262" x2="500" y2="352" marker-end="url(#aHot)"/>
+  </g>
+  <text x="184" y="126" font-size="8" fill="#0a84ff">分派入子系统</text>
+
+  <!-- Control 紫虚：进程管理 → 调度（fork 出可调度实体）；cgroup → 调度 -->
+  <g stroke="#7c5fe6" stroke-width="1.5" stroke-dasharray="5 3" fill="none">
+    <line x1="345" y1="161" x2="333" y2="161" marker-end="url(#aCtl)"/>
+    <path d="M884,278 L884,200 L654,161" marker-end="url(#aCtl)"/>
+  </g>
+  <text x="240" y="126" font-size="8" fill="#7c5fe6">fork 出可调度实体</text>
+
+  <!-- State 青：VFS → 块层（读写下沉）；VM ↔ VFS page cache -->
+  <g stroke="#0f9e8e" stroke-width="1.5" fill="none">
+    <line x1="178" y1="262" x2="700" y2="264" marker-end="url(#aState)"/>
+    <line x1="500" y1="192" x2="333" y2="216" marker-end="url(#aState)"/>
+  </g>
+  <text x="360" y="278" font-size="8" fill="#0f9e8e">page cache 落块层</text>
+
+  <!-- Failure 橙虚：缺页/panic 无隔离 -->
+  <path d="M958,192 L958,140" stroke="#e8730f" stroke-width="1.5" stroke-dasharray="3 3" fill="none" marker-end="url(#aFail)"/>
+  <text x="900" y="128" font-size="8" fill="#e8730f">缺页/异常</text>
+
+  <!-- Opt 灰点：软中断/定时器托底 hot（NAPI、tick 记账） -->
+  <line x1="115" y1="278" x2="115" y2="264" stroke="#c7c7cc" stroke-width="1.3" stroke-dasharray="1.5 3" fill="none"/>
+
+  <!-- ===== 底部 铭牌：设计张力 + 五路径图例 ===== -->
+  <rect x="24" y="410" width="952" height="80" rx="10" fill="#f4f5f7" stroke="#e6e6eb"/>
+  <text x="42" y="431" font-size="10.5" font-weight="700" fill="#1d1d1f">核心设计张力 · 宏内核性能（同址直调、快）vs 复杂度 / 无隔离（任一子系统 bug 可 panic 全核）</text>
+  <text x="42" y="449" font-size="8.5" fill="#5b6470">并存：抢占低延迟 vs 吞吐（PREEMPT 模型）；通用抽象（sched_class / VFS / device model 统一接口）vs 特化快路径（NAPI / blk-mq / per-VMA 锁 / RCU）。</text>
+
+  <g font-size="9" fill="#5b6470">
+    <line x1="42" y1="466" x2="66" y2="466" stroke="#0a84ff" stroke-width="2"/><text x="72" y="469">Hot syscall→子系统→硬件</text>
+    <line x1="250" y1="466" x2="274" y2="466" stroke="#0f9e8e" stroke-width="1.5"/><text x="280" y="469">State 对象图/页缓存</text>
+    <line x1="440" y1="466" x2="464" y2="466" stroke="#7c5fe6" stroke-width="1.5" stroke-dasharray="5 3"/><text x="470" y="469">Control 生命周期/隔离/probe</text>
+    <line x1="680" y1="466" x2="704" y2="466" stroke="#e8730f" stroke-width="1.5" stroke-dasharray="3 3"/><text x="710" y="469">Failure 缺页/panic 无隔离</text>
+    <text x="42" y="484" font-size="8" fill="#a1a1a6">Opt（灰点）：NAPI 批收 · blk-mq 多队列 · RCU 读无锁 · qspinlock · hrtimer · fair 类直取快路径 —— 均为特化性能路径</text>
+  </g>
+</svg>

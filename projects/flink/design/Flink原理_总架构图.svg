@@ -1,0 +1,133 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="706" viewBox="0 0 1080 706" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="aHot" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+    <marker id="aState" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#c99a3a"/></marker>
+    <marker id="aCtl" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#5b7db1"/></marker>
+    <marker id="aFail" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#e2703a"/></marker>
+  </defs>
+  <rect width="1080" height="706" fill="#fbfbfd"/>
+
+  <!-- ===== 标题带 · 判型 ===== -->
+  <rect x="24" y="8" width="1032" height="42" rx="10" fill="none" data-tid="overallarch" data-lab="全景框架"/>
+  <text x="30" y="27" font-size="14" font-weight="600" fill="#1d1d1f">Flink 总架构 · 判型：控制面 JobManager 只调度协调（不碰数据），数据面 TaskManager 跑算子与 shuffle（slot 为资源单位）</text>
+  <text x="30" y="44" font-size="10.5" fill="#6e6e73">编译脊 StreamGraph → JobGraph → ExecutionGraph；运行时 = mailbox 单线程算子 + credit 网络交换 + 分布式快照容错</text>
+  <text x="1050" y="27" font-size="9.5" font-weight="600" fill="#a1a1a6" text-anchor="end">源码基准 Flink 1.20</text>
+
+  <!-- ===== 设计张力命名牌带（对立面平衡） ===== -->
+  <rect x="24" y="54" width="1032" height="44" rx="10" fill="#fdf1f1" stroke="#ecc9c9" filter="url(#soft)"/>
+  <text x="40" y="74" font-size="11" font-weight="700" fill="#b3352f">设计张力</text>
+  <text x="40" y="89" font-size="8" fill="#c8817c">对立面平衡</text>
+  <text x="120" y="79" font-size="9.5" fill="#6b4a48"><tspan font-weight="600" fill="#a6403a">精确一次容错</tspan>：分布式快照 · CheckpointBarrier 随流注入 · 状态一致可恢复</text>
+  <text x="565" y="82" font-size="17" font-weight="700" fill="#b3352f" text-anchor="middle">⇄</text>
+  <text x="598" y="79" font-size="9.5" fill="#6b4a48"><tspan font-weight="600" fill="#a6403a">低延迟 · 高吞吐</tspan>：异步快照不停流 · credit 背压不阻 TCP · mailbox 单线程免锁</text>
+
+  <!-- ===== 图例：四型语义路径 ===== -->
+  <line x1="40" y1="112" x2="70" y2="112" stroke="#2f9e6e" stroke-width="1.8" marker-end="url(#aHot)"/>
+  <text x="76" y="116" font-size="10.5" fill="#3a3a3c">记录流 Hot</text>
+  <line x1="190" y1="112" x2="220" y2="112" stroke="#5b7db1" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#aCtl)"/>
+  <text x="226" y="116" font-size="10.5" fill="#3a3a3c">调度 / 反压 Control</text>
+  <line x1="430" y1="112" x2="460" y2="112" stroke="#c99a3a" stroke-width="1.8" marker-end="url(#aState)"/>
+  <text x="466" y="116" font-size="10.5" fill="#3a3a3c">检查点 / 状态 State</text>
+  <line x1="670" y1="112" x2="700" y2="112" stroke="#e2703a" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#aFail)"/>
+  <text x="706" y="116" font-size="10.5" fill="#3a3a3c">失败恢复 Recovery</text>
+  <text x="1056" y="116" font-size="10" fill="#a1a1a6" text-anchor="end">框 = 主线可下钻</text>
+
+  <!-- ===== 接触面 · 编程 API ===== -->
+  <rect x="24" y="124" width="1032" height="60" rx="13" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)" data-tid="api" data-lab="编程 API"/>
+  <text x="40" y="145" font-size="11.5" font-weight="600" fill="#5a3d78">接触面 · 编程 API（多 API 汇入统一管线）</text>
+  <text x="40" y="162" font-size="9" fill="#8a6db0">DataStream 命令式 · Table/SQL 声明式（Calcite）</text>
+  <text x="40" y="177" font-size="7.5" fill="#b09bc9">api/datastream/DataStream.java · table-planner/delegation/StreamPlanner.scala</text>
+  <g text-anchor="middle" font-size="9.5">
+    <rect x="560" y="134" width="234" height="42" rx="8" fill="#fff" stroke="#e2d2ee"/><text x="677" y="152" fill="#5a3d78">DataStream API · map/keyBy/window</text><text x="677" y="167" font-size="7.5" fill="#a892c4">streaming/api/datastream/DataStream.java</text>
+    <rect x="804" y="134" width="236" height="42" rx="8" fill="#fff" stroke="#e2d2ee"/><text x="922" y="152" fill="#5a3d78">Table / SQL · Calcite 声明式</text><text x="922" y="167" font-size="7.5" fill="#a892c4">table-planner/delegation/StreamPlanner.scala</text>
+  </g>
+
+  <!-- ===== 编译期 · 图变换 ===== -->
+  <rect x="24" y="192" width="1032" height="80" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)" data-tid="graph" data-lab="图变换"/>
+  <text x="40" y="212" font-size="11.5" font-weight="600" fill="#1b2a4a">编译期 · 图变换（两 API 汇入同一物理管线）</text>
+  <g text-anchor="middle" font-size="9.5">
+    <rect x="40" y="222" width="316" height="42" rx="8" fill="#fff" stroke="#cfe0f2"/><text x="198" y="240" fill="#274a78"><tspan font-weight="600">StreamGraph</tspan> · 逻辑 DAG</text><text x="198" y="256" font-size="7.5" fill="#93a9c9">streaming/api/graph/StreamGraph.java</text>
+    <rect x="384" y="222" width="316" height="42" rx="8" fill="#fff" stroke="#cfe0f2"/><text x="542" y="240" fill="#274a78"><tspan font-weight="600">JobGraph</tspan> · 算子链化</text><text x="542" y="256" font-size="7.5" fill="#93a9c9">graph/StreamingJobGraphGenerator#createJobGraph</text>
+    <rect x="728" y="222" width="312" height="42" rx="8" fill="#fff" stroke="#cfe0f2"/><text x="884" y="240" fill="#274a78"><tspan font-weight="600">ExecutionGraph</tspan> · 并行展开</text><text x="884" y="256" font-size="7.5" fill="#93a9c9">executiongraph/DefaultExecutionGraph#attachJobGraph</text>
+  </g>
+  <line x1="356" y1="243" x2="384" y2="243" stroke="#2f9e6e" stroke-width="1.8" marker-end="url(#aHot)"/>
+  <line x1="700" y1="243" x2="728" y2="243" stroke="#2f9e6e" stroke-width="1.8" marker-end="url(#aHot)"/>
+
+  <!-- ===== 控制面 · JobManager ===== -->
+  <rect x="24" y="280" width="1032" height="120" rx="14" fill="#eafaf1" stroke="#b8e6cd" filter="url(#soft)"/>
+  <text x="40" y="300" font-size="11.5" font-weight="600" fill="#1c6b45">控制面 · JobManager（只调度协调 · 不碰数据）</text>
+  <g text-anchor="middle" font-size="10">
+    <rect x="40" y="312" width="316" height="72" rx="9" fill="#fff" stroke="#b8e6cd" data-tid="sched" data-lab="JobMaster"/><text x="198" y="337" fill="#1c6b45" font-weight="600">JobMaster</text><text x="198" y="355" fill="#3a9b6e" font-size="9">单作业领导 · 驱动调度部署</text><text x="198" y="373" font-size="7.5" fill="#8fc9ac">jobmaster/JobMaster.java · SchedulerNG</text>
+    <rect x="384" y="312" width="316" height="72" rx="9" fill="#fff" stroke="#b8e6cd" data-tid="sched" data-lab="ResourceManager"/><text x="542" y="337" fill="#1c6b45" font-weight="600">ResourceManager + SlotManager</text><text x="542" y="355" fill="#3a9b6e" font-size="9">集群资源 · 分配 slot</text><text x="542" y="373" font-size="7.5" fill="#8fc9ac">resourcemanager/ResourceManager · slotmanager/SlotManager</text>
+    <rect x="728" y="312" width="312" height="72" rx="9" fill="#e6f7ee" stroke="#a8dfc0" data-tid="ckpt" data-lab="CheckpointCoordinator"/><text x="884" y="337" fill="#1c6b45" font-weight="600">CheckpointCoordinator</text><text x="884" y="355" fill="#3a9b6e" font-size="9">定时触发分布式快照（容错灵魂）</text><text x="884" y="373" font-size="7.5" fill="#8fc9ac">checkpoint/CheckpointCoordinator#triggerCheckpoint</text>
+  </g>
+
+  <!-- ===== 数据面 · TaskManager ===== -->
+  <rect x="24" y="408" width="1032" height="188" rx="16" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="40" y="428" font-size="11.5" font-weight="600" fill="#5a3410">数据面 · TaskManager / TaskExecutor（跑算子 + shuffle · slot 为资源单位）</text>
+
+  <rect x="40" y="438" width="480" height="92" rx="10" fill="#fef2e0" stroke="#e8cf9a" data-tid="task" data-lab="Slot · 算子链 + mailbox"/>
+  <text x="54" y="457" font-size="9.5" font-weight="600" fill="#5a3410">Slot · 算子链 + mailbox 单线程（免加锁）</text>
+  <g text-anchor="middle" font-size="8.5">
+    <rect x="54" y="466" width="140" height="26" rx="6" fill="#fff" stroke="#e8cf9a"/><text x="124" y="483" fill="#5a3410">source→map（链）</text>
+    <rect x="202" y="466" width="130" height="26" rx="6" fill="#fff" stroke="#e8cf9a"/><text x="267" y="483" fill="#5a3410">keyBy 断链</text>
+    <rect x="340" y="466" width="166" height="26" rx="6" fill="#fff" stroke="#e8cf9a" data-tid="time" data-lab="时间与窗口"/><text x="423" y="483" fill="#5a3410">window→sink</text>
+  </g>
+  <text x="54" y="508" font-size="8.5" fill="#93762e">记录 / 检查点 / 定时器串行执行</text>
+  <text x="54" y="523" font-size="7.5" fill="#c2a662">streaming/runtime/tasks/StreamTask.java · mailbox/MailboxProcessor#runMailboxLoop</text>
+
+  <rect x="532" y="438" width="508" height="92" rx="10" fill="#fef2e0" stroke="#e8cf9a" data-tid="net" data-lab="网络与数据交换"/>
+  <text x="546" y="457" font-size="9.5" font-weight="600" fill="#5a3410">网络与数据交换（链间 · 跨子任务 shuffle）</text>
+  <g text-anchor="middle" font-size="8.5">
+    <rect x="546" y="466" width="240" height="26" rx="6" fill="#fff" stroke="#e8cf9a"/><text x="666" y="483" fill="#5a3410">ResultPartition → InputGate</text>
+    <rect x="796" y="466" width="240" height="26" rx="6" fill="#fff" stroke="#e8cf9a"/><text x="916" y="483" fill="#5a3410">credit 流控 · 背压不阻 TCP</text>
+  </g>
+  <text x="546" y="508" font-size="8.5" fill="#93762e">检查点屏障随数据流注入并传播</text>
+  <text x="546" y="523" font-size="7.5" fill="#c2a662">io/network/partition/ResultPartition.java · consumer/BufferManager.java</text>
+
+  <rect x="40" y="538" width="1000" height="50" rx="9" fill="#fff" stroke="#e8cf9a" data-tid="state" data-lab="状态后端"/>
+  <text x="54" y="557" font-size="9.5" font-weight="600" fill="#5a3410">状态后端 State Backend · 按 key-group 分片（rescale 基础）<tspan fill="#93762e" font-weight="400" font-size="8.5">　HashMap 堆内（小状态低延迟） / RocksDB 盘（大状态 + 增量检查点）</tspan></text>
+  <text x="54" y="577" font-size="7.5" fill="#c2a662">state/hashmap/HashMapStateBackend.java · rocksdb/EmbeddedRocksDBStateBackend.java · state/KeyGroupRangeAssignment#assignKeyToParallelOperator</text>
+
+  <!-- ===== 外部系统 ===== -->
+  <rect x="24" y="604" width="1032" height="48" rx="12" fill="#f4f2ee" stroke="#e3ddd2" stroke-dasharray="6 4"/>
+  <text x="40" y="623" font-size="10.5" font-weight="600" fill="#6e6357">外部系统（非 Flink · 不管持久存储）</text>
+  <g text-anchor="middle" font-size="8.8">
+    <rect x="360" y="614" width="210" height="28" rx="7" fill="#fbf6ef" stroke="#e6d8c4"/><text x="465" y="632" fill="#5a3410">Source：Kafka / 文件 / CDC</text>
+    <rect x="580" y="614" width="230" height="28" rx="7" fill="#fbf6ef" stroke="#e6d8c4"/><text x="695" y="632" fill="#5a3410">检查点存储：HDFS / S3</text>
+    <rect x="820" y="614" width="220" height="28" rx="7" fill="#fbf6ef" stroke="#e6d8c4"/><text x="930" y="632" fill="#5a3410">Sink：Kafka / DB / 湖仓</text>
+  </g>
+
+  <!-- ===== 语义分型连线 ===== -->
+  <!-- Hot：接触面 → 图变换 -->
+  <line x1="200" y1="184" x2="200" y2="192" stroke="#2f9e6e" stroke-width="1.8" marker-end="url(#aHot)"/>
+  <!-- Control：图变换 → JobManager（提交 ExecutionGraph） -->
+  <line x1="200" y1="272" x2="200" y2="280" stroke="#5b7db1" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#aCtl)"/>
+  <text x="208" y="279" font-size="8" fill="#5b7db1">提交 ExecutionGraph</text>
+  <!-- Control：JobManager → 数据面（部署 task / 给 slot） -->
+  <line x1="150" y1="400" x2="150" y2="408" stroke="#5b7db1" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#aCtl)"/>
+  <text x="158" y="407" font-size="8" fill="#5b7db1">部署 task</text>
+  <line x1="500" y1="400" x2="500" y2="408" stroke="#5b7db1" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#aCtl)"/>
+  <text x="508" y="407" font-size="8" fill="#5b7db1">给 slot</text>
+  <!-- State：CheckpointCoordinator → 数据面（触发屏障快照） -->
+  <line x1="884" y1="400" x2="884" y2="408" stroke="#c99a3a" stroke-width="1.8" marker-end="url(#aState)"/>
+  <text x="892" y="407" font-size="8" fill="#b0842f">触发屏障</text>
+  <!-- Hot：Slot → 网络交换 -->
+  <line x1="520" y1="490" x2="532" y2="490" stroke="#2f9e6e" stroke-width="1.8" marker-end="url(#aHot)"/>
+  <!-- State：Slot → 状态后端 -->
+  <line x1="240" y1="530" x2="240" y2="538" stroke="#c99a3a" stroke-width="1.8" marker-end="url(#aState)"/>
+  <!-- State：状态后端 → 检查点存储（快照落盘） -->
+  <line x1="660" y1="588" x2="660" y2="614" stroke="#c99a3a" stroke-width="1.6" marker-end="url(#aState)"/>
+  <text x="668" y="602" font-size="8" fill="#b0842f">快照落盘</text>
+  <!-- Recovery：检查点存储 → 状态后端（失败恢复回填，按 key-group） -->
+  <line x1="745" y1="614" x2="745" y2="588" stroke="#e2703a" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#aFail)"/>
+  <text x="753" y="602" font-size="8" fill="#cf6234">失败恢复回填</text>
+  <!-- Hot：外部 Source → 数据面 / 数据面 → Sink -->
+  <line x1="465" y1="604" x2="465" y2="596" stroke="#2f9e6e" stroke-width="1.6" marker-end="url(#aHot)"/>
+  <line x1="930" y1="596" x2="930" y2="604" stroke="#2f9e6e" stroke-width="1.6" marker-end="url(#aHot)"/>
+
+  <!-- ===== 读法 ===== -->
+  <rect x="24" y="660" width="1032" height="32" rx="8" fill="#f7f7f9" stroke="#ececef"/>
+  <text x="540" y="680" font-size="10" fill="#4a4a4f" text-anchor="middle">读法：API 编译成三层图 → JobManager 部署到 TaskManager 的 slot → 算子跑数据 + credit 网络交换；CheckpointBarrier 随流注入触发各算子异步快照（精确一次根基），失败时从最近 checkpoint 按 key-group 恢复</text>
+</svg>

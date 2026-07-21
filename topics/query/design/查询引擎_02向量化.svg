@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="640" viewBox="0 0 1120 640" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="aR" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#d1544a"/></marker>
+    <marker id="aG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+    <marker id="aB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#4a7fd0"/></marker>
+  </defs>
+  <rect width="1120" height="640" fill="#fbfbfd"/>
+
+  <text x="30" y="32" font-size="15" font-weight="700" fill="#1d1d1f">图解点 ② 向量化列批执行（列批 RecordBatch + SIMD）· 一次处理一整列批而非逐行，用 SIMD 摊薄逐行解释开销</text>
+  <text x="30" y="53" font-size="10.5" fill="#6e6e73">逐行火山模型每行一次虚函数调用 + 分支，解释开销吃掉大半 CPU；向量化改为「每算子每次吃一批列数据」，一条 SIMD 指令处理多值，开销被批大小摊薄</text>
+
+  <!-- 图例 -->
+  <line x1="30" y1="80" x2="54" y2="80" stroke="#d1544a" stroke-width="2" marker-end="url(#aR)"/>
+  <text x="60" y="84" font-size="10" fill="#3a3a3c">逐行火山模型（每行一次调用）</text>
+  <line x1="320" y1="80" x2="344" y2="80" stroke="#2f9e6e" stroke-width="2" marker-end="url(#aG)"/>
+  <text x="350" y="84" font-size="10" fill="#3a3a3c">向量化（每批一次调用）</text>
+  <line x1="580" y1="80" x2="604" y2="80" stroke="#4a7fd0" stroke-width="2" marker-end="url(#aB)"/>
+  <text x="610" y="84" font-size="10" fill="#3a3a3c">SIMD 一指令多值（批内并行）</text>
+
+  <!-- 上半左：逐行模型 -->
+  <rect x="30" y="106" width="520" height="210" rx="14" fill="#fbeceb" stroke="#e8b9b3" filter="url(#soft)"/>
+  <text x="52" y="132" font-size="12.5" font-weight="700" fill="#a5372c">逐行火山模型 · next() 一次一行</text>
+  <text x="52" y="154" font-size="9.5" fill="#8a4038">每算子 next() 返回一行 → 上层再 next() → 一行穿过整条流水线</text>
+
+  <!-- 逐行流水 -->
+  <g font-size="9" text-anchor="middle">
+    <rect x="52" y="170" width="94" height="40" rx="8" fill="#f6d9d5" stroke="#d99a90"/><text x="99" y="188" fill="#8a4038">扫描.next()</text><text x="99" y="202" font-size="8" fill="#b06a60">1 行</text>
+    <rect x="162" y="170" width="94" height="40" rx="8" fill="#f6d9d5" stroke="#d99a90"/><text x="209" y="188" fill="#8a4038">过滤.next()</text><text x="209" y="202" font-size="8" fill="#b06a60">1 行</text>
+    <rect x="272" y="170" width="94" height="40" rx="8" fill="#f6d9d5" stroke="#d99a90"/><text x="319" y="188" fill="#8a4038">投影.next()</text><text x="319" y="202" font-size="8" fill="#b06a60">1 行</text>
+    <rect x="382" y="170" width="94" height="40" rx="8" fill="#f6d9d5" stroke="#d99a90"/><text x="429" y="188" fill="#8a4038">聚合.next()</text><text x="429" y="202" font-size="8" fill="#b06a60">1 行</text>
+  </g>
+  <line x1="146" y1="190" x2="160" y2="190" stroke="#d1544a" stroke-width="1.6" marker-end="url(#aR)"/>
+  <line x1="256" y1="190" x2="270" y2="190" stroke="#d1544a" stroke-width="1.6" marker-end="url(#aR)"/>
+  <line x1="366" y1="190" x2="380" y2="190" stroke="#d1544a" stroke-width="1.6" marker-end="url(#aR)"/>
+
+  <text x="52" y="244" font-size="10" font-weight="700" fill="#a5372c">开销结构（每行都重复付一遍）</text>
+  <text x="52" y="264" font-size="9.5" fill="#8a4038">· 每算子每行一次虚函数调用（无法内联 / 预测差）</text>
+  <text x="52" y="282" font-size="9.5" fill="#8a4038">· 每行一次类型判断 + 条件分支（分支预测失败）</text>
+  <text x="52" y="300" font-size="9.5" fill="#8a4038">· 真正的计算只占少数 —— 大半 CPU 花在「解释」上</text>
+
+  <!-- 上半右：向量化模型 -->
+  <rect x="570" y="106" width="520" height="210" rx="14" fill="#eaf6f0" stroke="#bfe3d1" filter="url(#soft)"/>
+  <text x="592" y="132" font-size="12.5" font-weight="700" fill="#2f6b4e">向量化模型 · next() 一次一批列</text>
+  <text x="592" y="154" font-size="9.5" fill="#4a7a63">每算子一次处理一个列批（RecordBatch，如 1024 行 ×若干列）</text>
+
+  <g font-size="9" text-anchor="middle">
+    <rect x="592" y="170" width="94" height="40" rx="8" fill="#d7efe2" stroke="#9ed3b8"/><text x="639" y="188" fill="#2f6b4e">扫描</text><text x="639" y="202" font-size="8" fill="#5f9c81">1 批</text>
+    <rect x="702" y="170" width="94" height="40" rx="8" fill="#d7efe2" stroke="#9ed3b8"/><text x="749" y="188" fill="#2f6b4e">过滤</text><text x="749" y="202" font-size="8" fill="#5f9c81">1 批</text>
+    <rect x="812" y="170" width="94" height="40" rx="8" fill="#d7efe2" stroke="#9ed3b8"/><text x="859" y="188" fill="#2f6b4e">投影</text><text x="859" y="202" font-size="8" fill="#5f9c81">1 批</text>
+    <rect x="922" y="170" width="94" height="40" rx="8" fill="#d7efe2" stroke="#9ed3b8"/><text x="969" y="188" fill="#2f6b4e">聚合</text><text x="969" y="202" font-size="8" fill="#5f9c81">1 批</text>
+  </g>
+  <line x1="686" y1="190" x2="700" y2="190" stroke="#2f9e6e" stroke-width="1.6" marker-end="url(#aG)"/>
+  <line x1="796" y1="190" x2="810" y2="190" stroke="#2f9e6e" stroke-width="1.6" marker-end="url(#aG)"/>
+  <line x1="906" y1="190" x2="920" y2="190" stroke="#2f9e6e" stroke-width="1.6" marker-end="url(#aG)"/>
+
+  <text x="592" y="244" font-size="10" font-weight="700" fill="#2f6b4e">开销被批大小摊薄</text>
+  <text x="592" y="264" font-size="9.5" fill="#4a7a63">· 一次调用处理整批 → 虚函数开销 ÷ 批大小</text>
+  <text x="592" y="282" font-size="9.5" fill="#4a7a63">· 批内是紧凑列数组 → 缓存局部性好、可预取</text>
+  <text x="592" y="300" font-size="9.5" fill="#4a7a63">· 循环体简单无分支 → 编译器自动 SIMD 化</text>
+
+  <!-- 下半：SIMD 批内计算 -->
+  <text x="40" y="352" font-size="11.5" font-weight="700" fill="#20375e">批内 SIMD：一条指令对一列中相邻的多个值同时运算（以「过滤 值 &gt; 8」为例）</text>
+
+  <!-- 一列批 -->
+  <text x="40" y="384" font-size="10" fill="#4a4a4f">列批的「值」列（连续内存）：</text>
+  <g font-size="10" text-anchor="middle">
+    <rect x="40" y="392" width="46" height="30" rx="5" fill="#eaf1fb" stroke="#c6d9f2"/><text x="63" y="412" fill="#20375e">7</text>
+    <rect x="90" y="392" width="46" height="30" rx="5" fill="#eaf1fb" stroke="#c6d9f2"/><text x="113" y="412" fill="#20375e">9</text>
+    <rect x="140" y="392" width="46" height="30" rx="5" fill="#eaf1fb" stroke="#c6d9f2"/><text x="163" y="412" fill="#20375e">11</text>
+    <rect x="190" y="392" width="46" height="30" rx="5" fill="#eaf1fb" stroke="#c6d9f2"/><text x="213" y="412" fill="#20375e">6</text>
+    <rect x="240" y="392" width="46" height="30" rx="5" fill="#eaf1fb" stroke="#c6d9f2"/><text x="263" y="412" fill="#20375e">10</text>
+    <rect x="290" y="392" width="46" height="30" rx="5" fill="#eaf1fb" stroke="#c6d9f2"/><text x="313" y="412" fill="#20375e">8</text>
+    <rect x="340" y="392" width="46" height="30" rx="5" fill="#eaf1fb" stroke="#c6d9f2"/><text x="363" y="412" fill="#20375e">14</text>
+    <rect x="390" y="392" width="46" height="30" rx="5" fill="#eaf1fb" stroke="#c6d9f2"/><text x="413" y="412" fill="#20375e">3</text>
+  </g>
+  <!-- SIMD register bracket -->
+  <rect x="36" y="388" width="404" height="38" rx="7" fill="none" stroke="#4a7fd0" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <text x="238" y="446" font-size="9" fill="#4a7fd0" text-anchor="middle">↑ 一个 SIMD 寄存器一次装入这一批（8 值），并行比较 &gt; 8</text>
+
+  <!-- mask -->
+  <text x="40" y="480" font-size="10" fill="#4a4a4f">→ 一条指令产出选择位掩码：</text>
+  <g font-size="10" text-anchor="middle">
+    <rect x="40" y="488" width="46" height="28" rx="5" fill="#fbeceb" stroke="#e8b9b3"/><text x="63" y="507" fill="#a5372c">0</text>
+    <rect x="90" y="488" width="46" height="28" rx="5" fill="#eaf6f0" stroke="#bfe3d1"/><text x="113" y="507" fill="#2f6b4e">1</text>
+    <rect x="140" y="488" width="46" height="28" rx="5" fill="#eaf6f0" stroke="#bfe3d1"/><text x="163" y="507" fill="#2f6b4e">1</text>
+    <rect x="190" y="488" width="46" height="28" rx="5" fill="#fbeceb" stroke="#e8b9b3"/><text x="213" y="507" fill="#a5372c">0</text>
+    <rect x="240" y="488" width="46" height="28" rx="5" fill="#eaf6f0" stroke="#bfe3d1"/><text x="263" y="507" fill="#2f6b4e">1</text>
+    <rect x="290" y="488" width="46" height="28" rx="5" fill="#fbeceb" stroke="#e8b9b3"/><text x="313" y="507" fill="#a5372c">0</text>
+    <rect x="340" y="488" width="46" height="28" rx="5" fill="#eaf6f0" stroke="#bfe3d1"/><text x="363" y="507" fill="#2f6b4e">1</text>
+    <rect x="390" y="488" width="46" height="28" rx="5" fill="#fbeceb" stroke="#e8b9b3"/><text x="413" y="507" fill="#a5372c">0</text>
+  </g>
+  <text x="40" y="540" font-size="9" fill="#8a97ab">掩码直接驱动下游（选择 / 计数 / 传递），全程无逐行 if 分支 —— 分支被「数据并行」替代</text>
+
+  <!-- 右下：收益与代价 -->
+  <rect x="470" y="466" width="620" height="150" rx="13" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="488" y="492" font-size="11" font-weight="700" fill="#2f6b4e">为什么快 + 边界</text>
+  <text x="488" y="514" font-size="10" fill="#4a4a4f"><tspan font-weight="700">摊薄解释：</tspan>固定的调用 / 分派开销除以批大小；批越大摊得越薄（但过大伤缓存，需权衡）。</text>
+  <text x="488" y="536" font-size="10" fill="#4a4a4f"><tspan font-weight="700">数据并行：</tspan>列在内存中连续，天然适配 SIMD 通道宽度，一条指令顶多条标量指令。</text>
+  <text x="488" y="558" font-size="10" fill="#4a4a4f"><tspan font-weight="700">缓存友好：</tspan>只读需要的列、顺序访问，预取命中率高。</text>
+  <text x="488" y="580" font-size="10" fill="#4a4a4f"><tspan font-weight="700">代价：</tspan>批处理增大延迟粒度、物化中间列占内存；与 JIT（图解点 ③）是两条互补路线。</text>
+  <text x="488" y="602" font-size="9" fill="#a1a1a6">向量化「拓宽每次处理的数据」，JIT「压缩每次处理的指令」—— 常组合使用。</text>
+</svg>

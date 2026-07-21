@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="500" viewBox="0 0 900 500" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#0a84ff"/></marker>
+  </defs>
+  <rect width="900" height="500" fill="#fbfbfd"/>
+  <text x="30" y="32" font-size="15" font-weight="600" fill="#1d1d1f">Leader 选举：tickElection → hup → campaign（PreVote 探路）</text>
+  <text x="30" y="52" font-size="10.5" fill="#8a8a90">raft.go:850 tickElection · :973 hup · :1025 campaign · :1075 poll</text>
+
+  <!-- 左：流程 -->
+  <rect x="40" y="76" width="400" height="392" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="56" y="100" font-size="12.5" font-weight="700" fill="#1b2a4a">选举流程（宿主 Tick 驱动）</text>
+  <g font-size="10.5" fill="#2b3a5a">
+    <rect x="56" y="112" width="368" height="34" rx="7" fill="#fff" stroke="#cfe0f2"/>
+    <text x="66" y="133">① 宿主 Tick() → tickElection：electionElapsed++</text>
+    <rect x="56" y="154" width="368" height="34" rx="7" fill="#fff" stroke="#cfe0f2"/>
+    <text x="66" y="175">② pastElectionTimeout → 自发 MsgHup（:855）</text>
+    <rect x="56" y="196" width="368" height="34" rx="7" fill="#f3f7fc" stroke="#cfe0f2"/>
+    <text x="66" y="217">③ hup：非 leader、promotable、无待应用 confchange</text>
+    <rect x="56" y="238" width="368" height="34" rx="7" fill="#f3ecfb" stroke="#d8c6ee"/>
+    <text x="66" y="259">④ campaignPreElection：becomePreCandidate</text>
+    <rect x="56" y="280" width="368" height="34" rx="7" fill="#f3ecfb" stroke="#d8c6ee"/>
+    <text x="66" y="301">　term = r.Term+1 但不真正自增（:1036-1037）</text>
+    <rect x="56" y="322" width="368" height="34" rx="7" fill="#fff" stroke="#cfe0f2"/>
+    <text x="66" y="343">⑤ 过 PreVote → becomeCandidate：真正 term++</text>
+    <rect x="56" y="364" width="368" height="34" rx="7" fill="#fff" stroke="#cfe0f2"/>
+    <text x="66" y="385">⑥ 向所有 voter 发 MsgVote，含 last(index,term)</text>
+    <rect x="56" y="406" width="368" height="34" rx="7" fill="#f5faf6" stroke="#c9e6cf"/>
+    <text x="66" y="427" fill="#1f5130">⑦ poll → TallyVotes 得多数 → becomeLeader</text>
+  </g>
+  <text x="56" y="456" font-size="9" fill="#8a8a90">给自己那票经 msgsAfterAppend 落盘后自我确认（:1054-1059）</text>
+
+  <!-- 右：PreVote 价值 + term 裁决 -->
+  <rect x="460" y="76" width="410" height="180" rx="13" fill="#f3ecfb" stroke="#d8c6ee" filter="url(#soft)"/>
+  <text x="476" y="100" font-size="12.5" font-weight="700" fill="#6b3ba0">PreVote 的价值</text>
+  <text x="476" y="124" font-size="10" fill="#814bbd">被隔离节点会反复自增 term，回归时逼现任 Leader 退位。</text>
+  <text x="476" y="144" font-size="10" fill="#814bbd">PreVote 先"探路"（term+1 但不落地），赢不了就不真正</text>
+  <text x="476" y="164" font-size="10" fill="#814bbd">加 term、不打扰集群（campaignPreElection，:1033）。</text>
+  <text x="476" y="192" font-size="10" fill="#814bbd">Step 中特判：绝不因 MsgPreVote 改自己 term（:1115）。</text>
+  <text x="476" y="220" font-size="10" fill="#814bbd">CheckQuorum + lease：租约内收到 MsgVote 直接忽略</text>
+  <text x="476" y="240" font-size="10" fill="#814bbd">（:1103-1112），进一步防扰动。</text>
+
+  <rect x="460" y="272" width="410" height="196" rx="13" fill="#f7f7f9" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="476" y="296" font-size="12.5" font-weight="700" fill="#1d1d1f">当选后 becomeLeader（:933）</text>
+  <g font-size="10.5" fill="#6e6e73">
+    <text x="476" y="322">· r.state = StateLeader，r.lead = r.id</text>
+    <text x="476" y="346">· 立即 appendEntry 一条空 entry（:961-965）</text>
+    <text x="476" y="370">· 用于尽快提交本任期、确立 commit 水位</text>
+    <text x="476" y="394">· pendingConfIndex = lastIndex（:958）</text>
+    <text x="476" y="418">· tick 切到 tickHeartbeat（:940）→ 定期 MsgBeat</text>
+    <text x="476" y="442">· 单调任期 + 日志新度 + 一票制 → 唯一且含全部已提交</text>
+  </g>
+</svg>

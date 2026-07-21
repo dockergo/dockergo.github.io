@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="470" viewBox="0 0 1000 470" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="s2" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="a1" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#5b7db1"/></marker>
+    <marker id="a2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+    <marker id="a3" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#d38236"/></marker>
+  </defs>
+  <rect width="1000" height="470" fill="#fbfbfd"/>
+  <text x="24" y="30" font-size="14" font-weight="700" fill="#1d1d1f">类加载与链接 · 双亲委派 → 解析校验 → 链接 → 初始化</text>
+  <text x="24" y="49" font-size="10" fill="#6e6e73">从 class 字节流到可执行 Klass：委派给父加载器 → ClassFileParser 解析+校验 → 链接(验证/准备/解析) → 首次主动使用触发 &lt;clinit&gt;</text>
+
+  <!-- 委派链 -->
+  <rect x="24" y="66" width="952" height="96" rx="12" fill="#f6f8fc" stroke="#cfe0f2"/>
+  <text x="40" y="86" font-size="11" font-weight="600" fill="#5b7db1">① 双亲委派（parent-first）· 自定义加载器先请父加载，父加载不到才自己找</text>
+  <g text-anchor="middle">
+    <rect x="44" y="96" width="200" height="52" rx="9" fill="#fff" stroke="#cfe0f2" filter="url(#s2)"/>
+    <text x="144" y="118" font-size="10.5" font-weight="600" fill="#1b2a4a">自定义 / 应用类加载器</text><text x="144" y="136" font-size="8" fill="#6e6e73">loadClass 先 delegate 父</text>
+    <rect x="300" y="96" width="200" height="52" rx="9" fill="#fff" stroke="#cfe0f2" filter="url(#s2)"/>
+    <text x="400" y="118" font-size="10.5" font-weight="600" fill="#1b2a4a">平台（扩展）类加载器</text><text x="400" y="136" font-size="8" fill="#6e6e73">再 delegate 引导</text>
+    <rect x="556" y="96" width="200" height="52" rx="9" fill="#fff" stroke="#cfe0f2" filter="url(#s2)"/>
+    <text x="656" y="118" font-size="10.5" font-weight="600" fill="#1b2a4a">引导类加载器 bootstrap</text><text x="656" y="136" font-size="8" fill="#6e6e73">JDK 核心类 · 无 Java 对象</text>
+    <rect x="812" y="96" width="164" height="52" rx="9" fill="#fff" stroke="#e2e2e7" filter="url(#s2)"/>
+    <text x="894" y="115" font-size="9" fill="#6e6e73">is_parallelCapable</text><text x="894" y="132" font-size="8" fill="#9a9aa0">并行则逐类对象锁</text>
+  </g>
+  <line x1="244" y1="122" x2="300" y2="122" stroke="#5b7db1" stroke-width="1.5" stroke-dasharray="5 3" marker-end="url(#a1)"/>
+  <line x1="500" y1="122" x2="556" y2="122" stroke="#5b7db1" stroke-width="1.5" stroke-dasharray="5 3" marker-end="url(#a1)"/>
+
+  <!-- 解析校验 -->
+  <rect x="24" y="176" width="952" height="86" rx="12" fill="#f5faf6" stroke="#cfe6d2"/>
+  <text x="40" y="196" font-size="11" font-weight="600" fill="#1d8f3f">② 解析 · 校验 · ClassFileParser 把字节流建成 InstanceKlass</text>
+  <g text-anchor="middle">
+    <rect x="44" y="206" width="290" height="46" rx="9" fill="#fff" stroke="#cfe6d2" filter="url(#s2)"/>
+    <text x="189" y="224" font-size="10" font-weight="600" fill="#1c6b45">解析常量池 / 字段 / 方法</text><text x="189" y="241" font-size="8" fill="#6e6e73">JVM_CONSTANT_Class/Fieldref/Methodref…</text>
+    <rect x="356" y="206" width="290" height="46" rx="9" fill="#fff" stroke="#cfe6d2" filter="url(#s2)"/>
+    <text x="501" y="224" font-size="10" font-weight="600" fill="#1c6b45">结构校验 + 魔数/版本检查</text><text x="501" y="241" font-size="8" fill="#6e6e73">拒绝畸形/超版本 class（安全边界）</text>
+    <rect x="668" y="206" width="308" height="46" rx="9" fill="#fff" stroke="#cfe6d2" filter="url(#s2)"/>
+    <text x="822" y="224" font-size="10" font-weight="600" fill="#1c6b45">建 InstanceKlass + 装入字典</text><text x="822" y="241" font-size="8" fill="#6e6e73">按 (name, loader) 唯一登记</text>
+  </g>
+
+  <!-- 链接三步 -->
+  <rect x="24" y="276" width="952" height="96" rx="12" fill="#fbf7ef" stroke="#ecdcbf"/>
+  <text x="40" y="296" font-size="11" font-weight="600" fill="#8a6d3b">③ 链接 = 验证 → 准备 → 解析（可懒惰）</text>
+  <g text-anchor="middle">
+    <rect x="44" y="306" width="296" height="52" rx="9" fill="#fff" stroke="#ecdcbf" filter="url(#s2)"/>
+    <text x="192" y="328" font-size="10" font-weight="600" fill="#8a5a1a">验证 verify</text><text x="192" y="345" font-size="8" fill="#6e6e73">字节码类型/栈映射校验，防伪造</text>
+    <rect x="352" y="306" width="296" height="52" rx="9" fill="#fff" stroke="#ecdcbf" filter="url(#s2)"/>
+    <text x="500" y="328" font-size="10" font-weight="600" fill="#8a5a1a">准备 prepare</text><text x="500" y="345" font-size="8" fill="#6e6e73">静态字段分配并置零值（非初值）</text>
+    <rect x="660" y="306" width="316" height="52" rx="9" fill="#fff" stroke="#ecdcbf" filter="url(#s2)"/>
+    <text x="818" y="328" font-size="10" font-weight="600" fill="#8a5a1a">解析 resolve</text><text x="818" y="345" font-size="8" fill="#6e6e73">符号引用 → 直接引用（LinkResolver，可懒到首次用）</text>
+  </g>
+  <line x1="340" y1="332" x2="352" y2="332" stroke="#2f9e6e" stroke-width="1.6" marker-end="url(#a2)"/>
+  <line x1="648" y1="332" x2="660" y2="332" stroke="#2f9e6e" stroke-width="1.6" marker-end="url(#a2)"/>
+
+  <!-- 初始化 -->
+  <rect x="24" y="386" width="952" height="66" rx="12" fill="#f4eefb" stroke="#d9c9ef"/>
+  <text x="40" y="406" font-size="11" font-weight="600" fill="#6f3ea8">④ 初始化 · 首次主动使用触发 &lt;clinit&gt;（线程安全，仅一次）</text>
+  <text x="40" y="428" font-size="9" fill="#3a3a3c">new/静态访问/反射等触发；执行静态初始化块与静态字段赋初值；JVM 用初始化锁保证并发下只执行一次；父类先于子类初始化。</text>
+  <text x="40" y="445" font-size="8" fill="#9a76c0">失败 → 抛 ExceptionInInitializerError / NoClassDefFoundError，Klass 标记为 erroneous</text>
+
+  <line x1="500" y1="162" x2="500" y2="176" stroke="#5b7db1" stroke-width="1.5" marker-end="url(#a1)"/>
+  <line x1="500" y1="262" x2="500" y2="276" stroke="#2f9e6e" stroke-width="1.5" marker-end="url(#a2)"/>
+  <line x1="500" y1="372" x2="500" y2="386" stroke="#8a5cae" stroke-width="1.5" marker-end="url(#a1)"/>
+</svg>

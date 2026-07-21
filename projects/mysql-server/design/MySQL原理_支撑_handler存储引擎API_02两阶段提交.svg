@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="350" viewBox="0 0 900 350" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="h2" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="h2x" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#8a5cae"/></marker>
+  </defs>
+  <rect width="900" height="350" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">双日志与两阶段提交（2PC）· binlog 与 redo 一致</text>
+  <text x="30" y="48" font-size="10.5" fill="#6e6e73">handler 缝的独特难题：Server 层 binlog（复制）与引擎 redo（恢复）必须要么都生效要么都不生效</text>
+
+  <!-- 两日志 -->
+  <rect x="40" y="72" width="360" height="56" rx="10" fill="#faf6fb" stroke="#e4cdea" filter="url(#h2)"/>
+  <text x="58" y="94" font-size="10.5" font-weight="700" fill="#8944ab">binlog（Server 层逻辑日志）</text><text x="58" y="112" font-size="8.5" fill="#6e6e73">记逻辑变更 · 用于主从复制 + 时点恢复</text>
+  <rect x="500" y="72" width="360" height="56" rx="10" fill="#fbf7ef" stroke="#ecdcbf" filter="url(#h2)"/>
+  <text x="518" y="94" font-size="10.5" font-weight="700" fill="#8a6d3b">redo（InnoDB 物理日志）</text><text x="518" y="112" font-size="8.5" fill="#6e6e73">记页物理改动 · 用于崩溃恢复</text>
+  <text x="450" y="104" font-size="12" font-weight="700" fill="#c0392b" text-anchor="middle">须一致</text>
+
+  <!-- 2PC 时序 -->
+  <text x="40" y="158" font-size="11.5" font-weight="700" fill="#1d1d1f">ha_commit_trans 的两阶段序列</text>
+  <g text-anchor="middle">
+    <rect x="40" y="172" width="180" height="66" rx="10" fill="#fff" stroke="#ecdcbf" filter="url(#h2)"/>
+    <text x="130" y="196" font-size="10.5" font-weight="700" fill="#8a6d3b">① Prepare 阶段</text><text x="130" y="214" font-size="8.3" fill="#6e6e73">tc_log->prepare</text><text x="130" y="230" font-size="8.3" fill="#6e6e73">引擎写 redo(prepare)</text>
+    <rect x="360" y="172" width="180" height="66" rx="10" fill="#faf6fb" stroke="#e4cdea" filter="url(#h2)"/>
+    <text x="450" y="196" font-size="10.5" font-weight="700" fill="#8944ab">② 写 binlog（提交点）</text><text x="450" y="214" font-size="8.3" fill="#6e6e73">tc_log->commit 内</text><text x="450" y="230" font-size="8.3" fill="#6e6e73">binlog 落盘 = 已提交</text>
+    <rect x="680" y="172" width="180" height="66" rx="10" fill="#fff" stroke="#ecdcbf" filter="url(#h2)"/>
+    <text x="770" y="196" font-size="10.5" font-weight="700" fill="#8a6d3b">③ Commit 阶段</text><text x="770" y="214" font-size="8.3" fill="#6e6e73">通知引擎 commit</text><text x="770" y="230" font-size="8.3" fill="#6e6e73">redo(commit)</text>
+  </g>
+  <line x1="220" y1="205" x2="360" y2="205" stroke="#8a5cae" stroke-width="1.6" marker-end="url(#h2x)"/>
+  <line x1="540" y1="205" x2="680" y2="205" stroke="#8a5cae" stroke-width="1.6" marker-end="url(#h2x)"/>
+
+  <!-- 崩溃恢复判定 -->
+  <rect x="40" y="256" width="820" height="60" rx="11" fill="#fff7f1" stroke="#f0d4b8" filter="url(#h2)"/>
+  <text x="58" y="278" font-size="11" font-weight="700" fill="#b0651f">崩溃恢复判定规则（保证主从不分叉）</text>
+  <text x="58" y="298" font-size="9" fill="#5a4a3a">redo 有 prepare 但 binlog 无该事务 → 回滚；binlog 已记该事务 → 提交（补齐 redo commit）</text>
+  <text x="58" y="313" font-size="8.5" fill="#8a6d3b">ordered_commit 用组提交合并多事务 fsync：吞吐↑ 同时保持顺序一致</text>
+
+  <text x="450" y="340" font-size="8.5" fill="#8a94a6" text-anchor="middle">锚点：ha_commit_trans `sql/handler.cc:1671`（prepare `:1792` → commit `:1807`）· ordered_commit `sql/binlog.cc:9520`</text>
+</svg>

@@ -1,0 +1,194 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1080" viewBox="0 0 1080 1080" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="aHot" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+    <marker id="aState" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#c99a3a"/></marker>
+    <marker id="aCtl" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#5b7db1"/></marker>
+    <marker id="aFail" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#d38236"/></marker>
+    <marker id="aX" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#8a5cae"/></marker>
+  </defs>
+  <rect width="1080" height="1080" fill="#fbfbfd"/>
+
+  <!-- ===== 标题带 · 判型 ===== -->
+  <text x="30" y="28" font-size="14" font-weight="600" fill="#1d1d1f">OpenJDK / HotSpot 总架构 · 托管运行时虚拟机：类加载 + 分层执行（解释器→C1→C2 JIT）+ 可插拔并发 GC + safepoint 协调 —— 一次编译到处运行</text>
+  <text x="30" y="47" font-size="10.5" fill="#6e6e73">分层脊：类加载 → 执行引擎（解释/JIT）→ 运行时数据（对象模型 + 堆）→ 自动内存管理（可插拔 GC）→ 横切协调（safepoint / JMM / JNI / JFR）　源码基准 JDK 28（HotSpot）</text>
+
+  <!-- ===== 设计张力铭牌带（显式）===== -->
+  <rect x="24" y="56" width="1032" height="52" rx="10" fill="#fbf2ea" stroke="#e6cdae"/>
+  <text x="40" y="76" font-size="11" font-weight="700" fill="#b0651f">设计张力</text>
+  <text x="104" y="76" font-size="10" fill="#5a4a3a">托管抽象<tspan fill="#8a6d3b">（GC 自动内存 + JIT 自适应优化 + 平台无关字节码，源码/编译一次、字节码到处运行）</tspan></text>
+  <text x="104" y="97" font-size="9.5" fill="#5a4a3a"><tspan font-weight="700" fill="#c0392b">⟷ vs ⟷ </tspan>停顿 / 预热 / 内存开销<tspan fill="#8a6d3b">（GC pause、JIT warmup、safepoint STW、对象头+元数据内存税）—— 靠分层编译（启动解释/C1、峰值 C2）+ 并发 GC（标记/疏散与应用并跑）缓解</tspan></text>
+
+  <!-- ===== 图例：五型语义路径 ===== -->
+  <line x1="36" y1="124" x2="58" y2="124" stroke="#2f9e6e" stroke-width="1.8" marker-end="url(#aHot)"/>
+  <text x="63" y="128" font-size="10" fill="#3a3a3c">Hot · 执行流 解释→C1→C2</text>
+  <line x1="252" y1="124" x2="274" y2="124" stroke="#5b7db1" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#aCtl)"/>
+  <text x="279" y="128" font-size="10" fill="#3a3a3c">Control · 类加载 + 编译派发</text>
+  <line x1="480" y1="124" x2="502" y2="124" stroke="#c99a3a" stroke-width="1.8" marker-end="url(#aState)"/>
+  <text x="507" y="128" font-size="10" fill="#3a3a3c">State · 堆 + 对象模型</text>
+  <line x1="668" y1="124" x2="690" y2="124" stroke="#d38236" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#aFail)"/>
+  <text x="695" y="128" font-size="10" fill="#3a3a3c">失败 · deopt + GC 停顿</text>
+  <line x1="858" y1="124" x2="880" y2="124" stroke="#8a5cae" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#aX)"/>
+  <text x="885" y="128" font-size="10" fill="#3a3a3c">横切 · safepoint + JMM</text>
+  <text x="1056" y="128" font-size="10" fill="#a1a1a6" text-anchor="end">框 = 主线可下钻</text>
+
+  <!-- ===== powers 立身带（全景主线热区）===== -->
+  <rect x="24" y="138" width="1032" height="28" rx="8" fill="#f6f6f8" stroke="#e2e2e7" data-tid="OpenJDK原理_全景主线框架" data-lab="全景主线框架"/>
+  <text x="40" y="156" font-size="10" fill="#4a4a4f">powers：Java 生态基石 —— 字节码一次编译到处运行；执行引擎按热度自适应把字节码升级成本机代码，GC 自动管理内存，safepoint 协调全局停顿动作</text>
+
+  <!-- ===== ① 类加载与链接 ===== -->
+  <rect x="24" y="174" width="1032" height="92" rx="14" fill="#f6f8fc" stroke="#cfe0f2"/>
+  <text x="40" y="194" font-size="12" font-weight="600" fill="#5b7db1">① 类加载与链接 · 把 class 字节流变成 JVM 可执行的 Klass（双亲委派 → 解析校验 → 链接 → 初始化）</text>
+  <g text-anchor="middle">
+    <rect x="40" y="204" width="326" height="54" rx="10" fill="#fff" stroke="#cfe0f2" filter="url(#soft)" data-tid="OpenJDK原理_支撑_类加载与链接" data-lab="双亲委派加载"/>
+    <text x="203" y="226" font-size="11" font-weight="600" fill="#1b2a4a">双亲委派加载 · ClassFileParser</text><text x="203" y="245" font-size="8.5" fill="#5b7db1">先请父加载器 · 解析常量池/字段/方法 · 结构校验</text>
+    <rect x="378" y="204" width="326" height="54" rx="10" fill="#fff" stroke="#cfe0f2" filter="url(#soft)" data-tid="OpenJDK原理_支撑_类加载与链接" data-lab="链接 验证/准备/解析"/>
+    <text x="541" y="226" font-size="11" font-weight="600" fill="#1b2a4a">链接：验证 → 准备 → 解析</text><text x="541" y="245" font-size="8.5" fill="#5b7db1">字节码校验 · 静态字段置零值 · 符号引用→直接引用</text>
+    <rect x="716" y="204" width="320" height="54" rx="10" fill="#fff" stroke="#cfe0f2" filter="url(#soft)" data-tid="OpenJDK原理_支撑_类加载与链接" data-lab="初始化 clinit"/>
+    <text x="876" y="226" font-size="11" font-weight="600" fill="#1b2a4a">初始化 · 执行 &lt;clinit&gt;</text><text x="876" y="245" font-size="8.5" fill="#5b7db1">首次主动使用触发 · 静态初始化 · 线程安全一次</text>
+  </g>
+
+  <!-- ===== ② 执行引擎（分层执行 · 主体）===== -->
+  <rect x="24" y="274" width="1032" height="250" rx="14" fill="#f5faf6" stroke="#cfe6d2"/>
+  <text x="40" y="294" font-size="12" font-weight="600" fill="#1d8f3f">② 执行引擎 · 分层执行（解释起步、热点自适应升级为本机代码；激进优化失效则去优化回退）</text>
+
+  <!-- 解释器 -->
+  <rect x="44" y="322" width="256" height="186" rx="12" fill="#fff" stroke="#cfe6d2" filter="url(#soft)" data-tid="OpenJDK原理_支撑_字节码解释器" data-lab="字节码解释器"/>
+  <text x="60" y="345" font-size="11.5" font-weight="600" fill="#1c6b45">字节码解释器（Level 0）</text>
+  <text x="60" y="367" font-size="9" fill="#3a3a3c">模板解释器：运行期为每条字节码</text>
+  <text x="60" y="381" font-size="9" fill="#3a3a3c">生成机器码片段，装入派发表</text>
+  <text x="60" y="401" font-size="9" fill="#3a3a3c">Rewriter 改写 → cpCache 缓存</text>
+  <text x="60" y="415" font-size="9" fill="#3a3a3c">首次 invoke/new 触发符号解析</text>
+  <text x="60" y="437" font-size="9" fill="#6e6e73">调用/回边计数器累计热度</text>
+  <text x="60" y="459" font-size="8.5" fill="#9a9aa0">启动即可执行 · 无需预热 · 慢</text>
+  <text x="60" y="485" font-size="9" fill="#2f9e6e">热度超阈 → 提交编译 ↑</text>
+
+  <!-- C1 -->
+  <rect x="326" y="322" width="196" height="84" rx="11" fill="#fff" stroke="#cfe6d2" filter="url(#soft)" data-tid="OpenJDK原理_支撑_分层编译JIT" data-lab="C1 客户端编译"/>
+  <text x="342" y="344" font-size="11" font-weight="600" fill="#1c6b45">C1 客户端 JIT（L1-3）</text>
+  <text x="342" y="364" font-size="8.5" fill="#3a3a3c">HIR→LIR→机器码 · 编译快</text>
+  <text x="342" y="379" font-size="8.5" fill="#3a3a3c">插桩收集 profile（分支/类型）</text>
+  <text x="342" y="396" font-size="8.5" fill="#6e6e73">兼顾启动速度与初步优化</text>
+
+  <!-- 编译队列 CompileBroker -->
+  <rect x="326" y="418" width="196" height="90" rx="11" fill="#fff" stroke="#cfe0f2" filter="url(#soft)" data-tid="OpenJDK原理_支撑_分层编译JIT" data-lab="编译队列派发"/>
+  <text x="342" y="440" font-size="11" font-weight="600" fill="#5b7db1">编译队列 · 后台派发</text>
+  <text x="342" y="460" font-size="8.5" fill="#3a3a3c">CompileBroker + 编译线程</text>
+  <text x="342" y="475" font-size="8.5" fill="#3a3a3c">计数器事件驱动分级入队</text>
+  <text x="342" y="492" font-size="8.5" fill="#6e6e73">异步编译 · 不阻塞执行</text>
+
+  <!-- C2 -->
+  <rect x="548" y="322" width="270" height="186" rx="12" fill="#fff" stroke="#cfe6d2" filter="url(#soft)" data-tid="OpenJDK原理_支撑_分层编译JIT" data-lab="C2 服务端 JIT"/>
+  <text x="564" y="345" font-size="11.5" font-weight="600" fill="#1c6b45">C2 服务端 JIT（Level 4）</text>
+  <text x="564" y="367" font-size="9" fill="#3a3a3c">sea-of-nodes 理想图（数据+控制流合一）</text>
+  <text x="564" y="385" font-size="9" fill="#3a3a3c">迭代 GVN → 内联 → 逃逸分析</text>
+  <text x="564" y="399" font-size="9" fill="#3a3a3c">→ 循环优化 → 宏节点展开</text>
+  <text x="564" y="421" font-size="9" fill="#3a3a3c">指令选择(Matcher) → 全局调度</text>
+  <text x="564" y="435" font-size="9" fill="#3a3a3c">→ 图着色寄存器分配</text>
+  <text x="564" y="459" font-size="9" fill="#6e6e73">基于 profile 的激进投机优化</text>
+  <text x="564" y="483" font-size="8.5" fill="#9a9aa0">峰值性能 · 编译慢 · 预热后接管</text>
+
+  <!-- 去优化 deopt -->
+  <rect x="844" y="322" width="192" height="186" rx="12" fill="#fff" stroke="#f0d8c2" filter="url(#soft)" data-tid="OpenJDK原理_支撑_分层编译JIT" data-lab="去优化 deopt"/>
+  <text x="860" y="345" font-size="11" font-weight="600" fill="#b5651d">去优化 Deoptimization</text>
+  <text x="860" y="367" font-size="9" fill="#3a3a3c">投机假设失效（类型/未见分支）</text>
+  <text x="860" y="385" font-size="9" fill="#3a3a3c">uncommon_trap 触发</text>
+  <text x="860" y="403" font-size="9" fill="#3a3a3c">拆编译帧 → 重建解释器帧</text>
+  <text x="860" y="421" font-size="9" fill="#3a3a3c">回退解释器继续执行</text>
+  <text x="860" y="445" font-size="9" fill="#3a3a3c">丢弃/重编该 nmethod</text>
+  <text x="860" y="471" font-size="8.5" fill="#9a9aa0">保证激进优化的正确性兜底</text>
+
+  <!-- ===== ③ 运行时数据（对象模型 + 堆）===== -->
+  <rect x="24" y="532" width="1032" height="104" rx="14" fill="#fbf7ef" stroke="#ecdcbf"/>
+  <text x="40" y="552" font-size="12" font-weight="600" fill="#8a6d3b">③ 运行时数据 · 执行引擎在 Java 堆按 oop-klass 布局分配与读写对象（实例数据与类元数据分离）</text>
+  <rect x="44" y="562" width="500" height="64" rx="11" fill="#fff" stroke="#ecdcbf" filter="url(#soft)" data-tid="OpenJDK原理_支撑_对象模型oop-klass" data-lab="对象模型 oop-klass"/>
+  <text x="60" y="583" font-size="11" font-weight="600" fill="#8a5a1a">对象模型 oop-klass · 实例/元数据分离</text>
+  <text x="60" y="601" font-size="8.8" fill="#3a3a3c">oop 实例 = 对象头（markWord + 压缩类指针）+ 字段</text>
+  <text x="60" y="617" font-size="8.8" fill="#3a3a3c">Klass 元数据：布局/vtable/父类链 · 快速子类型检查</text>
+  <rect x="556" y="562" width="480" height="64" rx="11" fill="#fff" stroke="#ecdcbf" filter="url(#soft)" data-tid="OpenJDK原理_支撑_垃圾回收与可插拔GC" data-lab="Java 堆 / 元空间"/>
+  <text x="572" y="583" font-size="11" font-weight="600" fill="#8a5a1a">Java 堆（对象分配区）· 元空间（类元数据）</text>
+  <text x="572" y="601" font-size="8.8" fill="#3a3a3c">堆是唯一对象存放处 · 由 GC 自动分配与回收</text>
+  <text x="572" y="617" font-size="8.8" fill="#3a3a3c">元空间存 Klass/常量池（本机内存，非堆）</text>
+
+  <!-- ===== ④ 自动内存管理 · 可插拔 GC ===== -->
+  <rect x="24" y="644" width="1032" height="202" rx="14" fill="#eef6f2" stroke="#cfe6da"/>
+  <text x="40" y="664" font-size="12" font-weight="600" fill="#2a8f6a">④ 自动内存管理 · 可插拔 GC（统一抽象接口 + 屏障插桩，启动时择一具体收集器）</text>
+  <rect x="44" y="674" width="992" height="44" rx="10" fill="#fff" stroke="#cfe6da" filter="url(#soft)" data-tid="OpenJDK原理_支撑_垃圾回收与可插拔GC" data-lab="GC 抽象接口"/>
+  <text x="60" y="693" font-size="10.5" font-weight="600" fill="#207a58">CollectedHeap + BarrierSet 抽象接口</text>
+  <text x="60" y="709" font-size="8.8" fill="#3a3a3c">分配（mem_allocate）/ 回收（collect）/ 对象访问屏障 —— 解释器、C1、C2 各自的屏障桩由 GC 提供，执行引擎与具体 GC 解耦</text>
+  <g text-anchor="middle">
+    <rect x="44" y="726" width="238" height="104" rx="11" fill="#fff" stroke="#cfe6da" filter="url(#soft)" data-tid="OpenJDK原理_支撑_垃圾回收与可插拔GC" data-lab="Parallel / Serial"/>
+    <text x="163" y="748" font-size="10.5" font-weight="600" fill="#1d1d1f">Parallel / Serial</text><text x="163" y="768" font-size="8.5" fill="#6e6e73">分代 · 复制/标整</text><text x="163" y="784" font-size="8.5" fill="#6e6e73">多线程并行回收</text><text x="163" y="804" font-size="8.5" fill="#d38236">吞吐优先 · 全程 STW</text>
+    <rect x="292" y="726" width="238" height="104" rx="11" fill="#fff" stroke="#cfe6da" filter="url(#soft)" data-tid="OpenJDK原理_支撑_垃圾回收与可插拔GC" data-lab="G1"/>
+    <text x="411" y="748" font-size="10.5" font-weight="600" fill="#1d1d1f">G1</text><text x="411" y="768" font-size="8.5" fill="#6e6e73">堆分成众多 Region</text><text x="411" y="784" font-size="8.5" fill="#6e6e73">并发标记 + 增量疏散</text><text x="411" y="804" font-size="8.5" fill="#2a8f6a">可预测停顿目标</text>
+    <rect x="540" y="726" width="238" height="104" rx="11" fill="#fff" stroke="#cfe6da" filter="url(#soft)" data-tid="OpenJDK原理_支撑_垃圾回收与可插拔GC" data-lab="ZGC"/>
+    <text x="659" y="748" font-size="10.5" font-weight="600" fill="#1d1d1f">ZGC</text><text x="659" y="768" font-size="8.5" fill="#6e6e73">着色指针 + 加载屏障</text><text x="659" y="784" font-size="8.5" fill="#6e6e73">并发标记/重定位</text><text x="659" y="804" font-size="8.5" fill="#2a8f6a">亚毫秒停顿 · 大堆</text>
+    <rect x="788" y="726" width="248" height="104" rx="11" fill="#fff" stroke="#cfe6da" filter="url(#soft)" data-tid="OpenJDK原理_支撑_垃圾回收与可插拔GC" data-lab="Shenandoah"/>
+    <text x="912" y="748" font-size="10.5" font-weight="600" fill="#1d1d1f">Shenandoah</text><text x="912" y="768" font-size="8.5" fill="#6e6e73">转发指针 + 读写屏障</text><text x="912" y="784" font-size="8.5" fill="#6e6e73">并发疏散与引用更新</text><text x="912" y="804" font-size="8.5" fill="#2a8f6a">低停顿 · 与应用并跑</text>
+  </g>
+
+  <!-- ===== ⑤ 横切协调 ===== -->
+  <rect x="24" y="854" width="1032" height="188" rx="14" fill="#f4eefb" stroke="#d9c9ef"/>
+  <text x="40" y="874" font-size="12" font-weight="600" fill="#6f3ea8">⑤ 横切协调 · 贯穿全栈的全局机制（线程到达安全点、同步与可见性、本机边界、可观测性）</text>
+  <rect x="44" y="884" width="320" height="146" rx="12" fill="#fff" stroke="#d9c9ef" filter="url(#soft)" data-tid="OpenJDK原理_支撑_safepoint与线程协调" data-lab="safepoint / handshake"/>
+  <text x="60" y="907" font-size="11.5" font-weight="600" fill="#5a2e8f">safepoint 与线程协调</text>
+  <text x="60" y="929" font-size="9" fill="#3a3a3c">全局 safepoint：所有 Java 线程停到</text>
+  <text x="60" y="943" font-size="9" fill="#3a3a3c">安全点（GC/deopt/JVMTI 的前置）</text>
+  <text x="60" y="965" font-size="9" fill="#3a3a3c">轮询页：线程 arm → 到点 block</text>
+  <text x="60" y="987" font-size="9" fill="#3a3a3c">handshake：只暂停单/子集线程</text>
+  <text x="60" y="1009" font-size="8.5" fill="#9a9aa0">协调"全体一致暂停"的核心原语</text>
+
+  <rect x="380" y="884" width="320" height="146" rx="12" fill="#fff" stroke="#d9c9ef" filter="url(#soft)" data-tid="OpenJDK原理_支撑_同步与Java内存模型" data-lab="同步 / JMM"/>
+  <text x="396" y="907" font-size="11.5" font-weight="600" fill="#5a2e8f">同步与 Java 内存模型</text>
+  <text x="396" y="929" font-size="9" fill="#3a3a3c">无竞争：轻量级锁记于线程锁栈</text>
+  <text x="396" y="943" font-size="9" fill="#3a3a3c">竞争 → 膨胀为 ObjectMonitor 重量锁</text>
+  <text x="396" y="965" font-size="9" fill="#3a3a3c">锁状态编码在对象头 markWord</text>
+  <text x="396" y="987" font-size="9" fill="#3a3a3c">JMM：happens-before + 内存屏障</text>
+  <text x="396" y="1009" font-size="8.5" fill="#9a9aa0">约束多线程可见性与重排序</text>
+
+  <rect x="716" y="884" width="320" height="146" rx="12" fill="#fff" stroke="#d9c9ef" filter="url(#soft)" data-tid="OpenJDK原理_支撑_JNI与JFR" data-lab="JNI / JFR"/>
+  <text x="732" y="907" font-size="11.5" font-weight="600" fill="#5a2e8f">JNI 与 JFR</text>
+  <text x="732" y="929" font-size="9" fill="#3a3a3c">JNI：Java ↔ 本地代码互调边界</text>
+  <text x="732" y="943" font-size="9" fill="#3a3a3c">跨界切换线程状态 + 句柄包裹 oop</text>
+  <text x="732" y="965" font-size="9" fill="#3a3a3c">JFR：内建低开销事件采集引擎</text>
+  <text x="732" y="987" font-size="9" fill="#3a3a3c">运行时/GC/编译事件 → 飞行记录</text>
+  <text x="732" y="1009" font-size="8.5" fill="#9a9aa0">生产环境常开的可观测性底座</text>
+
+  <!-- ===== 语义分型连线（横切走页边、标签落空白，绝不压标题/穿盒）===== -->
+  <!-- Control：类加载 → 执行引擎（在 ② 标题文字右侧空列下探，装入 Klass 供执行） -->
+  <line x1="541" y1="258" x2="541" y2="320" stroke="#5b7db1" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#aCtl)"/>
+  <text x="547" y="308" font-size="8" fill="#5b7db1">装入 Klass → 可执行</text>
+  <!-- Hot：解释器 → C1（计数超阈升级） -->
+  <line x1="300" y1="360" x2="326" y2="360" stroke="#2f9e6e" stroke-width="1.8" marker-end="url(#aHot)"/>
+  <text x="298" y="353" font-size="7.5" fill="#2f9e6e" text-anchor="end">超阈↑</text>
+  <!-- Hot：C1 → C2（进一步升级到峰值优化） -->
+  <line x1="522" y1="360" x2="548" y2="360" stroke="#2f9e6e" stroke-width="1.8" marker-end="url(#aHot)"/>
+  <text x="520" y="353" font-size="7.5" fill="#2f9e6e" text-anchor="end">更热↑</text>
+  <!-- Control：编译队列 → C1 / C2（后台派发编译任务） -->
+  <line x1="410" y1="418" x2="410" y2="407" stroke="#5b7db1" stroke-width="1.5" stroke-dasharray="5 3" marker-end="url(#aCtl)"/>
+  <line x1="522" y1="452" x2="548" y2="452" stroke="#5b7db1" stroke-width="1.5" stroke-dasharray="5 3" marker-end="url(#aCtl)"/>
+  <text x="430" y="414" font-size="7.5" fill="#5b7db1">后台派发编译</text>
+  <!-- 失败：C2 → 去优化（投机失效触发 uncommon_trap） -->
+  <line x1="818" y1="400" x2="844" y2="400" stroke="#d38236" stroke-width="1.6" stroke-dasharray="4 3" marker-end="url(#aFail)"/>
+  <text x="816" y="393" font-size="7.5" fill="#d38236" text-anchor="end">投机失效</text>
+  <!-- 失败：去优化 → 解释器（在 ② 盒底空带回退，不入 ③） -->
+  <path d="M900,508 L900,520 L182,520 L182,509" fill="none" stroke="#d38236" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#aFail)"/>
+  <text x="541" y="516" font-size="7.5" fill="#d38236" text-anchor="middle">拆编译帧 → 回退解释器继续执行（激进优化的正确性兜底）</text>
+  <!-- State：执行引擎 → 运行时数据（在 ③ 标题文字右侧空列下探，分配/读写对象） -->
+  <line x1="600" y1="526" x2="600" y2="562" stroke="#c99a3a" stroke-width="1.8" marker-end="url(#aState)"/>
+  <text x="606" y="549" font-size="8" fill="#b08535">分配 / 读写对象（经屏障）</text>
+  <!-- State：对象模型/堆 ↔ GC（在 ④ 标题文字右侧空列，GC 管理堆内存） -->
+  <line x1="700" y1="636" x2="700" y2="674" stroke="#c99a3a" stroke-width="1.8" marker-start="url(#aState)" marker-end="url(#aState)"/>
+  <text x="706" y="662" font-size="8" fill="#b08535">GC 分配 / 回收堆对象</text>
+  <!-- 失败：GC 回收伴随停顿（④ 标题行最右空白） -->
+  <text x="1036" y="662" font-size="8.5" fill="#d38236" text-anchor="end">回收含 STW 停顿（并发 GC 极小化）</text>
+  <!-- 横切 紫（左页边脊）：safepoint 暂停所有 Java 线程，是 GC/deopt 的前置 -->
+  <path d="M44,930 L14,930 L14,405 L44,405" fill="none" stroke="#8a5cae" stroke-width="1.5" stroke-dasharray="5 3" marker-end="url(#aX)"/>
+  <text x="9" y="690" font-size="8.5" fill="#8a5cae" text-anchor="middle" transform="rotate(-90 9 690)">safepoint 暂停所有 Java 线程 · GC/deopt 前置</text>
+  <!-- 横切 紫（右页边脊）：JMM 约束共享对象的可见性与重排序 -->
+  <path d="M540,1030 L540,1037 L1066,1037 L1066,596 L1038,596" fill="none" stroke="#8a5cae" stroke-width="1.5" stroke-dasharray="5 3" marker-end="url(#aX)"/>
+  <text x="1073" y="800" font-size="8.5" fill="#8a5cae" text-anchor="middle" transform="rotate(-90 1073 800)">JMM 约束共享对象可见性 / 重排序</text>
+
+  <!-- ===== 读法 ===== -->
+  <text x="540" y="1066" font-size="10" fill="#4a4a4f" text-anchor="middle">读法：类加载器把 class 装成 Klass → 解释器先执行并计数热度 → 热点方法经编译队列升级到 C1/C2 本机代码（失效则去优化回退）→ 对象在堆上按 oop-klass 分配、由可插拔 GC 自动回收 → safepoint/JMM 横切协调全局停顿与内存可见性</text>
+</svg>

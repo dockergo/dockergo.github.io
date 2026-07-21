@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="540" viewBox="0 0 1080 540" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+    <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#d08a8a"/></marker>
+  </defs>
+  <rect width="1080" height="540" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Rust Rc / Arc 引用计数生命周期 · clone→加 / drop→减 / 归零释放 · Weak 破环</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">共享所有权靠计数:clone 使 strong+1、drop 使 strong−1、strong=0 时析构 T;互相强引用成环则 strong 永不归零 → 泄漏,Weak 破环</text>
+
+  <!-- legend -->
+  <g font-size="9" fill="#86868b">
+    <rect x="740" y="20" width="12" height="12" rx="3" fill="#eafaf1" stroke="#bfe0cd"/><text x="756" y="30">计数流</text>
+    <rect x="820" y="20" width="12" height="12" rx="3" fill="#fff7e6" stroke="#e8cf9a"/><text x="836" y="30">堆存储</text>
+    <rect x="896" y="20" width="12" height="12" rx="3" fill="#fbeaea" stroke="#e7c3c3"/><text x="912" y="30">泄漏/环</text>
+  </g>
+
+  <!-- Top-left: RcInner 结构 (amber heap) -->
+  <rect x="40" y="80" width="300" height="180" rx="14" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="60" y="106" font-size="12" font-weight="600" fill="#5a3410">RcInner(堆上一块)</text>
+  <rect x="60" y="120" width="260" height="34" rx="8" fill="#ffffff" stroke="#efdcb4"/>
+  <text x="190" y="141" font-size="10" font-weight="600" text-anchor="middle" fill="#5a3410">strong: Cell&lt;usize&gt;</text>
+  <rect x="60" y="160" width="260" height="34" rx="8" fill="#ffffff" stroke="#efdcb4"/>
+  <text x="190" y="181" font-size="10" font-weight="600" text-anchor="middle" fill="#5a3410">weak: Cell&lt;usize&gt;</text>
+  <rect x="60" y="200" width="260" height="34" rx="8" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="190" y="221" font-size="10" font-weight="600" text-anchor="middle" fill="#5a3410">value: T(真正的数据)</text>
+  <text x="60" y="250" font-size="8.5" fill="#93762e">Rc 单线程 Cell 计数;Arc 换原子计数,规则同</text>
+
+  <!-- Top-right: 计数生命周期 timeline (green) -->
+  <rect x="360" y="80" width="680" height="180" rx="14" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="380" y="106" font-size="12" font-weight="600" fill="#12402a">strong 计数生命周期</text>
+  <g text-anchor="middle" font-size="9">
+    <rect x="380" y="122" width="118" height="58" rx="8" fill="#ffffff" stroke="#bfe0cd"/>
+    <text x="439" y="142" font-weight="600" fill="#12402a">Rc::new</text>
+    <text x="439" y="160" fill="#2f6f4f">strong = 1</text>
+    <text x="439" y="173" fill="#a1a1a6">堆上建 RcInner</text>
+    <rect x="518" y="122" width="118" height="58" rx="8" fill="#ffffff" stroke="#bfe0cd"/>
+    <text x="577" y="142" font-weight="600" fill="#12402a">.clone()</text>
+    <text x="577" y="160" fill="#2f6f4f">strong → 2</text>
+    <text x="577" y="173" fill="#a1a1a6">只加计数,不拷 T</text>
+    <rect x="656" y="122" width="118" height="58" rx="8" fill="#ffffff" stroke="#bfe0cd"/>
+    <text x="715" y="142" font-weight="600" fill="#12402a">drop 一个</text>
+    <text x="715" y="160" fill="#2f6f4f">strong → 1</text>
+    <text x="715" y="173" fill="#a1a1a6">还有人用,不析构</text>
+    <rect x="794" y="122" width="118" height="58" rx="8" fill="#f5faf6" stroke="#cfe6d5"/>
+    <text x="853" y="142" font-weight="600" fill="#12402a">drop 最后</text>
+    <text x="853" y="160" fill="#2f6f4f">strong → 0</text>
+    <text x="853" y="173" fill="#2c5a3a">析构 T(调 Drop)</text>
+    <rect x="932" y="122" width="90" height="58" rx="8" fill="#f5faf6" stroke="#cfe6d5"/>
+    <text x="977" y="142" font-weight="600" fill="#12402a">weak=0</text>
+    <text x="977" y="160" fill="#2c5a3a">释放整块</text>
+    <text x="977" y="173" fill="#a1a1a6">回收 RcInner</text>
+  </g>
+  <path d="M498,151 L518,151" stroke="#7fbf9a" stroke-width="1.5" marker-end="url(#ar)"/>
+  <path d="M636,151 L656,151" stroke="#7fbf9a" stroke-width="1.5" marker-end="url(#ar)"/>
+  <path d="M774,151 L794,151" stroke="#7fbf9a" stroke-width="1.5" marker-end="url(#ar)"/>
+  <path d="M912,151 L932,151" stroke="#7fbf9a" stroke-width="1.5" marker-end="url(#ar)"/>
+  <text x="380" y="204" font-size="9" fill="#2f6f4f">关键:strong=0 先析构 value T;strong 与 weak 都为 0 才回收整块内存(Weak 让块不早回收但不保活 T)</text>
+  <text x="380" y="224" font-size="9" fill="#2f6f4f">clone 是 O(1) 加计数,不深拷数据 —— 多所有者共享同一份 T</text>
+  <text x="380" y="246" font-size="8.5" fill="#a1a1a6">upgrade() 时若 strong&gt;0 则 weak→临时 strong 拿到 Rc,否则 None</text>
+
+  <!-- Bottom-left: 循环引用泄漏 (red) -->
+  <rect x="40" y="284" width="500" height="216" rx="14" fill="#fbeaea" stroke="#e7c3c3" filter="url(#soft)"/>
+  <text x="60" y="310" font-size="12" font-weight="600" fill="#4a1414">循环强引用 → strong 永不归零 → 泄漏</text>
+  <g text-anchor="middle" font-size="9.5">
+    <rect x="80" y="336" width="150" height="70" rx="10" fill="#ffffff" stroke="#e7c3c3"/>
+    <text x="155" y="366" font-weight="600" fill="#4a1414">节点 A</text>
+    <text x="155" y="386" font-size="8.5" fill="#8a4b4b">strong = 1(被 B 持)</text>
+    <rect x="350" y="336" width="150" height="70" rx="10" fill="#ffffff" stroke="#e7c3c3"/>
+    <text x="425" y="366" font-weight="600" fill="#4a1414">节点 B</text>
+    <text x="425" y="386" font-size="8.5" fill="#8a4b4b">strong = 1(被 A 持)</text>
+  </g>
+  <path d="M230,356 L350,356" stroke="#d08a8a" stroke-width="1.8" fill="none" marker-end="url(#arr)"/>
+  <text x="290" y="349" font-size="8.5" text-anchor="middle" fill="#8a4b4b">Rc 强引用</text>
+  <path d="M350,388 L230,388" stroke="#d08a8a" stroke-width="1.8" fill="none" marker-end="url(#arr)"/>
+  <text x="290" y="403" font-size="8.5" text-anchor="middle" fill="#8a4b4b">Rc 强引用</text>
+  <text x="60" y="436" font-size="9" fill="#8a4b4b">外部 Rc 都 drop 后,A/B 仍互相强引用</text>
+  <text x="60" y="454" font-size="9" fill="#8a4b4b">→ 两者 strong 都停在 1,永不归零</text>
+  <text x="60" y="472" font-size="9" fill="#8a4b4b">→ T 永不析构、内存永不回收 = 泄漏</text>
+  <text x="60" y="490" font-size="8.5" fill="#a1a1a6">借用检查器不查这个:泄漏不是内存不安全</text>
+
+  <!-- Bottom-right: Weak 破环 (green) -->
+  <rect x="560" y="284" width="480" height="216" rx="14" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="580" y="310" font-size="12" font-weight="600" fill="#12402a">Weak 破环 —— 反向边不增 strong</text>
+  <g text-anchor="middle" font-size="9.5">
+    <rect x="600" y="336" width="150" height="70" rx="10" fill="#ffffff" stroke="#bfe0cd"/>
+    <text x="675" y="366" font-weight="600" fill="#12402a">父 parent</text>
+    <text x="675" y="386" font-size="8.5" fill="#2f6f4f">Rc→子(strong)</text>
+    <rect x="850" y="336" width="150" height="70" rx="10" fill="#ffffff" stroke="#bfe0cd"/>
+    <text x="925" y="366" font-weight="600" fill="#12402a">子 child</text>
+    <text x="925" y="386" font-size="8.5" fill="#2f6f4f">Weak→父(不加 strong)</text>
+  </g>
+  <path d="M750,356 L850,356" stroke="#7fbf9a" stroke-width="1.8" fill="none" marker-end="url(#ar)"/>
+  <text x="800" y="349" font-size="8.5" text-anchor="middle" fill="#2f6f4f">Rc 强(保活)</text>
+  <path d="M850,388 L750,388" stroke="#7fbf9a" stroke-width="1.4" stroke-dasharray="5 3" fill="none" marker-end="url(#ar)"/>
+  <text x="800" y="403" font-size="8.5" text-anchor="middle" fill="#2f6f4f">Weak 弱(不保活)</text>
+  <text x="580" y="436" font-size="9" fill="#2f6f4f">反向边用 Weak:只加 weak 计数,不加 strong</text>
+  <text x="580" y="454" font-size="9" fill="#2f6f4f">→ 父的 strong 能归零 → 正常析构、破环</text>
+  <text x="580" y="472" font-size="9" fill="#2f6f4f">用时 weak.upgrade() → Option&lt;Rc&gt;(可能已没)</text>
+  <text x="580" y="490" font-size="8.5" fill="#a1a1a6">规律:所有权正向用 Rc/Arc,反向/观察用 Weak</text>
+
+  <text x="30" y="522" font-size="9" fill="#a1a1a6">为什么计数:多所有者需运行时判「还有没有人用」;归零即释放,确定性、无 GC 扫描 —— 代价是 clone/drop 的计数开销(Arc 还是原子)· 源码基准 Rust 1.99.0</text>
+</svg>

@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="460" viewBox="0 0 1020 460"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="aB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#4a7fd0"/></marker>
+    <marker id="aG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+    <marker id="aP" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#8a5cae"/></marker>
+  </defs>
+  <rect width="1020" height="460" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14.5" font-weight="700" fill="#1d1d1f">执行器算子 · volcano/pull 与落盘点（executor/ · ExecProcNode 逐行拉取）</text>
+  <text x="30" y="49" font-size="10.5" fill="#6e6e73">每个 plan node 对应 PlanState，上层向下 pull 一行、下层算完上返一行；Sort/HashAgg/HashJoin 会物化、是 work_mem 消费者</text>
+
+  <!-- legend -->
+  <line x1="30" y1="70" x2="54" y2="70" stroke="#4a7fd0" stroke-width="2" stroke-dasharray="5 3" marker-end="url(#aB)"/><text x="60" y="74" font-size="10" fill="#3a3a3c">向下 pull（要一行）</text>
+  <line x1="200" y1="70" x2="224" y2="70" stroke="#2f9e6e" stroke-width="2" marker-end="url(#aG)"/><text x="230" y="74" font-size="10" fill="#3a3a3c">向上返回一行</text>
+  <rect x="352" y="65" width="14" height="10" rx="2" fill="#fff7e6" stroke="#f0dcae"/><text x="372" y="74" font-size="10" fill="#3a3a3c">阻塞/落盘算子</text>
+  <line x1="500" y1="70" x2="524" y2="70" stroke="#8a5cae" stroke-width="2" marker-end="url(#aP)"/><text x="530" y="74" font-size="10" fill="#3a3a3c">并行 worker 汇聚</text>
+  <line x1="30" y1="84" x2="1000" y2="84" stroke="#e4e7ec" stroke-width="1"/>
+
+  <!-- left: plan tree -->
+  <rect x="30" y="100" width="430" height="336" rx="13" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="48" y="123" font-size="12" font-weight="600" fill="#1d1d1f">一棵 plan 的运行态（自顶向下 pull）</text>
+
+  <!-- Gather -->
+  <rect x="150" y="136" width="190" height="42" rx="9" fill="#f4eefb" stroke="#dcc9ef"/><text x="245" y="154" font-size="10.5" font-weight="600" fill="#6f3ea8" text-anchor="middle">Gather（leader 汇聚）</text><text x="245" y="170" font-size="8.5" fill="#8a5cae" text-anchor="middle">ExecGather · gather_readnext</text>
+  <!-- Sort -->
+  <rect x="150" y="200" width="190" height="46" rx="9" fill="#fff7e6" stroke="#f0dcae"/><text x="245" y="219" font-size="10.5" font-weight="600" fill="#7a4d00" text-anchor="middle">Sort ★阻塞</text><text x="245" y="235" font-size="8.5" fill="#9a7328" text-anchor="middle">首次 pull 取尽下游、排好再吐</text>
+  <!-- HashJoin -->
+  <rect x="150" y="268" width="190" height="46" rx="9" fill="#fff7e6" stroke="#f0dcae"/><text x="245" y="287" font-size="10.5" font-weight="600" fill="#7a4d00" text-anchor="middle">HashJoin ★阻塞</text><text x="245" y="303" font-size="8.5" fill="#9a7328" text-anchor="middle">先 build 小表哈希、再 probe</text>
+  <!-- leaves -->
+  <rect x="48" y="352" width="176" height="60" rx="9" fill="#eafaf1" stroke="#bce6cd"/><text x="136" y="373" font-size="10" font-weight="600" fill="#0f5132" text-anchor="middle">SeqScan（probe 大表）</text><text x="136" y="391" font-size="8.5" fill="#3f8f66" text-anchor="middle">流式：取一行给一行</text><text x="136" y="405" font-size="8.5" fill="#3f8f66" text-anchor="middle">按快照过滤，不物化</text>
+  <rect x="266" y="352" width="176" height="60" rx="9" fill="#eafaf1" stroke="#bce6cd"/><text x="354" y="373" font-size="10" font-weight="600" fill="#0f5132" text-anchor="middle">Hash ← SeqScan 小表</text><text x="354" y="391" font-size="8.5" fill="#3f8f66" text-anchor="middle">build 侧一次性读入</text><text x="354" y="405" font-size="8.5" fill="#3f8f66" text-anchor="middle">建内存哈希表</text>
+
+  <!-- edges pull(dashed blue, down on left) / emit(green, up on right) -->
+  <path d="M232,196 L232,182" stroke="#4a7fd0" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#aB)"/>
+  <path d="M258,180 L258,196" stroke="#2f9e6e" stroke-width="1.6" marker-end="url(#aG)"/>
+  <path d="M232,264 L232,250" stroke="#4a7fd0" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#aB)"/>
+  <path d="M258,248 L258,264" stroke="#2f9e6e" stroke-width="1.6" marker-end="url(#aG)"/>
+  <path d="M170,348 L200,318" stroke="#4a7fd0" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#aB)"/>
+  <path d="M320,318 L350,348" stroke="#2f9e6e" stroke-width="1.6" marker-end="url(#aG)"/>
+
+  <!-- right top: blocking / spill -->
+  <rect x="480" y="100" width="510" height="150" rx="13" fill="#fff7e6" stroke="#f0dcae" filter="url(#soft)"/>
+  <text x="498" y="123" font-size="12" font-weight="600" fill="#7a4d00">三个落盘阻塞点 · work_mem 主要消费者</text>
+  <rect x="498" y="134" width="150" height="66" rx="9" fill="#ffffff" stroke="#f0dcae"/><text x="573" y="154" font-size="10" font-weight="600" fill="#7a4d00" text-anchor="middle">Sort</text><text x="573" y="172" font-size="8.5" fill="#9a7328" text-anchor="middle">超 work_mem →</text><text x="573" y="188" font-size="8.5" fill="#9a7328" text-anchor="middle">外部归并落临时文件</text>
+  <rect x="658" y="134" width="150" height="66" rx="9" fill="#ffffff" stroke="#f0dcae"/><text x="733" y="154" font-size="10" font-weight="600" fill="#7a4d00" text-anchor="middle">HashAgg</text><text x="733" y="172" font-size="8.5" fill="#9a7328" text-anchor="middle">哈希表超阈 →</text><text x="733" y="188" font-size="8.5" fill="#9a7328" text-anchor="middle">分批 spill</text>
+  <rect x="818" y="134" width="154" height="66" rx="9" fill="#ffffff" stroke="#f0dcae"/><text x="895" y="154" font-size="10" font-weight="600" fill="#7a4d00" text-anchor="middle">HashJoin</text><text x="895" y="172" font-size="8.5" fill="#9a7328" text-anchor="middle">build 超内存 →</text><text x="895" y="188" font-size="8.5" fill="#9a7328" text-anchor="middle">分批 batch</text>
+  <text x="498" y="222" font-size="9" fill="#9a7328">每个此类节点各占一份 work_mem；复杂计划 × 高并发 → 内存放大、易 OOM。落盘后性能骤降但不报错。</text>
+  <text x="498" y="240" font-size="9" fill="#9a7328">流式算子（SeqScan/IndexScan/NestLoop）不物化，内存平稳。</text>
+
+  <!-- right bottom: parallel -->
+  <rect x="480" y="264" width="510" height="172" rx="13" fill="#f4eefb" stroke="#dcc9ef" filter="url(#soft)"/>
+  <text x="498" y="287" font-size="12" font-weight="600" fill="#6f3ea8">并行落地 · leader + worker 经共享内存 tuple queue</text>
+  <rect x="498" y="300" width="150" height="60" rx="9" fill="#ffffff" stroke="#dcc9ef"/><text x="573" y="322" font-size="10" font-weight="600" fill="#6f3ea8" text-anchor="middle">Gather（leader）</text><text x="573" y="340" font-size="8.5" fill="#8a5cae" text-anchor="middle">LaunchParallelWorkers</text><text x="573" y="354" font-size="8.5" fill="#8a5cae" text-anchor="middle">轮询汇聚各 worker</text>
+  <rect x="700" y="296" width="130" height="30" rx="7" fill="#ffffff" stroke="#dcc9ef"/><text x="765" y="315" font-size="9" fill="#6f3ea8" text-anchor="middle">worker 1 · 扫一部分块</text>
+  <rect x="700" y="330" width="130" height="30" rx="7" fill="#ffffff" stroke="#dcc9ef"/><text x="765" y="349" font-size="9" fill="#6f3ea8" text-anchor="middle">worker 2 · 扫一部分块</text>
+  <rect x="700" y="364" width="130" height="30" rx="7" fill="#ffffff" stroke="#dcc9ef"/><text x="765" y="383" font-size="9" fill="#6f3ea8" text-anchor="middle">worker N …</text>
+  <path d="M700,311 L652,320" stroke="#8a5cae" stroke-width="1.5" marker-end="url(#aP)"/>
+  <path d="M700,345 L652,335" stroke="#8a5cae" stroke-width="1.5" marker-end="url(#aP)"/>
+  <path d="M700,379 L652,348" stroke="#8a5cae" stroke-width="1.5" marker-end="url(#aP)"/>
+  <text x="845" y="316" font-size="9" fill="#8a5cae">worker 是 fork 的独立进程</text>
+  <text x="845" y="334" font-size="9" fill="#8a5cae">计划片段/参数经共享内存传</text>
+  <text x="845" y="352" font-size="9" fill="#8a5cae">受 max_parallel_workers 限</text>
+  <text x="498" y="386" font-size="9" fill="#8a5cae">写操作 · 游标 · SERIALIZABLE · parallel-unsafe 函数 → 退回串行执行</text>
+  <text x="498" y="420" font-size="9.5" fill="#6e6e73">主线：逐行开销靠 JIT（ExprState 编译）/ 并行 / Memoize 缓解；执行期错误（唯一冲突、除零）只在 Run 阶段暴露。</text>
+</svg>

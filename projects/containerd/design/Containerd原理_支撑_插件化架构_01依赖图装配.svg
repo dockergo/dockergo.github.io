@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="450" viewBox="0 0 920 450" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+    <marker id="arb" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#5b7db1"/></marker>
+  </defs>
+  <rect width="920" height="450" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">依赖图装配 · 注册 → Graph 拓扑排序 → 依次 Init 并注入依赖（灵魂）</text>
+
+  <!-- 步骤 1 注册 -->
+  <rect x="30" y="60" width="200" height="130" rx="11" fill="#f6f8fc" stroke="#cfe0f2" filter="url(#soft)"/>
+  <text x="130" y="84" font-size="12" font-weight="600" fill="#5b7db1" text-anchor="middle">① 注册</text>
+  <text x="46" y="106" font-size="10" fill="#1b2a4a">各插件 init() 调</text>
+  <text x="46" y="122" font-size="10" fill="#1b2a4a">registry.Register(&amp;Registration{</text>
+  <text x="56" y="138" font-size="9.5" fill="#5b7db1">Type, ID,</text>
+  <text x="56" y="153" font-size="9.5" fill="#5b7db1">Requires: []Type{...},</text>
+  <text x="56" y="168" font-size="9.5" fill="#5b7db1">InitFn })</text>
+  <text x="46" y="184" font-size="8.5" fill="#a1a1a6">plugin.go:68 Requires</text>
+
+  <!-- 步骤 2 Graph -->
+  <rect x="260" y="60" width="230" height="130" rx="11" fill="#faf4fb" stroke="#e4cdea" filter="url(#soft)"/>
+  <text x="375" y="84" font-size="12" font-weight="600" fill="#8944ab" text-anchor="middle">② Graph 拓扑排序</text>
+  <text x="276" y="106" font-size="10" fill="#8944ab">DFS：children 递归</text>
+  <text x="276" y="122" font-size="10" fill="#8944ab">被依赖者先入 ordered</text>
+  <text x="276" y="138" font-size="10" fill="#8944ab">环依赖 → panic</text>
+  <text x="276" y="158" font-size="8.5" fill="#a1a1a6">plugin.go:114 Graph</text>
+  <text x="276" y="172" font-size="8.5" fill="#a1a1a6">:137 children · :146 循环检测</text>
+  <text x="276" y="186" font-size="8.5" fill="#a1a1a6">filter 剔除 disabled</text>
+
+  <!-- 步骤 3 Init -->
+  <rect x="520" y="60" width="230" height="130" rx="11" fill="#f5faf6" stroke="#cfe6d2" filter="url(#soft)"/>
+  <text x="635" y="84" font-size="12" font-weight="600" fill="#1d8f3f" text-anchor="middle">③ 依次 Init</text>
+  <text x="536" y="106" font-size="10" fill="#1d8f3f">for p := range loaded:</text>
+  <text x="536" y="122" font-size="10" fill="#1d8f3f">NewContext 注入目录/地址</text>
+  <text x="536" y="138" font-size="10" fill="#1d8f3f">p.Init(ic) → Add 到 set</text>
+  <text x="536" y="158" font-size="8.5" fill="#a1a1a6">server.go:161 遍历</text>
+  <text x="536" y="172" font-size="8.5" fill="#a1a1a6">:166 NewContext · :189 Init</text>
+  <text x="536" y="186" font-size="8.5" fill="#a1a1a6">:190 initialized.Add</text>
+
+  <!-- 共享 plugin set -->
+  <rect x="780" y="60" width="110" height="130" rx="11" fill="#fbf7ef" stroke="#ecdcbf" filter="url(#soft)"/>
+  <text x="835" y="84" font-size="11" font-weight="600" fill="#8a6d3b" text-anchor="middle">共享 set</text>
+  <text x="835" y="106" font-size="9" fill="#b08535" text-anchor="middle">initialized</text>
+  <text x="835" y="124" font-size="9" fill="#b08535" text-anchor="middle">已装实例池</text>
+  <text x="835" y="146" font-size="9" fill="#b08535" text-anchor="middle">ic.Get(type)</text>
+  <text x="835" y="162" font-size="9" fill="#b08535" text-anchor="middle">ic.GetByID</text>
+  <text x="835" y="180" font-size="8.5" fill="#a1a1a6" text-anchor="middle">取到依赖</text>
+
+  <path d="M230 125 L260 125" fill="none" stroke="#b8b8bf" stroke-width="1.6" marker-end="url(#ar)"/>
+  <path d="M490 125 L520 125" fill="none" stroke="#b8b8bf" stroke-width="1.6" marker-end="url(#ar)"/>
+  <path d="M750 125 L780 125" fill="none" stroke="#b8b8bf" stroke-width="1.6" marker-end="url(#ar)"/>
+  <!-- 注入回路 -->
+  <path d="M810 190 Q810 240 660 240 L660 192" fill="none" stroke="#5b7db1" stroke-width="1.5" stroke-dasharray="5 3" marker-end="url(#arb)"/>
+  <text x="700" y="258" font-size="9.5" fill="#5b7db1">后装插件从 set 取先装好的依赖 → 依赖注入</text>
+
+  <!-- 示例：CRI plugin 的 Requires -->
+  <rect x="30" y="286" width="860" height="94" rx="11" fill="#f4eefb" stroke="#d9c9ef"/>
+  <text x="46" y="308" font-size="11.5" font-weight="600" fill="#3c1361">范例 · CRI GRPC plugin（plugins/cri/cri.go:48）声明一整串依赖类型 → Graph 保证它们都先装好</text>
+  <g font-size="9" fill="#6f3ea8">
+    <rect x="46" y="320" width="150" height="24" rx="6" fill="#fff" stroke="#d9c9ef"/><text x="54" y="336">CRIServicePlugin</text>
+    <rect x="204" y="320" width="150" height="24" rx="6" fill="#fff" stroke="#d9c9ef"/><text x="212" y="336">SandboxControllerPlugin</text>
+    <rect x="362" y="320" width="120" height="24" rx="6" fill="#fff" stroke="#d9c9ef"/><text x="370" y="336">EventPlugin</text>
+    <rect x="490" y="320" width="120" height="24" rx="6" fill="#fff" stroke="#d9c9ef"/><text x="498" y="336">LeasePlugin</text>
+    <rect x="618" y="320" width="130" height="24" rx="6" fill="#fff" stroke="#d9c9ef"/><text x="626" y="336">TransferPlugin</text>
+    <rect x="756" y="320" width="110" height="24" rx="6" fill="#fff" stroke="#d9c9ef"/><text x="764" y="336">ShimPlugin …</text>
+  </g>
+  <text x="46" y="366" font-size="9.5" fill="#9a76c0">initCRIService（cri.go:70）内 ic.GetByID(CRIServicePlugin,"runtime")（:75）一定取得到——Graph 已排它在前</text>
+
+  <text x="30" y="404" font-size="11.5" fill="#6e6e73"><tspan font-weight="600" fill="#1d1d1f">灵魂：</tspan>插件只声明依赖类型不绑实现 → 同类型可互换（overlayfs/native snapshotter）、可裁剪（disabled_plugins）、可扩展（第三方注册同类型即融入）</text>
+  <text x="30" y="430" font-size="11" fill="#a1a1a6">required 插件失败 → 整体启动失败（server.go:223）；非必需失败 → continue 跳过，能力缺失但 daemon 继续（:208）</text>
+</svg>

@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="540" viewBox="0 0 1080 540" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="540" fill="#fbfbfd"/>
+
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">prefill 与 decode —— 一次推理的两个阶段,代价完全不同</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">prefill 一次并行吃完整个 prompt(算力密集),decode 每步只吐一个 token(显存带宽密集);chunked prefill 把两者混进同一批</text>
+
+  <!-- 图例 -->
+  <rect x="720" y="18" width="12" height="12" rx="3" fill="#eafaf1" stroke="#bfe0cd"/><text x="737" y="28" font-size="9.5" fill="#12402a">token 流</text>
+  <rect x="800" y="18" width="12" height="12" rx="3" fill="#fff7e6" stroke="#e8cf9a"/><text x="817" y="28" font-size="9.5" fill="#5a3410">KV 块</text>
+  <rect x="868" y="18" width="12" height="12" rx="3" fill="#eef3fb" stroke="#c2d3ee"/><text x="885" y="28" font-size="9.5" fill="#2b5aa8">调度</text>
+
+  <!-- Prefill 阶段 -->
+  <rect x="30" y="70" width="500" height="196" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="50" y="94" font-size="12.5" font-weight="700" fill="#12402a">Prefill · 处理 prompt(算力密集)</text>
+  <text x="50" y="112" font-size="9.5" fill="#2f6f4f">num_computed_tokens: 0 → num_prompt_tokens(一步跨完)</text>
+
+  <rect x="50" y="124" width="270" height="40" rx="8" fill="#ffffff" stroke="#bfe0cd"/>
+  <text x="60" y="140" font-size="9" fill="#2f6f4f">输入:整个 prompt</text>
+  <rect x="60" y="146" width="24" height="12" rx="2" fill="#eafaf1" stroke="#bfe0cd"/><text x="72" y="155" font-size="7.5" text-anchor="middle" fill="#2f6f4f">t0</text>
+  <rect x="86" y="146" width="24" height="12" rx="2" fill="#eafaf1" stroke="#bfe0cd"/><text x="98" y="155" font-size="7.5" text-anchor="middle" fill="#2f6f4f">t1</text>
+  <rect x="112" y="146" width="24" height="12" rx="2" fill="#eafaf1" stroke="#bfe0cd"/><text x="124" y="155" font-size="7.5" text-anchor="middle" fill="#2f6f4f">t2</text>
+  <text x="150" y="155" font-size="8" fill="#86868b">… tn</text>
+
+  <path d="M185,164 L185,182" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <rect x="50" y="182" width="270" height="34" rx="8" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="185" y="203" font-size="10" font-weight="600" text-anchor="middle" fill="#12402a">一次前向 · 并行算全部位置</text>
+
+  <rect x="336" y="124" width="174" height="92" rx="9" fill="#fff7e6" stroke="#e8cf9a"/>
+  <text x="423" y="146" font-size="10" font-weight="600" text-anchor="middle" fill="#5a3410">写满整段 KV</text>
+  <text x="423" y="164" font-size="8.5" text-anchor="middle" fill="#93762e">所有 prompt token 的</text>
+  <text x="423" y="178" font-size="8.5" text-anchor="middle" fill="#93762e">K/V 一次算完落块</text>
+  <text x="423" y="200" font-size="8.5" text-anchor="middle" fill="#93762e">大矩阵乘 → 打满算力</text>
+
+  <path d="M320,199 L336,199" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="50" y="240" font-size="9.5" fill="#2f6f4f">产出:第一个生成 token · 一步搞定,但耗时随 prompt 长度增长</text>
+  <text x="50" y="256" font-size="9" fill="#86868b">瓶颈在算力(FLOPs):prompt 越长,这一步越重</text>
+
+  <!-- Decode 阶段 -->
+  <rect x="550" y="70" width="500" height="196" rx="12" fill="#eef3fb" stroke="#c2d3ee" filter="url(#soft)"/>
+  <text x="570" y="94" font-size="12.5" font-weight="700" fill="#2b5aa8">Decode · 逐 token 生成(带宽密集)</text>
+  <text x="570" y="112" font-size="9.5" fill="#3f6fbf">num_computed_tokens += 1(每步只前进一格)</text>
+
+  <rect x="570" y="124" width="180" height="40" rx="8" fill="#ffffff" stroke="#c2d3ee"/>
+  <text x="580" y="140" font-size="9" fill="#3f6fbf">输入:仅上一个 token</text>
+  <rect x="580" y="146" width="24" height="12" rx="2" fill="#eef3fb" stroke="#c2d3ee"/><text x="592" y="155" font-size="7.5" text-anchor="middle" fill="#2b5aa8">tk</text>
+
+  <path d="M660,164 L660,182" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <rect x="570" y="182" width="180" height="34" rx="8" fill="#eef3fb" stroke="#c2d3ee"/>
+  <text x="660" y="203" font-size="10" font-weight="600" text-anchor="middle" fill="#2b5aa8">一次前向 · 只算 1 个位置</text>
+
+  <rect x="766" y="124" width="264" height="92" rx="9" fill="#fff7e6" stroke="#e8cf9a"/>
+  <text x="898" y="146" font-size="10" font-weight="600" text-anchor="middle" fill="#5a3410">读全部历史 KV</text>
+  <text x="898" y="164" font-size="8.5" text-anchor="middle" fill="#93762e">注意力要读 t0..tk 全部缓存的 K/V</text>
+  <text x="898" y="180" font-size="8.5" text-anchor="middle" fill="#93762e">新 token 的 KV 追加一格</text>
+  <text x="898" y="200" font-size="8.5" text-anchor="middle" fill="#93762e">搬 KV 远多于算 → 卡在显存带宽</text>
+
+  <path d="M750,199 L766,199" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="570" y="240" font-size="9.5" fill="#3f6fbf">产出:1 个 token · 循环回到输入,直到停止符/达 max_tokens</text>
+  <path d="M900,232 Q960,232 960,150" stroke="#c2d3ee" stroke-width="1.3" stroke-dasharray="4 3" fill="none" marker-end="url(#ar)"/>
+  <text x="905" y="256" font-size="9" fill="#86868b">瓶颈在带宽:算力空闲,靠攒大 batch 才划算</text>
+
+  <!-- chunked prefill 混批 -->
+  <rect x="30" y="286" width="1020" height="196" rx="12" fill="#ffffff" stroke="#ececef" filter="url(#soft)"/>
+  <text x="50" y="312" font-size="12.5" font-weight="700" fill="#1d1d1f">Chunked Prefill · 把两阶段混进同一步,补上彼此的短板</text>
+  <text x="50" y="330" font-size="9.5" fill="#86868b">纯 prefill 步算力满但没在出 token;纯 decode 步带宽满但算力闲 —— 调度器按 token 预算把长 prompt 切块,与 decode 请求拼成一批</text>
+
+  <rect x="50" y="346" width="300" height="120" rx="10" fill="#eef3fb" stroke="#c2d3ee"/>
+  <text x="200" y="368" font-size="10.5" font-weight="600" text-anchor="middle" fill="#2b5aa8">调度器 · token 预算切分</text>
+  <text x="200" y="388" font-size="9" text-anchor="middle" fill="#3f6fbf">长 prompt 不必一步吃完</text>
+  <text x="200" y="404" font-size="9" text-anchor="middle" fill="#3f6fbf">按 max_num_scheduled_tokens</text>
+  <text x="200" y="420" font-size="9" text-anchor="middle" fill="#3f6fbf">切成若干 chunk 分步做</text>
+  <text x="200" y="444" font-size="8.5" text-anchor="middle" fill="#86868b">避免一个超长 prefill 卡住整批</text>
+
+  <path d="M350,406 L392,406" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <rect x="392" y="346" width="330" height="120" rx="10" fill="#f7f7f9" stroke="#e2e2e6"/>
+  <text x="557" y="368" font-size="10.5" font-weight="600" text-anchor="middle" fill="#1d1d1f">同一批 · prefill chunk + decode 混合</text>
+  <rect x="412" y="384" width="120" height="24" rx="5" fill="#eafaf1" stroke="#bfe0cd"/><text x="472" y="400" font-size="8.5" text-anchor="middle" fill="#12402a">prefill chunk(算力)</text>
+  <rect x="412" y="414" width="120" height="24" rx="5" fill="#eef3fb" stroke="#c2d3ee"/><text x="472" y="430" font-size="8.5" text-anchor="middle" fill="#2b5aa8">decode(带宽)</text>
+  <rect x="542" y="384" width="160" height="54" rx="6" fill="#ffffff" stroke="#e2e2e6"/>
+  <text x="622" y="405" font-size="8.5" text-anchor="middle" fill="#86868b">算力与带宽在同一步</text>
+  <text x="622" y="421" font-size="8.5" text-anchor="middle" fill="#86868b">被同时吃满</text>
+
+  <path d="M722,406 L764,406" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <rect x="764" y="346" width="266" height="120" rx="10" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="897" y="368" font-size="10.5" font-weight="600" text-anchor="middle" fill="#12402a">效果</text>
+  <text x="897" y="390" font-size="9" text-anchor="middle" fill="#2f6f4f">GPU 每步算力+带宽都不闲</text>
+  <text x="897" y="408" font-size="9" text-anchor="middle" fill="#2f6f4f">长 prompt 不再阻塞其他请求</text>
+  <text x="897" y="426" font-size="9" text-anchor="middle" fill="#2f6f4f">首 token 延迟与吞吐更平滑</text>
+  <text x="897" y="450" font-size="8.5" text-anchor="middle" fill="#86868b">代价:实现更复杂,注意力需支持混批</text>
+
+  <text x="30" y="510" font-size="9" fill="#a1a1a6">prefill=一次并行算完 prompt 的 KV(算力密集);decode=逐 token 读全历史 KV(带宽密集);chunked prefill 混批补短板,也是 PD 分离的动机 · vLLM(git 7aab6e2, v1)</text>
+</svg>

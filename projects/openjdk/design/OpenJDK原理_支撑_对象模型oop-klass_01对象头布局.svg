@@ -1,0 +1,96 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="560" viewBox="0 0 1000 560" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="a1" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#5b7db1"/></marker>
+    <marker id="a2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#d38236"/></marker>
+    <marker id="a3" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+  </defs>
+  <rect width="1000" height="560" fill="#fbfbfd"/>
+  <text x="24" y="30" font-size="14" font-weight="700" fill="#1d1d1f">oop 对象头布局 · markWord + 压缩类指针 → 指回 Klass 模板</text>
+  <text x="24" y="49" font-size="10" fill="#6e6e73">每个 Java 对象 = 对象头(标记字 + 类指针) + 实例数据 + 对齐填充；类指针指向元空间里全类唯一的一份 Klass</text>
+
+  <!-- 对象整体 -->
+  <rect x="24" y="66" width="600" height="196" rx="12" fill="#fbf7ef" stroke="#ecdcbf"/>
+  <text x="40" y="86" font-size="11" font-weight="600" fill="#8a6d3b">Java 堆上的一个对象（instanceOop / arrayOop）</text>
+
+  <!-- markWord -->
+  <rect x="44" y="98" width="560" height="66" rx="9" fill="#fff" stroke="#ecdcbf" filter="url(#soft)"/>
+  <text x="56" y="116" font-size="10.5" font-weight="600" fill="#8a5a1a">① markWord（1 个机器字，volatile）</text>
+  <text x="56" y="133" font-size="8.5" fill="#6e6e73">承载运行期元信息，多线程 CAS 更新</text>
+  <g text-anchor="middle" font-size="8">
+    <rect x="56" y="140" width="118" height="18" rx="4" fill="#f6f8fc" stroke="#cfe0f2"/><text x="115" y="152" fill="#1b2a4a">锁位 lock_bits=2</text>
+    <rect x="180" y="140" width="118" height="18" rx="4" fill="#f6f8fc" stroke="#cfe0f2"/><text x="239" y="152" fill="#1b2a4a">年龄 age_bits=4</text>
+    <rect x="304" y="140" width="150" height="18" rx="4" fill="#f6f8fc" stroke="#cfe0f2"/><text x="379" y="152" fill="#1b2a4a">身份哈希 hash（惰性写入）</text>
+    <rect x="460" y="140" width="132" height="18" rx="4" fill="#f5faf6" stroke="#cfe6d2"/><text x="526" y="152" fill="#1c6b45">紧凑头时: 内嵌 narrowKlass</text>
+  </g>
+
+  <!-- 压缩类指针 -->
+  <rect x="44" y="172" width="560" height="40" rx="9" fill="#fff" stroke="#d9c9ef" filter="url(#soft)"/>
+  <text x="56" y="190" font-size="10.5" font-weight="600" fill="#6f3ea8">② narrowKlass _compressed_klass（32 位压缩类指针）</text>
+  <text x="56" y="205" font-size="8.5" fill="#6e6e73">默认 UseCompressedClassPointers 开启；紧凑对象头(JDK 28)时此字段并入 markWord</text>
+
+  <!-- 实例数据 + 填充 -->
+  <rect x="44" y="220" width="368" height="32" rx="9" fill="#fff" stroke="#ecdcbf" filter="url(#soft)"/>
+  <text x="56" y="240" font-size="10" font-weight="600" fill="#8a5a1a">③ 实例数据（字段按 Klass 布局排放）</text>
+  <rect x="420" y="220" width="184" height="32" rx="9" fill="#fff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="512" y="240" font-size="9.5" fill="#6e6e73" text-anchor="middle">④ 对齐填充 → 8 字节倍数</text>
+
+  <!-- Klass 模板 -->
+  <rect x="672" y="66" width="304" height="196" rx="12" fill="#f6f8fc" stroke="#cfe0f2"/>
+  <text x="688" y="86" font-size="11" font-weight="600" fill="#5b7db1">元空间 Metaspace · Klass（全类唯一一份）</text>
+  <g>
+    <rect x="688" y="98" width="272" height="30" rx="8" fill="#fff" stroke="#cfe0f2" filter="url(#soft)"/>
+    <text x="700" y="117" font-size="9.5" fill="#1b2a4a"><tspan font-weight="600">_layout_helper</tspan> — 编码大小/头/元素宽</text>
+    <rect x="688" y="132" width="272" height="30" rx="8" fill="#fff" stroke="#cfe0f2" filter="url(#soft)"/>
+    <text x="700" y="151" font-size="9.5" fill="#1b2a4a"><tspan font-weight="600">_super / _primary_supers[8]</tspan></text>
+    <rect x="688" y="166" width="272" height="30" rx="8" fill="#fff" stroke="#cfe0f2" filter="url(#soft)"/>
+    <text x="700" y="185" font-size="9.5" fill="#1b2a4a"><tspan font-weight="600">_super_check_offset</tspan> / secondary_supers</text>
+    <rect x="688" y="200" width="272" height="30" rx="8" fill="#fff" stroke="#d9c9ef" filter="url(#soft)"/>
+    <text x="700" y="219" font-size="9.5" fill="#6f3ea8"><tspan font-weight="600">_java_mirror</tspan> → java.lang.Class</text>
+    <rect x="688" y="234" width="272" height="20" rx="6" fill="#f5faf6" stroke="#cfe6d2"/>
+    <text x="700" y="248" font-size="8.5" fill="#1c6b45">vtable / itable / 字段元数据 / oop-map</text>
+  </g>
+
+  <!-- 类指针连线 -->
+  <line x1="604" y1="192" x2="672" y2="140" stroke="#d38236" stroke-width="1.8" marker-end="url(#a2)"/>
+  <text x="612" y="176" font-size="8" fill="#d38236">decode → Klass*</text>
+
+  <!-- 大小现算 -->
+  <rect x="24" y="286" width="600" height="112" rx="12" fill="#f5faf6" stroke="#cfe6d2"/>
+  <text x="40" y="306" font-size="11" font-weight="600" fill="#1d8f3f">对象大小不落地：每次按 Klass 现算</text>
+  <g text-anchor="middle">
+    <rect x="44" y="318" width="168" height="64" rx="9" fill="#fff" stroke="#cfe6d2" filter="url(#soft)"/>
+    <text x="128" y="343" font-size="10" font-weight="600" fill="#1c6b45">oopDesc::size()</text><text x="128" y="361" font-size="8" fill="#6e6e73">读取所属 Klass</text><text x="128" y="374" font-size="8" fill="#6e6e73">再委托 size_given_klass</text>
+    <rect x="236" y="318" width="168" height="64" rx="9" fill="#fff" stroke="#cfe6d2" filter="url(#soft)"/>
+    <text x="320" y="343" font-size="10" font-weight="600" fill="#1c6b45">size_given_klass()</text><text x="320" y="361" font-size="8" fill="#6e6e73">实例: layout_helper 定长</text><text x="320" y="374" font-size="8" fill="#6e6e73">数组: 头 + length×元素宽</text>
+    <rect x="428" y="318" width="176" height="64" rx="9" fill="#fff" stroke="#ecdcbf" filter="url(#soft)"/>
+    <text x="516" y="343" font-size="10" font-weight="600" fill="#8a5a1a">对齐补齐</text><text x="516" y="361" font-size="8" fill="#6e6e73">ObjectAlignmentInBytes</text><text x="516" y="374" font-size="8" fill="#6e6e73">补到 8 字节倍数</text>
+  </g>
+  <line x1="212" y1="350" x2="236" y2="350" stroke="#2f9e6e" stroke-width="1.6" marker-end="url(#a3)"/>
+  <line x1="404" y1="350" x2="428" y2="350" stroke="#2f9e6e" stroke-width="1.6" marker-end="url(#a3)"/>
+
+  <!-- 头形态对比 -->
+  <rect x="672" y="286" width="304" height="112" rx="12" fill="#f4eefb" stroke="#d9c9ef"/>
+  <text x="688" y="306" font-size="11" font-weight="600" fill="#6f3ea8">对象头形态随开关变化</text>
+  <text x="688" y="326" font-size="9" fill="#3a3a3c">压缩类指针(默认): 实例头 12B / 数组头 16B</text>
+  <text x="688" y="346" font-size="9" fill="#3a3a3c">UseCompactObjectHeaders(JDK28): 头 8B</text>
+  <text x="688" y="366" font-size="9" fill="#3a3a3c">— 类指针内嵌 markWord 高 22 位(klass_bits)</text>
+  <text x="688" y="386" font-size="8.5" fill="#9a76c0">小对象密集服务收益显著</text>
+
+  <!-- 两个特化 -->
+  <rect x="24" y="422" width="952" height="118" rx="12" fill="#fbf7ef" stroke="#ecdcbf"/>
+  <text x="40" y="442" font-size="11" font-weight="600" fill="#8a6d3b">oopDesc 的两个特化 · instanceOop 不加字段，arrayOop 多一个 length</text>
+  <g>
+    <rect x="44" y="454" width="452" height="74" rx="9" fill="#fff" stroke="#ecdcbf" filter="url(#soft)"/>
+    <text x="60" y="474" font-size="10" font-weight="600" fill="#8a5a1a">instanceOopDesc</text>
+    <text x="60" y="492" font-size="8.5" fill="#6e6e73">class instanceOopDesc : public oopDesc {} — 无额外字段</text>
+    <text x="60" y="509" font-size="8.5" fill="#6e6e73">字段偏移全由 InstanceKlass 描述；GC 用 oop-map 定位引用字段</text>
+    <text x="60" y="523" font-size="8" fill="#9a9aa0">头 → 实例字段(引用/基本类型混排) → 填充</text>
+
+    <rect x="512" y="454" width="464" height="74" rx="9" fill="#fff" stroke="#ecdcbf" filter="url(#soft)"/>
+    <text x="528" y="474" font-size="10" font-weight="600" fill="#8a5a1a">arrayOopDesc</text>
+    <text x="528" y="492" font-size="8.5" fill="#6e6e73">头之后多一个 int length（length_offset_in_bytes）</text>
+    <text x="528" y="509" font-size="8.5" fill="#6e6e73">元素数据紧随其后；大小 = 头 + length × 元素宽</text>
+    <text x="528" y="523" font-size="8" fill="#9a9aa0">头 → length → 元素[0..n-1] → 填充</text>
+  </g>
+</svg>

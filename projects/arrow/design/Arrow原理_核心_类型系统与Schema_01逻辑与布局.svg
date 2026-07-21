@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="520" viewBox="0 0 960 520" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <marker id="c1" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#5b7db1"/></marker>
+    <filter id="s4" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+  </defs>
+  <rect width="960" height="520" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="700" fill="#1d1d1f">类型系统 · 逻辑类型描述物理布局（type.h）—— 逻辑 ≠ 物理</text>
+  <text x="30" y="50" font-size="10.5" fill="#6e6e73">DataType 是逻辑类型；DataTypeLayout 告诉 Array "该有几个 buffer、各是什么 BufferKind"</text>
+
+  <!-- Schema -> Field -> DataType 链 -->
+  <rect x="30" y="80" width="270" height="150" rx="12" fill="#f6f8fc" stroke="#cfe0f2" filter="url(#s4)"/>
+  <text x="165" y="102" font-size="12" font-weight="700" fill="#1b2a4a" text-anchor="middle">Schema（type.h:2330）</text>
+  <text x="165" y="121" font-size="9" fill="#5b7db1" text-anchor="middle">有序 Field 列表 + 元数据</text>
+  <rect x="50" y="132" width="230" height="40" rx="8" fill="#fff" stroke="#cfe0f2"/>
+  <text x="165" y="151" font-size="10" font-weight="600" fill="#1b2a4a" text-anchor="middle">Field（type.h:364）</text>
+  <text x="165" y="165" font-size="8.5" fill="#5b7db1" text-anchor="middle">name + type + nullable + metadata</text>
+  <rect x="50" y="180" width="230" height="40" rx="8" fill="#fff" stroke="#cfe0f2"/>
+  <text x="165" y="199" font-size="10" font-weight="600" fill="#1b2a4a" text-anchor="middle">DataType（type.h:136）</text>
+  <text x="165" y="213" font-size="8.5" fill="#5b7db1" text-anchor="middle">logical type · id + 子 fields</text>
+
+  <line x1="300" y1="200" x2="360" y2="200" stroke="#5b7db1" stroke-width="1.8" stroke-dasharray="5 3" marker-end="url(#c1)"/>
+  <text x="330" y="192" font-size="8" fill="#5b7db1" text-anchor="middle">Layout()</text>
+
+  <!-- DataTypeLayout -->
+  <rect x="360" y="80" width="570" height="150" rx="12" fill="#f5faf6" stroke="#bfe6cd" filter="url(#s4)"/>
+  <text x="376" y="102" font-size="11.5" font-weight="700" fill="#1c6b45">DataTypeLayout（type.h:93）· 声明 buffer 序列</text>
+  <text x="376" y="121" font-size="9.5" fill="#2f7d57">enum BufferKind（type.h:94）：FIXED_WIDTH · VARIABLE_WIDTH · BITMAP · ALWAYS_NULL</text>
+  <g font-size="8.5" text-anchor="middle">
+    <rect x="376" y="132" width="128" height="36" rx="6" fill="#fff" stroke="#cdeadb"/><text x="440" y="149" fill="#1c6b45" font-weight="600">Int32</text><text x="440" y="162" fill="#4a4a4f">[BITMAP, FIXED_WIDTH(4)]</text>
+    <rect x="512" y="132" width="128" height="36" rx="6" fill="#fff" stroke="#cdeadb"/><text x="576" y="149" fill="#1c6b45" font-weight="600">String</text><text x="576" y="162" fill="#4a4a4f">[BITMAP, VAR, VAR]</text>
+    <rect x="648" y="132" width="128" height="36" rx="6" fill="#fff" stroke="#cdeadb"/><text x="712" y="149" fill="#1c6b45" font-weight="600">Struct</text><text x="712" y="162" fill="#4a4a4f">[BITMAP] + child_data</text>
+    <rect x="784" y="132" width="130" height="36" rx="6" fill="#fff" stroke="#cdeadb"/><text x="849" y="149" fill="#1c6b45" font-weight="600">Null</text><text x="849" y="162" fill="#4a4a4f">[ALWAYS_NULL]</text>
+  </g>
+  <text x="376" y="188" font-size="9" fill="#2f7d57">has_dictionary：是否带字典数组　·　variadic_spec：可变数量 buffer（如 StringView 的多 data buffer）</text>
+  <text x="376" y="206" font-size="9" fill="#2f7d57">→ Array 据此知道 buffers[] 每一格该放什么、如何解读字节</text>
+  <text x="376" y="222" font-size="8.5" fill="#8a9a8f">BinaryView：kSize=16, kInlineSize=12, kPrefixSize=4（type.h:790-792）</text>
+
+  <!-- 逻辑vs物理 -->
+  <rect x="30" y="252" width="900" height="110" rx="12" fill="#fbf2ea" stroke="#e6cdae"/>
+  <text x="46" y="274" font-size="11" font-weight="700" fill="#b0651f">逻辑 ≠ 物理（type.h doc）</text>
+  <text x="46" y="295" font-size="9.5" fill="#5a4a3a">同一物理布局可承载多个逻辑类型：Timestamp / Date64 / Int64 都是 8 字节定长 —— 物理都是 int64，逻辑语义不同。</text>
+  <text x="46" y="314" font-size="9.5" fill="#5a4a3a">Equals 只认逻辑相等：List&lt;UInt8&gt; 与 Binary 物理相似但类型 NOT equal（type.h:145-146 注释）。</text>
+  <text x="46" y="333" font-size="9.5" fill="#5a4a3a">DataType 是"解读字节的透镜"：Array 存字节，DataType 决定这些字节是整数、时间戳还是字符串偏移。</text>
+  <text x="46" y="352" font-size="8.5" fill="#8a7a5a">num_fields()（type.h:159）· field(i)（:153）· fields()（:156）—— 嵌套类型的子 field 递归描述子列</text>
+
+  <rect x="30" y="378" width="900" height="120" rx="12" fill="#f6f6f8" stroke="#e2e2e7"/>
+  <text x="46" y="400" font-size="11" font-weight="700" fill="#1d1d1f">为什么类型要和数据分离</text>
+  <text x="46" y="421" font-size="9.5" fill="#4a4a4f">① 一个 DataType 实例可被无数 Array 共享（shared_ptr），描述与数据解耦、内存省。</text>
+  <text x="46" y="440" font-size="9.5" fill="#4a4a4f">② Schema 独立传输：IPC / C-Data / Flight 都先传 schema、再传数据批（一次 schema，多批数据）。</text>
+  <text x="46" y="459" font-size="9.5" fill="#4a4a4f">③ 跨语言只需约定"类型 format 字符串 + layout"，各语言自建 DataType，数据 buffer 原样共享。</text>
+  <text x="46" y="478" font-size="9.5" fill="#4a4a4f">④ compute 内核按类型 DispatchExact 选实现：类型是"派发键"，数据是"被运算的字节"。</text>
+</svg>

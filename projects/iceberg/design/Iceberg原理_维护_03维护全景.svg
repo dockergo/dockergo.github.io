@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="500" viewBox="0 0 1080 500" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="500" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="700" fill="#1d1d1f">维护全景 · 前台写入产生的"熵",后台三种维护回收</text>
+  <text x="30" y="49" font-size="9.5" fill="#a1a1a6">不可变元数据 + MoR + 时间旅行的代价:碎片与旧版本堆积;维护都走原子提交</text>
+
+  <!-- legend -->
+  <g font-size="9" fill="#6e6e73">
+    <rect x="770" y="20" width="12" height="12" rx="3" fill="#fbeef0" stroke="#ecc4cd"/><text x="787" y="30">熵(堆积)</text>
+    <rect x="860" y="20" width="12" height="12" rx="3" fill="#f5faf6" stroke="#cfe6d5"/><text x="877" y="30">维护(回收)</text>
+    <rect x="960" y="20" width="12" height="12" rx="3" fill="#e7f0fb" stroke="#b9d2ef"/><text x="977" y="30">提交</text>
+  </g>
+
+  <!-- entropy column -->
+  <text x="46" y="82" font-size="11" font-weight="700" fill="#7a2438">前台产生的三类熵</text>
+  <rect x="30" y="94" width="330" height="70" rx="12" fill="#fbeef0" stroke="#ecc4cd"/>
+  <text x="46" y="117" font-size="9.8" font-weight="700" fill="#7a2438">小 data file 堆积</text>
+  <text x="46" y="136" font-size="8.6" fill="#a65068">频繁小批写 → 大量小文件</text>
+  <text x="46" y="153" font-size="8.6" fill="#a65068">读时任务碎、剪枝粗</text>
+
+  <rect x="30" y="174" width="330" height="70" rx="12" fill="#fbeef0" stroke="#ecc4cd"/>
+  <text x="46" y="197" font-size="9.8" font-weight="700" fill="#7a2438">小 manifest + delete file 堆积</text>
+  <text x="46" y="216" font-size="8.6" fill="#a65068">MoR 删除只写小 delete file</text>
+  <text x="46" y="233" font-size="8.6" fill="#a65068">读时叠加过滤越来越慢</text>
+
+  <rect x="30" y="254" width="330" height="70" rx="12" fill="#fbeef0" stroke="#ecc4cd"/>
+  <text x="46" y="277" font-size="9.8" font-weight="700" fill="#7a2438">旧快照 + 孤儿文件膨胀</text>
+  <text x="46" y="296" font-size="8.6" fill="#a65068">时间旅行让旧快照永久保留</text>
+  <text x="46" y="313" font-size="8.6" fill="#a65068">失败提交留下无主文件</text>
+
+  <!-- arrows to maintenance -->
+  <line x1="360" y1="129" x2="420" y2="129" stroke="#b8b8bf" stroke-width="1.4" marker-end="url(#ar)"/>
+  <line x1="360" y1="209" x2="420" y2="209" stroke="#b8b8bf" stroke-width="1.4" marker-end="url(#ar)"/>
+  <line x1="360" y1="289" x2="420" y2="289" stroke="#b8b8bf" stroke-width="1.4" marker-end="url(#ar)"/>
+
+  <!-- maintenance column -->
+  <text x="436" y="82" font-size="11" font-weight="700" fill="#12402a">对应的三种维护动作</text>
+  <rect x="420" y="94" width="360" height="70" rx="12" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="436" y="117" font-size="9.8" font-weight="700" fill="#12402a">Compaction · rewrite data files</text>
+  <text x="436" y="136" font-size="8.6" fill="#2f6f4f">bin-pack 小文件装箱成大文件</text>
+  <text x="436" y="153" font-size="8.6" fill="#2f6f4f">顺带物化删除,保留 data_seq</text>
+
+  <rect x="420" y="174" width="360" height="70" rx="12" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="436" y="197" font-size="9.8" font-weight="700" fill="#12402a">Compaction · rewrite manifests</text>
+  <text x="436" y="216" font-size="8.6" fill="#2f6f4f">合并小 manifest、按分区聚簇</text>
+  <text x="436" y="233" font-size="8.6" fill="#2f6f4f">加快第一级 manifest 剪枝</text>
+
+  <rect x="420" y="254" width="360" height="70" rx="12" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="436" y="277" font-size="9.8" font-weight="700" fill="#12402a">Expire snapshots + remove orphan</text>
+  <text x="436" y="296" font-size="8.6" fill="#2f6f4f">按保留策略回收旧快照/不再引用文件</text>
+  <text x="436" y="313" font-size="8.6" fill="#2f6f4f">对比 metadata 引用集清孤儿文件</text>
+
+  <!-- arrows to commit -->
+  <line x1="780" y1="129" x2="840" y2="185" stroke="#b8b8bf" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="780" y1="209" x2="840" y2="209" stroke="#b8b8bf" stroke-width="1.4" marker-end="url(#ar)"/>
+  <line x1="780" y1="289" x2="840" y2="233" stroke="#b8b8bf" stroke-width="1.2" marker-end="url(#ar)"/>
+
+  <!-- commit column -->
+  <rect x="840" y="150" width="210" height="120" rx="12" fill="#e7f0fb" stroke="#b9d2ef"/>
+  <text x="945" y="176" font-size="10" font-weight="700" fill="#1b2a4a" text-anchor="middle">都走原子提交</text>
+  <text x="945" y="198" font-size="8.6" fill="#5b7db1" text-anchor="middle">SnapshotProducer.commit</text>
+  <text x="945" y="216" font-size="8.6" fill="#5b7db1" text-anchor="middle">+ OCC 冲突检测</text>
+  <text x="945" y="238" font-size="8.6" fill="#5b7db1" text-anchor="middle">产新快照、原子换指针</text>
+  <text x="945" y="258" font-size="8.4" fill="#7d9bc4" text-anchor="middle">与前台读写共享并发模型</text>
+
+  <!-- bottom -->
+  <rect x="30" y="340" width="1020" height="60" rx="12" fill="#f7f9fc" stroke="#e5ecf5"/>
+  <text x="46" y="364" font-size="10" font-weight="700" fill="#1b2a4a">关键不变量:维护不改变查询结果,只重整物理布局</text>
+  <text x="46" y="383" font-size="9" fill="#5b7db1">compaction 重写保留 data_sequence_number → 行级删除的作用范围语义不乱;回收只删"不再被任何保留快照引用"的文件</text>
+
+  <rect x="30" y="410" width="1020" height="70" rx="12" fill="#f0f0f4" stroke="#d2d2d7"/>
+  <text x="46" y="434" font-size="10" font-weight="700" fill="#48484a">维护不是可选项</text>
+  <text x="46" y="455" font-size="9" fill="#6e6e73">· MoR 表不做 compaction → 越读越慢(delete file 堆积)  · 不做 expire → 存储无限膨胀(旧快照/文件永不回收)</text>
+  <text x="46" y="473" font-size="9" fill="#6e6e73">· remove orphan 要用足够大的时间窗,避免误删正在提交的文件</text>
+</svg>

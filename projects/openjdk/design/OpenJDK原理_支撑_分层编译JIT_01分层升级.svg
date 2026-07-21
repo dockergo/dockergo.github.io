@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="560" viewBox="0 0 1000 560" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="s2" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="a1" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#5b7db1"/></marker>
+    <marker id="a2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+    <marker id="a3" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#d38236"/></marker>
+  </defs>
+  <rect width="1000" height="560" fill="#fbfbfd"/>
+  <text x="24" y="30" font-size="14" font-weight="700" fill="#1d1d1f">分层编译 · 计数器驱动 <tspan font-weight="600">解释 0 → C1 (1/2/3) → C2 (4)</tspan> 升级 · CompileBroker 队列异步派发</text>
+  <text x="24" y="49" font-size="10" fill="#6e6e73">解释器边跑边埋计数器 → 越阈发事件 → CompilationPolicy 判定目标级别 → 入队 → 后台编译线程出码装 nmethod；投机失败经 deopt 退回解释器</text>
+
+  <!-- ① 升级链 -->
+  <rect x="24" y="66" width="952" height="118" rx="12" fill="#f6f8fc" stroke="#cfe0f2"/>
+  <text x="40" y="86" font-size="11" font-weight="600" fill="#5b7db1">① 升级链 · 热度越高、优化越深（编译成本与峰值收益按需付费）· compilerDefinitions.hpp:57-63</text>
+  <g text-anchor="middle">
+    <rect x="34" y="98" width="168" height="66" rx="10" fill="#f5faf6" stroke="#cfe6d2" filter="url(#s2)"/>
+    <text x="118" y="122" font-size="10.5" font-weight="600" fill="#1c6b45">L0 解释器</text><text x="118" y="139" font-size="8" fill="#6e6e73">解释执行 + 累积计数</text><text x="118" y="154" font-size="7.5" fill="#9a9aa0">CompLevel_none=0</text>
+    <rect x="225" y="98" width="168" height="66" rx="10" fill="#fff" stroke="#cfe0f2" filter="url(#s2)"/>
+    <text x="309" y="122" font-size="10.5" font-weight="600" fill="#1b2a4a">L1 C1 · 无 profile</text><text x="309" y="139" font-size="8" fill="#6e6e73">最快出码 · 不插桩</text><text x="309" y="154" font-size="7.5" fill="#9a9aa0">CompLevel_simple=1</text>
+    <rect x="416" y="98" width="168" height="66" rx="10" fill="#fff" stroke="#cfe0f2" filter="url(#s2)"/>
+    <text x="500" y="122" font-size="10.5" font-weight="600" fill="#1b2a4a">L2 C1 · 有限 profile</text><text x="500" y="139" font-size="8" fill="#6e6e73">轻量计数 · 队列拥塞时走</text><text x="500" y="154" font-size="7.5" fill="#9a9aa0">limited_profile=2</text>
+    <rect x="607" y="98" width="168" height="66" rx="10" fill="#fbf7ef" stroke="#ecdcbf" filter="url(#s2)"/>
+    <text x="691" y="122" font-size="10.5" font-weight="600" fill="#8a5a1a">L3 C1 · 完整 MDO</text><text x="691" y="139" font-size="8" fill="#6e6e73">采集分支频率/类型剖面</text><text x="691" y="154" font-size="7.5" fill="#9a9aa0">full_profile=3</text>
+    <rect x="798" y="98" width="168" height="66" rx="10" fill="#eef3fb" stroke="#b9d0ea" filter="url(#s2)"/>
+    <text x="882" y="122" font-size="10.5" font-weight="600" fill="#1b2a4a">L4 C2 · 峰值</text><text x="882" y="139" font-size="8" fill="#6e6e73">sea-of-nodes 全优化</text><text x="882" y="154" font-size="7.5" fill="#9a9aa0">full_optimization=4</text>
+  </g>
+  <!-- 升级箭头(绿实线=Hot) -->
+  <line x1="202" y1="131" x2="225" y2="131" stroke="#2f9e6e" stroke-width="1.6" marker-end="url(#a2)"/>
+  <line x1="393" y1="131" x2="416" y2="131" stroke="#2f9e6e" stroke-width="1.6" marker-end="url(#a2)"/>
+  <line x1="584" y1="131" x2="607" y2="131" stroke="#2f9e6e" stroke-width="1.6" marker-end="url(#a2)"/>
+  <line x1="775" y1="131" x2="798" y2="131" stroke="#2f9e6e" stroke-width="1.6" marker-end="url(#a2)"/>
+  <!-- profile 反哺(琥珀) L3 -> C2 -->
+  <path d="M691 164 L691 176 L882 176 L882 164" fill="none" stroke="#d38236" stroke-width="1.3" stroke-dasharray="2 3" marker-end="url(#a3)"/>
+  <text x="786" y="174" font-size="8" fill="#c96a1f" text-anchor="middle">profile 反哺：C2 依 L3 数据投机</text>
+
+  <!-- ② CompilationPolicy 事件判定 -->
+  <rect x="24" y="196" width="952" height="112" rx="12" fill="#f5faf6" stroke="#cfe6d2"/>
+  <text x="40" y="216" font-size="11" font-weight="600" fill="#1d8f3f">② 计数越阈 → CompilationPolicy 判定级别 · compilationPolicy.cpp</text>
+  <g text-anchor="middle">
+    <rect x="34" y="228" width="176" height="66" rx="10" fill="#fff" stroke="#cfe6d2" filter="url(#s2)"/>
+    <text x="122" y="250" font-size="10" font-weight="600" fill="#1c6b45">InvocationCounter</text><text x="122" y="266" font-size="8" fill="#6e6e73">调用计数 + 回边计数</text><text x="122" y="281" font-size="7.5" fill="#9a9aa0">invocationCounter.hpp:36</text>
+    <rect x="232" y="228" width="176" height="66" rx="10" fill="#fff" stroke="#cfe6d2" filter="url(#s2)"/>
+    <text x="320" y="246" font-size="10" font-weight="600" fill="#1c6b45">event() 分流</text><text x="320" y="262" font-size="8" fill="#6e6e73">call_event / loop_event</text><text x="320" y="277" font-size="7.5" fill="#9a9aa0">:788 / :1378 / :1399</text>
+    <rect x="430" y="228" width="176" height="66" rx="10" fill="#f6f8fc" stroke="#cfe0f2" filter="url(#s2)"/>
+    <text x="518" y="246" font-size="10" font-weight="600" fill="#1b2a4a">common() 谓词判定</text><text x="518" y="262" font-size="8" fill="#6e6e73">算 next_level 晋级</text><text x="518" y="277" font-size="7.5" fill="#9a9aa0">compilationPolicy.cpp:1234</text>
+    <rect x="628" y="228" width="176" height="66" rx="10" fill="#f6f8fc" stroke="#cfe0f2" filter="url(#s2)"/>
+    <text x="716" y="246" font-size="10" font-weight="600" fill="#1b2a4a">invocation_event</text><text x="716" y="262" font-size="8" fill="#6e6e73">建 MDO + 提交编译</text><text x="716" y="277" font-size="7.5" fill="#9a9aa0">compilationPolicy.cpp:1413</text>
+    <rect x="826" y="228" width="140" height="66" rx="10" fill="#f4eefb" stroke="#d9c9ef" filter="url(#s2)"/>
+    <text x="896" y="246" font-size="10" font-weight="600" fill="#6f3ea8">OSR 栈上替换</text><text x="896" y="262" font-size="8" fill="#6e6e73">长循环途中热切换</text><text x="896" y="277" font-size="7.5" fill="#9a9aa0">compilationPolicy.cpp:814</text>
+  </g>
+  <line x1="210" y1="261" x2="232" y2="261" stroke="#2f9e6e" stroke-width="1.5" marker-end="url(#a2)"/>
+  <line x1="408" y1="261" x2="430" y2="261" stroke="#2f9e6e" stroke-width="1.5" marker-end="url(#a2)"/>
+  <line x1="606" y1="261" x2="628" y2="261" stroke="#2f9e6e" stroke-width="1.5" marker-end="url(#a2)"/>
+  <line x1="716" y1="228" x2="716" y2="220" stroke="#5b7db1" stroke-width="1.3" stroke-dasharray="4 3" marker-end="url(#a1)"/>
+  <path d="M320 294 L320 302 L896 302 L896 294" fill="none" stroke="#6f3ea8" stroke-width="1.2" stroke-dasharray="4 3" marker-end="url(#a1)"/>
+
+  <!-- ③ CompileBroker 队列派发 -->
+  <rect x="24" y="320" width="952" height="132" rx="12" fill="#f6f8fc" stroke="#cfe0f2"/>
+  <text x="40" y="340" font-size="11" font-weight="600" fill="#5b7db1">③ CompileBroker · 请求入队 → 后台编译线程消费 → 装 nmethod（编译与执行解耦）· compileBroker.cpp</text>
+  <g text-anchor="middle">
+    <rect x="34" y="352" width="150" height="84" rx="10" fill="#fff" stroke="#cfe0f2" filter="url(#s2)"/>
+    <text x="109" y="386" font-size="10" font-weight="600" fill="#1b2a4a">按级别选队列</text><text x="109" y="403" font-size="8" fill="#6e6e73">compile_queue(level)</text><text x="109" y="418" font-size="7.5" fill="#9a9aa0">compileBroker.cpp:502</text>
+    <rect x="216" y="352" width="270" height="38" rx="9" fill="#eef3fb" stroke="#b9d0ea" filter="url(#s2)"/>
+    <text x="351" y="371" font-size="9.5" font-weight="600" fill="#1b2a4a">C1 CompileQueue</text><text x="351" y="384" font-size="7.5" fill="#6e6e73">get() 阻塞取任务 · compileBroker.cpp:378</text>
+    <rect x="216" y="398" width="270" height="38" rx="9" fill="#eef3fb" stroke="#b9d0ea" filter="url(#s2)"/>
+    <text x="351" y="417" font-size="9.5" font-weight="600" fill="#1b2a4a">C2 CompileQueue</text><text x="351" y="430" font-size="7.5" fill="#6e6e73">与 C1 独立 · 互不阻塞</text>
+    <rect x="518" y="352" width="216" height="38" rx="9" fill="#fff" stroke="#cfe0f2" filter="url(#s2)"/>
+    <text x="626" y="371" font-size="9.5" font-weight="600" fill="#1b2a4a">C1 编译线程组</text><text x="626" y="384" font-size="7.5" fill="#6e6e73">_c1_count · compileBroker.cpp:129</text>
+    <rect x="518" y="398" width="216" height="38" rx="9" fill="#fff" stroke="#cfe0f2" filter="url(#s2)"/>
+    <text x="626" y="417" font-size="9.5" font-weight="600" fill="#1b2a4a">C2 编译线程组</text><text x="626" y="430" font-size="7.5" fill="#6e6e73">_c2_count · compileBroker.cpp:130</text>
+    <rect x="766" y="352" width="200" height="84" rx="10" fill="#f5faf6" stroke="#cfe6d2" filter="url(#s2)"/>
+    <text x="866" y="386" font-size="10" font-weight="600" fill="#1c6b45">安装 nmethod</text><text x="866" y="403" font-size="8" fill="#6e6e73">后续调用自动切编译版</text><text x="866" y="418" font-size="7.5" fill="#9a9aa0">-XX:-BackgroundCompilation 可关</text>
+  </g>
+  <line x1="184" y1="371" x2="216" y2="371" stroke="#5b7db1" stroke-width="1.5" stroke-dasharray="5 3" marker-end="url(#a1)"/>
+  <line x1="184" y1="417" x2="216" y2="417" stroke="#5b7db1" stroke-width="1.5" stroke-dasharray="5 3" marker-end="url(#a1)"/>
+  <line x1="486" y1="371" x2="518" y2="371" stroke="#5b7db1" stroke-width="1.5" marker-end="url(#a1)"/>
+  <line x1="486" y1="417" x2="518" y2="417" stroke="#5b7db1" stroke-width="1.5" marker-end="url(#a1)"/>
+  <line x1="734" y1="371" x2="766" y2="380" stroke="#2f9e6e" stroke-width="1.6" marker-end="url(#a2)"/>
+  <line x1="734" y1="417" x2="766" y2="408" stroke="#2f9e6e" stroke-width="1.6" marker-end="url(#a2)"/>
+  <!-- 提交编译 从 ② 到 ③ -->
+  <path d="M716 294 L716 314 L109 314 L109 320" fill="none" stroke="#5b7db1" stroke-width="1.4" stroke-dasharray="5 3" marker-end="url(#a1)"/>
+  <text x="380" y="312" font-size="8" fill="#5b7db1" text-anchor="middle">提交编译请求（策略层不阻塞应用线程）</text>
+
+  <!-- ④ deopt 兜底 -->
+  <rect x="24" y="464" width="952" height="80" rx="12" fill="#fef2ea" stroke="#f2cba3"/>
+  <text x="40" y="484" font-size="11" font-weight="600" fill="#c96a1f">④ deopt 兜底 · C2 投机假设被推翻 → uncommon trap → 退回解释器（安全网）· runtime/deoptimization.cpp</text>
+  <text x="40" y="505" font-size="9" fill="#3a3a3c">fetch_unroll_info(:283) 把压缩编译帧解卷成解释帧；标量替换对象经 deoptimize_objects_internal(:445) 重物化；失效 nmethod 由 deoptimize_all_marked(:171) 批量作废。</text>
+  <text x="40" y="523" font-size="8.5" fill="#c96a1f">正因 deopt 兜底，C2 才敢基于 profile 激进"下注"：赌错不出错，只退回慢速路径并可能以更保守策略重编译。</text>
+  <path d="M882 164 L882 172 L942 172 L942 460 L520 460" fill="none" stroke="#d38236" stroke-width="1.4" stroke-dasharray="5 3" marker-end="url(#a3)"/>
+</svg>

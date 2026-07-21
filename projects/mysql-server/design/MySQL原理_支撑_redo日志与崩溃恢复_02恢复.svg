@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="360" viewBox="0 0 900 360" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="r2" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="r2f" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#d38236"/></marker>
+  </defs>
+  <rect width="900" height="360" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">double-write 防撕页 + 崩溃恢复三步</text>
+  <text x="30" y="48" font-size="10.5" fill="#6e6e73">刷脏前先写完整页副本；崩溃后扫描 redo → 重放已提交 → 回滚未提交</text>
+
+  <!-- double-write -->
+  <rect x="40" y="72" width="820" height="86" rx="12" fill="#fff7f1" stroke="#f0d4b8" filter="url(#r2)"/>
+  <text x="58" y="94" font-size="11.5" font-weight="700" fill="#b0651f">double-write buffer · 防页部分写（撕页）</text>
+  <g text-anchor="middle">
+    <rect x="60" y="104" width="200" height="42" rx="8" fill="#fff" stroke="#f0d4b8"/><text x="160" y="122" font-size="9" font-weight="600" fill="#1d1d1f">① 整页先写 dblwr 区</text><text x="160" y="138" font-size="8" fill="#8a6d3b">连续顺序写完整副本</text>
+    <rect x="350" y="104" width="200" height="42" rx="8" fill="#fff" stroke="#f0d4b8"/><text x="450" y="122" font-size="9" font-weight="600" fill="#1d1d1f">② 再写真实位置</text><text x="450" y="138" font-size="8" fill="#8a6d3b">若断电只写半页 → 损坏</text>
+    <rect x="640" y="104" width="200" height="42" rx="8" fill="#eef7f1" stroke="#8fcaa8"/><text x="740" y="122" font-size="9" font-weight="600" fill="#1c7a4d">③ 崩溃后用副本还原</text><text x="740" y="138" font-size="8" fill="#3c7a58">redo 需完整基准页</text>
+  </g>
+
+  <!-- 恢复三步 -->
+  <text x="40" y="190" font-size="11.5" font-weight="700" fill="#1d1d1f">崩溃重启 · 恢复三步</text>
+  <g text-anchor="middle">
+    <rect x="40" y="204" width="250" height="90" rx="11" fill="#f4f7fc" stroke="#cfe0f2" filter="url(#r2)"/>
+    <text x="165" y="228" font-size="10.5" font-weight="700" fill="#5b7db1">① 扫描 redo</text><text x="165" y="248" font-size="8.5" fill="#6e6e73">从 checkpoint LSN 起</text><text x="165" y="266" font-size="8.5" fill="#6e6e73">日志记录按页归入哈希表</text><text x="165" y="284" font-size="7.8" fill="#8a94a6">recv_recovery_on `log0recv.cc:91`</text>
+
+    <rect x="325" y="204" width="250" height="90" rx="11" fill="#eafaf1" stroke="#b8e6cd" filter="url(#r2)"/>
+    <text x="450" y="228" font-size="10.5" font-weight="700" fill="#1c6b45">② 重放 redo</text><text x="450" y="248" font-size="8.5" fill="#2e8b57">把已提交未刷盘的改动</text><text x="450" y="266" font-size="8.5" fill="#2e8b57">应用回数据页</text><text x="450" y="284" font-size="7.8" fill="#6ba489">recv_recovery_from_checkpoint_start</text>
+
+    <rect x="610" y="204" width="250" height="90" rx="11" fill="#fbf7ef" stroke="#ecdcbf" filter="url(#r2)"/>
+    <text x="735" y="228" font-size="10.5" font-weight="700" fill="#8a6d3b">③ 回滚 undo</text><text x="735" y="248" font-size="8.5" fill="#b08535">对未提交事务反向撤销</text><text x="735" y="266" font-size="8.5" fill="#b08535">含 2PC 中 prepare 但</text><text x="735" y="282" font-size="8.5" fill="#b08535">binlog 无记录者</text>
+  </g>
+  <g stroke="#d38236" stroke-width="1.6" marker-end="url(#r2f)">
+    <line x1="290" y1="249" x2="325" y2="249"/><line x1="575" y1="249" x2="610" y2="249"/>
+  </g>
+
+  <text x="450" y="326" font-size="10" fill="#4a4a4f" text-anchor="middle">恢复后系统回到"所有已提交事务生效、所有未提交事务消失"的一致态</text>
+  <text x="450" y="346" font-size="9" fill="#8a94a6" text-anchor="middle">锚点：buf_dblwr `storage/innobase/buf/buf0dblwr.cc:51` · recv_recovery_on `storage/innobase/log/log0recv.cc:91`</text>
+</svg>

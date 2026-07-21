@@ -45,15 +45,29 @@ def cyan(s):  return _c("36", s)
 
 
 def discover_projects():
-    """发现所有含 gen.py 的 *-design 子项目,返回 [(key, dir, gen_path)] 按名排序。"""
+    """发现所有含 gen.py 的项目子目录,返回 [(key, dir, gen_path)] 按名排序。
+    新结构:projects/<name>/;向后兼容:projects/ 缺失时回退根级 *-design/。
+    另外把 topics/ 主题门户(若含 gen.py)也纳入,末位构建。"""
     out = []
-    for entry in sorted(os.listdir(HERE)):
-        full = os.path.join(HERE, entry)
-        if not os.path.isdir(full) or not entry.endswith(SUFFIX):
+    proot = os.path.join(HERE, "projects")
+    if os.path.isdir(proot):
+        base, strip = proot, False
+    else:
+        base, strip = HERE, True
+    for entry in sorted(os.listdir(base)):
+        full = os.path.join(base, entry)
+        if not os.path.isdir(full):
+            continue
+        if strip and not entry.endswith(SUFFIX):
             continue
         gen = os.path.join(full, "gen.py")
         if os.path.isfile(gen):
-            out.append((entry[: -len(SUFFIX)], full, gen))
+            key = entry[: -len(SUFFIX)] if strip else entry
+            out.append((key, full, gen))
+    # 主题门户(topics/gen.py)作为一个特殊"项目"末位构建
+    tgen = os.path.join(HERE, "topics", "gen.py")
+    if os.path.isfile(tgen):
+        out.append(("topics", os.path.join(HERE, "topics"), tgen))
     return out
 
 

@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="640" viewBox="0 0 1120 640" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="aG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+    <marker id="aR" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#d1544a"/></marker>
+  </defs>
+  <rect width="1120" height="640" fill="#fbfbfd"/>
+
+  <text x="30" y="32" font-size="15" font-weight="700" fill="#1d1d1f">图解点 ① MVCC 快照可见性判定 · 用事务 id 与 begin / commit 时间戳的不等关系，判断某版本对某快照是否可见</text>
+  <text x="30" y="53" font-size="10.5" fill="#6e6e73">读事务 T 持 start-ts 与「活跃事务集」；对每个版本看它的写事务：已提交且 commit-ts ≤ start-ts 且 不在活跃集 → 可见，否则跳到更旧版本</text>
+
+  <line x1="30" y1="80" x2="54" y2="80" stroke="#2f9e6e" stroke-width="2" marker-end="url(#aG)"/>
+  <text x="60" y="84" font-size="10" fill="#3a3a3c">可见（选此版本）</text>
+  <line x1="230" y1="80" x2="254" y2="80" stroke="#d1544a" stroke-width="2" stroke-dasharray="5 3" marker-end="url(#aR)"/>
+  <text x="260" y="84" font-size="10" fill="#3a3a3c">不可见（继续向旧版本回溯）</text>
+
+  <!-- 读事务快照信息 -->
+  <rect x="30" y="104" width="300" height="150" rx="13" fill="#eaf1fb" stroke="#c6d9f2" filter="url(#soft)"/>
+  <text x="180" y="130" font-size="12" font-weight="700" fill="#20375e" text-anchor="middle">读事务 T · 快照定义</text>
+  <text x="46" y="158" font-size="11" fill="#2f4a70"><tspan font-weight="700">start-ts = 50</tspan>（begin 瞬间取得）</text>
+  <text x="46" y="184" font-size="10.5" fill="#2f4a70">活跃事务集 = { txn-A, txn-C }</text>
+  <text x="46" y="204" font-size="9" fill="#5a7099">（这些事务在 ts=50 时尚未提交）</text>
+  <text x="46" y="228" font-size="9.5" fill="#5a7099">快照 = 「ts≤50 且当时已提交」的世界视图</text>
+  <text x="46" y="246" font-size="9" fill="#8aa0c0">同一读事务多次读，见到同一快照 → 可重复读</text>
+
+  <!-- 判定规则 -->
+  <rect x="352" y="104" width="738" height="150" rx="13" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="372" y="130" font-size="12" font-weight="700" fill="#1d1d1f">可见性判定规则（对某版本 v，其写事务为 w）</text>
+  <text x="372" y="158" font-size="10.5" fill="#a83c30">① w 尚未提交（仍在活跃集 / 无 commit-ts） → <tspan font-weight="700">不可见</tspan></text>
+  <text x="372" y="182" font-size="10.5" fill="#a83c30">② w.commit-ts &gt; T.start-ts（在我拍快照之后才提交） → <tspan font-weight="700">不可见</tspan></text>
+  <text x="372" y="206" font-size="10.5" fill="#a83c30">③ w 属于 T 的活跃事务集（拍快照时它还没提交） → <tspan font-weight="700">不可见</tspan></text>
+  <text x="372" y="230" font-size="10.5" fill="#2f6b4e">④ 以上都不成立（已提交 且 commit-ts ≤ start-ts 且 不在活跃集） → <tspan font-weight="700">可见</tspan></text>
+  <text x="372" y="248" font-size="9" fill="#8a97ab">从最新版本向旧遍历，命中第一个「可见」即停 —— 那就是快照下该 key 的值</text>
+
+  <!-- 版本链示例 -->
+  <text x="40" y="298" font-size="11.5" font-weight="700" fill="#1d1d1f">某 key 的版本链（从新到旧遍历，判定每个版本）</text>
+
+  <!-- 版本卡片 -->
+  <!-- v4 未提交 -->
+  <rect x="40" y="316" width="248" height="150" rx="12" fill="#fbeceb" stroke="#e8b7b1" filter="url(#soft)"/>
+  <text x="164" y="340" font-size="11" font-weight="700" fill="#a83c30" text-anchor="middle">版本 v4</text>
+  <text x="56" y="366" font-size="10" fill="#8a4038">写事务 = txn-C</text>
+  <text x="56" y="388" font-size="10" fill="#8a4038">状态：未提交（在活跃集）</text>
+  <text x="56" y="416" font-size="10.5" font-weight="700" fill="#d1544a">→ 规则① 不可见</text>
+  <text x="56" y="440" font-size="9" fill="#b06a60">别人未提交的写，我读不到</text>
+
+  <!-- v3 提交太晚 -->
+  <rect x="304" y="316" width="248" height="150" rx="12" fill="#fbeceb" stroke="#e8b7b1" filter="url(#soft)"/>
+  <text x="428" y="340" font-size="11" font-weight="700" fill="#a83c30" text-anchor="middle">版本 v3</text>
+  <text x="320" y="366" font-size="10" fill="#8a4038">写事务 = txn-B</text>
+  <text x="320" y="388" font-size="10" fill="#8a4038">commit-ts = 60 &gt; 50</text>
+  <text x="320" y="416" font-size="10.5" font-weight="700" fill="#d1544a">→ 规则② 不可见</text>
+  <text x="320" y="440" font-size="9" fill="#b06a60">在我拍快照之后才提交</text>
+
+  <!-- v2 活跃集 -->
+  <rect x="568" y="316" width="248" height="150" rx="12" fill="#fbeceb" stroke="#e8b7b1" filter="url(#soft)"/>
+  <text x="692" y="340" font-size="11" font-weight="700" fill="#a83c30" text-anchor="middle">版本 v2</text>
+  <text x="584" y="366" font-size="10" fill="#8a4038">写事务 = txn-A</text>
+  <text x="584" y="388" font-size="10" fill="#8a4038">commit-ts = 48，但在活跃集</text>
+  <text x="584" y="416" font-size="10.5" font-weight="700" fill="#d1544a">→ 规则③ 不可见</text>
+  <text x="584" y="440" font-size="9" fill="#b06a60">拍快照时它尚未提交，事后提交也不算</text>
+
+  <!-- v1 可见 -->
+  <rect x="832" y="316" width="248" height="150" rx="12" fill="#eaf6f0" stroke="#9ed3b8" stroke-width="1.5" filter="url(#soft)"/>
+  <text x="956" y="340" font-size="11" font-weight="700" fill="#2f6b4e" text-anchor="middle">版本 v1</text>
+  <text x="848" y="366" font-size="10" fill="#2f6b4e">写事务 = txn-X（早已提交）</text>
+  <text x="848" y="388" font-size="10" fill="#2f6b4e">commit-ts = 30 ≤ 50，非活跃</text>
+  <text x="848" y="416" font-size="10.5" font-weight="700" fill="#2f9e6e">→ 规则④ 可见 ✓</text>
+  <text x="848" y="440" font-size="9" fill="#5a9078">遍历命中，返回 v1 作为读取结果</text>
+
+  <!-- 遍历箭头 -->
+  <line x1="288" y1="391" x2="302" y2="391" stroke="#d1544a" stroke-width="2" stroke-dasharray="5 3" marker-end="url(#aR)"/>
+  <line x1="552" y1="391" x2="566" y2="391" stroke="#d1544a" stroke-width="2" stroke-dasharray="5 3" marker-end="url(#aR)"/>
+  <line x1="816" y1="391" x2="830" y2="391" stroke="#2f9e6e" stroke-width="2" marker-end="url(#aG)"/>
+
+  <!-- 底部要点 -->
+  <rect x="40" y="500" width="1040" height="116" rx="13" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="58" y="526" font-size="11.5" font-weight="700" fill="#1d1d1f">为什么这样定义可见性</text>
+  <text x="58" y="552" font-size="10" fill="#4a4a4f"><tspan font-weight="700" fill="#2f6b4e">读不阻塞写</tspan>：读只挑「快照可见的旧版本」，与并发的写各写各的新版本互不加锁 —— 这是 MVCC 高并发的根。</text>
+  <text x="58" y="576" font-size="10" fill="#4a4a4f"><tspan font-weight="700" fill="#20375e">快照点固定</tspan>：整个读事务用同一 start-ts，所以两次读同一 key 结果一致（可重复读）；写的新版本对它永远不可见。</text>
+  <text x="58" y="600" font-size="10" fill="#4a4a4f"><tspan font-weight="700" fill="#8a6417">回收边界</tspan>：比「最老活跃 start-ts」更旧且被覆盖的版本，没有任何快照会再需要 → 可被 GC / compaction 安全清理。</text>
+</svg>

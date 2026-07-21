@@ -1,0 +1,126 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="720" viewBox="0 0 1200 720" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="aHot" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+    <marker id="aCtl" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#5b7db1"/></marker>
+    <marker id="aState" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#c99a3a"/></marker>
+    <marker id="aFail" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#e0742a"/></marker>
+    <marker id="aOpt" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#8a5cae"/></marker>
+  </defs>
+  <rect width="1200" height="720" fill="#fbfbfd"/>
+
+  <!-- ===== 标题带 ===== -->
+  <text x="30" y="28" font-size="15" font-weight="700" fill="#1d1d1f">Spark 总架构 · 判型 = 基于 RDD 血缘的分布式内存计算引擎</text>
+  <text x="30" y="46" font-size="10.5" fill="#6e6e73">Driver 把惰性算子汇成 DAG，DAGScheduler 按 shuffle 边界切 Stage、TaskScheduler 分派到 N 个同构 Executor 并行跑；丢分区靠血缘重算，不靠副本　源码基准 Spark master · 5.0.0-SNAPSHOT</text>
+
+  <!-- ===== 图例：五型语义路径 ===== -->
+  <line x1="34" y1="64" x2="62" y2="64" stroke="#2f9e6e" stroke-width="1.8" marker-end="url(#aHot)"/>
+  <text x="68" y="68" font-size="10" fill="#3a3a3c">执行热流 Hot（DAG→task 计算）</text>
+  <line x1="270" y1="64" x2="298" y2="64" stroke="#5b7db1" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#aCtl)"/>
+  <text x="304" y="68" font-size="10" fill="#3a3a3c">调度 / 资源 Control</text>
+  <line x1="470" y1="64" x2="498" y2="64" stroke="#c99a3a" stroke-width="1.8" marker-end="url(#aState)"/>
+  <text x="504" y="68" font-size="10" fill="#3a3a3c">血缘 / 存储 State</text>
+  <line x1="660" y1="64" x2="688" y2="64" stroke="#e0742a" stroke-width="1.6" stroke-dasharray="3 3" marker-end="url(#aFail)"/>
+  <text x="694" y="68" font-size="10" fill="#3a3a3c">失败重算 Failure</text>
+  <line x1="850" y1="64" x2="878" y2="64" stroke="#8a5cae" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#aOpt)"/>
+  <text x="884" y="68" font-size="10" fill="#3a3a3c">Catalyst/Tungsten 优化（仅结构化）</text>
+  <text x="1170" y="68" font-size="10" fill="#a1a1a6" text-anchor="end">框 = 主线可下钻</text>
+
+  <!-- ===== 设计张力铭牌带 ===== -->
+  <rect x="30" y="78" width="1140" height="30" rx="9" fill="#f5f0fb" stroke="#ddcdf0"/>
+  <text x="46" y="97" font-size="11" font-weight="600" fill="#3d2a5a">设计张力</text>
+  <text x="120" y="97" font-size="10" fill="#6d5b8f">惰性血缘换容错（丢分区按 lineage 重算、无需全量副本） vs shuffle 物化 + 内存 spill 的 IO 现实代价（宽依赖跨 stage 屏障、内存不足外排落盘）</text>
+
+  <!-- ===== 接触面 · 编程接口层 ===== -->
+  <rect x="30" y="120" width="1140" height="52" rx="13" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)" data-tid="Spark原理_编程接口层" data-lab="编程接口层"/>
+  <text x="46" y="140" font-size="11.5" font-weight="600" fill="#5a3d78">接触面 · 编程接口层（惰性算子 → 一个 DAG）</text>
+  <text x="46" y="157" font-size="9" fill="#8a6db0">RDD 底层 · DataFrame/SQL 走 Catalyst · 流式建模为增量表　惰性</text>
+  <g text-anchor="middle" font-size="9.5">
+    <rect x="632" y="130" width="96" height="32" rx="8" fill="#fff" stroke="#e2d2ee"/><text x="680" y="150" fill="#5a3d78">RDD</text>
+    <rect x="738" y="130" width="160" height="32" rx="8" fill="#fff" stroke="#e2d2ee"/><text x="818" y="150" fill="#5a3d78">DataFrame / Dataset</text>
+    <rect x="908" y="130" width="60" height="32" rx="8" fill="#fff" stroke="#e2d2ee"/><text x="938" y="150" fill="#5a3d78">SQL</text>
+    <rect x="978" y="130" width="182" height="32" rx="8" fill="#fff" stroke="#e2d2ee" data-tid="Spark原理_支撑_StructuredStreaming" data-lab="Structured Streaming"/><text x="1069" y="150" fill="#5a3d78">Structured Streaming</text>
+  </g>
+  <line x1="360" y1="172" x2="360" y2="192" stroke="#2f9e6e" stroke-width="1.8" marker-end="url(#aHot)"/>
+  <line x1="820" y1="172" x2="820" y2="192" stroke="#8a5cae" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#aOpt)"/>
+  <text x="828" y="188" font-size="8" fill="#8a5cae">DF/SQL 走优化</text>
+
+  <!-- ===== 控制面 · Driver ===== -->
+  <rect x="30" y="194" width="720" height="322" rx="16" fill="#eafaf1" stroke="#b8e6cd" filter="url(#soft)" data-tid="Spark原理_支撑_执行模型" data-lab="Driver"/>
+  <text x="46" y="216" font-size="11.5" font-weight="600" fill="#1c6b45">控制面 · Driver（SparkContext · 每 app 一个 · 规划协调中枢）</text>
+  <text x="736" y="216" font-size="9" fill="#3a9b6e" text-anchor="end"></text>
+
+  <!-- 优化横切行（紫）：Catalyst + Tungsten -->
+  <text x="46" y="238" font-size="9.5" fill="#6d5b8f">横切优化 · 仅结构化查询（RDD 不过）</text>
+  <g text-anchor="middle" font-size="9">
+    <rect x="46" y="246" width="340" height="52" rx="9" fill="#f6f2fb" stroke="#d9c9ec" data-tid="Spark原理_支撑_Catalyst优化" data-lab="Catalyst"/><text x="216" y="267" font-weight="600" fill="#5a3d78">Catalyst 优化器</text><text x="216" y="283" fill="#8a6db0">analyze→optimize→physical plan</text><text x="216" y="295" fill="#a48bc4" font-size="8"></text>
+    <rect x="396" y="246" width="340" height="52" rx="9" fill="#f6f2fb" stroke="#d9c9ec" data-tid="Spark原理_支撑_Tungsten代码生成" data-lab="Tungsten"/><text x="566" y="267" font-weight="600" fill="#5a3d78">Tungsten 代码生成</text><text x="566" y="283" fill="#8a6db0">whole-stage codegen · driver 生成→executor 编译</text><text x="566" y="295" fill="#a48bc4" font-size="8"></text>
+  </g>
+
+  <!-- 调度行（蓝控制）：DAGScheduler + TaskScheduler -->
+  <text x="46" y="318" font-size="9.5" fill="#3a7fb5">调度 · 切 stage / 分派 task（Control）</text>
+  <g text-anchor="middle" font-size="9">
+    <rect x="46" y="326" width="340" height="56" rx="9" fill="#e6f7ee" stroke="#a8dfc0" data-tid="Spark原理_支撑_调度与集群管理" data-lab="DAGScheduler"/><text x="216" y="347" font-weight="600" fill="#1c6b45">DAGScheduler · 按 shuffle 边界切 Stage</text><text x="216" y="363" fill="#3a9b6e">ShuffleMapStage / ResultStage · submitJob/runJob</text><text x="216" y="376" fill="#7fb89a" font-size="8"></text>
+    <rect x="396" y="326" width="340" height="56" rx="9" fill="#e6f7ee" stroke="#a8dfc0" data-tid="Spark原理_支撑_调度与集群管理" data-lab="TaskScheduler"/><text x="566" y="347" font-weight="600" fill="#1c6b45">TaskSchedulerImpl · 分派 Task</text><text x="566" y="363" fill="#3a9b6e">submitTasks · resourceOffers · statusUpdate</text><text x="566" y="376" fill="#7fb89a" font-size="8"></text>
+  </g>
+
+  <!-- 状态行（琥珀 State）：BlockManagerMaster + MapOutputTracker -->
+  <text x="46" y="402" font-size="9.5" fill="#a9822f">状态真源 · 血缘 + 位置登记（State）</text>
+  <g text-anchor="middle" font-size="9">
+    <rect x="46" y="410" width="340" height="46" rx="9" fill="#fdf3e5" stroke="#efdcb4" data-tid="Spark原理_支撑_存储与缓存" data-lab="BlockManagerMaster"/><text x="216" y="431" font-weight="600" fill="#7a5a1e">BlockManagerMaster</text><text x="216" y="447" fill="#b08843" font-size="8.5">driver 端记录所有 block 位置</text>
+    <rect x="396" y="410" width="340" height="46" rx="9" fill="#fdf3e5" stroke="#efdcb4" data-tid="Spark原理_支撑_Shuffle" data-lab="MapOutputTracker"/><text x="566" y="431" font-weight="600" fill="#7a5a1e">MapOutputTrackerMaster</text><text x="566" y="447" fill="#b08843" font-size="8.5">记录 shuffle 输出位置</text>
+  </g>
+
+  <!-- 容错决策条（橙 Failure） -->
+  <rect x="46" y="464" width="690" height="44" rx="9" fill="#fdf2ea" stroke="#f0cdaa" data-tid="Spark原理_支撑_容错" data-lab="容错决策"/>
+  <text x="60" y="483" font-size="9.5" font-weight="600" fill="#8a4a12">容错决策：丢 executor / 丢分区 → 按 lineage 重算（Driver 编排）</text>
+  <text x="60" y="498" font-size="8.5" fill="#a8641e">窄依赖父分区局部重算 vs 宽依赖重跑上游 map stage；FetchFailedException 触发 stage 重提交</text>
+
+  <!-- ===== Cluster Manager ===== -->
+  <rect x="766" y="194" width="404" height="104" rx="16" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)" data-tid="Spark原理_支撑_调度与集群管理" data-lab="Cluster Manager"/>
+  <text x="968" y="216" font-size="11.5" font-weight="600" fill="#5a3410" text-anchor="middle">Cluster Manager · 供资源（起 Executor）</text>
+  <g text-anchor="middle" font-size="8.5">
+    <rect x="782" y="230" width="122" height="56" rx="9" fill="#fff" stroke="#e8cf9a"/><text x="843" y="253" font-weight="600" fill="#5a3410">Standalone</text><text x="843" y="270" fill="#93762e">Master/Worker</text>
+    <rect x="912" y="230" width="122" height="56" rx="9" fill="#fff" stroke="#e8cf9a"/><text x="973" y="253" font-weight="600" fill="#5a3410">YARN</text><text x="973" y="270" fill="#93762e">RM/AM/container</text>
+    <rect x="1042" y="230" width="112" height="56" rx="9" fill="#fff" stroke="#e8cf9a"/><text x="1098" y="253" font-weight="600" fill="#5a3410">K8s</text><text x="1098" y="270" fill="#93762e">executor=pod</text>
+  </g>
+
+  <!-- ===== 数据面 · Executors ===== -->
+  <rect x="766" y="310" width="404" height="206" rx="16" fill="#fdf3e5" stroke="#efdcb4" filter="url(#soft)" data-tid="Spark原理_支撑_执行模型" data-lab="Executors"/>
+  <text x="968" y="332" font-size="11.5" font-weight="600" fill="#7a5a1e" text-anchor="middle">数据面 · Executor（跑 task · N 个 · 同构）</text>
+  <text x="968" y="348" font-size="8.5" fill="#b08843" text-anchor="middle">launchTask · TaskRunner 线程池</text>
+  <g text-anchor="middle" font-size="8">
+    <rect x="782" y="358" width="188" height="60" rx="10" fill="#fff" stroke="#efdcb4" data-tid="Spark原理_支撑_内存管理" data-lab="统一内存"/><text x="876" y="378" font-size="9" font-weight="600" fill="#7a5a1e">统一内存管理</text><text x="876" y="395" fill="#93762e">执行/存储互借 · fraction=0.6</text><text x="876" y="409" fill="#93762e">memory/UnifiedMemoryManager</text>
+    <rect x="978" y="358" width="176" height="60" rx="10" fill="#fff" stroke="#efdcb4" data-tid="Spark原理_支撑_Shuffle" data-lab="shuffle 交换"/><text x="1066" y="378" font-size="9" font-weight="600" fill="#7a5a1e">shuffle 写/读 + spill</text><text x="1066" y="395" fill="#93762e"></text><text x="1066" y="409" fill="#93762e">内存不足外排 ExternalSorter</text>
+  </g>
+  <rect x="782" y="426" width="372" height="34" rx="9" fill="#eef3fb" stroke="#bcd0ec" data-tid="Spark原理_支撑_存储与缓存" data-lab="块缓存"/>
+  <text x="968" y="447" font-size="8.5" fill="#274a78" text-anchor="middle">BlockManager 块缓存（memoryStore/diskStore）· cached RDD 命中免重算</text>
+  <rect x="782" y="466" width="372" height="42" rx="9" fill="#fdf2ea" stroke="#f0cdaa" data-tid="Spark原理_支撑_容错" data-lab="lineage 重算"/>
+  <text x="968" y="484" font-size="8.5" font-weight="600" fill="#8a4a12" text-anchor="middle">executor 丢失 → cached/shuffle 块按 lineage 重算</text>
+  <text x="968" y="499" font-size="8" fill="#a8641e" text-anchor="middle">checkpoint 可截断血缘，避免重算链过长</text>
+
+  <!-- 跨面连线 -->
+  <line x1="750" y1="354" x2="766" y2="354" stroke="#5b7db1" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#aCtl)"/>
+  <text x="758" y="348" font-size="8" fill="#5b7db1" text-anchor="middle">分派 task</text>
+  <line x1="820" y1="298" x2="820" y2="310" stroke="#5b7db1" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#aCtl)"/>
+  <text x="828" y="308" font-size="8" fill="#5b7db1">起 executor</text>
+
+  <!-- ===== 外部存储带 ===== -->
+  <rect x="30" y="528" width="1140" height="60" rx="14" fill="#f4f2ee" stroke="#e3ddd2" stroke-dasharray="6 4" data-tid="Spark原理_支撑_存储与缓存" data-lab="外部存储"/>
+  <text x="46" y="548" font-size="10.5" font-weight="600" fill="#6e6357">外部存储（非 Spark · 不自管持久存储 · 数据在外）</text>
+  <g text-anchor="middle" font-size="8.8">
+    <rect x="300" y="556" width="150" height="24" rx="7" fill="#fbf6ef" stroke="#e6d8c4"/><text x="375" y="572" fill="#5a3410">HDFS / S3 / 对象存储</text>
+    <rect x="466" y="556" width="130" height="24" rx="7" fill="#fbf6ef" stroke="#e6d8c4"/><text x="531" y="572" fill="#5a3410">Hive 表 / 数据湖</text>
+    <rect x="612" y="556" width="130" height="24" rx="7" fill="#fbf6ef" stroke="#e6d8c4"/><text x="677" y="572" fill="#5a3410">Kafka 流</text>
+    <rect x="758" y="556" width="130" height="24" rx="7" fill="#fbf6ef" stroke="#e6d8c4"/><text x="823" y="572" fill="#5a3410">JDBC / 外部源</text>
+  </g>
+  <line x1="500" y1="516" x2="500" y2="528" stroke="#2f9e6e" stroke-width="1.6" marker-end="url(#aHot)"/>
+
+  <!-- ===== 读法带 ===== -->
+  <rect x="30" y="600" width="1140" height="30" rx="8" fill="#f7f7f9" stroke="#ececef" data-tid="Spark原理_全景主线框架" data-lab="全景主线框架"/>
+  <text x="600" y="619" font-size="9.5" fill="#4a4a4f" text-anchor="middle">读法：算子惰性汇成 DAG → DAGScheduler 按 shuffle 边界切 Stage、拆 Task → TaskScheduler 分派到 Executor 并行跑 → shuffle 物化交换 → 结果回 Driver；丢分区按血缘重算（DF/SQL 额外走 Catalyst+Tungsten 优化）</text>
+
+  <!-- ===== 单点提示 ===== -->
+  <text x="30" y="650" font-size="9" fill="#a1a1a6">Driver 是单点：driver 挂了整个 app 失败（lineage 不覆盖 driver）· deploy mode(client/cluster) 决定 driver 位置 · SparkListener 事件总线 → Web UI / history server 可观测</text>
+  <text x="30" y="668" font-size="8.5" fill="#b1483a">不变量：RDD 不可变 + 确定性 compute 是血缘重算的前提；宽依赖=stage 屏障、窄依赖=局部重算；shuffle 输出物化后可被下游多次拉取</text>
+</svg>

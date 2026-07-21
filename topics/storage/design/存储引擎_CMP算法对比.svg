@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="660" viewBox="0 0 1120 660" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#8a97ab"/></marker>
+  </defs>
+  <rect width="1120" height="660" fill="#fbfbfd"/>
+
+  <text x="30" y="32" font-size="15" font-weight="700" fill="#1d1d1f">算法核心差异对比 · LSM-tree vs B+/B-link tree —— 同一份数据的两种物理布局，本质是在 RUM 三角上选不同工作点</text>
+  <text x="30" y="53" font-size="10.5" fill="#6e6e73">RUM 猜想：读放大 Read · 写放大 Update · 空间放大 Memory 三者不可同时最优，优化其二必牺牲其三</text>
+
+  <!-- ===== 左：RUM 三角 ===== -->
+  <text x="70" y="92" font-size="12" font-weight="700" fill="#1d1d1f">① RUM 三角 · 两种布局的落点</text>
+  <!-- 三角形 -->
+  <polygon points="250,130 120,360 380,360" fill="none" stroke="#c7ced8" stroke-width="1.6"/>
+  <text x="250" y="122" font-size="11" font-weight="700" fill="#a03048" text-anchor="middle">Read 读放大</text>
+  <text x="104" y="380" font-size="11" font-weight="700" fill="#2f6b4e" text-anchor="middle">Update 写放大</text>
+  <text x="396" y="380" font-size="11" font-weight="700" fill="#6f3ea8" text-anchor="middle">Memory 空间</text>
+  <!-- LSM 落点：偏 写优（低写放大靠近底左? 实为低写放大=远离Update角）说明用文字 -->
+  <circle cx="205" cy="300" r="8" fill="#2f6b4e" opacity="0.85"/>
+  <text x="218" y="304" font-size="10" font-weight="700" fill="#2f6b4e">LSM</text>
+  <circle cx="300" cy="250" r="8" fill="#a03048" opacity="0.85"/>
+  <text x="313" y="254" font-size="10" font-weight="700" fill="#a03048">B-tree</text>
+  <text x="70" y="410" font-size="9.5" fill="#4a4a4f">LSM 顺序追加 → <tspan font-weight="700" fill="#2f6b4e">写放大低</tspan>，但多层归并 → <tspan font-weight="700" fill="#a03048">读放大高</tspan>、旧版占空间</text>
+  <text x="70" y="428" font-size="9.5" fill="#4a4a4f">B-tree 就地维护有序 → <tspan font-weight="700" fill="#a03048">读放大低</tspan>，但随机写 + 页半满 → 写放大 / 空间浪费</text>
+  <text x="70" y="446" font-size="9" fill="#8a97ab">没有免费午餐：选型 = 按负载（读多 / 写多 / 空间敏感）在三角上挑一点</text>
+
+  <!-- ===== 右：维度对照表 ===== -->
+  <text x="470" y="92" font-size="12" font-weight="700" fill="#1d1d1f">② 关键维度对照</text>
+  <rect x="470" y="104" width="150" height="34" rx="8" fill="#eef0f3" stroke="#e4e7ec"/>
+  <text x="545" y="126" font-size="11" font-weight="700" fill="#4a4a4f" text-anchor="middle">维度</text>
+  <rect x="626" y="104" width="230" height="34" rx="8" fill="#eaf6f0" stroke="#bfe3d1"/>
+  <text x="741" y="126" font-size="12" font-weight="800" fill="#2f6b4e" text-anchor="middle">LSM-tree</text>
+  <rect x="862" y="104" width="230" height="34" rx="8" fill="#fdeef0" stroke="#f2c9d0"/>
+  <text x="977" y="126" font-size="12" font-weight="800" fill="#a03048" text-anchor="middle">B+ / B-link tree</text>
+
+  <!-- 行: 写路径 -->
+  <rect x="470" y="144" width="150" height="66" rx="8" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="486" y="172" font-size="10.5" font-weight="700" fill="#1d1d1f">写路径</text>
+  <text x="486" y="192" font-size="9" fill="#8a97ab">随机 or 顺序</text>
+  <rect x="626" y="144" width="230" height="66" rx="8" fill="#fff" stroke="#e4e7ec"/>
+  <text x="642" y="168" font-size="9.5" fill="#4a4a4f">内存表满 → 整块顺序 flush 成</text>
+  <text x="642" y="184" font-size="9.5" fill="#4a4a4f">L0；几乎无随机 IO，<tspan font-weight="700" fill="#2f6b4e">写吞吐极高</tspan></text>
+  <rect x="862" y="144" width="230" height="66" rx="8" fill="#fff" stroke="#e4e7ec"/>
+  <text x="878" y="168" font-size="9.5" fill="#4a4a4f">就地更新有序页；页内插入</text>
+  <text x="878" y="184" font-size="9.5" fill="#4a4a4f">可能触发<tspan font-weight="700" fill="#a03048">随机写 + 页分裂</tspan></text>
+
+  <!-- 行: 读路径 -->
+  <rect x="470" y="216" width="150" height="66" rx="8" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="486" y="244" font-size="10.5" font-weight="700" fill="#1d1d1f">读路径</text>
+  <text x="486" y="264" font-size="9" fill="#8a97ab">要翻几处</text>
+  <rect x="626" y="216" width="230" height="66" rx="8" fill="#fff" stroke="#e4e7ec"/>
+  <text x="642" y="240" font-size="9.5" fill="#4a4a4f">跨内存表 + 多层 SST 归并；</text>
+  <text x="642" y="256" font-size="9.5" fill="#4a4a4f">靠布隆 / 稀疏索引短路，仍<tspan font-weight="700" fill="#a03048">读放大</tspan></text>
+  <rect x="862" y="216" width="230" height="66" rx="8" fill="#fff" stroke="#e4e7ec"/>
+  <text x="878" y="240" font-size="9.5" fill="#4a4a4f">从根沿指针到叶，<tspan font-weight="700" fill="#2f6b4e">点查稳定</tspan></text>
+  <text x="878" y="256" font-size="9.5" fill="#4a4a4f">O(log n)，无需归并多处。</text>
+
+  <!-- 行: 后台整理 -->
+  <rect x="470" y="288" width="150" height="66" rx="8" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="486" y="316" font-size="10.5" font-weight="700" fill="#1d1d1f">后台整理</text>
+  <text x="486" y="336" font-size="9" fill="#8a97ab">写放大来源</text>
+  <rect x="626" y="288" width="230" height="66" rx="8" fill="#fff" stroke="#e4e7ec"/>
+  <text x="642" y="312" font-size="9.5" fill="#4a4a4f">Compaction 逐层归并重写，</text>
+  <text x="642" y="328" font-size="9.5" fill="#4a4a4f">一条数据被重写约「层数」次；</text>
+  <text x="642" y="344" font-size="9.5" fill="#4a4a4f">L0 堆积触发<tspan font-weight="700" fill="#a03048">写停顿</tspan>反压。</text>
+  <rect x="862" y="288" width="230" height="66" rx="8" fill="#fff" stroke="#e4e7ec"/>
+  <text x="878" y="312" font-size="9.5" fill="#4a4a4f">无全局重写；分裂 / 合并局部</text>
+  <text x="878" y="328" font-size="9.5" fill="#4a4a4f">发生。B-link 用 high key + 兄弟</text>
+  <text x="878" y="344" font-size="9.5" fill="#4a4a4f">指针让分裂<tspan font-weight="700" fill="#2f6b4e">几乎不锁读</tspan>。</text>
+
+  <!-- 行: 并发 -->
+  <rect x="470" y="360" width="150" height="60" rx="8" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="486" y="386" font-size="10.5" font-weight="700" fill="#1d1d1f">并发要点</text>
+  <rect x="626" y="360" width="230" height="60" rx="8" fill="#fff" stroke="#e4e7ec"/>
+  <text x="642" y="384" font-size="9.5" fill="#4a4a4f">不可变 SST 天然读并发；</text>
+  <text x="642" y="400" font-size="9.5" fill="#4a4a4f">写只碰内存表，冲突面小。</text>
+  <rect x="862" y="360" width="230" height="60" rx="8" fill="#fff" stroke="#e4e7ec"/>
+  <text x="878" y="384" font-size="9.5" fill="#4a4a4f">B-link tree：分裂中途靠 high</text>
+  <text x="878" y="400" font-size="9.5" fill="#4a4a4f">key 右移，读几乎不加锁。</text>
+
+  <!-- 列存补注 -->
+  <rect x="470" y="432" width="622" height="52" rx="9" fill="#f4eefb" stroke="#dcc9ef"/>
+  <text x="486" y="456" font-size="10" font-weight="700" fill="#6f3ea8">正交第三维 · 列存 vs 行存</text>
+  <text x="486" y="474" font-size="9.5" fill="#4a4a4f">按列连续存 → 编码链(RLE/字典/bit-pack)极致压缩 + SIMD 谓词下推，OLAP 扫描最优；代价是取整行要跨列拼装。</text>
+
+  <!-- 底部一句话 -->
+  <rect x="30" y="500" width="1060" height="132" rx="12" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="48" y="526" font-size="10.5" font-weight="700" fill="#1d1d1f">一句话</text>
+  <text x="110" y="526" font-size="10" fill="#4a4a4f"><tspan font-weight="700" fill="#2f6b4e">LSM</tspan> 用「推迟合并」换低写放大（写多首选），代价是读要归并多层、旧版占空间；<tspan font-weight="700" fill="#a03048">B-tree</tspan> 用「就地维护有序」换低读放大（读多 / 点查首选），代价是随机写与页半满。</text>
+  <text x="110" y="548" font-size="10" fill="#4a4a4f">两者都逃不出 <tspan font-weight="700">RUM 三角</tspan>：读、写、空间三笔账，按负载挪工作点，没有普适最优。</text>
+  <text x="48" y="576" font-size="10" fill="#4a4a4f"><tspan font-weight="700" fill="#6f3ea8">列存</tspan>是与行/键布局正交的第三维：不改「LSM vs B-tree」的选择，而是把「一行的所有列」换成「一列的所有行」，服务扫描聚合而非点查点改。</text>
+  <text x="48" y="600" font-size="9" fill="#8a97ab">工程落地：RocksDB(leveled/universal compaction 是 RUM 上的两个对称点)、InnoDB(B+树聚簇)、PG nbtree(Lehman-Yao B-link)——具体差异见各项目页，本主题只讲算法本身。</text>
+  <text x="48" y="620" font-size="9" fill="#8a97ab">B-link 的自愈式无锁分裂（high key + 兄弟指针）是「用结构冗余换并发」的经典范例，被主流 B+树实现普遍采用。</text>
+</svg>

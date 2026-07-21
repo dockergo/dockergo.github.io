@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="350" viewBox="0 0 900 350" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="mv" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="mvr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#8a6d3b"/></marker>
+    <marker id="mvh" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+  </defs>
+  <rect width="900" height="350" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">MVCC · undo 版本链 + ReadView 快照读（读不加锁）</text>
+  <text x="30" y="48" font-size="10.5" fill="#6e6e73">行内 DB_TRX_ID / DB_ROLL_PTR 串起版本链；ReadView 按可见性沿链回溯</text>
+
+  <!-- 版本链 -->
+  <text x="60" y="86" font-size="11" font-weight="700" fill="#8a6d3b">undo 版本链（同一行的历史版本）</text>
+  <g text-anchor="middle">
+    <rect x="60" y="98" width="180" height="70" rx="10" fill="#eef7f1" stroke="#8fcaa8" filter="url(#mv)"/>
+    <text x="150" y="120" font-size="10" font-weight="700" fill="#1c7a4d">当前版本（最新）</text><text x="150" y="138" font-size="8.3" fill="#3c7a58">DB_TRX_ID = 30</text><text x="150" y="154" font-size="8.3" fill="#3c7a58">DB_ROLL_PTR ↓</text>
+    <rect x="320" y="98" width="180" height="70" rx="10" fill="#fbf7ef" stroke="#ecdcbf" filter="url(#mv)"/>
+    <text x="410" y="120" font-size="10" font-weight="600" fill="#8a6d3b">旧版本（undo）</text><text x="410" y="138" font-size="8.3" fill="#b08535">DB_TRX_ID = 20</text><text x="410" y="154" font-size="8.3" fill="#b08535">DB_ROLL_PTR ↓</text>
+    <rect x="580" y="98" width="180" height="70" rx="10" fill="#fbf7ef" stroke="#ecdcbf" filter="url(#mv)"/>
+    <text x="670" y="120" font-size="10" font-weight="600" fill="#8a6d3b">更旧版本（undo）</text><text x="670" y="138" font-size="8.3" fill="#b08535">DB_TRX_ID = 10</text><text x="670" y="154" font-size="8.3" fill="#b08535">链尾</text>
+  </g>
+  <line x1="240" y1="133" x2="320" y2="133" stroke="#8a6d3b" stroke-width="1.6" marker-end="url(#mvr)"/>
+  <line x1="500" y1="133" x2="580" y2="133" stroke="#8a6d3b" stroke-width="1.6" marker-end="url(#mvr)"/>
+  <text x="280" y="126" font-size="7.5" fill="#8a6d3b" text-anchor="middle">回溯</text>
+
+  <!-- ReadView -->
+  <rect x="200" y="212" width="380" height="90" rx="12" fill="#f4f7fc" stroke="#cfe0f2" filter="url(#mv)"/>
+  <text x="390" y="236" font-size="11.5" font-weight="700" fill="#5b7db1" text-anchor="middle">ReadView（事务的一致性快照）</text>
+  <text x="390" y="256" font-size="9" fill="#6e6e73" text-anchor="middle">记录创建时哪些事务还活跃</text>
+  <text x="390" y="274" font-size="9" fill="#6e6e73" text-anchor="middle">changes_visible 判某版本是否可见</text>
+  <text x="390" y="292" font-size="8.3" fill="#8a94a6" text-anchor="middle">不可见 → 沿 DB_ROLL_PTR 找更旧的可见版本</text>
+
+  <!-- 事务读 -->
+  <rect x="620" y="222" width="200" height="70" rx="11" fill="#eef7f1" stroke="#8fcaa8" filter="url(#mv)"/>
+  <text x="720" y="250" font-size="10.5" font-weight="700" fill="#1c7a4d" text-anchor="middle">普通 SELECT</text>
+  <text x="720" y="270" font-size="8.5" fill="#3c7a58" text-anchor="middle">读一致快照 · 完全不加锁</text>
+  <text x="720" y="286" font-size="8" fill="#6ba489" text-anchor="middle">读写并发互不阻塞</text>
+  <line x1="620" y1="257" x2="580" y2="257" stroke="#2f9e6e" stroke-width="1.6" marker-end="url(#mvh)"/>
+
+  <!-- 假想可见性判定线 -->
+  <path d="M390,212 C390,190 200,190 150,168" fill="none" stroke="#5b7db1" stroke-width="1.4" stroke-dasharray="4 3" marker-end="url(#mvr)"/>
+  <text x="250" y="196" font-size="8" fill="#5b7db1">按可见性选版本</text>
+
+  <text x="450" y="332" font-size="9" fill="#8a94a6" text-anchor="middle">锚点：class ReadView `storage/innobase/include/read0types.h:48` · changes_visible `:169` · 版本链 `read0read.cc:161` 注释</text>
+</svg>

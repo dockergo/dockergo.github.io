@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="470" viewBox="0 0 900 470" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="s2" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="m2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+  </defs>
+  <rect width="900" height="470" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">两层架构 · Server 层与存储引擎层经 handler API 解耦</text>
+  <text x="30" y="48" font-size="10.5" fill="#6e6e73">上层引擎无关、下层可插拔；唯一缝隙 = handler 虚函数集（MySQL 的定义性设计）</text>
+
+  <!-- Server 层 -->
+  <rect x="40" y="66" width="820" height="150" rx="14" fill="#f4f7fc" stroke="#cfe0f2" filter="url(#s2)"/>
+  <text x="58" y="88" font-size="12.5" font-weight="700" fill="#5b7db1">Server 层（对所有存储引擎通用）</text>
+  <g text-anchor="middle">
+    <rect x="58" y="100" width="150" height="46" rx="9" fill="#fff" stroke="#dbe6f4"/><text x="133" y="122" font-size="10.5" font-weight="600" fill="#1d1d1f">连接 / 线程</text><text x="133" y="137" font-size="8" fill="#8a94a6">THD 会话</text>
+    <rect x="220" y="100" width="150" height="46" rx="9" fill="#fff" stroke="#dbe6f4"/><text x="295" y="122" font-size="10.5" font-weight="600" fill="#1d1d1f">解析器</text><text x="295" y="137" font-size="8" fill="#8a94a6">SQL→语法树</text>
+    <rect x="382" y="100" width="150" height="46" rx="9" fill="#fff" stroke="#dbe6f4"/><text x="457" y="122" font-size="10.5" font-weight="600" fill="#5b7db1">优化器</text><text x="457" y="137" font-size="8" fill="#8a94a6">代价选计划</text>
+    <rect x="544" y="100" width="150" height="46" rx="9" fill="#fff" stroke="#dbe6f4"/><text x="619" y="122" font-size="10.5" font-weight="600" fill="#1d1d1f">执行器</text><text x="619" y="137" font-size="8" fill="#8a94a6">火山迭代</text>
+    <rect x="706" y="100" width="136" height="46" rx="9" fill="#faf6fb" stroke="#e4cdea"/><text x="774" y="122" font-size="10.5" font-weight="600" fill="#8944ab">binlog</text><text x="774" y="137" font-size="8" fill="#a98bbd">逻辑日志</text>
+  </g>
+  <text x="58" y="176" font-size="9.5" fill="#6e6e73">锚点：THD `sql/sql_class.h:1465` · dispatch_command `sql/sql_parse.cc:1218` · JOIN::optimize `sql/sql_optimizer.cc:138`</text>
+  <text x="58" y="196" font-size="9.5" fill="#6e6e73">JOIN::exec `sql/sql_executor.cc:104` · sub_select 火山迭代 `sql/sql_executor.cc:1224`</text>
+
+  <!-- handler 缝 -->
+  <rect x="40" y="234" width="820" height="46" rx="12" fill="#eef7f1" stroke="#8fcaa8" stroke-width="1.5" stroke-dasharray="7 4"/>
+  <text x="450" y="255" font-size="12" font-weight="700" fill="#1c7a4d" text-anchor="middle">★ handler API · 可插拔缝：handlerton（每引擎单例）+ handler（每表实例）虚函数</text>
+  <text x="450" y="272" font-size="9" fill="#3c7a58" text-anchor="middle">write_row / index_read / external_lock / commit / prepare　锚点：class handler `sql/handler.h:2157` · struct handlerton `sql/handler.h:698`</text>
+
+  <line x1="450" y1="216" x2="450" y2="234" stroke="#2f9e6e" stroke-width="1.8" marker-end="url(#m2)"/>
+  <line x1="450" y1="280" x2="450" y2="298" stroke="#2f9e6e" stroke-width="1.8" marker-end="url(#m2)"/>
+
+  <!-- 存储引擎层 -->
+  <rect x="40" y="298" width="820" height="150" rx="14" fill="#fbf7ef" stroke="#ecdcbf" filter="url(#s2)"/>
+  <text x="58" y="320" font-size="12.5" font-weight="700" fill="#8a6d3b">存储引擎层（可插拔 · 各自实现 handler）</text>
+  <g text-anchor="middle">
+    <rect x="58" y="332" width="360" height="98" rx="10" fill="#fff" stroke="#ecdcbf"/>
+    <text x="238" y="354" font-size="11.5" font-weight="700" fill="#1d1d1f">InnoDB（默认引擎）</text>
+    <text x="238" y="374" font-size="9" fill="#6e6e73">B+树聚簇索引 · Buffer Pool · undo/ReadView MVCC</text>
+    <text x="238" y="391" font-size="9" fill="#6e6e73">redo WAL + double-write · 行锁 + 事务 ACID</text>
+    <text x="238" y="411" font-size="8.5" fill="#b08535">ha_innodb.cc 实现 handler · innobase_commit `:971`</text>
+    <rect x="432" y="332" width="196" height="98" rx="10" fill="#fff" stroke="#ecdcbf"/>
+    <text x="530" y="354" font-size="11" font-weight="600" fill="#1d1d1f">MyISAM</text>
+    <text x="530" y="374" font-size="8.7" fill="#6e6e73">表锁 · 无事务</text>
+    <text x="530" y="390" font-size="8.7" fill="#6e6e73">非聚簇 · 索引与数据分离</text>
+    <text x="530" y="410" font-size="8.5" fill="#b0651f">读多写少 / 全文历史</text>
+    <rect x="642" y="332" width="200" height="98" rx="10" fill="#fff" stroke="#ecdcbf"/>
+    <text x="742" y="354" font-size="11" font-weight="600" fill="#1d1d1f">Memory / CSV / …</text>
+    <text x="742" y="374" font-size="8.7" fill="#6e6e73">内存表 / 特殊格式</text>
+    <text x="742" y="390" font-size="8.7" fill="#6e6e73">同一 handler 接口接入</text>
+    <text x="742" y="410" font-size="8.5" fill="#b0651f">证明缝的可插拔性</text>
+  </g>
+</svg>

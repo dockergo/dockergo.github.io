@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="560" viewBox="0 0 960 560"
+     font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="960" height="560" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">HDFS 读路径:NameNode 按距离排副本、client 就近直读、校验和失配自动切副本</text>
+
+  <!-- 图例 -->
+  <rect x="560" y="18" width="12" height="12" rx="3" fill="#f4eefb" stroke="#d9c9ef"/><text x="576" y="28" font-size="9" fill="#7c5aa6">client</text>
+  <rect x="628" y="18" width="12" height="12" rx="3" fill="#eef3fb" stroke="#bcd0ec"/><text x="644" y="28" font-size="9" fill="#5b7db1">NameNode 排序</text>
+  <rect x="740" y="18" width="12" height="12" rx="3" fill="#fff7e6" stroke="#f0dcae"/><text x="756" y="28" font-size="9" fill="#9a7328">DataNode 副本</text>
+  <rect x="852" y="18" width="12" height="12" rx="3" fill="#fff3f0" stroke="#f0c4b8"/><text x="868" y="28" font-size="9" fill="#c4341c">校验失败</text>
+
+  <!-- ① 取位置 + NN 排序 -->
+  <rect x="26" y="52" width="908" height="132" rx="14" fill="#f6f8fc" stroke="#cfe0f2"/>
+  <text x="46" y="76" font-size="12" font-weight="600" fill="#1b2a4a">① open / getBlockLocations —— NameNode 按到 client 的网络距离给每个块排副本</text>
+
+  <rect x="46" y="90" width="150" height="72" rx="10" fill="#f4eefb" stroke="#d9c9ef"/>
+  <text x="121" y="120" font-size="10" font-weight="600" fill="#3c1361" text-anchor="middle">Client</text>
+  <text x="121" y="139" font-size="8.3" fill="#7c5aa6" text-anchor="middle">DFSInputStream</text>
+  <path d="M196,126 L246,126" stroke="#7c5aa6" stroke-width="2" fill="none" marker-end="url(#ar)"/>
+
+  <rect x="246" y="90" width="330" height="72" rx="10" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="411" y="114" font-size="10" font-weight="600" fill="#1b2a4a" text-anchor="middle">NameNode · sortLocatedBlocks</text>
+  <text x="411" y="134" font-size="8.3" fill="#5b7db1" text-anchor="middle">先按状态:在役 → stale → 退役/慢节点 下沉</text>
+  <text x="411" y="151" font-size="8.3" fill="#5b7db1" text-anchor="middle">再按网络距离:本地 → 同机架 → 跨机架</text>
+  <path d="M576,126 L626,126" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <rect x="626" y="90" width="308" height="72" rx="10" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="780" y="114" font-size="10" font-weight="600" fill="#7a4d00" text-anchor="middle">返回块的有序副本列表</text>
+  <text x="780" y="134" font-size="8.3" fill="#9a7328" text-anchor="middle">[ 最近 DN, 次近 DN, … ] 每块一份</text>
+  <text x="780" y="151" font-size="8.3" fill="#9a7328" text-anchor="middle">缓存副本(cached)可优先</text>
+
+  <!-- ② 选点 + 读 -->
+  <rect x="26" y="196" width="908" height="150" rx="14" fill="#fdfaf3" stroke="#efdcb4"/>
+  <text x="46" y="220" font-size="12" font-weight="600" fill="#7a4d00">② 选点直读 —— client 取列表首个可用(最近)节点,同机短路、异机走 TCP</text>
+
+  <rect x="46" y="234" width="250" height="94" rx="10" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="171" y="258" font-size="9.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">chooseDataNode / getBestNode</text>
+  <text x="171" y="278" font-size="8.3" fill="#5b7db1" text-anchor="middle">取列表第一个可用节点(即最近)</text>
+  <text x="171" y="296" font-size="8.3" fill="#5b7db1" text-anchor="middle">跳过 deadNodes / 已忽略节点</text>
+  <text x="171" y="314" font-size="8.3" fill="#5b7db1" text-anchor="middle">blockSeekTo 定位到目标块</text>
+  <path d="M296,281 L346,281" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <rect x="346" y="234" width="270" height="94" rx="10" fill="#eafaf1" stroke="#bce6cd"/>
+  <text x="481" y="258" font-size="9.5" font-weight="600" fill="#0f5132" text-anchor="middle">getBlockReader 建读取器</text>
+  <text x="481" y="280" font-size="8.5" fill="#3f8f66" text-anchor="middle">同机:短路读 绕 TCP 直读本地块文件</text>
+  <text x="481" y="298" font-size="8.5" fill="#3f8f66" text-anchor="middle">异机:BlockReaderRemote 走 TCP</text>
+  <text x="481" y="316" font-size="8.5" fill="#3f8f66" text-anchor="middle">逐 chunk 用 .meta 校验 CRC</text>
+  <path d="M616,281 L666,281" stroke="#3f8f66" stroke-width="2" fill="none" marker-end="url(#ar)"/>
+
+  <rect x="666" y="234" width="268" height="94" rx="10" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="800" y="258" font-size="9.5" font-weight="600" fill="#7a4d00" text-anchor="middle">最近 DataNode</text>
+  <text x="800" y="280" font-size="8.3" fill="#9a7328" text-anchor="middle">按 packet 回传数据(不经 NameNode)</text>
+  <text x="800" y="298" font-size="8.3" fill="#9a7328" text-anchor="middle">顺序读多块:边读边取后续块位置</text>
+  <text x="800" y="316" font-size="8.3" fill="#9a7328" text-anchor="middle">= 流式,单块只连一个 DN</text>
+
+  <!-- ③ 失败自愈闭环 -->
+  <rect x="26" y="358" width="908" height="120" rx="14" fill="#fef6f4" stroke="#f0c4b8"/>
+  <text x="46" y="382" font-size="12" font-weight="600" fill="#c4341c">③ 校验失配 / DN 不可达 —— 换下一副本重读 + 上报坏块,后台自愈</text>
+
+  <rect x="46" y="396" width="230" height="66" rx="10" fill="#fff3f0" stroke="#f0c4b8"/>
+  <text x="161" y="420" font-size="9.5" font-weight="600" fill="#c4341c" text-anchor="middle">CRC 失配 / IO 异常</text>
+  <text x="161" y="440" font-size="8.2" fill="#c4341c" text-anchor="middle">addToLocalDeadNodes 标坏</text>
+  <text x="161" y="456" font-size="8.2" fill="#c4341c" text-anchor="middle">retry(默认 2 次)换下一副本</text>
+  <path d="M276,429 L326,429" stroke="#c4341c" stroke-width="1.6" fill="none" marker-end="url(#ar)"/>
+
+  <rect x="326" y="396" width="270" height="66" rx="10" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="461" y="420" font-size="9.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">reportCheckSumFailure → NN</text>
+  <text x="461" y="440" font-size="8.3" fill="#5b7db1" text-anchor="middle">把坏副本上报 NameNode 标记 corrupt</text>
+  <text x="461" y="456" font-size="8.3" fill="#5b7db1" text-anchor="middle">读请求由其它好副本继续满足</text>
+  <path d="M596,429 L646,429" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <rect x="646" y="396" width="288" height="66" rx="10" fill="#eafaf1" stroke="#bce6cd"/>
+  <text x="790" y="420" font-size="9.5" font-weight="600" fill="#0f5132" text-anchor="middle">NameNode 后台重建</text>
+  <text x="790" y="440" font-size="8.3" fill="#3f8f66" text-anchor="middle">从好副本调度复制补足副本数</text>
+  <text x="790" y="456" font-size="8.3" fill="#3f8f66" text-anchor="middle">坏副本删除 —— 全程无需人工</text>
+
+  <!-- 底部要点 -->
+  <text x="46" y="504" font-size="9.2" fill="#494950">· 就近读是数据本地性根基:MapReduce 把 Map Task 调度到块所在节点,读即本地/同机架,省跨机架带宽</text>
+  <text x="46" y="524" font-size="9.2" fill="#494950">· NameNode 只给「块在哪」,数据带宽由 DataNode 群提供;一次写入多次读取,HDFS 不支持随机写(仅追加)</text>
+  <text x="46" y="544" font-size="9.2" fill="#494950">· 排序 comparator 让退役/stale/慢节点下沉列表末尾,client 天然避开它们</text>
+</svg>

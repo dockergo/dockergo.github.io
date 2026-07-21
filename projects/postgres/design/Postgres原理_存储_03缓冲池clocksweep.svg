@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="470" viewBox="0 0 1020 470"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="aB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#4a7fd0"/></marker>
+    <marker id="aG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+    <marker id="aR" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#c0392b"/></marker>
+  </defs>
+  <rect width="1020" height="470" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14.5" font-weight="700" fill="#1d1d1f">缓冲池 clock-sweep · shared_buffers 环形淘汰与 pin 保护（storage/buffer/freelist.c）</text>
+  <text x="30" y="49" font-size="10.5" fill="#6e6e73">时钟指针 nextVictimBuffer 轮转扫描 buffer 槽；被 pin 的跳过、usage_count 递减给二次机会、归零且未 pin 即选为牺牲者</text>
+
+  <!-- legend -->
+  <line x1="30" y1="70" x2="54" y2="70" stroke="#4a7fd0" stroke-width="2" marker-end="url(#aB)"/><text x="60" y="74" font-size="10" fill="#3a3a3c">指针轮转 · 命中</text>
+  <line x1="188" y1="70" x2="212" y2="70" stroke="#2f9e6e" stroke-width="2" marker-end="url(#aG)"/><text x="218" y="74" font-size="10" fill="#3a3a3c">可淘汰 · 换入新页</text>
+  <line x1="360" y1="70" x2="384" y2="70" stroke="#c0392b" stroke-width="2" stroke-dasharray="4 3" marker-end="url(#aR)"/><text x="390" y="74" font-size="10" fill="#3a3a3c">脏页驱逐前先落 WAL</text>
+  <text x="1000" y="74" font-size="10" fill="#a1a1a6" text-anchor="end">BM_MAX_USAGE_COUNT = 5</text>
+  <line x1="30" y1="84" x2="1000" y2="84" stroke="#e4e7ec" stroke-width="1"/>
+
+  <!-- buffer ring container -->
+  <rect x="30" y="104" width="560" height="248" rx="14" fill="#fff7e6" stroke="#f0dcae" filter="url(#soft)"/>
+  <text x="48" y="128" font-size="12" font-weight="600" fill="#7a4d00">shared_buffers · 一圈 buffer 槽（每槽：usage_count 0–5 + pin 计数）</text>
+
+  <!-- clock hand marker over slot 3 -->
+  <text x="315" y="152" font-size="10" font-weight="600" fill="#4a7fd0" text-anchor="middle">时钟指针 →</text>
+  <path d="M270,158 L360,158" stroke="#4a7fd0" stroke-width="2" marker-end="url(#aB)"/>
+
+  <!-- slots row -->
+  <g font-size="9.5">
+    <rect x="48"  y="170" width="80" height="70" rx="9" fill="#ffffff" stroke="#f0dcae"/><text x="88" y="192" font-size="10" font-weight="600" fill="#7a4d00" text-anchor="middle">buf 0</text><text x="88" y="210" fill="#3f8f66" text-anchor="middle">u=2</text><text x="88" y="228" fill="#9a7328" text-anchor="middle">未 pin</text>
+    <rect x="136" y="170" width="80" height="70" rx="9" fill="#ffffff" stroke="#f0dcae"/><text x="176" y="192" font-size="10" font-weight="600" fill="#7a4d00" text-anchor="middle">buf 1</text><text x="176" y="210" fill="#b06a6a" text-anchor="middle">pin&gt;0</text><text x="176" y="228" fill="#9a7328" text-anchor="middle">跳过</text>
+    <rect x="224" y="170" width="80" height="70" rx="9" fill="#ffffff" stroke="#f0dcae"/><text x="264" y="192" font-size="10" font-weight="600" fill="#7a4d00" text-anchor="middle">buf 2</text><text x="264" y="210" fill="#3f8f66" text-anchor="middle">u=1</text><text x="264" y="228" fill="#9a7328" text-anchor="middle">u−−→0</text>
+    <rect x="312" y="170" width="80" height="70" rx="9" fill="#eafaf1" stroke="#7fce9f" stroke-width="1.6"/><text x="352" y="192" font-size="10" font-weight="700" fill="#0f5132" text-anchor="middle">buf 3 ←指针</text><text x="352" y="210" fill="#0f5132" text-anchor="middle">u=0 未 pin</text><text x="352" y="228" font-weight="600" fill="#0f5132" text-anchor="middle">牺牲者</text>
+    <rect x="400" y="170" width="80" height="70" rx="9" fill="#ffffff" stroke="#f0dcae"/><text x="440" y="192" font-size="10" font-weight="600" fill="#7a4d00" text-anchor="middle">buf 4</text><text x="440" y="210" fill="#3f8f66" text-anchor="middle">u=5</text><text x="440" y="228" fill="#9a7328" text-anchor="middle">热页</text>
+    <rect x="488" y="170" width="80" height="70" rx="9" fill="#ffffff" stroke="#f0dcae"/><text x="528" y="192" font-size="10" font-weight="600" fill="#7a4d00" text-anchor="middle">buf 5</text><text x="528" y="210" fill="#3f8f66" text-anchor="middle">u=3</text><text x="528" y="228" fill="#9a7328" text-anchor="middle">…</text>
+  </g>
+  <!-- wrap-around arrow -->
+  <path d="M568,205 C588,205 588,262 300,262 L88,262 L88,244" fill="none" stroke="#4a7fd0" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#aB)"/>
+  <text x="300" y="278" font-size="9" fill="#5b7db1" text-anchor="middle">扫到尾环回头部（completePasses++），一圈无空位则失败 no unpinned buffers</text>
+
+  <rect x="48" y="296" width="520" height="42" rx="9" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="60" y="314" font-size="9.5" fill="#1b2a4a">命中已在池中的页：usage_count++（封顶 5），pin 期间 refcount&gt;0 防被淘汰</text>
+  <text x="60" y="330" font-size="9.5" fill="#5b7db1">大顺序扫描/批量写走 strategy ring（小环形复用自己的几个槽），不冲刷整个缓冲池</text>
+
+  <!-- decision flow right -->
+  <rect x="620" y="104" width="380" height="248" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="638" y="128" font-size="12" font-weight="600" fill="#1d1d1f">指针停在一个槽 · 三问定去留</text>
+  <rect x="638" y="142" width="344" height="40" rx="8" fill="#fbeaea" stroke="#f0cccc"/><text x="654" y="160" font-size="9.5" fill="#7d1f1f">① refcount≠0（被 pin）？ 是 → 跳过，指针 +1</text><text x="654" y="175" font-size="8.5" fill="#b06a6a">pin 表示有人正用，绝不淘汰</text>
+  <rect x="638" y="190" width="344" height="40" rx="8" fill="#eef3fb" stroke="#bcd0ec"/><text x="654" y="208" font-size="9.5" fill="#1b2a4a">② usage_count&gt;0？ 是 → 减 1，指针 +1</text><text x="654" y="223" font-size="8.5" fill="#5b7db1">给"最近被用过"的页二次机会</text>
+  <rect x="638" y="238" width="344" height="48" rx="8" fill="#eafaf1" stroke="#bce6cd"/><text x="654" y="257" font-size="9.5" font-weight="600" fill="#0f5132">③ u=0 且未 pin → 选为牺牲者，pin 并换入新页</text><text x="654" y="273" font-size="8.5" fill="#3f8f66">CAS 抢占 buffer header，无需锁</text>
+  <rect x="638" y="294" width="344" height="44" rx="8" fill="#fbeaea" stroke="#f0cccc"/><text x="654" y="312" font-size="9.5" fill="#7d1f1f">牺牲者是脏页？ 是 → 先 FlushBuffer（其 WAL 已 fsync）</text><text x="654" y="328" font-size="8.5" fill="#b06a6a">write-ahead：数据页落盘前 WAL 必先落盘</text>
+
+  <text x="30" y="372" font-size="9.5" fill="#6e6e73">不变式：热页 usage_count 反复被顶到 5，需连续多圈递减才可能被淘汰 → 近似 LRU；被 pin 的页在任何情况下都豁免。</text>
+  <text x="30" y="392" font-size="9.5" fill="#6e6e73">边界：全部 buffer 都被 pin 时扫满一整圈仍无空位 → 报 "no unpinned buffers available"（连接持有过多 pin 的信号）。</text>
+</svg>

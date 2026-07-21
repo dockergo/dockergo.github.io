@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="520" viewBox="0 0 960 520"
+     font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="960" height="520" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">DataNode 写块:一条 socket 起一个 DataXceiver,边校验边转发边落盘,ack 逆向</text>
+
+  <!-- 图例 -->
+  <rect x="600" y="18" width="12" height="12" rx="3" fill="#eef3fb" stroke="#bcd0ec"/><text x="616" y="28" font-size="9" fill="#5b7db1">连接/线程</text>
+  <rect x="690" y="18" width="12" height="12" rx="3" fill="#eafaf1" stroke="#bce6cd"/><text x="706" y="28" font-size="9" fill="#3f8f66">packet 数据流</text>
+  <rect x="800" y="18" width="12" height="12" rx="3" fill="#fff7e6" stroke="#f0dcae"/><text x="816" y="28" font-size="9" fill="#9a7328">块落盘</text>
+  <rect x="884" y="18" width="12" height="12" rx="3" fill="#fff3f0" stroke="#f0c4b8"/><text x="900" y="28" font-size="9" fill="#c4341c">失败</text>
+
+  <!-- 上游 -->
+  <rect x="30" y="60" width="140" height="70" rx="11" fill="#f4eefb" stroke="#d9c9ef"/>
+  <text x="100" y="90" font-size="10" font-weight="600" fill="#3c1361" text-anchor="middle">上游(client/DN)</text>
+  <text x="100" y="110" font-size="8.3" fill="#7c5aa6" text-anchor="middle">socket + packet 流</text>
+
+  <!-- DataXceiver -->
+  <rect x="210" y="52" width="270" height="86" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="345" y="78" font-size="10.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">DataXceiver 线程(每连接一个)</text>
+  <text x="345" y="99" font-size="8.5" fill="#5b7db1" text-anchor="middle">writeBlock:解析下游 targets</text>
+  <text x="345" y="117" font-size="8.5" fill="#5b7db1" text-anchor="middle">建 BlockReceiver 落本地 + 向下游建 mirror</text>
+  <path d="M170,95 L210,95" stroke="#7c5aa6" stroke-width="2" fill="none" marker-end="url(#ar)"/>
+
+  <!-- 下游 DN -->
+  <rect x="790" y="52" width="140" height="86" rx="12" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="860" y="82" font-size="10" font-weight="600" fill="#7a4d00" text-anchor="middle">下游 DN</text>
+  <text x="860" y="102" font-size="8.3" fill="#9a7328" text-anchor="middle">mirrorOut 转发</text>
+  <text x="860" y="120" font-size="8.3" fill="#9a7328" text-anchor="middle">同样递归落盘</text>
+  <path d="M480,88 L790,88" stroke="#3f8f66" stroke-width="2" fill="none" marker-end="url(#ar)"/>
+  <text x="635" y="80" font-size="8.5" font-weight="600" fill="#0f5132" text-anchor="middle">mirrorPacketTo:先转发下游(流水并行)</text>
+
+  <!-- receivePacket 核心循环 -->
+  <rect x="30" y="160" width="600" height="200" rx="13" fill="#f3fbf6" stroke="#bce6cd"/>
+  <text x="50" y="184" font-size="12" font-weight="600" fill="#0f5132">BlockReceiver.receivePacket 核心循环(每 packet)</text>
+
+  <rect x="50" y="200" width="130" height="66" rx="10" fill="#eafaf1" stroke="#bce6cd"/>
+  <text x="115" y="228" font-size="9.5" font-weight="600" fill="#0f5132" text-anchor="middle">① verifyChunks</text>
+  <text x="115" y="246" font-size="8.2" fill="#3f8f66" text-anchor="middle">CRC 校验收到数据</text>
+
+  <rect x="200" y="200" width="130" height="66" rx="10" fill="#eafaf1" stroke="#bce6cd"/>
+  <text x="265" y="228" font-size="9.5" font-weight="600" fill="#0f5132" text-anchor="middle">② mirror 转发</text>
+  <text x="265" y="246" font-size="8.2" fill="#3f8f66" text-anchor="middle">先发下游再本地写</text>
+
+  <rect x="350" y="200" width="130" height="66" rx="10" fill="#fff7e6" stroke="#f0dcae"/>
+  <text x="415" y="222" font-size="9.5" font-weight="600" fill="#7a4d00" text-anchor="middle">③ 本地落盘</text>
+  <text x="415" y="240" font-size="8.2" fill="#9a7328" text-anchor="middle">写数据文件 blk_&lt;id&gt;</text>
+  <text x="415" y="256" font-size="8.2" fill="#9a7328" text-anchor="middle">+ .meta 校验文件</text>
+
+  <rect x="500" y="200" width="112" height="66" rx="10" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="556" y="228" font-size="9.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">④ 入 ackQueue</text>
+  <text x="556" y="246" font-size="8.2" fill="#5b7db1" text-anchor="middle">交 PacketResponder</text>
+
+  <path d="M180,233 L200,233" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M330,233 L350,233" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M480,233 L500,233" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <text x="50" y="298" font-size="9" fill="#3f8f66">packet = 默认 64KB,内含多个 512B chunk + CRC;循环推进直到整块收完</text>
+  <text x="50" y="320" font-size="9" fill="#3f8f66">整块收完 receiveBlock → finalizeBlock 定稿:rbw(在写)目录 → finalized(已完成)目录</text>
+  <text x="50" y="342" font-size="9" fill="#c4341c">下游 mirror 写失败/ack 超时 → 标 mirrorError,踢坏节点,client 重建更短 pipeline(genStamp 递增作废旧副本)</text>
+
+  <!-- PacketResponder ack -->
+  <rect x="650" y="160" width="280" height="200" rx="13" fill="#f6f8fc" stroke="#cfe0f2"/>
+  <text x="670" y="184" font-size="11.5" font-weight="600" fill="#1b2a4a">PacketResponder(独立线程)</text>
+  <rect x="670" y="200" width="240" height="52" rx="9" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="790" y="222" font-size="9" font-weight="600" fill="#1b2a4a" text-anchor="middle">等下游 ack 到达</text>
+  <text x="790" y="240" font-size="8.2" fill="#5b7db1" text-anchor="middle">合并本节点 ack 一并上送上游</text>
+  <rect x="670" y="262" width="240" height="46" rx="9" fill="#eafaf1" stroke="#bce6cd"/>
+  <text x="790" y="284" font-size="9" font-weight="600" fill="#0f5132" text-anchor="middle">PipelineAck 逆向:DN3→DN2→DN1</text>
+  <text x="790" y="300" font-size="8" fill="#3f8f66" text-anchor="middle">全 ack = 三副本都落地,packet 出队</text>
+  <text x="670" y="332" font-size="8.5" fill="#5b7db1">ack 沿 pipeline 逆向回传到 client;</text>
+  <text x="670" y="350" font-size="8.5" fill="#5b7db1">client 收 ack 才认为该 packet 持久。</text>
+
+  <!-- 底部:磁盘布局 -->
+  <rect x="30" y="384" width="900" height="112" rx="13" fill="#fbfbfd" stroke="#e2e2e7"/>
+  <text x="50" y="408" font-size="11.5" font-weight="600" fill="#1d1d1f">要点 · DataNode 只认块 id、不认文件</text>
+  <text x="50" y="432" font-size="9.2" fill="#494950">· 一个块落成一对文件:数据 blk_&lt;id&gt; + 校验和 blk_&lt;id&gt;_&lt;genStamp&gt;.meta(每 512B 一个 CRC)</text>
+  <text x="50" y="454" font-size="9.2" fill="#494950">· rbw(在写)→ finalized(已完成)按生命周期分目录;FsDatasetImpl 的内存 volumeMap 索引多盘副本位置</text>
+  <text x="50" y="476" font-size="9.2" fill="#494950">· 定稿后经增量块汇报(IBR)告诉 NameNode「我这里多了个块」;VolumeScanner 后台扫 .meta 检出 bit rot</text>
+</svg>

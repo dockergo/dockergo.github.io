@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="480" viewBox="0 0 900 480" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="900" height="480" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">垃圾回收 · ownerReferences 依赖图 + 三种传播策略</text>
+  <g font-size="10.5">
+    <rect x="540" y="20" width="12" height="12" rx="3" fill="#eef3fb" stroke="#bcd0ec"/><text x="558" y="30" fill="#6e6e73">GraphBuilder</text>
+    <rect x="648" y="20" width="12" height="12" rx="3" fill="#faf4fb" stroke="#e4cdea"/><text x="666" y="30" fill="#6e6e73">finalizer 钩子</text>
+    <rect x="758" y="20" width="12" height="12" rx="3" fill="#f5faf6" stroke="#cfe6d2"/><text x="776" y="30" fill="#6e6e73">保留</text>
+  </g>
+
+  <!-- object graph (left) -->
+  <rect x="30" y="66" width="300" height="230" rx="12" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="46" y="90" font-size="12" font-weight="600" fill="#1b2a4a">内存依赖图 uidToNode（边=ownerRef）</text>
+  <rect x="110" y="104" width="140" height="42" rx="9" fill="#ffffff" stroke="#ececef" filter="url(#soft)"/>
+  <text x="180" y="130" font-size="11" font-weight="600" fill="#1d1d1f" text-anchor="middle">Deployment</text>
+  <rect x="110" y="170" width="140" height="42" rx="9" fill="#ffffff" stroke="#ececef" filter="url(#soft)"/>
+  <text x="180" y="196" font-size="11" font-weight="600" fill="#1d1d1f" text-anchor="middle">ReplicaSet</text>
+  <rect x="110" y="236" width="140" height="42" rx="9" fill="#ffffff" stroke="#ececef" filter="url(#soft)"/>
+  <text x="180" y="262" font-size="11" font-weight="600" fill="#1d1d1f" text-anchor="middle">Pod</text>
+  <!-- child -> owner edges (upward) -->
+  <path d="M180 170 L180 146" fill="none" stroke="#b8b8bf" stroke-width="1.5" marker-end="url(#ar)"/>
+  <path d="M180 236 L180 212" fill="none" stroke="#b8b8bf" stroke-width="1.5" marker-end="url(#ar)"/>
+  <text x="192" y="164" font-size="9.5" fill="#a1a1a6">ownerRef</text>
+  <text x="192" y="230" font-size="9.5" fill="#a1a1a6">ownerRef</text>
+  <!-- virtual node + absentCache notes -->
+  <rect x="264" y="104" width="56" height="42" rx="8" fill="#faf4fb" stroke="#e4cdea" stroke-dasharray="4 3"/>
+  <text x="292" y="124" font-size="9.5" fill="#8944ab" text-anchor="middle">虚拟</text>
+  <text x="292" y="138" font-size="9.5" fill="#8944ab" text-anchor="middle">节点</text>
+  <text x="46" y="288" font-size="9.5" fill="#6e6e73">owner 未观察到→建虚拟节点占位；absentOwnerCache 缓存已确认不存在</text>
+
+  <!-- three policies (right) -->
+  <text x="360" y="90" font-size="12" font-weight="600" fill="#1d1d1f">删 owner 时的三种传播策略</text>
+
+  <rect x="360" y="104" width="510" height="58" rx="10" fill="#faf4fb" stroke="#e4cdea"/>
+  <text x="376" y="126" font-size="11.5" font-weight="600" fill="#8944ab">Foreground（两段式）</text>
+  <text x="376" y="146" font-size="10.5" fill="#6e6e73">打 FinalizerDeleteDependents → 下游全删净 → 才移除 finalizer → owner 消失</text>
+
+  <rect x="360" y="172" width="510" height="52" rx="10" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="376" y="194" font-size="11.5" font-weight="600" fill="#1b2a4a">Background（默认多数）</text>
+  <text x="376" y="212" font-size="10.5" fill="#6e6e73">owner 先删 → GC 后台沿图级联清下游孤儿（快速返回）</text>
+
+  <rect x="360" y="234" width="510" height="52" rx="10" fill="#f5faf6" stroke="#cfe6d2"/>
+  <text x="376" y="256" font-size="11.5" font-weight="600" fill="#1d8f3f">Orphan（解绑保留）</text>
+  <text x="376" y="274" font-size="10.5" fill="#6e6e73">摘除下游 ownerRef + 移除 FinalizerOrphanDependents → 子对象成无主保留</text>
+
+  <!-- bottom notes -->
+  <line x1="30" y1="330" x2="870" y2="330" stroke="#ececef"/>
+  <text x="30" y="352" font-size="11.5" fill="#6e6e73"><tspan font-weight="600" fill="#1d1d1f">级联触发：</tspan>owner 被删 → attemptToDeleteItem 沿图删孤儿子对象（删 Deployment→删 RS→删 Pod）</text>
+  <text x="30" y="376" font-size="11.5" fill="#6e6e73"><tspan font-weight="600" fill="#1d1d1f">虚拟节点：</tspan>引用了尚未入图的 owner 先占位，待真身出现或确认不存在再修正——避免误判孤儿</text>
+  <text x="30" y="400" font-size="11.5" fill="#6e6e73"><tspan font-weight="600" fill="#1d1d1f">卡 Terminating：</tspan>deletionTimestamp 已置却不消失，几乎总是某 finalizer 控制器没跑；GC 不删有未完成 finalizer 的对象</text>
+  <text x="30" y="424" font-size="11.5" fill="#6e6e73"><tspan font-weight="600" fill="#1d1d1f">Foreground 不变式：</tspan>只要 owner 还在，就代表其下游尚未删完——单向可观测保证级联正确性</text>
+</svg>

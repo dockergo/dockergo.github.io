@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="450" viewBox="0 0 900 450" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="900" height="450" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">kube-proxy · 节流重刷 + 整表原子替换（level-triggered 数据面）</text>
+  <g font-size="10.5">
+    <rect x="600" y="20" width="12" height="12" rx="3" fill="#eef3fb" stroke="#bcd0ec"/><text x="618" y="30" fill="#6e6e73">事件/节流</text>
+    <rect x="694" y="20" width="12" height="12" rx="3" fill="#fbf7ef" stroke="#ecdcbf"/><text x="712" y="30" fill="#6e6e73">规则表</text>
+    <rect x="770" y="20" width="12" height="12" rx="3" fill="#f5faf6" stroke="#cfe6d2"/><text x="788" y="30" fill="#6e6e73">内核生效</text>
+  </g>
+
+  <!-- events -->
+  <rect x="30" y="80" width="150" height="120" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="105" y="106" font-size="11.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">watch 事件</text>
+  <text x="105" y="126" font-size="10" fill="#5b7db1" text-anchor="middle">OnServiceUpdate</text>
+  <text x="105" y="143" font-size="10" fill="#5b7db1" text-anchor="middle">OnEndpointSlice…</text>
+  <text x="105" y="170" font-size="10" fill="#6e6e73" text-anchor="middle">只标脏 + Sync()</text>
+  <text x="105" y="187" font-size="9.5" fill="#a1a1a6" text-anchor="middle">不逐条改规则</text>
+
+  <!-- BoundedFrequencyRunner -->
+  <rect x="210" y="80" width="180" height="120" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="300" y="106" font-size="11.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">节流 Runner</text>
+  <text x="300" y="126" font-size="10" fill="#6e6e73" text-anchor="middle">minSyncPeriod 防抖</text>
+  <text x="300" y="143" font-size="10" fill="#6e6e73" text-anchor="middle">burstSyncs 突发</text>
+  <text x="300" y="160" font-size="10" fill="#6e6e73" text-anchor="middle">maxWait 1h 兜底</text>
+  <text x="300" y="185" font-size="9.5" fill="#a1a1a6" text-anchor="middle">合并抖动·限频调用</text>
+
+  <!-- syncProxyRules recompute -->
+  <rect x="420" y="80" width="200" height="120" rx="12" fill="#fbf7ef" stroke="#ecdcbf" filter="url(#soft)"/>
+  <text x="520" y="106" font-size="11.5" font-weight="600" fill="#8a6d3b" text-anchor="middle">syncProxyRules</text>
+  <text x="520" y="126" font-size="10" fill="#6e6e73" text-anchor="middle">重算整张表</text>
+  <text x="520" y="143" font-size="10" fill="#6e6e73" text-anchor="middle">写进 iptablesData buffer</text>
+  <text x="520" y="168" font-size="9.5" fill="#a1a1a6" text-anchor="middle">不增量改单条</text>
+  <text x="520" y="185" font-size="9.5" fill="#a1a1a6" text-anchor="middle">天然幂等</text>
+
+  <!-- RestoreAll kernel -->
+  <rect x="650" y="80" width="220" height="120" rx="12" fill="#f5faf6" stroke="#cfe6d2" filter="url(#soft)"/>
+  <text x="760" y="106" font-size="11.5" font-weight="600" fill="#1d8f3f" text-anchor="middle">RestoreAll</text>
+  <text x="760" y="126" font-size="10" fill="#6e6e73" text-anchor="middle">iptables-restore --noflush</text>
+  <text x="760" y="143" font-size="10" fill="#6e6e73" text-anchor="middle">一次性原子替换 NAT 表</text>
+  <text x="760" y="168" font-size="9.5" fill="#a1a1a6" text-anchor="middle">任意时刻内核规则自洽</text>
+  <text x="760" y="185" font-size="9.5" fill="#a1a1a6" text-anchor="middle">无删旧到加新的黑洞</text>
+
+  <!-- arrows -->
+  <path d="M180 140 L210 140" fill="none" stroke="#b8b8bf" stroke-width="1.5" marker-end="url(#ar)"/>
+  <path d="M390 140 L420 140" fill="none" stroke="#b8b8bf" stroke-width="1.5" marker-end="url(#ar)"/>
+  <path d="M620 140 L650 140" fill="none" stroke="#b8b8bf" stroke-width="1.5" marker-end="url(#ar)"/>
+  <!-- retry loop -->
+  <path d="M760 200 C760 240 520 240 520 202" fill="none" stroke="#c7c7cc" stroke-width="1.4" stroke-dasharray="4 3" marker-end="url(#ar)"/>
+  <text x="640" y="256" font-size="10" fill="#6e6e73" text-anchor="middle">restore 失败 → RetryAfter 重试（整表重算，无需知道上次改到哪）</text>
+
+  <!-- bottom notes -->
+  <line x1="30" y1="292" x2="870" y2="292" stroke="#ececef"/>
+  <text x="30" y="314" font-size="11.5" fill="#6e6e73"><tspan font-weight="600" fill="#1d1d1f">就绪后端才入表：</tspan>EndpointSlice 只收录 Ready 的 Pod，滚动升级流量不打到未起好/正退出的 Pod</text>
+  <text x="30" y="338" font-size="11.5" fill="#6e6e73"><tspan font-weight="600" fill="#1d1d1f">不丢在途连接：</tspan>DNAT 依赖 conntrack，规则重刷只影响新连接选路；已建长连接仍走旧后端</text>
+  <text x="30" y="362" font-size="11.5" fill="#6e6e73"><tspan font-weight="600" fill="#1d1d1f">规模退化：</tspan>iptables 规则数随 Service×后端线性增长，单次刷表变慢 → 超大集群切 IPVS(O(1)) / nftables</text>
+  <text x="30" y="386" font-size="11.5" fill="#6e6e73"><tspan font-weight="600" fill="#1d1d1f">为何整表重算：</tspan>不追"哪条变了"，周期重算保证与期望一致——重试无需上下文，是增量改规则做不到的容错</text>
+</svg>

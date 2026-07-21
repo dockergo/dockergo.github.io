@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="440" viewBox="0 0 1020 440" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs><filter id="sx" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="3.5" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="xx" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#8a5cae"/></marker>
+    <marker id="hx" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker></defs>
+  <rect width="1020" height="440" fill="#fbfbfd"/>
+  <text x="24" y="30" font-size="14" font-weight="700" fill="#1d1d1f">凭证与安全：连接级「传输凭证」握手 + 调用级「调用凭证」注入 metadata</text>
+  <text x="24" y="49" font-size="10" fill="#8a8a8e">两类凭证正交：channel credentials 定"连接怎么安全建立"，call credentials 定"每次调用带什么身份"</text>
+
+  <!-- transport creds -->
+  <rect x="24" y="66" width="486" height="200" rx="12" fill="#f4eefb" stroke="#ddccef"/>
+  <text x="40" y="87" font-size="11" font-weight="700" fill="#6f3ea8">① 传输凭证（channel · 连接级）</text>
+  <text x="40" y="106" font-size="8.5" fill="#7a4fa0">建连时握手鉴定对端身份、协商加密（credentials/transport/）</text>
+  <g font-size="8.5" text-anchor="middle" fill="#6f3ea8">
+    <rect x="40" y="116" width="108" height="42" rx="8" fill="#fff" stroke="#ddccef" filter="url(#sx)"/><text x="94" y="134" font-weight="600">TLS / SSL</text><text x="94" y="149" font-size="7" fill="#9a76c0">ssl/ · tls/</text>
+    <rect x="158" y="116" width="108" height="42" rx="8" fill="#fff" stroke="#ddccef" filter="url(#sx)"/><text x="212" y="134" font-weight="600">ALTS</text><text x="212" y="149" font-size="7" fill="#9a76c0">alts/（GCP）</text>
+    <rect x="276" y="116" width="108" height="42" rx="8" fill="#fff" stroke="#ddccef" filter="url(#sx)"/><text x="330" y="134" font-weight="600">local</text><text x="330" y="149" font-size="7" fill="#9a76c0">local/</text>
+    <rect x="394" y="116" width="100" height="42" rx="8" fill="#fff" stroke="#ddccef" filter="url(#sx)"/><text x="444" y="134" font-weight="600">insecure</text><text x="444" y="149" font-size="7" fill="#9a76c0">insecure/</text>
+  </g>
+  <rect x="40" y="168" width="454" height="40" rx="8" fill="#fff" stroke="#ddccef" filter="url(#sx)"/>
+  <text x="52" y="185" font-size="8.5" font-weight="600" fill="#6f3ea8">SecurityConnector 执行握手 → 建立 auth_context</text>
+  <text x="52" y="200" font-size="7.5" fill="#9a76c0">security_connector.cc · auth_context.cc（对端身份属性集合）</text>
+  <text x="40" y="228" font-size="8" fill="#7a4fa0">经注册表插件化：channel_creds_registry_init.cc · google_default 组合默认凭证</text>
+  <text x="40" y="246" font-size="8" fill="#a98cc7">composite：把传输凭证 + 调用凭证组合成一个 channel 凭证</text>
+  <text x="40" y="262" font-size="8" fill="#a98cc7">xds：凭证也可由控制面下发</text>
+
+  <!-- call creds -->
+  <rect x="526" y="66" width="470" height="200" rx="12" fill="#f4eefb" stroke="#ddccef"/>
+  <text x="542" y="87" font-size="11" font-weight="700" fill="#6f3ea8">② 调用凭证（call · 每次调用）</text>
+  <text x="542" y="106" font-size="8.5" fill="#7a4fa0">每次调用注入身份令牌到 metadata（credentials/call/）</text>
+  <g font-size="8.5" text-anchor="middle" fill="#6f3ea8">
+    <rect x="542" y="116" width="106" height="42" rx="8" fill="#fff" stroke="#ddccef" filter="url(#sx)"/><text x="595" y="134" font-weight="600">OAuth2</text><text x="595" y="149" font-size="7" fill="#9a76c0">oauth2/</text>
+    <rect x="658" y="116" width="106" height="42" rx="8" fill="#fff" stroke="#ddccef" filter="url(#sx)"/><text x="711" y="134" font-weight="600">JWT</text><text x="711" y="149" font-size="7" fill="#9a76c0">jwt/</text>
+    <rect x="774" y="116" width="90" height="42" rx="8" fill="#fff" stroke="#ddccef" filter="url(#sx)"/><text x="819" y="134" font-weight="600">IAM</text><text x="819" y="149" font-size="7" fill="#9a76c0">iam/</text>
+    <rect x="874" y="116" width="106" height="42" rx="8" fill="#fff" stroke="#ddccef" filter="url(#sx)"/><text x="927" y="134" font-weight="600">plugin</text><text x="927" y="149" font-size="7" fill="#9a76c0">plugin/ 自定义</text>
+  </g>
+  <rect x="542" y="168" width="438" height="40" rx="8" fill="#eafaf1" stroke="#b8e6cd" filter="url(#sx)"/>
+  <text x="554" y="185" font-size="8.5" font-weight="600" fill="#1c6b45">把令牌写入调用 metadata → 随 HEADERS 帧上送</text>
+  <text x="554" y="200" font-size="7.5" fill="#3a8a63">call_creds_util.cc · call_creds_registry_init.cc</text>
+  <text x="542" y="228" font-size="8" fill="#7a4fa0">external / gcp_service_account_identity：从外部源取令牌</text>
+  <text x="542" y="246" font-size="8" fill="#a98cc7">composite call creds：叠加多个调用凭证</text>
+  <text x="542" y="262" font-size="8" fill="#a98cc7">要求：多数调用凭证仅允许在安全传输（TLS/ALTS）上使用</text>
+
+  <!-- horizontal cross-cutting -->
+  <rect x="24" y="282" width="972" height="60" rx="12" fill="#f6f8fc" stroke="#cfe0f2"/>
+  <text x="40" y="303" font-size="10.5" font-weight="700" fill="#4f6f9f">③ 横切位置：凭证如何嵌入调用路径</text>
+  <g font-size="8" text-anchor="middle">
+    <rect x="40" y="312" width="150" height="24" rx="6" fill="#f4eefb" stroke="#ddccef"/><text x="115" y="328" fill="#6f3ea8">建连：传输凭证握手</text>
+    <rect x="210" y="312" width="170" height="24" rx="6" fill="#f4eefb" stroke="#ddccef"/><text x="295" y="328" fill="#6f3ea8">每调用：调用凭证注入 metadata</text>
+    <rect x="400" y="312" width="150" height="24" rx="6" fill="#eef8f2" stroke="#cbe6d5"/><text x="475" y="328" fill="#1c7a4d">filter 栈内鉴权</text>
+    <rect x="570" y="312" width="180" height="24" rx="6" fill="#eef8f2" stroke="#cbe6d5"/><text x="660" y="328" fill="#1c7a4d">服务端 rbac 授权 filter</text>
+    <rect x="770" y="312" width="200" height="24" rx="6" fill="#eef8f2" stroke="#cbe6d5"/><text x="870" y="328" fill="#1c7a4d">auth_context 供 handler 读身份</text>
+  </g>
+
+  <text x="24" y="368" font-size="9.5" fill="#4a4a4f">读法：传输凭证在「建连」一次性握手鉴定通道；调用凭证在「每次调用」注入身份令牌；服务端经 rbac/授权 filter + auth_context 做访问控制——连接安全与调用身份分离、可组合。</text>
+  <text x="24" y="390" font-size="9" fill="#6e6e73">composite 是关键：channel 凭证 = 传输凭证 ⊕ 调用凭证，一个对象同时管"怎么连"和"带谁的身份"。</text>
+  <text x="24" y="412" font-size="9" fill="#a1a1a6">安全约束：调用凭证（携带 bearer token）通常拒绝在 insecure 连接上发送，防令牌明文泄露。</text>
+  <text x="24" y="430" font-size="9" fill="#a1a1a6">C++ 层：ChannelCredentials / CallCredentials（src/cpp/client/secure_credentials.cc · include/grpcpp/security/）。</text>
+</svg>

@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="470" viewBox="0 0 1000 470"
+     font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="aG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+    <marker id="aB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#4a7fd0"/></marker>
+    <marker id="aA" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#c99a3a"/></marker>
+  </defs>
+  <rect width="1000" height="470" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">跨设备执行 · 按设备切分图，跨设备边替换成 Send/Recv 对</text>
+
+  <!-- 图例 -->
+  <line x1="30" y1="49" x2="54" y2="49" stroke="#2f9e6e" stroke-width="2" marker-end="url(#aG)"/><text x="60" y="53" font-size="9.5" fill="#3a3a3c">同设备数据边</text>
+  <line x1="168" y1="49" x2="192" y2="49" stroke="#4a7fd0" stroke-width="2" marker-end="url(#aB)"/><text x="198" y="53" font-size="9.5" fill="#3a3a3c">跨设备拷贝 Send→Recv</text>
+  <line x1="360" y1="49" x2="384" y2="49" stroke="#c99a3a" stroke-width="2" stroke-dasharray="5 3" marker-end="url(#aA)"/><text x="390" y="53" font-size="9.5" fill="#3a3a3c">同设备跨内存空间 Host</text>
+  <text x="970" y="53" font-size="9.5" fill="#a1a1a6" text-anchor="end">graph partition 机理</text>
+  <line x1="30" y1="62" x2="970" y2="62" stroke="#e4e7ec" stroke-width="1"/>
+
+  <!-- 上：放置好的整图 -->
+  <rect x="30" y="74" width="410" height="180" rx="13" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="50" y="97" font-size="11.5" font-weight="600" fill="#3a3a3c">放置后的整图（Placer 已定设备）</text>
+  <rect x="54" y="112" width="120" height="42" rx="9" fill="#eafaf1" stroke="#bce6cd"/><text x="114" y="132" font-size="9.5" fill="#0f5132" text-anchor="middle">op X</text><text x="114" y="147" font-size="8" fill="#2f6f4f" text-anchor="middle">GPU:0</text>
+  <rect x="54" y="188" width="120" height="42" rx="9" fill="#eafaf1" stroke="#bce6cd"/><text x="114" y="208" font-size="9.5" fill="#0f5132" text-anchor="middle">op Y</text><text x="114" y="223" font-size="8" fill="#2f6f4f" text-anchor="middle">GPU:0</text>
+  <rect x="296" y="150" width="120" height="42" rx="9" fill="#eef3fb" stroke="#bcd0ec"/><text x="356" y="170" font-size="9.5" fill="#1b2a4a" text-anchor="middle">op Z</text><text x="356" y="185" font-size="8" fill="#5b7db1" text-anchor="middle">GPU:1</text>
+  <line x1="174" y1="133" x2="196" y2="133" stroke="#2f9e6e" stroke-width="1.6" marker-end="url(#aG)"/>
+  <line x1="174" y1="209" x2="296" y2="180" stroke="#4a7fd0" stroke-width="1.8" marker-end="url(#aB)"/>
+  <text x="235" y="205" font-size="8.5" fill="#4a7fd0" text-anchor="middle">跨设备边</text>
+
+  <!-- 箭头到下 -->
+  <line x1="235" y1="254" x2="235" y2="278" stroke="#c7c7cc" stroke-width="1.6" marker-end="url(#aB)"/>
+  <text x="450" y="168" font-size="10" fill="#494950">切分（partition）：</text>
+  <text x="450" y="187" font-size="9.5" fill="#86868b">按目标设备把整图拆成</text>
+  <text x="450" y="204" font-size="9.5" fill="#86868b">每设备一张子图，</text>
+  <text x="450" y="221" font-size="9.5" fill="#86868b">跨设备边被自动改写</text>
+
+  <!-- 下左：GPU0 子图 + Send -->
+  <rect x="30" y="286" width="410" height="130" rx="13" fill="#eafaf1" stroke="#bce6cd" filter="url(#soft)"/>
+  <text x="50" y="309" font-size="11.5" font-weight="600" fill="#0f5132">GPU:0 子图（源侧）</text>
+  <rect x="54" y="322" width="110" height="40" rx="9" fill="#ffffff" stroke="#bce6cd"/><text x="109" y="346" font-size="9.5" fill="#0f5132" text-anchor="middle">op Y</text>
+  <line x1="164" y1="342" x2="204" y2="342" stroke="#2f9e6e" stroke-width="1.6" marker-end="url(#aG)"/>
+  <rect x="208" y="322" width="120" height="40" rx="9" fill="#eef3fb" stroke="#4a7fd0"/><text x="268" y="342" font-size="9.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">_Send</text><text x="268" y="356" font-size="7.5" fill="#5b7db1" text-anchor="middle">AddSend 插入</text>
+  <text x="50" y="388" font-size="9" fill="#2f6f4f">发送节点负责 D2H/H2D 拷贝与</text>
+  <text x="50" y="404" font-size="9" fill="#2f6f4f">跨设备同步</text>
+
+  <!-- 下右：GPU1 子图 + Recv -->
+  <rect x="560" y="286" width="410" height="130" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="580" y="309" font-size="11.5" font-weight="600" fill="#1b2a4a">GPU:1 子图（目标侧）</text>
+  <rect x="584" y="322" width="120" height="40" rx="9" fill="#ffffff" stroke="#4a7fd0"/><text x="644" y="342" font-size="9.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">_Recv</text><text x="644" y="356" font-size="7.5" fill="#5b7db1" text-anchor="middle">AddRecv 插入</text>
+  <line x1="704" y1="342" x2="744" y2="342" stroke="#2f9e6e" stroke-width="1.6" marker-end="url(#aG)"/>
+  <rect x="748" y="322" width="110" height="40" rx="9" fill="#ffffff" stroke="#bcd0ec"/><text x="803" y="346" font-size="9.5" fill="#1b2a4a" text-anchor="middle">op Z</text>
+  <text x="580" y="388" font-size="9" fill="#5b7db1">接收节点等到张量到达后</text>
+  <text x="580" y="404" font-size="9" fill="#5b7db1">交给后继计算</text>
+
+  <!-- Send -> Recv 跨设备连线 -->
+  <line x1="328" y1="342" x2="584" y2="342" stroke="#4a7fd0" stroke-width="2" marker-end="url(#aB)"/>
+  <text x="456" y="335" font-size="9" fill="#4a7fd0" text-anchor="middle">跨设备张量拷贝</text>
+
+  <!-- Host 特例 + 收尾 -->
+  <rect x="30" y="428" width="940" height="34" rx="10" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="50" y="450" font-size="10" fill="#494950">特例：同设备但跨内存空间（host↔device pinned）→ 落成 <tspan font-weight="600" fill="#8a5a1a">_HostSend/_HostRecv</tspan>。要点：减少跨设备来回 = 让强关联算子 <tspan font-weight="600" fill="#0f5132">colocate 同设备</tspan>。</text>
+</svg>

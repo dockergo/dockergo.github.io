@@ -1,0 +1,101 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="680" viewBox="0 0 1120 680" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="aB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#4a7fd0"/></marker>
+    <marker id="aR" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#d1544a"/></marker>
+    <marker id="aG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+    <marker id="aP" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#8a5cae"/></marker>
+  </defs>
+  <rect width="1120" height="680" fill="#fbfbfd"/>
+
+  <text x="30" y="32" font-size="15" font-weight="700" fill="#1d1d1f">SSI 危险结构检测 · 快照隔离(SI)会漏「写偏」异常；SSI 追踪 rw-反依赖，检出「两条相邻反依赖」的危险结构即中止一方</text>
+  <text x="30" y="53" font-size="10.5" fill="#6e6e73">SI 读一致快照、写做版本管理，绕开读写互斥——但不等于可串行化。SSI 在 SI 之上追踪冲突边，以少量误杀换取真正的可串行化</text>
+
+  <line x1="30" y1="80" x2="54" y2="80" stroke="#d1544a" stroke-width="2" stroke-dasharray="5 3" marker-end="url(#aR)"/>
+  <text x="60" y="84" font-size="10" fill="#3a3a3c">rw-反依赖（读旧版本，被并发写覆盖）</text>
+  <line x1="320" y1="80" x2="344" y2="80" stroke="#8a5cae" stroke-width="2" marker-end="url(#aP)"/>
+  <text x="350" y="84" font-size="10" fill="#3a3a3c">危险结构 → 中止的 pivot 事务</text>
+  <line x1="560" y1="80" x2="584" y2="80" stroke="#2f9e6e" stroke-width="2" marker-end="url(#aG)"/>
+  <text x="590" y="84" font-size="10" fill="#3a3a3c">保留提交</text>
+
+  <!-- Panel A: rw-反依赖是什么 -->
+  <rect x="30" y="100" width="520" height="250" rx="14" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="52" y="126" font-size="13" font-weight="700" fill="#1d1d1f">① 什么是 rw-反依赖（read-write antidependency）</text>
+  <text x="52" y="146" font-size="9.5" fill="#8a97ab">T 读到某项的旧版本，之后并发事务 T′ 写出该项的更新版本</text>
+
+  <rect x="60" y="168" width="180" height="60" rx="12" fill="#eaf1fb" stroke="#c6d9f2"/>
+  <text x="150" y="192" font-size="12" font-weight="700" fill="#20375e" text-anchor="middle">T（读者）</text>
+  <text x="150" y="212" font-size="9.5" fill="#5a7099" text-anchor="middle">读 x@v1（旧版本）</text>
+
+  <rect x="340" y="168" width="180" height="60" rx="12" fill="#eaf6f0" stroke="#bfe3d1"/>
+  <text x="430" y="192" font-size="12" font-weight="700" fill="#2f6b4e" text-anchor="middle">T′（写者）</text>
+  <text x="430" y="212" font-size="9.5" fill="#3f8a63" text-anchor="middle">写 x@v2（更新版本）</text>
+
+  <line x1="240" y1="198" x2="336" y2="198" stroke="#d1544a" stroke-width="2" stroke-dasharray="5 3" marker-end="url(#aR)"/>
+  <text x="288" y="188" font-size="9" fill="#a83c30" text-anchor="middle">rw</text>
+
+  <rect x="60" y="248" width="460" height="86" rx="10" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="76" y="272" font-size="10" fill="#4a4a4f">直觉：T 没看到 T′ 的写，故 T 在逻辑串行序里应「先于」T′。</text>
+  <text x="76" y="294" font-size="10" fill="#4a4a4f">单独一条 rw 边无害——SI 允许，可正常提交。</text>
+  <text x="76" y="316" font-size="10" fill="#8a5cae">危险的是两条 rw 边首尾相接（见 ②）。</text>
+
+  <!-- Panel B: 危险结构 -->
+  <rect x="570" y="100" width="520" height="250" rx="14" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="592" y="126" font-size="13" font-weight="700" fill="#1d1d1f">② 危险结构：pivot 同时有「入 rw + 出 rw」</text>
+  <text x="592" y="146" font-size="9.5" fill="#8a97ab">定理(Fekete/Cahill)：SI 下任何非可串行化执行都含此结构</text>
+
+  <rect x="600" y="176" width="130" height="56" rx="12" fill="#eaf1fb" stroke="#c6d9f2"/>
+  <text x="665" y="200" font-size="11" font-weight="700" fill="#20375e" text-anchor="middle">T_in</text>
+  <text x="665" y="218" font-size="9" fill="#5a7099" text-anchor="middle">出边指向 pivot</text>
+
+  <rect x="785" y="176" width="130" height="56" rx="12" fill="#f4eefb" stroke="#dcc9ef" stroke-width="1.6"/>
+  <text x="850" y="196" font-size="11.5" font-weight="700" fill="#6f3ea8" text-anchor="middle">T_pivot</text>
+  <text x="850" y="214" font-size="9" fill="#8a5cae" text-anchor="middle">入 rw + 出 rw</text>
+
+  <rect x="970" y="176" width="110" height="56" rx="12" fill="#eaf6f0" stroke="#bfe3d1"/>
+  <text x="1025" y="200" font-size="11" font-weight="700" fill="#2f6b4e" text-anchor="middle">T_out</text>
+  <text x="1025" y="218" font-size="9" fill="#3f8a63" text-anchor="middle">承接出边</text>
+
+  <line x1="730" y1="204" x2="781" y2="204" stroke="#d1544a" stroke-width="2" stroke-dasharray="5 3" marker-end="url(#aR)"/>
+  <text x="755" y="196" font-size="9" fill="#a83c30" text-anchor="middle">rw</text>
+  <line x1="915" y1="204" x2="966" y2="204" stroke="#d1544a" stroke-width="2" stroke-dasharray="5 3" marker-end="url(#aR)"/>
+  <text x="940" y="196" font-size="9" fill="#a83c30" text-anchor="middle">rw</text>
+
+  <rect x="600" y="248" width="480" height="86" rx="10" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="616" y="272" font-size="10" fill="#4a4a4f">SSI 给每个事务维护 inConflict / outConflict 两个标志位。</text>
+  <text x="616" y="294" font-size="10" fill="#4a4a4f">一旦某事务两标志同时置位（构成 pivot），就</text>
+  <text x="616" y="316" font-size="10" fill="#8a5cae">中止它或相邻一方 —— 用少量误杀（假阳性）换真串行化。</text>
+
+  <!-- Panel C: 写偏时间线 -->
+  <rect x="30" y="366" width="1060" height="290" rx="14" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="52" y="392" font-size="13" font-weight="700" fill="#1d1d1f">③ 具体异常：写偏(write skew) · 约束 x+y≥1（如「至少一人值班」），初始 x=1, y=1</text>
+  <text x="52" y="412" font-size="9.5" fill="#8a97ab">T1、T2 各读同一快照 {x=1,y=1}，各自判断「安全」，分别写不同项 → SI 下都能提交（无 ww 冲突）</text>
+
+  <!-- T1 track -->
+  <text x="46" y="450" font-size="11" font-weight="700" fill="#20375e">T1</text>
+  <line x1="90" y1="456" x2="1000" y2="456" stroke="#e4e7ec" stroke-width="1.2"/>
+  <circle cx="180" cy="456" r="7" fill="#4a7fd0"/><text x="180" y="440" font-size="9" fill="#20375e" text-anchor="middle">读快照 {x=1,y=1}</text>
+  <circle cx="470" cy="456" r="7" fill="#8a5cae"/><text x="470" y="440" font-size="9" fill="#6f3ea8" text-anchor="middle">写 x←0</text>
+  <circle cx="720" cy="456" r="8" fill="#2f9e6e"/><text x="720" y="440" font-size="9" fill="#2f6b4e" text-anchor="middle">commit</text>
+
+  <!-- T2 track -->
+  <text x="46" y="512" font-size="11" font-weight="700" fill="#20375e">T2</text>
+  <line x1="90" y1="518" x2="1000" y2="518" stroke="#e4e7ec" stroke-width="1.2"/>
+  <circle cx="300" cy="518" r="7" fill="#4a7fd0"/><text x="300" y="538" font-size="9" fill="#20375e" text-anchor="middle">读快照 {x=1,y=1}</text>
+  <circle cx="590" cy="518" r="7" fill="#8a5cae"/><text x="590" y="538" font-size="9" fill="#6f3ea8" text-anchor="middle">写 y←0</text>
+  <circle cx="840" cy="518" r="8" fill="#2f9e6e"/><text x="840" y="538" font-size="9" fill="#2f6b4e" text-anchor="middle">commit</text>
+
+  <!-- rw edges between the two txns -->
+  <path d="M470 464 C 500 494 560 494 590 510" fill="none" stroke="#d1544a" stroke-width="1.8" stroke-dasharray="5 3" marker-end="url(#aR)"/>
+  <text x="500" y="492" font-size="8.5" fill="#a83c30">T1 写 x，覆盖 T2 读到的 x → T2 →rw T1</text>
+  <path d="M590 526 C 540 556 460 556 440 470" fill="none" stroke="#d1544a" stroke-width="1.8" stroke-dasharray="5 3" marker-end="url(#aR)"/>
+  <text x="380" y="560" font-size="8.5" fill="#a83c30">T2 写 y，覆盖 T1 读到的 y → T1 →rw T2</text>
+
+  <rect x="60" y="588" width="500" height="52" rx="10" fill="#fbeceb" stroke="#e8b7b1"/>
+  <text x="76" y="612" font-size="10.5" font-weight="700" fill="#a83c30">SI：两者都提交 → x+y=0，违反约束（写偏溜过）</text>
+  <text x="76" y="630" font-size="9" fill="#b06a60">两笔写互不冲突，SI 的 ww 首提交者检查发现不了</text>
+
+  <rect x="576" y="588" width="504" height="52" rx="10" fill="#eaf6f0" stroke="#bfe3d1"/>
+  <text x="592" y="612" font-size="10.5" font-weight="700" fill="#2f6b4e">SSI：两条 rw 首尾相接构成危险结构 → 中止一方</text>
+  <text x="592" y="630" font-size="9" fill="#3f8a63">T1、T2 互为 pivot，中止其一即打破环，恢复可串行化</text>
+</svg>

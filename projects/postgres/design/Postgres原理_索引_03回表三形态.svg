@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="450" viewBox="0 0 1020 450"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="aB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#4a7fd0"/></marker>
+    <marker id="aG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+    <marker id="aA" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#c99a3a"/></marker>
+  </defs>
+  <rect width="1020" height="450" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14.5" font-weight="700" fill="#1d1d1f">从索引到堆表 · 三种回表形态（索引只存 key→TID，取真数据要回堆）</text>
+  <text x="30" y="49" font-size="10.5" fill="#6e6e73">同一次 key 定位，回堆策略不同 → IO 形态与代价迥异；选择率决定用哪种，优化器按代价选</text>
+
+  <!-- legend -->
+  <line x1="30" y1="70" x2="54" y2="70" stroke="#4a7fd0" stroke-width="2" marker-end="url(#aB)"/><text x="60" y="74" font-size="10" fill="#3a3a3c">随机回堆</text>
+  <line x1="150" y1="70" x2="174" y2="70" stroke="#c99a3a" stroke-width="2" marker-end="url(#aA)"/><text x="180" y="74" font-size="10" fill="#3a3a3c">攒位图 · 顺序回堆</text>
+  <line x1="330" y1="70" x2="354" y2="70" stroke="#2f9e6e" stroke-width="2" marker-end="url(#aG)"/><text x="360" y="74" font-size="10" fill="#3a3a3c">免回堆（VM 全可见）</text>
+  <text x="1000" y="74" font-size="10" fill="#a1a1a6" text-anchor="end">选择率：低 → 中 → 覆盖</text>
+  <line x1="30" y1="84" x2="1000" y2="84" stroke="#e4e7ec" stroke-width="1"/>
+
+  <!-- three columns -->
+  <!-- Index Scan -->
+  <rect x="30" y="102" width="308" height="318" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="184" y="126" font-size="12.5" font-weight="700" fill="#1b2a4a" text-anchor="middle">① Index Scan</text>
+  <text x="184" y="144" font-size="9" fill="#5b7db1" text-anchor="middle">逐个 TID 随机回堆 · 选择率低才划算</text>
+  <rect x="54" y="158" width="260" height="46" rx="8" fill="#ffffff" stroke="#bcd0ec"/><text x="184" y="178" font-size="10" font-weight="600" fill="#1b2a4a" text-anchor="middle">索引扫描给出 TID 序列</text><text x="184" y="194" font-size="8.5" fill="#5b7db1" text-anchor="middle">(blk,off), (blk,off)…</text>
+  <path d="M184,206 L184,224" stroke="#4a7fd0" stroke-width="1.8" marker-end="url(#aB)"/>
+  <rect x="54" y="228" width="260" height="70" rx="8" fill="#ffffff" stroke="#bcd0ec"/><text x="184" y="248" font-size="9.5" fill="#1b2a4a" text-anchor="middle">对每个 TID：随机读对应堆页</text><text x="184" y="266" font-size="9" fill="#5b7db1" text-anchor="middle">→ 取该行 → 按快照判可见性</text><text x="184" y="284" font-size="8.5" fill="#b06a6a" text-anchor="middle">命中一行一次可能的随机 IO</text>
+  <rect x="54" y="316" width="260" height="88" rx="8" fill="#f6f6f8" stroke="#e2e2e7"/><text x="184" y="336" font-size="9" fill="#494950" text-anchor="middle">代价随命中行数线性上升</text><text x="184" y="356" font-size="9" fill="#494950" text-anchor="middle">返回行多 → 随机 IO 爆炸</text><text x="184" y="378" font-size="8.5" fill="#6a6a70" text-anchor="middle">优化器此时改选 Seq Scan</text><text x="184" y="396" font-size="8.5" fill="#6a6a70" text-anchor="middle">或下面的 Bitmap 形态</text>
+
+  <!-- Bitmap Heap Scan -->
+  <rect x="356" y="102" width="308" height="318" rx="13" fill="#fff7e6" stroke="#f0dcae" filter="url(#soft)"/>
+  <text x="510" y="126" font-size="12.5" font-weight="700" fill="#7a4d00" text-anchor="middle">② Bitmap Heap Scan</text>
+  <text x="510" y="144" font-size="9" fill="#9a7328" text-anchor="middle">攒位图排序 · 顺序回堆 · 中等选择率</text>
+  <rect x="380" y="158" width="260" height="46" rx="8" fill="#ffffff" stroke="#f0dcae"/><text x="510" y="178" font-size="10" font-weight="600" fill="#7a4d00" text-anchor="middle">索引 TID 攒成"按页"位图</text><text x="510" y="194" font-size="8.5" fill="#9a7328" text-anchor="middle">可多索引 AND / OR 合并</text>
+  <path d="M510,206 L510,224" stroke="#c99a3a" stroke-width="1.8" marker-end="url(#aA)"/>
+  <rect x="380" y="228" width="260" height="70" rx="8" fill="#ffffff" stroke="#f0dcae"/><text x="510" y="248" font-size="9.5" fill="#7a4d00" text-anchor="middle">按块号有序遍历堆页</text><text x="510" y="266" font-size="9" fill="#9a7328" text-anchor="middle">每页只读一次、页内取多行</text><text x="510" y="284" font-size="8.5" fill="#3f8f66" text-anchor="middle">随机 IO 摊平成顺序 IO</text>
+  <rect x="380" y="316" width="260" height="88" rx="8" fill="#f6f6f8" stroke="#e2e2e7"/><text x="510" y="336" font-size="9" fill="#494950" text-anchor="middle">位图可能"有损"（记到页）</text><text x="510" y="356" font-size="9" fill="#494950" text-anchor="middle">→ 回页后需 recheck 条件</text><text x="510" y="378" font-size="8.5" fill="#6a6a70" text-anchor="middle">BRIN 只能产位图，天然走此路</text><text x="510" y="396" font-size="8.5" fill="#6a6a70" text-anchor="middle">nodeBitmapHeapscan.c</text>
+
+  <!-- Index-Only Scan -->
+  <rect x="682" y="102" width="308" height="318" rx="13" fill="#eafaf1" stroke="#bce6cd" filter="url(#soft)"/>
+  <text x="836" y="126" font-size="12.5" font-weight="700" fill="#0f5132" text-anchor="middle">③ Index-Only Scan</text>
+  <text x="836" y="144" font-size="9" fill="#3f8f66" text-anchor="middle">列全在索引 + VM 全可见 → 免回堆</text>
+  <rect x="706" y="158" width="260" height="46" rx="8" fill="#ffffff" stroke="#bce6cd"/><text x="836" y="178" font-size="10" font-weight="600" fill="#0f5132" text-anchor="middle">查询列全部包含在索引里</text><text x="836" y="194" font-size="8.5" fill="#3f8f66" text-anchor="middle">含 covering / INCLUDE 列</text>
+  <path d="M836,206 L836,224" stroke="#2f9e6e" stroke-width="1.8" marker-end="url(#aG)"/>
+  <rect x="706" y="228" width="260" height="70" rx="8" fill="#ffffff" stroke="#bce6cd"/><text x="836" y="248" font-size="9.5" fill="#0f5132" text-anchor="middle">查 Visibility Map：该页全可见？</text><text x="836" y="266" font-size="9" fill="#3f8f66" text-anchor="middle">是 → 直接用索引里的值返回</text><text x="836" y="284" font-size="8.5" fill="#c99a3a" text-anchor="middle">否 → 退回堆表判该行可见性</text>
+  <rect x="706" y="316" width="260" height="88" rx="8" fill="#f6f6f8" stroke="#e2e2e7"/><text x="836" y="336" font-size="9" fill="#494950" text-anchor="middle">全可见靠 VACUUM 维护 VM</text><text x="836" y="356" font-size="9" fill="#494950" text-anchor="middle">→ 久不 VACUUM 则常回退</text><text x="836" y="378" font-size="8.5" fill="#6a6a70" text-anchor="middle">最快：几乎不碰堆表</text><text x="836" y="396" font-size="8.5" fill="#6a6a70" text-anchor="middle">典型：count/覆盖查询</text>
+
+  <text x="30" y="438" font-size="9.5" fill="#6e6e73">主线：选择率越低越偏 ①，中等/多索引组合偏 ②，能被索引覆盖且 VM 干净则 ③ 最优；写侧每个索引都要维护 → 索引越多写越慢。</text>
+</svg>

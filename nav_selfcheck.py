@@ -20,7 +20,8 @@ ROOT = sys.argv[1] if len(sys.argv) > 1 else os.path.dirname(os.path.abspath(__f
 CLONE_SOURCES = ["Iceberg", "Quiche", "iceberg", "quiche"]
 
 def check(proj_dir):
-    key = os.path.basename(proj_dir)[:-7]
+    b = os.path.basename(proj_dir)
+    key = b[:-7] if b.endswith("-design") else b
     gen = os.path.join(proj_dir, "gen.py")
     ix = os.path.join(proj_dir, "index.html")
     fails = []
@@ -43,6 +44,7 @@ def check(proj_dir):
             fails.append(f"clone-residue-in-config:{src}@{'/'.join(hit)}")
 
     # 判据 1：生成产物合规 —— 数“渲染出的 nav 元素”，不数 CSS/JS 里的类名定义
+    t = ""
     if os.path.isfile(ix):
         t = open(ix, encoding="utf-8").read()
         if t.count('class="arch-hot"') == 0:
@@ -88,13 +90,63 @@ def check(proj_dir):
         covered |= set(re.findall(r'"([^"]+原理[^"]*)"', hs_block.group(1)))
     if chip_block:
         covered |= set(re.findall(r'"([^"]+原理[^"]*)"', chip_block.group(1)))
-    lost = mains - covered
+    lost = (mains - covered) if t else set()
     if lost:
         fails.append(f"失联主线×{len(lost)}:{','.join(sorted(lost))[:60]}")
     return key, fails
 
+def check_portal(root, proj_keys):
+    """一级门户自检:每个可构建项目 ∈ ≥1 lens tier(防 grpc 式静默掉出);
+    每个 lens 引用的项目有真 index.html(无死链)。读根 gen.py 的 LENSES。"""
+    fails = []
+    rg = os.path.join(root, "gen.py")
+    if not os.path.isfile(rg):
+        return ["portal: no root gen.py"]
+    s = open(rg, encoding="utf-8").read()
+    if "LENSES" not in s:
+        return []  # 非多视角门户,跳过
+    # 只取 LENSES 区(到 TOPICS 前),避免把 TOPICS 的 projects 列表误当 lens 项目
+    _l0 = s.index("LENSES")
+    _l1 = s.index("TOPICS", _l0) if "TOPICS" in s[_l0:] else len(s)
+    lr = s[_l0:_l1]
+    lens_keys = set()
+    for grp in re.findall(r'\(\s*"[a-z_]+"\s*,[^\[]*\[([^\]]*)\]', lr):
+        lens_keys |= set(re.findall(r'"([a-z0-9-]+)"', grp))
+    lens_keys -= {"id", "runtime", "stack"}
+    lens_lower = {k.lower() for k in lens_keys}
+    # (1) 孤儿:可构建项目不在任何 lens
+    orphans = sorted(k for k in proj_keys if k.lower() not in lens_lower)
+    if orphans:
+        fails.append(f"portal 孤儿×{len(orphans)}(不在任何 lens):{','.join(orphans)}")
+    # (2) 死链:lens 引用项目无 index.html(兼容 projects/<name>/ 新布局 + <name>-design/ 旧布局)
+    proot = os.path.join(root, "projects")
+    def _proj_idx(k):
+        for cand in (os.path.join(proot, k, "index.html"),
+                     os.path.join(root, k + "-design", "index.html")):
+            if os.path.isfile(cand):
+                return cand
+        return None
+    for k in sorted(lens_keys):
+        if not _proj_idx(k):
+            fails.append(f"portal 死链:{k} -> 无 index.html")
+    # (3) 关系视角(INDUSTRY/STANDARDS/PEOPLE)的 proj 关联键须能下钻(∈ 真实项目)
+    rel_projs = set(re.findall(r'"proj":\s*"([a-z0-9-]+)"', s))
+    for k in sorted(rel_projs):
+        if not _proj_idx(k):
+            fails.append(f"portal 关系视角死链:{k} -> 无 index.html")
+    return fails
+
+
 def main():
-    projs = sorted(glob.glob(os.path.join(ROOT, "*-design")))
+    # 兼容 projects/<name>/ 新布局(优先)+ 根级 <name>-design/ 旧布局
+    proot = os.path.join(ROOT, "projects")
+    if os.path.isdir(proot):
+        projs = sorted(p for p in glob.glob(os.path.join(proot, "*"))
+                       if os.path.isdir(p))
+    else:
+        projs = sorted(glob.glob(os.path.join(ROOT, "*-design")))
+    proj_keys = [os.path.basename(p)[:-7] if p.endswith("-design") else os.path.basename(p)
+                 for p in projs if os.path.isfile(os.path.join(p, "gen.py"))]
     bad = 0
     for p in projs:
         key, fails = check(p)
@@ -103,6 +155,14 @@ def main():
             print(f"FAIL {key:<14} " + " | ".join(fails))
         else:
             print(f"ok   {key}")
+    # 一级门户链路自检
+    pf = check_portal(ROOT, proj_keys)
+    if pf:
+        bad += 1
+        for f in pf:
+            print(f"FAIL portal        {f}")
+    else:
+        print("ok   portal (一级:无孤儿/无死链)")
     print(f"\n{'ALL GREEN' if not bad else str(bad)+' PROJECT(S) FAIL'} · {len(projs)} checked")
     sys.exit(1 if bad else 0)
 

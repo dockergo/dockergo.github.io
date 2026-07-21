@@ -58,22 +58,24 @@ LAYER_ORDER = [k for k, *_ in LAYERS]
 # 系统本就跨层;此处取其**主导机制**落位。新增项目补一条即在母图上落位。
 LAYER_MAP = {
     # Ingress:入口/路由/TLS/负载均衡/传输
-    "nginx": "ingress", "ffmpeg": "ingress",
+    "nginx": "ingress", "ffmpeg": "ingress", "grpc": "ingress",
     # Schedule:编排/调度/资源
     "kubernetes": "schedule", "ray": "schedule", "spark": "schedule", "flink": "schedule",
+    "containerd": "schedule",
     # Execute:查询执行/向量化/训练推理
     "doris": "execute", "clickhouse": "execute", "starrocks": "execute",
     "trino": "execute", "duckdb": "execute",
     "pytorch": "execute", "tensorflow": "execute", "vllm": "execute", "milvus": "execute",
     # State:内存/索引/事务/状态后端/图
     "redis": "state", "rocksdb": "state", "postgres": "state", "neo4j": "state",
+    "mysql-server": "state",
     # Persist:日志/表格式/列存/分布式文件
     "kafka": "persist", "hudi": "persist",
-    "iceberg": "persist", "orc": "persist", "hadoop": "persist",
+    "iceberg": "persist", "orc": "persist", "hadoop": "persist", "arrow": "persist",
     # Coordinate:共识/选主/控制面状态
-    "etcd": "coord", "zookeeper": "coord", "raft": "coord",
+    "etcd": "coord", "zookeeper": "coord", "hashicorp-raft": "coord", "etcd-raft": "coord",
     # Runtime:语言运行时/执行模型/内存纪律
-    "go": "runtime", "rust": "runtime", "linux": "runtime",
+    "go": "runtime", "rust": "runtime", "linux": "runtime", "openjdk": "runtime",
 }
 
 
@@ -107,8 +109,10 @@ META = {
              "lc": "linear-gradient(135deg,#2dd4a7,#5eead4)"},
     "zookeeper": {"name": "ZooKeeper", "init": "ZK", "desc": "分布式协调 · ZAB",
                   "lc": "linear-gradient(135deg,#4f9dff,#7cb8ff)"},
-    "raft": {"name": "Raft", "init": "RF", "desc": "共识算法",
-             "lc": "linear-gradient(135deg,#0a84ff,#5b8cff)"},
+    "hashicorp-raft": {"name": "HashiCorp Raft", "init": "HR", "desc": "共识算法库 · 电池全含",
+                       "lc": "linear-gradient(135deg,#0a84ff,#5b8cff)"},
+    "etcd-raft": {"name": "etcd Raft", "init": "ER", "desc": "共识状态机核 · Ready 驱动",
+                  "lc": "linear-gradient(135deg,#2dd4a7,#5eead4)"},
     "kafka": {"name": "Apache Kafka", "init": "KF", "desc": "分布式事件流平台",
               "lc": "linear-gradient(135deg,#8e8e93,#4a4a4f)"},
     "kubernetes": {"name": "Kubernetes", "init": "K8", "desc": "容器编排系统",
@@ -139,6 +143,16 @@ META = {
             "lc": "linear-gradient(135deg,#8e8e93,#b0b0b5)"},
     "ffmpeg": {"name": "FFmpeg", "init": "FF", "desc": "多媒体编解码",
                "lc": "linear-gradient(135deg,#4ade80,#5dc9e2)"},
+    "mysql-server": {"name": "MySQL", "init": "MY", "desc": "关系数据库 · InnoDB",
+                     "lc": "linear-gradient(135deg,#00758f,#4a9db5)"},
+    "containerd": {"name": "containerd", "init": "CD", "desc": "容器运行时 · 插件化",
+                   "lc": "linear-gradient(135deg,#5758a8,#8a8bd0)"},
+    "grpc": {"name": "gRPC", "init": "GR", "desc": "HTTP/2 RPC 框架",
+             "lc": "linear-gradient(135deg,#2dd4a7,#48b0c4)"},
+    "openjdk": {"name": "OpenJDK", "init": "JD", "desc": "JVM · JIT + GC",
+                "lc": "linear-gradient(135deg,#e76f00,#f89820)"},
+    "arrow": {"name": "Apache Arrow", "init": "AR", "desc": "列式内存格式 · 零拷贝",
+              "lc": "linear-gradient(135deg,#4a6fdc,#7b9ff0)"},
 }
 
 SKIP_TOP = {
@@ -219,12 +233,25 @@ def _find_icon(full, design, key):
 
 def scan():
     projects = []
-    for entry in sorted(os.listdir(ROOT)):
-        full = os.path.join(ROOT, entry)
-        if not os.path.isdir(full) or not entry.endswith(SUFFIX):
+    # 项目统一放在 projects/<name>/ 下(name 无 -design 后缀);向后兼容:projects/ 缺失时回退扫描根级 *-design/
+    proot = os.path.join(ROOT, "projects")
+    if os.path.isdir(proot):
+        base, entries = proot, sorted(os.listdir(proot))
+    else:
+        base, entries = ROOT, sorted(os.listdir(ROOT))
+    for entry in entries:
+        full = os.path.join(base, entry)
+        if not os.path.isdir(full):
             continue
-        key = entry[: -len(SUFFIX)].strip()
-        # 归一化查表键:去空格 + 小写,兼容 "FFmpeg" / " spring-boot" 等目录名瑕疵
+        if base == ROOT:  # 兼容旧结构
+            if not entry.endswith(SUFFIX):
+                continue
+            key = entry[: -len(SUFFIX)].strip()
+        else:
+            key = entry.strip()
+        if not os.path.isfile(os.path.join(full, "gen.py")) and not os.path.isdir(os.path.join(full, "design")):
+            continue
+        # 归一化查表键:去空格 + 小写,兼容 "FFmpeg" 等目录名瑕疵
         lookup = key.lower()
         meta = dict(META.get(lookup, META.get(key, {})))
         name = meta.get("name", key.replace("-", " ").replace("_", " ").title())
@@ -287,6 +314,23 @@ def _esc(s):
     return html.escape(str(s), quote=True)
 
 
+def _urlq(s):
+    """URL query 值编码(拼进 href,供项目页读来路视角面包屑)。"""
+    from urllib.parse import quote
+    return quote(str(s), safe="")
+
+
+def _ellip(s, n):
+    """按 CJK 宽度截断:CJK 记 1,ASCII 记 0.55,超 n 加省略号。"""
+    s = str(s)
+    w = 0.0
+    for i, ch in enumerate(s):
+        w += 1.0 if ord(ch) > 0x2E7F else 0.55
+        if w > n:
+            return s[:i].rstrip(" ·/") + "…"
+    return s
+
+
 LAYER_TITLE = {k: t for k, t, s, c in LAYERS}
 LAYER_SUB = {k: s for k, t, s, c in LAYERS}
 LAYER_COLOR = {k: c for k, t, s, c in LAYERS}
@@ -312,8 +356,9 @@ _DISP = {"PostgreSQL": "Postgres", "Hadoop HDFS": "Hadoop", "Apache Hadoop HDFS"
 LAYER_ITEMS = {}
 
 
-def _node(p, x, y, w, accent):
-    """项目节点:工业铭牌式模块。点击进入项目架构图。"""
+def _node(p, x, y, w, accent, sheen="cardSheen", lens_id="", lens_label=""):
+    """项目节点:工业铭牌式模块。点击进入项目架构图。
+    lens_id/lens_label:携带来路视角语境,拼进 href query,项目页顶部可显示面包屑。"""
     nav = p["status"] != "plan"
     gid = _gid(p["key"])
     dot = {"ready": "var(--ok)", "assets": "var(--warn)"}.get(p["status"], "var(--c-ink3)")
@@ -321,9 +366,15 @@ def _node(p, x, y, w, accent):
     meta = ("{s} 图 · {m} 篇".format(s=p["svg"], m=p["md"]) if (p["svg"] or p["md"])
             else ("规划中" if not nav else "待编译"))
     tip = "{n} · {d} · {m}".format(n=p["name"], d=p["desc"], m=meta)
+    href = p["href"]
+    if nav and lens_id:
+        sep = "&" if "?" in href else "?"
+        href = "{h}{sep}lens={lid}".format(h=href, sep=sep, lid=lens_id)
+        if lens_label:
+            href += "&from=" + _urlq(lens_label)
     if nav:
         head = ('<a href="{h}" class="{c}" id="{i}" tabindex="0">'
-                '<title>{t}</title>').format(h=_esc(p["href"]), c=cls, i=gid, t=_esc(tip))
+                '<title>{t}</title>').format(h=_esc(href), c=cls, i=gid, t=_esc(tip))
         tail = "</a>"
     else:
         head = '<g class="{c}" id="{i}"><title>{t}</title>'.format(c=cls, i=gid, t=_esc(tip))
@@ -332,7 +383,7 @@ def _node(p, x, y, w, accent):
            '<rect class="nd-rect" x="{x}" y="{y}" width="{w}" height="{h}" rx="10" '
            'style="--accent:{a}"/>'.format(x=x, y=y, w=w, h=_NODEH, a=accent)]
     isz = 22
-    ix, iy = x + 10, y + (_NODEH - isz) / 2
+    ix, iy = x + 14, y + (_NODEH - isz) / 2
     if p.get("icon"):
         out.append('<image class="nd-ic" x="{ix}" y="{iy:.1f}" width="{s}" height="{s}" href="{u}" '
                    'preserveAspectRatio="xMidYMid meet"/>'.format(ix=ix, iy=iy, s=isz, u=_esc(p["icon"])))
@@ -531,107 +582,196 @@ def build_svg(projects):
 #   一个项目可出现在多个视角(各视角是独立剖面),这是正确的。
 # ══════════════════════════════════════════════════════════════════ #
 LENSES = [
-    {"id": "vonneumann", "label": "冯诺依曼", "group": "理论视角", "kind": "stack",
-     "kicker": "VON NEUMANN ARCHITECTURE · 计算机体系结构",
-     "title": "I/O → 控制器 → 运算器 → 主存 → 外存 → 运行时",
-     "position": "回答「一个计算系统怎样把请求变成结果」:请求从 I/O 进入,控制器决定做什么,运算器执行,主存/外存承载状态,运行时是底座。",
-     "subtitle": "冯诺依曼体系结构(1945)自上而下的数据通路 · 各层项目实现该层机制 · 点击下钻",
+    {"id": "theory", "axis": ("强一致 · CP", "最终一致 · AP"), "label": "计算理论 · Theory", "group": "计算理论与数学模型", "kind": "stack",
+     "kicker": "COMPUTATION THEORY · 正确性与一致性谱",
+     "title": "线性一致/共识 → ACID 事务 → 快照隔离 → 顺序日志 → 最终一致 → 计算模型",
+     "position": "回答「并发/分布式下,系统给多强的正确性保证」:轴 = 一致性强度谱(强一致 CP 递减到最终一致 AP),越往下可用性/吞吐越高。每个项目按其最强正确性保证归层。",
+     "subtitle": "一致性强度 + 计算模型边界 · 从 CP 到 AP · 点击下钻",
      "flow": "hot",
      "tiers": [
-         ("vn_io", "I/O · 输入输出", "北向接入 · 网关 · TLS · 编解码 · 传输", ["nginx", "ffmpeg"], "#0a84ff"),
-         ("vn_ctrl", "控制器 · Control Unit", "调度 / 编排 / 共识 —— 决定「做什么、在哪做」", ["kubernetes", "ray", "spark", "flink", "etcd", "zookeeper", "raft"], "#a78bfa"),
-         ("vn_alu", "运算器 · ALU", "查询/向量化 · 训练推理 · 算子流水 —— 实际计算", ["doris", "clickhouse", "starrocks", "trino", "duckdb", "pytorch", "tensorflow", "vllm", "milvus"], "#0a84ff"),
-         ("vn_mem", "主存 · Memory", "内存结构 · 索引 · 事务 · 状态后端", ["redis", "rocksdb", "postgres", "neo4j"], "#2dd4bf"),
-         ("vn_store", "外存 · Storage", "日志 · 表格式 · 列存文件 · 分布式文件系统", ["kafka", "hudi", "iceberg", "orc", "hadoop"], "#2dd4bf"),
-         ("vn_rt", "运行时 · Substrate", "语言运行时 · GC · 调度纪律 · 内核", ["go", "rust", "linux"], "#8a8a90"),
+         ("th_lin", "线性一致 / 共识 · CP", "多数派 Raft/ZAB · 强一致元数据 · 选主", ["etcd", "zookeeper", "hashicorp-raft", "etcd-raft", "kubernetes", "containerd"], "#a78bfa"),
+         ("th_acid", "ACID 事务 · Serializable", "MVCC + WAL · 事务隔离级别 · 快照可见性", ["postgres", "mysql-server", "neo4j", "doris"], "#0a84ff"),
+         ("th_snap", "快照隔离 / 时间旅行", "表级快照 + 乐观提交 · 多版本文件", ["iceberg", "hudi", "orc", "arrow"], "#2dd4bf"),
+         ("th_log", "顺序日志 / 有序 · ISR", "分区内有序 + 副本同步 · exactly-once", ["kafka", "flink"], "#0a84ff"),
+         ("th_eventual", "最终一致 / 弱序 · AP", "异步复制 · 读己所写 · 内存弱保证", ["redis", "rocksdb", "milvus"], "#8a8a90"),
+         ("th_compute", "计算模型边界 · 有界↔无界", "批(全量重算)↔ 流(增量+状态)↔ 张量(计算图)", ["hadoop", "spark", "clickhouse", "starrocks", "trino", "duckdb", "pytorch", "tensorflow", "vllm", "ray", "go", "rust", "nginx", "grpc", "ffmpeg", "linux", "openjdk"], "#a78bfa"),
      ]},
-    {"id": "tcpip", "label": "TCP/IP 网络栈", "group": "理论视角", "kind": "stack",
-     "kicker": "TCP/IP PROTOCOL STACK · 网络协议分层",
-     "title": "应用层 L7 → 传输层 L4 → 网络/链路 · OS",
-     "position": "回答「一个字节怎样在网络上可靠送达」:严格按 TCP/IP 四层模型归位,只收真正实现协议栈层次的项目(共识/存储类不属于本视角)。",
-     "subtitle": "TCP/IP 分层模型 · 请求自上而下穿栈 · 仅含协议栈成员 · 点击下钻",
-     "flow": "hot",
-     "tiers": [
-         ("net_app", "应用层 · L7 Application", "HTTP/1·2·3 · 反向代理 · 消息协议端点", ["nginx", "kafka"], "#0a84ff"),
-         ("net_os", "网络/链路 · L3-L2 · OS", "内核协议栈 · 路由 · netpoll/epoll · 零拷贝", ["linux", "go"], "#8a8a90"),
-     ]},
-    {"id": "aiml", "label": "AI / ML", "group": "领域视角", "kind": "stack",
-     "kicker": "AI / ML PIPELINE · 机器学习系统",
-     "title": "数据/检索 → 训练 → 推理服务 → 分布式调度 → 底座",
-     "position": "回答「一个模型怎样从数据训练出来、再高吞吐地对外服务」:数据流自上而下贯穿训练与推理两段。",
-     "subtitle": "机器学习系统剖面 · 从张量到 token · 点击下钻",
-     "flow": "hot",
-     "tiers": [
-         ("ai_data", "数据 / 向量检索", "向量库 · ANN 检索 · 特征/嵌入存储", ["milvus"], "#2dd4bf"),
-         ("ai_train", "训练框架 · Training", "自动微分 · 计算图 · 算子分发到设备", ["pytorch", "tensorflow"], "#0a84ff"),
-         ("ai_infer", "推理服务 · Serving", "KV 缓存分块 · 连续批处理 · 高吞吐 token", ["vllm"], "#0a84ff"),
-         ("ai_dist", "分布式调度 · Scale", "task/actor · 参数分片 · 集群资源调度", ["ray"], "#a78bfa"),
-         ("ai_rt", "运行时底座 · Substrate", "语言运行时 · 内存/并发/GPU 边界", ["rust", "go", "linux"], "#8a8a90"),
-     ]},
-    {"id": "bigdata", "label": "大数据", "group": "领域视角", "kind": "stack",
-     "kicker": "BIG DATA STACK · 数据密集系统",
-     "title": "采集 → 存储/表格式 → 计算 → 查询 → 协调",
-     "position": "回答「海量数据怎样从进入到被分析」:数据自上而下流经采集、落盘、批流计算、查询,协调层横向保障一致性。",
-     "subtitle": "数据密集系统剖面 · 从日志到分析 · 点击下钻",
-     "flow": "hot",
-     "tiers": [
-         ("bd_ingest", "采集 / 日志总线", "顺序日志 · 流式接入 · CDC", ["kafka"], "#0a84ff"),
-         ("bd_store", "存储 / 表格式 / 文件", "表格式 · 列存文件 · 分布式文件系统", ["iceberg", "hudi", "orc", "hadoop"], "#2dd4bf"),
-         ("bd_compute", "计算引擎 · Compute", "DAG · shuffle · 有状态流 · 容错重算", ["spark", "flink"], "#a78bfa"),
-         ("bd_query", "查询引擎 · Query", "MPP · 向量化 · CBO · 联邦 · 嵌入式", ["doris", "clickhouse", "starrocks", "trino", "duckdb"], "#0a84ff"),
-         ("bd_coord", "协调 · Coordination", "元数据 · 选主 · 集群成员一致性", ["zookeeper", "etcd", "raft"], "#8a8a90"),
-     ]},
-    {"id": "memhier", "label": "存储层级", "group": "理论视角", "kind": "stack",
-     "kicker": "MEMORY / STORAGE HIERARCHY · 存储层级",
-     "title": "内存态 → 本地引擎 → 页+日志 → 表格式/文件 → 分布式/远端",
-     "position": "回答「数据放在离 CPU 多远、如何在层级间搬运」:越往下容量越大、延迟越高,是所有数据系统的物理约束轴。",
-     "subtitle": "经典存储层级(register→cache→RAM→disk→远端)投影到数据系统 · 点击下钻",
+    {"id": "hardware", "axis": ("热 · 快 · 近 CPU", "冷 · 慢 · 贴硬件"), "label": "物理底座 · Hardware", "group": "物理底座与体系结构", "kind": "stack",
+     "kicker": "HARDWARE / STORAGE HIERARCHY · 物理距离与延迟",
+     "title": "内存态 → 本地引擎 → 页+日志 → 表格式/文件 → 分布式/远端 → 内核/硬件",
+     "position": "回答「数据与执行离 CPU 多远」:轴 = 物理距离/延迟梯度(热·快·近 CPU 递减到冷·慢·贴硬件)。每个项目按其数据/执行主要驻留的物理层归位。",
+     "subtitle": "存储层级(register→RAM→disk→远端)+ 运行时/内核底座 · 同一物理轴 · 点击下钻",
      "flow": "state",
      "tiers": [
-         ("mh_mem", "内存态 · In-Memory", "纯内存结构 · 微秒级 · 断电即失", ["redis", "milvus"], "#2dd4bf"),
-         ("mh_local", "本地引擎 · Local Engine", "内存+本地盘 LSM/向量化 · 单机", ["rocksdb", "duckdb"], "#0a84ff"),
-         ("mh_page", "页 + 日志 · Page & WAL", "缓冲页 + 预写日志 · 持久单机存储", ["postgres", "neo4j"], "#a78bfa"),
-         ("mh_file", "表格式 / 列存文件", "不可变文件 + 元数据 · 对象存储之上", ["iceberg", "hudi", "orc"], "#2dd4bf"),
-         ("mh_dist", "分布式 / 远端", "多副本分布式文件 · 顺序日志 · 网络访问", ["hadoop", "kafka"], "#8a8a90"),
+         ("hw_mem", "内存态 · In-Memory", "纯内存结构 · 微秒级 · 断电即失", ["redis", "milvus", "vllm"], "#2dd4bf"),
+         ("hw_local", "本地引擎 · Local Engine", "内存+本地盘 · LSM/向量化 · 单机", ["rocksdb", "duckdb", "clickhouse"], "#0a84ff"),
+         ("hw_page", "页 + 日志 · Page & WAL", "缓冲页 + 预写日志 · 持久单机", ["postgres", "mysql-server", "neo4j"], "#a78bfa"),
+         ("hw_table", "表格式 / 列存文件", "不可变文件 + 元数据 · 对象存储之上", ["iceberg", "hudi", "orc", "arrow", "doris", "starrocks", "trino"], "#2dd4bf"),
+         ("hw_dist", "分布式 / 远端", "多副本分布式文件 · 顺序日志 · 网络访问", ["hadoop", "kafka", "etcd", "zookeeper", "hashicorp-raft", "etcd-raft", "spark", "flink"], "#8a8a90"),
+         ("hw_kernel", "运行时 / 内核 / 硬件", "语言运行时 · GC · 系统调用 · cgroup 隔离 · GPU", ["go", "rust", "openjdk", "linux", "kubernetes", "containerd", "nginx", "grpc", "ffmpeg", "pytorch", "tensorflow", "ray"], "#8a8a90"),
      ]},
-    {"id": "consistency", "label": "一致性模型", "group": "理论视角", "kind": "stack",
-     "kicker": "CONSISTENCY MODELS · 一致性谱系",
-     "title": "线性一致/共识 → ACID 事务 → 快照隔离 → 顺序日志 → 最终一致",
-     "position": "回答「并发下系统给多强的正确性保证」:自上而下一致性递减、可用性/吞吐递增,是分布式设计的核心权衡轴。",
-     "subtitle": "从线性一致(CP)到最终一致(AP)的一致性谱系 · 点击下钻",
-     "flow": "ctrl",
-     "tiers": [
-         ("cs_lin", "线性一致 / 共识 · CP", "Raft/ZAB 多数派 · 强一致元数据存储", ["etcd", "zookeeper", "raft"], "#a78bfa"),
-         ("cs_acid", "ACID 事务 · Serializable", "MVCC + WAL · 事务隔离级别", ["postgres", "doris"], "#0a84ff"),
-         ("cs_snap", "快照隔离 · Snapshot", "表级快照 + 乐观提交 · 时间旅行", ["iceberg", "hudi"], "#2dd4bf"),
-         ("cs_log", "顺序日志 / ISR", "分区内有序 + 副本同步 · at-least/exactly-once", ["kafka", "flink"], "#0a84ff"),
-         ("cs_evt", "最终一致 / 副本 · AP", "异步复制 · 读己所写弱保证", ["redis", "rocksdb"], "#8a8a90"),
-     ]},
-    {"id": "cloudnative", "label": "云原生", "group": "领域视角", "kind": "stack",
-     "kicker": "CLOUD NATIVE STACK · 云原生",
-     "title": "编排/控制平面 → 入口/网关 → 协调/共识 → 容器运行时底座",
-     "position": "回答「服务怎样被编排、路由、协调地跑在集群上」:声明式控制平面驱动,入口接流量,协调层保状态一致。",
-     "subtitle": "云原生控制/数据面剖面 · CNCF 分层视角 · 点击下钻",
-     "flow": "ctrl",
-     "tiers": [
-         ("cn_ctrl", "编排 / 控制平面", "声明式 reconcile · 资源调度 · 分布式执行", ["kubernetes", "ray", "spark"], "#a78bfa"),
-         ("cn_ingress", "入口 / 网关 / 边缘", "反向代理 · 动态路由 · TLS · 服务发现", ["nginx"], "#0a84ff"),
-         ("cn_coord", "协调 / 共识 · 状态存储", "集群状态真相 · 选主 · 配置中心", ["etcd", "zookeeper", "raft"], "#2dd4bf"),
-         ("cn_rt", "容器运行时 · 底座", "语言运行时 · 内核 cgroup/namespace", ["go", "rust", "linux"], "#8a8a90"),
-     ]},
-    {"id": "dbkernel", "label": "数据库内核", "group": "领域视角", "kind": "stack",
-     "kicker": "DATABASE KERNEL · 数据库内核",
-     "title": "查询前端 → MPP 执行 → 事务存储引擎 → 图/向量特化",
-     "position": "回答「一条查询在数据库内核里流经哪些部件」:按各库最具代表性的内核层归位(解析规划 / 执行 / 存储 / 特化)。",
-     "subtitle": "关系/分析/图/向量数据库内核部件剖面 · 点击下钻",
+    {"id": "system", "axis": ("高层抽象 · 声明", "底层实现 · 机器"), "label": "系统抽象 · System", "group": "系统抽象与工程实现", "kind": "stack",
+     "kicker": "SYSTEM ABSTRACTION · 抽象层级",
+     "title": "接口/协议 → 计算/算子引擎 → 核心数据结构 → 存储/持久化 → 运行时/内核",
+     "position": "回答「一个系统从声明式抽象到机器实现怎样分层」:轴 = 抽象度(高层声明递减到贴机器实现)。每个项目按其最能代表的抽象层归位——同一物理位置的项目抽象度可不同。",
+     "subtitle": "从接口/协议到运行时的工程抽象栈 · 点击下钻",
      "flow": "hot",
      "tiers": [
-         ("db_front", "查询前端 · 解析/规划/优化", "SQL 解析 · CBO · 联邦下推 · 嵌入式", ["trino", "duckdb"], "#0a84ff"),
-         ("db_exec", "执行引擎 · MPP/向量化", "向量化算子 · pipeline · shuffle · MPP", ["doris", "clickhouse", "starrocks"], "#0a84ff"),
-         ("db_store", "事务存储引擎 · Page/LSM", "MVCC + WAL · LSM · 缓冲池 · Compaction", ["postgres", "rocksdb"], "#a78bfa"),
-         ("db_spec", "特化模型 · 图/向量", "图遍历免索引邻接 · ANN 向量检索", ["neo4j", "milvus"], "#2dd4bf"),
+         ("sy_api", "接口 / 协议 · Interface", "SQL/API · RPC · HTTP · 声明式编排契约", ["grpc", "nginx", "kubernetes", "trino"], "#0a84ff"),
+         ("sy_engine", "计算 / 算子引擎 · Engine", "查询规划 · 向量化算子 · DAG · 训练/推理图", ["spark", "flink", "doris", "clickhouse", "starrocks", "duckdb", "pytorch", "tensorflow", "vllm", "ray"], "#a78bfa"),
+         ("sy_ds", "核心数据结构 · Structure", "LSM / B树 / 列式 / 图 / 向量 / 跳表", ["rocksdb", "postgres", "mysql-server", "neo4j", "milvus", "redis", "orc", "arrow"], "#0a84ff"),
+         ("sy_store", "存储 / 持久化 · Persistence", "日志段 · 表格式 · 分布式文件 · 副本", ["kafka", "iceberg", "hudi", "hadoop", "etcd", "zookeeper", "hashicorp-raft", "etcd-raft"], "#2dd4bf"),
+         ("sy_rt", "运行时 / 内核 · Machine", "语言运行时 · GC · 调度 · 系统调用 · 容器", ["go", "rust", "openjdk", "linux", "containerd", "ffmpeg"], "#8a8a90"),
+     ]},
+    {"id": "workload", "axis": ("数据入口 · 上游", "结果产出 / 底座 · 下游"), "label": "工作负载 · Workload", "group": "工作负载与领域范式", "kind": "stack",
+     "kicker": "WORKLOAD PIPELINE · 数据/负载处理流水",
+     "title": "采集/接入 → 计算/训练 → 查询/推理 → 协调/编排 → 运行时底座",
+     "position": "回答「一类负载(大数据/AI/在线服务)怎样从入口流到产出」:轴 = 处理流水位置(上游数据入口递进到下游产出/底座)。每个项目按其在负载流水中承担的环节归位。",
+     "subtitle": "大数据 + AI + 云原生负载的统一处理流水 · 点击下钻",
+     "flow": "hot",
+     "tiers": [
+         ("wl_ingest", "采集 / 接入 · Ingest", "日志总线 · 网关 · RPC · 编解码 · 向量库", ["kafka", "nginx", "grpc", "ffmpeg", "milvus"], "#0a84ff"),
+         ("wl_compute", "计算 / 训练 · Compute", "批流计算 DAG · 分布式训练 · shuffle", ["spark", "flink", "hadoop", "pytorch", "tensorflow", "ray"], "#a78bfa"),
+         ("wl_query", "查询 / 推理 · Serve", "MPP 查询 · 向量化 · 联邦 · 高吞吐推理", ["doris", "clickhouse", "starrocks", "trino", "duckdb", "vllm"], "#0a84ff"),
+         ("wl_coord", "协调 / 编排 · Coordinate", "元数据 · 选主 · 容器编排 · 表格式治理", ["etcd", "zookeeper", "hashicorp-raft", "etcd-raft", "kubernetes", "containerd", "iceberg", "hudi", "orc", "arrow"], "#8a8a90"),
+         ("wl_state", "状态 / 底座 · Substrate", "内存/持久状态后端 · 语言运行时 · 内核", ["redis", "rocksdb", "postgres", "mysql-server", "neo4j", "go", "rust", "openjdk", "linux"], "#2dd4bf"),
      ]},
 ]
+
+
+# ── 主题视角(一级导航第二模式):6 大跨项目专题,与项目视角并行、不混。──
+# 每主题:id / 标题 / 核心一句 / 3 图解点标题 / 相关项目 key(下钻目标,须 ∈ META)。
+# 产物 = topics/<id>/index.html 轻量综合页。本 session 交付导航 + 跳转骨架。
+TOPICS = [
+    {"id": "consensus", "title": "Distributed Consensus & Replication", "accent": "#0a84ff",
+     "core": "日志复制 + 多数派仲裁,实现多副本强一致。",
+     "dots": ["日志连续性回溯匹配", "Multi-Raft 分片路由与 Leader 均衡", "Read Index / Lease 绕过日志的读一致性"],
+     "projects": ["etcd", "etcd-raft", "hashicorp-raft", "zookeeper", "kafka"]},
+    {"id": "transaction", "title": "Transactions & Concurrency Control", "accent": "#a78bfa",
+     "core": "时间戳与锁管理,保障并发隔离性。",
+     "dots": ["MVCC 快照可见性判定(ID 与时间戳不等关系)", "Percolator 两阶段提交(Primary 锁为仲裁点)", "OCC 验证阶段读写集冲突检测"],
+     "projects": ["postgres", "mysql-server"]},
+    {"id": "storage", "title": "Storage Engine & Data Layout", "accent": "#2dd4bf",
+     "core": "适配磁盘 / SSD 的读写放大控制。",
+     "dots": ["LSM Compaction 写放大路径与 L0 停顿根因", "B-link tree 无锁页分裂(兄弟指针)", "列存压缩管线及 SIMD 下推"],
+     "projects": ["rocksdb", "clickhouse", "doris"]},
+    {"id": "query", "title": "Query Optimization & Execution", "accent": "#0a84ff",
+     "core": "搜索最优计划并生成 CPU 密集指令。",
+     "dots": ["Join Reorder 自底向上动态规划", "向量化列批执行(RecordBatch + SIMD)", "表达式树 JIT 编译为 IR"],
+     "projects": ["doris", "trino", "duckdb", "starrocks"]},
+    {"id": "netio", "title": "High-Performance Network I/O", "accent": "#e0742a",
+     "core": "零拷贝传输 + 跨语言协议治理。",
+     "dots": ["DPDK 用户态 DMA 与 mbuf 循环", "序列化兼容性(Protobuf 标签 vs FlatBuffers 偏移)", "gRPC HTTP/2 流复用与流控 · Sidecar 协议劫持治理"],
+     "projects": ["grpc", "nginx"]},
+    {"id": "osmem", "title": "OS Memory & Scheduling", "accent": "#8a8a90",
+     "core": "地址虚拟化与物理资源隔离。",
+     "dots": ["缺页处理 TLB 命中 / 未命中路径", "伙伴系统(大块)+ Slab(小对象)分配链路", "cgroup High/Max 水位线与 OOM 触发状态机"],
+     "projects": ["linux"]},
+]
+
+
+# ── 关系视角(一级导航第 3-5 模式):非技术切面,实体+边关系图。──
+# 每模式:core/insight 一句 + groups[{label, entities[{name, kind, note, proj?}]}] + relations 图例。
+# proj = 关联项目 key(∈META,可下钻);无 proj = 纯外部实体(叶子)。事实按公开常识核实,宁缺勿错。
+INDUSTRY = {
+    "core": "技术是商业变现与资本推动的产物。",
+    "insight": "看清资本推手 —— 为何某些技术突然爆火,或随大厂战略调整走向衰落。",
+    "accent": "#e0742a",
+    "groups": [
+        {"label": "科技巨头 · 开源 + 云托管", "entities": [
+            {"name": "Google", "kind": "巨头", "edge": "开源并主导,云托管变现", "projs": ["kubernetes", "tensorflow", "go", "grpc"]},
+            {"name": "Meta", "kind": "巨头", "edge": "开源主导(AI/存储)", "projs": ["pytorch", "rocksdb"]},
+            {"name": "LinkedIn", "kind": "巨头", "edge": "内部孵化后开源", "projs": ["kafka"]},
+            {"name": "Yahoo / 社区", "kind": "巨头", "edge": "Hadoop 生态孵化", "projs": ["hadoop", "zookeeper"]},
+        ]},
+        {"label": "商业化公司 · 开源变现", "entities": [
+            {"name": "Confluent", "kind": "商业化", "edge": "Kafka 主创创立(2014)· 托管变现", "projs": ["kafka"]},
+            {"name": "Databricks", "kind": "商业化", "edge": "Spark 母公司 · 收购 Tabular(Iceberg)", "projs": ["spark", "iceberg"]},
+            {"name": "ClickHouse Inc. / Yandex", "kind": "商业化", "edge": "Yandex 孵化 → 独立商业化", "projs": ["clickhouse"]},
+            {"name": "Redis Ltd.", "kind": "商业化", "edge": "商业化 + 2024 协议变更(争议)", "projs": ["redis"]},
+            {"name": "Neo4j / Zilliz / StarRocks Inc.", "kind": "商业化", "edge": "各自开源项目背后公司", "projs": ["neo4j", "milvus", "starrocks"]},
+            {"name": "Onehouse / 社区", "kind": "商业化", "edge": "Hudi 商业化;DuckDB Labs 独立", "projs": ["hudi", "duckdb"]},
+        ]},
+        {"label": "创投基金 · 资本推手(投资关系)", "entities": [
+            {"name": "a16z", "kind": "VC", "edge": "投资 Databricks 等基础软件(非拥有项目)", "projs": []},
+            {"name": "Benchmark", "kind": "VC", "edge": "早期投资 Confluent 等(非拥有项目)", "projs": []},
+        ]},
+        {"label": "其他主体 · 厂商 / 社区 / 基金会", "entities": [
+            {"name": "Oracle", "kind": "厂商", "edge": "维护(收购自 Sun/MySQL AB)", "projs": ["mysql-server", "openjdk"]},
+            {"name": "F5 / Starburst / Ververica", "kind": "厂商", "edge": "各自商业化(Nginx / Trino / Flink)", "projs": ["nginx", "trino", "flink"]},
+            {"name": "Anyscale / Rust 基金会", "kind": "厂商/基金会", "edge": "Ray 母公司;Rust 基金会治理", "projs": ["ray", "rust"]},
+            {"name": "社区 / 基金会驱动", "kind": "社区", "edge": "无单一商业主体,社区或基金会主导",
+             "projs": ["postgres", "linux", "etcd", "etcd-raft", "hashicorp-raft", "containerd", "arrow", "orc", "ffmpeg", "vllm", "doris"]},
+        ]},
+    ],
+    "relations": [("孵化 / 开源", "own"), ("收购", "acquire"), ("投资", "invest"), ("云服务托管", "host"), ("协议变更", "license")],
+}
+STANDARDS = {
+    "core": "技术生态的秩序、规范与治理结构。",
+    "insight": "标准是最大公约数 —— 理解标准就理解不同底层技术为何能互操作;基金会托管决定项目的中立性与存续。",
+    "accent": "#0a84ff",
+    "groups": [
+        {"label": "开源基金会 · 托管治理", "entities": [
+            {"name": "CNCF", "kind": "基金会", "edge": "托管毕业/孵化项目 · 中立治理",
+             "projs": ["kubernetes", "etcd", "containerd"]},
+            {"name": "Apache Software Foundation", "kind": "基金会", "edge": "顶级项目托管 · Apache-2.0 · PMC 治理",
+             "projs": ["kafka", "spark", "flink", "iceberg", "hudi", "hadoop", "zookeeper", "orc", "doris", "arrow"]},
+            {"name": "Linux Foundation", "kind": "基金会", "edge": "托管内核 + 基础设施 · GPL/多协议",
+             "projs": ["linux"]},
+            {"name": "厂商主导 / 独立治理", "kind": "非基金会", "edge": "由公司或个人主导,未入中立基金会",
+             "projs": ["redis", "rocksdb", "clickhouse", "starrocks", "duckdb", "milvus", "neo4j", "pytorch", "tensorflow", "vllm", "ray", "grpc", "nginx", "mysql-server", "postgres", "go", "rust", "ffmpeg", "hashicorp-raft", "etcd-raft", "openjdk"]},
+        ]},
+        {"label": "标准化组织 · 规范制定", "entities": [
+            {"name": "IETF", "kind": "标准组织", "edge": "制定 HTTP/1.1·HTTP/2·HTTP/3 RFC(gRPC/Nginx 依赖)",
+             "projs": ["grpc", "nginx"]},
+            {"name": "ISO / ANSI", "kind": "标准组织", "edge": "制定 SQL 标准(各关系/分析库实现子集)",
+             "projs": ["postgres", "mysql-server", "trino", "duckdb", "doris", "clickhouse", "starrocks"]},
+            {"name": "POSIX / IEEE", "kind": "标准组织", "edge": "制定系统调用/文件系统接口标准",
+             "projs": ["linux"]},
+        ]},
+        {"label": "关键规范 · RFC / Spec / 论文", "entities": [
+            {"name": "Raft 论文 (2014)", "kind": "规范", "edge": "定义共识算法(多个实现衍生自它)",
+             "projs": ["etcd-raft", "hashicorp-raft", "etcd"]},
+            {"name": "Paxos / ZAB", "kind": "规范", "edge": "早期共识协议(ZooKeeper 用 ZAB)",
+             "projs": ["zookeeper"]},
+            {"name": "Protobuf / Arrow 列格式", "kind": "规范", "edge": "跨语言序列化 / 内存列存开放规范",
+             "projs": ["grpc", "arrow"]},
+            {"name": "Parquet / ORC 文件格式", "kind": "规范", "edge": "开放列存文件格式(表格式之下)",
+             "projs": ["orc", "iceberg", "hudi"]},
+        ]},
+    ],
+    "relations": [("制定", "author"), ("托管", "host"), ("兼容 / 实现", "compat"), ("衍生", "derive")],
+}
+PEOPLE = {
+    "core": "一切技术皆由具体的人、师承关系和学术学派演化而来。",
+    "insight": "技术有'基因'和'性格' —— 追踪大牛流动与学派演进,可预测新技术的设计哲学。",
+    "accent": "#a78bfa",
+    "groups": [
+        {"label": "顶级实验室 · 学派源头", "entities": [
+            {"name": "贝尔实验室", "kind": "实验室", "edge": "Unix/C 诞生 → 内核与语言哲学", "projs": ["linux", "go", "rust"]},
+            {"name": "UC Berkeley (AMPLab/RISELab)", "kind": "实验室", "edge": "Spark/Ray 学术源头", "projs": ["spark", "ray"]},
+            {"name": "Google Brain / DeepMind", "kind": "实验室", "edge": "深度学习框架与 MapReduce 源头", "projs": ["tensorflow", "hadoop"]},
+        ]},
+        {"label": "图灵奖 · 理论奠基", "entities": [
+            {"name": "Leslie Lamport", "kind": "图灵奖", "edge": "Paxos/逻辑时钟 → 共识理论奠基", "projs": ["etcd-raft", "zookeeper", "hashicorp-raft"]},
+            {"name": "Thompson / Ritchie", "kind": "图灵奖", "edge": "Unix/C → 内核与系统语言哲学", "projs": ["linux", "go"]},
+            {"name": "Michael Stonebraker", "kind": "图灵奖", "edge": "关系/列存数据库理论(Postgres 之父)", "projs": ["postgres"]},
+        ]},
+        {"label": "核心 Maintainer · 理念继承", "entities": [
+            {"name": "Linus Torvalds", "kind": "Maintainer", "edge": "创建并维护 Linux / Git", "projs": ["linux"]},
+            {"name": "Jay Kreps", "kind": "Maintainer", "edge": "Kafka 主创 → 创立 Confluent", "projs": ["kafka"]},
+            {"name": "Jeff Dean / Sanjay Ghemawat", "kind": "Maintainer", "edge": "MapReduce → TensorFlow 谱系", "projs": ["tensorflow", "hadoop"]},
+            {"name": "Ongaro / Ousterhout", "kind": "Maintainer", "edge": "Raft 作者 → 可理解的共识", "projs": ["etcd-raft", "etcd"]},
+        ]},
+        {"label": "学派 / 社区谱系", "entities": [
+            {"name": "数据库学派 (Berkeley/Wisconsin)", "kind": "学派", "edge": "关系/列存/分析引擎理念继承", "projs": ["mysql-server", "clickhouse", "doris", "starrocks", "trino", "duckdb", "orc", "arrow"]},
+            {"name": "分布式系统学派", "kind": "学派", "edge": "共识/协调/编排理念继承", "projs": ["zookeeper", "hashicorp-raft", "kubernetes", "containerd", "flink"]},
+            {"name": "存储引擎学派 (LSM/图/向量)", "kind": "学派", "edge": "RocksDB LSM → 多引擎;图/向量特化", "projs": ["rocksdb", "redis", "neo4j", "milvus", "hudi", "iceberg"]},
+            {"name": "系统 / AI 社区", "kind": "社区", "edge": "多人协作,无单一奠基者", "projs": ["nginx", "grpc", "rust", "ffmpeg", "pytorch", "vllm", "ray", "openjdk"]},
+        ]},
+    ],
+    "relations": [("导师 / 学生", "mentor"), ("前同事", "colleague"), ("理念继承", "lineage")],
+}
 
 
 def build_stack_svg(lens, projects):
@@ -643,83 +783,95 @@ def build_stack_svg(lens, projects):
     LAYER_ITEMS = {tk: [by_key[k] for k in keys if k in by_key] for tk, _t, _s, keys, _c in tiers}
     LAYER_COLOR = {tk: c for tk, _t, _s, _keys, c in tiers}
 
-    GUT_X = 44                        # 左号栏起点
-    SPINE_X = 250                     # 总线脊 x(号栏与模块道之间)
-    LANE_X, LANE_W = 296, 826         # 模块道
-    Y1, VGAP, PAD = 208, 30, 20
+    AXIS_X = 40                       # 左序轴(展示本视角的排序原理)
+    GUT_X = 92                         # 层号/层名栏
+    LANE_X, LANE_W = 300, 858          # 模块道(层内组件)
+    Y1, PAD = 232, 18                  # VGAP=0:层紧贴堆叠 = 栈,不是列表
     NODEH, ROWG, NG = _NODEH, _ROWG, _NG
 
+    def _cols(n):                     # 均衡列数:≤5 单行,否则分行均摊(6→3×2,8→4×2)
+        if n <= 5:
+            return max(1, n)
+        r = -(-n // 5)
+        return -(-n // r)
     band = {}
     y = Y1
     for tk, _t, _s, keys, _c in tiers:
         mods = [by_key[k] for k in keys if k in by_key]
         n = len(mods)
-        cols = min(5, max(1, n))
+        cols = _cols(n)
         rows = max(1, -(-n // cols))
         grid_h = rows * (NODEH + ROWG) - ROWG
-        h = max(70, grid_h) + PAD * 2
+        h = max(64, grid_h) + PAD * 2
         band[tk] = (y, h, cols, mods)
-        y += h + VGAP
-    last_bottom = y - VGAP
-    total_h = last_bottom + 96
+        y += h                        # 紧贴:无间隙
+    stack_top, stack_bot = Y1, y
+    total_h = stack_bot + 108
 
     body = ['<rect class="frame" x="{x}" y="{y}" width="{w}" height="{h}" rx="28"/>'.format(
         x=_FRAME_X, y=_FRAME_Y, w=_FRAME_W, h=total_h - 2 * _FRAME_Y)]
-    body.append('<text class="map-kicker" x="70" y="72">%s</text>' % _esc(lens["kicker"]))
-    body.append('<text class="map-title" x="70" y="106">%s</text>' % _esc(lens["title"]))
-    body.append('<text class="map-subtitle" x="70" y="130">%s</text>' % _esc(lens["subtitle"]))
+    body.append('<text class="map-kicker" x="72" y="84">%s</text>' % _esc(lens["kicker"]))
+    body.append('<text class="map-title" x="72" y="126">%s</text>' % _esc(lens["title"]))
+    body.append('<text class="map-subtitle" x="72" y="156">%s</text>' % _esc(lens["subtitle"]))
     if lens.get("position"):
-        body.append('<rect class="lens-pos-bg" x="66" y="150" width="1054" height="30" rx="8"/>')
-        body.append('<text class="lens-pos" x="82" y="170">%s</text>' % _esc(lens["position"]))
+        body.append('<rect class="lens-pos-bg" x="68" y="180" width="1050" height="32" rx="9"/>')
+        body.append('<text class="lens-pos" x="86" y="201">%s</text>' % _esc(lens["position"]))
 
     order = [t[0] for t in tiers]
     centers = {tk: band[tk][0] + band[tk][1] / 2 for tk in order}
-    flow = "flow-" + lens.get("flow", "hot")
 
-    # ── OSI 分层栅:每层间一条发丝分隔线(号栏..模块道右缘) ──
-    body.append('<g class="osi-grid">')
-    for i in range(1, len(order)):
-        gy = (band[order[i - 1]][0] + band[order[i - 1]][1] + band[order[i]][0]) / 2
-        body.append('<line class="osi-line" x1="{x1}" y1="{y}" x2="{x2}" y2="{y}"/>'.format(
-            x1=GUT_X, y=gy, x2=LANE_X + LANE_W))
-    # 号栏与模块道的竖向分界(总线所在通道)
-    body.append('<line class="osi-vline" x1="{x}" y1="{y1}" x2="{x}" y2="{y2}"/>'.format(
-        x=SPINE_X + 22, y1=band[order[0]][0] - 6, y2=last_bottom + 6))
-    body.append('</g>')
-
-    # ── 总线脊:自顶层端口到底层端口,分段下行箭头(信号步进) ──
-    body.append('<g class="machine-rails">')
+    # ── 左序轴:一根竖轴 + 两极标签,显式说明本视角「按什么排序」(架构感来源①:排序原理可见) ──
+    axis = lens.get("axis", ("上层 · 近用户", "底层 · 近硬件"))
+    body.append('<g class="axis-rail">')
+    body.append('<line class="axis-line" x1="{x}" y1="{y1}" x2="{x}" y2="{y2}"/>'.format(x=AXIS_X, y1=stack_top + 8, y2=stack_bot - 8))
+    body.append('<text class="axis-pole" x="{x}" y="{y}">{t}</text>'.format(x=AXIS_X, y=stack_top - 6, t=_esc(axis[0])))
+    body.append('<text class="axis-pole axis-pole-b" x="{x}" y="{y}">{t}</text>'.format(x=AXIS_X, y=stack_bot + 18, t=_esc(axis[1])))
+    # 层间「下层支撑上层」依赖记号:紧贴边界上的小三角(honest 关系,非假数据流)
+    body.append('<g class="dep-marks">')
     for a, b in zip(order, order[1:]):
-        body.append(_flow_path(flow, [(SPINE_X, centers[a]), (SPINE_X, centers[b])]))
-    body.append('</g>')
+        by = band[b][0]              # 相邻层边界 y
+        body.append('<path class="dep-tri" d="M{x1},{y1} L{x2},{y1} L{xm},{y2} Z"/>'.format(
+            x1=AXIS_X - 4, x2=AXIS_X + 4, xm=AXIS_X, y1=by - 5, y2=by + 1))
+    body.append('</g></g>')
 
-    # ── 逐层:号栏(层号+名+副) · 端口 · 接入线 · 模块道 ──
+    # 固定卡宽:按 5 列基准算,任意层卡片同尺寸(栅格纪律)
+    FIXED_CW = (LANE_W - 4 * NG) / 5
+    BAND_X, BAND_W = LANE_X - 24, _FRAME_W - (LANE_X - 24) + _FRAME_X - 24
+
+    # ── 逐层:整幅平台层(紧贴堆叠) · 层号名 · 组件卡 · 右侧留白填角色注 ──
     for i, (tk, ttitle, tsub, _keys, accent) in enumerate(tiers):
         yy, h, cols, mods = band[tk]
         cy = centers[tk]
-        # 层号栏
-        body.append('<text class="layer-num" x="{x}" y="{y:.0f}">{n:02d}</text>'.format(x=GUT_X + 8, y=cy - 6, n=i + 1))
-        body.append('<text class="layer-title" x="{x}" y="{y:.0f}">{t}</text>'.format(x=GUT_X + 8, y=cy + 14, t=_esc(ttitle)))
-        body.append('<text class="layer-sub" x="{x}" y="{y:.0f}">{s}</text>'.format(x=GUT_X + 8, y=cy + 30, s=_esc(tsub[:34])))
-        # 端口(脊上的接入点)+ 接入线(脊 → 模块道)
-        body.append('<circle class="bus-port" cx="{x}" cy="{y:.1f}" r="5" style="--accent:{c}"/>'.format(x=SPINE_X, y=cy, c=accent))
-        body.append('<line class="bus-stub" x1="{x1}" y1="{y:.1f}" x2="{x2}" y2="{y:.1f}" style="--accent:{c}"/>'.format(
-            x1=SPINE_X + 5, y=cy, x2=LANE_X - 4, c=accent))
-        # 模块道:网格居中
-        card_w = (LANE_W - (cols - 1) * NG) / cols
+        top = (i == 0)
+        bot = (i == len(tiers) - 1)
+        # 平台层:整幅宽,accent 微染,层间紧贴(圆角只在最顶/最底外角)
+        body.append('<rect class="tier-band" x="{x}" y="{y:.1f}" width="{w}" height="{h:.1f}" rx="0" style="--accent:{c}"/>'.format(
+            x=BAND_X, y=yy, w=BAND_W, h=h, c=accent))
+        body.append('<rect class="tier-edge" x="{x}" y="{y:.1f}" width="4" height="{h:.1f}" style="--accent:{c}"/>'.format(
+            x=BAND_X, y=yy, h=h, c=accent))
+        if not bot:
+            body.append('<line class="tier-div" x1="{x1}" y1="{y:.1f}" x2="{x2}" y2="{y:.1f}"/>'.format(
+                x1=BAND_X, y=yy + h, x2=BAND_X + BAND_W))
+        # 层号 + 层名 + 副标(左栏)
+        body.append('<text class="layer-num" x="{x}" y="{y:.0f}">{n:02d}</text>'.format(x=GUT_X + 4, y=cy - 5, n=i + 1))
+        body.append('<text class="layer-title" x="{x}" y="{y:.0f}">{t}</text>'.format(x=GUT_X + 4, y=cy + 13, t=_esc(_ellip(ttitle, 13))))
+        body.append('<text class="layer-sub" x="{x}" y="{y:.0f}">{s}</text>'.format(x=GUT_X + 4, y=cy + 29, s=_esc(_ellip(tsub, 15))))
+        # 组件卡:固定卡宽,左对齐栅格
         rows = max(1, -(-len(mods) // cols))
         grid_h = rows * (NODEH + ROWG) - ROWG
         gy0 = yy + (h - grid_h) / 2
+        row_right = LANE_X
         for j, m in enumerate(mods):
             r, c = divmod(j, cols)
-            nx = LANE_X + c * (card_w + NG)
+            nx = LANE_X + c * (FIXED_CW + NG)
             ny = gy0 + r * (NODEH + ROWG)
-            body.append(_node(m, nx, ny, card_w, accent))
+            row_right = max(row_right, nx + FIXED_CW)
+            body.append(_node(m, nx, ny, FIXED_CW, accent, lens_id=lens["id"], lens_label=lens["label"]))
     return ('<svg class="atlas-lens" data-lens="{lid}" xmlns="http://www.w3.org/2000/svg" '
             'viewBox="0 0 {w} {h}" width="100%" role="img" aria-label="{lab} 架构视角 · 点击下钻">'
             '<defs>'
             '<filter id="soft" x="-20%" y="-20%" width="140%" height="140%">'
-            '<feDropShadow dx="0" dy="10" stdDeviation="18" flood-color="#000" flood-opacity="0.18"/></filter>'
+            '<feDropShadow dx="0" dy="1" stdDeviation="2" flood-color="#000" flood-opacity="0.08"/></filter>'
             '<marker id="flow-hot-arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 Z" class="arrow-hot"/></marker>'
             '<marker id="flow-ctrl-arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 Z" class="arrow-ctrl"/></marker>'
             '<marker id="flow-state-arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 Z" class="arrow-state"/></marker>'
@@ -738,26 +890,113 @@ def build_all_lenses(projects):
 
 
 def build_lens_switch():
-    """顶栏 segmented 视角切换器,按 理论框架视角 / 领域视角 两类分组。"""
+    """顶栏 segmented 视角切换器:四维各一张架构图,扁平 4 按钮(按钮 = 维名)。"""
+    DIM_ORDER = ["计算理论与数学模型", "物理底座与体系结构", "系统抽象与工程实现", "工作负载与领域范式"]
+    ordered = sorted(LENSES, key=lambda l: DIM_ORDER.index(l["group"]) if l.get("group") in DIM_ORDER else 99)
+    segs = []
+    for i, l in enumerate(ordered):
+        segs.append('<button class="lens-seg{act}" data-lens="{lid}" role="tab">{lab}</button>'.format(
+            act=" on" if i == 0 else "", lid=l["id"], lab=_esc(l["label"])))
+    return '<div class="lens-switch" role="tablist" aria-label="架构视角">%s</div>' % "".join(segs)
+
+
+def build_topics_switch():
+    """主题视角切换器:6 大专题 seg,点击滚动/高亮对应主题卡。与项目视角并行。"""
+    segs = []
+    for i, t in enumerate(TOPICS):
+        segs.append('<button class="topic-seg{act}" data-topic="{tid}" role="tab">{lab}</button>'.format(
+            act=" on" if i == 0 else "", tid=t["id"], lab=_esc(t["title"])))
+    return '<div class="topic-switch" role="tablist" aria-label="主题专题">%s</div>' % "".join(segs)
+
+
+def _topic_hero(tid):
+    """主题卡顶部预览图:取该主题 design/ 下的 *00生态架构.svg(核心代表图),base64 内联。
+    找不到返回 ''(卡片降级为无图)。"""
+    import glob as _glob
+    hits = _glob.glob(os.path.join(ROOT, "topics", tid, "design", "*00生态架构*.svg"))
+    if not hits:
+        hits = _glob.glob(os.path.join(ROOT, "topics", tid, "design", "*.svg"))
+    if not hits:
+        return ""
+    try:
+        with open(sorted(hits)[0], "rb") as f:
+            b = base64.b64encode(f.read()).decode("ascii")
+        return '<span class="tc-hero"><img src="data:image/svg+xml;base64,{b}" alt="" loading="lazy"/></span>'.format(b=b)
+    except OSError:
+        return ""
+
+
+def build_topics_cards():
+    """主题视角内容区:6 大专题卡网格,顶部核心生态图预览,点击下钻到 topics/<id>/index.html。"""
+    cards = []
+    for t in TOPICS:
+        dots = "".join('<li class="tc-dot">{d}</li>'.format(d=_esc(d)) for d in t["dots"])
+        chips = "".join('<span class="tc-chip">{n}</span>'.format(n=_esc(META.get(k, {}).get("name", k)))
+                        for k in t["projects"])
+        hero = _topic_hero(t["id"])
+        cards.append(
+            '<a class="topic-card" id="tc-{tid}" href="topics/{tid}/index.html" style="--accent:{c}">'
+            '{hero}'
+            '<span class="tc-body">'
+            '<span class="tc-head"><span class="tc-title">{title}</span></span>'
+            '<span class="tc-core">{core}</span>'
+            '<ul class="tc-dots">{dots}</ul>'
+            '<span class="tc-projs">{chips}</span>'
+            '</span>'
+            '</a>'.format(tid=t["id"], c=t["accent"], title=_esc(t["title"]),
+                          core=_esc(t["core"]), dots=dots, chips=chips, hero=hero))
+    note = ('<p class="topics-note">主题 = <b>跨项目专题深剖</b>(一个机制横穿多个项目,带图解点);'
+            '区别于「技术项目视角」里按理论轴给项目归位的 lens。</p>')
+    return note + '<div class="topics-grid">%s</div>' % "".join(cards)
+
+
+_REL_STYLE = {"own": "实线", "invest": "虚线", "host": "点线", "license": "橙线",
+              "author": "实线", "compat": "虚线", "vote": "点线", "derive": "橙线",
+              "mentor": "实线箭头", "colleague": "虚线", "lineage": "橙箭头"}
+
+
+def build_relation_view(model):
+    """关系视角内容区:核心/洞察 + 分组实体卡 + 关系图例。
+    每个实体把相关项目渲染成可点 chip,点击进入 projects/<key>/index.html。"""
+    accent = model["accent"]
     groups = []
-    seen = []
-    for l in LENSES:
-        g = l.get("group", "")
-        if g not in seen:
-            seen.append(g)
-    idx = 0
-    parts = []
-    for g in seen:
-        segs = []
-        for l in LENSES:
-            if l.get("group", "") != g:
-                continue
-            segs.append('<button class="lens-seg{act}" data-lens="{lid}" role="tab">{lab}</button>'.format(
-                act=" on" if idx == 0 else "", lid=l["id"], lab=_esc(l["label"])))
-            idx += 1
-        parts.append('<span class="lens-grp"><span class="lens-grp-lab">{g}</span><span class="lens-grp-segs">{segs}</span></span>'.format(
-            g=_esc(g), segs="".join(segs)))
-    return '<div class="lens-switch" role="tablist" aria-label="架构视角">%s</div>' % "".join(parts)
+    for g in model["groups"]:
+        ents = []
+        for e in g["entities"]:
+            edge = _esc(e.get("edge", e.get("note", "")))
+            kind = _esc(e.get("kind", ""))
+            # 相关项目 chip(可点下钻);兼容旧单键 proj
+            keys = list(e.get("projs", []))
+            if e.get("proj") and e["proj"] not in keys:
+                keys.insert(0, e["proj"])
+            chips = "".join(
+                '<a class="re-chip" href="projects/{k}/index.html">{n}</a>'.format(
+                    k=k, n=_esc(META.get(k, {}).get("name", k)))
+                for k in keys if k in META)
+            chip_row = '<span class="re-chips">{c}</span>'.format(c=chips) if chips else ""
+            ents.append(
+                '<div class="re-ent">'
+                '<span class="re-name">{n}</span>'
+                '<span class="re-kind">{k}</span>'
+                '<span class="re-edge">→ {edge}</span>'
+                '{chips}</div>'.format(n=_esc(e["name"]), k=kind, edge=edge, chips=chip_row))
+        groups.append(
+            '<div class="re-group"><div class="re-glab">{lab}</div>'
+            '<div class="re-ents">{ents}</div></div>'.format(
+                lab=_esc(g["label"]), ents="".join(ents)))
+    legend = "".join(
+        '<span class="re-leg"><span class="re-leg-k">{s}</span>{lab}</span>'.format(
+            s=_esc(_REL_STYLE.get(typ, "")), lab=_esc(lab))
+        for lab, typ in model["relations"])
+    return (
+        '<div class="relation-view" style="--accent:{a}">'
+        '<p class="re-core">{core}</p>'
+        '<p class="re-insight">{insight}</p>'
+        '<div class="re-legend"><span class="re-leg-lab">关系类型</span>{legend}</div>'
+        '<div class="re-groups">{groups}</div>'
+        '</div>').format(a=accent, core=_esc(model["core"]),
+                         insight=_esc(model["insight"]), legend=legend,
+                         groups="".join(groups))
 
 
 def _search_index(projects):
@@ -777,6 +1016,10 @@ def build_html(projects):
     return (TEMPLATE
             .replace("__SVG__", build_all_lenses(projects))
             .replace("__LENSSWITCH__", build_lens_switch())
+            .replace("__TOPICS__", build_topics_cards())
+            .replace("__INDUSTRY__", build_relation_view(INDUSTRY))
+            .replace("__STANDARDS__", build_relation_view(STANDARDS))
+            .replace("__PEOPLE__", build_relation_view(PEOPLE))
             .replace("__INDEX__", json.dumps(_search_index(projects), ensure_ascii=False))
             .replace("__AGG__", json.dumps(agg, ensure_ascii=False))
             .replace("__UPDATED__", agg["updated"] or "—"))
@@ -787,27 +1030,27 @@ TEMPLATE = r"""<!DOCTYPE html>
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>核心原理图谱 · 计算机体系架构导航</title>
+<title>技术图谱 · 计算机体系架构导航</title>
 <style>
 :root{
-  --c-bg:#0d0d0f; --c-bg2:#111114; --c-panel:#17171a; --c-panel2:#1e1e22;
-  --c-line:rgba(255,255,255,.10); --c-line2:rgba(255,255,255,.16);
-  --c-ink:#f2f2f5; --c-ink2:#c4c4c9; --c-ink3:#8a8a90;
-  --c-brand:#0a84ff; --c-brand-ink:#409cff; --c-hover:rgba(255,255,255,.06);
-  --c-shadow-lg:0 8px 28px rgba(0,0,0,.5),0 24px 48px rgba(0,0,0,.45);
-  --ok:#2dd4a7; --warn:#fbbf24;
-  --mono:"SF Mono",ui-monospace,"JetBrains Mono",Menlo,Consolas,monospace;
-  --sans:-apple-system,BlinkMacSystemFont,"SF Pro Display","PingFang SC","Microsoft YaHei",Segoe UI,sans-serif;
-  --grid-tint:rgba(10,132,255,.10); --grid-tint2:rgba(139,108,255,.09);
-}
-:root[data-theme="light"]{
   --c-bg:#fbfbfd; --c-bg2:#f5f5f7; --c-panel:#ffffff; --c-panel2:#f5f5f7;
   --c-line:rgba(0,0,0,.09); --c-line2:rgba(0,0,0,.13);
   --c-ink:#1d1d1f; --c-ink2:#424245; --c-ink3:#86868b;
   --c-brand:#0071e3; --c-brand-ink:#0066cc; --c-hover:rgba(0,0,0,.04);
   --c-shadow-lg:0 8px 28px rgba(0,0,0,.10),0 24px 48px rgba(0,0,0,.10);
   --ok:#2f8f5e; --warn:#b8801f;
+  --mono:"SF Mono",ui-monospace,"JetBrains Mono",Menlo,Consolas,monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"SF Pro Display","PingFang SC","Microsoft YaHei",Segoe UI,sans-serif;
   --grid-tint:rgba(0,113,227,.07); --grid-tint2:rgba(124,95,230,.06);
+}
+:root[data-theme="dark"]{
+  --c-bg:#0d0d0f; --c-bg2:#111114; --c-panel:#17171a; --c-panel2:#1e1e22;
+  --c-line:rgba(255,255,255,.10); --c-line2:rgba(255,255,255,.16);
+  --c-ink:#f2f2f5; --c-ink2:#c4c4c9; --c-ink3:#8a8a90;
+  --c-brand:#0a84ff; --c-brand-ink:#409cff; --c-hover:rgba(255,255,255,.06);
+  --c-shadow-lg:0 8px 28px rgba(0,0,0,.5),0 24px 48px rgba(0,0,0,.45);
+  --ok:#2dd4a7; --warn:#fbbf24;
+  --grid-tint:rgba(10,132,255,.10); --grid-tint2:rgba(139,108,255,.09);
 }
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
@@ -815,10 +1058,11 @@ html{background:var(--c-bg);transition:background-color .3s}
 body{font-family:var(--sans);color:var(--c-ink);min-height:100vh;-webkit-font-smoothing:antialiased;
   background:var(--c-bg);transition:background-color .3s,color .3s}
 /* 顶栏:极简 · 毛玻璃 · 贴顶(对标 Doris —— logo + 搜索 + 主题钮,不喧宾夺主) */
-.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:16px;
-  padding:14px 30px;border-bottom:1px solid var(--c-line);
+.chrome{position:sticky;top:0;z-index:20;
   background:color-mix(in srgb,var(--c-bg) 82%,transparent);
-  backdrop-filter:saturate(180%) blur(24px);-webkit-backdrop-filter:saturate(180%) blur(24px)}
+  backdrop-filter:saturate(180%) blur(24px);-webkit-backdrop-filter:saturate(180%) blur(24px);
+  border-bottom:1px solid var(--c-line)}
+.topbar{display:flex;align-items:center;gap:16px;padding:13px 30px 11px}
 .logo{flex:none;width:34px;height:34px;display:flex;align-items:center;justify-content:center}
 .logo svg{display:block}
 .nn-n{fill:var(--c-ink2)}
@@ -834,33 +1078,95 @@ body{font-family:var(--sans);color:var(--c-ink);min-height:100vh;-webkit-font-sm
 .search:focus-within{border-color:var(--c-brand);box-shadow:0 0 0 3px color-mix(in srgb,var(--c-brand) 16%,transparent)}
 .search svg{color:var(--c-ink3);flex:none}
 .search input{flex:1;min-width:0;border:0;background:transparent;color:var(--c-ink);font-size:13.5px;outline:none;font-family:var(--sans)}
-.lens-switch{position:absolute;left:50%;transform:translateX(-50%);display:inline-flex;gap:14px;padding:6px 8px;border-radius:12px;background:var(--c-panel);border:1px solid var(--c-line)}
-.lens-grp{display:inline-flex;flex-direction:column;gap:4px}
-.lens-grp+.lens-grp{padding-left:14px;border-left:1px solid var(--c-line)}
-.lens-grp-lab{font:600 10px var(--sans);color:var(--c-ink3);letter-spacing:.06em;white-space:nowrap;text-align:center}
+.lensbar{display:flex;flex-direction:column;align-items:center;gap:10px;padding:0 30px 11px}
+.mode-switch{display:inline-flex;align-items:center;gap:2px;padding:4px 8px;border-radius:11px;background:var(--c-bg2);border:1px solid var(--c-line);max-width:100%;overflow-x:auto;scrollbar-width:none}
+.mode-switch::-webkit-scrollbar{display:none}
+.mode-clab{font:700 9px var(--mono);color:var(--c-ink3);letter-spacing:.1em;text-transform:uppercase;padding:0 8px 0 4px;white-space:nowrap;opacity:.75}
+.mode-div{width:1px;align-self:stretch;margin:4px 8px;background:var(--c-line2)}
+.mode-seg{border:0;background:transparent;color:var(--c-ink3);cursor:pointer;font:700 12.5px var(--sans);padding:6px 18px;border-radius:8px;white-space:nowrap;transition:.15s}
+.mode-seg:hover{color:var(--c-ink)}
+.mode-seg.on{background:var(--c-panel);color:var(--c-ink);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.switch-region{display:none}
+.switch-region.on{display:flex;justify-content:center}
+.lens-switch{display:inline-flex;gap:0;padding:5px 6px;border-radius:12px;background:var(--c-panel);border:1px solid var(--c-line);max-width:100%;overflow-x:auto;scrollbar-width:none}
+.lens-switch::-webkit-scrollbar{display:none}
+.topic-switch{display:inline-flex;gap:2px;padding:5px 6px;border-radius:12px;background:var(--c-panel);border:1px solid var(--c-line);max-width:100%;overflow-x:auto;scrollbar-width:none}
+.topic-switch::-webkit-scrollbar{display:none}
+.topic-seg{border:0;background:transparent;color:var(--c-ink2);cursor:pointer;font:600 12px var(--sans);padding:5px 13px;border-radius:8px;white-space:nowrap;transition:.15s}
+.topic-seg:hover{color:var(--c-ink)}
+.topic-seg.on{background:var(--c-brand);color:#fff}
+.lens-grp{display:inline-flex;flex-direction:column;gap:5px;padding:0 12px}
+.lens-grp+.lens-grp{border-left:1px solid var(--c-line)}
+.lens-grp-lab{font:600 9.5px var(--sans);color:var(--c-ink3);letter-spacing:.08em;white-space:nowrap;text-align:center;text-transform:uppercase}
 .lens-grp-segs{display:flex;gap:2px;justify-content:center}
 .lens-seg{border:0;background:transparent;color:var(--c-ink2);cursor:pointer;font:600 12px var(--sans);padding:5px 12px;border-radius:8px;white-space:nowrap;transition:.15s}
 .lens-seg:hover{color:var(--c-ink)}
 .lens-seg.on{background:var(--c-brand);color:#fff}
+.mode-view{display:none}
+.mode-view.on{display:block}
 .lens-view{display:none}
 .lens-view.on{display:block}
+/* 主题卡网格 */
+.topics-note{font:450 12px var(--sans);color:var(--c-ink3);line-height:1.5;margin:2px 4px 16px;max-width:820px}
+.topics-note b{color:var(--c-ink2);font-weight:700}
+.topics-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;padding:8px 4px 20px}
+.topic-card{display:flex;flex-direction:column;position:relative;border-radius:16px;background:var(--c-panel);border:1px solid var(--c-line);text-decoration:none;overflow:hidden;transition:border-color .18s,box-shadow .18s,transform .18s}
+.topic-card:hover{border-color:color-mix(in srgb,var(--accent) 55%,var(--c-line));box-shadow:0 8px 28px rgba(0,0,0,.10);transform:translateY(-2px)}
+.tc-hero{display:block;height:132px;overflow:hidden;background:color-mix(in srgb,var(--accent) 6%,var(--c-bg2));border-bottom:1px solid var(--c-line);position:relative}
+.tc-hero img{width:100%;height:auto;display:block;object-fit:cover;object-position:top center;opacity:.96}
+.tc-hero::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 55%,var(--c-panel) 100%)}
+.topic-card:hover .tc-hero img{opacity:1}
+.tc-body{display:flex;flex-direction:column;gap:10px;padding:18px 22px 20px}
+.tc-title{font:700 16px var(--sans);color:var(--c-ink);letter-spacing:-.01em}
+.tc-core{font:450 12.5px var(--sans);color:var(--c-ink2);line-height:1.5}
+.tc-dots{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:5px}
+.tc-dot{font:500 11px var(--sans);color:var(--c-ink3);padding-left:14px;position:relative;line-height:1.45}
+.tc-dot::before{content:"";position:absolute;left:2px;top:7px;width:4px;height:4px;border-radius:50%;background:var(--accent);opacity:.7}
+.tc-projs{display:flex;flex-wrap:wrap;gap:5px;margin-top:2px}
+.tc-chip{font:600 10px var(--mono);color:var(--c-ink3);background:var(--c-bg2);border:1px solid var(--c-line);border-radius:6px;padding:2px 7px}
+.topic-card.tc-flash{animation:tcflash 1.15s ease-out}
+@keyframes tcflash{0%,100%{box-shadow:0 0 0 0 transparent}30%{box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 45%,transparent)}}
+/* 关系视角:核心 + 洞察 + 关系图例 + 分组实体卡 */
+.relation-view{padding:8px 4px 24px}
+.re-core{font:700 20px var(--sans);color:var(--c-ink);letter-spacing:-.02em;margin:6px 0 6px}
+.re-insight{font:450 13px var(--sans);color:var(--c-ink2);line-height:1.55;margin:0 0 18px;max-width:820px}
+.re-legend{display:flex;flex-wrap:wrap;align-items:center;gap:14px;padding:12px 16px;border-radius:12px;background:var(--c-bg2);border:1px solid var(--c-line);margin-bottom:22px}
+.re-leg-lab{font:700 10px var(--mono);letter-spacing:.14em;color:var(--c-ink3);text-transform:uppercase}
+.re-leg{font:500 11.5px var(--sans);color:var(--c-ink2);display:inline-flex;align-items:center;gap:6px}
+.re-leg-k{font:600 10px var(--mono);color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,transparent);border-radius:5px;padding:1px 6px}
+.re-groups{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;align-items:start}
+.re-group{display:flex;flex-direction:column;gap:10px}
+.re-glab{font:700 12.5px var(--sans);color:var(--c-ink);padding-bottom:8px;border-bottom:2px solid color-mix(in srgb,var(--accent) 55%,var(--c-line))}
+.re-ents{display:flex;flex-direction:column;gap:10px}
+.re-ent{display:flex;flex-direction:column;gap:5px;padding:14px 16px;border-radius:12px;background:var(--c-panel);border:1px solid var(--c-line)}
+.re-name{font:700 14px var(--sans);color:var(--c-ink)}
+.re-kind{font:600 9.5px var(--mono);color:var(--accent);letter-spacing:.06em;text-transform:uppercase}
+.re-edge{font:500 11.5px var(--sans);color:var(--c-ink2);line-height:1.45}
+.re-chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:4px}
+.re-chip{font:600 10.5px var(--sans);color:var(--accent);background:color-mix(in srgb,var(--accent) 9%,transparent);border:1px solid color-mix(in srgb,var(--accent) 28%,transparent);border-radius:7px;padding:3px 9px;text-decoration:none;transition:.15s;white-space:nowrap}
+.re-chip:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
 .lens-pos-bg{fill:color-mix(in srgb,var(--c-brand) 7%,transparent);stroke:color-mix(in srgb,var(--c-brand) 22%,transparent);stroke-width:1}
 .lens-pos{fill:var(--c-ink2);font:500 12px var(--sans)}
-.osi-line{stroke:var(--c-line);stroke-width:1;opacity:.6}
-.osi-vline{stroke:var(--c-line);stroke-width:1;stroke-dasharray:2 4;opacity:.5}
-.layer-num{fill:var(--c-ink3);font:700 20px var(--mono,monospace);opacity:.55}
+.axis-line{stroke:var(--c-line2);stroke-width:1.5}
+.axis-pole{fill:var(--c-ink3);font:600 9px var(--mono);letter-spacing:.04em;text-anchor:middle}
+.axis-pole-b{}
+.dep-tri{fill:var(--c-ink3);opacity:.5}
+.tier-band{fill:color-mix(in srgb,var(--accent) 5%,var(--c-panel));stroke:none}
+:root[data-theme="dark"] .tier-band{fill:color-mix(in srgb,var(--accent) 9%,var(--c-panel))}
+.tier-sheen{display:none}
+.tier-div{stroke:var(--c-line);stroke-width:1}
+.tier-edge{fill:var(--accent);opacity:.95}
+.layer-num{fill:var(--c-ink3);font:700 19px var(--mono,monospace);opacity:.5}
 .layer-title{fill:var(--c-ink);font:700 13px var(--sans)}
-.layer-sub{fill:var(--c-ink3);font:500 10px var(--sans)}
-.bus-port{fill:var(--c-bg);stroke:var(--accent,#0a84ff);stroke-width:2.5}
-.bus-stub{stroke:var(--accent,#0a84ff);stroke-width:1.5;opacity:.7}
+.layer-sub{fill:var(--c-ink3);font:500 9px var(--sans)}
 .search kbd{font-family:var(--mono);font-size:11px;color:var(--c-ink3);border:1px solid var(--c-line2);
   border-radius:6px;padding:1px 6px;background:var(--c-panel2);flex:none}
 .tt{flex:none;width:38px;height:38px;border-radius:50%;border:1px solid var(--c-line);
   background:var(--c-panel);color:var(--c-ink2);cursor:pointer;display:grid;place-items:center;transition:all .18s}
 .tt:hover{border-color:var(--c-ink3);color:var(--c-ink);background:var(--c-hover)}
-.tt-ico{font-size:16px;line-height:1} .tt-sun{display:none}
-:root[data-theme="light"] .tt-moon{display:none}
-:root[data-theme="light"] .tt-sun{display:inline}
+.tt-ico{font-size:16px;line-height:1} .tt-moon{display:none}
+:root[data-theme="dark"] .tt-sun{display:none}
+:root[data-theme="dark"] .tt-moon{display:inline}
 /* 舞台:架构图是主角,居中留白,无额外装饰框 */
 .stage{max-width:1300px;margin:0 auto;padding:34px 30px 56px}
 .diagram{position:relative;overflow-x:auto}
@@ -872,11 +1178,11 @@ body{font-family:var(--sans);color:var(--c-ink);min-height:100vh;-webkit-font-sm
 /* ── 架构图 SVG 主题化(不反相,图标保持真品牌色)── */
 #atlas{display:block;width:100%;height:auto;min-width:1040px}
 /* 单外框:系统母图是一张精密机器剖面,面板/路径/模块共享一张画布 */
-.frame{fill:var(--c-panel);stroke:var(--c-line);stroke-width:1;filter:url(#soft)}
-:root:not([data-theme="light"]) .frame{fill:color-mix(in srgb,#fff 2%,var(--c-bg))}
-.map-kicker{fill:var(--c-ink3);font:700 10px var(--mono);letter-spacing:.18em}
-.map-title{fill:var(--c-ink);font:600 19px var(--sans);letter-spacing:-.025em}
-.map-subtitle{fill:var(--c-ink3);font:500 12px var(--sans);letter-spacing:-.01em}
+.frame{fill:var(--c-panel);stroke:var(--c-line);stroke-width:1;filter:drop-shadow(0 1px 3px rgba(0,0,0,.05))}
+:root[data-theme="dark"] .frame{fill:var(--c-panel);stroke:color-mix(in srgb,#fff 8%,transparent);filter:none}
+.map-kicker{fill:var(--accent,var(--c-brand));font:700 10.5px var(--mono);letter-spacing:.24em;opacity:.9}
+.map-title{fill:var(--c-ink);font:600 30px var(--sans);letter-spacing:-.032em}
+.map-subtitle{fill:var(--c-ink3);font:450 13px var(--sans);letter-spacing:-.005em}
 .plane-band rect{fill:transparent;stroke:var(--c-line);stroke-width:1;stroke-dasharray:2 8;opacity:.48}
 .plane-band text{fill:var(--c-ink3);font:700 8.5px var(--mono);letter-spacing:.18em;opacity:.62}
 .machine-rails path{fill:none}
@@ -900,9 +1206,11 @@ body{font-family:var(--sans);color:var(--c-ink);min-height:100vh;-webkit-font-sm
 .panel-sub{fill:var(--c-ink3);font:400 11.5px var(--sans)}
 .panel-empty{fill:var(--c-ink3);font:500 11px var(--mono);opacity:.55}
 .nd{cursor:pointer}
-.nd-rect{fill:color-mix(in srgb,var(--c-panel) 84%,#fff 4%);stroke:var(--c-line2);stroke-width:1;transition:stroke .18s,fill .18s,filter .18s}
+.nd-rect{fill:var(--c-panel);stroke:var(--c-line2);stroke-width:1;transition:stroke .18s,fill .18s}
+:root[data-theme="dark"] .nd-rect{fill:color-mix(in srgb,#fff 6%,var(--c-panel));stroke:color-mix(in srgb,#fff 12%,transparent)}
+.nd-sheen{display:none}
 .nd-ic{transition:opacity .18s}
-.nd:hover .nd-rect{stroke:var(--c-ink);stroke-width:1.35;fill:var(--c-hover);filter:drop-shadow(0 0 7px color-mix(in srgb,var(--accent) 22%,transparent))}
+.nd:hover .nd-rect{stroke:var(--accent);stroke-width:1.5;fill:var(--c-hover)}
 .nd:focus{outline:none}
 .nd:focus-visible .nd-rect{stroke:var(--c-ink);stroke-width:2}
 .nd-plan{cursor:default}
@@ -930,6 +1238,7 @@ footer{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;margin
 </style>
 </head>
 <body>
+<div class="chrome">
 <header class="topbar">
   <span class="logo" aria-hidden="true">
     <svg viewBox="0 0 40 40" width="34" height="34" fill="none">
@@ -942,8 +1251,7 @@ footer{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;margin
       <circle cx="31" cy="14" r="3" class="nn-n"/><circle cx="31" cy="26" r="3" class="nn-n"/>
     </svg>
   </span>
-  <span class="brand">核心原理图谱</span>
-  __LENSSWITCH__
+  <span class="brand">技术图谱</span>
   <label class="search">
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
     <input id="q" type="text" placeholder="搜索项目 / 关键词…" autocomplete="off" aria-label="搜索项目"/>
@@ -953,9 +1261,27 @@ footer{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;margin
     <span class="tt-ico tt-moon">☾</span><span class="tt-ico tt-sun">☀</span>
   </button>
 </header>
+<nav class="lensbar" aria-label="一级导航">
+  <div class="mode-switch" role="tablist" aria-label="导航模式">
+    <span class="mode-clab">技术剖面</span>
+    <button class="mode-seg on" data-mode="project" role="tab">项目视角</button>
+    <button class="mode-seg" data-mode="topic" role="tab">主题视角</button>
+    <span class="mode-div" aria-hidden="true"></span>
+    <span class="mode-clab">项目背景</span>
+    <button class="mode-seg" data-mode="standards" role="tab">标准视角</button>
+    <button class="mode-seg" data-mode="industry" role="tab">产业视角</button>
+    <button class="mode-seg" data-mode="people" role="tab">学派视角</button>
+  </div>
+  <div class="switch-region mode-switchbar on" data-mode="project">__LENSSWITCH__</div>
+</nav>
+</div>
 
 <main class="stage">
-  <div class="diagram">__SVG__</div>
+  <div class="mode-view on" data-mode="project"><div class="diagram">__SVG__</div></div>
+  <div class="mode-view" data-mode="topic">__TOPICS__</div>
+  <div class="mode-view" data-mode="standards">__STANDARDS__</div>
+  <div class="mode-view" data-mode="industry">__INDUSTRY__</div>
+  <div class="mode-view" data-mode="people">__PEOPLE__</div>
   <div class="undernote">
     <span class="stats" id="stats"></span>
     <span class="hint" id="count"></span>
@@ -966,10 +1292,10 @@ footer{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;margin
 (function(){
   var AGG=__AGG__, IDX=__INDEX__;
   var r=document.documentElement, KEY="atlas-nav-theme";
-  function ap(t){ if(t==="light") r.setAttribute("data-theme","light"); else r.removeAttribute("data-theme"); }
-  var s="dark"; try{ s=localStorage.getItem(KEY)||"dark"; }catch(e){} ap(s);
+  function ap(t){ if(t==="dark") r.setAttribute("data-theme","dark"); else r.removeAttribute("data-theme"); }
+  var s="light"; try{ s=localStorage.getItem(KEY)||"light"; }catch(e){} ap(s);
   var tt=document.getElementById("tt");
-  if(tt) tt.onclick=function(){ var n=r.getAttribute("data-theme")==="light"?"dark":"light"; ap(n); try{localStorage.setItem(KEY,n);}catch(e){} };
+  if(tt) tt.onclick=function(){ var n=r.getAttribute("data-theme")==="dark"?"light":"dark"; ap(n); try{localStorage.setItem(KEY,n);}catch(e){} };
   // 视角切换:segmented → 显示对应 lens-view,隐藏其余
   (function(){
     var segs=[].slice.call(document.querySelectorAll(".lens-seg"));
@@ -979,6 +1305,25 @@ footer{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;margin
       views.forEach(function(v){ v.classList.toggle("on", v.dataset.lens===lid); });
     }
     segs.forEach(function(b){ b.onclick=function(){ show(b.dataset.lens); }; });
+  })();
+  // 一级模式切换:项目视角 / 主题视角 —— 两套并行,切模式显隐对应切换区 + 内容区
+  (function(){
+    var ms=[].slice.call(document.querySelectorAll(".mode-seg"));
+    var regions=[].slice.call(document.querySelectorAll(".mode-switchbar"));
+    var views=[].slice.call(document.querySelectorAll(".mode-view"));
+    function mode(m){
+      ms.forEach(function(b){ b.classList.toggle("on", b.dataset.mode===m); });
+      regions.forEach(function(r){ r.classList.toggle("on", r.dataset.mode===m); });
+      views.forEach(function(v){ v.classList.toggle("on", v.dataset.mode===m); });
+    }
+    ms.forEach(function(b){ b.onclick=function(){ mode(b.dataset.mode); }; });
+    // 主题 seg → 滚动+高亮对应主题卡
+    var tsegs=[].slice.call(document.querySelectorAll(".topic-seg"));
+    tsegs.forEach(function(b){ b.onclick=function(){
+      tsegs.forEach(function(x){ x.classList.toggle("on", x===b); });
+      var c=document.getElementById("tc-"+b.dataset.topic);
+      if(c){ c.scrollIntoView({behavior:"smooth", block:"center"}); c.classList.add("tc-flash"); setTimeout(function(){c.classList.remove("tc-flash");},1200); }
+    }; });
   })();
   // 底部一行细描述(数值弱化,不与图争视觉)
   document.getElementById("stats").textContent=AGG.projects+" 项目 · "+AGG.accessible+" 可交互 · "+AGG.layers+" 机制节点 · "+AGG.svg+" 图 · "+AGG.md+" 篇 · 更新 __UPDATED__";
@@ -1025,10 +1370,12 @@ footer{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;margin
 """
 
 
+
 def main():
     projects = scan()
     with open(OUT, "w", encoding="utf-8") as f:
         f.write(build_html(projects))
+    # 注:topics/<id>/index.html 的页面内容由专门流程维护(富主题图),本生成器不写、不覆盖。
     agg = aggregate(projects)
     print(f"✓ 扫描 {ROOT}")
     print(f"  项目 {agg['projects']} · 可交互 {agg['accessible']}(ready {agg['ready']}) · "

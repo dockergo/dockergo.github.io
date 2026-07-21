@@ -1,0 +1,88 @@
+# Iceberg 原理 · 支撑主线 · 表维护（Compaction / Expire / Orphan）
+
+> **定位**：属"维护能力域"——后台侧,保证表长期健康。管三件事:compaction(合并小文件、物化删除、合并 manifest)、expire snapshots(过期旧快照回收)、remove orphan files(清理孤儿文件)。都经【快照与提交】的原子提交路径落地,消费【元数据树】,与前台读写共享同一并发模型。源码基准 **Iceberg(apache/iceberg main · commit 6ec1a01)**(`api/actions/`、`core/actions/`)。
+
+Iceberg 的不可变元数据 + MoR 删除带来一个代价:频繁小批写会堆积大量小 data file、小 manifest、delete file,时间旅行又让旧快照/文件无限增长。**表维护**就是把这些"熵"周期性清理掉的后台任务——compaction 合并碎片、expire 回收旧快照、orphan 清理无主文件。它不是可选项:MoR 表不做 compaction 会越读越慢,不做 expire 会存储无限膨胀。
+
+---
+
+## 一、Compaction:重写数据/manifest,物化删除
+
+![Iceberg compaction](Iceberg原理_维护_01compaction.svg)
+
+compaction 把碎片合并、把 MoR 删除物化进 data file:bin-pack 按 target size 把小文件装箱重写成大文件(顺带应用 delete file),并把大量小 manifest 合并成少数大 manifest、按分区聚簇。重写时保留原 `data_sequence_number`,故行级删除作用范围语义不乱。compaction = 一种特殊提交:产新快照,读者仍 pin 旧快照不受影响,同样有 OCC 冲突检测。
+
+---
+
+## 二、Expire snapshots + 清理孤儿文件
+
+![Iceberg expire 与 orphan](Iceberg原理_维护_02expire与orphan.svg)
+
+图注:两步回收,分工不同、都要跑。expire snapshots 按保留策略(最大快照年龄 / 最少保留个数)移除过期快照条目,再删仅被过期快照引用的 manifest/data file——这界定时间旅行的回溯窗口。remove orphan files 清"存储上存在、但不被任何元数据引用"的文件(失败写残留),对比存储列表与元数据引用集取差集,必须设最小年龄阈值(默认约 3 天)以免误删并发新写。典型流水:compaction → expire snapshots → remove orphan files,周期调度。
+
+---
+
+## 三、维护全景:三类熵 → 三种回收
+
+![Iceberg 维护全景](Iceberg原理_维护_03维护全景.svg)
+
+图注:不可变元数据 + MoR + 时间旅行的代价是三类"熵"堆积——小 data file(读时任务碎)、小 manifest + delete file(读时叠加变慢)、旧快照 + 孤儿文件。三者分别由 compaction、expire snapshots、remove orphan files 回收,都走 SnapshotProducer 原子提交 + OCC。关键不变量:维护只重整物理布局、不改查询结果(保留 data_sequence_number)。MoR 表不做 compaction 越读越慢,不做 expire 存储无限膨胀。
+
+---
+
+## 深化 · 维护执行组件
+
+| 组件 | 职责 |
+|---|---|
+| `SizeBasedFileRewritePlanner` / `BinPackRewriteFilePlanner` | 按 target size 装箱规划重写 |
+| `RewriteDataFilesCommitManager` | 分组提交重写,降低单次冲突面 |
+| `RewriteFileGroup` | 重写分组单元,缩小 OCC 冲突窗口 |
+| `BaseRewriteManifests` | 合并小 manifest、按分区聚簇实现 |
+| `cleanExpiredSnapshots` | expire 后删仅被过期快照引用的文件 |
+| `BaseDeleteOrphanFiles` | 存储 vs 元数据引用取差集清孤儿 |
+
+## 拓展 · 表维护关键结构一览
+
+| 结构 | 定义 | 职责 |
+|---|---|---|
+| RewriteDataFiles | `api/.../actions/RewriteDataFiles.java` | 合并小文件 / 物化删除(bin-pack、sort) |
+| RewriteManifests | `api/.../actions/RewriteManifests.java` | 合并 manifest、按分区聚簇 |
+| RemoveSnapshots | `core/.../RemoveSnapshots.java` | expire 过期快照 + 回收其独占文件 |
+| DeleteOrphanFiles | `api/.../actions/DeleteOrphanFiles.java` | 对比存储 vs 元数据引用,清孤儿 |
+| BinPackRewriteFilePlanner | `core/.../actions/BinPackRewriteFilePlanner.java` | 按 target size 装箱规划重写 |
+
+## 调优要点（关键开关）
+
+- **compaction 触发与粒度**:`target-file-size-bytes` 定合并后文件大小;`min-input-files` 定触发阈值;分区级并行 + `partial-progress` 分批提交降低单次冲突/失败代价。
+- **删除堆积就 compaction**:MoR 表 delete file 多则读慢;定期 compaction 把删除物化进 data file(近似转 CoW 读性能)。
+- **保留策略权衡**:`max-snapshot-age-ms` / `min-snapshots-to-keep` 平衡"能回溯多久"与"存储膨胀";下游还在读旧快照时别 expire 太狠。
+- **orphan 最小年龄**:保守设(默认约 3 天),避免误删并发写入中尚未提交引用的新文件。
+
+## 常见误区与工程要点
+
+- **误区:时间旅行零成本。** 读免费,但保留旧快照的存储不免费;需 expire 定期回收。
+- **误区:expire 了就干净了。** expire 只删被过期快照引用的文件;孤儿还在,需单独 remove orphan files。
+- **误区:compaction 会影响正在读的查询。** 不。它产新快照,读者仍 pin 旧快照;只是之后的读走新文件。
+- **误区:orphan 清理可以设 0 年龄立即删。** 危险——可能删掉并发写正在生成、还没被元数据引用的文件;必须留足最小年龄。
+- **归属提醒**:维护经【快照与提交】的原子提交 + OCC;消费【元数据树】判断文件引用关系;删除的物化涉及【行级删除】的 seq 语义;维护是后台执行时机(区别于前台 scan/commit)。
+
+## 深化 · 源码锚点（apache/iceberg · commit 6ec1a01）
+
+| 论断 | 锚点 |
+|---|---|
+| rewrite data files（bin-pack 合并小文件、物化删除）action 契约 | `api/src/main/java/org/apache/iceberg/actions/RewriteDataFiles.java:32` |
+| rewrite manifests（合并小 manifest、按分区聚簇）action 契约 | `api/src/main/java/org/apache/iceberg/actions/RewriteManifests.java:26` |
+| expire snapshots：按保留策略回收旧快照与不再引用的文件 | `core/src/main/java/org/apache/iceberg/RemoveSnapshots.java:61` |
+| expireOlderThan：设定过期时间线 | `core/src/main/java/org/apache/iceberg/RemoveSnapshots.java:125` |
+| expire 也走原子提交（commit 换 metadata 指针） | `core/src/main/java/org/apache/iceberg/RemoveSnapshots.java:360` |
+| remove orphan files：清理无主文件（对比 metadata 引用集） | `api/src/main/java/org/apache/iceberg/actions/DeleteOrphanFiles.java:34` |
+| compaction 产新快照仍走 SnapshotProducer 提交路径 | `core/src/main/java/org/apache/iceberg/SnapshotProducer.java:480` |
+| 同样有 OCC 冲突检测（validateAddedDataFiles） | `core/src/main/java/org/apache/iceberg/MergingSnapshotProducer.java:363` |
+| 重写保留 data_sequence_number，行级删除作用范围语义不乱 | `core/src/main/java/org/apache/iceberg/ManifestWriter.java:161`（add(file,dataSeq)）|
+| 快照引用的 manifest 由 BaseSnapshot 暴露（回收判活） | `core/src/main/java/org/apache/iceberg/BaseSnapshot.java:204` |
+| expire 判活要读 delete manifest | `core/src/main/java/org/apache/iceberg/BaseSnapshot.java:276` |
+| 新写 manifest 经 ManifestListWriter 汇总 | `core/src/main/java/org/apache/iceberg/ManifestListWriter.java:63` |
+
+## 一句话总纲
+
+**表维护是 Iceberg 后台侧的"熵回收":compaction(RewriteDataFiles bin-pack 合并小文件+物化 MoR 删除、RewriteManifests 合并 manifest,保留 data_seq 故删除语义不乱)恢复读性能;expire snapshots(RemoveSnapshots 按保留策略移除旧快照并删其独占文件)界定时间旅行窗口、回收存储;remove orphan files(对比存储与元数据引用、留足最小年龄)清掉失败写残留的无主文件——三者都走原子提交路径、对读者透明,是 MoR + 不可变元数据 + 时间旅行这套设计能长期健康运行的必需后台任务。**

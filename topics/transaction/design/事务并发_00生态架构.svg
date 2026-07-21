@@ -1,0 +1,99 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1140" height="680" viewBox="0 0 1140 680" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="aG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+    <marker id="aP" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#8a5cae"/></marker>
+    <marker id="aA" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#c99a3a"/></marker>
+    <marker id="aR" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#d1544a"/></marker>
+  </defs>
+  <rect width="1140" height="680" fill="#fbfbfd"/>
+
+  <text x="30" y="32" font-size="15" font-weight="700" fill="#1d1d1f">事务处理与并发控制 · 时间戳给事务/版本定序，锁与校验裁决写冲突：读走快照不阻塞，写靠仲裁点原子成败 → 并发隔离</text>
+  <text x="30" y="53" font-size="10.5" fill="#6e6e73">begin 取 start-ts → 读多版本快照 / 写缓冲本地 → commit 取 commit-ts + 冲突裁决 → 版本落库；隔离级别 = 允许哪些异常读的可见性规则</text>
+
+  <line x1="30" y1="82" x2="54" y2="82" stroke="#2f9e6e" stroke-width="2" marker-end="url(#aG)"/>
+  <text x="60" y="86" font-size="10" fill="#3a3a3c">读路径 · 快照可见性（不阻塞）</text>
+  <line x1="290" y1="82" x2="314" y2="82" stroke="#8a5cae" stroke-width="2" marker-end="url(#aP)"/>
+  <text x="320" y="86" font-size="10" fill="#3a3a3c">写路径 · 缓冲 → 提交</text>
+  <line x1="520" y1="82" x2="544" y2="82" stroke="#c99a3a" stroke-width="2" stroke-dasharray="5 3" marker-end="url(#aA)"/>
+  <text x="550" y="86" font-size="10" fill="#3a3a3c">时间戳定序（TS Oracle）</text>
+  <line x1="750" y1="82" x2="774" y2="82" stroke="#d1544a" stroke-width="2" stroke-dasharray="5 3" marker-end="url(#aR)"/>
+  <text x="780" y="86" font-size="10" fill="#3a3a3c">冲突裁决 · 锁 / 校验</text>
+  <text x="1110" y="86" font-size="10" fill="#a1a1a6" text-anchor="end">概念层机理</text>
+  <line x1="30" y1="98" x2="1110" y2="98" stroke="#e4e7ec" stroke-width="1"/>
+
+  <!-- 事务生命周期脊 -->
+  <rect x="28" y="120" width="1084" height="120" rx="14" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="46" y="145" font-size="12" font-weight="700" fill="#4a4a4f">事务生命周期 · 一条只增时间轴</text>
+  <rect x="46" y="158" width="200" height="66" rx="10" fill="#ffffff" stroke="#d9dde4" filter="url(#soft)"/>
+  <text x="146" y="185" font-size="11" font-weight="600" fill="#1d1d1f" text-anchor="middle">Begin</text>
+  <text x="146" y="205" font-size="9" fill="#6e6e73" text-anchor="middle">取 start-ts（快照点）</text>
+  <rect x="290" y="158" width="240" height="66" rx="10" fill="#f4eefb" stroke="#dcc9ef" filter="url(#soft)"/>
+  <text x="410" y="185" font-size="11" font-weight="600" fill="#6f3ea8" text-anchor="middle">读 / 写执行</text>
+  <text x="410" y="205" font-size="9" fill="#8a5cae" text-anchor="middle">读见快照 · 写入本地缓冲区</text>
+  <rect x="574" y="158" width="240" height="66" rx="10" fill="#fbf3e2" stroke="#ecd6a8" filter="url(#soft)"/>
+  <text x="694" y="185" font-size="11" font-weight="600" fill="#8a6417" text-anchor="middle">Commit 裁决</text>
+  <text x="694" y="205" font-size="9" fill="#7a5a1a" text-anchor="middle">取 commit-ts + 冲突检测</text>
+  <rect x="858" y="158" width="234" height="66" rx="10" fill="#eaf6f0" stroke="#bfe3d1" filter="url(#soft)"/>
+  <text x="975" y="185" font-size="11" font-weight="600" fill="#2f6b4e" text-anchor="middle">Apply / Abort</text>
+  <text x="975" y="205" font-size="9" fill="#2f6b4e" text-anchor="middle">写版本可见 或 整体回滚</text>
+  <line x1="246" y1="191" x2="288" y2="191" stroke="#8a5cae" stroke-width="2" marker-end="url(#aP)"/>
+  <line x1="530" y1="191" x2="572" y2="191" stroke="#8a5cae" stroke-width="2" marker-end="url(#aP)"/>
+  <line x1="814" y1="191" x2="856" y2="191" stroke="#2f9e6e" stroke-width="2" marker-end="url(#aG)"/>
+
+  <!-- 时间戳源 -->
+  <rect x="28" y="266" width="250" height="150" rx="13" fill="#fbf3e2" stroke="#ecd6a8" filter="url(#soft)"/>
+  <text x="153" y="292" font-size="12" font-weight="700" fill="#8a6417" text-anchor="middle">时间戳源 · TS Oracle</text>
+  <text x="44" y="318" font-size="9.5" fill="#7a5a1a">单调递增，全局唯一定序</text>
+  <text x="44" y="340" font-size="9.5" fill="#7a5a1a">start-ts：定义读快照边界</text>
+  <text x="44" y="362" font-size="9.5" fill="#7a5a1a">commit-ts：定义写生效次序</text>
+  <text x="44" y="384" font-size="9.5" fill="#7a5a1a">可用逻辑时钟 / 混合时钟</text>
+  <text x="44" y="404" font-size="8.5" fill="#a98a3a">「谁先谁后」全由时间戳裁定</text>
+
+  <!-- MVCC 版本库 -->
+  <rect x="300" y="266" width="300" height="150" rx="13" fill="#eaf6f0" stroke="#bfe3d1" filter="url(#soft)"/>
+  <text x="450" y="292" font-size="12" font-weight="700" fill="#2f6b4e" text-anchor="middle">MVCC 多版本存储</text>
+  <text x="316" y="316" font-size="9.5" fill="#2f6b4e">每次写生成新版本，旧版本保留</text>
+  <text x="316" y="336" font-size="9.5" fill="#2f6b4e">版本带 ⟨写事务, commit-ts⟩</text>
+  <g font-size="8.5" text-anchor="middle" fill="#2f6b4e">
+    <rect x="316" y="348" width="80" height="30" rx="5" fill="#d7efe2" stroke="#9ed3b8"/><text x="356" y="367">v@ts10</text>
+    <rect x="404" y="348" width="80" height="30" rx="5" fill="#d7efe2" stroke="#9ed3b8"/><text x="444" y="367">v@ts25</text>
+    <rect x="492" y="348" width="92" height="30" rx="5" fill="#d7efe2" stroke="#9ed3b8"/><text x="538" y="367">v@ts40</text>
+  </g>
+  <text x="316" y="398" font-size="8.5" fill="#5a9078">读取时按快照挑「可见的最新版本」（图解点 ①）</text>
+
+  <!-- 锁 / 冲突裁决 -->
+  <rect x="622" y="266" width="490" height="150" rx="13" fill="#fbeceb" stroke="#e8b7b1" filter="url(#soft)"/>
+  <text x="867" y="292" font-size="12" font-weight="700" fill="#a83c30" text-anchor="middle">冲突裁决 · 悲观锁 vs 乐观校验</text>
+  <rect x="638" y="304" width="222" height="98" rx="10" fill="#fff" stroke="#e8b7b1"/>
+  <text x="749" y="326" font-size="10.5" font-weight="600" fill="#a83c30" text-anchor="middle">悲观：加锁 / 两阶段提交</text>
+  <text x="652" y="348" font-size="9" fill="#8a4038">先占锁再改，Primary 锁做原子仲裁点</text>
+  <text x="652" y="368" font-size="9" fill="#8a4038">冲突时等待 / 回滚，写多场景稳</text>
+  <text x="652" y="388" font-size="8.5" fill="#b06a60">见 图解点 ②（Percolator 2PC）</text>
+  <rect x="874" y="304" width="222" height="98" rx="10" fill="#fff" stroke="#e8b7b1"/>
+  <text x="985" y="326" font-size="10.5" font-weight="600" fill="#a83c30" text-anchor="middle">乐观：提交期校验</text>
+  <text x="888" y="348" font-size="9" fill="#8a4038">先改后验，commit 时查读写集</text>
+  <text x="888" y="368" font-size="9" fill="#8a4038">冲突则 abort 重试，读多写少快</text>
+  <text x="888" y="388" font-size="8.5" fill="#b06a60">见 图解点 ③（OCC 验证）</text>
+
+  <!-- 隔离级别 -->
+  <rect x="28" y="440" width="1084" height="96" rx="13" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="46" y="466" font-size="12" font-weight="700" fill="#1d1d1f">隔离级别 · 「允许哪些异常」的可见性刻度（越强并发度越低）</text>
+  <g font-size="9.5">
+    <rect x="46" y="480" width="248" height="44" rx="9" fill="#f6f7f9" stroke="#e4e7ec"/><text x="60" y="500" font-weight="600" fill="#4a4a4f">Read Committed</text><text x="60" y="516" fill="#8a8a8f">只读已提交，仍可不可重复读</text>
+    <rect x="306" y="480" width="248" height="44" rx="9" fill="#f2f8f5" stroke="#c9e6d7"/><text x="320" y="500" font-weight="600" fill="#2f6b4e">Snapshot Isolation</text><text x="320" y="516" fill="#5a9078">整事务见同一快照，防不可重复读</text>
+    <rect x="566" y="480" width="258" height="44" rx="9" fill="#f4eefb" stroke="#dcc9ef"/><text x="580" y="500" font-weight="600" fill="#6f3ea8">Serializable</text><text x="580" y="516" fill="#8a5cae">等价某串行序，杜绝写偏斜等异常</text>
+    <rect x="836" y="480" width="256" height="44" rx="9" fill="#fbf3e2" stroke="#ecd6a8"/><text x="850" y="500" font-weight="600" fill="#8a6417">代价权衡</text><text x="850" y="516" fill="#a98a3a">隔离越强 → 冲突/等待越多 → 吞吐降</text>
+  </g>
+
+  <!-- 连线：TS Oracle 供给 -->
+  <line x1="153" y1="266" x2="153" y2="226" stroke="#c99a3a" stroke-width="1.8" stroke-dasharray="5 3" marker-end="url(#aA)"/>
+  <text x="158" y="252" font-size="8.5" fill="#8a6417">发 ts</text>
+  <!-- 读→MVCC -->
+  <line x1="410" y1="224" x2="440" y2="264" stroke="#2f9e6e" stroke-width="1.8" marker-end="url(#aG)"/>
+  <!-- commit→冲突裁决 -->
+  <line x1="694" y1="224" x2="800" y2="264" stroke="#d1544a" stroke-width="1.8" stroke-dasharray="5 3" marker-end="url(#aR)"/>
+  <!-- 裁决→MVCC 落版本 -->
+  <line x1="620" y1="360" x2="602" y2="360" stroke="#8a5cae" stroke-width="1.8" marker-end="url(#aP)"/>
+  <text x="556" y="440" font-size="8.5" fill="#8a97ab">裁决通过 → 写版本落 MVCC；失败 → 丢弃缓冲、整体 abort</text>
+</svg>

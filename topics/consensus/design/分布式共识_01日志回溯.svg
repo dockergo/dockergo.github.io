@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="620" viewBox="0 0 1120 620" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="aB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#4a7fd0"/></marker>
+    <marker id="aR" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#d1544a"/></marker>
+    <marker id="aG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+  </defs>
+  <rect width="1120" height="620" fill="#fbfbfd"/>
+
+  <text x="30" y="32" font-size="15" font-weight="700" fill="#1d1d1f">图解点 ① 日志连续性回溯匹配 · prevLogIndex / prevLogTerm 不匹配则 Leader 回退 nextIndex 重试，直到找到最后一致点再顺序覆盖</text>
+  <text x="30" y="53" font-size="10.5" fill="#6e6e73">日志匹配性质：若两副本某 index 的 ⟨term,idx⟩ 相同，则其之前所有条目都相同 —— 故只需找到「最后一致点」，其后一律以 Leader 为准覆盖</text>
+
+  <!-- 图例 -->
+  <line x1="30" y1="80" x2="54" y2="80" stroke="#4a7fd0" stroke-width="2" marker-end="url(#aB)"/>
+  <text x="60" y="84" font-size="10" fill="#3a3a3c">AppendEntries 携带 prevLog⟨idx,term⟩</text>
+  <line x1="330" y1="80" x2="354" y2="80" stroke="#d1544a" stroke-width="2" stroke-dasharray="5 3" marker-end="url(#aR)"/>
+  <text x="360" y="84" font-size="10" fill="#3a3a3c">拒绝 → nextIndex 回退重试</text>
+  <line x1="600" y1="80" x2="624" y2="80" stroke="#2f9e6e" stroke-width="2" marker-end="url(#aG)"/>
+  <text x="630" y="84" font-size="10" fill="#3a3a3c">匹配 → 顺序覆盖对齐</text>
+
+  <!-- Leader 日志 -->
+  <text x="40" y="128" font-size="11" font-weight="700" fill="#20375e">Leader 日志（真源，term 标于格内）</text>
+  <g font-size="11" text-anchor="middle">
+    <rect x="40" y="138" width="70" height="42" rx="6" fill="#eaf1fb" stroke="#c6d9f2"/><text x="75" y="158" fill="#20375e">idx1</text><text x="75" y="173" font-size="9" fill="#5a7099">t1</text>
+    <rect x="112" y="138" width="70" height="42" rx="6" fill="#eaf1fb" stroke="#c6d9f2"/><text x="147" y="158" fill="#20375e">idx2</text><text x="147" y="173" font-size="9" fill="#5a7099">t1</text>
+    <rect x="184" y="138" width="70" height="42" rx="6" fill="#eaf1fb" stroke="#c6d9f2"/><text x="219" y="158" fill="#20375e">idx3</text><text x="219" y="173" font-size="9" fill="#5a7099">t2</text>
+    <rect x="256" y="138" width="70" height="42" rx="6" fill="#dbe8fa" stroke="#9dbdea" stroke-width="1.5"/><text x="291" y="158" fill="#20375e">idx4</text><text x="291" y="173" font-size="9" fill="#5a7099">t3</text>
+    <rect x="328" y="138" width="70" height="42" rx="6" fill="#dbe8fa" stroke="#9dbdea" stroke-width="1.5"/><text x="363" y="158" fill="#20375e">idx5</text><text x="363" y="173" font-size="9" fill="#5a7099">t3</text>
+    <rect x="400" y="138" width="70" height="42" rx="6" fill="#dbe8fa" stroke="#9dbdea" stroke-width="1.5"/><text x="435" y="158" fill="#20375e">idx6</text><text x="435" y="173" font-size="9" fill="#5a7099">t3</text>
+  </g>
+  <text x="291" y="204" font-size="9" fill="#2f6b4e" text-anchor="middle">↑ 最后一致点 idx3(t2)：其前一致，其后需对齐</text>
+
+  <!-- Follower 日志（分叉） -->
+  <text x="40" y="252" font-size="11" font-weight="700" fill="#8a4038">Follower 日志（尾部分叉 / 缺失）</text>
+  <g font-size="11" text-anchor="middle">
+    <rect x="40" y="262" width="70" height="42" rx="6" fill="#eaf1fb" stroke="#c6d9f2"/><text x="75" y="282" fill="#20375e">idx1</text><text x="75" y="297" font-size="9" fill="#5a7099">t1</text>
+    <rect x="112" y="262" width="70" height="42" rx="6" fill="#eaf1fb" stroke="#c6d9f2"/><text x="147" y="282" fill="#20375e">idx2</text><text x="147" y="297" font-size="9" fill="#5a7099">t1</text>
+    <rect x="184" y="262" width="70" height="42" rx="6" fill="#eaf1fb" stroke="#c6d9f2"/><text x="219" y="282" fill="#20375e">idx3</text><text x="219" y="297" font-size="9" fill="#5a7099">t2</text>
+    <rect x="256" y="262" width="70" height="42" rx="6" fill="#fbe6e3" stroke="#e8a79f"/><text x="291" y="282" fill="#8a4038">idx4</text><text x="291" y="297" font-size="9" fill="#b06a60">t2✗</text>
+    <rect x="328" y="262" width="70" height="42" rx="6" fill="#f4f4f6" stroke="#d7d7dd" stroke-dasharray="3 2"/><text x="363" y="284" font-size="9" fill="#a1a1a6">缺失</text>
+  </g>
+
+  <!-- 步骤盒：回退过程 -->
+  <rect x="540" y="120" width="552" height="196" rx="14" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="562" y="146" font-size="12" font-weight="700" fill="#1d1d1f">回退—重试循环（Leader 视角）</text>
+  <text x="562" y="172" font-size="10" fill="#8a4038">① 发 prevLog=⟨idx5,t3⟩ → Follower 无此项 <tspan font-weight="700" fill="#d1544a">拒绝</tspan></text>
+  <text x="562" y="196" font-size="10" fill="#8a4038">② nextIndex--，发 prevLog=⟨idx4,t3⟩ → Follower 是 t2 <tspan font-weight="700" fill="#d1544a">term 不符，拒绝</tspan></text>
+  <text x="562" y="220" font-size="10" fill="#2f6b4e">③ 继续回退，发 prevLog=⟨idx3,t2⟩ → <tspan font-weight="700" fill="#2f9e6e">匹配！</tspan></text>
+  <text x="562" y="244" font-size="10" fill="#2f6b4e">④ 从 idx4 起顺序覆盖：删掉冲突的 idx4(t2)，追加 Leader 的 idx4..idx6(t3)</text>
+  <text x="562" y="268" font-size="10" fill="#4a4a4f">⑤ 对齐完成，Follower 日志与 Leader 已提交前缀逐字节一致</text>
+  <text x="562" y="298" font-size="9" fill="#8a97ab">优化：拒绝时可回带冲突 term 的首个 index，一次跳过整段，免逐格回退</text>
+
+  <!-- 时间线：nextIndex 回退 -->
+  <text x="40" y="366" font-size="11" font-weight="700" fill="#1d1d1f">nextIndex 回退轨迹（横轴 = 尝试次数）</text>
+  <line x1="60" y1="500" x2="1080" y2="500" stroke="#d7d7dd" stroke-width="1.2"/>
+  <line x1="60" y1="390" x2="60" y2="500" stroke="#d7d7dd" stroke-width="1.2"/>
+  <!-- 回退点 -->
+  <circle cx="180" cy="404" r="7" fill="#d1544a"/><text x="180" y="392" font-size="9" fill="#8a4038" text-anchor="middle">try1 idx6 ✗</text>
+  <circle cx="360" cy="428" r="7" fill="#d1544a"/><text x="360" y="416" font-size="9" fill="#8a4038" text-anchor="middle">try2 idx5 ✗</text>
+  <circle cx="540" cy="452" r="7" fill="#d1544a"/><text x="540" y="440" font-size="9" fill="#8a4038" text-anchor="middle">try3 idx4 ✗</text>
+  <circle cx="720" cy="476" r="8" fill="#2f9e6e"/><text x="720" y="464" font-size="9" fill="#2f6b4e" text-anchor="middle">try4 idx3 ✓ 匹配</text>
+  <path d="M180 404 L360 428 L540 452 L720 476" fill="none" stroke="#d1544a" stroke-width="2" stroke-dasharray="5 3" marker-end="url(#aR)"/>
+  <!-- 对齐后前进 -->
+  <circle cx="900" cy="452" r="7" fill="#4a7fd0"/><text x="900" y="440" font-size="9" fill="#20375e" text-anchor="middle">覆盖 idx4</text>
+  <circle cx="1010" cy="428" r="7" fill="#4a7fd0"/><text x="1010" y="416" font-size="9" fill="#20375e" text-anchor="middle">追至 idx6</text>
+  <path d="M720 476 L900 452 L1010 428" fill="none" stroke="#2f9e6e" stroke-width="2" marker-end="url(#aG)"/>
+  <text x="1076" y="516" font-size="9" fill="#a1a1a6" text-anchor="end">找到一致点后单向前进，直到与 Leader 对齐</text>
+
+  <!-- 底部性质框 -->
+  <rect x="40" y="540" width="1040" height="56" rx="12" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="58" y="564" font-size="10.5" font-weight="700" fill="#2f6b4e">不变式</text>
+  <text x="118" y="564" font-size="10" fill="#4a4a4f">Follower 只接受 prevLog 匹配的追加；已提交条目永不被覆盖（覆盖只发生在未提交的分叉尾部）。</text>
+  <text x="118" y="583" font-size="10" fill="#4a4a4f">回退保证收敛：最坏逐格回退到公共前缀，一致点存在（至少空日志），故一定能对齐。</text>
+</svg>

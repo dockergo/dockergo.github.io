@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="430" viewBox="0 0 1020 430"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="aB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#4a7fd0"/></marker>
+  </defs>
+  <rect width="1020" height="430" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14.5" font-weight="700" fill="#1d1d1f">WAL 保留窗口与堆积 · pg_wal 何时能回收（access/transam · replication/）</text>
+  <text x="30" y="49" font-size="10.5" fill="#6e6e73">WAL 段按 LSN 顺序追加；只有所有"消费者"都用过的旧段才可回收，任一消费者卡住则保留下界不前进、pg_wal 增长</text>
+
+  <!-- legend -->
+  <rect x="30" y="64" width="14" height="10" rx="2" fill="#eafaf1" stroke="#bce6cd"/><text x="50" y="73" font-size="10" fill="#3a3a3c">可回收/复用段</text>
+  <rect x="180" y="64" width="14" height="10" rx="2" fill="#fff7e6" stroke="#f0dcae"/><text x="200" y="73" font-size="10" fill="#3a3a3c">必须保留段</text>
+  <line x1="320" y1="69" x2="344" y2="69" stroke="#4a7fd0" stroke-width="2" marker-end="url(#aB)"/><text x="350" y="73" font-size="10" fill="#3a3a3c">保留下界（取最靠后消费者）</text>
+  <text x="1000" y="73" font-size="10" fill="#a1a1a6" text-anchor="end">LSN 增大 →（每段默认 16MB）</text>
+  <line x1="30" y1="84" x2="1000" y2="84" stroke="#e4e7ec" stroke-width="1"/>
+
+  <!-- WAL segment strip -->
+  <text x="30" y="112" font-size="11.5" font-weight="600" fill="#1d1d1f">pg_wal/ 段序列（旧 ← → 新）</text>
+  <g>
+    <rect x="30"  y="122" width="86" height="46" rx="6" fill="#eafaf1" stroke="#bce6cd"/><text x="73" y="149" font-size="9" fill="#0f5132" text-anchor="middle">seg 01</text>
+    <rect x="120" y="122" width="86" height="46" rx="6" fill="#eafaf1" stroke="#bce6cd"/><text x="163" y="149" font-size="9" fill="#0f5132" text-anchor="middle">seg 02</text>
+    <rect x="210" y="122" width="86" height="46" rx="6" fill="#fff7e6" stroke="#f0dcae"/><text x="253" y="149" font-size="9" fill="#7a4d00" text-anchor="middle">seg 03</text>
+    <rect x="300" y="122" width="86" height="46" rx="6" fill="#fff7e6" stroke="#f0dcae"/><text x="343" y="149" font-size="9" fill="#7a4d00" text-anchor="middle">seg 04</text>
+    <rect x="390" y="122" width="86" height="46" rx="6" fill="#fff7e6" stroke="#f0dcae"/><text x="433" y="149" font-size="9" fill="#7a4d00" text-anchor="middle">seg 05</text>
+    <rect x="480" y="122" width="86" height="46" rx="6" fill="#fff7e6" stroke="#f0dcae"/><text x="523" y="149" font-size="9" fill="#7a4d00" text-anchor="middle">seg 06</text>
+    <rect x="570" y="122" width="86" height="46" rx="6" fill="#fff7e6" stroke="#f0dcae"/><text x="613" y="149" font-size="9" fill="#7a4d00" text-anchor="middle">seg 07</text>
+    <rect x="660" y="122" width="86" height="46" rx="6" fill="#fff7e6" stroke="#f0dcae"/><text x="703" y="149" font-size="9" fill="#7a4d00" text-anchor="middle">seg 08</text>
+    <rect x="750" y="122" width="86" height="46" rx="6" fill="#fff7e6" stroke="#f0dcae"/><text x="793" y="149" font-size="9" fill="#7a4d00" text-anchor="middle">seg 09</text>
+    <rect x="840" y="122" width="130" height="46" rx="6" fill="#eef3fb" stroke="#bcd0ec"/><text x="905" y="143" font-size="9" font-weight="600" fill="#1b2a4a" text-anchor="middle">当前插入位</text><text x="905" y="159" font-size="8" fill="#5b7db1" text-anchor="middle">GetInsertRecPtr</text>
+  </g>
+
+  <!-- 保留下界 marker between seg02 and seg03 -->
+  <line x1="208" y1="112" x2="208" y2="176" stroke="#4a7fd0" stroke-width="2"/>
+  <text x="208" y="188" font-size="9" font-weight="700" fill="#1b2a4a" text-anchor="middle">保留下界</text>
+  <text x="118" y="204" font-size="9" fill="#3f8f66" text-anchor="middle">← 此左侧已被所有人用过 → 回收/复用</text>
+  <text x="600" y="204" font-size="9" fill="#9a7328" text-anchor="middle">此右侧仍被某消费者需要 → 必须留</text>
+
+  <!-- consumers -->
+  <text x="30" y="236" font-size="11.5" font-weight="600" fill="#1d1d1f">四类"消费者"各有一个进度点；保留下界 = 其中最靠后（最老）的那个</text>
+  <rect x="30" y="246" width="232" height="72" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="46" y="267" font-size="10" font-weight="600" fill="#1b2a4a">① redo 点（最近 checkpoint）</text>
+  <text x="46" y="285" font-size="8.5" fill="#5b7db1">此前 WAL 崩溃恢复不再需要</text>
+  <text x="46" y="301" font-size="8.5" fill="#5b7db1">CreateCheckPoint 推进它</text>
+  <text x="46" y="314" font-size="8" fill="#9aa">→ 例：已到 seg 03</text>
+
+  <rect x="272" y="246" width="232" height="72" rx="11" fill="#fff7e6" stroke="#f0dcae" filter="url(#soft)"/>
+  <text x="288" y="267" font-size="10" font-weight="600" fill="#7a4d00">② 复制槽 restart_lsn</text>
+  <text x="288" y="285" font-size="8.5" fill="#9a7328">备库/订阅还没消费到的位置</text>
+  <text x="288" y="301" font-size="8.5" fill="#9a7328">槽会"钉住"WAL 不让回收</text>
+  <text x="288" y="314" font-size="8" fill="#c0392b">→ 掉线僵尸槽最危险</text>
+
+  <rect x="514" y="246" width="222" height="72" rx="11" fill="#fff7e6" stroke="#f0dcae" filter="url(#soft)"/>
+  <text x="530" y="267" font-size="10" font-weight="600" fill="#7a4d00">③ 归档点（archive_command）</text>
+  <text x="530" y="285" font-size="8.5" fill="#9a7328">还没成功归档的段不能删</text>
+  <text x="530" y="301" font-size="8.5" fill="#9a7328">供 PITR 时间点恢复</text>
+  <text x="530" y="314" font-size="8" fill="#c0392b">→ 归档失败则堆积</text>
+
+  <rect x="746" y="246" width="224" height="72" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="762" y="267" font-size="10" font-weight="600" fill="#1b2a4a">④ 最老长事务需要点</text>
+  <text x="762" y="285" font-size="8.5" fill="#5b7db1">未结束事务钉住其起点 WAL</text>
+  <text x="762" y="301" font-size="8.5" fill="#5b7db1">长事务同时压住死元组回收</text>
+  <text x="762" y="314" font-size="8" fill="#9aa">→ 缩短事务缓解</text>
+
+  <!-- failure band -->
+  <rect x="30" y="334" width="940" height="80" rx="11" fill="#fbeaea" stroke="#f0cccc"/>
+  <text x="48" y="356" font-size="11" font-weight="700" fill="#7d1f1f">堆积失控（pg_wal 撑爆磁盘 → 停摆）</text>
+  <text x="48" y="376" font-size="9.5" fill="#a33">成因：② 复制槽对应备库掉线不消费 / ③ archive_command 报错 / ④ 长事务钉住 —— 任一都让保留下界停在原地，新段不断追加而旧段删不掉。</text>
+  <text x="48" y="394" font-size="9.5" fill="#a33">应对：监控 pg_wal 大小与复制延迟、及时 pg_drop_replication_slot 清僵尸槽；max_slot_wal_keep_size 给槽设保留上限，超限主动断槽保盘。</text>
+  <text x="48" y="410" font-size="9" fill="#b06a6a">对照：max_wal_size 只影响 checkpoint 频率与 redo 点位置，不是保留上限；真正撑爆盘的是被消费者钉住的段。</text>
+</svg>

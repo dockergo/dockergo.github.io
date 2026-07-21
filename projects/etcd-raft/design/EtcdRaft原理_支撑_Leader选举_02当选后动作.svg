@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="520" viewBox="0 0 1020 520" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="aB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#0a84ff"/></marker>
+    <marker id="aG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#1f9e5f"/></marker>
+  </defs>
+  <rect width="1020" height="520" fill="#fbfbfd"/>
+
+  <text x="30" y="32" font-size="15" font-weight="700" fill="#1d1d1f">当选即 becomeLeader · 一组原子动作 + 立即追加空条目确立本任期 commit 水位</text>
+  <text x="30" y="52" font-size="10.5" fill="#6e6e73">stepCandidate 里拿到多数票后调 becomeLeader；随后切心跳时钟维持领导权</text>
+
+  <!-- 图例 -->
+  <line x1="30" y1="74" x2="54" y2="74" stroke="#0a84ff" stroke-width="2" marker-end="url(#aB)"/><text x="60" y="78" font-size="10" fill="#5b6470">控制 / 选举</text>
+  <line x1="160" y1="74" x2="184" y2="74" stroke="#1f9e5f" stroke-width="2.2" marker-end="url(#aG)"/><text x="190" y="78" font-size="10" fill="#5b6470">日志 / 提交</text>
+
+  <!-- 触发 -->
+  <rect x="30" y="98" width="180" height="60" rx="12" fill="#e9f0fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="120" y="123" font-size="12" font-weight="700" fill="#274a78" text-anchor="middle">赢得多数票</text>
+  <text x="120" y="142" font-size="9.5" fill="#8a8a90" text-anchor="middle">TallyVotes 过半 → becomeLeader</text>
+  <line x1="210" y1="128" x2="248" y2="128" stroke="#0a84ff" stroke-width="2" marker-end="url(#aB)"/>
+
+  <!-- 动作序列盒 -->
+  <rect x="250" y="90" width="440" height="278" rx="14" fill="#eef2fb" stroke="#c8d6ee" filter="url(#soft)"/>
+  <text x="270" y="114" font-size="12.5" font-weight="700" fill="#1b2a4a">becomeLeader · 原子动作序列</text>
+  <g font-size="10.5">
+    <rect x="270" y="126" width="400" height="34" rx="8" fill="#fff" stroke="#c6d2ea"/><text x="284" y="147" fill="#274a78"><tspan font-weight="700">① step=stepLeader · tick=tickHeartbeat</tspan> 换处理器与时钟</text>
+    <rect x="270" y="164" width="400" height="34" rx="8" fill="#fff" stroke="#c6d2ea"/><text x="284" y="185" fill="#274a78"><tspan font-weight="700">② reset(term)</tspan> 清 votes / inflights / 计时</text>
+    <rect x="270" y="202" width="400" height="34" rx="8" fill="#fff" stroke="#c6d2ea"/><text x="284" y="223" fill="#274a78"><tspan font-weight="700">③ lead=self · state=Leader</tspan> 确立身份</text>
+    <rect x="270" y="240" width="400" height="34" rx="8" fill="#fff" stroke="#c6d2ea"/><text x="284" y="261" fill="#274a78"><tspan font-weight="700">④ progress[self]=Replicate</tspan> · RecentActive=true</text>
+    <rect x="270" y="278" width="400" height="34" rx="8" fill="#fff" stroke="#c6d2ea"/><text x="284" y="299" fill="#274a78"><tspan font-weight="700">⑤ pendingConfIndex=lastIndex</tspan> 保守设，串行化变更</text>
+    <rect x="270" y="316" width="400" height="38" rx="8" fill="#eef6f0" stroke="#b9e0c8"/><text x="284" y="333" fill="#1f6b47"><tspan font-weight="700">⑥ appendEntry(空 no-op 条目)</tspan></text><text x="284" y="348" font-size="9.5" fill="#2f7a54">盖本任期 Term/Index，进 unstable，广播</text>
+  </g>
+  <line x1="470" y1="368" x2="470" y2="404" stroke="#1f9e5f" stroke-width="2.2" marker-end="url(#aG)"/>
+
+  <!-- 为什么空条目 -->
+  <rect x="712" y="90" width="278" height="278" rx="14" fill="#eef6f0" stroke="#b9e0c8" filter="url(#soft)"/>
+  <text x="730" y="114" font-size="12.5" font-weight="700" fill="#1f6b47">为什么当选即追加空条目</text>
+  <text x="730" y="138" font-size="10.5" fill="#2f7a54">commit 约束：只提交</text>
+  <text x="730" y="155" font-size="10.5" fill="#2f7a54"><tspan font-weight="700">当前任期</tspan>的条目（Raft 论文）</text>
+  <text x="730" y="180" font-size="10.5" fill="#2f7a54">新 leader 若不写新条目，就</text>
+  <text x="730" y="197" font-size="10.5" fill="#2f7a54">没有本任期条目可被提交 →</text>
+  <text x="730" y="214" font-size="10.5" fill="#2f7a54">旧任期已复制条目也提交不了</text>
+  <text x="730" y="240" font-size="10.5" fill="#2f7a54">追加一条本任期空条目：一旦</text>
+  <text x="730" y="257" font-size="10.5" fill="#2f7a54">它被多数派复制即可 commit，</text>
+  <text x="730" y="274" font-size="10.5" fill="#2f7a54"><tspan font-weight="700">顺带提交</tspan>其前所有旧任期条目</text>
+  <text x="730" y="300" font-size="10.5" fill="#2f7a54">→ 尽快确立本任期 commit 水位</text>
+  <rect x="730" y="316" width="242" height="38" rx="8" fill="#fff" stroke="#c9e0d2"/>
+  <text x="742" y="333" font-size="9.5" fill="#1f6b47">payloadSize=0，不计入未提交配额</text>
+  <text x="742" y="348" font-size="9.5" fill="#8a8a90">对复制吞吐几乎零开销</text>
+
+  <!-- 底部 心跳维持 -->
+  <rect x="30" y="404" width="960" height="98" rx="12" fill="#e9f0fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="50" y="428" font-size="12" font-weight="700" fill="#274a78">此后 · tickHeartbeat 维持领导权</text>
+  <g font-size="10.5" fill="#3d5a86">
+    <rect x="50" y="440" width="290" height="50" rx="9" fill="#fff" stroke="#c6d2ea"/><text x="64" y="461">每 HeartbeatTick 自发 MsgBeat →</text><text x="64" y="478">bcastHeartbeat 向各 follower 发心跳</text>
+    <rect x="356" y="440" width="290" height="50" rx="9" fill="#fff" stroke="#c6d2ea"/><text x="370" y="461">心跳只推进 follower 的 commit，</text><text x="370" y="478">不携带日志条目（轻量保活）</text>
+    <rect x="662" y="440" width="308" height="50" rx="9" fill="#fff" stroke="#c6d2ea"/><text x="676" y="461">CheckQuorum：leader 周期自检仍有</text><text x="676" y="478">多数派活性，失去则主动退位为 follower</text>
+  </g>
+</svg>

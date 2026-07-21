@@ -1,0 +1,138 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="660" viewBox="0 0 1080 660" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="aHot" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+    <marker id="aState" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#c99a3a"/></marker>
+    <marker id="aCtl" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#5b7db1"/></marker>
+    <marker id="aFail" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#d38236"/></marker>
+    <marker id="aX" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#8a5cae"/></marker>
+  </defs>
+  <rect width="1080" height="660" fill="#fbfbfd"/>
+
+  <!-- ===== 标题带 · 判型 ===== -->
+  <text x="30" y="26" font-size="14" font-weight="600" fill="#1d1d1f">Kubernetes 总架构 · 声明式容器编排系统：期望态 vs 实际态的持续 reconcile 控制循环，etcd 为唯一真源、apiserver 为唯一枢纽</text>
+  <text x="30" y="44" font-size="10.5" fill="#6e6e73">分层脊：客户端声明 → 控制面（API Server / etcd / 控制器 / 调度器）→ 节点数据面（kubelet/CRI/kube-proxy）　组件间零直接 RPC，全经 API Server 读写 + watch　源码基准 v1.37（dev, master）</text>
+
+  <!-- ===== 设计张力铭牌带（显式）===== -->
+  <rect x="24" y="52" width="1032" height="46" rx="10" fill="#fbf2ea" stroke="#e6cdae"/>
+  <text x="40" y="71" font-size="11" font-weight="700" fill="#b0651f">设计张力</text>
+  <text x="104" y="71" font-size="10" fill="#5a4a3a">期望态<tspan fill="#8a6d3b">（spec，用户只声明 want）</tspan> ── 控制器持续调谐 actual→desired ── 实际态<tspan fill="#8a6d3b">（status）</tspan>：系统只保证<tspan font-weight="700" fill="#b0651f"> 最终收敛</tspan>，非实时强一致</text>
+  <text x="104" y="88" font-size="9.5" fill="#5a4a3a">中心化真源·声明式<tspan fill="#8a6d3b">（全量 state 存 etcd、唯一经 apiserver 读写）</tspan><tspan font-weight="700" fill="#c0392b"> ⟷ vs ⟷ </tspan>组件解耦·异步收敛<tspan fill="#8a6d3b">（controller/scheduler/kubelet 各自 watch-reconcile，靠 resync + 乐观并发 resourceVersion 收敛，有延迟与冲突重试）</tspan></text>
+
+  <!-- ===== 图例：五型语义路径 ===== -->
+  <line x1="40" y1="112" x2="62" y2="112" stroke="#2f9e6e" stroke-width="1.8" marker-end="url(#aHot)"/>
+  <text x="68" y="116" font-size="10" fill="#3a3a3c">Hot · API 请求同步</text>
+  <line x1="192" y1="112" x2="214" y2="112" stroke="#c99a3a" stroke-width="1.8" marker-end="url(#aState)"/>
+  <text x="220" y="116" font-size="10" fill="#3a3a3c">State · etcd 真源 + informer 缓存</text>
+  <line x1="426" y1="112" x2="448" y2="112" stroke="#5b7db1" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#aCtl)"/>
+  <text x="454" y="116" font-size="10" fill="#3a3a3c">Control · reconcile 调谐 + 调度</text>
+  <line x1="662" y1="112" x2="684" y2="112" stroke="#d38236" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#aFail)"/>
+  <text x="690" y="116" font-size="10" fill="#3a3a3c">失败 · workqueue 退避重试</text>
+  <line x1="854" y1="112" x2="876" y2="112" stroke="#8a5cae" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#aX)"/>
+  <text x="882" y="116" font-size="10" fill="#3a3a3c">横切 · admission + RBAC</text>
+  <text x="1056" y="116" font-size="10" fill="#a1a1a6" text-anchor="end">框 = 主线可下钻</text>
+
+  <!-- ===== powers 立身带 ===== -->
+  <rect x="24" y="126" width="1032" height="26" rx="8" fill="#f6f6f8" stroke="#e2e2e7" data-tid="Kubernetes原理_全景主线框架" data-lab="全景主线框架"/>
+  <text x="40" y="143" font-size="10" fill="#4a4a4f">powers：容器编排事实标准 —— 用户只写期望态，控制器持续把实际态拉向期望态；扩展全走 CRD + 自定义控制器（复用同一 reconcile 骨架）</text>
+
+  <!-- ===== ① 接入层：声明式 API ===== -->
+  <rect x="24" y="158" width="1032" height="48" rx="14" fill="#f4eefb" stroke="#d9c9ef" filter="url(#soft)" data-tid="Kubernetes原理_接口_声明式API与期望态" data-lab="声明式API与期望态"/>
+  <text x="40" y="178" font-size="12" font-weight="600" fill="#3c1361">① 客户端接触面 · kubectl / client-go 声明式提交（只写 spec 期望态、不写执行步骤）</text>
+  <text x="40" y="196" font-size="9" fill="#8a5cae">resourceVersion 乐观并发 · apply 幂等 · 只描述结果</text>
+
+  <!-- ===== ② 控制面 ===== -->
+  <rect x="24" y="214" width="1032" height="270" rx="14" fill="#f6f8fc" stroke="#cfe0f2"/>
+  <text x="40" y="232" font-size="12" font-weight="600" fill="#5b7db1">② 控制面 · 只读写对象、不接触真实容器（组件间零直接调用）</text>
+
+  <!-- API Server hub -->
+  <rect x="40" y="242" width="600" height="110" rx="11" fill="#e9f0fb" stroke="#bcd0ec" filter="url(#soft)" data-tid="Kubernetes原理_支撑_APIServer与etcd" data-lab="API Server"/>
+  <text x="56" y="261" font-size="11.5" font-weight="600" fill="#1b2a4a">kube-apiserver · 唯一枢纽 · 唯一读写 etcd</text>
+  <g text-anchor="middle">
+    <rect x="52" y="270" width="182" height="74" rx="8" fill="#fff" stroke="#d9c9ef" data-tid="Kubernetes原理_支撑_认证授权与准入" data-lab="认证授权准入"/>
+    <text x="143" y="291" font-size="10" font-weight="600" fill="#6f3ea8">认证 → 授权 → 准入</text><text x="143" y="307" font-size="8.5" fill="#9a76c0">横切每个写请求（authn/RBAC/admission）</text><text x="143" y="322" font-size="7.5" fill="#a9a3b8">DefaultBuildHandlerChain</text>
+    <rect x="242" y="270" width="182" height="74" rx="8" fill="#fff" stroke="#cfe0f2" data-tid="Kubernetes原理_支撑_APIServer与etcd" data-lab="REST 存储"/>
+    <text x="333" y="291" font-size="10" font-weight="600" fill="#1b2a4a">REST 存储</text><text x="333" y="307" font-size="8.5" fill="#5b7db1">多版本转换 · 落 etcd</text><text x="333" y="322" font-size="7.5" fill="#a6adba">Create/Update</text>
+    <rect x="432" y="270" width="196" height="74" rx="8" fill="#fff" stroke="#cfe0f2" data-tid="Kubernetes原理_支撑_APIServer与etcd" data-lab="watch cache"/>
+    <text x="530" y="291" font-size="10" font-weight="600" fill="#1b2a4a">watch cache</text><text x="530" y="307" font-size="8.5" fill="#5b7db1">扇出变更给所有客户端</text><text x="530" y="322" font-size="7.5" fill="#a6adba">Cacher</text>
+  </g>
+
+  <!-- etcd -->
+  <rect x="656" y="242" width="384" height="110" rx="11" fill="#fbf7ef" stroke="#ecdcbf" filter="url(#soft)" data-tid="Kubernetes原理_支撑_APIServer与etcd" data-lab="etcd"/>
+  <text x="672" y="264" font-size="12" font-weight="600" fill="#8a6d3b">etcd · 唯一有状态后端（single source of truth）</text>
+  <text x="672" y="288" font-size="9.5" fill="#b08535">全量声明态存储 · revision = resourceVersion</text>
+  <text x="672" y="309" font-size="9.5" fill="#b08535">事务写 · 读-改-写乐观并发（compare-and-swap on rev）</text>
+  <text x="672" y="331" font-size="7.5" fill="#c3ab7e">OptimisticPut(…origState.rev)</text>
+
+  <!-- controller-manager frame -->
+  <rect x="40" y="360" width="600" height="118" rx="12" fill="#faf4fb" stroke="#e4cdea"/>
+  <text x="56" y="377" font-size="10.5" font-weight="600" fill="#8944ab">kube-controller-manager · 共享 Informer · leader 选举 · 内嵌几十个控制器</text>
+  <g text-anchor="middle">
+    <rect x="52" y="384" width="184" height="88" rx="9" fill="#fff" stroke="#ececef" filter="url(#soft)" data-tid="Kubernetes原理_支撑_Informer与Watch机制" data-lab="Informer"/>
+    <text x="144" y="405" font-size="10.5" font-weight="600" fill="#1d1d1f">Informer / Watch</text><text x="144" y="421" font-size="8.5" fill="#6e6e73">Reflector→DeltaFIFO→Indexer</text><text x="144" y="436" font-size="8.5" fill="#6e6e73">本地缓存 + 增量事件（只唤醒）</text><text x="144" y="452" font-size="7.5" fill="#adadb2">client-go/tools/cache/*.go</text>
+    <rect x="244" y="384" width="184" height="88" rx="9" fill="#fff" stroke="#ececef" filter="url(#soft)" data-tid="Kubernetes原理_支撑_控制器reconcile循环" data-lab="syncHandler"/>
+    <text x="336" y="405" font-size="10.5" font-weight="600" fill="#8944ab">syncHandler ★（灵魂）</text><text x="336" y="421" font-size="8.5" fill="#6e6e73">对比 spec ↔ 实际态、差异回写</text><text x="336" y="436" font-size="8.5" fill="#6e6e73">level-triggered · 丢事件靠 resync</text><text x="336" y="452" font-size="7.5" fill="#adadb2">syncDeployment</text>
+    <rect x="436" y="384" width="192" height="88" rx="9" fill="#fff" stroke="#ececef" filter="url(#soft)" data-tid="Kubernetes原理_支撑_控制器管理器与GC" data-lab="controller-manager / GC"/>
+    <text x="532" y="405" font-size="10.5" font-weight="600" fill="#1d1d1f">控制器管理器 / GC</text><text x="532" y="421" font-size="8.5" fill="#6e6e73">ownerRef 级联删除</text><text x="532" y="436" font-size="8.5" fill="#6e6e73">finalizers 删前钩子</text><text x="532" y="452" font-size="7.5" fill="#adadb2">pkg/controller/ · cmd/kube-controller-manager</text>
+  </g>
+
+  <!-- scheduler -->
+  <rect x="656" y="360" width="384" height="56" rx="11" fill="#fff" stroke="#ececef" filter="url(#soft)" data-tid="Kubernetes原理_支撑_调度器" data-lab="调度器"/>
+  <text x="672" y="381" font-size="11.5" font-weight="600" fill="#1d1d1f">kube-scheduler</text>
+  <text x="672" y="398" font-size="9" fill="#6e6e73">filter 剔除 → score 打分 → bind 写 pod.spec.nodeName（v1.Binding）</text>
+  <text x="672" y="411" font-size="7.5" fill="#b4b4b9">schedulePod / findNodesThatFitPod / bind</text>
+
+  <!-- CRD -->
+  <rect x="656" y="424" width="384" height="54" rx="11" fill="#fff" stroke="#ececef" filter="url(#soft)" data-tid="Kubernetes原理_支撑_扩展机制" data-lab="扩展 CRD"/>
+  <text x="672" y="444" font-size="11.5" font-weight="600" fill="#1d1d1f">扩展 CRD / Operator</text>
+  <text x="672" y="460" font-size="9" fill="#6e6e73">注册新类型 + 复用同一 reconcile 骨架</text>
+  <text x="672" y="473" font-size="7.5" fill="#b4b4b9">apiextensions-apiserver/… crdHandler</text>
+
+  <!-- ===== ③ 节点数据面 ===== -->
+  <rect x="24" y="490" width="1032" height="108" rx="14" fill="#f5faf6" stroke="#cfe6d2"/>
+  <text x="40" y="508" font-size="12" font-weight="600" fill="#1d8f3f">③ 节点数据面 · 把期望 Pod 变成真实容器（实际态在此产生，再 watch/回写闭环）</text>
+  <g>
+    <rect x="40" y="516" width="330" height="74" rx="11" fill="#fff" stroke="#ececef" filter="url(#soft)" data-tid="Kubernetes原理_支撑_kubelet与CRI" data-lab="kubelet / CRI"/>
+    <text x="56" y="537" font-size="11" font-weight="600" fill="#1d1d1f">kubelet + CRI</text><text x="56" y="555" font-size="9" fill="#6e6e73">syncLoop 节点级 reconcile · SyncPod 重算容器差异</text><text x="56" y="570" font-size="9" fill="#6e6e73">CRI→containerd · 写回 status</text><text x="56" y="584" font-size="7.5" fill="#b4b4b9">syncLoop / SyncPod</text>
+    <rect x="384" y="516" width="330" height="74" rx="11" fill="#fff" stroke="#ececef" filter="url(#soft)" data-tid="Kubernetes原理_支撑_网络" data-lab="网络"/>
+    <text x="400" y="537" font-size="11" font-weight="600" fill="#1d1d1f">网络 kube-proxy + CNI</text><text x="400" y="555" font-size="9" fill="#6e6e73">Service ClusterIP · EndpointSlice</text><text x="400" y="570" font-size="9" fill="#6e6e73">iptables/IPVS 整表重刷 · CNI 派 Pod IP</text><text x="400" y="584" font-size="7.5" fill="#b4b4b9">syncProxyRules</text>
+    <rect x="728" y="516" width="312" height="74" rx="11" fill="#fff" stroke="#ececef" filter="url(#soft)" data-tid="Kubernetes原理_支撑_存储" data-lab="存储"/>
+    <text x="744" y="537" font-size="11" font-weight="600" fill="#1d1d1f">存储 CSI / PV / PVC</text><text x="744" y="555" font-size="9" fill="#6e6e73">PVC 申领 → PV 绑定/动态供给</text><text x="744" y="570" font-size="9" fill="#6e6e73">CSI: Provision→Attach→Mount</text><text x="744" y="584" font-size="7.5" fill="#b4b4b9"></text>
+  </g>
+
+  <!-- ===== 容器运行时（Hot 实际态） ===== -->
+  <rect x="24" y="604" width="1032" height="26" rx="8" fill="#eafaf1" stroke="#b8e6cd"/>
+  <text x="40" y="621" font-size="10" fill="#1c6b45">容器运行时 · containerd / runc 真实拉起 Pod 容器（Hot 实际态）—— kubelet 把实际态回报 API Server，触发下一轮 reconcile</text>
+
+  <!-- ===== 语义分型连线 ===== -->
+  <!-- Hot：接入层 → API Server（写 spec 请求，过 authn→authz→admission） -->
+  <line x1="560" y1="206" x2="560" y2="242" stroke="#2f9e6e" stroke-width="1.8" marker-end="url(#aHot)"/>
+  <text x="554" y="226" font-size="8" fill="#2f9e6e" text-anchor="end">写 spec · 过安全三关</text>
+  <!-- State：API Server ↔ etcd -->
+  <line x1="640" y1="297" x2="656" y2="297" stroke="#c99a3a" stroke-width="1.8" marker-start="url(#aState)" marker-end="url(#aState)"/>
+  <!-- State：API Server → Informer（watch 填充本地缓存） -->
+  <line x1="130" y1="352" x2="130" y2="384" stroke="#c99a3a" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#aState)"/>
+  <text x="136" y="372" font-size="7.5" fill="#b08535">watch→informer</text>
+  <!-- Control：syncHandler reconcile 回写 → API Server -->
+  <line x1="360" y1="384" x2="360" y2="352" stroke="#5b7db1" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#aCtl)"/>
+  <text x="366" y="372" font-size="7.5" fill="#5b7db1">reconcile 回写</text>
+  <!-- 失败：syncHandler 出错 → 指数退避重入队（workqueue 自环） -->
+  <path d="M312,472 q16,13 32,0" fill="none" stroke="#d38236" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#aFail)"/>
+  <text x="352" y="484" font-size="7.5" fill="#d38236">出错→指数退避重入队 workqueue（maxRetries=15）</text>
+  <!-- Control：scheduler watch pending + bind 写 nodeName → API Server -->
+  <line x1="700" y1="360" x2="660" y2="352" stroke="#5b7db1" stroke-width="1.4" stroke-dasharray="5 3" marker-end="url(#aCtl)"/>
+  <text x="700" y="345" font-size="7.5" fill="#5b7db1">watch pending · bind 写 nodeName</text>
+  <!-- State：控制面 → 节点面（节点 watch 分给自己的对象） -->
+  <text x="40" y="486" font-size="8.5" fill="#b08535">节点经 API Server watch 拿到分给自己的 Pod / Service / 卷</text>
+  <line x1="240" y1="500" x2="240" y2="516" stroke="#c99a3a" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#aState)"/>
+  <line x1="549" y1="500" x2="549" y2="516" stroke="#c99a3a" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#aState)"/>
+  <line x1="884" y1="500" x2="884" y2="516" stroke="#c99a3a" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#aState)"/>
+  <!-- Hot：kubelet → 容器运行时 -->
+  <line x1="205" y1="590" x2="205" y2="604" stroke="#2f9e6e" stroke-width="1.8" marker-end="url(#aHot)"/>
+  <!-- Control：节点 → API Server 写回 status（左侧回路） -->
+  <path d="M14,553 L14,300 L40,300" fill="none" stroke="#5b7db1" stroke-width="1.5" stroke-dasharray="5 3" marker-end="url(#aCtl)"/>
+  <text x="10" y="430" font-size="8" fill="#5b7db1" text-anchor="middle" transform="rotate(-90 10 430)">kubelet 写回 status → API Server</text>
+
+  <!-- ===== 读法 ===== -->
+  <text x="540" y="650" font-size="10" fill="#4a4a4f" text-anchor="middle">读法：用户写 spec → API Server 存 etcd → 控制器 watch 到变更后 reconcile 差异回写 → 调度器绑节点 → 节点 kubelet 把 Pod 拉成真实容器并回报 status，期望态与实际态持续收敛</text>
+</svg>

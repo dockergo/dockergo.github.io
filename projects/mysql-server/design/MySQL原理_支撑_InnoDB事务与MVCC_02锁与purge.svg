@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="360" viewBox="0 0 900 360" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="lk" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="lkf" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#d38236"/></marker>
+    <marker id="lkc" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#5b7db1"/></marker>
+  </defs>
+  <rect width="900" height="360" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">当前读的行锁 · 死锁检测 · purge 回收</text>
+  <text x="30" y="48" font-size="10.5" fill="#6e6e73">当前读加 S/X 行锁 + 间隙锁防幻读；等锁成环 → 死锁检测回滚一方；旧版本待无人可见再 purge</text>
+
+  <!-- 行锁 -->
+  <rect x="40" y="72" width="250" height="110" rx="11" fill="#f4f7fc" stroke="#cfe0f2" filter="url(#lk)"/>
+  <text x="165" y="96" font-size="11" font-weight="700" fill="#5b7db1" text-anchor="middle">行锁（当前读）</text>
+  <text x="60" y="120" font-size="9" fill="#1d1d1f">LOCK_S 共享锁：可多个并存读</text>
+  <text x="60" y="140" font-size="9" fill="#1d1d1f">LOCK_X 排他锁：写独占</text>
+  <text x="60" y="160" font-size="9" fill="#6e6e73">间隙锁：RR 隔离下防幻读</text>
+  <text x="60" y="177" font-size="7.8" fill="#8a94a6">REC_LOCK_SIZE `lock0lock.cc:69`</text>
+
+  <!-- 死锁检测 -->
+  <rect x="325" y="72" width="250" height="110" rx="11" fill="#fff7f1" stroke="#f0d4b8" filter="url(#lk)"/>
+  <text x="450" y="96" font-size="11" font-weight="700" fill="#b0651f" text-anchor="middle">死锁检测器</text>
+  <g text-anchor="middle" font-size="9">
+    <circle cx="380" cy="128" r="16" fill="#fff" stroke="#f0d4b8"/><text x="380" y="132" fill="#b0651f">T1</text>
+    <circle cx="520" cy="128" r="16" fill="#fff" stroke="#f0d4b8"/><text x="520" y="132" fill="#b0651f">T2</text>
+  </g>
+  <path d="M396,122 C440,110 476,110 504,122" fill="none" stroke="#d38236" stroke-width="1.4" marker-end="url(#lkf)"/>
+  <path d="M504,134 C476,146 440,146 396,134" fill="none" stroke="#d38236" stroke-width="1.4" marker-end="url(#lkf)"/>
+  <text x="450" y="162" font-size="8.5" fill="#8a6d3b" text-anchor="middle">等待成环 → 回滚代价小的事务</text>
+  <text x="450" y="176" font-size="7.8" fill="#b0651f" text-anchor="middle">DeadlockChecker `lock0lock.cc:78`</text>
+
+  <!-- purge -->
+  <rect x="610" y="72" width="250" height="110" rx="11" fill="#fbf7ef" stroke="#ecdcbf" filter="url(#lk)"/>
+  <text x="735" y="96" font-size="11" font-weight="700" fill="#8a6d3b" text-anchor="middle">purge 线程</text>
+  <text x="630" y="120" font-size="9" fill="#1d1d1f">回收再无快照可见的旧版本</text>
+  <text x="630" y="140" font-size="9" fill="#6e6e73">清理 undo、释放空间</text>
+  <text x="630" y="160" font-size="9" fill="#c0392b">长事务拖住 → undo 膨胀</text>
+  <text x="630" y="177" font-size="7.8" fill="#8a94a6">purge_sys `trx0purge.cc:68`</text>
+
+  <!-- 隔离级别对照 -->
+  <rect x="40" y="212" width="820" height="98" rx="12" fill="#f6f6f8" stroke="#e2e2e7" filter="url(#lk)"/>
+  <text x="58" y="234" font-size="11" font-weight="700" fill="#1d1d1f">隔离级别 = 快照读 + 锁的组合</text>
+  <g font-size="9">
+    <text x="58" y="258" fill="#1d1d1f" font-weight="600">RR 可重复读（默认）</text><text x="230" y="258" fill="#6e6e73">快照可重复 + 间隙锁防幻读，锁范围大</text>
+    <text x="58" y="280" fill="#1d1d1f" font-weight="600">RC 读已提交</text><text x="230" y="280" fill="#6e6e73">每次读刷新快照，锁更少、并发更好，但有幻读</text>
+    <text x="58" y="300" fill="#1d1d1f" font-weight="600">读写并发本质</text><text x="230" y="300" fill="#6e6e73">快照读(不阻塞) 与 当前读(加锁) 分工，实现正确隔离</text>
+  </g>
+  <text x="450" y="338" font-size="9" fill="#8a94a6" text-anchor="middle">MVCC 管快照读、锁管当前读、purge 管回收 —— 三者合力兑现 ACID 的隔离性 I</text>
+</svg>

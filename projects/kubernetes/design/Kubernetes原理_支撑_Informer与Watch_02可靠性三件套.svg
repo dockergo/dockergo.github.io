@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="450" viewBox="0 0 900 450" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="900" height="450" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">Informer 可靠性三件套 · 丢事件也最终一致</text>
+  <g font-size="10.5">
+    <rect x="600" y="20" width="12" height="12" rx="3" fill="#eef3fb" stroke="#bcd0ec"/><text x="618" y="30" fill="#6e6e73">重列对账</text>
+    <rect x="700" y="20" width="12" height="12" rx="3" fill="#fbf7ef" stroke="#ecdcbf"/><text x="718" y="30" fill="#6e6e73">背压</text>
+    <rect x="770" y="20" width="12" height="12" rx="3" fill="#f5faf6" stroke="#cfe6d2"/><text x="788" y="30" fill="#6e6e73">resync 兜底</text>
+  </g>
+
+  <!-- A: relist reconcile -->
+  <rect x="30" y="66" width="270" height="300" rx="12" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="46" y="90" font-size="12" font-weight="600" fill="#1b2a4a">① 重列对账</text>
+  <rect x="46" y="104" width="238" height="44" rx="8" fill="#ffffff" stroke="#ececef" filter="url(#soft)"/>
+  <text x="165" y="126" font-size="10.5" font-weight="600" fill="#1d1d1f" text-anchor="middle">watch 断链</text>
+  <text x="165" y="142" font-size="9.5" fill="#6e6e73" text-anchor="middle">用最后 rv 重 watch（不回退）</text>
+  <rect x="46" y="160" width="238" height="44" rx="8" fill="#fdeeeb" stroke="#e6c9c2"/>
+  <text x="165" y="182" font-size="10.5" font-weight="600" fill="#8a3527" text-anchor="middle">410 Gone（rv 太老）</text>
+  <text x="165" y="198" font-size="9.5" fill="#b06a5c" text-anchor="middle">watch cache 已淘汰该 rv</text>
+  <path d="M165 204 L165 220" fill="none" stroke="#b8b8bf" stroke-width="1.4" marker-end="url(#ar)"/>
+  <rect x="46" y="222" width="238" height="44" rx="8" fill="#ffffff" stroke="#ececef" filter="url(#soft)"/>
+  <text x="165" y="244" font-size="10.5" font-weight="600" fill="#1d1d1f" text-anchor="middle">全量 LIST → Replace</text>
+  <text x="165" y="260" font-size="9.5" fill="#6e6e73" text-anchor="middle">新列表与缓存做差集</text>
+  <rect x="46" y="278" width="238" height="46" rx="8" fill="#f5faf6" stroke="#cfe6d2"/>
+  <text x="165" y="300" font-size="10.5" font-weight="600" fill="#1d8f3f" text-anchor="middle">补发 Deleted</text>
+  <text x="165" y="316" font-size="9.5" fill="#6e6e73" text-anchor="middle">清掉幽灵对象·不残留</text>
+  <text x="46" y="348" font-size="9.5" fill="#a1a1a6">关键：丢了 Deleted 事件也不会永久残留</text>
+
+  <!-- B: backpressure -->
+  <rect x="316" y="66" width="270" height="300" rx="12" fill="#fbf7ef" stroke="#ecdcbf"/>
+  <text x="332" y="90" font-size="12" font-weight="600" fill="#8a6d3b">② listener 背压</text>
+  <rect x="332" y="106" width="238" height="52" rx="8" fill="#ffffff" stroke="#ececef" filter="url(#soft)"/>
+  <text x="451" y="130" font-size="10.5" font-weight="600" fill="#1d1d1f" text-anchor="middle">pop：环形缓冲</text>
+  <text x="451" y="147" font-size="9.5" fill="#6e6e73" text-anchor="middle">pendingNotifications 吸收突发</text>
+  <path d="M451 158 L451 176" fill="none" stroke="#b8b8bf" stroke-width="1.4" marker-end="url(#ar)"/>
+  <rect x="332" y="178" width="238" height="52" rx="8" fill="#ffffff" stroke="#ececef" filter="url(#soft)"/>
+  <text x="451" y="202" font-size="10.5" font-weight="600" fill="#1d1d1f" text-anchor="middle">run：串行调 handler</text>
+  <text x="451" y="219" font-size="9.5" fill="#6e6e73" text-anchor="middle">OnAdd / OnUpdate / OnDelete</text>
+  <rect x="332" y="250" width="238" height="60" rx="8" fill="#faf9f4" stroke="#ecdcbf"/>
+  <text x="451" y="272" font-size="10" fill="#8a6d3b" text-anchor="middle">handler 慢 → 只在本 listener</text>
+  <text x="451" y="290" font-size="10" fill="#8a6d3b" text-anchor="middle">内积压，不阻塞 DeltaFIFO</text>
+  <text x="451" y="304" font-size="9.5" fill="#a1a1a6" text-anchor="middle">也不阻塞其他 listener</text>
+  <text x="332" y="336" font-size="9.5" fill="#a1a1a6">铁律：handler 只入队 key，快进快出</text>
+  <text x="332" y="352" font-size="9.5" fill="#a1a1a6">缓冲无限涨会吃内存</text>
+
+  <!-- C: resync -->
+  <rect x="602" y="66" width="268" height="300" rx="12" fill="#f5faf6" stroke="#cfe6d2"/>
+  <text x="618" y="90" font-size="12" font-weight="600" fill="#1d8f3f">③ resync 兜底</text>
+  <rect x="618" y="106" width="236" height="54" rx="8" fill="#ffffff" stroke="#ececef" filter="url(#soft)"/>
+  <text x="736" y="130" font-size="10.5" font-weight="600" fill="#1d1d1f" text-anchor="middle">周期到（最小 1s）</text>
+  <text x="736" y="147" font-size="9.5" fill="#6e6e73" text-anchor="middle">对全量缓存对象重发 Sync</text>
+  <path d="M736 160 L736 178" fill="none" stroke="#b8b8bf" stroke-width="1.4" marker-end="url(#ar)"/>
+  <rect x="618" y="180" width="236" height="54" rx="8" fill="#ffffff" stroke="#ececef" filter="url(#soft)"/>
+  <text x="736" y="204" font-size="10.5" font-weight="600" fill="#1d1d1f" text-anchor="middle">即便无真实变更</text>
+  <text x="736" y="221" font-size="9.5" fill="#6e6e73" text-anchor="middle">也让控制器重算一次差异</text>
+  <rect x="618" y="254" width="236" height="56" rx="8" fill="#f4faf5" stroke="#cfe6d2"/>
+  <text x="736" y="276" font-size="10" fill="#1d8f3f" text-anchor="middle">level-triggered 自愈</text>
+  <text x="736" y="294" font-size="10" fill="#1d8f3f" text-anchor="middle">"漏处理"的底层机制</text>
+  <text x="618" y="336" font-size="9.5" fill="#a1a1a6">resync 只走本地缓存·不打 API Server</text>
+  <text x="618" y="352" font-size="9.5" fill="#a1a1a6">周期过短会放大无谓 reconcile</text>
+
+  <!-- bottom -->
+  <text x="30" y="398" font-size="11.5" fill="#6e6e73"><tspan font-weight="600" fill="#1d1d1f">首次同步屏障：</tspan>HasSynced 在初始 LIST 全部分发完前为 false；控制器应 WaitForCacheSync 后再启 worker，避免"缓存没热就 reconcile"误删</text>
+  <text x="30" y="424" font-size="11.5" fill="#6e6e73"><tspan font-weight="600" fill="#1d1d1f">三者合力：</tspan>断线续传 + 重列对账保证不丢不残留，背压隔离慢 handler，resync 兜底漏处理——共同支撑"最终一致"</text>
+</svg>

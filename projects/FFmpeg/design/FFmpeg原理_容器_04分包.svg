@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="500" viewBox="0 0 1080 500" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="500" fill="#fbfbfd"/>
+
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">av_read_frame 与 parser 分包 —— 把裸流块切成完整帧包</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">demuxer 按 IO 块读,块边界未必对齐帧 ｜ parser 找帧边界、补 pts/dts、标记关键帧 ｜ 已是完整帧的流可跳过</text>
+
+  <!-- 图例 -->
+  <rect x="720" y="20" width="12" height="12" rx="3" fill="#fff7e6" stroke="#e8cf9a"/><text x="737" y="30" font-size="9" fill="#6e6e73">原始块</text>
+  <rect x="792" y="20" width="12" height="12" rx="3" fill="#eef3fb" stroke="#bcd0ec"/><text x="809" y="30" font-size="9" fill="#6e6e73">判定/控制</text>
+  <rect x="878" y="20" width="12" height="12" rx="3" fill="#f4eefb" stroke="#d9c7ec"/><text x="895" y="30" font-size="9" fill="#6e6e73">parser</text>
+  <rect x="948" y="20" width="12" height="12" rx="3" fill="#eafaf1" stroke="#bfe0cd"/><text x="965" y="30" font-size="9" fill="#6e6e73">完整帧包</text>
+
+  <!-- A 读块 -->
+  <rect x="30" y="110" width="200" height="92" rx="12" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="130" y="150" font-size="11.5" font-weight="600" text-anchor="middle" fill="#5a3410">ff_read_packet</text>
+  <text x="130" y="170" font-size="9" text-anchor="middle" fill="#93762e">从 demuxer 读原始块</text>
+  <text x="130" y="186" font-size="9" text-anchor="middle" fill="#93762e">可能半帧 / 多帧粘连</text>
+
+  <!-- B 判定 -->
+  <rect x="262" y="110" width="180" height="92" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="352" y="148" font-size="11" font-weight="600" text-anchor="middle" fill="#1b2a4a">need_parsing</text>
+  <text x="352" y="166" font-size="11" font-weight="600" text-anchor="middle" fill="#1b2a4a">且有 parser?</text>
+  <text x="352" y="188" font-size="8.5" text-anchor="middle" fill="#5b7db1">按流的分包需求判定</text>
+
+  <!-- C 否:直接 -->
+  <rect x="474" y="66" width="196" height="76" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="572" y="98" font-size="10.5" font-weight="600" text-anchor="middle" fill="#12402a">否 · 直接是完整帧</text>
+  <text x="572" y="118" font-size="9" text-anchor="middle" fill="#2f6f4f">mp4/mkv 封装内已按帧</text>
+  <text x="572" y="132" font-size="9" text-anchor="middle" fill="#2f6f4f">存储,原样输出</text>
+
+  <!-- D parser -->
+  <rect x="474" y="168" width="196" height="92" rx="12" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="572" y="198" font-size="11" font-weight="600" text-anchor="middle" fill="#3d2a5a">av_parser_parse2 循环</text>
+  <text x="572" y="220" font-size="9" text-anchor="middle" fill="#7a5aa0">喂字节 → 切出一个完整帧</text>
+  <text x="572" y="236" font-size="9" text-anchor="middle" fill="#7a5aa0">while(还有字节) 循环取尽</text>
+  <text x="572" y="252" font-size="9" text-anchor="middle" fill="#7a5aa0">粘连拆开 / 半帧攒齐</text>
+
+  <!-- E 补齐 -->
+  <rect x="702" y="168" width="150" height="92" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="777" y="200" font-size="10.5" font-weight="600" text-anchor="middle" fill="#1b2a4a">补齐字段</text>
+  <text x="777" y="222" font-size="9" text-anchor="middle" fill="#5b7db1">pts / dts</text>
+  <text x="777" y="238" font-size="9" text-anchor="middle" fill="#5b7db1">key_frame 标记</text>
+  <text x="777" y="254" font-size="9" text-anchor="middle" fill="#5b7db1">入 parse_queue</text>
+
+  <!-- OUT -->
+  <rect x="884" y="110" width="166" height="92" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="967" y="150" font-size="11.5" font-weight="600" text-anchor="middle" fill="#12402a">输出 AVPacket</text>
+  <text x="967" y="170" font-size="9" text-anchor="middle" fill="#2f6f4f">交给上层 av_read_frame</text>
+  <text x="967" y="186" font-size="9" text-anchor="middle" fill="#2f6f4f">→ 送解码器</text>
+
+  <!-- arrows -->
+  <path d="M230,156 L260,156" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M442,140 L474,110" stroke="#5b7db1" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="452" y="118" font-size="8.5" fill="#5b7db1">否</text>
+  <path d="M442,172 L474,206" stroke="#7a5aa0" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="446" y="200" font-size="8.5" fill="#7a5aa0">是</text>
+  <path d="M670,104 L884,140" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M670,214 L700,214" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M852,200 L884,172" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <!-- 底:need_parsing 模式 + 为什么 -->
+  <rect x="30" y="290" width="1020" height="158" rx="13" fill="#ffffff" stroke="#e4e4ea" filter="url(#soft)"/>
+  <text x="52" y="318" font-size="12" font-weight="600" fill="#1d1d1f">need_parsing 分包模式 · 按流特性选</text>
+
+  <rect x="52" y="332" width="180" height="52" rx="9" fill="#f7f7f9" stroke="#e4e4ea"/>
+  <text x="142" y="354" font-size="10" font-weight="600" text-anchor="middle" fill="#1d1d1f">NONE</text>
+  <text x="142" y="372" font-size="8.5" text-anchor="middle" fill="#86868b">封装已分帧,不解析</text>
+
+  <rect x="244" y="332" width="180" height="52" rx="9" fill="#f7f7f9" stroke="#e4e4ea"/>
+  <text x="334" y="354" font-size="10" font-weight="600" text-anchor="middle" fill="#1d1d1f">HEADERS</text>
+  <text x="334" y="372" font-size="8.5" text-anchor="middle" fill="#86868b">只解头取参数</text>
+
+  <rect x="436" y="332" width="180" height="52" rx="9" fill="#f4eefb" stroke="#d9c7ec"/>
+  <text x="526" y="354" font-size="10" font-weight="600" text-anchor="middle" fill="#3d2a5a">FULL</text>
+  <text x="526" y="372" font-size="8.5" text-anchor="middle" fill="#7a5aa0">完整分包(裸流常用)</text>
+
+  <rect x="628" y="332" width="180" height="52" rx="9" fill="#f7f7f9" stroke="#e4e4ea"/>
+  <text x="718" y="354" font-size="10" font-weight="600" text-anchor="middle" fill="#1d1d1f">FULL_ONCE</text>
+  <text x="718" y="372" font-size="8.5" text-anchor="middle" fill="#86868b">仅首包完整解析</text>
+
+  <rect x="820" y="332" width="208" height="52" rx="9" fill="#f4eefb" stroke="#d9c7ec"/>
+  <text x="924" y="354" font-size="10" font-weight="600" text-anchor="middle" fill="#3d2a5a">FULL_RAW</text>
+  <text x="924" y="372" font-size="8.5" text-anchor="middle" fill="#7a5aa0">裸流,含帧偏移定位</text>
+
+  <text x="52" y="410" font-size="9.5" fill="#6e6e73">为什么要 parser:裸流(Annex-B H.264 / ADTS AAC)按 IO 块读入,块边界与帧边界不对齐 —— 一块可能含多帧或半帧。</text>
+  <text x="52" y="428" font-size="9.5" fill="#6e6e73">parser 按码流语法找帧起止、把块重切成"一包一完整帧",并补上解码所需的 pts/dts 与关键帧标记。封装容器已按帧存则跳过。</text>
+
+  <text x="30" y="472" font-size="9" fill="#a1a1a6">源码基准 FFmpeg(1588bce) · read_frame_internal → ff_read_packet → parse_packet/av_parser_parse2 · 完整帧流跳过分包</text>
+</svg>

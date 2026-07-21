@@ -1,0 +1,156 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="536" viewBox="0 0 1080 536" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="aH" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+    <marker id="aC" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#5b7db1"/></marker>
+    <marker id="aS" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#c99a3a"/></marker>
+    <marker id="aF" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#e8730f"/></marker>
+    <marker id="aX" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#7c5cd6"/></marker>
+  </defs>
+  <rect width="1080" height="536" fill="#fbfbfd"/>
+
+  <!-- ===== 标题带（判型 · 全景热区） ===== -->
+  <rect x="24" y="8" width="1032" height="46" rx="10" fill="#f4f5f7" stroke="#e6e6eb" data-tid="vLLM原理_全景主线框架" data-lab="全景主线框架"/>
+  <text x="30" y="28" font-size="13.5" font-weight="700" fill="#1d1d1f">vLLM 总架构 · 高吞吐 LLM 推理引擎 ＝ PagedAttention 分块 KV 缓存 ＋ 连续批处理 ＋ EngineCore step 循环</text>
+  <text x="30" y="46" font-size="10" fill="#8a8a90">灵魂：KV 像 OS 分页切成 16-token 固定物理块消碎片，连续批处理填满 GPU　·　源码基准 main@7aab6e2 · v1-only（vllm/v1/）</text>
+
+  <!-- ===== 图例：五型语义路径 ===== -->
+  <line x1="40" y1="70" x2="64" y2="70" stroke="#2f9e6e" stroke-width="2.2" marker-end="url(#aH)"/>
+  <text x="70" y="74" font-size="10" fill="#3a3a3c">Hot 推理主脊 · 出 token</text>
+  <line x1="210" y1="70" x2="234" y2="70" stroke="#5b7db1" stroke-width="2" marker-end="url(#aC)"/>
+  <text x="240" y="74" font-size="10" fill="#3a3a3c">Control 连续批处理调度</text>
+  <line x1="382" y1="70" x2="406" y2="70" stroke="#c99a3a" stroke-width="1.8" stroke-dasharray="5 3" marker-end="url(#aS)"/>
+  <text x="412" y="74" font-size="10" fill="#3a3a3c">State 分块 KV · 中心</text>
+  <line x1="528" y1="70" x2="552" y2="70" stroke="#e8730f" stroke-width="1.8" stroke-dasharray="3 3" marker-end="url(#aF)"/>
+  <text x="558" y="74" font-size="10" fill="#3a3a3c">失败 抢占＝重算</text>
+  <line x1="656" y1="70" x2="680" y2="70" stroke="#7c5cd6" stroke-width="1.8" stroke-dasharray="5 3" marker-end="url(#aX)"/>
+  <text x="686" y="74" font-size="10" fill="#3a3a3c">横切 TP/PP 并行</text>
+  <text x="1056" y="74" font-size="10" fill="#a1a1a6" text-anchor="end">框＝主线可下钻 · 显存利用率 20%→≈满</text>
+
+  <!-- ===== 接触面 · 入口与 API（三入口） ===== -->
+  <rect x="24" y="88" width="316" height="54" rx="12" fill="#eef7f0" stroke="#bfe0c8" filter="url(#soft)" data-tid="vLLM原理_接触面_入口与API" data-lab="离线入口"/>
+  
+  <text x="40" y="108" font-size="11" font-weight="700" fill="#1d4a2b">离线 · LLM.generate 批量</text>
+  <text x="40" y="126" font-size="9" fill="#4a8c60">一次喂一批 prompt · 内部 add_request 入队</text>
+  <text x="40" y="138" font-size="8" fill="#86a892"></text>
+
+  <rect x="356" y="88" width="316" height="54" rx="12" fill="#eef7f0" stroke="#bfe0c8" filter="url(#soft)" data-tid="vLLM原理_接触面_入口与API" data-lab="在线入口"/>
+  
+  <text x="372" y="108" font-size="11" font-weight="700" fill="#1d4a2b">在线 · OpenAI 兼容 server</text>
+  <text x="372" y="126" font-size="9" fill="#4a8c60">HTTP 流式 · EngineClient 转发 · SamplingParams</text>
+  <text x="372" y="138" font-size="8" fill="#86a892"></text>
+
+  <rect x="688" y="88" width="368" height="54" rx="12" fill="#eef0f3" stroke="#d2d6dd" filter="url(#soft)" data-tid="vLLM原理_接触面_入口与API" data-lab="前端异步队列"/>
+  
+  <text x="704" y="108" font-size="11" font-weight="700" fill="#1d1d1f">前端异步 · input / output_queue</text>
+  <text x="704" y="126" font-size="9" fill="#5b6470">EngineCore 独立进程，队列 + ZMQ 收发，前端 IO 不阻塞 GPU</text>
+  <text x="704" y="138" font-size="8" fill="#9aa0aa">input/output_queue</text>
+
+  <!-- 请求入队（Hot）/ token 异步回流（虚线） -->
+  <line x1="120" y1="142" x2="120" y2="162" stroke="#2f9e6e" stroke-width="2.2" fill="none" marker-end="url(#aH)"/>
+  <text x="128" y="156" font-size="8.5" fill="#4a8c60">请求入队 → 选批</text>
+  <line x1="1020" y1="162" x2="1020" y2="144" stroke="#9aa2b1" stroke-width="1.4" stroke-dasharray="4 3" fill="none" marker-end="url(#aH)"/>
+  <text x="1012" y="158" font-size="8.5" fill="#8a8a90" text-anchor="end">token 异步回流前端</text>
+
+  <!-- ===== EngineCore · step busy loop ===== -->
+  <rect x="24" y="164" width="1032" height="140" rx="14" fill="#f3faf5" stroke="#cfe6d6" data-tid="vLLM原理_支撑_EngineCore执行循环" data-lab="EngineCore 执行循环"/>
+  <text x="40" y="185" font-size="12" font-weight="700" fill="#1d4a2b">EngineCore · step busy loop（独立进程，与前端队列异步 —— 避 GIL）</text>
+  <text x="40" y="200" font-size="8.5" fill="#5fa07a">每一步：schedule 选批 → execute_model 前向 → sample 采样 → update_from_output 回填 step run_busy_loop</text>
+
+  <rect x="40" y="210" width="312" height="82" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)" data-tid="vLLM原理_支撑_连续批处理调度" data-lab="连续批处理调度"/>
+  
+  <text x="56" y="231" font-size="11.5" font-weight="700" fill="#1b2a4a">① schedule 选批</text>
+  <text x="56" y="250" font-size="9" fill="#5b7db1">连续批处理：随到随入 · 完成即出</text>
+  <text x="56" y="266" font-size="9" fill="#5b7db1">按 token 预算收批 + chunked prefill</text>
+  <text x="56" y="284" font-size="8" fill="#8a9bbd">schedule</text>
+
+  <rect x="384" y="210" width="312" height="82" rx="11" fill="#eef7f0" stroke="#bfe0c8" filter="url(#soft)" data-tid="vLLM原理_支撑_EngineCore执行循环" data-lab="execute_model 前向"/>
+  
+  <text x="400" y="231" font-size="11.5" font-weight="700" fill="#1d4a2b">② execute_model 前向</text>
+  <text x="400" y="250" font-size="9" fill="#4a8c60">GPUModelRunner 跑一遍模型</text>
+  <text x="400" y="266" font-size="9" fill="#4a8c60">按 block_table 读 KV · 写新 KV</text>
+  <text x="400" y="284" font-size="8" fill="#86a892"></text>
+
+  <rect x="728" y="210" width="312" height="82" rx="11" fill="#eef7f0" stroke="#bfe0c8" filter="url(#soft)" data-tid="vLLM原理_支撑_采样" data-lab="采样"/>
+  
+  <text x="744" y="231" font-size="11.5" font-weight="700" fill="#1d4a2b">③ sample 采样 + 回填</text>
+  <text x="744" y="250" font-size="9" fill="#4a8c60">Sampler logits→token（greedy/top-p/top-k）</text>
+  <text x="744" y="266" font-size="9" fill="#4a8c60">check_stop · 未停则进下一 step</text>
+  <text x="744" y="284" font-size="8" fill="#86a892"></text>
+
+  <!-- ①→②（Control 交批）②→③（Hot 出 token） -->
+  <line x1="352" y1="248" x2="382" y2="248" stroke="#5b7db1" stroke-width="2" fill="none" marker-end="url(#aC)"/>
+  <line x1="696" y1="248" x2="726" y2="248" stroke="#2f9e6e" stroke-width="2.2" fill="none" marker-end="url(#aH)"/>
+  <!-- loop back（绿虚线：未停则回选批） -->
+  <path d="M884,292 L884,298 L200,298 L200,294" fill="none" stroke="#2f9e6e" stroke-width="1.5" stroke-dasharray="5 3" marker-end="url(#aH)"/>
+  <text x="542" y="296" font-size="8.5" fill="#4a8c60" text-anchor="middle">未停止 → 下一 step 重组批（连续批处理）</text>
+
+  <!-- ===== KV 中心资源带 ===== -->
+  <rect x="24" y="314" width="1032" height="70" rx="13" fill="#fdf6ec" stroke="#f0dcaf" filter="url(#soft)" data-tid="vLLM原理_支撑_PagedAttention与KV缓存" data-lab="PagedAttention 与 KV 缓存"/>
+  
+  <text x="40" y="336" font-size="12" font-weight="700" fill="#6b4e16">PagedAttention · 分块 KV 缓存　（中心资源 · 灵魂）</text>
+  <text x="40" y="356" font-size="9.5" fill="#a9822f">KV 切 16-token 固定物理块（像 OS 分页）· 块表映射逻辑→物理 · 按需分配、物理分散、可共享 · 消碎片 → 利用率≈满</text>
+  <text x="40" y="374" font-size="8" fill="#c2a05a">DEFAULT_BLOCK_SIZE=16 按 block_table gather</text>
+
+  <rect x="744" y="322" width="296" height="54" rx="10" fill="#faeecf" stroke="#e6cd8f" data-tid="vLLM原理_支撑_PagedAttention与KV缓存" data-lab="KV 块读写"/>
+  <text x="760" y="342" font-size="10" font-weight="700" fill="#6b4e16">reshape_and_cache 写块 · gather 读块</text>
+  <text x="760" y="358" font-size="8.5" fill="#a9822f">前向按 slot_mapping 写 KV，按块表聚合读</text>
+  <text x="760" y="371" font-size="8" fill="#c2a05a">csrc/ CUDA 核</text>
+
+  <!-- ② execute_model ↔ KV（State 读写块） -->
+  <line x1="540" y1="292" x2="540" y2="312" stroke="#c99a3a" stroke-width="1.8" stroke-dasharray="5 3" fill="none" marker-start="url(#aS)" marker-end="url(#aS)"/>
+  <text x="548" y="308" font-size="8.5" fill="#a9822f">按块表 gather / 写块</text>
+
+  <!-- ===== 底部能力域：块管理 · 抢占 · 分布式并行 ===== -->
+  <rect x="24" y="396" width="284" height="76" rx="12" fill="#fdf6ec" stroke="#f0dcaf" filter="url(#soft)" data-tid="vLLM原理_支撑_块管理与前缀缓存" data-lab="块管理"/>
+  
+  <text x="40" y="417" font-size="11" font-weight="700" fill="#6b4e16">BlockPool 分配 / 回收</text>
+  <text x="40" y="435" font-size="9" fill="#a9822f">free_block_queue 取块 · ref_cnt 共享</text>
+  <text x="40" y="451" font-size="9" fill="#a9822f">LRU 式驱逐空闲缓存块</text>
+  <text x="40" y="466" font-size="8" fill="#c2a05a">get_new_blocks</text>
+
+  <rect x="316" y="396" width="260" height="76" rx="12" fill="#fdf6ec" stroke="#f0dcaf" filter="url(#soft)" data-tid="vLLM原理_支撑_块管理与前缀缓存" data-lab="前缀缓存"/>
+  
+  <text x="332" y="417" font-size="11" font-weight="700" fill="#6b4e16">前缀缓存 · hash 复用</text>
+  <text x="332" y="435" font-size="9" fill="#a9822f">按 token hash 找最长命中前缀</text>
+  <text x="332" y="451" font-size="9" fill="#a9822f">公共前缀只算一次 · 直接复用块</text>
+  <text x="332" y="466" font-size="8" fill="#c2a05a"></text>
+
+  <rect x="584" y="396" width="180" height="76" rx="12" fill="#fdefe2" stroke="#f3c79b" filter="url(#soft)" data-tid="vLLM原理_支撑_连续批处理调度" data-lab="抢占重算"/>
+  
+  <text x="600" y="417" font-size="11" font-weight="700" fill="#9a4a12">抢占 ＝ 重算（v1）</text>
+  <text x="600" y="435" font-size="9" fill="#c26426">无空闲块 → 释放 KV</text>
+  <text x="600" y="451" font-size="9" fill="#c26426">打回 waiting 队首重跑</text>
+  <text x="600" y="466" font-size="8" fill="#d69766">（无换出）</text>
+
+  <rect x="772" y="396" width="136" height="76" rx="12" fill="#f0ecfb" stroke="#d3c6ef" filter="url(#soft)" data-tid="vLLM原理_支撑_分布式并行" data-lab="TP 并行"/>
+  
+  <text x="788" y="417" font-size="10.5" font-weight="700" fill="#4a2e78">TP 层内并行</text>
+  <text x="788" y="435" font-size="8.5" fill="#6b52a3">Column/Row 切层</text>
+  <text x="788" y="451" font-size="8.5" fill="#6b52a3">all-reduce/gather</text>
+  <text x="788" y="466" font-size="8" fill="#9d8ac9">1537</text>
+
+  <rect x="916" y="396" width="140" height="76" rx="12" fill="#f0ecfb" stroke="#d3c6ef" filter="url(#soft)" data-tid="vLLM原理_支撑_分布式并行" data-lab="PP 与执行器"/>
+  
+  <text x="932" y="417" font-size="10.5" font-weight="700" fill="#4a2e78">PP · 多进程执行</text>
+  <text x="932" y="435" font-size="8.5" fill="#6b52a3">PP 切层间传激活</text>
+  <text x="932" y="451" font-size="8.5" fill="#6b52a3">各卡各存 KV 分片</text>
+  <text x="932" y="466" font-size="8" fill="#9d8ac9"></text>
+
+  <!-- KV → 块管理（State 派生） -->
+  <line x1="120" y1="384" x2="120" y2="394" stroke="#c99a3a" stroke-width="1.6" stroke-dasharray="5 3" fill="none" marker-end="url(#aS)"/>
+  <line x1="440" y1="384" x2="440" y2="394" stroke="#c99a3a" stroke-width="1.6" stroke-dasharray="5 3" fill="none" marker-end="url(#aS)"/>
+  <!-- 无空闲块 → 抢占（失败橙） -->
+  <path d="M660,384 L660,394" stroke="#e8730f" stroke-width="1.6" stroke-dasharray="3 3" fill="none" marker-end="url(#aF)"/>
+  <text x="668" y="392" font-size="8" fill="#e8730f">无空闲块 → 抢占重算</text>
+  <!-- 分布式横切 → execute_model（紫虚线，清空走廊 x=690） -->
+  <path d="M800,396 L800,390 L690,390 L690,292" stroke="#7c5cd6" stroke-width="1.5" stroke-dasharray="5 3" fill="none" marker-end="url(#aX)"/>
+  <text x="700" y="309" font-size="7.5" fill="#6b52a3">各卡各存 KV 分片 · all-reduce</text>
+
+  <!-- ===== 设计张力铭牌带 ===== -->
+  <rect x="24" y="484" width="1032" height="46" rx="12" fill="#f4f5f7" stroke="#e6e6eb"/>
+  <text x="40" y="504" font-size="11" font-weight="700" fill="#1d1d1f">设计张力 · 显存利用率／吞吐　调度与间接开销</text>
+  <text x="40" y="522" font-size="9" fill="#5b6470">得：分块消碎片 + 连续批处理填满 GPU（利用率≈满）　　失：块表间接寻址 + 显存不足即抢占重算（v1 丢弃已算 KV、打回 waiting，无换出）</text>
+</svg>

@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="430" viewBox="0 0 1000 430" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="mw_s" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="mw_a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#8a5cae"/></marker>
+  </defs>
+  <rect width="1000" height="430" fill="#fbfbfd"/>
+  <text x="24" y="30" font-size="14" font-weight="700" fill="#1d1d1f">markWord · 一个机器字复用承载「锁 / 哈希 / 年龄 / GC 转发」四类互斥状态</text>
+  <text x="24" y="49" font-size="10" fill="#6e6e73">2 位锁标签（lock_bits=2，markWord.hpp:116）决定其余高位存什么；四态互斥，靠标签切换语义。修改必走 CAS（cas_set_mark，oop.hpp:74）</text>
+
+  <!-- 四态卡片 -->
+  <g text-anchor="middle">
+    <!-- unlocked -->
+    <rect x="24" y="72" width="232" height="128" rx="12" fill="#f5faf6" stroke="#cfe6d2" filter="url(#mw_s)"/>
+    <text x="140" y="94" font-size="11" font-weight="700" fill="#1d8f3f">unlocked = 1</text>
+    <text x="140" y="114" font-size="9" fill="#1c6b45">无锁（初始 prototype）</text>
+    <text x="140" y="138" font-size="9" fill="#3a3a3c">高位存 → 身份哈希（惰性）</text>
+    <text x="140" y="156" font-size="9" fill="#3a3a3c">+ GC 年龄 age_bits=4</text>
+    <text x="140" y="180" font-size="8" fill="#9a9aa0">每熬过一次 Minor GC 年龄 +1</text>
+    <text x="140" y="194" font-size="8" fill="#9a9aa0">到 max_age 晋升老年代</text>
+    <!-- lightweight -->
+    <rect x="272" y="72" width="232" height="128" rx="12" fill="#f6f8fc" stroke="#cfe0f2" filter="url(#mw_s)"/>
+    <text x="388" y="94" font-size="11" font-weight="700" fill="#5b7db1">locked = 0</text>
+    <text x="388" y="114" font-size="9" fill="#1b2a4a">轻量级锁</text>
+    <text x="388" y="138" font-size="9" fill="#3a3a3c">高位存 → 持锁线程栈上</text>
+    <text x="388" y="156" font-size="9" fill="#3a3a3c">Lock Record 指针</text>
+    <text x="388" y="184" font-size="8" fill="#9a9aa0">无竞争 · CAS 即得</text>
+    <!-- monitor -->
+    <rect x="520" y="72" width="232" height="128" rx="12" fill="#faf3ea" stroke="#ecdcbf" filter="url(#mw_s)"/>
+    <text x="636" y="94" font-size="11" font-weight="700" fill="#8a5a1a">monitor = 2</text>
+    <text x="636" y="114" font-size="9" fill="#8a5a1a">重量级（已膨胀）</text>
+    <text x="636" y="138" font-size="9" fill="#3a3a3c">高位存 → ObjectMonitor*</text>
+    <text x="636" y="162" font-size="8" fill="#b0413e">哈希被搬进 monitor</text>
+    <text x="636" y="180" font-size="8" fill="#9a9aa0">故膨胀后 identityHashCode</text>
+    <text x="636" y="192" font-size="8" fill="#9a9aa0">不能再从头字直接取</text>
+    <!-- marked -->
+    <rect x="768" y="72" width="208" height="128" rx="12" fill="#f4eefb" stroke="#d9c9ef" filter="url(#mw_s)"/>
+    <text x="872" y="94" font-size="11" font-weight="700" fill="#6f3ea8">marked = 3</text>
+    <text x="872" y="114" font-size="9" fill="#6f3ea8">GC 转发标记</text>
+    <text x="872" y="138" font-size="9" fill="#3a3a3c">整字用作转发指针</text>
+    <text x="872" y="156" font-size="9" fill="#3a3a3c">→ 对象搬移后新地址</text>
+    <text x="872" y="184" font-size="8" fill="#9a9aa0">GC 结束再恢复</text>
+  </g>
+  <line x1="256" y1="128" x2="272" y2="128" stroke="#8a5cae" stroke-width="1.4" marker-end="url(#mw_a)"/>
+  <line x1="504" y1="128" x2="520" y2="128" stroke="#8a5cae" stroke-width="1.4" marker-end="url(#mw_a)"/>
+  <text x="264" y="120" font-size="7.5" fill="#8a5cae" text-anchor="middle">加锁</text>
+  <text x="512" y="120" font-size="7.5" fill="#8a5cae" text-anchor="middle">竞争膨胀</text>
+  <text x="636" y="218" font-size="8" fill="#8a5cae" text-anchor="middle">↑ GC 阶段任意态临时切到 marked=3，回收后恢复</text>
+
+  <!-- oop ↔ Klass 双向 -->
+  <rect x="24" y="238" width="952" height="80" rx="12" fill="#fbfbfd" stroke="#e2e2e7"/>
+  <text x="40" y="260" font-size="11" font-weight="600" fill="#1d1d1f">oop ↔ Klass 双向勾连（多对一）</text>
+  <g text-anchor="middle">
+    <rect x="120" y="270" width="240" height="36" rx="9" fill="#fff" stroke="#cfe0f2" filter="url(#mw_s)"/>
+    <text x="240" y="292" font-size="9.5" fill="#1b2a4a">oop（堆·每实例一份）压缩类指针</text>
+    <rect x="640" y="270" width="240" height="36" rx="9" fill="#fff" stroke="#cfe6d2" filter="url(#mw_s)"/>
+    <text x="760" y="292" font-size="9.5" fill="#1c6b45">Klass（元空间·全类唯一）_java_mirror</text>
+  </g>
+  <line x1="360" y1="282" x2="640" y2="282" stroke="#5b7db1" stroke-width="1.4" marker-end="url(#mw_a)"/>
+  <line x1="640" y1="298" x2="360" y2="298" stroke="#2f9e6e" stroke-width="1.4" marker-end="url(#mw_a)"/>
+  <text x="500" y="278" font-size="8" fill="#5b7db1" text-anchor="middle">「我是什么类型」klass()：decode narrowKlass</text>
+  <text x="500" y="312" font-size="8" fill="#2f9e6e" text-anchor="middle">「类型的 Java 镜像 java.lang.Class」_java_mirror（静态字段拼在镜像尾部）</text>
+
+  <!-- 底部要点 -->
+  <rect x="24" y="336" width="952" height="72" rx="12" fill="#f4eefb" stroke="#d9c9ef"/>
+  <text x="40" y="358" font-size="10.5" font-weight="600" fill="#6f3ea8">反直觉后果</text>
+  <text x="40" y="380" font-size="9" fill="#3a3a3c">① 身份哈希是首次 System.identityHashCode 才惰性写入头字，之前 has_no_hash() 为真。</text>
+  <text x="40" y="398" font-size="9" fill="#3a3a3c">② 一旦对象曾膨胀过锁（哈希搬进 monitor），读它的 identityHashCode 就不能再从对象头直接取 —— 这正是四态互斥复用同一机器字的直接代价。</text>
+</svg>

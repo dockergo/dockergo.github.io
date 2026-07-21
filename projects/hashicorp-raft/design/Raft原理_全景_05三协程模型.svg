@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="648" viewBox="0 0 1060 648" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/>
+    </filter>
+    <marker id="aB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#4a7fd0"/></marker>
+    <marker id="aG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+    <marker id="aA" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#cf972b"/></marker>
+  </defs>
+  <rect width="1060" height="648" fill="#fbfbfd"/>
+
+  <rect x="0" y="0" width="1060" height="46" fill="#f4f5f7" stroke="#e6e6eb"/>
+  <text x="30" y="27" font-size="15" font-weight="700" fill="#1d1d1f">三协程模型 · 单线程 run 串行驱动 + runFSM / runSnapshots 旁挂</text>
+  <text x="30" y="40" font-size="10.5" fill="#8a8a90">无锁根基:term / state / config 只由 run 主线程改,跨协程只用 channel 通信</text>
+
+  <!-- 图例 -->
+  <g font-size="10">
+    <rect x="640" y="12" width="12" height="12" rx="3" fill="#eef3fb" stroke="#4a7fd0"/><text x="656" y="22" fill="#3a3a3c">控制/主循环</text>
+    <rect x="742" y="12" width="12" height="12" rx="3" fill="#f5faf6" stroke="#2f9e6e"/><text x="758" y="22" fill="#3a3a3c">FSM/apply</text>
+    <rect x="838" y="12" width="12" height="12" rx="3" fill="#fbf7ef" stroke="#cf972b"/><text x="854" y="22" fill="#3a3a3c">存储/快照</text>
+    <rect x="934" y="12" width="12" height="12" rx="3" fill="#faf4fb" stroke="#8a5cae"/><text x="950" y="22" fill="#3a3a3c">接口/宿主</text>
+  </g>
+
+  <!-- 宿主接触面 -->
+  <rect x="30" y="58" width="990" height="42" rx="10" fill="#faf4fb" stroke="#e7cff0" filter="url(#soft)"/>
+  <text x="46" y="76" font-size="12" font-weight="600" fill="#5a2b6b">宿主线程 · 接触面</text>
+  <text x="46" y="92" font-size="10.5" fill="#9a5cb0">Apply / AddVoter / VerifyLeader / Snapshot → 投递到 channel,返回 Future 阻塞等待(不直接改核心状态)</text>
+
+  <!-- run 主线协程 -->
+  <rect x="30" y="116" width="486" height="504" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="48" y="140" font-size="12.5" font-weight="700" fill="#1b2a4a">run 主线协程 · raft.go:136 · 按状态分派</text>
+  <text x="48" y="156" font-size="10" fill="#5b7db1">整个库唯一修改核心状态的线程 → 天然串行、免锁</text>
+
+  <g font-size="10.5" text-anchor="middle">
+    <rect x="48" y="168" width="140" height="30" rx="8" fill="#fff" stroke="#c6d2ea"/><text x="118" y="187" fill="#1b2a4a"><tspan font-weight="600">runFollower</tspan> :159</text>
+    <rect x="200" y="168" width="140" height="30" rx="8" fill="#fff" stroke="#c6d2ea"/><text x="270" y="187" fill="#1b2a4a"><tspan font-weight="600">runCandidate</tspan> :286</text>
+    <rect x="352" y="168" width="146" height="30" rx="8" fill="#e9edf6" stroke="#9db6de"/><text x="425" y="187" fill="#1b2a4a"><tspan font-weight="700">runLeader</tspan> :469</text>
+  </g>
+
+  <!-- leaderLoop select -->
+  <rect x="48" y="214" width="450" height="358" rx="11" fill="#ffffff" stroke="#cfe0f2"/>
+  <text x="66" y="236" font-size="11.5" font-weight="700" fill="#1b2a4a">leaderLoop 热循环 · :668 · for { select … }</text>
+  <g font-size="10.5" fill="#2b3a5a">
+    <rect x="66" y="248" width="414" height="28" rx="7" fill="#eef3fb" stroke="#cfe0f2"/><text x="78" y="266"><tspan font-weight="600">applyCh</tspan> :906 — 收命令 → dispatchLogs 写本地日志</text>
+    <rect x="66" y="282" width="414" height="28" rx="7" fill="#eef3fb" stroke="#cfe0f2"/><text x="78" y="300"><tspan font-weight="600">commitCh</tspan> :786 — 多数派达标 → 推进 commitIndex</text>
+    <rect x="66" y="316" width="414" height="28" rx="7" fill="#eef3fb" stroke="#cfe0f2"/><text x="78" y="334"><tspan font-weight="600">verifyCh</tspan> :849 — VerifyLeader 线性读前哨</text>
+    <rect x="66" y="350" width="414" height="28" rx="7" fill="#eef3fb" stroke="#cfe0f2"/><text x="78" y="368"><tspan font-weight="600">configurationChangeCh</tspan> :893 — 单步成员变更</text>
+    <rect x="66" y="384" width="414" height="28" rx="7" fill="#eef3fb" stroke="#cfe0f2"/><text x="78" y="402"><tspan font-weight="600">rpcCh</tspan> :684 — processRPC 处理入站 RPC</text>
+    <rect x="66" y="418" width="414" height="28" rx="7" fill="#eef3fb" stroke="#cfe0f2"/><text x="78" y="436"><tspan font-weight="600">leadershipTransferCh</tspan> :692 — 优雅交班</text>
+    <rect x="66" y="452" width="414" height="28" rx="7" fill="#fbf7ef" stroke="#ead9b3"/><text x="78" y="470" fill="#8a5a12"><tspan font-weight="600">lease 定时器</tspan> — checkLeaderLease 失多数派则退位</text>
+  </g>
+  <text x="66" y="504" font-size="10" fill="#5b7db1">已提交条目 → 打包 commitTuple 送 fsmMutateCh(见右上)</text>
+  <text x="66" y="522" font-size="10" fill="#5b7db1">状态迁移(选举超时/更高任期)由 run 自身 setState 触发</text>
+  <rect x="66" y="532" width="414" height="30" rx="7" fill="#f2f5fb" stroke="#d6e0f0"/>
+  <text x="78" y="551" font-size="10.5" fill="#1b2a4a"><tspan font-weight="600">无锁不变量</tspan> · 核心状态单写者 = run,读者拿快照或走 channel</text>
+
+  <!-- runFSM 协程 -->
+  <rect x="540" y="116" width="480" height="256" rx="13" fill="#f5faf6" stroke="#c9e6cf" filter="url(#soft)"/>
+  <text x="558" y="140" font-size="12.5" font-weight="700" fill="#1f5130">runFSM 协程 · fsm.go:86</text>
+  <text x="558" y="156" font-size="10" fill="#4f8b63">与 run 解耦:慢 apply 不阻塞共识主循环</text>
+  <g font-size="10.5" fill="#1f5130">
+    <rect x="558" y="168" width="444" height="80" rx="9" fill="#fff" stroke="#c9e6cf"/>
+    <text x="572" y="188"><tspan font-weight="600">fsmMutateCh</tspan>(cap 128)</text>
+    <text x="572" y="208" font-size="10">• []*commitTuple → 依序调宿主 FSM.Apply(可选 ApplyBatch)</text>
+    <text x="572" y="226" font-size="10">• *restoreFuture → FSM.Restore(从快照重建状态机)</text>
+    <text x="572" y="242" font-size="9.5" fill="#4f8b63">apply 完 future.respond(返回值) → 唤醒宿主 ApplyFuture</text>
+    <rect x="558" y="256" width="444" height="52" rx="9" fill="#fff" stroke="#c9e6cf"/>
+    <text x="572" y="276"><tspan font-weight="600">fsmSnapshotCh</tspan></text>
+    <text x="572" y="294" font-size="10">• *reqSnapshotFuture → FSM.Snapshot() 捕获状态指针(快返回)</text>
+  </g>
+  <text x="558" y="332" font-size="10" fill="#4f8b63">Persist 重 IO 可与后续 Apply 并发 → 要求 FSM 支持并发读</text>
+  <text x="558" y="350" font-size="10" fill="#4f8b63">restore 与 apply 互斥,均在本协程内串行</text>
+
+  <!-- runSnapshots 协程 -->
+  <rect x="540" y="388" width="480" height="232" rx="13" fill="#fbf7ef" stroke="#ead9b3" filter="url(#soft)"/>
+  <text x="558" y="412" font-size="12.5" font-weight="700" fill="#8a5a12">runSnapshots 协程 · snapshot.go:73</text>
+  <g font-size="10.5" fill="#8a5a12">
+    <rect x="558" y="424" width="444" height="30" rx="8" fill="#fff" stroke="#ead9b3"/><text x="572" y="443">① randomTimeout(SnapshotInterval,默认 120s) 到点</text>
+    <rect x="558" y="460" width="444" height="30" rx="8" fill="#fff" stroke="#ead9b3"/><text x="572" y="479">② shouldSnapshot :107 — delta ≥ SnapshotThreshold(8192)?</text>
+    <rect x="558" y="496" width="444" height="30" rx="8" fill="#fff" stroke="#ead9b3"/><text x="572" y="515">③ takeSnapshot :126 — 经 fsmSnapshotCh 请 runFSM 出快照</text>
+    <rect x="558" y="532" width="444" height="30" rx="8" fill="#fff" stroke="#ead9b3"/><text x="572" y="551">④ Persist 落 SnapshotStore → compactLogs 截断旧日志</text>
+  </g>
+  <text x="558" y="586" font-size="10" fill="#a07a1e">保留尾部 TrailingLogs(默认 10240),供落后 follower 增量追</text>
+  <text x="558" y="604" font-size="10" fill="#a07a1e">也可由宿主 Snapshot() API 手动触发(userSnapshotCh)</text>
+
+  <!-- channels -->
+  <path d="M498,300 L540,268" stroke="#4a7fd0" stroke-width="1.6" fill="none" marker-end="url(#aB)"/>
+  <text x="504" y="278" font-size="9.5" fill="#4a7fd0">commitTuple</text>
+  <path d="M778,388 L778,372" stroke="#cf972b" stroke-width="1.6" fill="none" marker-end="url(#aA)"/>
+  <text x="784" y="384" font-size="9.5" fill="#a07a1e">fsmSnapshotCh</text>
+</svg>

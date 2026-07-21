@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="520" viewBox="0 0 1040 520" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs><filter id="sw" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="3.5" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="wa" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#4f6f9f"/></marker></defs>
+  <rect width="1040" height="520" fill="#fbfbfd"/>
+  <text x="24" y="30" font-size="14" font-weight="700" fill="#1d1d1f">message → frame 映射：应用 message 如何被前缀化、帧化、切成 DATA 帧，metadata 如何走 HEADERS/trailer</text>
+  <text x="24" y="49" font-size="10" fill="#8a8a8e">一次调用在 wire 上 = 首 HEADERS（initial md）→ N×DATA（load）→ 末 HEADERS（trailing md，带 grpc-status）；payload 全程 Slice 零拷贝</text>
+
+  <!-- LEFT: payload framing stack -->
+  <rect x="24" y="66" width="470" height="300" rx="12" fill="#f4f6fb" stroke="#cdd8ea" filter="url(#sw)"/>
+  <text x="40" y="88" font-size="11" font-weight="700" fill="#4f6f9f">① 载荷帧化：三层前缀，自内向外包裹</text>
+
+  <rect x="132" y="102" width="254" height="34" rx="7" fill="#fff" stroke="#cdd8ea" filter="url(#sw)"/>
+  <text x="259" y="123" font-size="9.5" text-anchor="middle" fill="#3f5f8f">序列化 message（protobuf 字节）</text>
+
+  <line x1="259" y1="136" x2="259" y2="150" stroke="#4f6f9f" stroke-width="1.4" marker-end="url(#wa)"/>
+  <rect x="88" y="150" width="342" height="40" rx="7" fill="#eafaf1" stroke="#b8e6cd" filter="url(#sw)"/>
+  <rect x="96" y="158" width="86" height="24" rx="4" fill="#d6f2e2" stroke="#b8e6cd"/>
+  <text x="139" y="174" font-size="8" text-anchor="middle" fill="#1c6b45">5B 前缀</text>
+  <text x="310" y="169" font-size="8.5" text-anchor="middle" fill="#1c6b45">1B 压缩标志 + 4B 大端长度 + message</text>
+  <text x="310" y="182" font-size="7" text-anchor="middle" fill="#5aa07d">Length-Prefixed-Message（gRPC 帧）</text>
+
+  <line x1="259" y1="190" x2="259" y2="204" stroke="#4f6f9f" stroke-width="1.4" marker-end="url(#wa)"/>
+  <rect x="60" y="204" width="398" height="40" rx="7" fill="#f4eefb" stroke="#ddccef" filter="url(#sw)"/>
+  <rect x="68" y="212" width="96" height="24" rx="4" fill="#ecdcf7" stroke="#ddccef"/>
+  <text x="116" y="228" font-size="8" text-anchor="middle" fill="#6f3ea8">9B 帧头</text>
+  <text x="320" y="223" font-size="8.5" text-anchor="middle" fill="#6f3ea8">3B 长度 + 类型 + 标志 + 4B 流号（末帧 END_STREAM）</text>
+  <text x="320" y="236" font-size="7" text-anchor="middle" fill="#9a76c0">encode_data（frame_data.cc:55）</text>
+
+  <line x1="259" y1="244" x2="259" y2="258" stroke="#4f6f9f" stroke-width="1.4" marker-end="url(#wa)"/>
+  <g font-size="8" text-anchor="middle" fill="#6f3ea8">
+    <rect x="70" y="258" width="120" height="30" rx="6" fill="#fff" stroke="#ddccef" filter="url(#sw)"/><text x="130" y="277">DATA 帧 1</text>
+    <rect x="200" y="258" width="120" height="30" rx="6" fill="#fff" stroke="#ddccef" filter="url(#sw)"/><text x="260" y="277">DATA 帧 2</text>
+    <rect x="330" y="258" width="118" height="30" rx="6" fill="#fff" stroke="#ddccef" filter="url(#sw)"/><text x="389" y="277">DATA 帧 …</text>
+  </g>
+  <text x="40" y="308" font-size="8.5" fill="#5f7799">大 message 受连接级+流级流控配额节流（DataSendContext，writing.cc:390）</text>
+  <text x="40" y="324" font-size="8.5" fill="#5f7799">自然切成多帧分批发出；收侧按 9B 帧头分派、按 5B 前缀还原 message</text>
+  <text x="40" y="344" font-size="8" fill="#7b96bd">收侧：perform_read（parsing.cc:215）· deframe（frame_data.cc:87）</text>
+  <text x="40" y="360" font-size="8" fill="#9db3ce">payload 全程以 Slice/SliceBuffer 引用计数零拷贝流转（lib/slice/）</text>
+
+  <!-- RIGHT: HEADERS/DATA/trailer sequence + metadata -->
+  <rect x="510" y="66" width="506" height="300" rx="12" fill="#fbfbfd" stroke="#e6e6ea" filter="url(#sw)"/>
+  <text x="526" y="88" font-size="11" font-weight="700" fill="#1d1d1f">② 一次调用的 wire 序列：两次 HEADERS 夹 N 个 DATA</text>
+
+  <line x1="560" y1="108" x2="560" y2="342" stroke="#dcdce0" stroke-width="2"/>
+  <!-- initial HEADERS -->
+  <rect x="576" y="108" width="424" height="52" rx="8" fill="#f4eefb" stroke="#ddccef" filter="url(#sw)"/>
+  <circle cx="560" cy="134" r="5" fill="#8a5cae"/>
+  <text x="590" y="127" font-size="9.5" font-weight="600" fill="#6f3ea8">HEADERS（initial metadata）</text>
+  <text x="590" y="142" font-size="7.5" fill="#9a76c0">:method / :path / content-type · grpc-timeout（deadline 编码）</text>
+  <text x="590" y="154" font-size="7" fill="#b79fd4">GrpcTimeoutMetadata · Timeout::Encode（timeout_encoding.h:34/:38）→ 如 100m</text>
+
+  <!-- DATA -->
+  <rect x="576" y="170" width="424" height="46" rx="8" fill="#eafaf1" stroke="#b8e6cd" filter="url(#sw)"/>
+  <circle cx="560" cy="193" r="5" fill="#2f9e6e"/>
+  <text x="590" y="188" font-size="9.5" font-weight="600" fill="#1c6b45">DATA × N（载荷）</text>
+  <text x="590" y="203" font-size="7.5" fill="#5aa07d">左侧帧化后的 Length-Prefixed-Message，按流控分批</text>
+
+  <!-- trailing HEADERS -->
+  <rect x="576" y="226" width="424" height="56" rx="8" fill="#f4eefb" stroke="#ddccef" filter="url(#sw)"/>
+  <circle cx="560" cy="254" r="5" fill="#8a5cae"/>
+  <text x="590" y="245" font-size="9.5" font-weight="600" fill="#6f3ea8">HEADERS（trailing metadata，END_STREAM）</text>
+  <text x="590" y="260" font-size="7.5" fill="#9a76c0">grpc-status（必有）+ grpc-message（可选）</text>
+  <text x="590" y="273" font-size="7" fill="#b79fd4">GrpcStatusMetadata :408 · GrpcMessageMetadata :283</text>
+
+  <text x="526" y="304" font-size="8.5" fill="#4a4a4f">结果码走 trailer 而非 body：故正常调用即使无 body 也至少有 initial + trailing 两次 HEADERS。</text>
+  <text x="526" y="322" font-size="8" fill="#8a8a8e">头部集合 = metadata batch（metadata_batch.h）；HPACK 压缩见前一张图。</text>
+  <text x="526" y="340" font-size="8" fill="#a1a1a6">unary 也是「流」：一进一出各一条 message，仍走同一 HEADERS→DATA→trailer 结构。</text>
+
+  <text x="24" y="392" font-size="9.5" fill="#4a4a4f">读法：应用 message 先加 5B gRPC 前缀成 gRPC 帧，再加 9B HTTP/2 帧头切成 DATA 帧；一次调用在 wire 上是「首 HEADERS 带 grpc-timeout → N×DATA → 末 HEADERS 带 grpc-status」。</text>
+  <text x="24" y="414" font-size="9" fill="#6e6e73">关键不变量：请求元信息走 initial metadata、结果码走 trailing metadata（trailer），二者都是 HEADERS 帧；载荷才走 DATA 帧——控制与数据在帧层分离。</text>
+  <text x="24" y="436" font-size="9" fill="#a1a1a6">零拷贝：5B/9B 前缀与 payload 都以 Slice 拼接，切帧只移动指针与长度、不复制字节，海量小 RPC 下开销可忽略。</text>
+</svg>

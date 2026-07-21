@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="560" viewBox="0 0 960 560"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="960" height="560" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">Leader 选举（FLE）+ 恢复同步：从崩溃到重新广播</text>
+
+  <!-- 阶段条 -->
+  <rect x="30" y="52" width="290" height="30" rx="8" fill="#eef3fb" stroke="#bcd0ec"/><text x="175" y="72" font-size="10.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">阶段 0 · 选举（FastLeaderElection）</text>
+  <rect x="336" y="52" width="290" height="30" rx="8" fill="#fff7e6" stroke="#f0dcae"/><text x="481" y="72" font-size="10.5" font-weight="600" fill="#7a4d00" text-anchor="middle">阶段 1 · 恢复同步（DIFF/TRUNC/SNAP）</text>
+  <rect x="642" y="52" width="288" height="30" rx="8" fill="#eafaf1" stroke="#bce6cd"/><text x="786" y="72" font-size="10.5" font-weight="600" fill="#0f5132" text-anchor="middle">阶段 2 · 广播（正常服务）</text>
+
+  <!-- FLE 选举 -->
+  <rect x="30" y="100" width="290" height="200" rx="12" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="46" y="122" font-size="10" font-weight="600" fill="#2c5a3a">节点进入 LOOKING</text>
+  <text x="46" y="144" font-size="9" fill="#2f6f4f">各自投 (自己 id, 自己 zxid,</text>
+  <text x="46" y="158" font-size="9" fill="#2f6f4f">　electionEpoch, peerEpoch)</text>
+  <text x="46" y="180" font-size="9" fill="#2f6f4f">经 QuorumCnxManager 互换投票</text>
+  <rect x="46" y="192" width="258" height="46" rx="8" fill="#ffffff" stroke="#bcd0ec"/>
+  <text x="175" y="210" font-size="8.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">totalOrderPredicate 比大小</text>
+  <text x="175" y="226" font-size="8" fill="#5b7db1" text-anchor="middle">peerEpoch &gt; ｜ 同则 zxid &gt; ｜ 再同则 id &gt;</text>
+  <text x="46" y="258" font-size="9" fill="#2f6f4f">收敛到同一 leader、过半认同</text>
+  <text x="46" y="276" font-size="9" fill="#2f6f4f">→ 胜者 LEADING、余者 FOLLOWING</text>
+  <text x="46" y="294" font-size="8" fill="#86868b">lookForLeader（FastLeaderElection）</text>
+
+  <!-- 恢复 -->
+  <rect x="336" y="100" width="290" height="200" rx="12" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="352" y="122" font-size="10" font-weight="600" fill="#7a4d00">Leader 确定新 epoch</text>
+  <text x="352" y="142" font-size="9" fill="#9a7328">收集各 follower 的 ACKEPOCH，</text>
+  <text x="352" y="156" font-size="9" fill="#9a7328">newEpoch = max(peerEpoch)+1</text>
+  <text x="352" y="178" font-size="9" fill="#9a7328">按 follower 落后程度选同步方式：</text>
+  <rect x="352" y="190" width="258" height="22" rx="6" fill="#ffffff" stroke="#efdcb4"/><text x="481" y="205" font-size="8" fill="#7a4d00" text-anchor="middle">DIFF：只补差异事务（最常见）</text>
+  <rect x="352" y="216" width="258" height="22" rx="6" fill="#ffffff" stroke="#efdcb4"/><text x="481" y="231" font-size="8" fill="#7a4d00" text-anchor="middle">TRUNC：follower 多了未提交 → 截断</text>
+  <rect x="352" y="242" width="258" height="22" rx="6" fill="#ffffff" stroke="#efdcb4"/><text x="481" y="257" font-size="8" fill="#7a4d00" text-anchor="middle">SNAP：落后太多 → 发整份快照</text>
+  <text x="352" y="284" font-size="8" fill="#86868b">Learner.syncWithLeader · NEWLEADER</text>
+
+  <!-- 广播 -->
+  <rect x="642" y="100" width="288" height="200" rx="12" fill="#eafaf1" stroke="#bce6cd"/>
+  <text x="658" y="122" font-size="10" font-weight="600" fill="#0f5132">同步完成 → UPTODATE</text>
+  <text x="658" y="144" font-size="9" fill="#2f6f4f">Leader 等过半 follower 回</text>
+  <text x="658" y="158" font-size="9" fill="#2f6f4f">NEWLEADER 的 Ack</text>
+  <text x="658" y="172" font-size="9" fill="#2f6f4f">（waitForNewLeaderAck）</text>
+  <rect x="658" y="186" width="256" height="46" rx="8" fill="#ffffff" stroke="#bce6cd"/>
+  <text x="786" y="204" font-size="8.5" font-weight="600" fill="#0f5132" text-anchor="middle">集群对外提供服务</text>
+  <text x="786" y="220" font-size="8" fill="#3f8f66" text-anchor="middle">开始接受写、走 Proposal→Ack→Commit</text>
+  <text x="658" y="256" font-size="9" fill="#2f6f4f">Leader 周期 PING 各 follower；</text>
+  <text x="658" y="272" font-size="9" fill="#2f6f4f">失联过半 → 退回 LOOKING 重选</text>
+  <text x="658" y="290" font-size="8" fill="#86868b">Leader.lead · waitForEpochAck</text>
+
+  <line x1="320" y1="200" x2="336" y2="200" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+  <line x1="626" y1="200" x2="642" y2="200" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+
+  <!-- 底部 -->
+  <rect x="30" y="320" width="900" height="220" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="48" y="344" font-size="11.5" font-weight="600" fill="#1d1d1f">为什么这样能保证一致</text>
+  <text x="48" y="368" font-size="9.5" fill="#494950">· 选举选出"数据最新"的 leader：totalOrderPredicate 先比 peerEpoch 再比 zxid——已提交事务 zxid 最大者当选，</text>
+  <text x="62" y="384" font-size="9.5" fill="#494950">  保证任何已提交事务都在新 leader 上，不会因换主丢失（对应 Raft 的"选举限制"）。</text>
+  <text x="48" y="408" font-size="9.5" fill="#494950">· 新 epoch 防脑裂：每任 leader 用更高 epoch，旧 leader 复活发的低 epoch 包被拒；zxid 高 32 位即 epoch。</text>
+  <text x="48" y="428" font-size="9.5" fill="#494950">· 同步补齐历史：follower 加入前先 DIFF/TRUNC/SNAP 对齐到 leader 的日志，再进入广播——先对齐后服务。</text>
+  <text x="48" y="448" font-size="9.5" fill="#494950">· 过半可用：只要过半节点存活即可选出 leader 并服务；否则集群暂停写（CP：宁停不错）。</text>
+  <text x="48" y="476" font-size="10.5" font-weight="600" fill="#1d1d1f">ZAB vs Raft</text>
+  <text x="48" y="498" font-size="9.5" fill="#86868b">· 同：主-从复制、日志+过半提交、更高 term/epoch 防旧主、选举比日志新旧。</text>
+  <text x="48" y="516" font-size="9.5" fill="#86868b">· 异：ZAB 恢复期有独立"发现 epoch + 同步"阶段，主先确定 epoch/对齐历史再广播；Raft 把这些融进 AppendEntries 一致性检查。</text>
+</svg>

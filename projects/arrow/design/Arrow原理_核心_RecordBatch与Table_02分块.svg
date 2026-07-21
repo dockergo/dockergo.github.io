@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="470" viewBox="0 0 980 470" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <marker id="rb2a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#8a5cae"/></marker>
+    <filter id="rb2s" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+  </defs>
+  <rect width="980" height="470" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="700" fill="#1d1d1f">ChunkedArray · 一列"逻辑连续、物理分块"（chunked_array.h:74）</text>
+  <text x="30" y="50" font-size="10.5" fill="#6e6e73">追加新数据 = 加一个 chunk，不重排旧内存；随机定位需 ChunkResolver 二分（吞吐/追加 ⟷ 单值多一跳）</text>
+
+  <!-- 逻辑视图 -->
+  <rect x="30" y="78" width="920" height="72" rx="12" fill="#f6f8fc" stroke="#cfe0f2" filter="url(#rb2s)"/>
+  <text x="46" y="100" font-size="11" font-weight="700" fill="#1b2a4a">逻辑视图（length()=8，首尾相接的一列）</text>
+  <g font-size="12" font-weight="700" text-anchor="middle">
+    <rect x="46" y="110" width="52" height="30" fill="#e8eefb" stroke="#c3d3ee"/><text x="72" y="130" fill="#1b2a4a">1</text>
+    <rect x="100" y="110" width="52" height="30" fill="#e8eefb" stroke="#c3d3ee"/><text x="126" y="130" fill="#1b2a4a">2</text>
+    <rect x="154" y="110" width="52" height="30" fill="#e8eefb" stroke="#c3d3ee"/><text x="180" y="130" fill="#1b2a4a">3</text>
+    <rect x="208" y="110" width="52" height="30" fill="#e8eefb" stroke="#c3d3ee"/><text x="234" y="130" fill="#1b2a4a">4</text>
+    <rect x="262" y="110" width="52" height="30" fill="#e8eefb" stroke="#c3d3ee"/><text x="288" y="130" fill="#1b2a4a">5</text>
+    <rect x="316" y="110" width="52" height="30" fill="#e8eefb" stroke="#c3d3ee"/><text x="342" y="130" fill="#1b2a4a">6</text>
+    <rect x="370" y="110" width="52" height="30" fill="#e8eefb" stroke="#c3d3ee"/><text x="396" y="130" fill="#1b2a4a">7</text>
+    <rect x="424" y="110" width="52" height="30" fill="#e8eefb" stroke="#c3d3ee"/><text x="450" y="130" fill="#1b2a4a">8</text>
+  </g>
+  <text x="700" y="130" font-size="9.5" fill="#5b7db1">对外像一个连续数组 [1..8]</text>
+
+  <line x1="490" y1="150" x2="490" y2="186" stroke="#8a5cae" stroke-width="1.6" marker-end="url(#rb2a)"/>
+  <text x="560" y="174" font-size="9" fill="#8a5cae" text-anchor="middle">物理上是三个各自 buffers 的独立 Array</text>
+
+  <!-- 物理分块 -->
+  <rect x="60" y="196" width="240" height="110" rx="12" fill="#f5faf6" stroke="#bfe6cd" filter="url(#rb2s)"/>
+  <text x="180" y="218" font-size="10.5" font-weight="700" fill="#1c6b45" text-anchor="middle">chunk 0（chunk(0)）</text>
+  <g font-size="12" font-weight="700" text-anchor="middle">
+    <rect x="88" y="234" width="52" height="30" fill="#d9f2e4" stroke="#9ed9ba"/><text x="114" y="254" fill="#1c6b45">1</text>
+    <rect x="142" y="234" width="52" height="30" fill="#d9f2e4" stroke="#9ed9ba"/><text x="168" y="254" fill="#1c6b45">2</text>
+    <rect x="196" y="234" width="52" height="30" fill="#d9f2e4" stroke="#9ed9ba"/><text x="222" y="254" fill="#1c6b45">3</text>
+  </g>
+  <text x="180" y="290" font-size="8.5" fill="#2f7d57" text-anchor="middle">起始偏移 0，独立 buffers</text>
+
+  <rect x="370" y="196" width="180" height="110" rx="12" fill="#f5faf6" stroke="#bfe6cd" filter="url(#rb2s)"/>
+  <text x="460" y="218" font-size="10.5" font-weight="700" fill="#1c6b45" text-anchor="middle">chunk 1</text>
+  <g font-size="12" font-weight="700" text-anchor="middle">
+    <rect x="398" y="234" width="52" height="30" fill="#d9f2e4" stroke="#9ed9ba"/><text x="424" y="254" fill="#1c6b45">4</text>
+    <rect x="452" y="234" width="52" height="30" fill="#d9f2e4" stroke="#9ed9ba"/><text x="478" y="254" fill="#1c6b45">5</text>
+  </g>
+  <text x="460" y="290" font-size="8.5" fill="#2f7d57" text-anchor="middle">起始偏移 3</text>
+
+  <rect x="620" y="196" width="240" height="110" rx="12" fill="#f5faf6" stroke="#bfe6cd" filter="url(#rb2s)"/>
+  <text x="740" y="218" font-size="10.5" font-weight="700" fill="#1c6b45" text-anchor="middle">chunk 2　← 新数据加在这</text>
+  <g font-size="12" font-weight="700" text-anchor="middle">
+    <rect x="648" y="234" width="52" height="30" fill="#d9f2e4" stroke="#9ed9ba"/><text x="674" y="254" fill="#1c6b45">6</text>
+    <rect x="702" y="234" width="52" height="30" fill="#d9f2e4" stroke="#9ed9ba"/><text x="728" y="254" fill="#1c6b45">7</text>
+    <rect x="756" y="234" width="52" height="30" fill="#d9f2e4" stroke="#9ed9ba"/><text x="782" y="254" fill="#1c6b45">8</text>
+  </g>
+  <text x="740" y="290" font-size="8.5" fill="#2f7d57" text-anchor="middle">起始偏移 5，追加不重排旧块</text>
+
+  <!-- Resolver -->
+  <rect x="60" y="330" width="500" height="112" rx="12" fill="#f4eefb" stroke="#d9c9ef" filter="url(#rb2s)"/>
+  <text x="76" y="352" font-size="11" font-weight="700" fill="#3c1361">随机定位：ChunkResolver（chunk_resolver.h:65）</text>
+  <text x="76" y="373" font-size="9.5" fill="#6f3ea8">Resolve(index=6)（:125）在各 chunk 起始偏移数组上二分</text>
+  <text x="76" y="390" font-size="9.5" fill="#6f3ea8">→ ChunkLocation {chunk_index=2, index_in_chunk=1}</text>
+  <text x="76" y="410" font-size="9.5" fill="#6f3ea8">即"第几块 + 块内偏移"（:41 / :46）</text>
+  <text x="76" y="430" font-size="8.5" fill="#9a86c0">ResolveMany（:172）一次解析多个下标，摊薄二分开销</text>
+
+  <!-- 张力 -->
+  <rect x="580" y="330" width="340" height="112" rx="12" fill="#fbf2ea" stroke="#e6cdae"/>
+  <text x="596" y="352" font-size="11" font-weight="700" fill="#b0651f">张力落点</text>
+  <text x="596" y="374" font-size="9.5" fill="#5a4a3a">吞吐 / 追加友好（分块、O(1) 拼接、</text>
+  <text x="596" y="391" font-size="9.5" fill="#5a4a3a">边读边攒、不重排旧内存）</text>
+  <text x="596" y="414" font-size="9.5" fill="#5a4a3a">⟷ 单值随机访问要多一层 chunk 定位</text>
+  <text x="596" y="432" font-size="8.5" fill="#8a7a5a">故 Table 非行式 O(1) 取第 i 行第 j 列</text>
+</svg>

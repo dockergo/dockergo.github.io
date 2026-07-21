@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="460" viewBox="0 0 900 460" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="900" height="460" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">准入 · Mutating（串行·可改写·可重调）→ Validating（并发·只校验）</text>
+  <g font-size="10.5">
+    <rect x="600" y="20" width="12" height="12" rx="3" fill="#faf4fb" stroke="#e4cdea"/><text x="618" y="30" fill="#6e6e73">改写</text>
+    <rect x="676" y="20" width="12" height="12" rx="3" fill="#eef3fb" stroke="#bcd0ec"/><text x="694" y="30" fill="#6e6e73">校验</text>
+    <rect x="748" y="20" width="12" height="12" rx="3" fill="#fdeeeb" stroke="#e6c9c2"/><text x="766" y="30" fill="#6e6e73">拒绝/失败</text>
+  </g>
+
+  <!-- entry -->
+  <rect x="30" y="150" width="118" height="60" rx="10" fill="#ffffff" stroke="#ececef" filter="url(#soft)"/>
+  <text x="89" y="176" font-size="11" font-weight="600" fill="#1d1d1f" text-anchor="middle">REST handler</text>
+  <text x="89" y="194" font-size="10" fill="#6e6e73" text-anchor="middle">解码后·落库前</text>
+
+  <!-- Mutating box -->
+  <rect x="176" y="86" width="290" height="188" rx="12" fill="#faf4fb" stroke="#e4cdea" filter="url(#soft)"/>
+  <text x="321" y="110" font-size="12" font-weight="600" fill="#8944ab" text-anchor="middle">① Mutating（串行）</text>
+  <rect x="196" y="124" width="112" height="46" rx="8" fill="#ffffff" stroke="#ececef"/>
+  <text x="252" y="146" font-size="10.5" fill="#8944ab" text-anchor="middle">webhook A</text>
+  <text x="252" y="162" font-size="9.5" fill="#6e6e73" text-anchor="middle">注入 sidecar</text>
+  <rect x="334" y="124" width="112" height="46" rx="8" fill="#ffffff" stroke="#ececef"/>
+  <text x="390" y="146" font-size="10.5" fill="#8944ab" text-anchor="middle">webhook B</text>
+  <text x="390" y="162" font-size="9.5" fill="#6e6e73" text-anchor="middle">补默认值</text>
+  <path d="M308 147 L334 147" fill="none" stroke="#b8b8bf" stroke-width="1.4" marker-end="url(#ar)"/>
+  <!-- reinvocation loop -->
+  <path d="M390 170 C390 210 252 210 252 172" fill="none" stroke="#8944ab" stroke-width="1.4" stroke-dasharray="4 3" marker-end="url(#ar)"/>
+  <text x="321" y="226" font-size="10" fill="#8944ab" text-anchor="middle">reinvocation：B 又改了对象</text>
+  <text x="321" y="242" font-size="10" fill="#6e6e73" text-anchor="middle">→ A 基于新对象重跑（IfNeeded）</text>
+  <text x="321" y="260" font-size="9.5" fill="#a1a1a6" text-anchor="middle">要求 webhook 幂等，否则累积改写</text>
+
+  <!-- Validating box -->
+  <rect x="494" y="86" width="240" height="188" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="614" y="110" font-size="12" font-weight="600" fill="#1b2a4a" text-anchor="middle">② Validating（并发）</text>
+  <rect x="512" y="124" width="100" height="40" rx="8" fill="#ffffff" stroke="#ececef"/>
+  <text x="562" y="149" font-size="10" fill="#1b2a4a" text-anchor="middle">配额校验</text>
+  <rect x="620" y="124" width="100" height="40" rx="8" fill="#ffffff" stroke="#ececef"/>
+  <text x="670" y="149" font-size="10" fill="#1b2a4a" text-anchor="middle">OPA 策略</text>
+  <rect x="512" y="172" width="208" height="34" rx="8" fill="#ffffff" stroke="#ececef"/>
+  <text x="616" y="193" font-size="10" fill="#6e6e73" text-anchor="middle">任一拒绝即整体拒绝 · 延迟看最慢者</text>
+  <text x="614" y="232" font-size="10" fill="#a1a1a6" text-anchor="middle">只读校验 · 不改对象</text>
+  <text x="614" y="252" font-size="10" fill="#a1a1a6" text-anchor="middle">改完必复检 → 必在 Mutating 后</text>
+
+  <!-- store -->
+  <rect x="762" y="150" width="108" height="60" rx="10" fill="#fbf7ef" stroke="#ecdcbf" filter="url(#soft)"/>
+  <text x="816" y="176" font-size="11" font-weight="600" fill="#8a6d3b" text-anchor="middle">落 etcd</text>
+  <text x="816" y="194" font-size="10" fill="#6e6e73" text-anchor="middle">Store.create</text>
+
+  <!-- flow arrows -->
+  <path d="M148 180 L176 180" fill="none" stroke="#b8b8bf" stroke-width="1.5" marker-end="url(#ar)"/>
+  <path d="M466 180 L494 180" fill="none" stroke="#b8b8bf" stroke-width="1.5" marker-end="url(#ar)"/>
+  <path d="M734 180 L762 180" fill="none" stroke="#b8b8bf" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- bottom notes -->
+  <line x1="30" y1="310" x2="870" y2="310" stroke="#ececef"/>
+  <text x="30" y="332" font-size="11.5" fill="#6e6e73"><tspan font-weight="600" fill="#8a3527">failurePolicy=Fail：</tspan>webhook 不可达/超时即拒绝请求（策略优先，webhook 挂会阻断该资源写）</text>
+  <text x="30" y="356" font-size="11.5" fill="#6e6e73"><tspan font-weight="600" fill="#1d8f3f">failurePolicy=Ignore：</tspan>webhook 挂则放行（可用性优先，但策略可能被绕过）</text>
+  <text x="30" y="380" font-size="11.5" fill="#6e6e73"><tspan font-weight="600" fill="#1d1d1f">授权内部错 500 ≠ 403：</tspan>区分"明确拒绝"与"暂时故障"；网络错按 failurePolicy 转拒绝或忽略</text>
+  <text x="30" y="404" font-size="11.5" fill="#6e6e73"><tspan font-weight="600" fill="#1d1d1f">最常见事故：</tspan>matchPolicy / namespaceSelector 漏配，本该拦截的对象被静默漏过</text>
+</svg>

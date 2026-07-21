@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="440" viewBox="0 0 1000 440"
+     font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="aP" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#8a5cae"/></marker>
+    <marker id="aA" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#c99a3a"/></marker>
+  </defs>
+  <rect width="1000" height="440" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">XLA 编译融合 · cluster → HLO → 融合 → codegen 大 kernel</text>
+
+  <!-- 图例 -->
+  <line x1="30" y1="49" x2="54" y2="49" stroke="#8a5cae" stroke-width="2" marker-end="url(#aP)"/><text x="60" y="53" font-size="9.5" fill="#3a3a3c">编译流程</text>
+  <rect x="150" y="44" width="16" height="10" rx="2" fill="#f4eefb" stroke="#d9c9ef"/><text x="172" y="53" font-size="9.5" fill="#3a3a3c">HLO / 融合</text>
+  <rect x="256" y="44" width="16" height="10" rx="2" fill="#fff2da" stroke="#e8cf9a"/><text x="278" y="53" font-size="9.5" fill="#3a3a3c">签名缓存复用</text>
+  <text x="970" y="53" font-size="9.5" fill="#a1a1a6" text-anchor="end">JIT 编译栈机理</text>
+  <line x1="30" y1="62" x2="970" y2="62" stroke="#e4e7ec" stroke-width="1"/>
+
+  <!-- 编译流水 -->
+  <rect x="52" y="86" width="150" height="66" rx="11" fill="#eafaf1" stroke="#bce6cd" filter="url(#soft)"/><text x="127" y="115" font-size="10.5" font-weight="600" fill="#0f5132" text-anchor="middle">cluster 子图</text><text x="127" y="133" font-size="8.5" fill="#2f6f4f" text-anchor="middle">_XlaCompile/_XlaRun</text>
+  <rect x="240" y="86" width="160" height="66" rx="11" fill="#f4eefb" stroke="#d9c9ef" filter="url(#soft)"/><text x="320" y="112" font-size="10.5" font-weight="600" fill="#3c1361" text-anchor="middle">XlaCompiler 翻译</text><text x="320" y="130" font-size="8.5" fill="#7a4fb0" text-anchor="middle">每 TF op 发射 XLA 算子</text><text x="320" y="144" font-size="8" fill="#a58fc9" text-anchor="middle">BuildComputation 收口</text>
+  <rect x="438" y="86" width="150" height="66" rx="11" fill="#f4eefb" stroke="#d9c9ef" filter="url(#soft)"/><text x="513" y="112" font-size="10.5" font-weight="600" fill="#3c1361" text-anchor="middle">HLO Module</text><text x="513" y="130" font-size="8.5" fill="#7a4fb0" text-anchor="middle">High-Level</text><text x="513" y="144" font-size="8.5" fill="#7a4fb0" text-anchor="middle">Optimizer IR</text>
+  <rect x="626" y="86" width="150" height="66" rx="11" fill="#f4eefb" stroke="#d9c9ef" filter="url(#soft)"/><text x="701" y="112" font-size="10.5" font-weight="600" fill="#3c1361" text-anchor="middle">算子融合</text><text x="701" y="130" font-size="8.5" fill="#7a4fb0" text-anchor="middle">多 op 合一</text><text x="701" y="144" font-size="8.5" fill="#7a4fb0" text-anchor="middle">布局/内存优化</text>
+  <rect x="814" y="86" width="150" height="66" rx="11" fill="#eafaf1" stroke="#bce6cd" filter="url(#soft)"/><text x="889" y="112" font-size="10.5" font-weight="600" fill="#0f5132" text-anchor="middle">codegen</text><text x="889" y="130" font-size="8.5" fill="#2f6f4f" text-anchor="middle">目标设备可执行</text><text x="889" y="144" font-size="8.5" fill="#2f6f4f" text-anchor="middle">CPU/GPU/TPU</text>
+  <line x1="202" y1="119" x2="240" y2="119" stroke="#8a5cae" stroke-width="1.8" marker-end="url(#aP)"/>
+  <line x1="400" y1="119" x2="438" y2="119" stroke="#8a5cae" stroke-width="1.8" marker-end="url(#aP)"/>
+  <line x1="588" y1="119" x2="626" y2="119" stroke="#8a5cae" stroke-width="1.8" marker-end="url(#aP)"/>
+  <line x1="776" y1="119" x2="814" y2="119" stroke="#8a5cae" stroke-width="1.8" marker-end="url(#aP)"/>
+
+  <!-- 融合前后对比 -->
+  <rect x="30" y="176" width="466" height="176" rx="13" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="52" y="199" font-size="11.5" font-weight="600" fill="#7a2a2a">未融合：每 op 一次 kernel 启动</text>
+  <rect x="52" y="212" width="90" height="34" rx="7" fill="#ffffff" stroke="#e0c3c3"/><text x="97" y="233" font-size="9" fill="#7a2a2a" text-anchor="middle">mul kernel</text>
+  <rect x="158" y="212" width="90" height="34" rx="7" fill="#ffffff" stroke="#e0c3c3"/><text x="203" y="233" font-size="9" fill="#7a2a2a" text-anchor="middle">add kernel</text>
+  <rect x="264" y="212" width="90" height="34" rx="7" fill="#ffffff" stroke="#e0c3c3"/><text x="309" y="233" font-size="9" fill="#7a2a2a" text-anchor="middle">relu kernel</text>
+  <text x="52" y="272" font-size="9" fill="#93394a">中间张量逐个落显存（写回+读回），启动开销 ×N</text>
+  <text x="52" y="300" font-size="9.5" font-weight="600" fill="#0f5132">融合后：合成一个大 kernel</text>
+  <rect x="52" y="310" width="300" height="34" rx="7" fill="#eafaf1" stroke="#bce6cd"/><text x="202" y="331" font-size="9.5" fill="#0f5132" text-anchor="middle">fused(mul → add → relu) 一次启动</text>
+
+  <!-- 收益 -->
+  <rect x="518" y="176" width="452" height="176" rx="13" fill="#f4eefb" stroke="#d9c9ef" filter="url(#soft)"/>
+  <text x="540" y="199" font-size="11.5" font-weight="600" fill="#3c1361">融合的收益</text>
+  <text x="540" y="223" font-size="9.5" fill="#7a4fb0">· 减少 kernel 启动次数（几十 → 少数几个）</text>
+  <text x="540" y="245" font-size="9.5" fill="#7a4fb0">· 中间张量不落显存，留寄存器/共享内存</text>
+  <text x="540" y="267" font-size="9.5" fill="#7a4fb0">· 布局/内存优化在 HLO 层统一做</text>
+  <line x1="540" y1="280" x2="948" y2="280" stroke="#e4d7f0" stroke-width="1"/>
+  <text x="540" y="302" font-size="10" font-weight="600" fill="#5a3410">按签名缓存复用</text>
+  <text x="540" y="323" font-size="9.5" fill="#93762e">DeviceCompilationCache 以 dtype/shape 签名为 key</text>
+  <text x="540" y="341" font-size="9.5" fill="#93762e">命中跳过重编译；签名变（动态形状）→ 重编译</text>
+
+  <!-- 收尾 -->
+  <rect x="30" y="364" width="940" height="58" rx="13" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="52" y="388" font-size="10.5" fill="#494950">口诀：<tspan font-weight="600" fill="#3c1361">聚类 → 编 HLO → 融合 → codegen</tspan>，编一次按签名缓存复用；形状稳定时收益大。</text>
+  <text x="52" y="408" font-size="10.5" fill="#7a2a2a">边界：首次编译有延迟；动态形状频繁重编译可能盖过收益。与 Grappler 不同层——它在 TF 图重写，XLA 换到 HLO 栈。</text>
+</svg>

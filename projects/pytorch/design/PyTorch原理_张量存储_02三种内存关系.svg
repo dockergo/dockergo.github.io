@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="376" viewBox="0 0 1020 376"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+    <marker id="arg" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#7fbf9c"/>
+    </marker>
+  </defs>
+  <rect width="1020" height="376" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">view / contiguous / clone · 三种内存关系（改元信息 vs 共享 Storage vs 拷贝）</text>
+  <!-- legend -->
+  <rect x="612" y="18" width="12" height="12" rx="3" fill="#eef3fb" stroke="#bcd0ec"/><text x="630" y="28" font-size="9.5" fill="#1b2a4a">TensorImpl 元信息</text>
+  <rect x="748" y="18" width="12" height="12" rx="3" fill="#fff7e6" stroke="#f0dcae"/><text x="766" y="28" font-size="9.5" fill="#7a4d00">Storage 字节</text>
+  <rect x="856" y="18" width="12" height="12" rx="3" fill="#eafaf1" stroke="#bce6cd"/><text x="874" y="28" font-size="9.5" fill="#0f5132">共享零拷贝</text>
+
+  <!-- 原张量 t -->
+  <rect x="380" y="60" width="260" height="54" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="510" y="82" font-size="11" font-weight="600" fill="#1b2a4a" text-anchor="middle">原张量 t（TensorImpl）</text>
+  <text x="510" y="100" font-size="8.5" fill="#5b7db1" text-anchor="middle">sizes / strides / offset · 可选 autograd_meta</text>
+  <line x1="510" y1="114" x2="510" y2="146" stroke="#b8b8bf" marker-end="url(#ar)"/>
+
+  <!-- Storage S0 -->
+  <rect x="380" y="146" width="260" height="80" rx="11" fill="#fff7e6" stroke="#f0dcae" filter="url(#soft)"/>
+  <text x="510" y="176" font-size="11" font-weight="600" fill="#7a4d00" text-anchor="middle">Storage S0</text>
+  <text x="510" y="196" font-size="8.5" fill="#9a7328" text-anchor="middle">一维连续字节</text>
+  <text x="510" y="212" font-size="8.5" fill="#9a7328" text-anchor="middle">引用计数（归零自动释放）</text>
+
+  <!-- 共享组 -->
+  <rect x="40" y="114" width="300" height="112" rx="12" fill="#f5faf6" stroke="#cfe6d6" filter="url(#soft)"/>
+  <text x="60" y="136" font-size="10.5" font-weight="600" fill="#0f5132">① 共享 S0（零拷贝，只改元信息）</text>
+  <rect x="56" y="146" width="268" height="30" rx="7" fill="#ffffff" stroke="#bce6cd"/><text x="190" y="165" font-size="9" fill="#0f5132" text-anchor="middle">t.view / 切片 / transpose</text>
+  <rect x="56" y="182" width="268" height="30" rx="7" fill="#ffffff" stroke="#bce6cd"/><text x="190" y="201" font-size="9" fill="#0f5132" text-anchor="middle">t.detach()（清 autograd_meta）</text>
+  <line x1="340" y1="186" x2="380" y2="186" stroke="#7fbf9c" marker-end="url(#arg)"/><text x="360" y="179" font-size="8" fill="#0f5132" text-anchor="middle">共享</text>
+
+  <!-- 拷贝组 -->
+  <rect x="680" y="114" width="300" height="112" rx="12" fill="#fbf7ef" stroke="#ecdcc0" filter="url(#soft)"/>
+  <text x="700" y="136" font-size="10.5" font-weight="600" fill="#7a4d00">② 新建 Storage（触发拷贝）</text>
+  <rect x="696" y="146" width="268" height="30" rx="7" fill="#ffffff" stroke="#f0dcae"/><text x="830" y="165" font-size="9" fill="#7a4d00" text-anchor="middle">t.contiguous()（非连续时）</text>
+  <rect x="696" y="182" width="268" height="30" rx="7" fill="#ffffff" stroke="#f0dcae"/><text x="830" y="201" font-size="9" fill="#7a4d00" text-anchor="middle">t.clone()（总是深拷贝）</text>
+  <line x1="640" y1="186" x2="680" y2="186" stroke="#b8b8bf" marker-end="url(#ar)"/><text x="660" y="179" font-size="8" fill="#9a7328" text-anchor="middle">拷贝</text>
+  <text x="830" y="222" font-size="8" fill="#a1a1a6" text-anchor="middle">→ 分配新 Storage S1，行主序重排 / 独立内存</text>
+
+  <!-- reshape band -->
+  <rect x="40" y="246" width="940" height="40" rx="10" fill="#f2f2f4" stroke="#d8d8dd"/>
+  <text x="60" y="271" font-size="9" fill="#5b5b63">t.reshape：连续则等价 view（共享 S0）；无法零拷贝表达时退化为 contiguous + view（拷贝到新 Storage）。is_contiguous_ 位随 view 可能翻 false。</text>
+
+  <!-- autograd band -->
+  <rect x="40" y="296" width="940" height="40" rx="10" fill="#f6f8fc" stroke="#dfe6f2"/>
+  <text x="60" y="321" font-size="9" fill="#3a5680">set_requires_grad 惰性 new 出 autograd_meta——这解释了为什么「不需要梯度的张量几乎零 autograd 开销」。</text>
+</svg>

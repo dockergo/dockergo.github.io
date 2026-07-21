@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="540" viewBox="0 0 1080 540" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="540" fill="#fbfbfd"/>
+
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">投机解码 —— 便宜草稿多猜几步,大模型一次前向验证,准了就一步多吐</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">decode 卡在显存带宽、算力有余;用余下算力一次验证 k 个草稿 token,验证与解码结果分布一致(无损),猜得准就 1 步吐 1..k+1 个</text>
+
+  <!-- 图例 -->
+  <rect x="700" y="18" width="12" height="12" rx="3" fill="#eef3fb" stroke="#c2d3ee"/><text x="717" y="28" font-size="9.5" fill="#2b5aa8">草稿/调度</text>
+  <rect x="792" y="18" width="12" height="12" rx="3" fill="#eafaf1" stroke="#bfe0cd"/><text x="809" y="28" font-size="9.5" fill="#12402a">目标模型/接受</text>
+  <rect x="905" y="18" width="12" height="12" rx="3" fill="#fbeaea" stroke="#e6b8b8"/><text x="922" y="28" font-size="9.5" fill="#7a2a2a">拒绝</text>
+
+  <!-- 步骤1 drafter propose -->
+  <rect x="30" y="70" width="320" height="150" rx="12" fill="#eef3fb" stroke="#c2d3ee" filter="url(#soft)"/>
+  <text x="50" y="94" font-size="12" font-weight="700" fill="#2b5aa8">① Drafter 提草稿(便宜)</text>
+  <text x="50" y="112" font-size="9" fill="#3f6fbf">ngram / eagle / 小 draft 模型</text>
+  <text x="50" y="130" font-size="9" fill="#3f6fbf">基于已生成序列 propose k 个 token</text>
+  <rect x="50" y="142" width="26" height="16" rx="3" fill="#eef3fb" stroke="#c2d3ee"/><text x="63" y="154" font-size="8" text-anchor="middle" fill="#2b5aa8">d1</text>
+  <rect x="80" y="142" width="26" height="16" rx="3" fill="#eef3fb" stroke="#c2d3ee"/><text x="93" y="154" font-size="8" text-anchor="middle" fill="#2b5aa8">d2</text>
+  <rect x="110" y="142" width="26" height="16" rx="3" fill="#eef3fb" stroke="#c2d3ee"/><text x="123" y="154" font-size="8" text-anchor="middle" fill="#2b5aa8">d3</text>
+  <text x="145" y="154" font-size="8.5" fill="#86868b">… dk(草稿)</text>
+  <text x="50" y="182" font-size="9" fill="#3f6fbf">num_speculative_tokens = k</text>
+  <text x="50" y="200" font-size="8.5" fill="#86868b">代价远低于跑一次目标模型;猜错也不会错</text>
+
+  <path d="M350,145 L392,145" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <!-- 步骤2 调度进批 -->
+  <rect x="392" y="70" width="296" height="150" rx="12" fill="#eef3fb" stroke="#c2d3ee" filter="url(#soft)"/>
+  <text x="412" y="94" font-size="12" font-weight="700" fill="#2b5aa8">② 调度器排进批</text>
+  <text x="412" y="112" font-size="9" fill="#3f6fbf">scheduled_spec_decode_tokens</text>
+  <text x="412" y="130" font-size="9" fill="#3f6fbf">把 k 个草稿当查询位追加到本请求</text>
+  <rect x="412" y="144" width="252" height="40" rx="7" fill="#ffffff" stroke="#c2d3ee"/>
+  <text x="538" y="162" font-size="9" text-anchor="middle" fill="#3f6fbf">[ 上一采样 token | d1 d2 d3 … dk ]</text>
+  <text x="538" y="177" font-size="8.5" text-anchor="middle" fill="#86868b">num_lookahead_tokens 预留 k(+1) 个位置</text>
+  <text x="412" y="204" font-size="8.5" fill="#86868b">与连续批处理共存:草稿位算进 token 预算</text>
+
+  <path d="M538,220 L538,244" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <!-- 步骤3 目标模型一次前向 -->
+  <rect x="30" y="244" width="658" height="120" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="50" y="268" font-size="12" font-weight="700" fill="#12402a">③ 目标模型 · 一次前向同时算全部位置的概率</text>
+  <text x="50" y="286" font-size="9" fill="#2f6f4f">k+1 个位置并行前向(与 1 个 token 的 decode 几乎同样耗时——反正卡带宽)</text>
+  <rect x="50" y="300" width="118" height="50" rx="7" fill="#ffffff" stroke="#bfe0cd"/><text x="109" y="322" font-size="9" text-anchor="middle" fill="#12402a">位置1 概率</text><text x="109" y="338" font-size="8" text-anchor="middle" fill="#2f6f4f">p_target(d1)</text>
+  <rect x="176" y="300" width="118" height="50" rx="7" fill="#ffffff" stroke="#bfe0cd"/><text x="235" y="322" font-size="9" text-anchor="middle" fill="#12402a">位置2 概率</text><text x="235" y="338" font-size="8" text-anchor="middle" fill="#2f6f4f">p_target(d2)</text>
+  <rect x="302" y="300" width="118" height="50" rx="7" fill="#ffffff" stroke="#bfe0cd"/><text x="361" y="322" font-size="9" text-anchor="middle" fill="#12402a">位置3 概率</text><text x="361" y="338" font-size="8" text-anchor="middle" fill="#2f6f4f">p_target(d3)</text>
+  <text x="432" y="329" font-size="9" fill="#86868b">…</text>
+  <rect x="452" y="300" width="222" height="50" rx="7" fill="#ffffff" stroke="#bfe0cd"/><text x="563" y="322" font-size="9" text-anchor="middle" fill="#12402a">bonus 位(位置 k+1)</text><text x="563" y="338" font-size="8" text-anchor="middle" fill="#2f6f4f">若全接受,从此位采 1 个额外 token</text>
+
+  <path d="M688,304 L720,304" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <!-- 步骤4 RejectionSampler -->
+  <rect x="720" y="70" width="330" height="294" rx="12" fill="#ffffff" stroke="#ececef" filter="url(#soft)"/>
+  <text x="740" y="94" font-size="12" font-weight="700" fill="#1d1d1f">④ RejectionSampler · 验证取最长前缀</text>
+  <text x="740" y="112" font-size="9" fill="#86868b">逐位置比 draft 概率 vs target 概率</text>
+
+  <rect x="740" y="124" width="290" height="42" rx="7" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="750" y="142" font-size="9.5" font-weight="600" fill="#12402a">接受:target 也认可该草稿</text>
+  <text x="750" y="158" font-size="8.5" fill="#2f6f4f">按接受概率判定,保证输出分布==直接采样</text>
+
+  <rect x="740" y="174" width="290" height="42" rx="7" fill="#fbeaea" stroke="#e6b8b8"/>
+  <text x="750" y="192" font-size="9.5" font-weight="600" fill="#7a2a2a">拒绝:遇到第一个不合的位置</text>
+  <text x="750" y="208" font-size="8.5" fill="#a05a5a">从"修正分布"重采 1 个,丢弃其后所有草稿</text>
+
+  <rect x="740" y="224" width="290" height="42" rx="7" fill="#eef3fb" stroke="#c2d3ee"/>
+  <text x="750" y="242" font-size="9.5" font-weight="600" fill="#2b5aa8">全接受:追加 bonus token</text>
+  <text x="750" y="258" font-size="8.5" fill="#3f6fbf">仅从 target 概率采,本步共吐 k+1 个</text>
+
+  <rect x="740" y="278" width="290" height="72" rx="8" fill="#f7f7f9" stroke="#e2e2e6"/>
+  <text x="885" y="298" font-size="9.5" font-weight="600" text-anchor="middle" fill="#1d1d1f">本步产出:1 .. k+1 个 token</text>
+  <text x="885" y="316" font-size="8.5" text-anchor="middle" fill="#86868b">草稿准 → 一步多吐,提速</text>
+  <text x="885" y="332" font-size="8.5" text-anchor="middle" fill="#86868b">草稿差 → 退化为每步 1 个(不出错)</text>
+
+  <!-- 底注 -->
+  <rect x="30" y="384" width="1020" height="112" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="50" y="408" font-size="11.5" font-weight="700" fill="#12402a">为什么无损又能提速</text>
+  <text x="50" y="430" font-size="9.5" fill="#2f6f4f">· 无损:rejection sampling 的接受/重采规则使最终输出分布严格等于"直接用 target 逐个采"——投机只改速度不改结果</text>
+  <text x="50" y="450" font-size="9.5" fill="#2f6f4f">· 提速:decode 本就卡带宽、算力闲;一次多算几个位置几乎不加时间,平均每步接受数 &gt;1 就赚</text>
+  <text x="50" y="470" font-size="9.5" fill="#2f6f4f">· 取舍:草稿越准加速越多(ngram 适合有重复的文本、eagle/draft 模型适合通用);接受率低时反而略亏(多算了草稿)</text>
+  <text x="50" y="488" font-size="8.5" fill="#a1a1a6">草稿只影响"猜多少",验证由目标模型说了算 · vLLM(git 7aab6e2, v1 · spec_decode/ + rejection_sampler.py)</text>
+</svg>

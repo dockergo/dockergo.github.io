@@ -1,0 +1,168 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="520" viewBox="0 0 1120 520" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="aH" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+    <marker id="aC" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#5b7db1"/></marker>
+    <marker id="aS" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#c99a3a"/></marker>
+    <marker id="aF" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#e07b39"/></marker>
+    <marker id="aA" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#9b6fc4"/></marker>
+  </defs>
+  <rect width="1120" height="520" fill="#fbfbfd"/>
+
+  <!-- ===== 标题带（判型 · 全景热区） ===== -->
+  <rect x="20" y="10" width="1080" height="60" rx="11" fill="none" data-tid="Ray原理_全景主线框架" data-lab="全景主线框架"/>
+  <text x="28" y="32" font-size="15" font-weight="700" fill="#1d1d1f">总架构 · 判型 = 分布式 task / actor 运行时</text>
+  <text x="28" y="52" font-size="11" font-weight="600" fill="#3a3a3c">去中心化调度（worker 直连租借） ＋ GCS 全局控制存储 ＋ Plasma 共享内存对象存储</text>
+  <text x="1092" y="30" font-size="10.5" fill="#86868b" text-anchor="end">源码基准 v3.0.0.dev0</text>
+  <text x="1092" y="50" font-size="9.5" fill="#a1a1a6" text-anchor="end">driver / worker 同源内嵌 CoreWorker 为唯一门户</text>
+
+  <!-- ===== 设计张力铭牌带 ===== -->
+  <rect x="20" y="78" width="1080" height="30" rx="8" fill="#f1f3f7" stroke="#d8dce4"/>
+  
+  
+  <text x="34" y="97" font-size="10.5" font-weight="700" fill="#8a6d1f">设计张力</text>
+  <circle cx="118" cy="93" r="3.5" fill="#5b7db1"/>
+  <text x="128" y="97" font-size="10.5" fill="#1b2a4a" font-weight="600">去中心化低延迟：owner 直接派活 · 对象引用不进 GCS</text>
+  <text x="560" y="97" font-size="12" fill="#6e6e73" text-anchor="middle">⟷</text>
+  <circle cx="586" cy="93" r="3.5" fill="#c99a3a"/>
+  <text x="596" y="97" font-size="10.5" fill="#6b4e16" font-weight="600">全局状态一致：GCS 集中裁决 节点 / actor 元数据</text>
+  <text x="1090" y="97" font-size="9.5" fill="#a1a1a6" text-anchor="end">对象丢失 → owner 按 lineage 重算兜底</text>
+
+  <!-- ===== 图例：五型语义正交路径 ===== -->
+  <line x1="34" y1="126" x2="62" y2="126" stroke="#2f9e6e" stroke-width="1.8" marker-end="url(#aH)"/>
+  <text x="68" y="130" font-size="10.5" fill="#3a3a3c">对象数据 Plasma 零拷贝 Hot</text>
+  <line x1="270" y1="126" x2="298" y2="126" stroke="#5b7db1" stroke-width="1.8" marker-end="url(#aC)"/>
+  <text x="304" y="130" font-size="10.5" fill="#3a3a3c">task 提交 + lease 调度 Control</text>
+  <line x1="524" y1="126" x2="552" y2="126" stroke="#c99a3a" stroke-width="1.8" marker-end="url(#aS)"/>
+  <text x="558" y="130" font-size="10.5" fill="#3a3a3c">GCS 集中元数据 State</text>
+  <line x1="716" y1="126" x2="744" y2="126" stroke="#e07b39" stroke-width="1.8" marker-end="url(#aF)"/>
+  <text x="750" y="130" font-size="10.5" fill="#3a3a3c">lineage 重建 失败</text>
+  <line x1="880" y1="126" x2="908" y2="126" stroke="#9b6fc4" stroke-width="1.8" stroke-dasharray="5 3" marker-end="url(#aA)"/>
+  <text x="914" y="130" font-size="10.5" fill="#3a3a3c">autoscaler 横切</text>
+  <text x="1090" y="130" font-size="9.5" fill="#a1a1a6" text-anchor="end">框=可下钻</text>
+
+  <!-- ================= 接口层 ================= -->
+  <rect x="20" y="140" width="1080" height="76" rx="13" fill="#f5f6f8" stroke="#e2e4e9"/>
+  <text x="36" y="160" font-size="12" font-weight="600" fill="#1d1d1f">接口层 · 应用门户</text>
+  <text x="150" y="160" font-size="9.5" fill="#86868b">driver / worker 内嵌 CoreWorker —— 应用 ↔ 系统的唯一门户，向下分三路</text>
+
+  <rect x="36" y="168" width="340" height="42" rx="10" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)" data-tid="Ray原理_接口_远程任务与对象" data-lab="远程任务与对象"/>
+  
+  <text x="52" y="187" font-size="11.5" font-weight="600" fill="#1d1d1f">远程任务与对象</text>
+  <text x="52" y="203" font-size="9" fill="#8a8a8e">@ray.remote · ObjectRef future · SubmitTask</text>
+
+  <rect x="390" y="168" width="340" height="42" rx="10" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)" data-tid="Ray原理_接口_Actor编程模型" data-lab="Actor 编程模型"/>
+  
+  <text x="406" y="187" font-size="11.5" font-weight="600" fill="#1d1d1f">Actor 编程模型</text>
+  <text x="406" y="203" font-size="9" fill="#8a8a8e">有状态远程对象 · 方法串行 · handle</text>
+
+  <rect x="744" y="168" width="340" height="42" rx="10" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)" data-tid="Ray原理_接口_集群与运行时" data-lab="集群与运行时"/>
+  
+  <text x="760" y="187" font-size="11.5" font-weight="600" fill="#1d1d1f">集群与运行时</text>
+  <text x="760" y="203" font-size="9" fill="#8a8a8e">ray.init · runtime envc</text>
+
+  <!-- 接口向下分路 -->
+  <line x1="250" y1="210" x2="250" y2="228" stroke="#c99a3a" stroke-width="1.6" fill="none" marker-end="url(#aS)"/>
+  <text x="258" y="224" font-size="8.5" fill="#a9822f">建 actor · 注册 / 放置组 → GCS</text>
+  <line x1="820" y1="210" x2="820" y2="228" stroke="#5b7db1" stroke-width="1.8" fill="none" marker-end="url(#aC)"/>
+  <text x="828" y="224" font-size="8.5" fill="#5b7db1">提交 task · 租 worker → 数据面</text>
+
+  <!-- ================= 控制面 · GCS zone（State 琥珀） ================= -->
+  <rect x="20" y="228" width="534" height="210" rx="13" fill="#fbf7ee" stroke="#ecdcbf"/>
+  <text x="36" y="248" font-size="12" font-weight="600" fill="#6b4e16">控制面 · head 节点单进程 GCS（集群真源 · 集中裁决）</text>
+  <text x="36" y="263" font-size="9.5" fill="#a9822f">集群级元数据集中一处；细粒度对象引用不进 GCS</text>
+
+  <rect x="36" y="272" width="502" height="44" rx="10" fill="#ffffff" stroke="#ecdcbf" filter="url(#soft)" data-tid="Ray原理_支撑_全局控制存储GCS" data-lab="全局控制存储 GCS"/>
+  
+  <text x="52" y="291" font-size="11.5" font-weight="600" fill="#6b4e16">全局控制存储 GCS</text>
+  <text x="52" y="308" font-size="9" fill="#a9822f">节点表 · actor 注册 · KV · 一进程多 manager</text>
+
+  <rect x="36" y="324" width="246" height="62" rx="10" fill="#ffffff" stroke="#ecdcbf" filter="url(#soft)" data-tid="Ray原理_支撑_Actor生命周期与调度" data-lab="Actor 生命周期与调度"/>
+  
+  <text x="52" y="344" font-size="11" font-weight="600" fill="#6b4e16">Actor 生命周期与调度</text>
+  <text x="52" y="360" font-size="9" fill="#a9822f">GCS 集中调度定居 worker</text>
+  
+
+  <rect x="292" y="324" width="246" height="62" rx="10" fill="#ffffff" stroke="#ecdcbf" filter="url(#soft)" data-tid="Ray原理_支撑_资源管理与放置组" data-lab="资源管理与放置组"/>
+  
+  <text x="308" y="344" font-size="11" font-weight="600" fill="#6b4e16">资源管理与放置组</text>
+  <text x="308" y="360" font-size="9" fill="#a9822f">逻辑资源账本 · PG 两阶段提交 2PC</text>
+  
+
+  <rect x="36" y="394" width="502" height="36" rx="9" fill="#fdf6e6" stroke="#ecdcbf" data-tid="Ray原理_支撑_全局控制存储GCS" data-lab="全局控制存储 GCS"/>
+  <text x="52" y="410" font-size="10" font-weight="600" fill="#6b4e16">pub/sub 广播 + KV 表存储</text>
+  <text x="52" y="423" font-size="8.5" fill="#b7a06a">PublishActor / PublishNodeInfo</text>
+
+  <!-- ================= 数据面 + 调度面 zone（每工作节点一 Raylet） ================= -->
+  <rect x="566" y="228" width="534" height="210" rx="13" fill="#f3faf5" stroke="#cfe6d6"/>
+  <text x="582" y="248" font-size="12" font-weight="600" fill="#1d4a2b">数据面 + 调度面 · 每工作节点一 Raylet（node_manager + object_manager 同进程）</text>
+  <text x="582" y="263" font-size="9.5" fill="#5fa07a">去中心化：owner 租到 worker 后直推 task，绕开中央调度器</text>
+
+  <rect x="582" y="272" width="246" height="44" rx="10" fill="#ffffff" stroke="#cfe6d6" filter="url(#soft)" data-tid="Ray原理_支撑_分布式调度" data-lab="分布式调度"/>
+  
+  <text x="598" y="291" font-size="11" font-weight="600" fill="#1d4a2b">分布式调度（两级 lease）</text>
+  <text x="598" y="308" font-size="8.5" fill="#7bab8c">cluster + local_lease_manager · spillback</text>
+
+  <rect x="842" y="272" width="242" height="44" rx="10" fill="#ffffff" stroke="#cfe6d6" filter="url(#soft)" data-tid="Ray原理_支撑_远程任务提交与依赖" data-lab="远程任务提交与依赖"/>
+  
+  <text x="858" y="291" font-size="11" font-weight="600" fill="#1d4a2b">远程 task 提交（owner 直投）</text>
+  <text x="858" y="308" font-size="8.5" fill="#7bab8c">RequestWorkerLease→PushNormalTask</text>
+
+  <rect x="582" y="324" width="246" height="44" rx="10" fill="#ffffff" stroke="#cfe6d6" filter="url(#soft)" data-tid="Ray原理_支撑_分布式对象存储" data-lab="分布式对象存储"/>
+  
+  <text x="598" y="343" font-size="11" font-weight="600" fill="#1d4a2b">分布式对象存储 Plasma</text>
+  <text x="598" y="360" font-size="8.5" fill="#7bab8c">共享内存零拷贝 · ray.get mmap 取回</text>
+
+  <rect x="842" y="324" width="242" height="44" rx="10" fill="#ffffff" stroke="#cfe6d6" filter="url(#soft)" data-tid="Ray原理_支撑_引用计数与容错" data-lab="引用计数与容错"/>
+  
+  <text x="858" y="343" font-size="11" font-weight="600" fill="#1d4a2b">引用计数与容错（owner-based）</text>
+  <text x="858" y="360" font-size="8.5" fill="#7bab8c">owner 记引用 + 借用回传</text>
+
+  <!-- 失败路径子带（orange） -->
+  <rect x="582" y="376" width="502" height="54" rx="10" fill="#fdf2e9" stroke="#f0cdac"/>
+  <text x="596" y="392" font-size="10" font-weight="600" fill="#a85a1f">失败恢复 · 不可变对象可重跑</text>
+  <rect x="596" y="396" width="238" height="30" rx="8" fill="#ffffff" stroke="#f0cdac" data-tid="Ray原理_支撑_分布式对象存储" data-lab="分布式对象存储"/>
+  <text x="608" y="409" font-size="9.5" font-weight="600" fill="#a85a1f">spill 落盘 / 恢复</text>
+  
+  <rect x="846" y="396" width="232" height="30" rx="8" fill="#ffffff" stroke="#f0cdac" data-tid="Ray原理_支撑_引用计数与容错" data-lab="引用计数与容错"/>
+  <text x="858" y="409" font-size="9.5" font-weight="600" fill="#a85a1f">lineage 重建（重算产出 task）</text>
+  
+
+  <!-- 数据面内部：调度 ← 提交（蓝 Control，租 worker） -->
+  <line x1="842" y1="294" x2="830" y2="294" stroke="#5b7db1" stroke-width="1.8" fill="none" marker-end="url(#aC)"/>
+  <text x="836" y="288" font-size="8" fill="#5b7db1" text-anchor="middle">租 worker</text>
+  <!-- 数据面内部：对象位置（绿 Hot） -->
+  <line x1="828" y1="346" x2="842" y2="346" stroke="#2f9e6e" stroke-width="1.8" fill="none" marker-end="url(#aH)"/>
+  <!-- 对象丢失 → 失败带（orange，走两子框间隙） -->
+  <line x1="840" y1="368" x2="840" y2="392" stroke="#e07b39" stroke-width="1.6" fill="none" marker-end="url(#aF)"/>
+  <text x="846" y="386" font-size="8" fill="#e07b39">对象丢失</text>
+  <!-- lineage 重建 → 回补引用计数（orange 虚线，走两框间隙） -->
+  <line x1="962" y1="396" x2="962" y2="370" stroke="#e07b39" stroke-width="1.4" stroke-dasharray="4 3" fill="none" marker-end="url(#aF)"/>
+  <text x="968" y="386" font-size="8" fill="#e07b39">重算产出 task</text>
+  <!-- 值取回 ray.get（绿 Hot，数据面右缘 → 接口层） -->
+  <line x1="1092" y1="320" x2="1092" y2="211" stroke="#2f9e6e" stroke-width="1.6" fill="none" marker-end="url(#aH)"/>
+  <text x="1090" y="238" font-size="8" fill="#2f9e6e" text-anchor="end">值取回 ray.get ↑</text>
+
+  <!-- 控制面 ↔ 数据面：心跳 / 资源上报（琥珀虚线，raylet → GCS） -->
+  <line x1="574" y1="300" x2="546" y2="300" stroke="#c99a3a" stroke-width="1.6" stroke-dasharray="5 3" fill="none" marker-end="url(#aS)"/>
+  <text x="560" y="293" font-size="8" fill="#a9822f" text-anchor="middle">心跳·上报</text>
+
+  <!-- ================= autoscaler + runtime env 横切带（purple） ================= -->
+  <rect x="20" y="448" width="1080" height="56" rx="12" fill="#f6f0fb" stroke="#dcc6ec" stroke-dasharray="6 4" filter="url(#soft)" data-tid="Ray原理_支撑_自动伸缩与运行时环境" data-lab="自动伸缩与运行时环境"/>
+  
+  <text x="36" y="470" font-size="11.5" font-weight="600" fill="#5b3a7a">后台横切 · 弹性伸缩与环境准备（旁路守护）</text>
+  <text x="36" y="488" font-size="9.5" fill="#8158a6">autoscaler 按 pending 资源需求增删物理节点　GetPendingResourceRequests</text>
+  <rect x="712" y="458" width="378" height="38" rx="9" fill="#ffffff" stroke="#dcc6ec" data-tid="Ray原理_支撑_自动伸缩与运行时环境" data-lab="自动伸缩与运行时环境"/>
+  <text x="726" y="474" font-size="10" font-weight="600" fill="#5b3a7a">runtime env agent · worker 启动前预备依赖</text>
+  
+
+  <!-- autoscaler 旁路虚线：控制面 / 数据面 → 横切带 -->
+  <g stroke="#9b6fc4" stroke-width="1.4" stroke-dasharray="5 3" fill="none">
+    <line x1="180" y1="438" x2="180" y2="446" marker-end="url(#aA)"/>
+    <line x1="420" y1="438" x2="420" y2="446" marker-end="url(#aA)"/>
+    <line x1="660" y1="438" x2="660" y2="446" marker-end="url(#aA)"/>
+  </g>
+  <text x="430" y="446" font-size="8" fill="#9b6fc4">pending 资源需求</text>
+</svg>

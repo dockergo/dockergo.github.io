@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="520" viewBox="0 0 1080 520" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1080" height="520" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">ORC 谓词下推 · SearchArgument 构造与下推入口</text>
+  <text x="30" y="50" font-size="12" fill="#a1a1a6">引擎构造 SARG 传入;仅 sarg≠null 且 rowIndexStride&gt;0 建 SargApplier;谓词列映射文件列 index;仅 isPPDSafeConversion 才下推</text>
+
+  <!-- 契约传递 top row -->
+  <rect x="60" y="70" width="300" height="62" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="210" y="96" font-size="12" font-weight="600" fill="#1b2a4a" text-anchor="middle">计算引擎 (Hive / Spark / Trino)</text>
+  <text x="210" y="116" font-size="10" fill="#5b7db1" text-anchor="middle">把 WHERE 谓词编成 SearchArgument</text>
+
+  <path d="M360,101 L436,101" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <rect x="440" y="70" width="380" height="62" rx="12" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="630" y="95" font-size="12" font-weight="600" fill="#3d2a5a" text-anchor="middle">SearchArgument + PredicateLeaf</text>
+  <text x="630" y="115" font-size="9.5" fill="#8a72b0" text-anchor="middle">Hive 类型 (org.apache.hadoop.hive.ql.io.sarg.*),引擎构造后传入</text>
+
+  <text x="925" y="105" font-size="9.5" fill="#a1a1a6" text-anchor="middle">SARG=引擎与 ORC 的契约</text>
+
+  <path d="M630,132 L630,174" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <!-- ORC reader container -->
+  <rect x="60" y="176" width="960" height="298" rx="14" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="80" y="201" font-size="12" font-weight="600" fill="#1d1d1f">ORC RecordReaderImpl · 下推入口判定 (由粗到细)</text>
+
+  <!-- gate1 -->
+  <rect x="78" y="228" width="168" height="82" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="162" y="252" font-size="10.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">① 建判定</text>
+  <text x="162" y="273" font-size="10" fill="#1b2a4a" text-anchor="middle">sarg ≠ null &amp;&amp;</text>
+  <text x="162" y="290" font-size="10" fill="#1b2a4a" text-anchor="middle">rowIndexStride &gt; 0 ?</text>
+
+  <path d="M246,269 L268,269" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="257" y="262" font-size="9" fill="#a1a1a6" text-anchor="middle">是</text>
+
+  <!-- SargApplier -->
+  <rect x="270" y="228" width="140" height="82" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="340" y="263" font-size="11" font-weight="600" fill="#12402a" text-anchor="middle">建 SargApplier</text>
+  <text x="340" y="283" font-size="9" fill="#2f6f4f" text-anchor="middle">RecordReaderImpl 建立时</text>
+
+  <path d="M410,269 L432,269" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <!-- mapSargColumns -->
+  <rect x="434" y="228" width="236" height="82" rx="12" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="552" y="250" font-size="9.5" font-weight="600" fill="#1d1d1f" text-anchor="middle">mapSargColumnsToOrcInternalColIdx</text>
+  <text x="552" y="271" font-size="9.5" fill="#6e6e73" text-anchor="middle">谓词列名 → 文件列 index (:193)</text>
+  <text x="552" y="290" font-size="9" fill="#6e6e73" text-anchor="middle">虚拟/分区列 → -1 (当 YES_NO_NULL)</text>
+
+  <path d="M670,269 L692,269" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <!-- gate2 -->
+  <rect x="694" y="228" width="160" height="82" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="774" y="252" font-size="10.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">② 安全判定</text>
+  <text x="774" y="273" font-size="9.5" fill="#1b2a4a" text-anchor="middle">isPPDSafeConversion</text>
+  <text x="774" y="290" font-size="9.5" fill="#1b2a4a" text-anchor="middle">(columnIx) ? (:1217)</text>
+
+  <path d="M854,269 L876,269" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="865" y="262" font-size="9" fill="#a1a1a6" text-anchor="middle">是</text>
+
+  <!-- apply -->
+  <rect x="878" y="228" width="124" height="82" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="940" y="259" font-size="11" font-weight="600" fill="#12402a" text-anchor="middle">应用下推</text>
+  <text x="940" y="278" font-size="9" fill="#2f6f4f" text-anchor="middle">pickRowGroups</text>
+  <text x="940" y="292" font-size="9" fill="#2f6f4f" text-anchor="middle">用统计剪枝</text>
+
+  <!-- no leaves -->
+  <path d="M162,310 L162,356" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="172" y="337" font-size="9" fill="#a1a1a6" text-anchor="middle">否</text>
+  <rect x="72" y="358" width="180" height="58" rx="11" fill="#fbeaea" stroke="#e7c3c3" filter="url(#soft)"/>
+  <text x="162" y="382" font-size="10" font-weight="600" fill="#4a1414" text-anchor="middle">不建 SargApplier</text>
+  <text x="162" y="401" font-size="9" fill="#7a2a2a" text-anchor="middle">无谓词 / 无索引 → 全读</text>
+
+  <path d="M774,310 L774,356" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="784" y="337" font-size="9" fill="#a1a1a6" text-anchor="middle">否</text>
+  <rect x="654" y="358" width="240" height="58" rx="11" fill="#fbeaea" stroke="#e7c3c3" filter="url(#soft)"/>
+  <text x="774" y="382" font-size="10" font-weight="600" fill="#4a1414" text-anchor="middle">退回不剪 (保正确)</text>
+  <text x="774" y="401" font-size="9" fill="#7a2a2a" text-anchor="middle">类型演进不安全的转换禁用下推</text>
+
+  <text x="540" y="500" font-size="9.5" fill="#a1a1a6" text-anchor="middle">下推只跳整块肯定无匹配的 stripe / row-group,块内行仍由引擎精确过滤 — 减 IO 不代替过滤</text>
+</svg>

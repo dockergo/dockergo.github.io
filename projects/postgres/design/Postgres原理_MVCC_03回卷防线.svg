@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="440" viewBox="0 0 1020 440"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="aA" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#c99a3a"/></marker>
+    <marker id="aG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+  </defs>
+  <rect width="1020" height="440" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14.5" font-weight="700" fill="#1d1d1f">XID 回卷防线 · freeze 与三道闸门（access/transam/varsup.c）</text>
+  <text x="30" y="49" font-size="10.5" fill="#6e6e73">XID 是 32 位循环计数：最老未冻结事务的年龄越大越危险，autovacuum 逐级加压、逼近回卷点则停写自保</text>
+
+  <!-- legend -->
+  <rect x="30" y="64" width="14" height="10" rx="2" fill="#eafaf1" stroke="#bce6cd"/><text x="50" y="73" font-size="10" fill="#3a3a3c">安全区</text>
+  <rect x="130" y="64" width="14" height="10" rx="2" fill="#fff7e6" stroke="#f0dcae"/><text x="150" y="73" font-size="10" fill="#3a3a3c">加压区（强制 VACUUM/告警）</text>
+  <rect x="360" y="64" width="14" height="10" rx="2" fill="#fbeaea" stroke="#f0cccc"/><text x="380" y="73" font-size="10" fill="#3a3a3c">停写区（只读自保）</text>
+  <text x="1000" y="73" font-size="10" fill="#a1a1a6" text-anchor="end">回卷上限 ~21 亿 XID</text>
+  <line x1="30" y1="84" x2="1000" y2="84" stroke="#e4e7ec" stroke-width="1"/>
+
+  <!-- age axis / gauge -->
+  <text x="30" y="112" font-size="11.5" font-weight="600" fill="#1d1d1f">最老未冻结事务的年龄 age(relfrozenxid) —— 向右增大 →</text>
+  <!-- colored bands -->
+  <rect x="30"  y="124" width="470" height="40" rx="7" fill="#eafaf1" stroke="#bce6cd"/>
+  <rect x="500" y="124" width="360" height="40" rx="0" fill="#fff7e6" stroke="#f0dcae"/>
+  <rect x="860" y="124" width="130" height="40" rx="7" fill="#fbeaea" stroke="#f0cccc"/>
+  <text x="265" y="149" font-size="10" fill="#0f5132" text-anchor="middle">正常：普通 autovacuum 顺带 freeze 老元组</text>
+  <text x="680" y="149" font-size="10" fill="#7a4d00" text-anchor="middle">强制反回卷 VACUUM · 逼近时发告警</text>
+  <text x="925" y="149" font-size="10" fill="#7d1f1f" text-anchor="middle">拒绝写入</text>
+
+  <!-- threshold ticks -->
+  <line x1="500" y1="118" x2="500" y2="182" stroke="#c99a3a" stroke-width="1.6"/>
+  <line x1="700" y1="118" x2="700" y2="182" stroke="#c99a3a" stroke-width="1.6" stroke-dasharray="4 3"/>
+  <line x1="860" y1="118" x2="860" y2="182" stroke="#c0392b" stroke-width="1.8"/>
+  <text x="500" y="196" font-size="9" font-weight="600" fill="#8a6417" text-anchor="middle">xidVacLimit</text>
+  <text x="700" y="196" font-size="9" font-weight="600" fill="#8a6417" text-anchor="middle">xidWarnLimit</text>
+  <text x="860" y="196" font-size="9" font-weight="600" fill="#7d1f1f" text-anchor="middle">xidStopLimit</text>
+  <text x="500" y="209" font-size="8" fill="#9a7328" text-anchor="middle">= age ≥ autovacuum_freeze_max_age</text>
+  <text x="700" y="209" font-size="8" fill="#9a7328" text-anchor="middle">= wrap − 1 亿</text>
+  <text x="860" y="209" font-size="8" fill="#b06a6a" text-anchor="middle">= wrap − 300 万</text>
+
+  <!-- three gates -->
+  <rect x="30" y="230" width="305" height="120" rx="12" fill="#ffffff" stroke="#f0dcae" filter="url(#soft)"/>
+  <text x="48" y="253" font-size="11.5" font-weight="700" fill="#8a6417">闸① 过 xidVacLimit</text>
+  <text x="48" y="274" font-size="9.5" fill="#7a5a1a">GetNewTransactionId 检测到年龄超阈</text>
+  <text x="48" y="292" font-size="9.5" fill="#7a5a1a">→ 强制触发 autovacuum 反回卷</text>
+  <text x="48" y="310" font-size="9.5" fill="#7a5a1a">即使 autovacuum 已关闭也照样跑</text>
+  <text x="48" y="332" font-size="8.5" fill="#a1a1a6">目的：冻结老元组、推高 relfrozenxid</text>
+
+  <rect x="352" y="230" width="305" height="120" rx="12" fill="#ffffff" stroke="#f0dcae" filter="url(#soft)"/>
+  <text x="370" y="253" font-size="11.5" font-weight="700" fill="#8a6417">闸② 过 xidWarnLimit</text>
+  <text x="370" y="274" font-size="9.5" fill="#7a5a1a">每次分配 XID 都发 WARNING：</text>
+  <text x="370" y="292" font-size="9.5" fill="#7a5a1a">"database must be vacuumed within…"</text>
+  <text x="370" y="310" font-size="9.5" fill="#7a5a1a">距回卷仅剩约 1 亿 XID</text>
+  <text x="370" y="332" font-size="8.5" fill="#a1a1a6">目的：最后的人工干预窗口</text>
+
+  <rect x="674" y="230" width="316" height="120" rx="12" fill="#fbeaea" stroke="#f0cccc" filter="url(#soft)"/>
+  <text x="692" y="253" font-size="11.5" font-weight="700" fill="#7d1f1f">闸③ 过 xidStopLimit</text>
+  <text x="692" y="274" font-size="9.5" fill="#a33">数据库拒绝一切分配新 XID 的写</text>
+  <text x="692" y="292" font-size="9.5" fill="#a33">进入只读自保态（唯一会停库的边界）</text>
+  <text x="692" y="310" font-size="9.5" fill="#a33">须单用户模式手工 VACUUM 才能恢复</text>
+  <text x="692" y="332" font-size="8.5" fill="#b06a6a">若真回卷：老元组被误判"未来"而消失</text>
+
+  <!-- freeze mechanism note -->
+  <rect x="30" y="366" width="960" height="56" rx="11" fill="#eafaf1" stroke="#bce6cd"/>
+  <text x="48" y="388" font-size="10.5" font-weight="600" fill="#0f5132">freeze 机制：VACUUM 把足够老、且对所有快照都可见的 tuple 标为"已冻结"（xmin 视为永远过去），其 XID 不再参与年龄计算 → 推高 relfrozenxid、把年龄拉回安全区。</text>
+  <text x="48" y="408" font-size="9.5" fill="#3f8f66">红线成因：长事务 / 关掉 autovacuum / 大量导入后从不 VACUUM，都会让最老年龄单调逼近 stop 线。防线靠"定期 freeze"而非"永不回卷"。</text>
+</svg>

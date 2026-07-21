@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="500" viewBox="0 0 1080 500" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#7fae7f"/></marker>
+  </defs>
+  <rect width="1080" height="500" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="700" fill="#1d1d1f">三条贯穿声明 · Iceberg 表格式 vs Hive 表</text>
+  <text x="30" y="49" font-size="9.5" fill="#a1a1a6">每根支柱都把 Hive 的一个痛点,换成"只改元数据、原子、可演进"的解法</text>
+
+  <!-- legend -->
+  <g font-size="9" fill="#6e6e73">
+    <rect x="760" y="20" width="12" height="12" rx="3" fill="#fbeef0" stroke="#ecc4cd"/><text x="777" y="30">Hive 痛点</text>
+    <rect x="855" y="20" width="12" height="12" rx="3" fill="#f5faf6" stroke="#cfe6d5"/><text x="872" y="30">Iceberg 解法</text>
+  </g>
+
+  <!-- pillar 1 -->
+  <rect x="30" y="70" width="330" height="30" rx="9" fill="#e7f0fb" stroke="#b9d2ef"/>
+  <text x="195" y="90" font-size="11" font-weight="700" fill="#1b2a4a" text-anchor="middle">① 表 = 不可变元数据树</text>
+  <rect x="30" y="110" width="330" height="96" rx="12" fill="#fbeef0" stroke="#ecc4cd"/>
+  <text x="46" y="132" font-size="10" font-weight="700" fill="#7a2438">Hive:表 = 目录下所有文件</text>
+  <text x="46" y="152" font-size="8.8" fill="#a65068">读要 list 目录 —— 慢</text>
+  <text x="46" y="170" font-size="8.8" fill="#a65068">无事务、无一致性保证</text>
+  <text x="46" y="188" font-size="8.8" fill="#a65068">规划要扫全表元信息</text>
+  <line x1="195" y1="210" x2="195" y2="228" stroke="#7fae7f" stroke-width="1.6" marker-end="url(#ar)"/>
+  <rect x="30" y="230" width="330" height="120" rx="12" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="46" y="252" font-size="10" font-weight="700" fill="#12402a">Iceberg:明确列出每个文件</text>
+  <text x="46" y="272" font-size="8.8" fill="#2f6f4f">metadata.json → manifest list</text>
+  <text x="46" y="290" font-size="8.8" fill="#2f6f4f">→ manifest → data file</text>
+  <text x="46" y="308" font-size="8.8" fill="#2f6f4f">带分区值 + 列统计</text>
+  <text x="46" y="326" font-size="8.8" fill="#2f6f4f">不 list 目录,顺树剪枝</text>
+  <text x="46" y="344" font-size="8.2" fill="#7fae7f">→ 规划快且原子</text>
+
+  <!-- pillar 2 -->
+  <rect x="375" y="70" width="330" height="30" rx="9" fill="#e7f0fb" stroke="#b9d2ef"/>
+  <text x="540" y="90" font-size="11" font-weight="700" fill="#1b2a4a" text-anchor="middle">② 原子提交靠 CAS,不锁表</text>
+  <rect x="375" y="110" width="330" height="96" rx="12" fill="#fbeef0" stroke="#ecc4cd"/>
+  <text x="391" y="132" font-size="10" font-weight="700" fill="#7a2438">Hive:改表要锁 / 无原子性</text>
+  <text x="391" y="152" font-size="8.8" fill="#a65068">并发写易互相覆盖</text>
+  <text x="391" y="170" font-size="8.8" fill="#a65068">中途失败留半成品</text>
+  <text x="391" y="188" font-size="8.8" fill="#a65068">对象存储无锁可用</text>
+  <line x1="540" y1="210" x2="540" y2="228" stroke="#7fae7f" stroke-width="1.6" marker-end="url(#ar)"/>
+  <rect x="375" y="230" width="330" height="120" rx="12" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="391" y="252" font-size="10" font-weight="700" fill="#12402a">Iceberg:原子换一个指针</text>
+  <text x="391" y="272" font-size="8.8" fill="#2f6f4f">写全新 metadata.json(UUID)</text>
+  <text x="391" y="290" font-size="8.8" fill="#2f6f4f">catalog CAS 换当前位置</text>
+  <text x="391" y="308" font-size="8.8" fill="#2f6f4f">rename / 条件 UPDATE / 服务端</text>
+  <text x="391" y="326" font-size="8.8" fill="#2f6f4f">冲突则乐观重试(re-apply)</text>
+  <text x="391" y="344" font-size="8.2" fill="#7fae7f">→ 快照隔离/时间旅行免费</text>
+
+  <!-- pillar 3 -->
+  <rect x="720" y="70" width="330" height="30" rx="9" fill="#e7f0fb" stroke="#b9d2ef"/>
+  <text x="885" y="90" font-size="11" font-weight="700" fill="#1b2a4a" text-anchor="middle">③ 按字段 ID 演进,不重写数据</text>
+  <rect x="720" y="110" width="330" height="96" rx="12" fill="#fbeef0" stroke="#ecc4cd"/>
+  <text x="736" y="132" font-size="10" font-weight="700" fill="#7a2438">Hive:改 schema 是噩梦</text>
+  <text x="736" y="152" font-size="8.8" fill="#a65068">按名字/位置解析列易错位</text>
+  <text x="736" y="170" font-size="8.8" fill="#a65068">改分区要重写全表目录</text>
+  <text x="736" y="188" font-size="8.8" fill="#a65068">rename/改类型高危</text>
+  <line x1="885" y1="210" x2="885" y2="228" stroke="#7fae7f" stroke-width="1.6" marker-end="url(#ar)"/>
+  <rect x="720" y="230" width="330" height="120" rx="12" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="736" y="252" font-size="10" font-weight="700" fill="#12402a">Iceberg:列身份钉在字段 ID</text>
+  <text x="736" y="272" font-size="8.8" fill="#2f6f4f">rename/加删列/类型提升</text>
+  <text x="736" y="290" font-size="8.8" fill="#2f6f4f">只改元数据,保 ID 不变</text>
+  <text x="736" y="308" font-size="8.8" fill="#2f6f4f">分区每 manifest 记 spec id</text>
+  <text x="736" y="326" font-size="8.8" fill="#2f6f4f">隐藏分区:查源列自动剪枝</text>
+  <text x="736" y="344" font-size="8.2" fill="#7fae7f">→ 演进不碰数据文件</text>
+
+  <!-- bottom -->
+  <rect x="30" y="366" width="1020" height="52" rx="12" fill="#f7f9fc" stroke="#e5ecf5"/>
+  <text x="540" y="390" font-size="10.5" font-weight="700" fill="#1b2a4a" text-anchor="middle">三根支柱共用一个物理事实:数据文件不动,只在其上加/换不可变元数据</text>
+  <text x="540" y="409" font-size="9" fill="#5b7db1" text-anchor="middle">这就是"一堆对象存储文件"表现得像有 ACID、快照、可演进的表的全部秘密</text>
+</svg>

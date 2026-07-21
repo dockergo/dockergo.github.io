@@ -1,0 +1,106 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="660" viewBox="0 0 1120 660" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="aT" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2aa0a4"/></marker>
+    <marker id="aG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+    <marker id="aA" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#c99a3a"/></marker>
+  </defs>
+  <rect width="1120" height="660" fill="#fbfbfd"/>
+
+  <text x="30" y="32" font-size="15" font-weight="700" fill="#1d1d1f">图解点 ③ HTTP/2 流复用 + Sidecar 治理 · 一条 TCP 上多 stream 多路复用、逐流 + 连接级流控；sidecar 劫持流量统一治理</text>
+  <text x="30" y="53" font-size="10.5" fill="#6e6e73">gRPC 把多路并发 RPC 编成 stream，帧交织在同一连接；WINDOW_UPDATE 双层反压；sidecar 用 iptables 劫持进出流量做 mTLS / 路由 / 限流</text>
+
+  <line x1="30" y1="80" x2="54" y2="80" stroke="#2aa0a4" stroke-width="2" marker-end="url(#aT)"/>
+  <text x="60" y="84" font-size="10" fill="#3a3a3c">多 stream 的帧交织复用同一 TCP</text>
+  <line x1="356" y1="80" x2="380" y2="80" stroke="#2f9e6e" stroke-width="2" marker-end="url(#aG)"/>
+  <text x="386" y="84" font-size="10" fill="#3a3a3c">WINDOW_UPDATE 流控反压</text>
+  <line x1="616" y1="80" x2="640" y2="80" stroke="#c99a3a" stroke-width="2" stroke-dasharray="5 3" marker-end="url(#aA)"/>
+  <text x="646" y="84" font-size="10" fill="#3a3a3c">sidecar 劫持治理（对应用透明）</text>
+
+  <!-- ===== 上半：HTTP/2 流复用 ===== -->
+  <rect x="30" y="104" width="1060" height="286" rx="14" fill="#e3f4f4" stroke="#bfe3e4"/>
+  <text x="50" y="130" font-size="13" font-weight="700" fill="#1a6d70">一、HTTP/2 流复用 · 一条 TCP 承载多路并发</text>
+
+  <!-- 客户端多 stream -->
+  <rect x="50" y="146" width="200" height="224" rx="11" fill="#ffffff" stroke="#bfe3e4" filter="url(#soft)"/>
+  <text x="150" y="170" font-size="11" font-weight="700" fill="#1a6d70" text-anchor="middle">客户端 · 多路 RPC</text>
+  <g font-size="9" text-anchor="middle">
+    <rect x="66" y="184" width="168" height="34" rx="7" fill="#d5efef" stroke="#8fcccd"/><text x="150" y="205" fill="#1a6d70">stream 1 · 请求 A</text>
+    <rect x="66" y="226" width="168" height="34" rx="7" fill="#d5efef" stroke="#8fcccd"/><text x="150" y="247" fill="#1a6d70">stream 3 · 请求 B</text>
+    <rect x="66" y="268" width="168" height="34" rx="7" fill="#d5efef" stroke="#8fcccd"/><text x="150" y="289" fill="#1a6d70">stream 5 · 请求 C</text>
+  </g>
+  <text x="150" y="326" font-size="8.5" fill="#4a8d8f" text-anchor="middle">每个 RPC = 一个 stream</text>
+  <text x="150" y="342" font-size="8.5" fill="#4a8d8f" text-anchor="middle">客户端发起用奇数流 id</text>
+  <text x="150" y="358" font-size="8.5" fill="#8a97ab" text-anchor="middle">并发发起，无需各开一条连接</text>
+
+  <!-- 单条 TCP 帧序列 -->
+  <rect x="300" y="146" width="500" height="140" rx="11" fill="#ffffff" stroke="#bfe3e4"/>
+  <text x="320" y="170" font-size="11" font-weight="700" fill="#1a6d70">同一条 TCP · 帧交织（frame interleave）</text>
+  <g font-size="8.5" text-anchor="middle">
+    <rect x="320" y="182" width="70" height="30" rx="5" fill="#2aa0a4"/><text x="355" y="201" fill="#fff">S1 · DATA</text>
+    <rect x="394" y="182" width="70" height="30" rx="5" fill="#5bb8bb"/><text x="429" y="201" fill="#fff">S3 · HDR</text>
+    <rect x="468" y="182" width="70" height="30" rx="5" fill="#2aa0a4"/><text x="503" y="201" fill="#fff">S1 · DATA</text>
+    <rect x="542" y="182" width="70" height="30" rx="5" fill="#7ac9cb"/><text x="577" y="201" fill="#fff">S5 · DATA</text>
+    <rect x="616" y="182" width="70" height="30" rx="5" fill="#5bb8bb"/><text x="651" y="201" fill="#fff">S3 · DATA</text>
+    <rect x="690" y="182" width="70" height="30" rx="5" fill="#2aa0a4"/><text x="725" y="201" fill="#fff">S1 · END</text>
+  </g>
+  <text x="320" y="234" font-size="9" fill="#3a5a48">同一 stream 的帧带同一流 id → 接收端按 id 归并重组</text>
+  <text x="320" y="254" font-size="9" fill="#3a5a48">不同 stream 的帧可任意穿插 → 一个慢请求不再堵住整条连接</text>
+  <text x="320" y="274" font-size="8.5" fill="#8a97ab">对比 HTTP/1.1：一条连接一次只跑一个请求，故要开多连接</text>
+
+  <!-- 服务端 -->
+  <rect x="850" y="146" width="200" height="140" rx="11" fill="#ffffff" stroke="#bfe3e4" filter="url(#soft)"/>
+  <text x="950" y="170" font-size="11" font-weight="700" fill="#1a6d70" text-anchor="middle">服务端 · 按流 id 重组</text>
+  <text x="866" y="196" font-size="9" fill="#3a5a48">收帧 → 按流 id 分派</text>
+  <text x="866" y="216" font-size="9" fill="#3a5a48">各 stream 独立组装成完整 RPC</text>
+  <text x="866" y="236" font-size="9" fill="#3a5a48">处理完各自回程（偶数流可推送）</text>
+  <text x="866" y="262" font-size="8.5" fill="#8a97ab">复用降握手 / 连接数</text>
+
+  <!-- 流控条 -->
+  <rect x="300" y="300" width="750" height="72" rx="10" fill="#eaf6f0" stroke="#bfe3d1"/>
+  <text x="316" y="324" font-size="11" font-weight="700" fill="#2f6b4e">双层流控 · 逐流 window + 连接级 window</text>
+  <text x="316" y="346" font-size="9" fill="#3a5a48">每收到数据消耗对应 stream 的窗口 + 连接总窗口；两者任一耗尽即停发</text>
+  <text x="316" y="364" font-size="9" fill="#2f6b4e">接收方处理完 → 回 WINDOW_UPDATE 抬升窗口 → 发送方续发（信用式反压，防快压垮慢）</text>
+  <!-- 流控箭头 -->
+  <line x1="850" y1="336" x2="806" y2="336" stroke="#2f9e6e" stroke-width="2" marker-end="url(#aG)"/>
+
+  <!-- ===== 下半：Sidecar 治理 ===== -->
+  <rect x="30" y="404" width="1060" height="240" rx="14" fill="#fbf3e2" stroke="#ecd6a8"/>
+  <text x="50" y="430" font-size="13" font-weight="700" fill="#8a6417">二、Sidecar 协议治理 · iptables 劫持流量，横切能力下沉</text>
+
+  <!-- Pod 容器 -->
+  <rect x="50" y="446" width="470" height="180" rx="12" fill="#ffffff" stroke="#ecd6a8" filter="url(#soft)"/>
+  <text x="66" y="470" font-size="11" font-weight="700" fill="#8a6417">同一 Pod / 主机</text>
+  <!-- app -->
+  <rect x="70" y="482" width="180" height="126" rx="10" fill="#eaf1fb" stroke="#c6d9f2"/>
+  <text x="160" y="506" font-size="11" font-weight="700" fill="#20375e" text-anchor="middle">业务应用</text>
+  <text x="86" y="530" font-size="9" fill="#3a4a63">发起 / 接收明文 RPC</text>
+  <text x="86" y="550" font-size="9" fill="#3a4a63">以为直连对端</text>
+  <text x="86" y="570" font-size="9" fill="#3a4a63">无治理逻辑</text>
+  <text x="86" y="592" font-size="8.5" fill="#8a97ab">代码零改动</text>
+  <!-- sidecar -->
+  <rect x="270" y="482" width="230" height="126" rx="10" fill="#fbf3e2" stroke="#ecd6a8"/>
+  <text x="385" y="506" font-size="11" font-weight="700" fill="#8a6417" text-anchor="middle">Sidecar 代理</text>
+  <text x="286" y="530" font-size="9" fill="#7a5a1a">iptables 把出/入流量重定向到本代理</text>
+  <text x="286" y="550" font-size="9" fill="#7a5a1a">解出 HTTP/2 帧 → 施加策略</text>
+  <text x="286" y="570" font-size="9" fill="#7a5a1a">再转发到真正对端</text>
+  <text x="286" y="592" font-size="8.5" fill="#a98a3a">与应用同生命周期，独立进程</text>
+  <!-- 劫持箭头 -->
+  <line x1="250" y1="545" x2="268" y2="545" stroke="#c99a3a" stroke-width="2" stroke-dasharray="5 3" marker-end="url(#aA)"/>
+  <text x="238" y="535" font-size="8" fill="#8a6417" text-anchor="end">劫持</text>
+
+  <!-- 治理能力清单 -->
+  <rect x="540" y="446" width="510" height="180" rx="12" fill="#ffffff" stroke="#ecd6a8" filter="url(#soft)"/>
+  <text x="556" y="470" font-size="11" font-weight="700" fill="#8a6417">代理施加的治理能力（数据面统一执行）</text>
+  <g font-size="9.5" fill="#7a5a1a">
+    <text x="556" y="496">🔒 mTLS：双向证书加密，应用间流量自动加密认证</text>
+    <text x="556" y="520">🧭 路由 / 灰度：按 header / 权重把请求导到不同版本</text>
+    <text x="556" y="544">⏱ 限流 / 熔断 / 重试：过载保护与容错，配额集中管控</text>
+    <text x="556" y="568">📈 观测：统一采集调用链 / 指标 / 日志</text>
+  </g>
+  <text x="556" y="594" font-size="8.5" fill="#a98a3a">这些横切关注点从业务代码剥离，交给基础设施；升级策略无需改应用</text>
+
+  <!-- app→sidecar 数据流 -->
+  <line x1="820" y1="380" x2="700" y2="440" stroke="#c99a3a" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#aA)"/>
+  <text x="720" y="404" font-size="8.5" fill="#8a6417">治理作用于 HTTP/2 层</text>
+</svg>

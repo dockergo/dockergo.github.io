@@ -1,0 +1,223 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1300" height="792" viewBox="0 0 1300 792" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+  </defs>
+  <rect width="1300" height="792" fill="#fbfbfd"/>
+
+  <text x="24" y="32" font-size="15" font-weight="700" fill="#1d1d1f">工程实现差异 · 同一套共识算法，在真实系统里怎么落地 —— etcd / hashicorp-raft / etcd-raft / ZooKeeper 的封装取舍</text>
+  <text x="24" y="53" font-size="10.5" fill="#6e6e73">算法（选举 / 多数派 / 日志复制）几乎同构，工程分歧在「边界画在哪、I/O 谁来做」。四列均为库内已源码核实项目；下表按 6 个工程取舍维度横向对照。</text>
+
+  <!-- 维度列头 -->
+  <rect x="24" y="74" width="168" height="42" rx="9" fill="#eef0f3" stroke="#e4e7ec"/>
+  <text x="108" y="100" font-size="12" font-weight="700" fill="#4a4a4f" text-anchor="middle">工程取舍维度</text>
+
+  <!-- 四项目列头 -->
+  <rect x="196" y="74" width="264" height="42" rx="9" fill="#eaf1fb" stroke="#c6d9f2"/>
+  <text x="328" y="94" font-size="13" font-weight="800" fill="#20375e" text-anchor="middle">etcd</text>
+  <text x="328" y="109" font-size="9" fill="#5b7196" text-anchor="middle">内嵌 Raft 的 CP 分布式 KV</text>
+
+  <rect x="464" y="74" width="264" height="42" rx="9" fill="#f4eefb" stroke="#dcc9ef"/>
+  <text x="596" y="94" font-size="13" font-weight="800" fill="#6f3ea8" text-anchor="middle">hashicorp-raft</text>
+  <text x="596" y="109" font-size="9" fill="#8a6bab" text-anchor="middle">可嵌入 Raft 库（Consul/Nomad/Vault）</text>
+
+  <rect x="732" y="74" width="264" height="42" rx="9" fill="#e4f4f4" stroke="#bfe1e1"/>
+  <text x="864" y="94" font-size="13" font-weight="800" fill="#1d6b6e" text-anchor="middle">etcd-raft</text>
+  <text x="864" y="109" font-size="9" fill="#4a8a8c" text-anchor="middle">纯共识状态机核（算法本体）</text>
+
+  <rect x="1000" y="74" width="276" height="42" rx="9" fill="#fbf0e2" stroke="#ecd6b6"/>
+  <text x="1138" y="94" font-size="13" font-weight="800" fill="#9a5f1c" text-anchor="middle">ZooKeeper</text>
+  <text x="1138" y="109" font-size="9" fill="#b0854a" text-anchor="middle">ZAB 协调服务（znode 树）</text>
+
+  <!-- ============ 行1：定位与形态 ============ -->
+  <rect x="24" y="122" width="168" height="88" rx="9" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="38" y="150" font-size="11.5" font-weight="700" fill="#1d1d1f">① 定位与形态</text>
+  <text x="38" y="171" font-size="9" fill="#8a97ab">边界画在哪</text>
+  <text x="38" y="185" font-size="9" fill="#8a97ab">（服务 / 库 /</text>
+  <text x="38" y="199" font-size="9" fill="#8a97ab">内核 / 协调服务）</text>
+
+  <rect x="196" y="122" width="264" height="88" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="210" y="146" font-size="10.5" font-weight="700" fill="#20375e">整库 · 开箱即用 CP 服务</text>
+  <text x="210" y="165" font-size="9.5" fill="#4a4a4f">内嵌 Raft + MVCC KV + gRPC，</text>
+  <text x="210" y="181" font-size="9.5" fill="#4a4a4f">交付一个线性一致的分布式</text>
+  <text x="210" y="197" font-size="9.5" fill="#4a4a4f">键值存储，直接跑。</text>
+
+  <rect x="464" y="122" width="264" height="88" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="478" y="146" font-size="10.5" font-weight="700" fill="#6f3ea8">电池全含 · 可嵌入库</text>
+  <text x="478" y="165" font-size="9.5" fill="#4a4a4f">宿主 import 后注入六件套，</text>
+  <text x="478" y="181" font-size="9.5" fill="#4a4a4f">库只持共识状态机、不含</text>
+  <text x="478" y="197" font-size="9.5" fill="#4a4a4f">业务，无 main、非独立服务。</text>
+
+  <rect x="732" y="122" width="264" height="88" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="746" y="146" font-size="10.5" font-weight="700" fill="#1d6b6e">纯共识状态机核</text>
+  <text x="746" y="165" font-size="9.5" fill="#4a4a4f">只有 Step→Ready 状态机，</text>
+  <text x="746" y="181" font-size="9.5" fill="#4a4a4f">无网络 / 磁盘 / 驱动复制的</text>
+  <text x="746" y="197" font-size="9.5" fill="#4a4a4f">线程；被 etcd/CockroachDB 复用。</text>
+
+  <rect x="1000" y="122" width="276" height="88" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="1014" y="146" font-size="10.5" font-weight="700" fill="#9a5f1c">协调服务 · znode 层级树</text>
+  <text x="1014" y="165" font-size="9.5" fill="#4a4a4f">ZAB + 层级命名空间，</text>
+  <text x="1014" y="181" font-size="9.5" fill="#4a4a4f">对外是配置 / 锁 / 选主 /</text>
+  <text x="1014" y="197" font-size="9.5" fill="#4a4a4f">成员发现的协调原语库。</text>
+
+  <!-- ============ 行2：共识核 / 算法 ============ -->
+  <rect x="24" y="215" width="168" height="88" rx="9" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="38" y="243" font-size="11.5" font-weight="700" fill="#1d1d1f">② 共识核 / 算法</text>
+  <text x="38" y="264" font-size="9" fill="#8a97ab">用哪种一致性</text>
+  <text x="38" y="278" font-size="9" fill="#8a97ab">协议、自实现</text>
+  <text x="38" y="292" font-size="9" fill="#8a97ab">还是复用</text>
+
+  <rect x="196" y="215" width="264" height="88" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="210" y="239" font-size="10.5" font-weight="700" fill="#20375e">Raft（复用 etcd-io/raft）</text>
+  <text x="210" y="258" font-size="9.5" fill="#4a4a4f">直接把下方 etcd-raft 库</text>
+  <text x="210" y="274" font-size="9.5" fill="#4a4a4f">作为内核，自己不再实现</text>
+  <text x="210" y="290" font-size="9.5" fill="#4a4a4f">一份 Raft。</text>
+
+  <rect x="464" y="215" width="264" height="88" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="478" y="239" font-size="10.5" font-weight="700" fill="#6f3ea8">Raft（独立自实现一份）</text>
+  <text x="478" y="258" font-size="9.5" fill="#4a4a4f">自带选举 / 复制 / 提交 /</text>
+  <text x="478" y="274" font-size="9.5" fill="#4a4a4f">快照，与 etcd-raft 是</text>
+  <text x="478" y="290" font-size="9.5" fill="#4a4a4f">两份独立实现。</text>
+
+  <rect x="732" y="215" width="264" height="88" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="746" y="239" font-size="10.5" font-weight="700" fill="#1d6b6e">Raft 算法本体</text>
+  <text x="746" y="258" font-size="9.5" fill="#4a4a4f">这就是「Raft 算法」的</text>
+  <text x="746" y="274" font-size="9.5" fill="#4a4a4f">参考实现，供上层系统</text>
+  <text x="746" y="290" font-size="9.5" fill="#4a4a4f">嵌入复用。</text>
+
+  <rect x="1000" y="215" width="276" height="88" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="1014" y="239" font-size="10.5" font-weight="700" fill="#9a5f1c">ZAB 原子广播（非 Raft）</text>
+  <text x="1014" y="258" font-size="9.5" fill="#4a4a4f">Proposal→Ack→Commit 两阶段，</text>
+  <text x="1014" y="274" font-size="9.5" fill="#4a4a4f">zxid = ⟨epoch, counter⟩ 定全序，</text>
+  <text x="1014" y="290" font-size="9.5" fill="#4a4a4f">恢复分离出独立发现阶段。</text>
+
+  <!-- ============ 行3：存储 / 日志后端 ============ -->
+  <rect x="24" y="308" width="168" height="88" rx="9" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="38" y="336" font-size="11.5" font-weight="700" fill="#1d1d1f">③ 存储 / 日志后端</text>
+  <text x="38" y="357" font-size="9" fill="#8a97ab">日志与元数据</text>
+  <text x="38" y="371" font-size="9" fill="#8a97ab">谁存、能不能</text>
+  <text x="38" y="385" font-size="9" fill="#8a97ab">换后端</text>
+
+  <rect x="196" y="308" width="264" height="88" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="210" y="332" font-size="10.5" font-weight="700" fill="#20375e">自带 WAL + bbolt</text>
+  <text x="210" y="351" font-size="9.5" fill="#4a4a4f">WAL 顺序日志 + boltdb 快照，</text>
+  <text x="210" y="367" font-size="9.5" fill="#4a4a4f">库自管磁盘 I/O，</text>
+  <text x="210" y="383" font-size="9.5" fill="#4a4a4f">后端固定不可换。</text>
+
+  <rect x="464" y="308" width="264" height="88" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="478" y="332" font-size="10.5" font-weight="700" fill="#6f3ea8">LogStore / StableStore 接口</text>
+  <text x="478" y="351" font-size="9.5" fill="#4a4a4f">注入 raft-boltdb 或 Inmem，</text>
+  <text x="478" y="367" font-size="9.5" fill="#4a4a4f">后端可插拔；铁律「先落盘</text>
+  <text x="478" y="383" font-size="9.5" fill="#4a4a4f">再改内存」。</text>
+
+  <rect x="732" y="308" width="264" height="88" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="746" y="332" font-size="10.5" font-weight="700" fill="#1d6b6e">Storage 只读接口 + 外包</text>
+  <text x="746" y="351" font-size="9.5" fill="#4a4a4f">Ready.Entries/Snapshot 待落盘，</text>
+  <text x="746" y="367" font-size="9.5" fill="#4a4a4f">全部磁盘 I/O 由宿主承担，</text>
+  <text x="746" y="383" font-size="9.5" fill="#4a4a4f">库零 open 文件。</text>
+
+  <rect x="1000" y="308" width="276" height="88" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="1014" y="332" font-size="10.5" font-weight="700" fill="#9a5f1c">TxnLog + 快照（自管）</text>
+  <text x="1014" y="351" font-size="9.5" fill="#4a4a4f">follower 先 fsync 事务日志</text>
+  <text x="1014" y="367" font-size="9.5" fill="#4a4a4f">再回 Ack，forceSync 保证</text>
+  <text x="1014" y="383" font-size="9.5" fill="#4a4a4f">持久性，定期打快照。</text>
+
+  <!-- ============ 行4：读一致实现 ============ -->
+  <rect x="24" y="401" width="168" height="88" rx="9" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="38" y="429" font-size="11.5" font-weight="700" fill="#1d1d1f">④ 读一致实现</text>
+  <text x="38" y="450" font-size="9" fill="#8a97ab">怎样保证读到</text>
+  <text x="38" y="464" font-size="9" fill="#8a97ab">最新已提交</text>
+  <text x="38" y="478" font-size="9" fill="#8a97ab">（不读旧）</text>
+
+  <rect x="196" y="401" width="264" height="88" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="210" y="425" font-size="10.5" font-weight="700" fill="#20375e">ReadIndex（默认线性）</text>
+  <text x="210" y="444" font-size="9.5" fill="#4a4a4f">一轮心跳确认「仍是 leader」，</text>
+  <text x="210" y="460" font-size="9.5" fill="#4a4a4f">等本地 apply 追上再读；</text>
+  <text x="210" y="476" font-size="9.5" fill="#4a4a4f">串行读可选走本地略旧。</text>
+
+  <rect x="464" y="401" width="264" height="88" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="478" y="425" font-size="10.5" font-weight="700" fill="#6f3ea8">VerifyLeader + Leader Lease</text>
+  <text x="478" y="444" font-size="9.5" fill="#4a4a4f">VerifyLeader 向多数派确认</text>
+  <text x="478" y="460" font-size="9.5" fill="#4a4a4f">领导权（不写日志）；Lease</text>
+  <text x="478" y="476" font-size="9.5" fill="#4a4a4f">免掉每次读的心跳 RTT。</text>
+
+  <rect x="732" y="401" width="264" height="88" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="746" y="425" font-size="10.5" font-weight="700" fill="#1d6b6e">ReadIndex（库产出信号）</text>
+  <text x="746" y="444" font-size="9.5" fill="#4a4a4f">read_only.go 记录 commit，</text>
+  <text x="746" y="460" font-size="9.5" fill="#4a4a4f">经 Ready 交宿主放行读，</text>
+  <text x="746" y="476" font-size="9.5" fill="#4a4a4f">不走日志复制。</text>
+
+  <rect x="1000" y="401" width="276" height="88" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="1014" y="425" font-size="10.5" font-weight="700" fill="#9a5f1c">写线性 / 读走本地副本</text>
+  <text x="1014" y="444" font-size="9.5" fill="#4a4a4f">读默认落本地副本、可能略旧，</text>
+  <text x="1014" y="460" font-size="9.5" fill="#4a4a4f">要读最新须显式 sync() 强制</text>
+  <text x="1014" y="476" font-size="9.5" fill="#4a4a4f">追平后再读。</text>
+
+  <!-- ============ 行5：成员变更方式 ============ -->
+  <rect x="24" y="494" width="168" height="88" rx="9" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="38" y="522" font-size="11.5" font-weight="700" fill="#1d1d1f">⑤ 成员变更方式</text>
+  <text x="38" y="543" font-size="9" fill="#8a97ab">如何安全增删</text>
+  <text x="38" y="557" font-size="9" fill="#8a97ab">节点、单步</text>
+  <text x="38" y="571" font-size="9" fill="#8a97ab">还是联合共识</text>
+
+  <rect x="196" y="494" width="264" height="88" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="210" y="518" font-size="10.5" font-weight="700" fill="#20375e">ConfChange 单步</text>
+  <text x="210" y="537" font-size="9.5" fill="#4a4a4f">增删经日志、learner 先追平</text>
+  <text x="210" y="553" font-size="9.5" fill="#4a4a4f">不计票再 promote；</text>
+  <text x="210" y="569" font-size="9.5" fill="#4a4a4f">底层内核亦支持 joint。</text>
+
+  <rect x="464" y="494" width="264" height="88" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="478" y="518" font-size="10.5" font-weight="700" fill="#6f3ea8">单步 AddVoter（非 joint）</text>
+  <text x="478" y="537" font-size="9.5" fill="#4a4a4f">一次只增减一个 server，</text>
+  <text x="478" y="553" font-size="9.5" fill="#4a4a4f">靠「前配置已提交 + 本任期</text>
+  <text x="478" y="569" font-size="9.5" fill="#4a4a4f">no-op 已提交」串行化。</text>
+
+  <rect x="732" y="494" width="264" height="88" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="746" y="518" font-size="10.5" font-weight="700" fill="#1d6b6e">联合共识 + 单步</text>
+  <text x="746" y="537" font-size="9.5" fill="#4a4a4f">EnterJoint→C(new,old)→LeaveJoint，</text>
+  <text x="746" y="553" font-size="9.5" fill="#4a4a4f">可一次替换多个 voter；</text>
+  <text x="746" y="569" font-size="9.5" fill="#4a4a4f">也支持 Simple 单步。</text>
+
+  <rect x="1000" y="494" width="276" height="88" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="1014" y="518" font-size="10.5" font-weight="700" fill="#9a5f1c">动态 reconfig</text>
+  <text x="1014" y="537" font-size="9.5" fill="#4a4a4f">reconfig 命令改集群成员，</text>
+  <text x="1014" y="553" font-size="9.5" fill="#4a4a4f">变更后触发新一轮选主 + 同步；</text>
+  <text x="1014" y="569" font-size="9.5" fill="#4a4a4f">经典部署多为静态集群。</text>
+
+  <!-- ============ 行6：并发 / IO 模型 ============ -->
+  <rect x="24" y="587" width="168" height="88" rx="9" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="38" y="615" font-size="11.5" font-weight="700" fill="#1d1d1f">⑥ 并发 / IO 模型</text>
+  <text x="38" y="636" font-size="9" fill="#8a97ab">谁驱动状态机、</text>
+  <text x="38" y="650" font-size="9" fill="#8a97ab">线程模型是</text>
+  <text x="38" y="664" font-size="9" fill="#8a97ab">什么样</text>
+
+  <rect x="196" y="587" width="264" height="88" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="210" y="611" font-size="10.5" font-weight="700" fill="#20375e">server 进程集成</text>
+  <text x="210" y="630" font-size="9.5" fill="#4a4a4f">raftNode 循环取 Ready，</text>
+  <text x="210" y="646" font-size="9.5" fill="#4a4a4f">apply 到 MVCC；WAL 与</text>
+  <text x="210" y="662" font-size="9.5" fill="#4a4a4f">网络由 etcd 自己承接。</text>
+
+  <rect x="464" y="587" width="264" height="88" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="478" y="611" font-size="10.5" font-weight="700" fill="#6f3ea8">单线程 run + 旁挂协程</text>
+  <text x="478" y="630" font-size="9.5" fill="#4a4a4f">run 单线程串行改状态（无锁），</text>
+  <text x="478" y="646" font-size="9.5" fill="#4a4a4f">每 follower 一复制协程，</text>
+  <text x="478" y="662" font-size="9.5" fill="#4a4a4f">runFSM/runSnapshots 旁挂。</text>
+
+  <rect x="732" y="587" width="264" height="88" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="746" y="611" font-size="10.5" font-weight="700" fill="#1d6b6e">宿主 Node 循环驱动</text>
+  <text x="746" y="630" font-size="9.5" fill="#4a4a4f">库不起线程（RawNode 非线程</text>
+  <text x="746" y="646" font-size="9.5" fill="#4a4a4f">安全）；宿主用 Tick/Step/</text>
+  <text x="746" y="662" font-size="9.5" fill="#4a4a4f">Ready/Advance 同步驱动。</text>
+
+  <rect x="1000" y="587" width="276" height="88" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="1014" y="611" font-size="10.5" font-weight="700" fill="#9a5f1c">LearnerHandler 每 follower</text>
+  <text x="1014" y="630" font-size="9.5" fill="#4a4a4f">Leader 侧每个 follower 一个</text>
+  <text x="1014" y="646" font-size="9.5" fill="#4a4a4f">处理线程；请求处理链</text>
+  <text x="1014" y="662" font-size="9.5" fill="#4a4a4f">(RequestProcessor) 串成流水线。</text>
+
+  <!-- 底部一句话总括 -->
+  <rect x="24" y="688" width="1252" height="70" rx="12" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="42" y="713" font-size="10.5" font-weight="700" fill="#1d1d1f">本质差异</text>
+  <text x="112" y="713" font-size="10" fill="#4a4a4f">同一套 Raft：<tspan font-weight="700" fill="#20375e">etcd</tspan> 打包成 CP KV 服务（自管 WAL/网络）、<tspan font-weight="700" fill="#6f3ea8">hashicorp-raft</tspan> 做成注入式可嵌入库（存储/传输可插拔）、<tspan font-weight="700" fill="#1d6b6e">etcd-raft</tspan> 只留纯状态机核把 I/O 全外包给宿主；<tspan font-weight="700" fill="#9a5f1c">ZooKeeper</tspan> 另走 ZAB——</text>
+  <text x="112" y="731" font-size="10" fill="#4a4a4f">用独立的「发现 epoch + DIFF/TRUNC/SNAP 同步」恢复阶段，换取高吞吐原子广播，读默认走本地副本。</text>
+  <text x="112" y="750" font-size="9" fill="#8a97ab">取舍两根主轴：I/O 谁来做（自管 / 注入 / 外包）× 边界画在哪（整库 / 库 / 内核 / 服务）——算法同构，工程封装层级不同，选型即在这两轴上取点。</text>
+</svg>

@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="640" viewBox="0 0 1120 640" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="aG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+    <marker id="aR" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#d1544a"/></marker>
+    <marker id="aB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#4a7fd0"/></marker>
+  </defs>
+  <rect width="1120" height="640" fill="#fbfbfd"/>
+
+  <text x="30" y="32" font-size="15" font-weight="700" fill="#1d1d1f">图解点 ③ OCC 验证阶段读写集冲突检测 · 先改后验：读写全程不加锁，commit 时校验 read set 是否被并发写改动，冲突则整体 abort 重试</text>
+  <text x="30" y="53" font-size="10.5" fill="#6e6e73">乐观并发控制三阶段：读（记录 read set + 各自版本、写入本地缓冲）→ 验证（原子检查 read set 是否仍是当初的版本）→ 写（通过则落库）</text>
+
+  <line x1="30" y1="80" x2="54" y2="80" stroke="#4a7fd0" stroke-width="2" marker-end="url(#aB)"/>
+  <text x="60" y="84" font-size="10" fill="#3a3a3c">读阶段（记版本，写本地缓冲）</text>
+  <line x1="300" y1="80" x2="324" y2="80" stroke="#2f9e6e" stroke-width="2" marker-end="url(#aG)"/>
+  <text x="330" y="84" font-size="10" fill="#3a3a3c">验证通过 → 提交</text>
+  <line x1="520" y1="80" x2="544" y2="80" stroke="#d1544a" stroke-width="2" stroke-dasharray="5 3" marker-end="url(#aR)"/>
+  <text x="550" y="84" font-size="10" fill="#3a3a3c">read set 被改 → abort 重试</text>
+
+  <!-- 三阶段 -->
+  <!-- 读阶段 -->
+  <rect x="30" y="104" width="340" height="200" rx="13" fill="#eaf1fb" stroke="#c6d9f2" filter="url(#soft)"/>
+  <text x="200" y="130" font-size="12" font-weight="700" fill="#20375e" text-anchor="middle">① 读阶段 · Read Phase</text>
+  <text x="46" y="156" font-size="10" fill="#2f4a70">读每个 key 时，记录其读到的版本号</text>
+  <rect x="46" y="166" width="308" height="52" rx="8" fill="#fff" stroke="#c6d9f2"/>
+  <text x="60" y="186" font-size="9.5" font-weight="700" fill="#20375e">read set</text>
+  <text x="60" y="204" font-size="9" fill="#3a4a63">{ x@ver3, y@ver7 }（读时的版本快照）</text>
+  <rect x="46" y="226" width="308" height="52" rx="8" fill="#f4eefb" stroke="#dcc9ef"/>
+  <text x="60" y="246" font-size="9.5" font-weight="700" fill="#6f3ea8">write set（本地缓冲，别人看不到）</text>
+  <text x="60" y="264" font-size="9" fill="#8a5cae">{ x ← x+100 }（尚未落库）</text>
+  <text x="46" y="296" font-size="8.5" fill="#8aa0c0">全程不加锁，不阻塞任何并发事务</text>
+
+  <!-- 验证阶段 -->
+  <rect x="390" y="104" width="360" height="200" rx="13" fill="#fbf3e2" stroke="#ecd6a8" filter="url(#soft)"/>
+  <text x="570" y="130" font-size="12" font-weight="700" fill="#8a6417" text-anchor="middle">② 验证阶段 · Validate（原子）</text>
+  <text x="406" y="156" font-size="10" fill="#7a5a1a">进入临界区，逐个检查 read set：</text>
+  <rect x="406" y="166" width="328" height="46" rx="8" fill="#fff" stroke="#ecd6a8"/>
+  <text x="420" y="186" font-size="9.5" fill="#7a5a1a">对每个 read key：当前版本 == 读时版本？</text>
+  <text x="420" y="202" font-size="9" fill="#a98a3a">相等 → 未被并发写动过；不等 → 冲突</text>
+  <rect x="406" y="220" width="328" height="30" rx="7" fill="#eaf6f0" stroke="#bfe3d1"/>
+  <text x="420" y="240" font-size="9.5" fill="#2f6b4e">全部相等 → 取 commit-ts，判定 COMMIT</text>
+  <rect x="406" y="256" width="328" height="30" rx="7" fill="#fbeceb" stroke="#e8b7b1"/>
+  <text x="420" y="276" font-size="9.5" fill="#a83c30">任一不等 → 判定 ABORT</text>
+  <text x="406" y="300" font-size="8.5" fill="#a98a3a">验证 + 写生效必须原子（短临界区 / CAS）</text>
+
+  <!-- 写阶段 -->
+  <rect x="770" y="104" width="320" height="200" rx="13" fill="#eaf6f0" stroke="#bfe3d1" filter="url(#soft)"/>
+  <text x="930" y="130" font-size="12" font-weight="700" fill="#2f6b4e" text-anchor="middle">③ 写阶段 · Write Phase</text>
+  <text x="786" y="158" font-size="10" fill="#2f6b4e">仅当验证 COMMIT：</text>
+  <text x="786" y="182" font-size="10" fill="#2f6b4e">把 write set 落库，生成新版本</text>
+  <text x="786" y="204" font-size="10" fill="#2f6b4e">x → 新版本 ver4@commit-ts</text>
+  <text x="786" y="232" font-size="10" fill="#a83c30">若 ABORT：丢弃本地缓冲</text>
+  <text x="786" y="254" font-size="10" fill="#a83c30">退避后从 ① 整体重试</text>
+  <text x="786" y="286" font-size="8.5" fill="#5a9078">写生效瞬间对后续事务可见</text>
+
+  <line x1="370" y1="204" x2="388" y2="204" stroke="#4a7fd0" stroke-width="2" marker-end="url(#aB)"/>
+  <line x1="750" y1="190" x2="768" y2="190" stroke="#2f9e6e" stroke-width="2" marker-end="url(#aG)"/>
+  <path d="M570 304 C570 340 200 340 200 316" fill="none" stroke="#d1544a" stroke-width="1.8" stroke-dasharray="5 3" marker-end="url(#aR)"/>
+  <text x="384" y="336" font-size="8.5" fill="#a83c30">ABORT → 回到 ① 重试</text>
+
+  <!-- 冲突时间线示例 -->
+  <text x="40" y="384" font-size="11.5" font-weight="700" fill="#1d1d1f">冲突检测时间线（T1 读 x 后，T2 抢先改了 x）</text>
+  <line x1="60" y1="500" x2="1080" y2="500" stroke="#d7d7dd" stroke-width="1.2"/>
+  <!-- T1 轨迹 -->
+  <text x="46" y="430" font-size="10" font-weight="700" fill="#20375e">T1</text>
+  <circle cx="180" cy="440" r="7" fill="#4a7fd0"/><text x="180" y="426" font-size="9" fill="#20375e" text-anchor="middle">读 x@ver3</text>
+  <circle cx="760" cy="440" r="7" fill="#c99a3a"/><text x="760" y="426" font-size="9" fill="#8a6417" text-anchor="middle">验证：x 现在 ver4 ≠ ver3</text>
+  <circle cx="940" cy="440" r="8" fill="#d1544a"/><text x="940" y="426" font-size="9" fill="#a83c30" text-anchor="middle">ABORT 重试</text>
+  <path d="M180 440 L760 440" fill="none" stroke="#4a7fd0" stroke-width="2"/>
+  <path d="M760 440 L940 440" fill="none" stroke="#d1544a" stroke-width="2" stroke-dasharray="5 3" marker-end="url(#aR)"/>
+  <!-- T2 轨迹 -->
+  <text x="46" y="482" font-size="10" font-weight="700" fill="#2f6b4e">T2</text>
+  <circle cx="420" cy="474" r="7" fill="#2f9e6e"/><text x="420" y="492" font-size="9" fill="#2f6b4e" text-anchor="middle">读 x@ver3</text>
+  <circle cx="560" cy="474" r="8" fill="#2f9e6e"/><text x="560" y="492" font-size="9" fill="#2f6b4e" text-anchor="middle">验证通过 → 写 x@ver4</text>
+  <path d="M420 474 L560 474" fill="none" stroke="#2f9e6e" stroke-width="2" marker-end="url(#aG)"/>
+  <line x1="560" y1="466" x2="560" y2="448" stroke="#d1544a" stroke-width="1.4" stroke-dasharray="3 2"/>
+  <text x="600" y="462" font-size="8.5" fill="#a83c30">正是这次写让 T1 的 read set 失效</text>
+
+  <!-- 适用性 -->
+  <rect x="40" y="524" width="1040" height="92" rx="13" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="58" y="550" font-size="11.5" font-weight="700" fill="#1d1d1f">乐观 vs 悲观 · 何时用 OCC</text>
+  <text x="58" y="576" font-size="10" fill="#4a4a4f"><tspan font-weight="700" fill="#2f6b4e">读多写少 / 低冲突</tspan> 场景最优：无锁开销、无死锁；绝大多数事务一次验证通过。冲突率高时重试会放大浪费，此时悲观锁更稳。</text>
+  <text x="58" y="600" font-size="10" fill="#4a4a4f"><tspan font-weight="700" fill="#8a6417">正确性关键</tspan>：验证与写生效必须原子，且验证要覆盖完整 read set（含范围读的幻影检查），否则会漏判写偏斜类异常。</text>
+</svg>

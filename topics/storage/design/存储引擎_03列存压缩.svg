@@ -1,0 +1,124 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="640" viewBox="0 0 1120 640" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="aB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#4a7fd0"/></marker>
+    <marker id="aG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+    <marker id="aP" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#8a5cae"/></marker>
+  </defs>
+  <rect width="1120" height="640" fill="#fbfbfd"/>
+
+  <text x="30" y="32" font-size="15" font-weight="700" fill="#1d1d1f">图解点 ③ 列存压缩管线 + SIMD 谓词下推 · 同列同类型 → 编码链层层压缩；谓词下推到列块，用 SIMD 批量判定跳过整块</text>
+  <text x="30" y="53" font-size="10.5" fill="#6e6e73">行存混排难压；列存把同一列连续存放，数据同质 → RLE / 字典 / bit-pack 逐级压缩。查询把过滤条件下推到列块，先用块级统计跳过、再 SIMD 批量比对</text>
+
+  <!-- 图例 -->
+  <line x1="30" y1="80" x2="54" y2="80" stroke="#4a7fd0" stroke-width="2" marker-end="url(#aB)"/>
+  <text x="60" y="84" font-size="10" fill="#3a3a3c">编码压缩管线（写路径）</text>
+  <line x1="270" y1="80" x2="294" y2="80" stroke="#8a5cae" stroke-width="2" stroke-dasharray="5 3" marker-end="url(#aP)"/>
+  <text x="300" y="84" font-size="10" fill="#3a3a3c">谓词下推 · 块级统计跳过</text>
+  <line x1="540" y1="80" x2="564" y2="80" stroke="#2f9e6e" stroke-width="2" marker-end="url(#aG)"/>
+  <text x="570" y="84" font-size="10" fill="#3a3a3c">SIMD 批量判定（一指令多值）</text>
+
+  <!-- 行存 → 列存 -->
+  <text x="40" y="124" font-size="11" font-weight="700" fill="#1d1d1f">① 行存打散为列：同列同类型连续存放，为压缩创造同质数据</text>
+  <!-- 行存 -->
+  <rect x="40" y="136" width="230" height="120" rx="10" fill="#f4f4f6" stroke="#d7d7dd"/>
+  <text x="155" y="158" font-size="10" font-weight="600" fill="#6e6e73" text-anchor="middle">行存（混排，难压）</text>
+  <g font-size="8.5" text-anchor="middle">
+    <rect x="54" y="168" width="66" height="20" rx="3" fill="#ececef" stroke="#d7d7dd"/><text x="87" y="182" fill="#6e6e73">A,红,7</text>
+    <rect x="54" y="192" width="66" height="20" rx="3" fill="#ececef" stroke="#d7d7dd"/><text x="87" y="206" fill="#6e6e73">B,红,7</text>
+    <rect x="54" y="216" width="66" height="20" rx="3" fill="#ececef" stroke="#d7d7dd"/><text x="87" y="230" fill="#6e6e73">C,蓝,9</text>
+  </g>
+  <text x="200" y="200" font-size="9" fill="#8a97ab" text-anchor="middle">每行三种类型</text>
+  <text x="200" y="216" font-size="9" fill="#8a97ab" text-anchor="middle">交错 → 熵高</text>
+  <!-- 列存 -->
+  <rect x="310" y="136" width="250" height="120" rx="10" fill="#eaf1fb" stroke="#c6d9f2"/>
+  <text x="435" y="158" font-size="10" font-weight="600" fill="#20375e" text-anchor="middle">列存（按列聚拢）</text>
+  <text x="324" y="182" font-size="9" fill="#2f4a70">列: 名 → A B C …</text>
+  <text x="324" y="204" font-size="9" fill="#2f4a70">列: 色 → 红 红 蓝 红 红 …</text>
+  <text x="324" y="226" font-size="9" fill="#2f4a70">列: 值 → 7 7 9 7 8 …</text>
+  <text x="324" y="246" font-size="8.5" fill="#5a7099">同列同质 → 高度可压</text>
+  <line x1="270" y1="196" x2="308" y2="196" stroke="#4a7fd0" stroke-width="1.8" marker-end="url(#aB)"/>
+
+  <!-- 编码链 -->
+  <text x="600" y="124" font-size="11" font-weight="700" fill="#1d1d1f">② 编码链：逐级把体积压下去（可级联）</text>
+  <rect x="600" y="136" width="150" height="52" rx="9" fill="#eaf6f0" stroke="#bfe3d1"/>
+  <text x="675" y="158" font-size="10" font-weight="700" fill="#2f6b4e" text-anchor="middle">RLE 游程</text>
+  <text x="675" y="176" font-size="8.5" fill="#4a7a63" text-anchor="middle">红×2 → (红,2)</text>
+  <line x1="750" y1="162" x2="774" y2="162" stroke="#4a7fd0" stroke-width="1.6" marker-end="url(#aB)"/>
+  <rect x="776" y="136" width="150" height="52" rx="9" fill="#eaf6f0" stroke="#bfe3d1"/>
+  <text x="851" y="158" font-size="10" font-weight="700" fill="#2f6b4e" text-anchor="middle">字典编码</text>
+  <text x="851" y="176" font-size="8.5" fill="#4a7a63" text-anchor="middle">红→0 蓝→1 …</text>
+  <line x1="926" y1="162" x2="950" y2="162" stroke="#4a7fd0" stroke-width="1.6" marker-end="url(#aB)"/>
+  <rect x="952" y="136" width="150" height="52" rx="9" fill="#eaf6f0" stroke="#bfe3d1"/>
+  <text x="1027" y="158" font-size="10" font-weight="700" fill="#2f6b4e" text-anchor="middle">bit-pack</text>
+  <text x="1027" y="176" font-size="8.5" fill="#4a7a63" text-anchor="middle">2 值只需 1 bit</text>
+  <text x="600" y="212" font-size="9" fill="#8a97ab">字典码小整数再 bit-pack → 定长紧凑，还能在「编码域」直接比较，免解码</text>
+  <text x="600" y="230" font-size="9" fill="#8a97ab">数值列另有 frame-of-reference / delta 等，思路一致：用规律换体积</text>
+  <line x1="600" y1="240" x2="1102" y2="240" stroke="#eef0f3" stroke-width="1"/>
+
+  <!-- 谓词下推 + SIMD -->
+  <text x="40" y="290" font-size="11.5" font-weight="700" fill="#6f3ea8">③ 查询下推：把谓词（如 值 &gt; 8）推到每个列块，两级跳过省 IO 与 CPU</text>
+
+  <!-- 列块序列 -->
+  <text x="40" y="322" font-size="10" font-weight="700" fill="#1d1d1f">列块（column chunk）序列，每块带 min/max 等统计</text>
+  <!-- block1 skip -->
+  <rect x="40" y="334" width="200" height="120" rx="10" fill="#f4f4f6" stroke="#d7d7dd"/>
+  <text x="140" y="356" font-size="10" font-weight="600" fill="#8a97ab" text-anchor="middle">列块 #1</text>
+  <text x="56" y="378" font-size="9" fill="#8a97ab">统计 min=1 max=6</text>
+  <text x="56" y="398" font-size="9.5" font-weight="700" fill="#8a97ab">谓词 值&gt;8 与 [1,6] 无交</text>
+  <text x="56" y="418" font-size="10" font-weight="700" fill="#8a97ab">→ 整块跳过（不解码、不读）</text>
+  <text x="56" y="440" font-size="8.5" fill="#a1a1a6">第一级：靠统计裁块</text>
+  <line x1="100" y1="300" x2="120" y2="332" stroke="#8a5cae" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#aP)"/>
+
+  <!-- block2 scan with SIMD -->
+  <rect x="260" y="334" width="360" height="120" rx="10" fill="#f4eefb" stroke="#dcc9ef"/>
+  <text x="440" y="356" font-size="10" font-weight="600" fill="#6f3ea8" text-anchor="middle">列块 #2 · min=5 max=12（可能命中 → 解码扫描）</text>
+  <!-- SIMD lanes -->
+  <g font-size="9" text-anchor="middle">
+    <rect x="276" y="372" width="40" height="26" rx="4" fill="#eae0f5" stroke="#c9b3e0"/><text x="296" y="389" fill="#5a3a7a">7</text>
+    <rect x="320" y="372" width="40" height="26" rx="4" fill="#eae0f5" stroke="#c9b3e0"/><text x="340" y="389" fill="#5a3a7a">9</text>
+    <rect x="364" y="372" width="40" height="26" rx="4" fill="#eae0f5" stroke="#c9b3e0"/><text x="384" y="389" fill="#5a3a7a">11</text>
+    <rect x="408" y="372" width="40" height="26" rx="4" fill="#eae0f5" stroke="#c9b3e0"/><text x="428" y="389" fill="#5a3a7a">6</text>
+    <rect x="452" y="372" width="40" height="26" rx="4" fill="#eae0f5" stroke="#c9b3e0"/><text x="472" y="389" fill="#5a3a7a">10</text>
+    <rect x="496" y="372" width="40" height="26" rx="4" fill="#eae0f5" stroke="#c9b3e0"/><text x="516" y="389" fill="#5a3a7a">8</text>
+    <rect x="540" y="372" width="40" height="26" rx="4" fill="#eae0f5" stroke="#c9b3e0"/><text x="560" y="389" fill="#5a3a7a">12</text>
+  </g>
+  <text x="276" y="418" font-size="9" fill="#6f3ea8">一条 SIMD 指令对整批同时比较 &gt; 8：</text>
+  <!-- mask -->
+  <g font-size="9" text-anchor="middle">
+    <rect x="276" y="424" width="40" height="22" rx="4" fill="#fbeceb" stroke="#e8b9b3"/><text x="296" y="439" fill="#a5372c">0</text>
+    <rect x="320" y="424" width="40" height="22" rx="4" fill="#eaf6f0" stroke="#bfe3d1"/><text x="340" y="439" fill="#2f6b4e">1</text>
+    <rect x="364" y="424" width="40" height="22" rx="4" fill="#eaf6f0" stroke="#bfe3d1"/><text x="384" y="439" fill="#2f6b4e">1</text>
+    <rect x="408" y="424" width="40" height="22" rx="4" fill="#fbeceb" stroke="#e8b9b3"/><text x="428" y="439" fill="#a5372c">0</text>
+    <rect x="452" y="424" width="40" height="22" rx="4" fill="#eaf6f0" stroke="#bfe3d1"/><text x="472" y="439" fill="#2f6b4e">1</text>
+    <rect x="496" y="424" width="40" height="22" rx="4" fill="#fbeceb" stroke="#e8b9b3"/><text x="516" y="439" fill="#a5372c">0</text>
+    <rect x="540" y="424" width="40" height="22" rx="4" fill="#eaf6f0" stroke="#bfe3d1"/><text x="560" y="439" fill="#2f6b4e">1</text>
+  </g>
+  <text x="596" y="440" font-size="8.5" fill="#8a5cae">→ 选择位掩码</text>
+
+  <!-- 结果 -->
+  <rect x="640" y="334" width="180" height="120" rx="10" fill="#eaf6f0" stroke="#bfe3d1"/>
+  <text x="730" y="356" font-size="10" font-weight="700" fill="#2f6b4e" text-anchor="middle">命中位掩码</text>
+  <text x="656" y="380" font-size="9" fill="#2f6b4e">仅取 mask=1 的值</text>
+  <text x="656" y="400" font-size="9" fill="#2f6b4e">9,11,10,12 入结果</text>
+  <text x="656" y="424" font-size="8.5" fill="#5f9c81">无分支、无逐行 if</text>
+  <text x="656" y="440" font-size="8.5" fill="#5f9c81">向量掩码即选择</text>
+  <line x1="620" y1="410" x2="638" y2="400" stroke="#2f9e6e" stroke-width="1.8" marker-end="url(#aG)"/>
+
+  <!-- 下推收益 -->
+  <rect x="840" y="334" width="262" height="120" rx="10" fill="#ffffff" stroke="#c6d9f2" filter="url(#soft)"/>
+  <text x="856" y="356" font-size="10.5" font-weight="700" fill="#20375e">为何要「下推」而非上层过滤</text>
+  <text x="856" y="378" font-size="9" fill="#2f4a70">块级统计裁掉的块：不读、不解压</text>
+  <text x="856" y="398" font-size="9" fill="#2f4a70">→ 省 IO + 省解码 CPU</text>
+  <text x="856" y="420" font-size="9" fill="#2f4a70">SIMD 摊薄每值判定成本</text>
+  <text x="856" y="440" font-size="8.5" fill="#5a7099">离数据越近过滤，搬运的数据越少</text>
+
+  <!-- 底部性质 -->
+  <rect x="40" y="472" width="1062" height="146" rx="13" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="58" y="498" font-size="11" font-weight="700" fill="#2f6b4e">列存三重协同：布局 → 压缩 → 计算彼此放大</text>
+  <text x="58" y="520" font-size="10" fill="#4a4a4f"><tspan font-weight="700">① 布局使能压缩：</tspan>同列同质，编码链（RLE / 字典 / bit-pack）能级联把体积压到很小，扫描时读得更少。</text>
+  <text x="58" y="542" font-size="10" fill="#4a4a4f"><tspan font-weight="700">② 压缩使能计算：</tspan>定长编码码可直接在「编码域」比较、对齐到 SIMD 寄存器宽度，一条指令处理一批。</text>
+  <text x="58" y="564" font-size="10" fill="#4a4a4f"><tspan font-weight="700">③ 下推使能跳过：</tspan>块级 min/max 先裁块（省 IO），命中的块再 SIMD 批量判定（省 CPU），两级递进。</text>
+  <text x="58" y="586" font-size="10" fill="#4a4a4f">代价：列存不利于「取一整行的所有列」（需跨列拼装），故偏 OLAP 扫描/聚合，非点查改写。</text>
+  <text x="58" y="609" font-size="9" fill="#a1a1a6">与图解点 ① 的写放大呼应：列块也是不可变有序单元，更新走追加 + 后台整理，而非就地改。</text>
+</svg>

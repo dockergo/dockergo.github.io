@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="560" viewBox="0 0 1080 560" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="560" fill="#fbfbfd"/>
+
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">vLLM 三条贯穿声明 —— 与朴素推理循环的三处根本不同</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">同一自回归生成任务,vLLM 在"显存 / 批处理 / 架构"三个维度都换了做法,显存利用率从 ~20% 提到接近 100%,吞吐倍增</text>
+
+  <!-- 图例 -->
+  <rect x="700" y="18" width="12" height="12" rx="3" fill="#fbeaea" stroke="#e6b8b8"/><text x="717" y="28" font-size="9.5" fill="#7a2a2a">朴素·浪费</text>
+  <rect x="785" y="18" width="12" height="12" rx="3" fill="#fff7e6" stroke="#e8cf9a"/><text x="802" y="28" font-size="9.5" fill="#5a3410">KV 显存</text>
+  <rect x="868" y="18" width="12" height="12" rx="3" fill="#eef3fb" stroke="#c2d3ee"/><text x="885" y="28" font-size="9.5" fill="#2b5aa8">调度</text>
+  <rect x="935" y="18" width="12" height="12" rx="3" fill="#eafaf1" stroke="#bfe0cd"/><text x="952" y="28" font-size="9.5" fill="#12402a">数据/执行</text>
+
+  <!-- 列头 -->
+  <text x="300" y="82" font-size="12.5" font-weight="700" text-anchor="middle" fill="#7a2a2a">朴素推理循环</text>
+  <text x="792" y="82" font-size="12.5" font-weight="700" text-anchor="middle" fill="#12402a">vLLM v1</text>
+  <path d="M552,72 L580,72" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <!-- 行1: KV 显存 -->
+  <text x="30" y="118" font-size="11" font-weight="700" fill="#1d1d1f">① 显存</text>
+  <rect x="88" y="96" width="424" height="70" rx="11" fill="#fbeaea" stroke="#e6b8b8" filter="url(#soft)"/>
+  <text x="108" y="120" font-size="11" font-weight="600" fill="#7a2a2a">按"最大长度"预留连续 KV 显存</text>
+  <text x="108" y="140" font-size="9.5" fill="#a05a5a">一请求独占一大段连续块 · 实际只用一小截</text>
+  <text x="108" y="156" font-size="9.5" fill="#a05a5a">内部碎片 + 为峰值预留 → 利用率 ~20%</text>
+
+  <rect x="580" y="96" width="470" height="70" rx="11" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="600" y="120" font-size="11" font-weight="600" fill="#5a3410">PagedAttention · KV 分块非连续</text>
+  <text x="600" y="140" font-size="9.5" fill="#93762e">切成固定块(默认 16 token/块),像 OS 分页按需分配</text>
+  <text x="600" y="156" font-size="9.5" fill="#93762e">逻辑连续物理分散 · 块可共享(前缀缓存) → 利用率近 100%</text>
+
+  <!-- 行2: 批处理 -->
+  <text x="30" y="212" font-size="11" font-weight="700" fill="#1d1d1f">② 批处理</text>
+  <rect x="88" y="190" width="424" height="70" rx="11" fill="#fbeaea" stroke="#e6b8b8" filter="url(#soft)"/>
+  <text x="108" y="214" font-size="11" font-weight="600" fill="#7a2a2a">静态批 · 等整批全做完才收下一批</text>
+  <text x="108" y="234" font-size="9.5" fill="#a05a5a">生成长度不同 · 短请求早完只能干等长请求</text>
+  <text x="108" y="250" font-size="9.5" fill="#a05a5a">GPU 大量空转</text>
+
+  <rect x="580" y="190" width="470" height="70" rx="11" fill="#eef3fb" stroke="#c2d3ee" filter="url(#soft)"/>
+  <text x="600" y="214" font-size="11" font-weight="600" fill="#2b5aa8">连续批处理 · 每步(step)重组批</text>
+  <text x="600" y="234" font-size="9.5" fill="#3f6fbf">完成的出队 · 等待的立即补入 → GPU 每步都满载</text>
+  <text x="600" y="250" font-size="9.5" fill="#3f6fbf">配 chunked prefill(长 prompt 切块混入)进一步平滑</text>
+
+  <!-- 行3: 架构 -->
+  <text x="30" y="306" font-size="11" font-weight="700" fill="#1d1d1f">③ 架构</text>
+  <rect x="88" y="284" width="424" height="70" rx="11" fill="#fbeaea" stroke="#e6b8b8" filter="url(#soft)"/>
+  <text x="108" y="308" font-size="11" font-weight="600" fill="#7a2a2a">单进程串行 · 采样/调度/前向抢一个 GIL</text>
+  <text x="108" y="328" font-size="9.5" fill="#a05a5a">CPU 侧调度与 GPU 前向互相等 · 显存不够只能换出</text>
+  <text x="108" y="344" font-size="9.5" fill="#a05a5a">KV 换出换入 PCIe 传输往往比重算还慢</text>
+
+  <rect x="580" y="284" width="470" height="70" rx="11" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="600" y="308" font-size="11" font-weight="600" fill="#12402a">v1 · EngineCore 独立进程 + 重算式抢占</text>
+  <text x="600" y="328" font-size="9.5" fill="#2f6f4f">调度+执行拆进独立进程,与前端并行 · v0 已删</text>
+  <text x="600" y="344" font-size="9.5" fill="#2f6f4f">显存不够:释放块归零重入队,稍后重算(非 CPU swap)</text>
+
+  <!-- 底部结论带 -->
+  <rect x="30" y="384" width="1020" height="130" rx="12" fill="#ffffff" stroke="#ececef" filter="url(#soft)"/>
+  <text x="50" y="410" font-size="12" font-weight="700" fill="#1d1d1f">中心资源 · KV 块把三条声明串起来</text>
+  <rect x="50" y="424" width="316" height="74" rx="9" fill="#fff7e6" stroke="#e8cf9a"/>
+  <text x="208" y="448" font-size="10.5" font-weight="600" text-anchor="middle" fill="#5a3410">分块管 KV</text>
+  <text x="208" y="468" font-size="9" text-anchor="middle" fill="#93762e">按需分配 · 可共享</text>
+  <text x="208" y="484" font-size="9" text-anchor="middle" fill="#93762e">显存不再浪费</text>
+
+  <rect x="382" y="424" width="316" height="74" rx="9" fill="#eef3fb" stroke="#c2d3ee"/>
+  <text x="540" y="448" font-size="10.5" font-weight="600" text-anchor="middle" fill="#2b5aa8">按可用块数组批</text>
+  <text x="540" y="468" font-size="9" text-anchor="middle" fill="#3f6fbf">调度器看块池余量收多少请求</text>
+  <text x="540" y="484" font-size="9" text-anchor="middle" fill="#3f6fbf">块够就入 · 块紧就抢占</text>
+
+  <rect x="714" y="424" width="316" height="74" rx="9" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="872" y="448" font-size="10.5" font-weight="600" text-anchor="middle" fill="#12402a">GPU 一刻不闲</text>
+  <text x="872" y="468" font-size="9" text-anchor="middle" fill="#2f6f4f">每步都满载活跃请求</text>
+  <text x="872" y="484" font-size="9" text-anchor="middle" fill="#2f6f4f">吞吐倍增</text>
+
+  <path d="M366,461 L382,461" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M698,461 L714,461" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <text x="30" y="536" font-size="9" fill="#a1a1a6">理解"分块 KV(按需/可共享) + 连续批处理(块够就收) + v1 独立进程(重算抢占)"三点,就懂了 vLLM 为何快 · vLLM(git 7aab6e2, v1)</text>
+</svg>

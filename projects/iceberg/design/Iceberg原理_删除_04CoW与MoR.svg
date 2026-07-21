@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="500" viewBox="0 0 1080 500" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="500" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="700" fill="#1d1d1f">Merge-on-Read vs Copy-on-Write · 删除代价挪到写还是读</text>
+  <text x="30" y="49" font-size="9.5" fill="#a1a1a6">MoR 写快读慢、CoW 写慢读快;Iceberg v2 默认 MoR,按写多/读多选</text>
+
+  <!-- legend -->
+  <g font-size="9" fill="#6e6e73">
+    <rect x="740" y="20" width="12" height="12" rx="3" fill="#e7f0fb" stroke="#b9d2ef"/><text x="757" y="30">写路径</text>
+    <rect x="820" y="20" width="12" height="12" rx="3" fill="#fdf6ea" stroke="#efdcb4"/><text x="837" y="30">读路径</text>
+    <rect x="900" y="20" width="12" height="12" rx="3" fill="#f5faf6" stroke="#cfe6d5"/><text x="917" y="30">快</text>
+    <rect x="955" y="20" width="12" height="12" rx="3" fill="#fbeef0" stroke="#ecc4cd"/><text x="972" y="30">慢/代价</text>
+  </g>
+
+  <!-- MoR column -->
+  <rect x="30" y="70" width="500" height="30" rx="9" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="280" y="90" font-size="11.5" font-weight="700" fill="#12402a" text-anchor="middle">Merge-on-Read(v2 默认)</text>
+
+  <rect x="30" y="110" width="500" height="88" rx="12" fill="#e7f0fb" stroke="#b9d2ef"/>
+  <text x="46" y="132" font-size="10" font-weight="700" fill="#1b2a4a">写:只写小 delete file,不动 data file</text>
+  <text x="46" y="152" font-size="8.8" fill="#5b7db1">position delete 记 (file, 行号) / equality delete 记列值</text>
+  <text x="46" y="170" font-size="8.8" fill="#5b7db1">data file 原封不动 —— 写入极快、放大小</text>
+  <text x="46" y="189" font-size="8.4" fill="#7fae7f">✓ 写快</text>
+
+  <rect x="30" y="208" width="500" height="100" rx="12" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="46" y="230" font-size="10" font-weight="700" fill="#5a3410">读:每个 data file 叠加适用删除后过滤</text>
+  <text x="46" y="250" font-size="8.8" fill="#93762e">position 删除按位置跳过(快)</text>
+  <text x="46" y="268" font-size="8.8" fill="#93762e">equality 删除按列值比对(慢)</text>
+  <text x="46" y="286" font-size="8.8" fill="#93762e">v3 删除向量(DV,puffin 位图)提升位置删除</text>
+  <text x="46" y="303" font-size="8.4" fill="#c07a2f">✗ 读慢(delete file 越堆越慢)</text>
+
+  <!-- CoW column -->
+  <rect x="550" y="70" width="500" height="30" rx="9" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="800" y="90" font-size="11.5" font-weight="700" fill="#12402a" text-anchor="middle">Copy-on-Write</text>
+
+  <rect x="550" y="110" width="500" height="88" rx="12" fill="#e7f0fb" stroke="#b9d2ef"/>
+  <text x="566" y="132" font-size="10" font-weight="700" fill="#1b2a4a">写:重写整个受影响 data file</text>
+  <text x="566" y="152" font-size="8.8" fill="#5b7db1">删除物化进新 data file,删掉的行不再存在</text>
+  <text x="566" y="170" font-size="8.8" fill="#5b7db1">改一行也要重写整文件 —— 写放大高</text>
+  <text x="566" y="189" font-size="8.4" fill="#c07a2f">✗ 写慢</text>
+
+  <rect x="550" y="208" width="500" height="100" rx="12" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="566" y="230" font-size="10" font-weight="700" fill="#5a3410">读:无删除叠加,直接读 data file</text>
+  <text x="566" y="250" font-size="8.8" fill="#93762e">文件已是最终状态,无需 merge</text>
+  <text x="566" y="268" font-size="8.8" fill="#93762e">扫描规划更简单,delete file 不参与</text>
+  <text x="566" y="286" font-size="8.4" fill="#7fae7f">✓ 读快</text>
+
+  <!-- seq bridge note -->
+  <rect x="30" y="318" width="1020" height="42" rx="11" fill="#f7f9fc" stroke="#e5ecf5"/>
+  <text x="46" y="340" font-size="9.5" font-weight="700" fill="#1b2a4a">哪个删除作用于哪个文件,靠 sequence number 比较</text>
+  <text x="46" y="356" font-size="8.6" fill="#5b7db1">位置删除:delete.seq ≥ dataFile.seq 才生效;等值删除:只作用于严格更老 seq —— 表达"删除只作用于其时刻已有数据"</text>
+
+  <!-- decision bar -->
+  <rect x="30" y="372" width="1020" height="98" rx="12" fill="#f0f0f4" stroke="#d2d2d7"/>
+  <text x="46" y="394" font-size="10.5" font-weight="700" fill="#48484a">怎么选</text>
+  <text x="46" y="416" font-size="9" fill="#6e6e73">· 写多读少 / 频繁小批更新删除 → MoR(写快,靠 compaction 定期把删除物化进 data file)</text>
+  <text x="46" y="436" font-size="9" fill="#6e6e73">· 读多写少 / 追求最快查询 → CoW 或 MoR + 定期 rewrite,清理 delete file、缩短读放大</text>
+  <text x="46" y="456" font-size="9" fill="#6e6e73">· 关键:MoR 表不做 compaction 会越读越慢 —— 删除代价没消失,只是从写挪到了读</text>
+</svg>

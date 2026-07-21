@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="520" viewBox="0 0 1080 520" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="520" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="700" fill="#1d1d1f">读 · TableScan + 时间旅行 + 增量读</text>
+  <text x="30" y="49" font-size="9.5" fill="#a1a1a6">读者 pin 一个不可变快照 → 顺元数据树两级剪枝 → 得 data file 列表交引擎扫</text>
+
+  <!-- snapshot chain -->
+  <text x="30" y="82" font-size="11" font-weight="700" fill="#1b2a4a">快照链(不可变,旧快照永久保留)</text>
+  <g text-anchor="middle" font-size="9">
+    <rect x="60" y="94" width="150" height="46" rx="10" fill="#f3f7fc" stroke="#cfe0f2"/><text x="135" y="114" fill="#274a78">S1(旧)</text><text x="135" y="131" font-size="8" fill="#86868b">seq=1</text>
+    <rect x="300" y="94" width="150" height="46" rx="10" fill="#f3f7fc" stroke="#cfe0f2"/><text x="375" y="114" fill="#274a78">S2</text><text x="375" y="131" font-size="8" fill="#86868b">seq=2</text>
+    <rect x="540" y="94" width="150" height="46" rx="10" fill="#e7f0fb" stroke="#b9d2ef"/><text x="615" y="114" font-weight="700" fill="#1b2a4a">S3(current)</text><text x="615" y="131" font-size="8" fill="#86868b">seq=3</text>
+  </g>
+  <line x1="210" y1="117" x2="300" y2="117" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="450" y1="117" x2="540" y2="117" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <text x="255" y="110" font-size="7.5" text-anchor="middle" fill="#a1a1a6">parent</text>
+  <text x="495" y="110" font-size="7.5" text-anchor="middle" fill="#a1a1a6">parent</text>
+
+  <!-- three read modes -->
+  <g>
+  <rect x="30" y="170" width="330" height="150" rx="12" fill="#e7f0fb" stroke="#b9d2ef"/>
+  <text x="46" y="194" font-size="11" font-weight="700" fill="#1b2a4a">读当前</text>
+  <text x="46" y="216" font-size="9" fill="#5b7db1">pin current snapshot(S3)</text>
+  <text x="46" y="235" font-size="9" fill="#5b7db1">DataTableScan 规划</text>
+  <text x="46" y="254" font-size="9" fill="#5b7db1">两级剪枝出 data file</text>
+  <text x="46" y="273" font-size="9" fill="#5b7db1">交引擎扫</text>
+  <text x="46" y="300" font-size="8" fill="#a1a1a6">最常见路径</text>
+
+  <rect x="375" y="170" width="330" height="150" rx="12" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="391" y="194" font-size="11" font-weight="700" fill="#12402a">时间旅行</text>
+  <text x="391" y="216" font-size="9" fill="#2f6f4f">FOR VERSION AS OF id</text>
+  <text x="391" y="235" font-size="9" fill="#2f6f4f">FOR TIMESTAMP AS OF t</text>
+  <text x="391" y="254" font-size="9" fill="#2f6f4f">pin 那个历史快照(S1)</text>
+  <text x="391" y="273" font-size="9" fill="#2f6f4f">读其不可变 manifests</text>
+  <text x="391" y="300" font-size="8" fill="#a1a1a6">零额外存储(旧快照本就在)</text>
+
+  <rect x="720" y="170" width="330" height="150" rx="12" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="736" y="194" font-size="11" font-weight="700" fill="#5a3410">增量读</text>
+  <text x="736" y="216" font-size="9" fill="#93762e">读两快照之间新增数据</text>
+  <text x="736" y="235" font-size="9" fill="#93762e">基于快照链 + seq</text>
+  <text x="736" y="254" font-size="9" fill="#93762e">appendsBetween(S1,S3)</text>
+  <text x="736" y="273" font-size="9" fill="#93762e">流式/增量处理</text>
+  <text x="736" y="300" font-size="8" fill="#a1a1a6">CDC/流式消费场景</text>
+  </g>
+
+  <line x1="615" y1="140" x2="195" y2="170" stroke="#b8b8bf" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="135" y1="140" x2="500" y2="170" stroke="#c7c7cc" stroke-width="1.2" stroke-dasharray="5 4" marker-end="url(#ar)"/>
+
+  <rect x="30" y="340" width="1020" height="70" rx="12" fill="#f7f9fc" stroke="#e5ecf5"/>
+  <text x="46" y="366" font-size="11" font-weight="700" fill="#1b2a4a">快照隔离免费</text>
+  <text x="46" y="388" font-size="9.5" fill="#5b7db1">读者 pin 一个快照读它不可变的 manifests,读期间别人提交新快照(产生 S4)完全不影响它 —— 这是"不可变元数据树"的天然红利,无需 MVCC 版本链维护</text>
+
+  <rect x="30" y="428" width="1020" height="72" rx="12" fill="#f0f0f4" stroke="#d2d2d7"/>
+  <text x="46" y="452" font-size="10" font-weight="700" fill="#48484a">读全走"pin 快照 → 规划 → 交引擎扫"</text>
+  <text x="46" y="473" font-size="9" fill="#6e6e73">Iceberg 只负责"哪些 data file 要读 + 附带哪些 delete file";真正读取 parquet/orc 由计算引擎完成。规划细节见【扫描规划】,delete 叠加见【行级删除】。</text>
+  <text x="46" y="491" font-size="9" fill="#6e6e73">时间旅行/增量读都只是"选择 pin 哪个(或哪两个)快照",规划路径同一套。</text>
+</svg>

@@ -1,0 +1,148 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="680" viewBox="0 0 1120 680" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+  </defs>
+  <rect width="1120" height="680" fill="#fbfbfd"/>
+
+  <text x="30" y="32" font-size="15" font-weight="700" fill="#1d1d1f">算法核心差异对比 · Raft vs Multi-Paxos vs ZAB —— 同解「就一条全序日志达成一致」，分歧在序列化点、选主、日志模型、成员变更与恢复</text>
+  <text x="30" y="53" font-size="10.5" fill="#6e6e73">三者都用「唯一 Leader + 过半 quorum + 单调届次」这套骨架；下表按 5 个维度横向对照它们的取舍</text>
+
+  <!-- 维度列头 -->
+  <rect x="30" y="72" width="200" height="40" rx="9" fill="#eef0f3" stroke="#e4e7ec"/>
+  <text x="130" y="97" font-size="12" font-weight="700" fill="#4a4a4f" text-anchor="middle">对比维度</text>
+
+  <!-- 三算法列头 -->
+  <rect x="240" y="72" width="286" height="40" rx="9" fill="#eaf1fb" stroke="#c6d9f2"/>
+  <text x="383" y="97" font-size="13" font-weight="800" fill="#20375e" text-anchor="middle">Raft</text>
+  <rect x="536" y="72" width="286" height="40" rx="9" fill="#f4eefb" stroke="#dcc9ef"/>
+  <text x="679" y="97" font-size="13" font-weight="800" fill="#6f3ea8" text-anchor="middle">Multi-Paxos</text>
+  <rect x="832" y="72" width="258" height="40" rx="9" fill="#eaf6f0" stroke="#bfe3d1"/>
+  <text x="961" y="97" font-size="13" font-weight="800" fill="#2f6b4e" text-anchor="middle">ZAB</text>
+
+  <!-- ============ 行1：谁是序列化点 ============ -->
+  <rect x="30" y="120" width="200" height="96" rx="9" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="46" y="150" font-size="11.5" font-weight="700" fill="#1d1d1f">① 序列化点</text>
+  <text x="46" y="170" font-size="9" fill="#8a97ab">谁给操作定全序</text>
+  <text x="46" y="192" font-size="9" fill="#8a97ab">（single point</text>
+  <text x="46" y="205" font-size="9" fill="#8a97ab">of ordering）</text>
+
+  <rect x="240" y="120" width="286" height="96" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="256" y="146" font-size="10.5" font-weight="700" fill="#20375e">强 Leader 唯一定序</text>
+  <text x="256" y="166" font-size="9.5" fill="#4a4a4f">日志只能由 Leader → Follower</text>
+  <text x="256" y="182" font-size="9.5" fill="#4a4a4f">单向流动；Follower 从不反向</text>
+  <text x="256" y="198" font-size="9.5" fill="#4a4a4f">写 Leader。语义最简单直观。</text>
+
+  <rect x="536" y="120" width="286" height="96" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="552" y="146" font-size="10.5" font-weight="700" fill="#6f3ea8">Leader 是优化项非必需</text>
+  <text x="552" y="166" font-size="9.5" fill="#4a4a4f">理论上任意节点可提案；稳定</text>
+  <text x="552" y="182" font-size="9.5" fill="#4a4a4f">Leader 仅为摊销 Phase 1。</text>
+  <text x="552" y="198" font-size="9.5" fill="#4a4a4f">日志可有空洞、乱序填充。</text>
+
+  <rect x="832" y="120" width="258" height="96" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="848" y="146" font-size="10.5" font-weight="700" fill="#2f6b4e">Leader 原子广播定序</text>
+  <text x="848" y="166" font-size="9.5" fill="#4a4a4f">按 zxid 全序广播；FIFO 信道</text>
+  <text x="848" y="182" font-size="9.5" fill="#4a4a4f">保证提交是连续前缀，</text>
+  <text x="848" y="198" font-size="9.5" fill="#4a4a4f">不留空洞。</text>
+
+  <!-- ============ 行2：如何选主 ============ -->
+  <rect x="30" y="220" width="200" height="96" rx="9" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="46" y="250" font-size="11.5" font-weight="700" fill="#1d1d1f">② 选主 / 届次</text>
+  <text x="46" y="270" font-size="9" fill="#8a97ab">怎样选出 Leader，</text>
+  <text x="46" y="284" font-size="9" fill="#8a97ab">用什么标识届次</text>
+
+  <rect x="240" y="220" width="286" height="96" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="256" y="246" font-size="10.5" font-weight="700" fill="#20375e">term + 随机超时投票</text>
+  <text x="256" y="266" font-size="9.5" fill="#4a4a4f">随机选举超时打破对称；只投</text>
+  <text x="256" y="282" font-size="9.5" fill="#4a4a4f">给「日志≥自己新」的候选人，</text>
+  <text x="256" y="298" font-size="9.5" fill="#4a4a4f">保证 Leader 完备性。</text>
+
+  <rect x="536" y="220" width="286" height="96" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="552" y="246" font-size="10.5" font-weight="700" fill="#6f3ea8">提案号 n + 更大编号抢占</text>
+  <text x="552" y="266" font-size="9.5" fill="#4a4a4f">选主未内建、实现自定；靠</text>
+  <text x="552" y="282" font-size="9.5" fill="#4a4a4f">Prepare(更大 n) 抢占领导权，</text>
+  <text x="552" y="298" font-size="9.5" fill="#4a4a4f">回收已接受值。</text>
+
+  <rect x="832" y="220" width="258" height="96" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="848" y="246" font-size="10.5" font-weight="700" fill="#2f6b4e">FLE：选 zxid 最大者</text>
+  <text x="848" y="266" font-size="9.5" fill="#4a4a4f">Fast Leader Election 直接选</text>
+  <text x="848" y="282" font-size="9.5" fill="#4a4a4f">数据最新的副本；epoch 标届，</text>
+  <text x="848" y="298" font-size="9.5" fill="#4a4a4f">当选后 epoch+1。</text>
+
+  <!-- ============ 行3：日志/广播模型 ============ -->
+  <rect x="30" y="320" width="200" height="96" rx="9" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="46" y="350" font-size="11.5" font-weight="700" fill="#1d1d1f">③ 日志 / 广播</text>
+  <text x="46" y="370" font-size="9" fill="#8a97ab">复制单元、是否</text>
+  <text x="46" y="384" font-size="9" fill="#8a97ab">允许空洞</text>
+
+  <rect x="240" y="320" width="286" height="96" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="256" y="346" font-size="10.5" font-weight="700" fill="#20375e">连续日志 + 匹配性质</text>
+  <text x="256" y="366" font-size="9.5" fill="#4a4a4f">日志<tspan font-weight="700"> 不允许空洞</tspan>；⟨term,idx⟩</text>
+  <text x="256" y="382" font-size="9.5" fill="#4a4a4f">相同则此前全同，回退 nextIndex</text>
+  <text x="256" y="398" font-size="9.5" fill="#4a4a4f">找一致点后覆盖对齐。</text>
+
+  <rect x="536" y="320" width="286" height="96" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="552" y="346" font-size="10.5" font-weight="700" fill="#6f3ea8">按 slot 独立实例</text>
+  <text x="552" y="366" font-size="9.5" fill="#4a4a4f">每个 slot 是独立 Paxos；</text>
+  <text x="552" y="382" font-size="9.5" fill="#4a4a4f"><tspan font-weight="700">允许空洞</tspan>、可乱序达成，</text>
+  <text x="552" y="398" font-size="9.5" fill="#4a4a4f">后台补洞。并行度更高。</text>
+
+  <rect x="832" y="320" width="258" height="96" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="848" y="346" font-size="10.5" font-weight="700" fill="#2f6b4e">事务提案 + zxid 前缀</text>
+  <text x="848" y="366" font-size="9.5" fill="#4a4a4f">PROPOSE/ACK/COMMIT 两阶段；</text>
+  <text x="848" y="382" font-size="9.5" fill="#4a4a4f">按 zxid 严格前缀提交，</text>
+  <text x="848" y="398" font-size="9.5" fill="#4a4a4f">不留空洞。</text>
+
+  <!-- ============ 行4：成员变更 ============ -->
+  <rect x="30" y="420" width="200" height="88" rx="9" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="46" y="450" font-size="11.5" font-weight="700" fill="#1d1d1f">④ 成员变更</text>
+  <text x="46" y="470" font-size="9" fill="#8a97ab">如何安全增删</text>
+  <text x="46" y="484" font-size="9" fill="#8a97ab">节点</text>
+
+  <rect x="240" y="420" width="286" height="88" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="256" y="446" font-size="10.5" font-weight="700" fill="#20375e">联合共识 / 单步变更</text>
+  <text x="256" y="466" font-size="9.5" fill="#4a4a4f">原始 C_old,new 两阶段；主流</text>
+  <text x="256" y="482" font-size="9.5" fill="#4a4a4f">实现改用单节点±1 保相交。</text>
+  <text x="256" y="498" font-size="9" fill="#8a97ab">变更即一条特殊日志条目。</text>
+
+  <rect x="536" y="420" width="286" height="88" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="552" y="446" font-size="10.5" font-weight="700" fill="#6f3ea8">作为一条被决议的命令</text>
+  <text x="552" y="466" font-size="9.5" fill="#4a4a4f">配置本身也是一个 Paxos 值；</text>
+  <text x="552" y="482" font-size="9.5" fill="#4a4a4f">Flexible Paxos 松绑 quorum</text>
+  <text x="552" y="498" font-size="9.5" fill="#4a4a4f">（选举/复制 quorum 相交即可）。</text>
+
+  <rect x="832" y="420" width="258" height="88" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="848" y="446" font-size="10.5" font-weight="700" fill="#2f6b4e">重配置 + 重连恢复</text>
+  <text x="848" y="466" font-size="9.5" fill="#4a4a4f">经典 ZAB 静态集群为主；</text>
+  <text x="848" y="482" font-size="9.5" fill="#4a4a4f">动态重配置后触发新一轮</text>
+  <text x="848" y="498" font-size="9.5" fill="#4a4a4f">选主 + 同步。</text>
+
+  <!-- ============ 行5：恢复方式 ============ -->
+  <rect x="30" y="512" width="200" height="88" rx="9" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="46" y="542" font-size="11.5" font-weight="700" fill="#1d1d1f">⑤ 崩溃恢复</text>
+  <text x="46" y="562" font-size="9" fill="#8a97ab">Leader 挂后如何</text>
+  <text x="46" y="576" font-size="9" fill="#8a97ab">对齐副本</text>
+
+  <rect x="240" y="512" width="286" height="88" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="256" y="538" font-size="10.5" font-weight="700" fill="#20375e">选举内建 + 日志回溯对齐</text>
+  <text x="256" y="558" font-size="9.5" fill="#4a4a4f">新 Leader 用 AppendEntries 回退</text>
+  <text x="256" y="574" font-size="9.5" fill="#4a4a4f">nextIndex 找一致点，覆盖尾部</text>
+  <text x="256" y="590" font-size="9.5" fill="#4a4a4f">分叉。恢复=正常复制的特例。</text>
+
+  <rect x="536" y="512" width="286" height="88" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="552" y="538" font-size="10.5" font-weight="700" fill="#6f3ea8">重跑 Phase 1 回收 + 补洞</text>
+  <text x="552" y="558" font-size="9.5" fill="#4a4a4f">新 Leader 用更大 n 抢占，</text>
+  <text x="552" y="574" font-size="9.5" fill="#4a4a4f">回收各 slot 已接受值、填补</text>
+  <text x="552" y="590" font-size="9.5" fill="#4a4a4f">空洞后恢复稳态。</text>
+
+  <rect x="832" y="512" width="258" height="88" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="848" y="538" font-size="10.5" font-weight="700" fill="#2f6b4e">显式 DIFF / TRUNC / SNAP</text>
+  <text x="848" y="558" font-size="9.5" fill="#4a4a4f">三种同步原语：补发 / 截断悬挂</text>
+  <text x="848" y="574" font-size="9.5" fill="#4a4a4f">提案 / 传快照，把 follower</text>
+  <text x="848" y="590" font-size="9.5" fill="#4a4a4f">拉到统一前缀再开新 epoch。</text>
+
+  <!-- 底部一句话总括 -->
+  <rect x="30" y="612" width="1060" height="52" rx="12" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="48" y="636" font-size="10.5" font-weight="700" fill="#1d1d1f">一句话</text>
+  <text x="110" y="636" font-size="10" fill="#4a4a4f"><tspan font-weight="700" fill="#20375e">Raft</tspan> 为「可理解」牺牲灵活（强 Leader、无空洞）；<tspan font-weight="700" fill="#6f3ea8">Multi-Paxos</tspan> 为「灵活/并行」牺牲直观（可空洞、选主外挂）；<tspan font-weight="700" fill="#2f6b4e">ZAB</tspan> 为「高吞吐广播 + 快恢复」定制（zxid 全序、显式同步）。</text>
+  <text x="110" y="656" font-size="9" fill="#8a97ab">三者内核同构：term≈提案号 epoch≈zxid.epoch；log index≈slot≈zxid.counter；多数派相交是共同的安全性基石。</text>
+</svg>

@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="460" viewBox="0 0 960 460"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="960" height="460" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">三种 watch 模式对比 · 标准一次性会漏"重挂间隙"的变更，持久/递归补足连续监听</text>
+
+  <!-- 图例 -->
+  <circle cx="36" cy="50" r="5" fill="#2f9e6e"/><text x="46" y="54" font-size="9" fill="#494950">事件送达</text>
+  <circle cx="132" cy="50" r="5" fill="#c0392b"/><text x="142" y="54" font-size="9" fill="#494950">watch 失效 / 变更被漏（gap）</text>
+
+  <!-- STANDARD -->
+  <rect x="30" y="70" width="290" height="300" rx="14" fill="#fbeaea" stroke="#e7c3c3"/>
+  <text x="46" y="92" font-size="11.5" font-weight="600" fill="#7a2a2a">STANDARD（默认）</text>
+  <text x="46" y="112" font-size="9" fill="#7a2a2a">读时挂，触发一次即从 watchTable 移除</text>
+  <!-- timeline -->
+  <line x1="60" y1="150" x2="290" y2="150" stroke="#d8b6b6" stroke-width="1.4" marker-end="url(#ar)"/>
+  <circle cx="90" cy="150" r="6" fill="#2f9e6e"/><text x="90" y="138" font-size="8" fill="#2c5a3a" text-anchor="middle">挂 watch</text>
+  <circle cx="150" cy="150" r="6" fill="#2f9e6e"/><text x="150" y="138" font-size="8" fill="#2c5a3a" text-anchor="middle">事件</text>
+  <text x="150" y="170" font-size="7.5" fill="#7a2a2a" text-anchor="middle">→ 失效</text>
+  <rect x="176" y="158" width="66" height="18" rx="4" fill="#f7d7d7" stroke="#e7c3c3"/><text x="209" y="171" font-size="7.5" fill="#c0392b" text-anchor="middle">gap 期</text>
+  <circle cx="209" cy="150" r="5" fill="#c0392b"/><text x="209" y="138" font-size="7.5" fill="#c0392b" text-anchor="middle">变更漏</text>
+  <circle cx="262" cy="150" r="6" fill="#2f9e6e"/><text x="262" y="138" font-size="8" fill="#2c5a3a" text-anchor="middle">重挂</text>
+  <text x="46" y="210" font-size="9" fill="#7a2a2a">收到事件后须"重读拿新值 + 重新注册"</text>
+  <text x="46" y="230" font-size="9" fill="#7a2a2a">从触发到重挂之间的变更会被漏掉</text>
+  <text x="46" y="256" font-size="9" fill="#a15b5b">动机：服务端不为海量长期订阅保状态</text>
+  <text x="46" y="284" font-size="9" fill="#7a2a2a">事件只带 path + type，不带新数据</text>
+  <text x="46" y="316" font-size="8.5" fill="#a15b5b">适合"读一次+条件触发"，不适合</text>
+  <text x="46" y="332" font-size="8.5" fill="#a15b5b">"不丢任何一次变更"的严格计数/审计</text>
+
+  <!-- PERSISTENT -->
+  <rect x="336" y="70" width="290" height="300" rx="14" fill="#eafaf1" stroke="#bce6cd"/>
+  <text x="352" y="92" font-size="11.5" font-weight="600" fill="#0f5132">PERSISTENT（3.6+）</text>
+  <text x="352" y="112" font-size="9" fill="#2f6f4f">addWatch 注册，触发后仍有效，无需重挂</text>
+  <line x1="366" y1="150" x2="596" y2="150" stroke="#bce6cd" stroke-width="1.4" marker-end="url(#ar)"/>
+  <circle cx="396" cy="150" r="6" fill="#2f9e6e"/><text x="396" y="138" font-size="8" fill="#2c5a3a" text-anchor="middle">挂</text>
+  <circle cx="456" cy="150" r="6" fill="#2f9e6e"/><text x="456" y="138" font-size="8" fill="#2c5a3a" text-anchor="middle">事件1</text>
+  <circle cx="516" cy="150" r="6" fill="#2f9e6e"/><text x="516" y="138" font-size="8" fill="#2c5a3a" text-anchor="middle">事件2</text>
+  <circle cx="576" cy="150" r="6" fill="#2f9e6e"/><text x="576" y="138" font-size="8" fill="#2c5a3a" text-anchor="middle">事件3</text>
+  <text x="352" y="196" font-size="9" fill="#2f6f4f">连续接收该节点的所有后续变更</text>
+  <text x="352" y="216" font-size="9" fill="#2f6f4f">无 gap → 适合"持续跟踪单节点"</text>
+  <text x="352" y="248" font-size="9" fill="#2f6f4f">监听单个 znode 的数据/存在变更</text>
+  <text x="352" y="290" font-size="8.5" fill="#3f8f66">服务端需为其保持订阅状态（有成本）</text>
+
+  <!-- RECURSIVE -->
+  <rect x="642" y="70" width="288" height="300" rx="14" fill="#f4eefb" stroke="#d9c9ef"/>
+  <text x="658" y="92" font-size="11.5" font-weight="600" fill="#3c1361">PERSISTENT_RECURSIVE</text>
+  <text x="658" y="112" font-size="9" fill="#7a3fb0">持久 + 递归：监听整棵子树的任意变更</text>
+  <!-- 子树 -->
+  <rect x="700" y="140" width="60" height="24" rx="6" fill="#ffffff" stroke="#d9c9ef"/><text x="730" y="156" font-size="8" fill="#3c1361" text-anchor="middle">/app</text>
+  <rect x="672" y="184" width="70" height="22" rx="6" fill="#ffffff" stroke="#d9c9ef"/><text x="707" y="199" font-size="8" fill="#3c1361" text-anchor="middle">/app/a</text>
+  <rect x="758" y="184" width="70" height="22" rx="6" fill="#ffffff" stroke="#d9c9ef"/><text x="793" y="199" font-size="8" fill="#3c1361" text-anchor="middle">/app/b</text>
+  <rect x="758" y="224" width="90" height="22" rx="6" fill="#ffffff" stroke="#d9c9ef"/><text x="803" y="239" font-size="8" fill="#3c1361" text-anchor="middle">/app/b/c</text>
+  <line x1="720" y1="164" x2="707" y2="184" stroke="#d9c9ef" stroke-width="1.2"/>
+  <line x1="742" y1="164" x2="793" y2="184" stroke="#d9c9ef" stroke-width="1.2"/>
+  <line x1="793" y1="206" x2="803" y2="224" stroke="#d9c9ef" stroke-width="1.2"/>
+  <text x="658" y="278" font-size="9" fill="#7a3fb0">挂在 /app 一处，子树任意节点增删改</text>
+  <text x="658" y="296" font-size="9" fill="#7a3fb0">都持续推事件 → 一次订阅覆盖整棵树</text>
+  <text x="658" y="326" font-size="8.5" fill="#9a6fc0">适合配置子树 / 服务发现目录整体监听</text>
+
+  <!-- 底部 -->
+  <rect x="30" y="384" width="900" height="60" rx="12" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="48" y="408" font-size="9.5" fill="#494950">· WatchManagerOptimized 用 bitset 表示 watcher 集，海量 watch 时省内存；WatcherCleaner 后台清理死连接遗留 watch。</text>
+  <text x="48" y="430" font-size="9.5" fill="#86868b">· 有序性：watch 与数据变更同源于 zxid 全序 → 先收事件再见新值，视图一致；连续监听优先 PERSISTENT/RECURSIVE 或用 Curator Cache。</text>
+</svg>

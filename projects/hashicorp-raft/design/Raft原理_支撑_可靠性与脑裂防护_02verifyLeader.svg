@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="576" viewBox="0 0 1040 576" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/>
+    </filter>
+    <marker id="aB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#4a7fd0"/></marker>
+    <marker id="aG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+    <marker id="aR" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#e0654f"/></marker>
+  </defs>
+  <rect width="1040" height="576" fill="#fbfbfd"/>
+
+  <rect x="0" y="0" width="1040" height="46" fill="#f4f5f7" stroke="#e6e6eb"/>
+  <text x="30" y="27" font-size="15" font-weight="700" fill="#1d1d1f">VerifyLeader · 线性读前哨:读之前用一轮 quorum 往返确认「我仍是 Leader」</text>
+  <text x="30" y="40" font-size="10.5" fill="#8a8a90">主动确认(区别于被动的时间型 Leader Lease)——防被分区的旧 Leader 读到过期数据</text>
+
+  <g font-size="10">
+    <rect x="720" y="12" width="12" height="12" rx="3" fill="#eef3fb" stroke="#4a7fd0"/><text x="736" y="22" fill="#3a3a3c">确认控制流</text>
+    <rect x="838" y="12" width="12" height="12" rx="3" fill="#f5faf6" stroke="#2f9e6e"/><text x="854" y="22" fill="#3a3a3c">通过·可读</text>
+    <rect x="940" y="12" width="12" height="12" rx="3" fill="#fbf1f0" stroke="#e0654f"/><text x="956" y="22" fill="#3a3a3c">失败·退位</text>
+  </g>
+
+  <!-- 泳道标题 -->
+  <text x="150" y="72" font-size="11.5" font-weight="700" fill="#5a2b6b" text-anchor="middle">宿主(读请求方)</text>
+  <text x="520" y="72" font-size="11.5" font-weight="700" fill="#1b2a4a" text-anchor="middle">Leader · leaderLoop verifyCh(:849)</text>
+  <text x="905" y="72" font-size="11.5" font-weight="700" fill="#1f5130" text-anchor="middle">Follower 多数派</text>
+  <line x1="150" y1="80" x2="150" y2="470" stroke="#e7cff0" stroke-width="1.6"/>
+  <line x1="520" y1="80" x2="520" y2="470" stroke="#bcd0ec" stroke-width="1.6"/>
+  <line x1="905" y1="80" x2="905" y2="470" stroke="#c9e6cf" stroke-width="1.6"/>
+
+  <!-- ① 发起 -->
+  <rect x="40" y="92" width="220" height="52" rx="10" fill="#faf4fb" stroke="#e7cff0" filter="url(#soft)"/>
+  <text x="52" y="112" font-size="11" font-weight="600" fill="#5a2b6b">① VerifyLeader() api.go:931</text>
+  <text x="52" y="130" font-size="10" fill="#9a5cb0">返回 verifyFuture,投入 verifyCh</text>
+  <path d="M260,118 L516,118" stroke="#4a7fd0" stroke-width="1.6" fill="none" marker-end="url(#aB)"/>
+
+  <!-- ② verifyLeader() -->
+  <rect x="380" y="150" width="290" height="70" rx="10" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="394" y="170" font-size="11" font-weight="600" fill="#1b2a4a">② verifyLeader() raft.go:966</text>
+  <text x="394" y="187" font-size="10" fill="#5b7db1">votes = 1(先自投)· quorumSize = voters/2+1</text>
+  <text x="394" y="204" font-size="10" fill="#5b7db1">单节点 quorumSize==1 → 立即 respond(nil)</text>
+
+  <!-- ③ 触发即时心跳 -->
+  <rect x="380" y="234" width="290" height="66" rx="10" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="394" y="254" font-size="11" font-weight="600" fill="#1b2a4a">③ 遍历 replState 注入 notify</text>
+  <text x="394" y="271" font-size="10" fill="#5b7db1">asyncNotifyCh 触发各 follower</text>
+  <text x="394" y="288" font-size="10" fill="#5b7db1">立刻发一轮 AppendEntries(空心跳)</text>
+  <path d="M670,262 L901,262" stroke="#4a7fd0" stroke-width="1.6" fill="none" marker-end="url(#aB)"/>
+
+  <!-- Follower ack -->
+  <rect x="800" y="150" width="210" height="150" rx="10" fill="#f5faf6" stroke="#c9e6cf" filter="url(#soft)"/>
+  <text x="814" y="172" font-size="11" font-weight="600" fill="#1f5130">Follower 校验并 ack</text>
+  <text x="814" y="191" font-size="10" fill="#4f8b63">仍认此 Leader(term 不更高)</text>
+  <text x="814" y="208" font-size="10" fill="#4f8b63">→ 回 success 响应</text>
+  <text x="814" y="232" font-size="10" fill="#4f8b63">若已投更高任期新 Leader</text>
+  <text x="814" y="249" font-size="10" fill="#4f8b63">→ 拒绝 / 不 ack</text>
+  <text x="814" y="278" font-size="9.5" fill="#86868b">每个 ack 令 v.votes++</text>
+  <text x="814" y="294" font-size="9.5" fill="#86868b">再次投回 verifyCh 汇总</text>
+  <path d="M901,282 C700,320 640,300 640,300" stroke="#2f9e6e" stroke-width="1.5" fill="none" marker-end="url(#aG)"/>
+  <text x="690" y="330" font-size="9.5" fill="#2f9e6e">ack → votes++</text>
+
+  <!-- ④ 判定分支 -->
+  <rect x="360" y="344" width="330" height="46" rx="10" fill="#e9edf6" stroke="#9db6de" filter="url(#soft)"/>
+  <text x="374" y="364" font-size="11" font-weight="700" fill="#1b2a4a">④ 判定(verifyCh 二次进入 :849)</text>
+  <text x="374" y="381" font-size="10" fill="#5b7db1">比较 v.votes 与 v.quorumSize</text>
+
+  <!-- 通过 -->
+  <rect x="150" y="410" width="330" height="56" rx="10" fill="#f5faf6" stroke="#c9e6cf" filter="url(#soft)"/>
+  <text x="164" y="430" font-size="11" font-weight="700" fill="#1f5130">votes ≥ quorumSize</text>
+  <text x="164" y="448" font-size="10" fill="#4f8b63">respond(nil):确认仍是 Leader</text>
+  <text x="164" y="462" font-size="10" fill="#4f8b63">→ 宿主安全读本地 FSM 状态(线性一致)</text>
+  <path d="M470,378 L360,412" stroke="#2f9e6e" stroke-width="1.6" fill="none" marker-end="url(#aG)"/>
+
+  <!-- 失败 -->
+  <rect x="560" y="410" width="330" height="56" rx="10" fill="#fbf1f0" stroke="#f2cfca" filter="url(#soft)"/>
+  <text x="574" y="430" font-size="11" font-weight="700" fill="#8a2b1f">votes &lt; quorumSize(已有新 Leader)</text>
+  <text x="574" y="448" font-size="10" fill="#c4675a">setState(Follower) 主动退位</text>
+  <text x="574" y="462" font-size="10" fill="#c4675a">→ respond(ErrNotLeader):禁止读,宿主重定向</text>
+  <path d="M600,390 L690,412" stroke="#e0654f" stroke-width="1.6" fill="none" marker-end="url(#aR)"/>
+
+  <!-- 底部对比 -->
+  <rect x="30" y="482" width="980" height="82" rx="13" fill="#f7f7f9" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="46" y="505" font-size="12" font-weight="700" fill="#1d1d1f">VerifyLeader vs Leader Lease · 两道读安全防线</text>
+  <text x="46" y="526" font-size="10.5" fill="#6e6e73"><tspan font-weight="600" fill="#1b2a4a">VerifyLeader = 主动</tspan>:每次读前发一轮真实 quorum 往返,拿到「此刻多数派仍承认我」的强证据——但每读一次多一轮 RTT。</text>
+  <text x="46" y="546" font-size="10.5" fill="#6e6e73"><tspan font-weight="600" fill="#8a5a12">Leader Lease = 被动</tspan>:靠周期心跳的 LastContact 时间窗,contacted &lt; quorum 就自行退位——省 RTT 但依赖时钟假设,窗口内仍可能短暂脑裂。</text>
+</svg>

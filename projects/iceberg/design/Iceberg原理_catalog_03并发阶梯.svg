@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="500" viewBox="0 0 1080 500" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="500" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="700" fill="#1d1d1f">并发可靠性阶梯 · catalog 换指针能力越强,多写越可靠</text>
+  <text x="30" y="49" font-size="9.5" fill="#a1a1a6">四类实现差异只在"如何原子换指针"这一步;这一步的强弱直接决定并发可靠性</text>
+
+  <!-- common reduction bar -->
+  <rect x="30" y="66" width="1020" height="44" rx="11" fill="#e7f0fb" stroke="#b9d2ef"/>
+  <text x="46" y="88" font-size="10.5" font-weight="700" fill="#1b2a4a">共同归约:把"提交的原子性"降到"原子换一个指针(表名 → 当前 metadata 位置)"</text>
+  <text x="46" y="105" font-size="8.8" fill="#5b7db1">所有 catalog 都实现 commit(base, metadata):校验 base==current 后原子换指针,冲突转 CommitFailedException 由上层重试</text>
+
+  <!-- ladder: weak -> strong (left to right) -->
+  <text x="30" y="138" font-size="10.5" font-weight="700" fill="#48484a">弱</text>
+  <text x="1040" y="138" font-size="10.5" font-weight="700" fill="#12402a" text-anchor="end">强</text>
+  <line x1="55" y1="133" x2="1010" y2="133" stroke="#cfd6e0" stroke-width="1.2" marker-end="url(#ar)"/>
+
+  <!-- tier 1 Hadoop (weakest) -->
+  <rect x="30" y="150" width="240" height="150" rx="12" fill="#fbeef0" stroke="#ecc4cd"/>
+  <text x="46" y="174" font-size="11" font-weight="700" fill="#7a2438">Hadoop 文件系统</text>
+  <text x="46" y="195" font-size="8.8" fill="#a65068">原子 rename 即提交</text>
+  <text x="46" y="213" font-size="8.8" fill="#a65068">依赖底层原子 rename</text>
+  <text x="46" y="235" font-size="8.6" fill="#a65068">对象存储(S3)无原子</text>
+  <text x="46" y="251" font-size="8.6" fill="#a65068">rename → 最弱</text>
+  <text x="46" y="273" font-size="8.4" fill="#c07a2f">可选 LockManager 兜底</text>
+  <text x="46" y="291" font-size="8.2" fill="#a1a1a6">测试/单机可用</text>
+
+  <!-- tier 2 JDBC -->
+  <rect x="290" y="150" width="240" height="150" rx="12" fill="#f4eefb" stroke="#d9c7ec"/>
+  <text x="306" y="174" font-size="11" font-weight="700" fill="#3d2a5a">JDBC(关系库)</text>
+  <text x="306" y="195" font-size="8.8" fill="#8a6db3">条件 UPDATE 一行:</text>
+  <text x="306" y="213" font-size="8.6" fill="#8a6db3">SET location=新</text>
+  <text x="306" y="231" font-size="8.6" fill="#8a6db3">WHERE location=旧</text>
+  <text x="306" y="253" font-size="8.6" fill="#8a6db3">恰好更新 1 行才成功</text>
+  <text x="306" y="275" font-size="8.4" fill="#a07dc4">集中式,靠 DB 事务</text>
+  <text x="306" y="293" font-size="8.2" fill="#7fae7f">强</text>
+
+  <!-- tier 3 Hive -->
+  <rect x="550" y="150" width="240" height="150" rx="12" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="566" y="174" font-size="11" font-weight="700" fill="#5a3410">Hive(HMS)</text>
+  <text x="566" y="195" font-size="8.8" fill="#93762e">元存储条件更新 + 锁</text>
+  <text x="566" y="213" font-size="8.6" fill="#93762e">metadata 位置存 HMS</text>
+  <text x="566" y="235" font-size="8.6" fill="#93762e">集中式裁决冲突</text>
+  <text x="566" y="257" font-size="8.4" fill="#c07a2f">HMS 单点易成瓶颈</text>
+  <text x="566" y="279" font-size="8.2" fill="#7fae7f">强</text>
+
+  <!-- tier 4 REST (strongest) -->
+  <rect x="810" y="150" width="240" height="150" rx="12" fill="#f5faf6" stroke="#8fc79f" stroke-width="1.6"/>
+  <text x="826" y="174" font-size="11" font-weight="700" fill="#12402a">REST(服务端 CAS)</text>
+  <text x="826" y="195" font-size="8.8" fill="#2f6f4f">服务端统一裁决冲突</text>
+  <text x="826" y="213" font-size="8.6" fill="#2f6f4f">客户端只认 HTTP 协议</text>
+  <text x="826" y="231" font-size="8.6" fill="#2f6f4f">引擎与后端解耦、可水平扩展</text>
+  <text x="826" y="253" font-size="8.6" fill="#2f6f4f">+ 集中鉴权/审计</text>
+  <text x="826" y="271" font-size="8.6" fill="#2f6f4f">+ multi-table 事务/视图</text>
+  <text x="826" y="289" font-size="8.4" fill="#3f8f5f">最强 · 能力最全</text>
+
+  <!-- bottom -->
+  <rect x="30" y="316" width="1020" height="80" rx="12" fill="#f7f9fc" stroke="#e5ecf5"/>
+  <text x="46" y="340" font-size="10" font-weight="700" fill="#1b2a4a">选型要点</text>
+  <text x="46" y="362" font-size="9" fill="#5b7db1">· 生产 / 多写并发 / 多引擎共享 → REST(首选)或 Hive、JDBC;测试 / 单机才用 Hadoop</text>
+  <text x="46" y="382" font-size="9" fill="#5b7db1">· 对象存储上避免纯 Hadoop catalog(S3 无原子 rename,提交不可靠);数据/元数据树在存储不动,换 catalog 只换"谁持指针"</text>
+
+  <rect x="30" y="410" width="1020" height="60" rx="12" fill="#f0f0f4" stroke="#d2d2d7"/>
+  <text x="46" y="434" font-size="10" font-weight="700" fill="#48484a">与"快照与提交"的分工</text>
+  <text x="46" y="455" font-size="9" fill="#6e6e73">那边管"怎么产快照、冲突了怎么 OCC 重试";这边管"指针存哪、怎么原子换、并发有多可靠"—— 二者共同实现 ACID</text>
+</svg>
