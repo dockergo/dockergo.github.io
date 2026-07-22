@@ -10,7 +10,7 @@
 
 ![DQL 生命周期总览](ClickHouse原理_DQL_01总览.svg)
 
-`executeQueryImpl`（`executeQuery.cpp:973`）是总漏斗：`parseQuery`（`:1053`）→ `InterpreterFactory::get`（`:1493`）→ `plan.buildQueryPipeline`（`:1644`）→ `CompletedPipelineExecutor`（`:2041`）执行。v25.8 默认走 **Analyzer→Planner→QueryPlan→Processors** 新路径（`enable_analyzer=true`，`Settings.cpp:6521`），旧的 `InterpreterSelectQuery` 仅在 `enable_analyzer=0` 时兜底。
+图注：`executeQueryImpl` 是总漏斗——`parseQuery → InterpreterFactory::get → plan.buildQueryPipeline → CompletedPipelineExecutor` 执行。v25.8 默认走 **Analyzer→Planner→QueryPlan→Processors** 新路径（`enable_analyzer=true`），旧 `InterpreterSelectQuery` 仅在关闭时兜底。
 
 ---
 
@@ -18,7 +18,7 @@
 
 ![接入与缓存](ClickHouse原理_DQL_02接入缓存.svg)
 
-查询经 TCPHandler/HTTPHandler 进入 `executeQuery`。若命中 **QueryResultCache**（`can_use_query_result_cache`，`:1421`），直接从缓存读结果（`createReader:1460` → `readFromQueryResultCache:1464`），跳过全部计算；未命中则正常执行，并在允许时把结果写入缓存（`QueryResultCacheWriter:1606`）。这是"完全相同的查询"的最快路径。
+图注：查询经 TCP/HTTPHandler 进入 `executeQuery`。命中 **QueryResultCache**（`use_query_cache` 且确定性）则直接读缓存、跳过全部计算；未命中正常执行并在允许时回填。此为"完全相同查询"的最快路径。
 
 ---
 
@@ -26,7 +26,7 @@
 
 ![分析：AST → QueryTree](ClickHouse原理_DQL_03分析.svg)
 
-`buildQueryTree`（`QueryTreeBuilder.cpp:1157`）把 AST 转成 **QueryTree**（语义树，节点如 QueryNode/JoinNode/FunctionNode）。随后 `QueryTreePassManager` 跑 **40+ 个 pass**（`addQueryTreePasses`，`QueryTreePassManager.cpp:268-352`）：名称解析（`QueryAnalysisPass`，`:270`）、常量折叠、谓词化简、函数重写等——把"用户写的 SQL"规整成"引擎好优化的语义形态"。驱动是 `InterpreterSelectQueryAnalyzer`（`buildQueryTreeAndRunPasses:148`）。
+图注：`buildQueryTree` 把 AST 转成 **QueryTree**（语义树：QueryNode/JoinNode/FunctionNode…），随后 `QueryTreePassManager` 跑 **40+ pass**——名称解析、常量折叠、谓词化简、函数重写——把"用户写的 SQL"规整成"引擎好优化的语义形态"。
 
 ---
 
@@ -34,7 +34,7 @@
 
 ![规划：QueryTree → QueryPlan](ClickHouse原理_DQL_04规划.svg)
 
-`Planner::buildQueryPlanIfNeeded`（`Planner.cpp:1373`）把 QueryTree 变成 **QueryPlan**——一棵由 `IQueryPlanStep` 组成的逻辑算子树（ReadFromMergeTree / Aggregating / Sorting / Join / …）。FROM/JOIN 子树由 `buildJoinTreeQueryPlan`（`:1616`）构建，Join 算法在此期选定（`chooseJoinAlgorithm`）。
+图注：`Planner` 把 QueryTree 变成 **QueryPlan**——一棵由 `IQueryPlanStep` 组成的逻辑算子树（ReadFromMergeTree / Aggregating / Sorting / Join / …）。FROM/JOIN 子树由 `buildJoinTreeQueryPlan` 构建，Join 算法在此期由 `chooseJoinAlgorithm` 选定。
 
 ---
 
@@ -42,7 +42,7 @@
 
 ![QueryPlan 优化 pass](ClickHouse原理_DQL_05优化.svg)
 
-`optimizeTree`（`Optimizations/optimizeTree.cpp:24`）对 QueryPlan 跑两轮 pass。第一轮（`getOptimizations`，15 条）含谓词下推（`filterPushDown`）、limit 下推、表达式合并等；第二轮含 **PREWHERE 移动**（`optimizePrewhere:141`）、**主键裁剪 + limit**（`optimizePrimaryKeyConditionAndLimit:134`）、**按序读**（`optimizeReadInOrder:172`）、**投影使用**（`optimizeUseAggregateProjections:243`）。这些优化最终把过滤/裁剪条件推给 `ReadFromMergeTree` 读取步——见「优化技术」主线详解。
+图注：`optimizeTree` 对 QueryPlan 跑两轮 pass。第一轮（15 条）含谓词下推、limit 下推、表达式合并；第二轮含 **PREWHERE 移动**、**主键裁剪 + limit**、**按序读**、**投影使用**。这些优化最终把过滤/裁剪条件推给 `ReadFromMergeTree` 读取步——详见「优化技术」主线。
 
 ---
 
@@ -50,7 +50,7 @@
 
 ![Pipeline 执行](ClickHouse原理_DQL_06Pipeline.svg)
 
-`QueryPlan::buildQueryPipeline`（`QueryPlan.cpp:168`）逐步 `updatePipeline`（`:202`）把逻辑算子树转成 **QueryPipeline**——由 `IProcessor` 组成的物理执行图。`PipelineExecutor`（`PipelineExecutor.cpp:125`）以 **pull 模型**驱动 `ExecutingGraph` 并行执行；数据单位是 **Chunk**（列式批）。并行度由 `max_threads`（默认 0=自动取 CPU 核数，`Settings.cpp:206`）控制。执行细节见「执行引擎」主线。
+图注：`buildQueryPipeline` 逐步把逻辑算子树转成 **QueryPipeline**——由 `IProcessor` 组成的物理执行图；`PipelineExecutor` 以 **pull 模型**驱动 `ExecutingGraph` 并行执行，数据单位是 **Chunk**（列式批），并行度由 `max_threads`（默认 0=自动取核数）控制。执行细节见「执行引擎」主线。
 
 ---
 
@@ -59,8 +59,8 @@
 ![分布式散射汇聚](ClickHouse原理_DQL_07分布式.svg)
 
 跨节点查询有两条路径：
-- **Distributed 表**：`StorageDistributed::read`（`StorageDistributed.cpp:961`）→ `ClusterProxy::executeQuery`（`:1033`）遍历各 shard，发 `ReadFromRemote` 步（`ReadFromRemote.cpp`），`RemoteQueryExecutor` 把子查询发到各 shard 的一个副本、汇聚结果。**经典 Distributed 引擎是 scatter/gather（散射/汇聚）**——每个 shard 独立算完再由发起节点汇总，不像 Doris 那样按 key 在 fragment 间 shuffle 重分布。（注：现代执行模型里也存在 exchange/repartition 算子，尤其 parallel replicas 路径会用到；但经典 Distributed 表查询以散射汇聚为主。）
-- **parallel replicas**（`enable_parallel_replicas`，`Settings.cpp:6422`，BETA）：把**同一 shard** 的扫描工作动态分给多个副本并行，提升单分片大扫描的吞吐。
+- **Distributed 表**：`StorageDistributed::read → ClusterProxy` 遍历各 shard，发 `ReadFromRemote` 步，`RemoteQueryExecutor` 把子查询发到各 shard 的一个副本再汇聚。**经典 Distributed 是 scatter/gather（散射/汇聚）**——每 shard 独立算完再由发起节点汇总，不像 Doris 那样按 key 在 fragment 间 shuffle 重分布（parallel replicas 路径会用到 exchange/repartition）。
+- **parallel replicas**（`enable_parallel_replicas`，BETA）：把**同一 shard** 的扫描工作动态分给多个副本并行，提升单分片大扫描吞吐。
 
 ---
 
@@ -68,7 +68,7 @@
 
 ![两级聚合](ClickHouse原理_DQL_08两级聚合.svg)
 
-`GROUP BY` 走 `Aggregator`：先每线程/每来源做**部分聚合**（`AggregatingTransform`，共享 `ManyAggregatedData`），再**合并**（`MergingAggregatedTransform`）。当基数大到阈值（`group_by_two_level_threshold=100000` 行或 `..._bytes=50000000`，`Settings.cpp:962-965`），切到 **two-level** 哈希表（`convertToTwoLevel:1732`）——按 key 的高位桶拆分，使合并阶段可并行、避免单大哈希表成瓶颈。
+图注：`GROUP BY` 走 `Aggregator`——先每线程/每来源做**部分聚合**（`AggregatingTransform`，共享 `ManyAggregatedData`），再**合并**（`MergingAggregatedTransform`）。基数超阈值（`group_by_two_level_threshold=100000` 行或 `..._bytes=50MB`）时切 **two-level** 哈希表：按 key 高位桶拆分，使合并阶段可并行、避免单大哈希表成瓶颈。
 
 ---
 
@@ -76,7 +76,7 @@
 
 ![Join 算法决策](ClickHouse原理_DQL_10Join算法.svg)
 
-`join_algorithm` 默认 `direct,parallel_hash,hash`（`Settings.cpp:2958`，按序偏好）。`chooseJoinAlgorithm`（`PlannerJoins.cpp:1219`）按序尝试：
+`join_algorithm` 默认 `direct,parallel_hash,hash`（按序偏好）；`chooseJoinAlgorithm` 按序尝试：
 
 | 算法 | 内存 | 触发 | 适用 |
 |---|---|---|---|
@@ -92,7 +92,7 @@
 
 ![点查旁路](ClickHouse原理_DQL_11点查.svg)
 
-ClickHouse **不擅长单行点查**：MergeTree 主键裁剪（`markRangesFromPKRange`，`MergeTreeDataSelectExecutor.cpp:1259`）只能定位到 granule，点查一行也要读整个 granule（默认 8192 行）。真正的低延迟 KV 点查靠专门引擎：`DirectKeyValueJoin`（`DirectJoin.cpp:119`）over `StorageEmbeddedRocksDB`/`StorageKeeperMap`/字典，`getByKeys` 直接按键取值。
+图注：ClickHouse **不擅长单行点查**——MergeTree 主键裁剪只能定位到 granule，点查一行也要读整个 granule（默认 8192 行）。真正的低延迟 KV 点查靠专门引擎：`DirectKeyValueJoin` over `StorageEmbeddedRocksDB`/`StorageKeeperMap`/字典，按键直取值。
 
 ---
 

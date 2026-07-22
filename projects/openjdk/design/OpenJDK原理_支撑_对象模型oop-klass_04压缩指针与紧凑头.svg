@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="474" viewBox="0 0 1040 474" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="cp_s" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="cp_a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#5b7db1"/></marker>
+  </defs>
+  <rect width="1040" height="474" fill="#fbfbfd"/>
+  <text x="24" y="30" font-size="14" font-weight="700" fill="#1d1d1f">压缩指针与紧凑对象头 · 用编解码换内存，用内嵌换更小的头</text>
+  <text x="24" y="49" font-size="10" fill="#6e6e73">64 位平台上引用/类指针本占 8 字节；HotSpot 靠 base+shift 把它们压成 32 位，并进一步把类指针塞进对象头——都是拿一点算力换堆内存</text>
+
+  <!-- legend -->
+  <g font-size="9.5">
+    <rect x="24" y="60" width="12" height="12" rx="3" fill="#f5faf6" stroke="#cfe6d2"/><text x="41" y="70" fill="#3a3a3c">64位真实地址</text>
+    <rect x="150" y="60" width="12" height="12" rx="3" fill="#faf3ea" stroke="#ecdcbf"/><text x="167" y="70" fill="#3a3a3c">markWord·压缩位</text>
+    <rect x="286" y="60" width="12" height="12" rx="3" fill="#f4eefb" stroke="#d9c9ef"/><text x="303" y="70" fill="#3a3a3c">类指针</text>
+    <rect x="392" y="60" width="12" height="12" rx="3" fill="#fbeeee" stroke="#e0b4b0"/><text x="409" y="70" fill="#3a3a3c">失效阈值 32GB</text>
+  </g>
+
+  <!-- 上：narrowOop 编解码 -->
+  <rect x="24" y="88" width="992" height="150" rx="12" fill="#fbfbfd" stroke="#e2e2e7"/>
+  <text x="40" y="110" font-size="11" font-weight="600" fill="#5b7db1">一、CompressedOops：把 64 位堆指针压成 32 位 narrowOop</text>
+  <g text-anchor="middle">
+    <rect x="60" y="124" width="250" height="44" rx="9" fill="#f5faf6" stroke="#cfe6d2" filter="url(#cp_s)"/>
+    <text x="185" y="144" font-size="10" font-weight="700" fill="#1d8f3f">64 位堆内真实地址</text>
+    <text x="185" y="160" font-size="8.5" fill="#1c6b45">对象在堆中的完整机器地址</text>
+    <rect x="730" y="124" width="250" height="44" rx="9" fill="#faf3ea" stroke="#ecdcbf" filter="url(#cp_s)"/>
+    <text x="855" y="144" font-size="10" font-weight="700" fill="#8a5a1a">32 位 narrowOop</text>
+    <text x="855" y="160" font-size="8.5" fill="#3a3a3c">存进对象引用字段，省一半宽度</text>
+  </g>
+  <line x1="310" y1="138" x2="730" y2="138" stroke="#5b7db1" stroke-width="1.4" marker-end="url(#cp_a)"/>
+  <line x1="730" y1="154" x2="310" y2="154" stroke="#5b7db1" stroke-width="1.4" marker-end="url(#cp_a)"/>
+  <text x="520" y="132" font-size="9" fill="#5b7db1" text-anchor="middle">编码 encode：(addr − base) &gt;&gt; shift</text>
+  <text x="520" y="167" font-size="9" fill="#5b7db1" text-anchor="middle">解码 decode：真实地址 = base + (narrowOop &lt;&lt; shift)</text>
+  <text x="40" y="192" font-size="9" fill="#3a3a3c">shift = log₂(对象对齐)：默认 8 字节对齐 → shift = 3（地址低 3 位恒为 0，无需存，故能"腾出"高位寻址范围）。</text>
+  <rect x="40" y="202" width="600" height="26" rx="7" fill="#fbeeee" stroke="#e0b4b0"/>
+  <text x="52" y="219" font-size="9" fill="#b0413e">寻址上限 = 2³² × 8 = <tspan font-weight="700">32 GB</tspan> → 堆超过 32GB 压缩失效、退回 64 位指针（内存反而涨）。</text>
+  <text x="660" y="219" font-size="9" fill="#3a3a3c">narrowKlass 同理压 Klass*，其 base 取元空间区间起点。</text>
+
+  <!-- 下：对象头演进 -->
+  <rect x="24" y="250" width="992" height="152" rx="12" fill="#fbfbfd" stroke="#e2e2e7"/>
+  <text x="40" y="272" font-size="11" font-weight="600" fill="#8a5a1a">二、对象头演进：从"markWord + 独立类指针"到把类指针内嵌进 markWord</text>
+  <text x="40" y="290" font-size="8.5" fill="#9a9aa0">下方色条按字节等比绘制（1 格 = 4 字节）</text>
+
+  <!-- 传统 实例头 -->
+  <text x="40" y="312" font-size="9" fill="#3a3a3c">传统实例头（默认压类指针）</text>
+  <g>
+    <rect x="230" y="300" width="240" height="22" rx="4" fill="#faf3ea" stroke="#ecdcbf"/><text x="350" y="315" font-size="8.5" fill="#8a5a1a" text-anchor="middle">markWord（8B）</text>
+    <rect x="470" y="300" width="120" height="22" rx="4" fill="#f4eefb" stroke="#d9c9ef"/><text x="530" y="315" font-size="8.5" fill="#6f3ea8" text-anchor="middle">narrowKlass（4B）</text>
+    <text x="606" y="315" font-size="9" font-weight="700" fill="#8a5a1a">= 12B</text>
+  </g>
+  <!-- 传统 数组头 -->
+  <text x="40" y="344" font-size="9" fill="#3a3a3c">传统数组头（多存长度）</text>
+  <g>
+    <rect x="230" y="332" width="240" height="22" rx="4" fill="#faf3ea" stroke="#ecdcbf"/><text x="350" y="347" font-size="8.5" fill="#8a5a1a" text-anchor="middle">markWord（8B）</text>
+    <rect x="470" y="332" width="120" height="22" rx="4" fill="#f4eefb" stroke="#d9c9ef"/><text x="530" y="347" font-size="8.5" fill="#6f3ea8" text-anchor="middle">narrowKlass（4B）</text>
+    <rect x="590" y="332" width="120" height="22" rx="4" fill="#f5faf6" stroke="#cfe6d2"/><text x="650" y="347" font-size="8.5" fill="#1d8f3f" text-anchor="middle">length（4B）</text>
+    <text x="726" y="347" font-size="9" font-weight="700" fill="#8a5a1a">= 16B</text>
+  </g>
+  <!-- 紧凑 -->
+  <text x="40" y="376" font-size="9" fill="#3a3a3c">紧凑头 UseCompactObjectHeaders</text>
+  <g>
+    <rect x="230" y="364" width="240" height="22" rx="4" fill="#faf3ea" stroke="#ecdcbf"/>
+    <rect x="380" y="364" width="90" height="22" rx="0" fill="#eee0f2" stroke="#d9c9ef"/>
+    <text x="305" y="379" font-size="8.5" fill="#8a5a1a" text-anchor="middle">markWord</text>
+    <text x="425" y="379" font-size="8" fill="#6f3ea8" text-anchor="middle">内嵌类指针</text>
+    <text x="486" y="379" font-size="9" font-weight="700" fill="#1d8f3f">= 8B</text>
+    <text x="560" y="379" font-size="8.5" fill="#3a3a3c">类指针塞入 markWord 高位（klass_bits=22），去掉独立字段</text>
+  </g>
+  <rect x="40" y="390" width="976" height="0" fill="none"/>
+
+  <!-- 底部要点 -->
+  <rect x="24" y="416" width="992" height="52" rx="12" fill="#f4eefb" stroke="#d9c9ef"/>
+  <text x="40" y="437" font-size="10.5" font-weight="600" fill="#6f3ea8">一句话</text>
+  <text x="120" y="437" font-size="9" fill="#3a3a3c">压缩指针省"引用字段"的宽度，紧凑头省"每个对象头"的字节；对象数以亿计时，头缩 4~8 字节就是整堆的显著节省。</text>
+  <text x="40" y="456" font-size="9" fill="#3a3a3c">代价：每次解引用多一次 base+shift 运算（编译器常能优化掉），以及 32GB 寻址上限这条"压缩失效线"。</text>
+</svg>

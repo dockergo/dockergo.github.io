@@ -14,7 +14,9 @@
 
 ## 二、句柄机制：为什么 native 永远拿不到裸 oop
 
-native 手里的 `jobject`/`jclass`/`jstring` **从来不是对象真实地址**，而是一层**间接句柄**。原因直白：移动式 GC 会搬迁对象、地址随时变，裸 `oop` 交给 native 一次 GC 后就成野指针。句柄 API 集中在 `runtime/jniHandles.hpp`：**local**（`make_local :95`）绑定当前 native 调用帧、返回时自动批量释放（存于线程 `JNIHandleBlock`）；**global**（`make_global :101`）跨调用长存、**必须手动** `destroy_global :103`；**weak global**（`make_weak_global :106`）不阻止回收、挂在独立 OopStorage（`:42`）。核心不变量：**GC 扫根时遍历这些句柄存储、更新其中的 `oop`——对象移动了、句柄内容随之更新，而 native 手里的句柄值纹丝不动**。取真实 `oop` 走 `resolve`（`:85`），只能在 `in_vm` 状态下短暂使用。
+![JNI 句柄机制 · 三类句柄存储与「对象会动、句柄不动」不变量](OpenJDK原理_支撑_JNI与JFR_03句柄机制.svg)
+
+句柄 API 集中在 `runtime/jniHandles.hpp`：**local**（`make_local` `:95`）绑当前调用帧、返回自动批量释放（存 `JNIHandleBlock`）；**global**（`make_global` `:101`）跨调用长存、须手动 `destroy_global`（`:103`）；**weak global**（`make_weak_global` `:106`）不阻止回收、挂独立 OopStorage（`:42`）。核心不变量与 Critical 区代价见图；取真实 `oop` 走 `resolve`（`:85`），仅在 `in_vm` 状态下短暂使用。
 
 ## 三、JNI 的开销来源与 Critical 区
 

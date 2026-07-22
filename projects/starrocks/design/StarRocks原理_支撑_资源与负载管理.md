@@ -10,11 +10,11 @@
 
 ![StarRocks 资源组模型](StarRocks原理_资源_01资源组.svg)
 
-FE 侧 **ResourceGroup**(`fe/fe-core/src/main/java/com/starrocks/catalog/ResourceGroup.java`)是用户可定义的对象(`CREATE RESOURCE GROUP`),由 **ResourceGroupMgr** 管理、经 EditLog 持久化(`persist/ResourceGroupOpEntry.java`)。BE 侧对应 **WorkGroup**(`be/src/compute_env/workgroup/work_group.h:145`),构造参数即配额:
+FE 侧 **ResourceGroup** 是用户可定义的对象(`CREATE RESOURCE GROUP`),由 **ResourceGroupMgr** 管理、经 EditLog 持久化。BE 侧对应 **WorkGroup**,构造参数即配额:
 
-- `cpu_weight`(`:169`):CPU 时间片权重(相对份额,非绝对核数)。
-- `memory_limit`/`mem_limit_bytes`(`:171`):内存上限。
-- `concurrency`/`_concurrency_limit`(`:283`):并发查询数上限。
+- `cpu_weight`:CPU 时间片权重(相对份额,非绝对核数)。
+- `memory_limit` / `mem_limit_bytes`:内存上限。
+- `concurrency` / `_concurrency_limit`:并发查询数上限。
 - `spill_mem_limit_threshold`:超此内存阈值触发溢写。
 - `WorkGroupType type`:组类型(普通/短查询等)。
 
@@ -34,9 +34,9 @@ FE 定义、BE 执行——定义落元数据、约束在执行期生效。
 
 ![StarRocks CPU 调度与大查询熔断](StarRocks原理_资源_03大查询熔断.svg)
 
-**CPU 隔离**:WorkGroup 用 `cpu_weight` 做加权公平调度——`runtime_ns(cpu_weight)`(`work_group.h:52`)把消耗的 CPU 时间按权重折算 vruntime,GlobalDriverExecutor 按 vruntime 选下一个跑的组,权重高的组拿更多 CPU 份额(类似 CFS)。
+**CPU 隔离**:WorkGroup 用 `cpu_weight` 做加权公平调度——`runtime_ns(cpu_weight)` 把消耗的 CPU 时间按权重折算 vruntime,GlobalDriverExecutor 按 vruntime 选下一个跑的组,权重高的组拿更多 CPU 份额(类似 CFS)。
 
-**大查询熔断**:`check_big_query(query_stats)`(`work_group.h:216`)在查询运行中检查是否超"大查询"限额——`big_query_mem_limit`(`:233`)、`big_query_cpu_second_limit`(`:237`)、`big_query_scan_rows_limit`(`:238`),超限则终止该查询,防单个失控查询拖垮整组。**内存溢写**:超 `spill_mem_limit_threshold` 的可溢写算子把中间结果落盘换内存。
+**大查询熔断**:`check_big_query(query_stats)` 在查询运行中检查是否超"大查询"限额——`big_query_mem_limit`、`big_query_cpu_second_limit`、`big_query_scan_rows_limit`,超限则终止该查询,防单个失控查询拖垮整组。**内存溢写**:超 `spill_mem_limit_threshold` 的可溢写算子把中间结果落盘换内存。
 
 ---
 

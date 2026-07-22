@@ -10,7 +10,7 @@
   <rect width="1000" height="660" fill="#fbfbfd"/>
   <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">ORC 写路径 · close 收尾步骤链 与 最终文件尾部布局</text>
 
-  <text x="50" y="60" font-size="11" font-weight="600" fill="#2f6f4f">close 收尾步骤 (WriterImpl.java:804)</text>
+  <text x="50" y="60" font-size="11" font-weight="600" fill="#2f6f4f">close 收尾步骤</text>
   <text x="600" y="60" font-size="11" font-weight="600" fill="#93762e">最终 ORC 文件布局 (从头到尾)</text>
 
   <!-- ===== LEFT: close step chain (green flow) ===== -->
@@ -20,23 +20,23 @@
   <path d="M230,384 L230,410" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
 
   <rect x="50" y="78" width="360" height="44" rx="11" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
-  <text x="230" y="105" font-size="12" font-weight="600" fill="#12402a" text-anchor="middle">close 触发收尾 (WriterImpl.java:804)</text>
+  <text x="230" y="105" font-size="12" font-weight="600" fill="#12402a" text-anchor="middle">close 触发收尾</text>
 
   <rect x="50" y="146" width="360" height="52" rx="11" fill="#f5faf6" stroke="#cfe6d5" filter="url(#soft)"/>
-  <text x="230" y="167" font-size="11.5" font-weight="600" fill="#12402a" text-anchor="middle">① flushStripe 落最后未满 stripe (:813)</text>
+  <text x="230" y="167" font-size="11.5" font-weight="600" fill="#12402a" text-anchor="middle">① flushStripe 落最后未满 stripe</text>
   <text x="230" y="185" font-size="9" fill="#2f6f4f" text-anchor="middle">末 stripe 落盘</text>
 
   <rect x="50" y="224" width="360" height="52" rx="11" fill="#f5faf6" stroke="#cfe6d5" filter="url(#soft)"/>
-  <text x="230" y="245" font-size="11.5" font-weight="600" fill="#12402a" text-anchor="middle">② writeFileStatistics (:707)</text>
+  <text x="230" y="245" font-size="11.5" font-weight="600" fill="#12402a" text-anchor="middle">② writeFileStatistics</text>
   <text x="230" y="263" font-size="9" fill="#2f6f4f" text-anchor="middle">汇总文件级统计</text>
 
   <rect x="50" y="302" width="360" height="82" rx="11" fill="#f5faf6" stroke="#cfe6d5" filter="url(#soft)"/>
-  <text x="230" y="322" font-size="11.5" font-weight="600" fill="#12402a" text-anchor="middle">③ writeFooter (:691)</text>
-  <text x="230" y="343" font-size="9.5" fill="#2f6f4f" text-anchor="middle">writeMetadata(:624) — stripe 级统计</text>
-  <text x="230" y="362" font-size="9.5" fill="#2f6f4f" text-anchor="middle">writeFileFooter(:718) — 类型树 / stripe 目录 / 文件统计</text>
+  <text x="230" y="322" font-size="11.5" font-weight="600" fill="#12402a" text-anchor="middle">③ writeFooter</text>
+  <text x="230" y="343" font-size="9.5" fill="#2f6f4f" text-anchor="middle">writeMetadata — stripe 级统计</text>
+  <text x="230" y="362" font-size="9.5" fill="#2f6f4f" text-anchor="middle">writeFileFooter — 类型树 / stripe 目录 / 文件统计</text>
 
   <rect x="50" y="410" width="360" height="60" rx="11" fill="#f5faf6" stroke="#cfe6d5" filter="url(#soft)"/>
-  <text x="230" y="432" font-size="11.5" font-weight="600" fill="#12402a" text-anchor="middle">④ writePostScript (:630 / PhysicalFsWriter:475)</text>
+  <text x="230" y="432" font-size="11.5" font-weight="600" fill="#12402a" text-anchor="middle">④ writePostScript</text>
   <text x="230" y="450" font-size="9.5" fill="#2f6f4f" text-anchor="middle">压缩方式 · footer 长度 · 版本</text>
   <text x="230" y="464" font-size="9" fill="#2f6f4f" text-anchor="middle">末字节 = postscript 长度</text>
 
@@ -76,7 +76,7 @@
   <rect x="50" y="492" width="890" height="150" rx="12" fill="#f7f7f9" stroke="#e3e3e8"/>
   <text x="70" y="516" font-size="11" font-weight="600" fill="#1d1d1f">机制要点</text>
   <text x="70" y="542" font-size="10.5" fill="#1d1d1f"><tspan font-weight="600">收尾链</tspan>:close(:804) 先 flushStripe(:813) 落末 stripe → writeFileStatistics(:707) → writeFooter(:691) = writeMetadata(:624, stripe 统计)</text>
-  <text x="70" y="560" font-size="10.5" fill="#1d1d1f">+ writeFileFooter(:718, 类型树/stripe 目录/文件统计) → writePostScript(:630 / PhysicalFsWriter:475, 压缩方式/footer 长度, 末字节 = 其长度)。</text>
+  <text x="70" y="560" font-size="10.5" fill="#1d1d1f">+ writeFileFooter(类型树/stripe 目录/文件统计) → writePostScript(压缩方式/footer 长度, 末字节 = 其长度)。</text>
   <text x="70" y="586" font-size="10.5" fill="#1d1d1f"><tspan font-weight="600">开头 magic</tspan>:3 字节 "ORC"(PhysicalFsWriter.java:717, OrcFile.MAGIC) 在建 writer 时已写。</text>
   <text x="70" y="612" font-size="10.5" fill="#1d1d1f"><tspan font-weight="600">为什么尾部写</tspan>:写时行数/stripe 边界事先未知,写完才知全貌;尾部索引 + 末字节长度让 reader 倒读一次小 IO 拿全图。</text>
 </svg>

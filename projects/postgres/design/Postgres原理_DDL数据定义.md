@@ -26,14 +26,16 @@ DDL 语句不进 Planner/Executor，而经 utility 通道分派：`ProcessUtilit
 
 ## 深化 · DDL 的锁级别与失败路径
 
-不同 DDL 取的锁级别决定了它对并发读写的影响（相容矩阵在 `storage/lockdefs.h`，`AccessShareLock=1`（SELECT）… `AccessExclusiveLock=8`（ALTER/DROP/VACUUM FULL））：
+DDL 取的锁级别决定它对并发读写的影响（相容矩阵 `storage/lockdefs.h`：AccessShareLock=1 … AccessExclusiveLock=8）。
 
-- **AccessExclusiveLock**（多数 ALTER TABLE 子命令、DROP TABLE、TRUNCATE、VACUUM FULL）：与一切锁互斥，会**排队等待并阻塞该表全部读写**；且 DDL 排队时会挡住它后面所有新查询——一次不当 ALTER 可瞬间雪崩。
-- **ShareUpdateExclusiveLock**（`CREATE INDEX CONCURRENTLY`、`ANALYZE`、普通 VACUUM）：与读写兼容，只互斥同类维护——生产加索引应优先它。
-- **失败与回滚**：普通 DDL 在事务里失败会随事务整体回滚（因目录变更也是 MVCC tuple）；但 `CREATE INDEX CONCURRENTLY` 是**非事务**多阶段构建，中途失败会留下一个 `INVALID` 索引（`pg_index.indisvalid=false`），需手动 DROP 重建——这是"事务性 DDL"的显著例外。
-- **依赖阻断**：裸 `DROP` 一个被别的对象依赖的对象时，`pg_depend` 检查（`RemoveRelations`，`commands/tablecmds.c:1597` → `performDeletion`，`catalog/dependency.c:279`；批量走 `performMultipleDeletions:388`）会报错，需 `CASCADE` 递归删或先删依赖方。
-- **建表的物理落地**：`DefineRelation` 内经 `heap_create_with_catalog`（`catalog/heap.c:1140`）既往 pg_class/pg_attribute 写目录行、又建物理文件，两者在同一事务内一致提交。
-- **缓存失效广播**：DDL 提交时经 `CacheInvalidateHeapTuple`（`utils/cache/inval.c:1568`）登记失效消息，其他 backend 在拿锁时 `AcceptInvalidationMessages`（`inval.c:930`）消费、把过期的 syscache/relcache 条目清掉——这是"改了目录、别的连接下次访问就看到新定义"的机制。
+| 场景 | 机理 | 后果 / 应对 |
+|---|---|---|
+| AccessExclusiveLock | 多数 ALTER TABLE 子命令、DROP、TRUNCATE、VACUUM FULL 与一切锁互斥 | 阻塞该表全部读写、排队时挡住其后所有新查询；一次不当 ALTER 可瞬间雪崩 |
+| ShareUpdateExclusiveLock | `CREATE INDEX CONCURRENTLY`/`ANALYZE`/普通 VACUUM 与读写兼容 | 只互斥同类维护；生产加索引应优先它 |
+| 失败与回滚 | 普通 DDL 失败随事务整体回滚（目录变更也是 MVCC tuple） | `CREATE INDEX CONCURRENTLY` 非事务多阶段、中途失败留 `INVALID` 索引需手动 DROP 重建 |
+| 依赖阻断 | 裸 `DROP` 被依赖对象时 `pg_depend` 检查（`RemoveRelations`→`performDeletion`/`performMultipleDeletions`）报错 | 需 `CASCADE` 递归删或先删依赖方 |
+| 建表物理落地 | `DefineRelation`→`heap_create_with_catalog` 既写 pg_class/pg_attribute 又建物理文件 | 两者在同一事务内一致提交 |
+| 缓存失效广播 | 提交时 `CacheInvalidateHeapTuple` 登记失效，别的 backend 拿锁时 `AcceptInvalidationMessages` 消费 | 清过期 syscache/relcache，"改了目录、别的连接下次访问看到新定义" |
 
 ---
 

@@ -59,6 +59,7 @@ TreeWriter/Reader 树结构镜像类型树——每个节点(列)负责自己类
 | WriterImpl / TreeWriter | `impl/WriterImpl.java:242` | 每列 writer 树 + addRowBatch |
 | ReaderImpl | `impl/ReaderImpl.java:67` | 解析 tail/footer 建 RecordReader |
 | RecordReaderImpl / TreeReader | `impl/RecordReaderImpl.java:83` | 每列 reader 树解码填批 |
+| TreeReader.nextVector | `TreeReaderFactory.java:405` | 填批先应用 PRESENT null stream 再填值 |
 | OrcFile.createWriter/createReader | `OrcFile.java:1097` / `:389` | 引擎拿 Writer/Reader 的静态工厂 |
 | CompressionKind | `CompressionKind.java:26` | ZLIB/SNAPPY/ZSTD…默认 ZSTD |
 

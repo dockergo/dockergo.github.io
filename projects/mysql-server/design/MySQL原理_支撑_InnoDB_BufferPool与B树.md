@@ -14,6 +14,18 @@ InnoDB 每张表就是一棵以主键排序的 **B+树聚簇索引**：非叶结
 
 磁盘 I/O 以**页（16KB）**为单位，Buffer Pool 是内存里缓存这些页的大池子。读写都先落 Buffer Pool：命中则纯内存操作，未命中才从磁盘读页入池（入池前需取一块空闲帧，空闲链空了就从 LRU 尾淘汰或逼迫刷脏腾位）。**LRU 冷热淘汰**用改良版（young/old 分区，默认 old 区约 3/8）防全表扫把热页冲走：新页先插 old 区头部，被再次访问且停留超阈值才提升到 young 区。**脏页**（改过未落盘）挂在 flush_list 上，由 **page cleaner 后台线程**异步刷盘——事务提交不必等页落盘（有 redo 保证持久），磁盘 I/O 与事务解耦。这是"写快"的关键：改内存 + 顺序写 redo，脏页慢慢刷。各结构与刷脏函数落点见深化表。
 
+## 三、InnoDB 存储架构总览
+
+![InnoDB 架构总览](MySQL原理_支撑_InnoDB_BufferPool与B树_03InnoDB架构.svg)
+
+把上面两节放进全局：InnoDB 分**内存结构**（Buffer Pool `buf0buf.h:99`、Change Buffer、Log Buffer、自适应哈希）、**磁盘结构**（独立表空间 .ibd 聚簇索引页、系统表空间 ibdata、redo log、undo 回滚段、doublewrite）与**后台线程**（page cleaner `buf0flu.cc:84`、purge `trx0purge.cc:68`、master thread `srv0srv.cc:2354`、IO 线程）三块。设计纪律：事务线程只改内存 + 顺序写 redo，随机落盘全部甩给后台线程——内存吸收随机写、磁盘只承接顺序写与副本。
+
+## 四、Change Buffer：非唯一二级索引写优化
+
+![Change Buffer](MySQL原理_支撑_InnoDB_BufferPool与B树_04ChangeBuffer.svg)
+
+改非唯一二级索引时，若目标页不在 Buffer Pool，InnoDB 不立刻把页读进来，而是把改动记进 **Change Buffer**（`ibuf_insert` `ibuf0ibuf.cc:3686`）先返回，省掉一次随机读页 I/O；等该页因查询被读入内存、或后台 `ibuf_merge` `ibuf0ibuf.cc:2646` 触发时再合并回页。边界：唯一二级索引必须立刻读页查唯一性、聚簇索引随机读本就发生，故都不适用。
+
 ## 深化 · 关键结构与落点
 
 | 结构 | 作用 | 落点 |

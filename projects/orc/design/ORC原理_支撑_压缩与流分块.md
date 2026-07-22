@@ -57,6 +57,7 @@ ORC 支持 7 种 codec(`CompressionKind.java:27`):`NONE、ZLIB、SNAPPY、LZO、
 |---|---|---|
 | CompressionKind | `CompressionKind.java:27` | NONE/ZLIB/SNAPPY/LZO/LZ4/ZSTD/BROTLI |
 | COMPRESS 默认 | `OrcConf.java:55` | 默认 codec = ZSTD |
+| COMPRESSION_STRATEGY | `OrcConf.java:71` | 压缩策略,默认 SPEED(可切 COMPRESSION) |
 | BUFFER_SIZE | `OrcConf.java:48` | 压缩块大小,默认 256KB |
 | HEADER_SIZE | `OutStream.java:52` | 块头 3 字节 |
 | writeHeader | `OutStream.java:184` | (长度<<1)\|isOriginal,小端 |

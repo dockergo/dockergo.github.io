@@ -2,7 +2,7 @@
 
 > **定位**：属"保障能力域"。让长查询在 worker/task 失败时**不整个重来**——按 `RetryPolicy` 做查询级或任务级重试，任务级依赖 spooling exchange 把中间结果落外部存储以便重试去重。被【分布式执行】按策略选用（默认 NONE 不启用），依赖【数据交换】的 ExchangeManager SPI。源码基准 **Trino 483-SNAPSHOT**。
 
-默认 Trino 是"尽力而为"——一个 worker 挂了，整条查询失败。对跑几十分钟的 ETL 这代价太大。FTE 通过 `RetryPolicy` 提供两档容错：**QUERY**（整查询重试）与 **TASK**（任务级重试，需 exchange-manager）。
+默认 Trino 是"尽力而为"——一个 worker 挂了整条查询失败，对跑几十分钟的 ETL 代价太大。FTE 通过 `RetryPolicy` 提供两档容错：**QUERY**（整查询重试）与 **TASK**（任务级重试，需 exchange-manager）。
 
 ---
 
@@ -10,11 +10,13 @@
 
 ![Trino RetryPolicy · NONE/QUERY/TASK 与调度器映射](Trino原理_容错_01RetryPolicy.svg)
 
-`RetryPolicy`（`io.trino.operator`）有三值，`SqlQueryExecution.createQueryScheduler` 据此选调度器：
+`RetryPolicy`（`io.trino.operator`）三值，`SqlQueryExecution.createQueryScheduler` 据此选调度器与 exchange 形态：
 
-- **NONE**（默认）：不重试，`PipelinedQueryScheduler`，任一失败整查询挂。
-- **QUERY**：整查询重试，仍用 `PipelinedQueryScheduler`（内部 `shouldRetry` 判可重试错误码 + 未超 `query-retry-attempts`，默认 4，排除 fatal/USER_ERROR），流式直连 exchange。
-- **TASK**：任务级重试，`EventDrivenFaultTolerantQueryScheduler` + spooling exchange，单 task 失败只重跑该 task。
+| 策略 | 调度器 | exchange | 重试语义 |
+|---|---|---|---|
+| **NONE**（默认） | `PipelinedQueryScheduler` | 流式直连 | 不重试，任一失败整查询挂 |
+| **QUERY** | `PipelinedQueryScheduler` | 流式直连 | 整查询重试（`shouldRetry` 判可重试码 + 未超 `query-retry-attempts`=4，排除 fatal/USER_ERROR）|
+| **TASK** | `EventDrivenFaultTolerantQueryScheduler` | spooling exchange | 单 task 失败只重跑该 task |
 
 `retry-policy.allowed` 可限制允许的策略集（483 新增）。
 
@@ -24,12 +26,7 @@
 
 ![Trino 任务级重试 · 每分区独立重试 + 内存增长](Trino原理_容错_02任务重试.svg)
 
-FTE 调度器为每个 stage partition 建一个 `StagePartition`，`remainingAttempts` 初始 = `task-retry-attempts-per-task`+1（默认 5）。task 失败时 `StageExecution.taskFailed`：
-
-- **给不给重试**：`remainingAttempts==0` 或 USER_ERROR 或 fatal 错误码 → `stage.fail`（放弃）；否则重新发一个 `PrioritizedScheduledTask` 到同 partition（重试）。
-- **内存感知重试**：OOM 失败时 `getNextRetryMemoryRequirements` 给下次更大的内存估计（`ExponentialGrowthPartitionMemoryEstimator`）；`BinPackingNodeAllocatorService` 据此选节点。
-- **每 attempt 新 sink 实例**：`exchange.instantiateSink(handle, attempt)` 按 attempt 键控，实现结果去重。
-- speculative（未 sealed）partition 不重试。
+每 stage partition 一个 `StagePartition`，`remainingAttempts` 初始 = `task-retry-attempts-per-task`+1。task 失败经 `StageExecution.taskFailed` 判定：耗尽/USER_ERROR/fatal → `stage.fail` 放弃，否则重发 `PrioritizedScheduledTask` 到同 partition。OOM 重试内存感知增长（`ExponentialGrowthPartitionMemoryEstimator` + `BinPackingNodeAllocatorService` 选节点）；每 attempt 新 sink 实例按 attempt 键控去重；speculative（未 sealed）partition 不重试。
 
 ---
 
@@ -37,21 +34,19 @@ FTE 调度器为每个 stage partition 建一个 `StagePartition`，`remainingAt
 
 ![Trino spooling exchange · ExchangeManager 暂存与去重](Trino原理_容错_03spooling.svg)
 
-TASK 策略下，stage 间数据不走流式直连，而经 **ExchangeManager SPI**（引擎内部叫 spooling exchange）落到外部存储：
-
-- 上游 task 经 `ExchangeSink.add(partition, Slice)` 写；`FileSystemExchangeSink` 把每分区写成 `.data` 文件，`finish` 时落 `committed` 标记。
-- 下游经 `ExchangeSource.read` 读；**忽略无 `committed` 标记的目录**——这是去重关键：某 task 重试产生的多份输出，只有 committed 的那份被读。
-- `ExchangeManagerRegistry` 从 `exchange-manager.properties` 加载（`filesystem`/S3）；未配则 `EXCHANGE_MANAGER_NOT_CONFIGURED`——**FTE-TASK 必须配 exchange-manager**。
-
----
+TASK 策略下 stage 间数据不走流式直连，而经 **ExchangeManager SPI**（引擎内部叫 spooling exchange）落外部存储：上游经 `ExchangeSink.add(partition, Slice)` 写，`FileSystemExchangeSink` 把每分区写成 `.data` 文件、`finish` 时落 `committed` 标记；下游经 `ExchangeSource.read` 读，**忽略无 `committed` 标记的目录**——这是去重关键（某 task 重试的多份输出只读 committed 那份）。`ExchangeManagerRegistry` 从 `exchange-manager.properties` 加载（filesystem/S3），未配则 `EXCHANGE_MANAGER_NOT_CONFIGURED`——**FTE-TASK 必须配 exchange-manager**。
 
 ## 深化 · QUERY vs TASK 重试对比
 
 ![Trino QUERY vs TASK 重试 · 粒度与代价对比](Trino原理_容错_04对比.svg)
 
-- **QUERY**：整查询重跑，无需 exchange-manager，实现简单（`PipelinedQueryScheduler.shouldRetry` 内），适合中短查询——失败率低时开销小，但一旦失败代价大（全部重算）。
-- **TASK**：单 task 重跑，需 exchange-manager 暂存中间结果，适合长 ETL/大查询——失败只赔一个 task，但中间结果落盘有持续开销。
-- 二者都排除 USER_ERROR（用户 SQL 错误重试无意义）与 fatal 错误码。
+| 维度 | QUERY | TASK |
+|---|---|---|
+| 重试粒度 | 整查询重跑 | 单 task 重跑 |
+| exchange-manager | 无需 | **必需**（暂存中间结果去重） |
+| 实现 | `PipelinedQueryScheduler.shouldRetry` 内 | `EventDrivenFaultTolerantQueryScheduler` + spooling |
+| 适用 | 中短查询（失败率低时开销小，失败则全部重算） | 长 ETL/大查询（失败只赔一个 task，中间落盘有持续开销） |
+| 排除 | USER_ERROR + fatal 错误码 | 同左 |
 
 ## 调优要点（关键开关）
 

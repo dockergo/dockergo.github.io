@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="410" viewBox="0 0 920 410" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="cbs" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="cbb" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#5b7db1"/></marker>
+    <marker id="cbg" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#6aa17f"/></marker>
+    <marker id="cbr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#c0392b"/></marker>
+  </defs>
+  <rect width="920" height="410" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">Change Buffer · 非唯一二级索引的写优化</text>
+  <text x="30" y="48" font-size="10.5" fill="#6e6e73">目标索引页不在内存时，改动先记缓冲；页被读入时再合并 → 省掉随机读一页</text>
+
+  <!-- DML -->
+  <rect x="40" y="76" width="150" height="58" rx="10" fill="#eef7f1" stroke="#6aa17f" filter="url(#cbs)"/>
+  <text x="115" y="100" font-size="10.5" font-weight="700" fill="#2f7a4f" text-anchor="middle">INSERT/UPDATE/DELETE</text>
+  <text x="115" y="120" font-size="9" fill="#6e6e73" text-anchor="middle">改二级索引项</text>
+
+  <!-- 判定 -->
+  <path d="M330,105 L400,80 L470,105 L400,130 z" fill="#eef3fb" stroke="#5b7db1" filter="url(#cbs)"/>
+  <text x="400" y="102" font-size="9.5" font-weight="700" fill="#3a5a8a" text-anchor="middle">目标页在</text>
+  <text x="400" y="116" font-size="9.5" font-weight="700" fill="#3a5a8a" text-anchor="middle">Buffer Pool？</text>
+  <path d="M190,105 L326,105" fill="none" stroke="#6aa17f" stroke-width="1.6" marker-end="url(#cbg)"/>
+
+  <!-- 在:直接改 -->
+  <rect x="560" y="72" width="320" height="52" rx="10" fill="#eef3fb" stroke="#5b7db1" filter="url(#cbs)"/>
+  <text x="720" y="92" font-size="10" font-weight="700" fill="#3a5a8a" text-anchor="middle">在 → 直接就地修改页</text>
+  <text x="720" y="110" font-size="8.8" fill="#6e6e73" text-anchor="middle">已在内存，无需缓冲</text>
+  <path d="M474,98 L556,90 " fill="none" stroke="#5b7db1" stroke-width="1.5" marker-end="url(#cbb)"/>
+  <text x="500" y="84" font-size="9" fill="#2f7a4f">是</text>
+
+  <!-- 不在:记入change buffer -->
+  <rect x="560" y="150" width="320" height="70" rx="10" fill="#fbf5ec" stroke="#d9b98a" filter="url(#cbs)"/>
+  <text x="720" y="172" font-size="10.5" font-weight="700" fill="#9a6a1f" text-anchor="middle">不在 → 记入 Change Buffer</text>
+  <text x="720" y="192" font-size="8.8" fill="#1d1d1f" text-anchor="middle">把改动缓存起来，立即返回</text>
+  <text x="720" y="209" font-size="8.8" fill="#6e6e73" text-anchor="middle">省掉一次随机读页的磁盘 I/O</text>
+  <path d="M400,132 L400,185 L556,185" fill="none" stroke="#d9b98a" stroke-width="1.6" marker-end="url(#cbb)"/>
+  <text x="410" y="178" font-size="9" fill="#9a6a1f">否</text>
+
+  <!-- merge -->
+  <rect x="560" y="248" width="320" height="72" rx="10" fill="#eef7f1" stroke="#6aa17f" filter="url(#cbs)"/>
+  <text x="720" y="270" font-size="10.5" font-weight="700" fill="#2f7a4f" text-anchor="middle">合并 Merge</text>
+  <text x="720" y="290" font-size="8.8" fill="#1d1d1f" text-anchor="middle">该页因查询被读入内存时</text>
+  <text x="720" y="307" font-size="8.8" fill="#6e6e73" text-anchor="middle">或后台线程触发 → 把缓冲改动应用回页</text>
+  <path d="M720,220 L720,246" fill="none" stroke="#6aa17f" stroke-width="1.6" marker-end="url(#cbg)"/>
+
+  <!-- 触发合并来源 -->
+  <rect x="40" y="248" width="470" height="72" rx="10" fill="#f6f6f8" stroke="#e2e2e7" filter="url(#cbs)"/>
+  <text x="58" y="270" font-size="10" font-weight="700" fill="#1d1d1f">合并触发时机</text>
+  <text x="58" y="290" font-size="9" fill="#6e6e73">① 该二级索引页被查询读入 Buffer Pool</text>
+  <text x="58" y="307" font-size="9" fill="#6e6e73">② Master/后台线程周期性 ibuf_merge 收缩缓冲</text>
+  <path d="M510,284 L556,284" fill="none" stroke="#6aa17f" stroke-width="1.5" marker-end="url(#cbg)"/>
+
+  <!-- 边界/不适用 -->
+  <rect x="40" y="338" width="840" height="52" rx="10" fill="#fdeeec" stroke="#e0a49a" filter="url(#cbs)"/>
+  <text x="58" y="359" font-size="10" font-weight="700" fill="#c0392b">不适用边界</text>
+  <text x="58" y="378" font-size="9" fill="#8a4a3a">唯一二级索引：必须立刻读页查唯一性 → 无法延迟合并；聚簇索引：主键即数据，随机读本就发生。故仅优化"非唯一二级索引"的写。</text>
+</svg>

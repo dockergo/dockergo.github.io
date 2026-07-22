@@ -69,7 +69,15 @@
 
 **Commit ≠ Visible**：COMMITTED 只保证"数据已持久化"，Publish 才保证"可见"。
 
-**外部 2PC 的用途**：PRECOMMITTED 这个"落盘但不可见、可提交可回滚"的中间态，正是给 Flink / Spark 等外部系统做**端到端 exactly-once** 用的——外部框架在自己的 checkpoint 里先让 Doris 预提交，checkpoint 成功再触发 Commit、失败则 Abort，把两侧的成败绑定为一个原子决策（对应 Stream Load `two_phase_commit`）。
+## 深化 · 外部 2PC 与端到端 exactly-once
+
+PRECOMMITTED 这个"落盘但不可见、可提交可回滚"的中间态,正是给 Flink / Spark 做端到端 exactly-once 用的(对应 Stream Load `two_phase_commit`)。
+
+| 外部框架动作 | Doris 侧 | 结果 |
+|---|---|---|
+| checkpoint 前 | 预提交(PRECOMMITTED) | 数据落盘、不可见 |
+| checkpoint 成功 | 触发 Commit → Publish | 可见 |
+| checkpoint 失败 | Abort | 回滚,两侧成败绑为一个原子决策 |
 
 ---
 

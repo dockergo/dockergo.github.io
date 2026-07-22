@@ -30,11 +30,13 @@
 
 ## 深化 · 失败路径与边界
 
-- **唯一约束/外键冲突**：INSERT/UPDATE 违反唯一约束在 `ExecInsertIndexTuples` 插索引项时报错、整语句回滚；这是执行期错误，`EXPLAIN`（不带 ANALYZE）看不到。`INSERT ... ON CONFLICT` 走推测插入（speculative insertion）先占位再回退。
-- **写写冲突阻塞**：两个事务 UPDATE 同一行时，后者在 `heap_update` 取行锁等待前者提交/回滚（`HeapTupleSatisfiesUpdate` 返回 BeingUpdated → 等 `t_xmax` 事务结束）；RC 下前者提交后重取最新版本再改，RR/Serializable 下报序列化失败。
-- **索引写放大失控**：非 HOT 的 UPDATE 要更新表上所有索引，索引越多 UPDATE 越慢；一张表挂十几个索引时高频更新会成为瓶颈。
-- **膨胀与页分裂**：HOT 落空（跨页）+ 关掉 autovacuum → 死元组与旧索引项堆积、表和 B-tree 膨胀、扫描要跳过大量死行。
-- **COPY 与单行 INSERT 的差距**：`heap_multi_insert`（`heapam.c:2282`）一次锁页装多行、批量记 WAL，比逐行 `heap_insert` 少大量加锁与 WAL 刷次；大批量导入用 COPY 而非循环 INSERT 常快一个数量级，配合 `wal_level=minimal` + 同事务内建表还可跳过部分 WAL。
+| 场景 | 机理 | 后果 / 应对 |
+|---|---|---|
+| 唯一约束/外键冲突 | 插索引项（`ExecInsertIndexTuples`）时报错、整语句回滚 | 执行期错误，`EXPLAIN`（不带 ANALYZE）看不到；`ON CONFLICT` 走推测插入先占位再回退 |
+| 写写冲突阻塞 | 两事务 UPDATE 同一行，后者在 `heap_update` 取行锁等前者结束 | RC 下前者提交后重取最新版本再改；RR/Serializable 报序列化失败 |
+| 索引写放大 | 非 HOT 的 UPDATE 要更新表上所有索引 | 索引越多 UPDATE 越慢；一张表十几个索引时高频更新成瓶颈 |
+| 膨胀与页分裂 | HOT 落空（跨页）+ 关掉 autovacuum | 死元组与旧索引项堆积、表和 B-tree 膨胀、扫描跳过大量死行 |
+| COPY vs 单行 INSERT | `heap_multi_insert` 一次锁页装多行、批量记 WAL | 大批量导入用 COPY 常快一个数量级；`wal_level=minimal`+同事务建表可跳过部分 WAL |
 
 ---
 

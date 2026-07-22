@@ -21,6 +21,8 @@
 
 ## 深化 · 四型 RPC 与 op 的对应
 
+![四型RPC与op组合](gRPC原理_接口_Stub与Channel契约_02四型RPC与op组合.svg)
+
 `RpcType` 只是决定了 `CallOpSet` 里 Send/Recv 消息 op 出现的次数与节奏，其余 op（metadata、close、status）四型共有：
 
 | RPC 类型 | RpcType 枚举 | 发送侧 op 特征 | 典型用途 |
@@ -30,21 +32,34 @@
 | 服务端流 | SERVER_STREAMING | 一次 SendMessage → 多次 RecvMessage | 订阅/推送 |
 | 双向流 | BIDI_STREAMING | 收发交织（各自节奏） | 实时会话 |
 
-流式 RPC 不再用一次性的 `BlockingUnaryCallImpl`，而是把 op 拆成多个独立批次逐次 `FillOps`：每个 `Write` 是一批 `CallOpSendMessage`、每个 `Read` 是一批 `CallOpRecvMessage`，`WritesDone` 单独下发 `CallOpClientSendClose`，最后 `Finish` 收 `CallOpClientRecvStatus`。同一 op 类型在一条 RPC 上不允许并发挂起（例如两个 `Write` 同时 pending），否则 core 层会返回 API misuse 错误。
+流式 RPC 的拆批规则与"同方向不可并发挂起两个同型 op（否则 core 返回 API misuse）"的边界见图；落点见下深化表。
 
-## 深化 · Channel::CreateCall 如何下沉到 core call
+## 深化 · 一次调用如何下沉到 core
 
-`Channel::CreateCall` 只是转调 `Channel::CreateCallInternal`（`src/cpp/client/channel_cc.cc:125`）。这里有一个关键分叉：若 `RpcMethod` 带 `channel_tag()` 且 context 未覆盖 authority，走**已注册路径**（`kRegistered`），直接用注册句柄里缓存的 path/authority 建 call（`src/cpp/client/channel_cc.cc:133` 的 `grpc_channel_create_call_with_arena_init`，`registered_method=true`）；否则走未注册路径，现场把 `method.name()` 转成 slice 再建 call。两条路径都收敛到同一个 C 接口 `grpc_channel_create_call_with_arena_init`（`src/core/lib/surface/channel.cc:158`），它转调 `grpc_core::Channel::CreateCall`，为这次调用分配一块 Arena（调用级内存竞技场，一次 RPC 的所有临时对象都从中分配、结束时整块释放）。方法注册的落点是 `Channel::RegisterMethod`（`src/cpp/client/channel_cc.cc:196`）→ core 的 `grpc_channel_register_call`（`src/core/lib/surface/channel.cc:121`）。`CreateCallInternal` 建好 call 后还会把 `ClientRpcInfo`（拦截器上下文）与 `census_context` 挂到 call 上，并调 `context->set_call()` 把 `grpc_call*` 回填进 `ClientContext`——这一步顺带把凭证 `ApplyToCall`，若失败当场取消调用。
+![调用下沉core](gRPC原理_接口_Stub与Channel契约_03调用下沉core.svg)
 
-对于 `target` 为解析目标（如 `dns:///...`）的普通 Channel，core 侧的具体 call 由 `ClientChannel::CreateCall`（`src/core/client_channel/client_channel.cc:902`）承接，它 `MakeClientCall` 后由 `ClientChannel::StartCall`（`src/core/client_channel/client_channel.cc:981`）驱动：先按需退出 IDLE、触发连接，再等解析器结果与负载均衡挑选子通道，最后把调用交给选中的传输。Stub 完全看不到这层选路——这正是"像本地函数"的代价被吸收之处。
+`Channel::CreateCall` 转调 `CreateCallInternal`（`src/cpp/client/channel_cc.cc:125`），在此分叉：带 `channel_tag()` 且未覆盖 authority 走 **kRegistered**（用注册句柄缓存的 path/authority），否则现场把 `method.name()` 转 slice；两路收敛到同一 C 接口 `grpc_channel_create_call_with_arena_init`（`src/core/lib/surface/channel.cc:158`），为本次调用分配一块 **Arena**（调用级内存竞技场，结束整块释放）。普通 `dns:///` Channel 的 core call 由 `ClientChannel::CreateCall`（`src/core/client_channel/client_channel.cc:902`）承接、`StartCall`（`:981`）驱动：退 IDLE→等 resolver→LB pick→交 transport——**Stub 看不到这层选路，即"像本地函数"的代价被吸收之处**。
 
-## 深化 · FillOps → grpc_call_start_batch → StartBatch
+| 阶段 | 落点 | 语义 |
+|---|---|---|
+| C++ 建 call | `Channel::CreateCallInternal` `src/cpp/client/channel_cc.cc:125` | kRegistered / 未注册分叉，收敛到统一 C 接口 |
+| 分配 Arena | `grpc_channel_create_call_with_arena_init` `src/core/lib/surface/channel.cc:158` | 一次 RPC 一块 Arena，结束整块释放 |
+| 方法注册 | `Channel::RegisterMethod` `channel_cc.cc:196` → `grpc_channel_register_call` `channel.cc:121` | 缓存 path/authority，省每次 slice 拷贝与路径解析 |
+| 挂调用上下文 | `set_call` 回填 + `ClientRpcInfo` / `census_context` + 凭证 `ApplyToCall`（失败即取消） | `ClientContext` 是 core call 回填与凭证生效的汇合点 |
+| core 承接选路 | `ClientChannel::CreateCall` `client_channel.cc:902` → `StartCall` `:981` | 退 IDLE→resolver→LB pick→transport |
 
-`CallOpSet::FillOps`（`include/grpcpp/impl/call_op_set.h:895`）先跑客户端拦截器链，若无拦截则直接进入 `ContinueFillOpsAfterInterception`（`include/grpcpp/impl/call_op_set.h:961`）。这里把最多 6 个 op（模板参数 Op1..Op6）逐个 `AddOp` 填进一个 `grpc_op ops[6]` 数组，再一次性调 `grpc_call_start_batch(call_.call(), ops, nops, core_cq_tag(), nullptr)`（`include/grpcpp/impl/call_op_set.h:973`）把整批交给 core。core 侧入口 `grpc_call_start_batch`（`src/core/lib/surface/call.cc:491`）取出 `grpc_core::Call` 对象并调 `call_obj->StartBatch(ops, nops, tag, false)`（`src/core/lib/surface/call.cc:503`）真正执行。当这一批 op 完成，core 会把 `core_cq_tag()` 作为 tag 投递回 `CompletionQueue`；`CallOpSet::FinalizeResult`（`include/grpcpp/impl/call_op_set.h:909`）随后被调，逐个 `FinishOp` 把收到的 message 反序列化、把 trailing metadata 解析成 `Status`。**一次批次 = 一个 tag = 一次完成事件**，这是理解 gRPC 异步模型的钥匙。
+## 深化 · 三套 API 共用装配线，只在交付分叉
 
-## 深化 · 回调式一元路径
+![三套API交付分叉](gRPC原理_接口_Stub与Channel契约_04三套API交付分叉.svg)
 
-除同步阻塞的 `BlockingUnaryCallImpl`，C++ 还提供回调 API。`CallbackUnaryCall`（`include/grpcpp/support/client_callback.h:59`）构造一个 `CallbackUnaryCallImpl`（`include/grpcpp/support/client_callback.h:73`），它拿的是 channel 内建的共享回调队列 `channel->CallbackCQ()`（`include/grpcpp/support/client_callback.h:80`），而非每调用一个临时 Pluckable CQ。它组装的 op 集合与同步版完全相同，但把 `on_completion` 回调包成一个 `CallbackWithStatusTag` 设成 `core_cq_tag`，最后 `ops->FillOps(&call)`（`include/grpcpp/support/client_callback.h:117`）下发后立即返回——完成时由回调线程直接触发用户的 `std::function<void(Status)>`，无需应用线程主动 `Next`。这就是同步、异步(CQ+tag)、回调三套 API 共用同一套 `CallOpSet` 装配线、只在"结果如何交付"上分叉的实证。
+`CallOpSet::FillOps`（`include/grpcpp/impl/call_op_set.h:895`）先跑客户端拦截器链，把最多 6 个 op 逐个 `AddOp` 填进 `grpc_op ops[6]`，一次性 `grpc_call_start_batch(call, ops, nops, core_cq_tag())`（`:973`）交 core 入口 `grpc_call_start_batch`（`src/core/lib/surface/call.cc:491`）→ `Call::StartBatch`（`:503`）真正执行。**一批 op = 一个 tag = 一次完成事件**——异步模型的钥匙；完成时 `FinalizeResult`（`:909`）逐个 `FinishOp` 把 message 反序列化、把 trailing metadata 解析成 `Status`。三套 API 组装的 op 集合相同，只在"结果如何交付"分叉。
+
+| API | 交付方式 | 落点 |
+|---|---|---|
+| 同步 | 每调用一个临时 Pluckable CQ · `cq.Pluck(tag)` 阻塞等这批 | `include/grpcpp/impl/client_unary_call.h:60/81` |
+| 异步 | 应用显式持 CQ · `Next`/`AsyncNext` 轮询（GOT_EVENT/TIMEOUT/SHUTDOWN） | `include/grpcpp/completion_queue.h:177/199` |
+| 回调 | 用 channel 共享 `CallbackCQ` · 回调线程直接触发 `std::function<void(Status)>` | `include/grpcpp/support/client_callback.h:59/73/80/117` |
+| 装配线 | `FillOps`→`grpc_call_start_batch`→core `StartBatch` | `call_op_set.h:895/973` · `src/core/lib/surface/call.cc:491/503` |
 
 ## 深化 · ClientContext 承载的调用级契约
 

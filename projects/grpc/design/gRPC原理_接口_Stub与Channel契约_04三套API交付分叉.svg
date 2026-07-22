@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="452" viewBox="0 0 1020 452" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs><filter id="sp" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="3.5" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="ap" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#6f3ea8"/></marker>
+    <marker id="ao" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#9a6a1c"/></marker></defs>
+  <rect width="1020" height="452" fill="#fbfbfd"/>
+  <text x="24" y="30" font-size="14" font-weight="700" fill="#1d1d1f">三套 API 共用同一套装配线，只在"结果如何交付"上分叉</text>
+  <text x="24" y="49" font-size="10" fill="#8a8a8e">一批 op = 一个 tag = 一次完成事件 —— 这是理解 gRPC 异步模型的钥匙</text>
+
+  <g font-size="9">
+    <rect x="708" y="20" width="12" height="10" rx="2" fill="#f4eefb" stroke="#ddccef"/><text x="724" y="29" fill="#6e6e73">共用装配线</text>
+    <rect x="808" y="20" width="12" height="10" rx="2" fill="#fdf6ec" stroke="#f0dcb8"/><text x="824" y="29" fill="#6e6e73">CompletionQueue</text>
+    <rect x="928" y="20" width="12" height="10" rx="2" fill="#eafaf1" stroke="#b8e6cd"/><text x="944" y="29" fill="#6e6e73">回填结果</text>
+  </g>
+
+  <!-- shared assembly line -->
+  <rect x="24" y="64" width="972" height="78" rx="12" fill="#f4eefb" stroke="#ddccef" filter="url(#sp)"/>
+  <text x="40" y="84" font-size="11.5" font-weight="700" fill="#6f3ea8">共用装配线（三套 API 完全相同的 op 集合）</text>
+  <g text-anchor="middle" font-size="8.5">
+    <rect x="40" y="94" width="150" height="38" rx="7" fill="#fff" stroke="#ddccef"/><text x="115" y="110" fill="#6f3ea8">CallOpSet 组装</text><text x="115" y="123" font-size="6.5" fill="#9a76c0">≤6 个 op</text>
+    <rect x="212" y="94" width="180" height="38" rx="7" fill="#fff" stroke="#ddccef"/><text x="302" y="110" fill="#6f3ea8">FillOps（跑拦截器链）</text><text x="302" y="123" font-size="6.5" fill="#9a76c0">AddOp → grpc_op[6]</text>
+    <rect x="414" y="94" width="190" height="38" rx="7" fill="#fff" stroke="#ddccef"/><text x="509" y="110" fill="#6f3ea8">grpc_call_start_batch(tag)</text><text x="509" y="123" font-size="6.5" fill="#9a76c0">整批一次性交 core</text>
+    <rect x="626" y="94" width="160" height="38" rx="7" fill="#fff" stroke="#ddccef"/><text x="706" y="110" fill="#6f3ea8">core StartBatch</text><text x="706" y="123" font-size="6.5" fill="#9a76c0">真正执行这批 op</text>
+    <rect x="808" y="94" width="176" height="38" rx="7" fill="#fdf6ec" stroke="#f0dcb8"/><text x="896" y="110" fill="#9a6a1c">批完成 → 投 tag 回 CQ</text><text x="896" y="123" font-size="6.5" fill="#c1955a">core_cq_tag()</text>
+    <line x1="190" y1="113" x2="210" y2="113" stroke="#8a5cae" stroke-width="1.3" marker-end="url(#ap)"/>
+    <line x1="392" y1="113" x2="412" y2="113" stroke="#8a5cae" stroke-width="1.3" marker-end="url(#ap)"/>
+    <line x1="604" y1="113" x2="624" y2="113" stroke="#8a5cae" stroke-width="1.3" marker-end="url(#ap)"/>
+    <line x1="786" y1="113" x2="806" y2="113" stroke="#9a6a1c" stroke-width="1.3" marker-end="url(#ao)"/>
+  </g>
+
+  <!-- fork label -->
+  <text x="510" y="162" font-size="9.5" text-anchor="middle" fill="#8a8a8e">↓ 结果如何交付 —— 三条尾巴分叉 ↓</text>
+  <line x1="180" y1="150" x2="180" y2="180" stroke="#9a6a1c" stroke-width="1.3" marker-end="url(#ao)"/>
+  <line x1="510" y1="168" x2="510" y2="180" stroke="#9a6a1c" stroke-width="1.3" marker-end="url(#ao)"/>
+  <line x1="840" y1="150" x2="840" y2="180" stroke="#9a6a1c" stroke-width="1.3" marker-end="url(#ao)"/>
+
+  <!-- three tails -->
+  <g font-size="8.5">
+    <!-- sync -->
+    <rect x="24" y="182" width="308" height="150" rx="11" fill="#fdf6ec" stroke="#f0dcb8" filter="url(#sp)"/>
+    <text x="40" y="202" font-size="11" font-weight="700" fill="#9a6a1c">同步 · 阻塞</text>
+    <rect x="40" y="212" width="276" height="34" rx="7" fill="#fff" stroke="#f0dcb8"/><text x="52" y="228" fill="#9a6a1c">每调用一个临时 Pluckable CQ</text><text x="52" y="240" font-size="7" fill="#c1955a">BlockingUnaryCallImpl</text>
+    <rect x="40" y="252" width="276" height="34" rx="7" fill="#fff" stroke="#f0dcb8"/><text x="52" y="268" fill="#9a6a1c">cq.Pluck(tag) 阻塞等这一批</text><text x="52" y="280" font-size="7" fill="#c1955a">只等指定 tag 那一个事件</text>
+    <text x="40" y="304" font-size="8" fill="#c1955a">发一批、等这批 —— 天然阻塞语义</text>
+    <text x="40" y="320" font-size="8" fill="#c1955a">简单，但高并发反复建销 CQ</text>
+    <!-- async -->
+    <rect x="356" y="182" width="308" height="150" rx="11" fill="#fdf6ec" stroke="#f0dcb8" filter="url(#sp)"/>
+    <text x="372" y="202" font-size="11" font-weight="700" fill="#9a6a1c">异步 · CQ + tag</text>
+    <rect x="372" y="212" width="276" height="34" rx="7" fill="#fff" stroke="#f0dcb8"/><text x="384" y="228" fill="#9a6a1c">应用显式持有 CQ</text><text x="384" y="240" font-size="7" fill="#c1955a">下发后立即返回</text>
+    <rect x="372" y="252" width="276" height="34" rx="7" fill="#fff" stroke="#f0dcb8"/><text x="384" y="268" fill="#9a6a1c">Next / AsyncNext 轮询取事件</text><text x="384" y="280" font-size="7" fill="#c1955a">GOT_EVENT / TIMEOUT / SHUTDOWN</text>
+    <text x="372" y="304" font-size="8" fill="#c1955a">Next 是 AsyncNext 无限截止的特例</text>
+    <text x="372" y="320" font-size="8" fill="#c1955a">复用线程，适合高并发</text>
+    <!-- callback -->
+    <rect x="688" y="182" width="308" height="150" rx="11" fill="#f4eefb" stroke="#ddccef" filter="url(#sp)"/>
+    <text x="704" y="202" font-size="11" font-weight="700" fill="#6f3ea8">回调 · CallbackCQ</text>
+    <rect x="704" y="212" width="276" height="34" rx="7" fill="#fff" stroke="#ddccef"/><text x="716" y="228" fill="#6f3ea8">用 channel 内建共享 CallbackCQ</text><text x="716" y="240" font-size="7" fill="#9a76c0">非每调用一个临时 CQ</text>
+    <rect x="704" y="252" width="276" height="34" rx="7" fill="#fff" stroke="#ddccef"/><text x="716" y="268" fill="#6f3ea8">回调线程触发用户函数</text><text x="716" y="280" font-size="7" fill="#9a76c0">std::function&lt;void(Status)&gt;</text>
+    <text x="704" y="304" font-size="8" fill="#9a76c0">on_completion 包成 CallbackWithStatusTag</text>
+    <text x="704" y="320" font-size="8" fill="#9a76c0">无需应用线程主动 Next</text>
+  </g>
+
+  <!-- finalize -->
+  <rect x="24" y="352" width="972" height="46" rx="11" fill="#eafaf1" stroke="#b8e6cd" filter="url(#sp)"/>
+  <text x="40" y="372" font-size="11" font-weight="700" fill="#1c6b45">完成回填：FinalizeResult → 逐个 FinishOp</text>
+  <text x="40" y="389" font-size="8.5" fill="#5aa07d">把收到的 message 反序列化、把 trailing metadata 解析成 Status —— 三套 API 在此殊途同归</text>
+
+  <text x="24" y="424" font-size="9" fill="#4a4a4f">读法：无论同步/异步/回调，op 集合与下发路径完全相同；差异只在完成事件"由谁、如何"取回。</text>
+  <text x="24" y="440" font-size="9" fill="#6e6e73">不变量：CQ 只是事件交付队列、不自起线程；同步/异步须应用线程 Pluck/Next，仅回调 API 由内部回调线程驱动。</text>
+</svg>

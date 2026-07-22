@@ -32,11 +32,13 @@
 
 ## 深化 · 失败路径与边界
 
-- **认证失败早于 SQL**：pg_hba 不匹配、口令错、SSL 要求不满足都在 `ClientAuthentication` 阶段直接断连，客户端收到连接错误而非查询错误；改 pg_hba.conf 需 `reload`（无需重启）才对新连接生效，已建连接不受影响。
-- **权限检查在计划期就报错**：无表权限的 SELECT 在名称绑定/权限校验时即 `permission denied`（`aclcheck_error`），不进执行。列级 GRANT 下只授部分列时，`SELECT *` 会因缺列权限失败。
-- **RLS 静默过滤而非报错**：RLS 不报"无权限"，而是**让不满足 USING 的行不可见**——INSERT 违反 WITH CHECK 则报错，但 SELECT 只是少返回行；调试时易误判为"数据丢了"。
-- **owner/superuser 绕过 RLS**：默认表 owner 与超级用户不受 policy 约束，多租户场景须 `ALTER TABLE ... FORCE ROW LEVEL SECURITY` 才对 owner 生效。
-- **默认权限陷阱**：PUBLIC 默认对新库/schema 有部分权限；新建对象权限用 `ALTER DEFAULT PRIVILEGES` 统一，否则逐个补易漏。
+| 场景 | 机理 | 后果 / 应对 |
+|---|---|---|
+| 认证失败早于 SQL | pg_hba 不匹配/口令错/SSL 不满足在 `ClientAuthentication` 直接断连 | 客户端收连接错误而非查询错误；改 pg_hba.conf 需 `reload` 才对新连接生效，已建连接不受影响 |
+| 权限检查在计划期报错 | 无表权限 SELECT 在名称绑定/权限校验时即 `permission denied` | 不进执行；列级 GRANT 只授部分列时 `SELECT *` 因缺列权限失败 |
+| RLS 静默过滤而非报错 | RLS 让不满足 USING 的行不可见 | INSERT 违反 WITH CHECK 报错，但 SELECT 只是少返回行，易误判"数据丢了" |
+| owner/superuser 绕过 RLS | 表 owner 与超级用户默认不受 policy 约束 | 多租户须 `ALTER TABLE ... FORCE ROW LEVEL SECURITY` 才对 owner 生效 |
+| 默认权限陷阱 | PUBLIC 默认对新库/schema 有部分权限 | 新建对象权限用 `ALTER DEFAULT PRIVILEGES` 统一，否则逐个补易漏 |
 
 ---
 

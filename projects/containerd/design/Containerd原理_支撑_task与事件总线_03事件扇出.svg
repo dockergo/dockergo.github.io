@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="940" height="420" viewBox="0 0 940 420" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="arg" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#5aa06e"/></marker>
+    <marker id="arp" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#a066c0"/></marker>
+    <marker id="arb" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#8fa0c0"/></marker>
+  </defs>
+  <rect width="940" height="420" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">事件总线 · Publish / Subscribe 扇出，生产者不认识消费者</text>
+
+  <!-- legend -->
+  <rect x="590" y="17" width="12" height="12" rx="3" fill="#f5faf6" stroke="#cfe6d2"/><text x="607" y="27" font-size="10" fill="#6e6e73">运行时事件源</text>
+  <rect x="694" y="17" width="12" height="12" rx="3" fill="#faf4fb" stroke="#e4cdea"/><text x="711" y="27" font-size="10" fill="#6e6e73">exchange 总线</text>
+  <rect x="800" y="17" width="12" height="12" rx="3" fill="#f6f8fc" stroke="#cfe0f2"/><text x="817" y="27" font-size="10" fill="#6e6e73">订阅者</text>
+
+  <!-- 事件源 -->
+  <rect x="30" y="96" width="210" height="128" rx="12" fill="#f5faf6" stroke="#cfe6d2" filter="url(#soft)"/>
+  <text x="135" y="120" font-size="11.5" font-weight="600" fill="#1d8f3f" text-anchor="middle">事件源 · 运行时 / shim</text>
+  <text x="46" y="144" font-size="9.5" fill="#4a8a5c">task 状态变化即发事件</text>
+  <text x="46" y="164" font-size="9.5" fill="#4a8a5c">TaskExit / start / delete …</text>
+  <text x="46" y="186" font-size="9.5" fill="#4a8a5c">Publish(topic, event)</text>
+  <text x="46" y="206" font-size="9.5" fill="#4a8a5c">topic 如 /tasks/exit</text>
+
+  <!-- exchange -->
+  <rect x="300" y="96" width="200" height="128" rx="12" fill="#faf4fb" stroke="#e4cdea" filter="url(#soft)"/>
+  <text x="400" y="120" font-size="11.5" font-weight="600" fill="#8944ab" text-anchor="middle">events exchange</text>
+  <text x="316" y="146" font-size="9.5" fill="#8944ab">按 topic + namespace 过滤</text>
+  <text x="316" y="168" font-size="9.5" fill="#8944ab">Publish → 扇出所有匹配订阅</text>
+  <text x="316" y="190" font-size="9.5" fill="#8944ab">生产者不认识消费者</text>
+  <text x="316" y="210" font-size="9.5" fill="#8944ab">解耦：消费端问题不反压</text>
+
+  <path d="M240 160 L298 160" fill="none" stroke="#5aa06e" stroke-width="1.7" marker-end="url(#arg)"/>
+  <text x="246" y="152" font-size="9" fill="#1d8f3f">Publish</text>
+
+  <!-- 订阅者 -->
+  <rect x="560" y="90" width="352" height="54" rx="10" fill="#f6f8fc" stroke="#cfe0f2" filter="url(#soft)"/>
+  <text x="576" y="112" font-size="10.5" font-weight="600" fill="#5b7db1">CRI plugin（订阅 /tasks/exit）</text>
+  <text x="576" y="130" font-size="9.5" fill="#5b7db1">据此更新 Pod / 容器状态 → 回报 kubelet</text>
+
+  <rect x="560" y="152" width="352" height="52" rx="10" fill="#f6f8fc" stroke="#cfe0f2" filter="url(#soft)"/>
+  <text x="576" y="174" font-size="10.5" font-weight="600" fill="#5b7db1">监控 / metrics</text>
+  <text x="576" y="192" font-size="9.5" fill="#5b7db1">计数、观测容器生命周期变化</text>
+
+  <rect x="560" y="212" width="352" height="52" rx="10" fill="#f6f8fc" stroke="#cfe0f2" filter="url(#soft)"/>
+  <text x="576" y="234" font-size="10.5" font-weight="600" fill="#5b7db1">ctr events / 其它订阅者</text>
+  <text x="576" y="252" font-size="9.5" fill="#5b7db1">命令行实时观察，按需接入</text>
+
+  <path d="M500 150 L558 117" fill="none" stroke="#8fa0c0" stroke-width="1.5" marker-end="url(#arb)"/>
+  <path d="M500 162 L558 178" fill="none" stroke="#8fa0c0" stroke-width="1.5" marker-end="url(#arb)"/>
+  <path d="M500 174 L558 238" fill="none" stroke="#8fa0c0" stroke-width="1.5" marker-end="url(#arb)"/>
+  <text x="512" y="200" font-size="9" fill="#5b7db1">Subscribe</text>
+
+  <!-- caption -->
+  <rect x="30" y="290" width="882" height="112" rx="10" fill="#f8f8fb" stroke="#eceaf0"/>
+  <text x="46" y="316" font-size="11" fill="#6e6e73"><tspan font-weight="600" fill="#1d1d1f">核心：</tspan>运行时把状态变化 Publish 成事件，exchange 按 topic/namespace 扇出给所有订阅者——生产者无需知道有哪些消费者，两端彻底解耦。</text>
+  <text x="46" y="340" font-size="10.5" fill="#6e6e73"><tspan font-weight="600" fill="#c0392b">事件是"变化通知"而非真源：</tspan>真源在元数据库 / shim；丢事件不致命，订阅者据事件"去查真实状态"即可，与 k8s level-triggered 精神相通。</text>
+  <text x="46" y="362" font-size="10.5" fill="#6e6e73"><tspan font-weight="600" fill="#5b7db1">exec 独立记账：</tspan>exec 进程有自己的 process id，DeleteProcess 单独清理、不动容器主 task。</text>
+  <text x="46" y="384" font-size="9.5" fill="#a1a1a6">锚点见下方"exchange 与 PlatformRuntime"表与"task 操作与对应事件"表（local.go / exchange.go / runtime.go）。</text>
+</svg>

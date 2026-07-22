@@ -10,12 +10,12 @@
 
 ![StarRocks CBO 三阶段](StarRocks原理_优化_01CBO.svg)
 
-`Optimizer` 是接口(`fe/.../sql/optimizer/Optimizer.java:19`),主实现 **QueryOptimizer**。`optimizeByCost`(`QueryOptimizer.java:250`)三阶段:
-1. **逻辑改写(RBO)**:`rewriteAndValidatePlan`(`:261`)——谓词下推、列裁剪、常量折叠等定点改写。
-2. **Memo 初始化**:`memo.init`(`:265`)把计划树 copyIn 成 Group + GroupExpression(`Memo.java:91`),`Join(Scan A, Scan B)` → 3 个 Group;`deriveAllGroupLogicalProperty` 推导逻辑属性。
-3. **Cascades 搜索**:`memoOptimize`(`:278`)→ `extractBestPlan`(`:287`)→ `physicalRuleRewrite`(`:308`)。
+`Optimizer` 是接口,主实现 **QueryOptimizer**。`optimizeByCost` 三阶段:
+1. **逻辑改写(RBO)**:`rewriteAndValidatePlan`——谓词下推、列裁剪、常量折叠等定点改写。
+2. **Memo 初始化**:`memo.init` 把计划树 copyIn 成 Group + GroupExpression(`Join(Scan A, Scan B)` → 3 个 Group),`deriveAllGroupLogicalProperty` 推导逻辑属性。
+3. **Cascades 搜索**:`memoOptimize → extractBestPlan → physicalRuleRewrite`。
 
-搜索由**任务队列**驱动:`OptimizeGroupTask/ExploreGroupTask/OptimizeExpressionTask/ApplyRuleTask/EnforceAndCostTask/DeriveStatsTask` 经 `TaskScheduler` 调度(`QueryOptimizer.java:956`)。规则分**转换**(logical→logical,`rule/transformation/`)与**实现**(logical→physical,`rule/implementation/` 如 `HashJoinImplementationRule`),基类 `Rule` 持 `RuleType`+`Pattern`+`transform`(`Rule.java:45`)。
+搜索由**任务队列**驱动:`OptimizeGroupTask/ExploreGroupTask/OptimizeExpressionTask/ApplyRuleTask/EnforceAndCostTask/DeriveStatsTask` 经 `TaskScheduler` 调度。规则分**转换**(logical→logical)与**实现**(logical→physical,如 `HashJoinImplementationRule`),基类 `Rule` 持 `RuleType` + `Pattern` + `transform`。
 
 ---
 
@@ -23,11 +23,11 @@
 
 ![StarRocks 代价模型与统计](StarRocks原理_优化_02代价统计.svg)
 
-代价是择优的标尺。**CostModel**(`fe/.../sql/optimizer/cost/CostModel.java:129`)加权求和:`realCost = cpu*0.5 + memory*2 + network*1.5`;每算子代价由 `CostEstimator`(`OperatorVisitor`)分别估(`visitPhysicalOlapScan`/`visitPhysicalHashJoin`/`visitPhysicalHashAggregate`,`:171,469,265`)。
+代价是择优的标尺。**CostModel** 加权求和:`realCost = cpu*0.5 + memory*2 + network*1.5`;每算子代价由 `CostEstimator`(`OperatorVisitor`)分别估(`visitPhysicalOlapScan` / `visitPhysicalHashJoin` / `visitPhysicalHashAggregate`)。
 
-统计来源 **ColumnStatistic**(`statistics/ColumnStatistic.java:24`):`min/max/nullsFraction/averageRowSize/distinctValuesCount`(+可选直方图)。**StatisticsCalculator**(`statistics/StatisticsCalculator.java:197`)自底向上推每个算子的行数/列统计,谓词选择率由 `PredicateStatisticsCalculator`。收集(ANALYZE)由 `FullStatisticsCollectJob`/`SampleStatisticsCollectJob` 生成 SQL 算 `COUNT/NDV(hll)/null/min/max`,存进 `_statistics_.column_statistics` 等表(`StatsConstants.java:67`)。
+统计来源 **ColumnStatistic**:`min/max/nullsFraction/averageRowSize/distinctValuesCount`(+可选直方图)。**StatisticsCalculator** 自底向上推每个算子的行数/列统计,谓词选择率由 `PredicateStatisticsCalculator`。收集(ANALYZE)由 `FullStatisticsCollectJob` / `SampleStatisticsCollectJob` 生成 SQL 算 `COUNT/NDV(hll)/null/min/max`,存进 `_statistics_.column_statistics` 等表。
 
-**EnforceAndCostTask**(`task/EnforceAndCostTask.java:147`)是 Cascades 给物理表达式定价的地方:`curTotalCost += CostModel.calculateCost(ge)` + 子最优代价,对上界剪枝(`:189`),并强制子节点的输出属性(必要时插 Exchange,`:205`)。
+**EnforceAndCostTask** 是 Cascades 给物理表达式定价的地方:`curTotalCost += CostModel.calculateCost(ge)` + 子最优代价,对上界剪枝,并强制子节点的输出属性(必要时插 Exchange)。
 
 ---
 
@@ -35,14 +35,14 @@
 
 ![StarRocks Join 重排](StarRocks原理_优化_03Join重排.svg)
 
-Join 顺序对性能影响巨大。`memoOptimize` 里(`QueryOptimizer.java:966`):inner/cross join 数 `< cboMaxReorderNode` 时,超阈值走穷举 `ReorderJoinRule`,否则把交换律/结合律/left-asscom 规则加进 memo 让搜索自然探索。
+Join 顺序对性能影响巨大。`memoOptimize` 里:inner/cross join 数 `< cboMaxReorderNode` 时走穷举 `ReorderJoinRule`,否则把交换律/结合律/left-asscom 规则加进 memo 让搜索自然探索。
 
-`ReorderJoinRule.enumerate`(`rule/join/ReorderJoinRule.java:257`)三算法分级:
+`ReorderJoinRule.enumerate` 三算法分级:
 - 总是 **JoinReorderLeftDeep**(左深树,兜底);
 - `atomSize ≤ 62 && ≤ cboMaxReorderNodeUseDP && 开 DP` → **JoinReorderDP**(动态规划,~10 表内最优);
 - `≤ cboMaxReorderNodeUseGreedy` → **JoinReorderGreedy**(贪心,大 Join 图)。
 
-统计未知时退化为仅左深(`:260`)——**没统计就没 CBO**,这是 ANALYZE 重要的原因。
+统计未知时退化为仅左深——**没统计就没 CBO**,这是 ANALYZE 重要的原因。
 
 ---
 
@@ -51,10 +51,21 @@ Join 顺序对性能影响巨大。`memoOptimize` 里(`QueryOptimizer.java:966`)
 ![StarRocks RF 与 MV 改写](StarRocks原理_优化_04RF与MV.svg)
 
 - **Runtime Filter**:FE 规划 `RuntimeFilterDescription` + `RuntimeFilterPushDownContext`(`planner/RuntimeFilterDescription.java`),把 Join 构建侧的谓词(如 build 侧 key 集合)下推到探测侧扫描,BE 侧 `be/src/storage/runtime_filter_predicate.h` 在扫描层就过滤——大幅减少参与 Join 的行。
-- **CTE 复用**:`CTEContext`(`sql/optimizer/CTEContext.java:38`)决定 CTE 内联还是复用:复用关闭或消费者只用一次则内联;`isForceCTE`/比例阈值触发复用(算一次多处用)。规则 `CollectCTEProduce/Consume`、`InlineOneCTEConsume`、`ForceCTEReuse`。
-- **物化视图透明改写**:`BaseMaterializedViewRewriteRule`(`rule/transformation/materialization/`)+ `MvRewriteStrategy`(单表/多表/CBO/视图改写开关)把命中 MV 的查询自动重写到 MV,用户无感知加速;改写后 `MVRewriteValidator.validateMV` 校验(`QueryOptimizer.java:330`)。
+- **CTE 复用**:`CTEContext` 决定 CTE 内联还是复用:复用关闭或消费者只用一次则内联;`isForceCTE`/比例阈值触发复用(算一次多处用)。规则 `CollectCTEProduce/Consume`、`InlineOneCTEConsume`、`ForceCTEReuse`。
+- **物化视图透明改写**:`BaseMaterializedViewRewriteRule` + `MvRewriteStrategy`(单表/多表/CBO/视图改写开关)把命中 MV 的查询自动重写到 MV,用户无感知加速;改写后 `MVRewriteValidator.validateMV` 校验。
 
 ---
+
+## 深化 · 源码坐标（统计 / 规则 / CTE / MV）
+
+| 结构 | 定义 | 职责 |
+|---|---|---|
+| ColumnStatistic | `statistics/ColumnStatistic.java:24` | min/max/nulls/ndv/rowSize |
+| StatsConstants | `statistics/StatsConstants.java:67` | ANALYZE 存储表常量 |
+| Rule 基类 | `sql/optimizer/rule/Rule.java:45` | RuleType+Pattern+transform |
+| CTEContext | `sql/optimizer/CTEContext.java:38` | CTE 内联 vs 复用决策 |
+| MVRewriteValidator | `QueryOptimizer.java:330` | MV 透明改写后校验 |
+| Cascades 任务队列 | `QueryOptimizer.java:956` | TaskScheduler 驱动搜索 |
 
 ## 拓展 · 优化技术关键结构一览
 

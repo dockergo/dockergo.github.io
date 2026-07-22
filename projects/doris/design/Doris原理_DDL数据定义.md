@@ -20,7 +20,7 @@
 
 ![执行并写 EditLog](Doris原理_DDL_03执行EditLog.svg)
 
-Master 改完内存后，把变更序列化成一条 op 记录写入 Journal：统一出口 `EditLog.logEdit`（`fe/fe-core/src/main/java/org/apache/doris/persist/EditLog.java:1585`）；不同 DDL 对应不同 op，如建表 `logCreateTable`（`EditLog.java:1673`）、变更作业 `logAlterJob`（`EditLog.java:2158`）、改表属性 `logModifyTableProperty`（`EditLog.java:2185`）。写入经 BDBJE 复制到多数派 Follower 后才算"提交"。
+Master 改完内存后,把变更序列化成一条 op 记录写入 Journal(统一出口 `EditLog.logEdit`,不同 DDL 对应不同 op)。写入经 BDBJE 复制到多数派 Follower 后才算"提交"。
 
 ---
 
@@ -32,9 +32,16 @@ Follower/Observer 按 Journal 位点顺序拉取、Replay 到本地内存 Metada
 
 ## 阶段四 · 涉及数据的 DDL：下发 BE
 
-Schema Change、Rollup、物化视图等触及数据的 DDL，Master 改元数据的同时向 **BE** 下发任务（建 Tablet、转换数据、构建索引），由异步作业驱动，BE 完成后回报。入口 `Alter.processAlterTable`（`fe/fe-core/src/main/java/org/apache/doris/alter/Alter.java:639`）按 AlterClause 分派到 `SchemaChangeHandler`（`fe/fe-core/src/main/java/org/apache/doris/alter/SchemaChangeHandler.java:140`）等 handler；物化视图走 `processCreateMaterializedView`（`Alter.java:142`）。
+Schema Change、Rollup、物化视图等触及数据的 DDL,Master 改元数据的同时向 **BE** 下发任务(建 Tablet、转换数据、构建索引),由异步作业驱动,BE 完成后回报。
 
-**CREATE TABLE 是"同步建 Tablet"的特例**：建表入口 `InternalCatalog.createTable`（`fe/fe-core/src/main/java/org/apache/doris/datasource/InternalCatalog.java:1203`）分派到 `createOlapTable`（`InternalCatalog.java:2349`）；FE 内存组装表对象后为每个 Tablet 的每个 Replica 选定 BE、下发建 Tablet 任务，用 `MarkedCountDownLatch`（`InternalCatalog.java:2102`）**同步阻塞等待所有 BE 回报建好或超时**，之后才写 EditLog 并返回成功；实际发任务在 `createTablets`（`InternalCatalog.java:3402`）。
+**CREATE TABLE 是"同步建 Tablet"的特例**:FE 内存组装表对象后,为每个 Tablet 的每个 Replica 选定 BE、下发建 Tablet 任务,**同步阻塞等待所有 BE 回报建好或超时**,之后才写 EditLog 并返回成功。
+
+## 深化 · 涉数据 DDL 的同步 / 异步之分
+
+| 类别 | 典型 DDL | BE 下发 | FE 是否阻塞等 |
+|---|---|---|---|
+| 异步作业 | Schema Change / Rollup / 物化视图 | 建 Tablet + 转换数据 + 构建索引 | 否,作业驱动、BE 回报 |
+| 同步特例 | CREATE TABLE | 建空 Tablet 副本 | 是,全副本回报或超时才写 EditLog |
 
 ---
 

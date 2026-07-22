@@ -18,7 +18,7 @@
 | **Routine Load** | Kafka/Pulsar 流 | 常驻消费 | `RoutineLoadScheduler`(`load/routineload/RoutineLoadScheduler.java:51`) |
 | **Insert Overwrite** | SELECT 结果覆盖 | 前台查询 | `StmtExecutor.handleInsertOverwrite`(`:3195`) |
 
-共性:都先 `beginTransaction`(INSERT 在 `StatementPlanner.plan` 里就开了,`StatementPlanner.java:120`),写完 `commit`,由 publish 守护推到可见。
+共性:都先 `beginTransaction`(INSERT 在 `StatementPlanner.plan` 里就开事务),写完 `commit`,由 publish 守护推到可见。
 
 ---
 
@@ -26,7 +26,7 @@
 
 ![StarRocks INSERT 执行路径](StarRocks原理_DML_02INSERT.svg)
 
-`INSERT ... SELECT` 复用查询执行框架:`handleDMLStmt`(`StmtExecutor.java:3300`)拿到规划阶段已开的 `TransactionState`(`:3391`),跑协调器 `coord.join(timeout)`(`:3484`)——SELECT 侧照常 MPP 执行,结果经 OlapTableSink 写进目标表的 Tablet。全部实例完成后 `retryCommitOnRateLimitExceeded` 提交返回 `VisibleStateWaiter`(`:3706`),失败则 `abortTransaction`(`:3561`);收尾回调 `onDMLStmtJobTransactionFinish`(`:3816`)。
+`INSERT ... SELECT` 复用查询执行框架:`handleDMLStmt` 拿到规划阶段已开的 `TransactionState`,跑协调器 `coord.join` 等 MPP 执行——SELECT 侧照常并行,结果经 OlapTableSink 写进目标表 Tablet;全部实例完成后提交并等 `VisibleStateWaiter`,失败则 `abortTransaction`,收尾回调 `onDMLStmtJobTransactionFinish`。坐标见深化表。
 
 **Insert Overwrite** 用临时分区 + 原子替换:先写临时分区,成功后整体换入,失败不影响原数据(`InsertOverwriteJobRunner`)。
 
@@ -36,9 +36,9 @@
 
 ![StarRocks 三种 Load](StarRocks原理_DML_03三种Load.svg)
 
-- **Stream Load**(同步 HTTP):客户端 PUT 一批数据,`StreamLoadMgr.beginLoadTaskFromFrontend`(`StreamLoadMgr.java:172`)建 `StreamLoadTask`、`beginTxnFromFrontend`(`:189`)开事务,同步返回 JSON 看 Status;label 保证幂等(重复 label 拒绝)。
-- **Broker Load**(异步拉取):`BrokerLoadJob extends BulkLoadJob`(`BrokerLoadJob.java:108`),`beginTxn`(`:142`)后 `unprotectedExecuteJob` 派 `BrokerPendingTask`(`:176`)从 HDFS/S3 拉大文件,适合 TB 级批量。
-- **Routine Load**(常驻流):两个守护——`RoutineLoadScheduler`(`RoutineLoadScheduler.java:51`)调度作业,`RoutineLoadTaskScheduler`(`:77`)`scheduleOneTask → allocateTaskToBe → submitTask`(`:262`)把 Kafka/Pulsar 分区任务分给 BE 持续消费(`KafkaRoutineLoadJob`/`PulsarRoutineLoadJob`)。
+- **Stream Load**(同步 HTTP):客户端 PUT 一批数据,`StreamLoadMgr.beginLoadTaskFromFrontend` 建 `StreamLoadTask`、`beginTxnFromFrontend` 开事务,同步返回 JSON 看 Status;label 保证幂等(重复 label 拒绝)。
+- **Broker Load**(异步拉取):`BrokerLoadJob extends BulkLoadJob`,`beginTxn` 后 `unprotectedExecuteJob` 派 `BrokerPendingTask` 从 HDFS/S3 拉大文件,适合 TB 级批量。
+- **Routine Load**(常驻流):两个守护——`RoutineLoadScheduler` 调度作业,`RoutineLoadTaskScheduler` 经 `scheduleOneTask → allocateTaskToBe → submitTask` 把 Kafka/Pulsar 分区任务分给 BE 持续消费(`KafkaRoutineLoadJob` / `PulsarRoutineLoadJob`)。
 
 ---
 
@@ -52,6 +52,7 @@
 | RoutineLoadScheduler | `load/routineload/RoutineLoadScheduler.java:51` | Routine Load 调度 |
 | RoutineLoadTaskScheduler | `load/routineload/RoutineLoadTaskScheduler.java:77` | 分区任务派发 BE |
 | InsertOverwriteJobRunner | `load/InsertOverwriteJobRunner.java` | 覆盖写(临时分区替换) |
+| INSERT SELECT 子步 | `StmtExecutor.java` 3391 事务态 / 3484 coord.join / 3706 VisibleStateWaiter / 3561 abort / 3816 收尾 | 复用 MPP 写入的关键行号 |
 
 ## 调优要点（关键开关）
 

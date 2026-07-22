@@ -33,7 +33,7 @@ Linux **不区分"创建进程"和"创建线程"的系统调用**——`fork`/`v
 
 ![exec 替换执行映像：选 binfmt → 越过不可回头点 → 收编线程组、整体换地址空间](Linux原理_进程_04exec映像.svg)
 
-`exec` **不创建新任务**，而是把当前 `task_struct` 的执行映像整体换掉。入口 `do_execveat_common`（`fs/exec.c:1778`）建立 `linux_binprm`（bprm，承载新程序文件、参数、环境）→ `bprm_execve`（`exec.c:1724`）→ `exec_binprm` → `search_binary_handler`（`exec.c:1645`，按 ELF 等格式选 binfmt 处理器）→ **`begin_new_exec`（`exec.c:1091`）是不可回头点**：`de_thread` 先把线程组里其它线程全部收掉（`exec.c:1115`），再 `exec_mmap`（`exec.c:1148`）**卸下旧 `mm`、挂上全新地址空间**。此后旧代码/数据/堆栈全部消失，新程序从入口开始跑——`pid` 不变，但"里面的人"换了。
+`exec` **不创建新任务**，而是把当前 `task_struct` 的执行映像整体换掉：入口 `do_execveat_common` 建 `linux_binprm`（承载新程序文件、参数、环境）→ `search_binary_handler` 按 ELF 等格式选 binfmt 处理器。**`begin_new_exec` 是不可回头点**——先 `de_thread` 收掉线程组里其它线程，再 `exec_mmap` 卸下旧 `mm`、挂上全新地址空间；此后旧代码/数据/堆栈全部消失，新程序从入口开始跑。**`pid` 不变，但"里面的人"换了**。各阶段函数与行号见图内标注。
 
 ## 深化 · exit / wait 与僵尸回收
 

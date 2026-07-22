@@ -5,14 +5,14 @@
   </defs>
   <rect width="1060" height="760" fill="#fbfbfd"/>
   <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">读取路径 + PREWHERE：先读判断列过滤，再按存活行读投影列</text>
-  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">MergeTreeReadPoolBase → MergeTreeSelectProcessor → MergeTreeRangeReader · WHERE→PREWHERE 自动 (optimize_move_to_prewhere 默认 true, Settings.cpp:722)</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">MergeTreeReadPoolBase → MergeTreeSelectProcessor → MergeTreeRangeReader · WHERE→PREWHERE 自动 (optimize_move_to_prewhere 默认 true, Settings)</text>
 
   <!-- top flow -->
   <g text-anchor="middle">
     <rect x="30" y="78" width="150" height="70" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/><text x="105" y="104" font-size="10.5" font-weight="600" fill="#1b2a4a">裁剪得 MarkRange</text><text x="105" y="122" font-size="8.5" fill="#5b7db1">主键 + 跳数 + 分区</text><text x="105" y="137" font-size="8.5" fill="#5b7db1">→ 要读的 granule 段</text>
-    <rect x="204" y="78" width="160" height="70" rx="11" fill="#f3f7fc" stroke="#cfe0f2" filter="url(#soft)"/><text x="284" y="100" font-size="10.5" font-weight="600" fill="#274a78">ReadPool 分派</text><text x="284" y="118" font-size="8.5" fill="#5b7db1">MergeTreeReadPoolBase.h:10</text><text x="284" y="133" font-size="8.5" fill="#5b7db1">MarkRange → 多线程任务</text>
+    <rect x="204" y="78" width="160" height="70" rx="11" fill="#f3f7fc" stroke="#cfe0f2" filter="url(#soft)"/><text x="284" y="100" font-size="10.5" font-weight="600" fill="#274a78">ReadPool 分派</text><text x="284" y="118" font-size="8.5" fill="#5b7db1">MergeTreeReadPoolBase</text><text x="284" y="133" font-size="8.5" fill="#5b7db1">MarkRange → 多线程任务</text>
     <rect x="388" y="78" width="160" height="70" rx="11" fill="#f3f7fc" stroke="#cfe0f2" filter="url(#soft)"/><text x="468" y="100" font-size="10.5" font-weight="600" fill="#274a78">SelectProcessor</text><text x="468" y="118" font-size="8.5" fill="#5b7db1">驱动逐 task 读取</text><text x="468" y="133" font-size="8.5" fill="#5b7db1">交给 RangeReader</text>
-    <rect x="572" y="78" width="180" height="70" rx="11" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/><text x="662" y="100" font-size="10.5" font-weight="600" fill="#12402a">RangeReader 分步读</text><text x="662" y="118" font-size="8.5" fill="#2f6f4f">PrewhereExprInfo::steps</text><text x="662" y="133" font-size="8.5" fill="#2f6f4f">MergeTreeRangeReader.h:50</text>
+    <rect x="572" y="78" width="180" height="70" rx="11" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/><text x="662" y="100" font-size="10.5" font-weight="600" fill="#12402a">RangeReader 分步读</text><text x="662" y="118" font-size="8.5" fill="#2f6f4f">PrewhereExprInfo::steps</text><text x="662" y="133" font-size="8.5" fill="#2f6f4f">MergeTreeRangeReader</text>
     <rect x="776" y="78" width="254" height="70" rx="11" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/><text x="903" y="100" font-size="10.5" font-weight="600" fill="#5a3410">输出向量化 Block</text><text x="903" y="118" font-size="8.5" fill="#93762e">交执行引擎 Pipeline</text><text x="903" y="133" font-size="8.5" fill="#93762e">见「执行引擎」主线</text>
   </g>
   <g stroke="#c7c7cc" stroke-width="1.5" fill="none">
@@ -24,7 +24,7 @@
 
   <!-- PREWHERE deep dive -->
   <text x="45" y="188" font-size="13" font-weight="700" fill="#12402a">PREWHERE 是什么：为什么能省 IO</text>
-  <text x="45" y="206" font-size="9.5" fill="#4c8567">tryBuildPrewhereSteps (MergeTreeSplitPrewhereIntoReadSteps.cpp:209) 把过滤拆成多步，executePrewhereActionsAndFilterColumns 逐步应用</text>
+  <text x="45" y="206" font-size="9.5" fill="#4c8567">tryBuildPrewhereSteps 把过滤拆成多步，executePrewhereActionsAndFilterColumns 逐步应用</text>
 
   <!-- without prewhere -->
   <rect x="40" y="222" width="470" height="240" rx="14" fill="#fbeef0" stroke="#f0cdd4"/>
@@ -49,7 +49,7 @@
   <!-- auto move -->
   <rect x="40" y="484" width="990" height="118" rx="13" fill="#f3f7fc" stroke="#cfe0f2"/>
   <text x="60" y="506" font-size="12" font-weight="700" fill="#274a78">自动化：MergeTreeWhereOptimizer 把 WHERE 里选择性高的条件下移为 PREWHERE</text>
-  <text x="60" y="528" font-size="9.5" fill="#5b7db1">· MergeTreeWhereOptimizer.h:34 · 默认开启 optimize_move_to_prewhere（Settings.cpp:722）——用户写普通 WHERE 也能享受</text>
+  <text x="60" y="528" font-size="9.5" fill="#5b7db1">MergeTreeWhereOptimizer · 默认开启 optimize_move_to_prewhere——用户写普通 WHERE 也能享受</text>
   <text x="60" y="546" font-size="9.5" fill="#5b7db1">· 可多步 PREWHERE：先最便宜/最能筛的条件，层层缩小存活集，再逐步读更贵的列</text>
   <text x="60" y="564" font-size="9.5" fill="#5b7db1">· 手写 PREWHERE 可覆盖优化器判断（当你比统计更了解选择性时）</text>
   <text x="60" y="586" font-size="9.5" fill="#8aa6cf">· 本质：把"过滤"尽量前移、把"读宽列"尽量后延，是列存 + 稀疏索引之外第三大读性能杠杆</text>

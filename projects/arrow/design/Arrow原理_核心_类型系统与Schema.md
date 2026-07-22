@@ -14,6 +14,12 @@
 
 图示 `DataType` 派生出的类型树、layout 各异：定长（[validity, 定宽值]）、变长/列表（+ offset + 子数组）、嵌套（Struct 每字段一个 child_data）、编码类型（Dictionary = index 数组 + 独立去重字典）、视图/扩展。**不变量**：`DictionaryType`（type.h:1927）尤其体现"逻辑 ≠ 物理"——逻辑一列字符串、物理是小整数 index + 一份去重字典，低基数列大幅省内存（也是 IPC 要专发 DictionaryBatch 的原因）；`ExtensionType`（extension_type.h:39）在 storage type 上贴自定义语义，收端认不得就退化成 storage type、向后兼容。
 
+## 三、逻辑 ≠ 物理：一种布局多种语义
+
+![逻辑非物理](Arrow原理_核心_类型系统与Schema_03逻辑非物理.svg)
+
+图示同一份 8 字节 int64 字节，被不同 `DataType`「透镜」解读成不同逻辑值：`Int64` 是整数、`Timestamp(us)` 是 Unix 微秒时刻、`Date64` 是毫秒日期——物理布局完全相同。**不变量**：`Equals`（type.h:147）只认逻辑相等，`Timestamp≠Int64`、`Binary≠List<UInt8>`（type.h:145-146 注释"logically convertible … are NOT equal"）；`DataType` 既是"解读字节的透镜"（`Array` 存字节、`DataType` 决定当作整数/时间戳/偏移），也是 compute `DispatchExact` 选实现的派发键。
+
 ## 深化 · 类型家族与 layout 对照
 
 | 类别 | 代表类型（锚点） | buffer 布局要点 |
@@ -29,10 +35,6 @@
 | 视图型 | `StringViewType`（type.h:931） | 变长 buffer 之外多个 data buffer（variadic） |
 
 `Schema` 侧 `GetFieldByName`（type.h:2370）/ `GetFieldIndex`（type.h:2376）提供按名定位列的入口。
-
-## 深化 · 逻辑 ≠ 物理：一种布局多种语义
-
-同一物理布局可承载不同逻辑类型：`Timestamp`、`Date64`、`Int64` 物理都是 8 字节定长（int64），逻辑语义却不同。反过来 `Equals`（type.h:147）只认逻辑相等——`List<UInt8>` 与 `Binary` 物理相似但 NOT equal（type.h:145-146 注释明说"logically convertible ... are NOT equal"）。所以 `DataType` 是"解读字节的透镜"：`Array` 存字节，`DataType` 决定这些字节被当作整数、时间戳还是字符串偏移。这也是 compute 内核按类型 `DispatchExact` 选实现的依据——类型是派发键。
 
 ## 深化 · 为什么类型与数据分离
 

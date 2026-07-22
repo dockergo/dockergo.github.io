@@ -10,7 +10,7 @@
 
 ![StarRocks 认证链](StarRocks原理_DCL_01认证.svg)
 
-`AuthenticationHandler.authenticate`(`fe/.../authentication/AuthenticationHandler.java:50`)先试**原生认证** `authenticateWithNative`(`:63`)再试**安全集成** `authenticateWithSecurityIntegration`(`:68`)。原生按 `AuthPlugin`(`:97`)经 `AuthenticationProviderFactory.create`(`:98`)选 provider 再 `authenticate(...)`(`:115`)。
+`AuthenticationHandler.authenticate` 先试**原生认证** `authenticateWithNative`,失败再试**安全集成** `authenticateWithSecurityIntegration`。原生认证按 `AuthPlugin` 经 `AuthenticationProviderFactory` 选 provider 再验证。
 
 支持的认证 provider(`fe/.../authentication/`):
 - `PlainPasswordAuthenticationProvider`(密码)
@@ -26,11 +26,11 @@
 
 ![StarRocks RBAC 授权](StarRocks原理_DCL_02RBAC.svg)
 
-授权门面 **Authorizer**(`fe/.../sql/analyzer/Authorizer.java:48`):`check(stmt, ctx)`(`:59`)跑权限检查 AST 访问器,`checkSystemAction`/`checkTableAction` 路由到对应 catalog 的 `AccessController`。它在规划阶段(`StatementPlanner.java:139`)与 `StmtExecutor`(`:823`)被调。
+授权门面 **Authorizer**:`check(stmt, ctx)` 跑权限检查 AST 访问器,`checkSystemAction` / `checkTableAction` 路由到对应 catalog 的 `AccessController`。它在规划阶段与 `StmtExecutor` 被调。
 
-原生控制器 **NativeAccessController**(`fe/.../authorization/NativeAccessController.java`):`checkTableAction`(`:90`)调 `manager.provider.check(objectType, privilegeType, object, collection)`(`:298`)。RBAC 存储 **AuthorizationMgr**(`fe/.../authorization/AuthorizationMgr.java:75`)持 `AuthorizationProvider` + `Map<Long, RolePrivilegeCollectionV2>`(角色→权限集,`:88`)。检查 `checkAction`(`:892`)在 `mergePrivilegeCollection(user, groups, roleIds)`(`:1001`)合并出的权限集上判定——**用户的有效权限 = 直授 + 所有激活角色 + 组**。
+原生控制器 **NativeAccessController**:`checkTableAction` 调 `provider.check(objectType, privilegeType, object, collection)`。RBAC 存储 **AuthorizationMgr** 持 `AuthorizationProvider` + `Map<Long, RolePrivilegeCollectionV2>`(角色→权限集)。检查在 `mergePrivilegeCollection(user, groups, roleIds)` 合并出的权限集上判定——**用户有效权限 = 直授 + 所有激活角色 + 组**。
 
-权限模型(`authorization/PrivilegeType.java`):`INSERT`/`SELECT`/`CREATE_TABLE`… × 对象类型(`ObjectType.java`:CATALOG/DATABASE/TABLE/…),条目 `PrivilegeEntry`,内置 root 角色(`PrivilegeBuiltinConstants.java:282`)。
+权限模型:`PrivilegeType`(`INSERT` / `SELECT` / `CREATE_TABLE`…)× 对象类型 `ObjectType`(CATALOG / DATABASE / TABLE…),条目 `PrivilegeEntry`,内置 root 角色见 `PrivilegeBuiltinConstants`。
 
 ---
 
@@ -51,6 +51,7 @@
 | Authorizer | `sql/analyzer/Authorizer.java:48` | 授权门面 |
 | NativeAccessController | `authorization/NativeAccessController.java:90` | 原生权限检查 |
 | AuthorizationMgr | `authorization/AuthorizationMgr.java:75` | RBAC 存储(角色→权限) |
+| mergePrivilegeCollection | `AuthorizationMgr.java:1001` | 合并 直授+角色+组 出有效权限集 |
 | PrivilegeType | `authorization/PrivilegeType.java` | 权限类型枚举 |
 | SecurityIntegration | `authentication/` | 可插拔外部身份集成 |
 

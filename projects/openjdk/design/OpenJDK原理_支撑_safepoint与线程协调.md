@@ -10,9 +10,9 @@
 
 ## 二、poll 点如何插入，native 为何不必停
 
-**不同线程状态用不同机制停下**（判定依据 `JavaThreadState`，`globalDefinitions.hpp:1024`）：**解释执行**在字节码边界检查本地 poll；**编译代码**在方法返回/循环回边编译进一条读"轮询页"的 load——需要停时该页被设成缺页、load 触发信号导入 safepoint（**正常路径零开销、靠内存保护陷阱停下**）；**native**（`_thread_in_native`）**根本不用停**——它只碰句柄不碰裸 oop、栈对 VM 已"安全"，VMThread 直接跳过它，代价是它**返回 Java 时**转换代码检查 `_state`、若 safepoint 进行中就地 block（"进入前等"变"返回时挡"）；**在 VM 内/转换中**轮询直到其下次状态转换时 block。统一入口 `should_process`/`process_if_requested`（`safepointMechanism.hpp:81`/`:84`），本地 poll 武装/解除 `arm_local_poll`（`:90`）/`disarm_local_poll`（`:48`）。JDK 9+ 起 poll 是**每线程本地**的，这正是 handshake 只停一个线程的基础设施。
+![到达安全点 · 四种线程状态各自停下 + TTSP](OpenJDK原理_支撑_safepoint与线程协调_03线程状态与poll.svg)
 
-**TTSP（time-to-safepoint）** 是关键指标：从武装 poll 到最后一个线程 block 的墙钟时间，**真正 STW = TTSP + VM 操作耗时**。超长无回边循环会拖长 TTSP，表现为"GC 很快、停顿却久"，`SafepointTimeout`（`:236`）用来抓掉队线程。
+四种线程状态用不同机制停下（判定依据 `JavaThreadState`，`globalDefinitions.hpp:1024`），细节见图：解释执行查字节码边界本地 poll、编译代码靠读「轮询页」触发缺页信号、native（`_thread_in_native`）根本不停而在返回 Java 时挡、在 VM 内到下次转换时 block。统一入口 `should_process`/`process_if_requested`（`safepointMechanism.hpp:81`/`:84`），本地 poll 武装/解除 `arm_local_poll`（`:90`）/`disarm_local_poll`（`:48`）。JDK 9+ 起 poll 是**每线程本地**的，这正是 handshake 只停一个线程的基础设施。TTSP 与「真正 STW = TTSP + VM 操作耗时」见图注；`SafepointTimeout`（`:236`）用来抓掉队线程。
 
 ## 三、handshake——把全局停顿降级为单线程停顿
 

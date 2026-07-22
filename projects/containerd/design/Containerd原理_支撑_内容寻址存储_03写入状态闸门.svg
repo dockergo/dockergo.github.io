@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="940" height="410" viewBox="0 0 940 410" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="arb" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#8fa0c0"/></marker>
+    <marker id="arg" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#5aa06e"/></marker>
+    <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#c0392b"/></marker>
+    <marker id="arm" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="940" height="410" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">一次 blob 写入的状态流转 · 校验闸门保证库里没有"名不副实"的 blob</text>
+
+  <!-- legend -->
+  <rect x="590" y="17" width="12" height="12" rx="3" fill="#f6f8fc" stroke="#cfe0f2"/><text x="607" y="27" font-size="10" fill="#6e6e73">写入状态</text>
+  <rect x="676" y="17" width="12" height="12" rx="3" fill="#faf4fb" stroke="#e4cdea"/><text x="693" y="27" font-size="10" fill="#6e6e73">校验闸门</text>
+  <rect x="762" y="17" width="12" height="12" rx="3" fill="#f5faf6" stroke="#cfe6d2"/><text x="779" y="27" font-size="10" fill="#6e6e73">已入库</text>
+  <rect x="826" y="17" width="12" height="12" rx="3" fill="#fdf3f2" stroke="#f0cfc9"/><text x="843" y="27" font-size="10" fill="#6e6e73">拒绝</text>
+
+  <!-- S0 -->
+  <rect x="30" y="92" width="128" height="66" rx="11" fill="#f6f8fc" stroke="#cfe0f2" filter="url(#soft)"/>
+  <text x="94" y="118" font-size="11" font-weight="600" fill="#5b7db1" text-anchor="middle">不存在</text>
+  <text x="94" y="138" font-size="9.5" fill="#5b7db1" text-anchor="middle">库中无此 blob</text>
+
+  <!-- S1 ingest -->
+  <rect x="196" y="92" width="186" height="66" rx="11" fill="#f6f8fc" stroke="#cfe0f2" filter="url(#soft)"/>
+  <text x="289" y="114" font-size="11" font-weight="600" fill="#5b7db1" text-anchor="middle">写入中（ingest 暂存）</text>
+  <text x="212" y="134" font-size="9.5" fill="#5b7db1">Writer 写临时目录，边写边算摘要</text>
+  <text x="212" y="150" font-size="9.5" fill="#5b7db1">可断点续写，尚未进 blobs</text>
+
+  <!-- Gate -->
+  <rect x="420" y="92" width="150" height="66" rx="11" fill="#faf4fb" stroke="#e4cdea" filter="url(#soft)"/>
+  <text x="495" y="114" font-size="11" font-weight="600" fill="#8944ab" text-anchor="middle">commit 闸门</text>
+  <text x="495" y="134" font-size="9.5" fill="#8944ab" text-anchor="middle">实算摘要 == 期望？</text>
+  <text x="495" y="150" font-size="9.5" fill="#8944ab" text-anchor="middle">一致才放行</text>
+
+  <!-- S2 committed -->
+  <rect x="610" y="92" width="196" height="66" rx="11" fill="#f5faf6" stroke="#cfe6d2" filter="url(#soft)"/>
+  <text x="708" y="114" font-size="11" font-weight="600" fill="#1d8f3f" text-anchor="middle">已提交（不可变）</text>
+  <text x="626" y="134" font-size="9.5" fill="#4a8a5c">原子改名进 blobs/&lt;algo&gt;/&lt;digest&gt;</text>
+  <text x="626" y="150" font-size="9.5" fill="#4a8a5c">摘要即路径 · 永不覆盖</text>
+
+  <!-- S3 reject -->
+  <rect x="360" y="206" width="270" height="62" rx="11" fill="#fdf3f2" stroke="#f0cfc9" filter="url(#soft)"/>
+  <text x="495" y="228" font-size="10.5" font-weight="600" fill="#c0392b" text-anchor="middle">拒绝：摘要不符</text>
+  <text x="376" y="248" font-size="9.5" fill="#c0392b">数据留在 ingest，绝不污染 blobs/</text>
+  <text x="376" y="262" font-size="9.5" fill="#c0392b">清理后可重来（幂等）</text>
+
+  <!-- read back -->
+  <rect x="656" y="206" width="150" height="62" rx="11" fill="#f5faf6" stroke="#cfe6d2"/>
+  <text x="731" y="228" font-size="10.5" font-weight="600" fill="#1d8f3f" text-anchor="middle">读回</text>
+  <text x="731" y="248" font-size="9.5" fill="#4a8a5c" text-anchor="middle">ReaderAt 按摘要取</text>
+  <text x="731" y="262" font-size="9.5" fill="#4a8a5c" text-anchor="middle">摘要即完整性校验</text>
+
+  <!-- arrows -->
+  <path d="M158 125 L194 125" fill="none" stroke="#8fa0c0" stroke-width="1.6" marker-end="url(#arb)"/>
+  <path d="M382 125 L418 125" fill="none" stroke="#8fa0c0" stroke-width="1.6" marker-end="url(#arb)"/>
+  <text x="386" y="118" font-size="9" fill="#5b7db1">Commit</text>
+  <path d="M570 125 L608 125" fill="none" stroke="#5aa06e" stroke-width="1.7" marker-end="url(#arg)"/>
+  <text x="576" y="118" font-size="9" fill="#1d8f3f">一致</text>
+  <path d="M495 158 L495 206" fill="none" stroke="#c0392b" stroke-width="1.6" marker-end="url(#arr)"/>
+  <text x="502" y="184" font-size="9" fill="#c0392b">不一致</text>
+  <path d="M708 158 L708 206" fill="none" stroke="#5aa06e" stroke-width="1.5" marker-end="url(#arg)"/>
+  <!-- retry loop -->
+  <path d="M360 237 L289 237 L289 160" fill="none" stroke="#b8b8bf" stroke-width="1.4" stroke-dasharray="5 3" marker-end="url(#arm)"/>
+  <text x="300" y="196" font-size="9" fill="#6e6e73">清理后重来</text>
+
+  <!-- caption -->
+  <rect x="30" y="292" width="876" height="102" rx="10" fill="#f8f8fb" stroke="#eceaf0"/>
+  <text x="46" y="318" font-size="11" fill="#6e6e73"><tspan font-weight="600" fill="#1d1d1f">核心：</tspan>写入是两段式——先在 ingest 临时目录边写边算摘要，Commit 时比对"实算摘要 == 期望摘要"，一致才原子改名进 blobs/，摘要即成为路径。</text>
+  <text x="46" y="342" font-size="10.5" fill="#6e6e73"><tspan font-weight="600" fill="#8944ab">闸门是不变量：</tspan>不符即拒绝、数据留在 ingest 供清理，blobs/ 里永远只有名副其实、不可变的 blob。</text>
+  <text x="46" y="364" font-size="10.5" fill="#6e6e73"><tspan font-weight="600" fill="#1d8f3f">三性质由此而来：</tspan>不可变（内容变→摘要变→新 blob）、天然去重（同摘要只存一份）、可校验（读回摘要即完整性凭据）。</text>
+  <text x="46" y="384" font-size="9.5" fill="#a1a1a6">各阶段精确落点见下方状态流转表（store.go / content.go / db.go）；引用记账在 bbolt、回收靠租约 + GC。</text>
+</svg>

@@ -14,9 +14,13 @@
 
 图示 push 模型下下游积压会撑爆内存，Acero 用 pause/resume 反压解决：下游积压时调上游 `PauseProducing(output, counter)`（exec_plan.h:300）停产、缓解后 `ResumeProducing`（:310）恢复。**不变量**：`counter` 单调递增——pause/resume 可能乱序到达（:271-280），源节点只认"见过的最高计数"决定最终状态，故并发下正确收敛。终止走幂等且转发 inputs 的 `StopProducing()`（:328）。这让引擎始终只保留在途少量批次、吞下"远大于内存"的数据集，是数据流的流量控制。
 
-## 深化 · 声明式装配：一张 Options 表定义整图
+## 三、声明式装配：Options → 工厂 → DAG
 
-用户不必手工连线，而是给每个节点一份 `*NodeOptions`（`acero/options.h`），由工厂按名实例化并接线：
+![声明式装配](Arrow原理_引擎_Acero流式执行_03声明式装配.svg)
+
+图示用户不手工连线，而是给每节点一份 `*NodeOptions`（`acero/options.h`）→ `ExecFactoryRegistry` 按名 `MakeExecNode(name, opts)`（exec_plan.h:376）实例化并接线 → 成 `ExecNode` DAG（`ExecPlan` 统一编排、`StartProducing` 不递归进 inputs）。**关键**：`filter` / `project` 的 Expression 下沉成 compute 的 `CallFunction`，`aggregate` / `hash_join` 用 compute 哈希 kernel——**Acero 只做编排与调度，运算全部借道 compute**。各节点 Options 锚点见下表。
+
+## 深化 · 声明式装配：一张 Options 表定义整图
 
 | 节点 | Options 锚点 | 语义 |
 |---|---|---|
@@ -27,8 +31,6 @@
 | order_by | options.h:539（OrderByNodeOptions） | 排序键与升降序 |
 | hash_join | options.h:564（HashJoinNodeOptions） | join 类型 + 左右键 |
 | sink | options.h:403（SinkNodeOptions） | 结果出口（回调 / 生成器） |
-
-`filter` / `project` 里的 Expression 最终下沉成 compute 的 `CallFunction`，`aggregate` / `hash_join` 内部用 compute 的哈希聚合与哈希表 kernel——**Acero 只做编排与调度，运算全部借道 compute**。
 
 ## 深化 · Acero 与 compute、与格式的关系
 

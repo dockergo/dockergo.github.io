@@ -18,6 +18,12 @@
 
 关键不变量：控制与数据在帧层分离——请求元信息走 **initial metadata**（首 HEADERS，deadline 编成 `grpc-timeout` 如 `100m`）、结果码走 **trailing metadata**（末 HEADERS 即 trailer，`grpc-status` 必有 + `grpc-message` 可选），载荷才走 DATA 帧；故正常调用即使无 body 也至少有 initial + trailing 两次 HEADERS。
 
+## 三、stream 生命周期状态机
+
+![流状态机](gRPC原理_支撑_HTTP2传输与流控_03流状态机.svg)
+
+一条连接内每个 stream 独立走 `idle → open → half-closed → closed` 状态机：`idle` 收/发首个 HEADERS（initial metadata）转 `open`；一侧发 `END_STREAM`（客户端 `WritesDone`）转 `half-closed`（local/remote 视方向）；收到 trailing HEADERS（`grpc-status`）转 `closed`。`RST_STREAM`（取消单流）与 `GOAWAY`（连接排空、不再收新流）可把任意状态直接撕到 `closed`。客户端用奇数流号、服务端用偶数（`next_stream_id` 校验低位，`chttp2_transport.cc:424-429`）；新流受对端 `MAX_CONCURRENT_STREAMS` 上限约束、超额者由 `maybe_start_some_streams`（`chttp2_transport.cc:1454`）排队待旧流关闭腾配额。**每个 `open` 流各占一份流级 + 连接级两级流控窗口**，任一耗尽即停发；读写状态机全跑在 combiner 单写者域、写意图收敛到 `initiate_write` 做写合并降 syscall。
+
 ## 深化 · 关键帧类型
 
 | 帧 | 源文件 | 作用 |

@@ -5,7 +5,7 @@
   </defs>
   <rect width="1060" height="600" fill="#fbfbfd"/>
   <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">优化 pass：在 QueryPlan 上做变换，把过滤/裁剪推给读取步</text>
-  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">optimizeTree (Optimizations/optimizeTree.cpp:24) 两轮 pass · 第一轮 getOptimizations 15 条 · 第二轮含 PREWHERE/主键裁剪</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">optimizeTree (Optimizations/optimizeTree) 两轮 pass · 第一轮 getOptimizations 15 条 · 第二轮含 PREWHERE/主键裁剪</text>
 
   <!-- first pass -->
   <rect x="40" y="72" width="480" height="220" rx="13" fill="#f3f7fc" stroke="#cfe0f2"/>
@@ -24,11 +24,11 @@
   <rect x="540" y="72" width="480" height="220" rx="13" fill="#eafaf1" stroke="#bfe0cd"/>
   <text x="780" y="96" font-size="12" font-weight="700" fill="#12402a" text-anchor="middle">第二轮 pass（存储相关裁剪）</text>
   <g text-anchor="middle" font-size="8.5">
-    <rect x="560" y="110" width="215" height="42" rx="8" fill="#fff" stroke="#bfe0cd"/><text x="667" y="128" font-weight="600" fill="#12402a">optimizePrewhere（:141）</text><text x="667" y="143" fill="#2f6f4f">WHERE → PREWHERE</text>
-    <rect x="785" y="110" width="215" height="42" rx="8" fill="#fff" stroke="#bfe0cd"/><text x="892" y="128" font-weight="600" fill="#12402a">主键裁剪+limit（:134）</text><text x="892" y="143" fill="#2f6f4f">optimizePrimaryKeyConditionAndLimit</text>
-    <rect x="560" y="160" width="215" height="42" rx="8" fill="#fff" stroke="#bfe0cd"/><text x="667" y="178" font-weight="600" fill="#12402a">optimizeReadInOrder（:172）</text><text x="667" y="193" fill="#2f6f4f">利用已有序省排序</text>
-    <rect x="785" y="160" width="215" height="42" rx="8" fill="#fff" stroke="#bfe0cd"/><text x="892" y="178" font-weight="600" fill="#12402a">useAggregateProjections（:243）</text><text x="892" y="193" fill="#2f6f4f">命中预聚合投影</text>
-    <rect x="560" y="210" width="440" height="42" rx="8" fill="#fff" stroke="#bfe0cd"/><text x="780" y="228" font-weight="600" fill="#12402a">useNormalProjections（:265）· applyOrder（:329）</text><text x="780" y="243" fill="#2f6f4f">用重排序投影 · 确定读取顺序</text>
+    <rect x="560" y="110" width="215" height="42" rx="8" fill="#fff" stroke="#bfe0cd"/><text x="667" y="128" font-weight="600" fill="#12402a">optimizePrewhere</text><text x="667" y="143" fill="#2f6f4f">WHERE → PREWHERE</text>
+    <rect x="785" y="110" width="215" height="42" rx="8" fill="#fff" stroke="#bfe0cd"/><text x="892" y="128" font-weight="600" fill="#12402a">主键裁剪+limit</text><text x="892" y="143" fill="#2f6f4f">optimizePrimaryKeyConditionAndLimit</text>
+    <rect x="560" y="160" width="215" height="42" rx="8" fill="#fff" stroke="#bfe0cd"/><text x="667" y="178" font-weight="600" fill="#12402a">optimizeReadInOrder</text><text x="667" y="193" fill="#2f6f4f">利用已有序省排序</text>
+    <rect x="785" y="160" width="215" height="42" rx="8" fill="#fff" stroke="#bfe0cd"/><text x="892" y="178" font-weight="600" fill="#12402a">useAggregateProjections</text><text x="892" y="193" fill="#2f6f4f">命中预聚合投影</text>
+    <rect x="560" y="210" width="440" height="42" rx="8" fill="#fff" stroke="#bfe0cd"/><text x="780" y="228" font-weight="600" fill="#12402a">useNormalProjections· applyOrder</text><text x="780" y="243" fill="#2f6f4f">用重排序投影 · 确定读取顺序</text>
   </g>
   <text x="780" y="278" font-size="8.5" fill="#4c8567" text-anchor="middle">目标：让存储少读、少排、命中投影</text>
 
@@ -36,10 +36,10 @@
   <rect x="40" y="312" width="980" height="120" rx="13" fill="#fdf9f0" stroke="#efe3cd"/>
   <text x="60" y="336" font-size="11.5" font-weight="700" fill="#7a5a1e">优化的落点：把条件推给 ReadFromMergeTree（optimizePrimaryKeyConditionAndLimit.cpp）</text>
   <g text-anchor="middle" font-size="8.5">
-    <rect x="70" y="350" width="210" height="60" rx="9" fill="#fff" stroke="#efdcb4"/><text x="175" y="370" font-size="9" font-weight="600" fill="#5a3410">addFilter（PREWHERE）:21</text><text x="175" y="388" fill="#93762e">PREWHERE 条件下推</text><text x="175" y="402" fill="#b08843">先读判断列</text>
-    <rect x="290" y="350" width="210" height="60" rx="9" fill="#fff" stroke="#efdcb4"/><text x="395" y="370" font-size="9" font-weight="600" fill="#5a3410">row-level filter :23</text><text x="395" y="388" fill="#93762e">行级安全过滤</text><text x="395" y="402" fill="#b08843">RowPolicy 注入</text>
-    <rect x="510" y="350" width="210" height="60" rx="9" fill="#fff" stroke="#efdcb4"/><text x="615" y="370" font-size="9" font-weight="600" fill="#5a3410">WHERE + setLimit :30,:34</text><text x="615" y="388" fill="#93762e">主键裁剪条件 + limit</text><text x="615" y="402" fill="#b08843">缩小 MarkRange</text>
-    <rect x="730" y="350" width="270" height="60" rx="9" fill="#fff" stroke="#efdcb4"/><text x="865" y="370" font-size="9" font-weight="600" fill="#5a3410">applyFilters :50</text><text x="865" y="388" fill="#93762e">读取步据此裁剪 granule</text><text x="865" y="402" fill="#b08843">= 真正少读盘</text>
+    <rect x="70" y="350" width="210" height="60" rx="9" fill="#fff" stroke="#efdcb4"/><text x="175" y="370" font-size="9" font-weight="600" fill="#5a3410">addFilter（PREWHERE）</text><text x="175" y="388" fill="#93762e">PREWHERE 条件下推</text><text x="175" y="402" fill="#b08843">先读判断列</text>
+    <rect x="290" y="350" width="210" height="60" rx="9" fill="#fff" stroke="#efdcb4"/><text x="395" y="370" font-size="9" font-weight="600" fill="#5a3410">row-level filter</text><text x="395" y="388" fill="#93762e">行级安全过滤</text><text x="395" y="402" fill="#b08843">RowPolicy 注入</text>
+    <rect x="510" y="350" width="210" height="60" rx="9" fill="#fff" stroke="#efdcb4"/><text x="615" y="370" font-size="9" font-weight="600" fill="#5a3410">WHERE + setLimit</text><text x="615" y="388" fill="#93762e">主键裁剪条件 + limit</text><text x="615" y="402" fill="#b08843">缩小 MarkRange</text>
+    <rect x="730" y="350" width="270" height="60" rx="9" fill="#fff" stroke="#efdcb4"/><text x="865" y="370" font-size="9" font-weight="600" fill="#5a3410">applyFilters</text><text x="865" y="388" fill="#93762e">读取步据此裁剪 granule</text><text x="865" y="402" fill="#b08843">= 真正少读盘</text>
   </g>
 
   <rect x="40" y="448" width="980" height="130" rx="12" fill="#f7f7f9" stroke="#e6e6ea"/>

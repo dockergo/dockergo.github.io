@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="512" viewBox="0 0 1040 512" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="tl_s" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="tl_a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#5b7db1"/></marker>
+    <marker id="tl_r" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b0413e"/></marker>
+  </defs>
+  <rect width="1040" height="512" fill="#fbfbfd"/>
+  <text x="24" y="30" font-size="14" font-weight="700" fill="#1d1d1f">TLAB 对象分配 · 线程本地缓冲的碰撞指针快路径</text>
+  <text x="24" y="49" font-size="10" fill="#6e6e73">每线程独占一段 Eden，无锁 bump-pointer 分配是绝大多数对象的出生路径；填不下才走加锁慢路径 → 重开 TLAB 或退到堆直分配</text>
+
+  <!-- legend -->
+  <g font-size="9.5">
+    <rect x="24" y="60" width="12" height="12" rx="3" fill="#f5faf6" stroke="#cfe6d2"/><text x="41" y="70" fill="#3a3a3c">快路径·无锁</text>
+    <rect x="150" y="60" width="12" height="12" rx="3" fill="#f6f8fc" stroke="#cfe0f2"/><text x="167" y="70" fill="#3a3a3c">判定·控制</text>
+    <rect x="266" y="60" width="12" height="12" rx="3" fill="#faf3ea" stroke="#ecdcbf"/><text x="283" y="70" fill="#3a3a3c">TLAB·堆存储</text>
+    <rect x="392" y="60" width="12" height="12" rx="3" fill="#fbeeee" stroke="#e0b4b0"/><text x="409" y="70" fill="#3a3a3c">退堆·可能触发 GC</text>
+  </g>
+
+  <!-- 左：TLAB 结构 -->
+  <g>
+    <rect x="24" y="90" width="330" height="168" rx="12" fill="#fbfbfd" stroke="#e2e2e7"/>
+    <text x="40" y="112" font-size="11" font-weight="600" fill="#8a5a1a">TLAB 结构：三个指针夹出一段私有空间</text>
+    <!-- bar -->
+    <rect x="40" y="126" width="298" height="30" rx="5" fill="#faf3ea" stroke="#ecdcbf"/>
+    <rect x="40" y="126" width="150" height="30" rx="5" fill="#efe0c8"/>
+    <line x1="190" y1="120" x2="190" y2="164" stroke="#8a5a1a" stroke-width="1.2"/>
+    <text x="115" y="145" font-size="9" fill="#8a5a1a" text-anchor="middle">已分配对象</text>
+    <text x="264" y="145" font-size="9" fill="#8a5a1a" text-anchor="middle">剩余 free</text>
+    <text x="40" y="176" font-size="8.5" fill="#6e6e73">start</text>
+    <text x="190" y="176" font-size="8.5" fill="#6e6e73" text-anchor="middle">top（碰撞指针）</text>
+    <text x="338" y="176" font-size="8.5" fill="#6e6e73" text-anchor="end">end</text>
+    <text x="40" y="204" font-size="9" fill="#3a3a3c">分配一个对象 = 把 top 往前推 size，</text>
+    <text x="40" y="220" font-size="9" fill="#3a3a3c">线程独占故<tspan font-weight="700" fill="#1d8f3f">全程无锁、无 CAS</tspan>。</text>
+    <text x="40" y="240" font-size="8.5" fill="#9a9aa0">refill_waste_limit：剩余多大就不舍得丢、</text>
+    <text x="40" y="253" font-size="8.5" fill="#9a9aa0">改让本次对象去共享堆的分水岭。</text>
+  </g>
+
+  <!-- 右：三级路径 -->
+  <!-- ① 快路径 -->
+  <rect x="378" y="90" width="638" height="52" rx="10" fill="#f5faf6" stroke="#cfe6d2" filter="url(#tl_s)"/>
+  <text x="396" y="112" font-size="11" font-weight="700" fill="#1d8f3f">① 快路径（inside TLAB fast）</text>
+  <text x="396" y="131" font-size="9.5" fill="#1c6b45">obj = top；若 end − top ≥ size：top += size，直接返回 obj —— 无锁碰撞，占绝大多数分配</text>
+
+  <!-- 判定 -->
+  <rect x="378" y="158" width="638" height="46" rx="10" fill="#f6f8fc" stroke="#cfe0f2" filter="url(#tl_s)"/>
+  <text x="396" y="178" font-size="10.5" font-weight="700" fill="#5b7db1">② 装不下 → 慢路径判定：剩余 free 与 refill_waste_limit 比大小</text>
+  <text x="396" y="196" font-size="9" fill="#1b2a4a">目的：剩余还很大就别浪费——宁可让这一个对象单独去堆；剩余已很小才舍得丢掉整块 TLAB 重开</text>
+
+  <!-- 分叉两路 -->
+  <!-- free 大 -> 保留 TLAB, 堆直分配 -->
+  <rect x="378" y="220" width="308" height="118" rx="10" fill="#fbeeee" stroke="#e0b4b0" filter="url(#tl_s)"/>
+  <text x="392" y="240" font-size="10" font-weight="700" fill="#b0413e">free &gt; 阈值：保留 TLAB</text>
+  <text x="392" y="259" font-size="9" fill="#3a3a3c">record_slow_allocation：本次对象</text>
+  <text x="392" y="274" font-size="9" fill="#3a3a3c">改到<tspan font-weight="600">共享堆</tspan>直接分配（要同步/CAS）</text>
+  <text x="392" y="293" font-size="9" fill="#3a3a3c">当前 TLAB 原封不动继续用，</text>
+  <text x="392" y="308" font-size="9" fill="#3a3a3c">避免丢弃大片可用空间。</text>
+  <text x="392" y="329" font-size="8.5" fill="#9a9aa0">只是"这一个"绕道，不动 TLAB。</text>
+
+  <!-- free 小 -> 退休重开 -->
+  <rect x="708" y="220" width="308" height="118" rx="10" fill="#faf3ea" stroke="#ecdcbf" filter="url(#tl_s)"/>
+  <text x="722" y="240" font-size="10" font-weight="700" fill="#8a5a1a">free ≤ 阈值：退休并重开</text>
+  <text x="722" y="259" font-size="9" fill="#3a3a3c">record_refill_waste → retire_tlab</text>
+  <text x="722" y="274" font-size="9" fill="#3a3a3c">（当前 TLAB 交还堆，剩头填占位）</text>
+  <text x="722" y="293" font-size="9" fill="#3a3a3c">→ compute_size 算新尺寸</text>
+  <text x="722" y="308" font-size="9" fill="#3a3a3c">→ allocate_new_tlab 从 Eden 领新块</text>
+  <text x="722" y="329" font-size="8.5" fill="#1d8f3f">→ 回到 ① 在新 TLAB 无锁分配</text>
+
+  <!-- ③ 堆外直分配 / 触发 GC -->
+  <rect x="378" y="354" width="638" height="56" rx="10" fill="#fbeeee" stroke="#e0b4b0" filter="url(#tl_s)"/>
+  <text x="396" y="375" font-size="10.5" font-weight="700" fill="#b0413e">③ 退到堆分配（outside TLAB）· 大对象或上面失败时</text>
+  <text x="396" y="393" font-size="9" fill="#3a3a3c">直接向 CollectedHeap::mem_allocate 要内存；Eden 也满 → <tspan font-weight="700" fill="#b0413e">触发一次 GC</tspan> 腾空间后重试</text>
+
+  <!-- 底部要点 -->
+  <rect x="24" y="426" width="992" height="68" rx="12" fill="#f4eefb" stroke="#d9c9ef"/>
+  <text x="40" y="447" font-size="10.5" font-weight="600" fill="#6f3ea8">为什么这样设计</text>
+  <text x="40" y="468" font-size="9" fill="#3a3a3c">① 多数对象走无锁碰撞，把"多线程抢 Eden"这个热点从每次分配摊薄到"每重开一次 TLAB 才同步一次"。</text>
+  <text x="40" y="486" font-size="9" fill="#3a3a3c">② 慢路径的两分叉本质是一道<tspan font-weight="600" fill="#6f3ea8">浪费权衡</tspan>：剩得多不舍得丢（绕道堆），剩得少才丢弃重开——refill_waste_limit 就是这条分界线。</text>
+</svg>

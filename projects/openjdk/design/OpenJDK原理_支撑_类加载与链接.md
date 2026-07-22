@@ -16,11 +16,13 @@
 
 ## 三、链接三步：验证 → 准备 → 解析
 
-链接由 `InstanceKlass::link_class_impl`（`oops/instanceKlass.cpp:971`）驱动，三段可懒惰：**验证** `verify_code`（`:949`）做字节码类型/栈映射校验（安全模型核心）；**准备**为静态字段分配空间并置**零值**（非用户初值）；**解析**把符号引用转直接引用（`LinkResolver::resolve_method` `linkResolver.cpp:753`、virtual `:1368`、interface `:1512`、`resolve_field :994`），可懒到首次执行到对应字节码。
+![链接三步 + 初始化 · 验证 / 准备(置零) / 解析(符号→直接) → clinit](OpenJDK原理_支撑_类加载与链接_03链接三步与初始化.svg)
+
+链接由 `InstanceKlass::link_class_impl`（`oops/instanceKlass.cpp:971`）驱动，三段可懒惰：**验证** `verify_code`（`:949`）做字节码类型/栈映射校验（安全模型核心）；**准备**为静态字段分配空间并置**零值**（非用户初值）；**解析**把符号引用转直接引用（`LinkResolver::resolve_method` `linkResolver.cpp:753`、virtual `:1368`、interface `:1512`、`resolve_field :994`），可懒到首次执行到对应字节码。三步与初始化的分离/懒惰关系见图。
 
 ## 四、初始化 `<clinit>`
 
-首次**主动使用**（new、访问静态成员、反射、子类触发父类）经 `InstanceKlass::initialize`（`:847`）→ `initialize_impl`（`:1258`）执行 `<clinit>`。不变量：**初始化锁保证只执行一次、父类先于子类**；成功置 `fully_initialized`（`:927`），`<clinit>` 抛异常则包装 `ExceptionInInitializerError`、Klass 标记 erroneous、后续使用抛 `NoClassDefFoundError`。
+首次**主动使用**（new、访问静态成员、反射、子类触发父类）经 `InstanceKlass::initialize`（`:847`）→ `initialize_impl`（`:1258`）执行 `<clinit>`：**初始化锁保证只执行一次、父类先于子类**（见上图右栏）；成功置 `fully_initialized`（`:927`），抛异常则包装 `ExceptionInInitializerError`、Klass 标记 erroneous、后续使用抛 `NoClassDefFoundError`。
 
 ## 拓展 · 五种类加载器与可见性
 

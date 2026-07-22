@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="410" viewBox="0 0 900 410" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="vcs" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="vcb" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#5b7db1"/></marker>
+    <marker id="vcg" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#6aa17f"/></marker>
+  </defs>
+  <rect width="900" height="410" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">火山模型（Volcano）· 执行为什么是"逐行拉取"</text>
+  <text x="30" y="48" font-size="10.5" fill="#6e6e73">上层算子向下 next() 要一行，行数据自底向上冒出；不物化中间结果</text>
+  <!-- legend -->
+  <g font-size="9">
+    <line x1="640" y1="26" x2="664" y2="26" stroke="#5b7db1" stroke-width="1.6" marker-end="url(#vcb)"/><text x="670" y="30" fill="#6e6e73">next() 下探</text>
+    <line x1="770" y1="26" x2="794" y2="26" stroke="#6aa17f" stroke-width="1.6" marker-end="url(#vcg)"/><text x="800" y="30" fill="#6e6e73">一行冒出</text>
+  </g>
+
+  <!-- 算子树 -->
+  <rect x="330" y="70" width="240" height="52" rx="10" fill="#eef3fb" stroke="#5b7db1" filter="url(#vcs)"/>
+  <text x="450" y="90" font-size="10.5" font-weight="700" fill="#3a5a8a" text-anchor="middle">SELECT / LIMIT（顶层）</text>
+  <text x="450" y="108" font-size="8.8" fill="#6e6e73" text-anchor="middle">向下要下一行，够数即停</text>
+
+  <rect x="330" y="160" width="240" height="52" rx="10" fill="#eef3fb" stroke="#5b7db1" filter="url(#vcs)"/>
+  <text x="450" y="180" font-size="10.5" font-weight="700" fill="#3a5a8a" text-anchor="middle">JOIN 嵌套循环</text>
+  <text x="450" y="198" font-size="8.8" fill="#6e6e73" text-anchor="middle">外表拉一行，驱动内表匹配</text>
+
+  <rect x="180" y="250" width="230" height="52" rx="10" fill="#eef7f1" stroke="#6aa17f" filter="url(#vcs)"/>
+  <text x="295" y="270" font-size="10" font-weight="700" fill="#2f7a4f" text-anchor="middle">扫描外表 t1</text>
+  <text x="295" y="288" font-size="8.8" fill="#6e6e73" text-anchor="middle">经 handler 从 InnoDB 取行</text>
+
+  <rect x="490" y="250" width="230" height="52" rx="10" fill="#eef7f1" stroke="#6aa17f" filter="url(#vcs)"/>
+  <text x="605" y="270" font-size="10" font-weight="700" fill="#2f7a4f" text-anchor="middle">扫描内表 t2</text>
+  <text x="605" y="288" font-size="8.8" fill="#6e6e73" text-anchor="middle">按连接键定位匹配行</text>
+
+  <!-- next 下探 (蓝, 左侧) -->
+  <path d="M420,122 L420,158" fill="none" stroke="#5b7db1" stroke-width="1.6" marker-end="url(#vcb)"/>
+  <path d="M400,212 L300,248" fill="none" stroke="#5b7db1" stroke-width="1.6" marker-end="url(#vcb)"/>
+  <path d="M500,212 L600,248" fill="none" stroke="#5b7db1" stroke-width="1.6" marker-end="url(#vcb)"/>
+  <!-- 行冒出 (绿, 右侧) -->
+  <path d="M330,275 L235,215" fill="none" stroke="#6aa17f" stroke-width="1.6" marker-end="url(#vcg)"/>
+  <path d="M480,180 L480,124" fill="none" stroke="#6aa17f" stroke-width="1.6" marker-end="url(#vcg)"/>
+
+  <!-- 说明 -->
+  <rect x="30" y="322" width="840" height="70" rx="11" fill="#f6f6f8" stroke="#e2e2e7" filter="url(#vcs)"/>
+  <text x="48" y="344" font-size="10" font-weight="700" fill="#1d1d1f">一次驱动一行 —— 为什么这样设计</text>
+  <text x="48" y="364" font-size="9" fill="#6e6e73">① 统一接口：每个算子只实现"给我下一行"，任意算子可自由拼接成树；</text>
+  <text x="48" y="382" font-size="9" fill="#6e6e73">② 省内存：数据像流水线一样穿过算子，无需先把整张中间表落地（LIMIT 时更早短路停拉）。</text>
+</svg>

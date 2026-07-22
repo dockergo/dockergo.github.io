@@ -2,7 +2,7 @@
 
 > **定位**：属"底座能力域"。管数据的组织、落盘与读取——本地表(shared-nothing)与云原生表(shared-data/存算分离)两套形态。被【DML】写入、【DQL】扫描、【事务一致性】按版本发布、【后台任务】Compaction 整理。是 StarRocks 区别于纯查询引擎的立身之本。源码基准 **StarRocks 3.x**(`~/workdir/StarRocks`,git `b2f06e51a37`;`be/src/storage/`)。
 
-StarRocks 从 Apache Doris fork 而来,存储层顶层词汇 **Tablet → Rowset → Segment 与 Doris 完全一致**(`gensrc/proto/tablet_schema.proto:15` 明言"based on ...apache/incubator-doris...olap_file.proto")。但它在两处走出了自己的路:**持久化主键索引**(real-time upsert 的 LSM 主键索引)与**存算分离**(云原生表把数据交给对象存储、把放置交给 StarOS)。读全库遇"某能力属哪条主线"回全景框架查依赖矩阵。
+StarRocks 从 Apache Doris fork 而来,存储层顶层词汇 **Tablet → Rowset → Segment 与 Doris 完全一致**(`tablet_schema.proto` 明言基于 Doris 的 `olap_file.proto`)。但它在两处走出了自己的路:**持久化主键索引**(real-time upsert 的 LSM 主键索引)与**存算分离**(云原生表把数据交给对象存储、把放置交给 StarOS)。读全库遇"某能力属哪条主线"回全景框架查依赖矩阵。
 
 ---
 
@@ -10,7 +10,7 @@ StarRocks 从 Apache Doris fork 而来,存储层顶层词汇 **Tablet → Rowset
 
 ![StarRocks 存储层级](StarRocks原理_存储_01层级.svg)
 
-一张表按分区(Partition)+ 分桶(Bucket)切成多个 **Tablet**(`be/src/storage/tablet.h:84`,`class Tablet : public BaseTablet`),Tablet 是数据分布、副本、调度的基本单位,带一个 `KeysType`(`tablet.h:125`)。每个 Tablet 由若干 **Rowset**(`be/src/storage/rowset/rowset.h:143`)组成,一个 Rowset 对应一个版本区间 `Version{start,end}`——每次导入产出一个新 Rowset(版本 +1),这是 MVCC 的物理载体。一个 Rowset 内含若干 **Segment**(`be/src/storage/rowset/segment.h:85`),Segment 是真正的列式数据文件,持有每列的 `ColumnReader`(`segment.h:325`)、行数、短键索引。Tablet 通过 `add_rowset`/`get_rowset_by_version`(`tablet.h:141`)增删与按版本取 Rowset。
+一张表按分区 + 分桶切成多个 **Tablet**(数据分布、副本、调度的基本单位,带一个 `KeysType`)。每个 Tablet 由若干 **Rowset** 组成,一个 Rowset 对应一个版本区间 `Version{start,end}`——每次导入产出一个新 Rowset(版本 +1),这是 MVCC 的物理载体。一个 Rowset 内含若干 **Segment**(真正的列式数据文件,持有每列 `ColumnReader`、行数、短键索引)。坐标见拓展表。
 
 ---
 
@@ -18,7 +18,7 @@ StarRocks 从 Apache Doris fork 而来,存储层顶层词汇 **Tablet → Rowset
 
 ![StarRocks 四种数据模型](StarRocks原理_存储_02数据模型.svg)
 
-数据模型是建表时定的存储语义,枚举在 `gensrc/proto/tablet_schema.proto:45`(`DUP_KEYS=0, UNIQUE_KEYS=1, AGG_KEYS=2, PRIMARY_KEYS=10`),FE 侧在 `fe/fe-parser/src/main/java/com/starrocks/sql/ast/KeysType.java:17`。
+数据模型是建表时定的存储语义,枚举 `DUP_KEYS=0, UNIQUE_KEYS=1, AGG_KEYS=2, PRIMARY_KEYS=10`(FE 侧 `KeysType`)。
 
 | 模型 | SQL 声明 | 语义 | 实现要点 |
 |---|---|---|---|
@@ -35,11 +35,11 @@ StarRocks 从 Apache Doris fork 而来,存储层顶层词汇 **Tablet → Rowset
 
 ![StarRocks 主键索引与删除向量](StarRocks原理_存储_03主键索引.svg)
 
-主键模型的核心是 **PrimaryIndex**(`be/src/storage/primary_index.h:38`):把编码后的主键映射到一个 64 位值 `(rssid<<32 | rowid)`——即"这个 key 当前活在哪个 Rowset segment 的第几行"。写入时 `upsert(rssid, rowid_start, pks, DeletesMap*)`(`primary_index.h:74`)插入新位置、并把被覆盖的旧行位置吐进 `DeletesMap`。
+主键模型的核心是 **PrimaryIndex**:把编码后的主键映射到一个 64 位值 `(rssid<<32 | rowid)`——即"这个 key 当前活在哪个 Rowset segment 的第几行"。写入时 `upsert` 插入新位置、并把被覆盖的旧行位置吐进 `DeletesMap`。
 
-**持久化**由 **PersistentIndex**(`be/src/storage/persistent_index.h:674`)承担,是一个类 LSM 的两级结构(`persistent_index.h:661`):内存 **L0**(`MutableIndex`)+ 落盘 **L1**(`ImmutableIndex`),apply 流程 `prepare → upsert → erase → commit → on_commited`。主键编码 **PrimaryKeyEncoder**(`be/src/storage_primitive/primary_key_encoder.h:109`,注意目录是 `storage_primitive/`)是保序编码(借鉴 Kudu):整型大端 + 符号位翻转,变长串把 `0x00` 转义为 `0x00 0x01`、以 `0x00 0x00` 结尾——保证字节序 = 逻辑序。
+**持久化**由 **PersistentIndex** 承担,是一个类 LSM 的两级结构:内存 **L0**(`MutableIndex`)+ 落盘 **L1**(`ImmutableIndex`),apply 流程 `prepare → upsert → erase → commit → on_commited`。主键编码 `PrimaryKeyEncoder` 保序(借鉴 Kudu):整型大端 + 符号位翻转,变长串转义 `0x00`——保证字节序 = 逻辑序。
 
-被覆盖/删除的旧行不重写 Segment,而是记进**删除向量 DelVector**(`be/src/storage/del_vector.h:30`):每个 Segment 一个 Roaring 位图,标记哪些 rowid 已失效,带 EditVersion。读时活行 = Segment 行 − 删除位图。partial update 有行模式与**列模式**两条路:列模式用 **Delta Column Group**(`be/src/storage/delta_column_group.h:35`)只写被更新的列成单独文件,避免整行重写(`_apply_column_partial_update_commit`,`be/src/storage/tablet_updates.h:440`)。
+被覆盖/删除的旧行不重写 Segment,而是记进**删除向量 DelVector**:每个 Segment 一个 Roaring 位图标记失效 rowid,带 EditVersion,读时活行 = Segment 行 − 删除位图。partial update 有行模式与**列模式**:列模式用 **Delta Column Group** 只写被更新的列成单独文件,避免整行重写。
 
 ---
 
@@ -47,11 +47,11 @@ StarRocks 从 Apache Doris fork 而来,存储层顶层词汇 **Tablet → Rowset
 
 ![StarRocks 存算分离架构](StarRocks原理_存储_04存算分离.svg)
 
-这是 StarRocks 相对 Doris 最大的架构分叉。云原生表 **LakeTable**(`fe/fe-core/src/main/java/com/starrocks/lake/LakeTable.java:58`,`extends OlapTable`)把数据放到对象存储(S3/OSS),把 Tablet 放置交给 **StarOS**:**LakeTablet**(`lake/LakeTablet.java:42`)的注释直言"数据副本由对象存储管理、计算副本由 StarOS 通过 Shard 管理,**tablet id 就是 StarOS Shard id**"(`getShardId{return getId;}`,`LakeTablet.java:81`)。`StarOSAgent`(`lake/StarOSAgent.java:82`)建 shard group、解析某 shard 当前由哪个 CN 服务——**任何 CN 都能服务任何 Tablet**,只需从对象存储拉元数据 + 数据。
+这是 StarRocks 相对 Doris 最大的架构分叉。云原生表 **LakeTable**(`extends OlapTable`)把数据放到对象存储(S3/OSS),把 Tablet 放置交给 **StarOS**:**LakeTablet** 直言"数据副本由对象存储管理、计算副本由 StarOS 通过 Shard 管理,**tablet id 就是 StarOS Shard id**"。`StarOSAgent` 建 shard group、解析某 shard 当前由哪个 CN 服务——**任何 CN 都能服务任何 Tablet**,只需从对象存储拉元数据 + 数据。
 
-BE 侧云原生 Tablet 是独立的 `starrocks::lake::Tablet`(`be/src/storage/lake/tablet.h:52`),**元数据驱动**:Rowset 来自版本化的 `TabletMetadataPtr`(`get_rowsets(version)`,`lake/tablet.h:119`);`belonged_to_cloud_native` 返回 true,对比本地 Tablet 的 false。本地 `TabletManager::create_tablet` 绑定 `std::vector<DataDir*> stores`(本地盘),云原生 `lake::TabletManager` 只按 `tablet_id + LocationProvider` 索引(`be/src/storage/lake/tablet_manager.h:61`)——存储彻底与本地盘解耦。
+BE 侧云原生 Tablet 是独立的 `starrocks::lake::Tablet`,**元数据驱动**:Rowset 来自版本化的 `TabletMetadataPtr`(`get_rowsets(version)`);`belonged_to_cloud_native` 返回 true。本地 `TabletManager::create_tablet` 绑定 `DataDir*`(本地盘),云原生 `lake::TabletManager` 只按 `tablet_id + LocationProvider` 索引——存储彻底与本地盘解耦。
 
-存算分离的读延迟靠 **DataCache**(`be/src/cache/datacache.h:49`)拉回:内存 + 本地盘(starcache)分层缓存,前置在对象存储之前;每次读由 `LakeIOOptions{fill_data_cache, fill_meta_cache}`(`be/src/storage/lake/options.h:20`)决定是否回填。云原生的主键索引则落成 **SSTable**(`LakePersistentIndex`,`be/src/storage/lake/lake_persistent_index.h:44`,LevelDB 派生的 sstable + 布隆),与 git log "lake PK index sstables" 一致。
+存算分离的读延迟靠 **DataCache** 拉回:内存 + 本地盘(starcache)分层缓存,前置在对象存储之前;每次读由 `LakeIOOptions{fill_data_cache, fill_meta_cache}` 决定是否回填。云原生的主键索引则落成 **SSTable**(`LakePersistentIndex`,LevelDB 派生的 sstable + 布隆)。
 
 ---
 
@@ -59,9 +59,9 @@ BE 侧云原生 Tablet 是独立的 `starrocks::lake::Tablet`(`be/src/storage/la
 
 ![StarRocks Segment 磁盘格式](StarRocks原理_存储_05Segment格式.svg)
 
-Segment 是列式不可变文件,格式定义在 `gensrc/proto/segment.proto`。文件尾 **SegmentFooterPB**(`segment.proto:214`)存 `repeated ColumnMetaPB columns`、`num_rows`、短键索引页指针,由 `Segment::parse_segment_footer`(`segment.h:95`)解析。每列 **ColumnMetaPB**(`segment.proto:177`)含 `type/encoding/compression`、字典页、以及 `repeated ColumnIndexMetaPB indexes`;列内按页组织(DATA/INDEX/DICTIONARY/SHORT_KEY page,`PageFooterPB` `segment.proto:136`),行号索引是 B-tree(`OrdinalIndexPB`)。
+Segment 是列式不可变文件,格式定义在 `segment.proto`。文件尾 **SegmentFooterPB** 存 `repeated ColumnMetaPB columns`、`num_rows`、短键索引页指针,由 `Segment::parse_segment_footer` 解析。每列 **ColumnMetaPB** 含 `type/encoding/compression`、字典页、`repeated ColumnIndexMetaPB indexes`;列内按页组织(DATA/INDEX/DICTIONARY/SHORT_KEY page),行号索引是 B-tree(`OrdinalIndexPB`)。
 
-列级索引(`ColumnIndexTypePB` `segment.proto:259`):**Zone Map**(min/max/has_null,段级 + 页级 `segment.proto:309`,谓词下推的第一道裁剪)、**Bloom Filter**(`segment.proto:345`,MURMUR3;BLOCK/CLASSIC 两算法)、**Bitmap**(`segment.proto:316`,ROARING)、**Builtin Inverted**(`segment.proto:353`,基于 bitmap)。另有稀疏**短键前缀索引**(`Segment::num_short_keys` `segment.h:149`):把排序前缀 → 块序号,每 `num_rows_per_block` 行一条,边界标记见 `be/src/storage/base/short_key_index.h:50`。
+列级索引(`ColumnIndexTypePB`):**Zone Map**(min/max/has_null,段级 + 页级,谓词下推第一道裁剪)、**Bloom Filter**(MURMUR3;BLOCK/CLASSIC)、**Bitmap**(ROARING)、**Builtin Inverted**(基于 bitmap)。另有稀疏**短键前缀索引**(`Segment::num_short_keys`):把排序前缀 → 块序号,每 `num_rows_per_block` 行一条。
 
 ---
 
@@ -70,6 +70,26 @@ Segment 是列式不可变文件,格式定义在 `gensrc/proto/segment.proto`。
 ![StarRocks 本地表与云原生表对比](StarRocks原理_存储_06两形态对比.svg)
 
 同一套 Tablet/Rowset/Segment 抽象,两种落地:本地表数据固定在 BE 本地盘、Tablet 绑定 DataDir、副本靠三副本冗余;云原生表数据在对象存储、Tablet=StarOS Shard、副本靠对象存储冗余、计算节点(CN)无状态可弹性伸缩。存算分离的代价是读需经 DataCache 命中才有本地盘级延迟,收益是存储/计算独立扩容、冷数据成本大降。
+
+## 深化 · 源码坐标（存算分离 / Segment 格式）
+
+| 结构 | 类/定义 | 职责 |
+|---|---|---|
+| KeysType | `fe/.../sql/ast/KeysType.java:17` | 四种模型枚举(FE 侧) |
+| ColumnPB.aggregation | `gensrc/proto/tablet_schema.proto:65` | 聚合模型每列聚合函数 |
+| LakeTable | `fe/.../lake/LakeTable.java:58` | 云原生表(extends OlapTable) |
+| LakeTablet | `fe/.../lake/LakeTablet.java:81` | tablet id = StarOS Shard id |
+| StarOSAgent | `fe/.../lake/StarOSAgent.java:82` | shard group / CN 归属解析 |
+| lake::Tablet | `be/src/storage/lake/tablet.h:119` | 元数据驱动取版本 Rowset |
+| lake::TabletManager | `be/src/storage/lake/tablet_manager.h:61` | 按 tablet_id+LocationProvider 索引 |
+| LakePersistentIndex | `be/src/storage/lake/lake_persistent_index.h:44` | 云原生主键索引(SSTable) |
+| LakeIOOptions | `be/src/storage/lake/options.h:20` | fill_data_cache/fill_meta_cache |
+| tablet_updates 列模式 | `be/src/storage/tablet_updates.h:440` | 列模式 partial update 提交 |
+| SegmentFooterPB | `gensrc/proto/segment.proto:214` | 段尾:列元/行数/短键页 |
+| ColumnMetaPB | `gensrc/proto/segment.proto:177` | 列元:类型/编码/索引 |
+| ColumnIndexTypePB | `gensrc/proto/segment.proto:259` | ZoneMap/Bloom/Bitmap/Inverted |
+| parse_segment_footer | `be/src/storage/rowset/segment.h:95` | 解析段尾 |
+| short_key_index | `be/src/storage/base/short_key_index.h:50` | 短键前缀索引边界 |
 
 ## 拓展 · 存储关键结构一览
 
@@ -97,7 +117,7 @@ Segment 是列式不可变文件,格式定义在 `gensrc/proto/segment.proto`。
 - **误区:Unique 模型是独立实现。** 不。Unique 是聚合模型的 REPLACE 特例(`KeysType.isAggregationFamily` 对二者都 true),读时仍走归并;主键模型才是靠索引免归并的那个。
 - **误区:主键删除会立即重写 Segment。** 不。删除只在 DelVector 位图打标,旧行惰性由 Compaction 回收——与"追加不覆盖"一致。
 - **误区:存算分离 = 慢。** 首次读远端确实慢,但 DataCache 命中后接近本地盘;真正收益是存算独立弹性 + 冷数据省钱。
-- **误区:Tablet/Rowset/Segment 是 StarRocks 独创。** 是从 Doris fork 的同名抽象(`tablet_schema.proto:15`);差异在主键索引与存算分离,不在层级词汇。
+- **误区:Tablet/Rowset/Segment 是 StarRocks 独创。** 是从 Doris fork 的同名抽象(见 `tablet_schema.proto`);差异在主键索引与存算分离,不在层级词汇。
 - **归属提醒**:分区裁剪属【优化技术+元数据】非本主线;版本发布可见属【事务一致性】;Compaction 调度属【后台任务】;主键索引的写入时机属【DML】。
 
 ## 一句话总纲
