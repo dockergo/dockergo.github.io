@@ -1,0 +1,126 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="700" viewBox="0 0 1120 700" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+  </defs>
+  <rect width="1120" height="700" fill="#fbfbfd"/>
+
+  <text x="30" y="34" font-size="17" font-weight="700" fill="#1d1d1f">二分边界 · 命中不停：== 时继续向一侧收缩，收敛到最左 target / 插入点</text>
+  <text x="30" y="56" font-size="11" fill="#6e6e73">有重复元素时，普通二分只保证「命中某一个」；把 == 也当作「往左走」，出口 i 就锁定最左 target 或有序插入处。示例 nums=[1,3,3,3,5,7]</text>
+
+  <!-- 图例 -->
+  <rect x="30" y="72" width="12" height="12" rx="2" fill="#d99a2b"/><text x="48" y="82" font-size="10.5" fill="#3a3a3c">存活区间</text>
+  <rect x="150" y="72" width="12" height="12" rx="2" fill="#4a7fd0"/><text x="168" y="82" font-size="10.5" fill="#3a3a3c">中点 mid</text>
+  <rect x="270" y="72" width="12" height="12" rx="2" fill="#d1544a"/><text x="288" y="82" font-size="10.5" fill="#3a3a3c">已淘汰</text>
+  <rect x="370" y="72" width="12" height="12" rx="2" fill="#2f9e6e"/><text x="388" y="82" font-size="10.5" fill="#3a3a3c">最终边界下标</text>
+
+  <!-- 参考数组 -->
+  <g font-size="9" fill="#8e8e93" text-anchor="middle">
+    <text x="452" y="112">[0]</text><text x="516" y="112">[1]</text><text x="580" y="112">[2]</text><text x="644" y="112">[3]</text><text x="708" y="112">[4]</text><text x="772" y="112">[5]</text>
+  </g>
+  <g font-size="12" text-anchor="middle">
+    <rect x="428" y="118" width="48" height="30" rx="5" fill="#f2f3f5" stroke="#e4e7ec"/><text x="452" y="138" fill="#6e6e73">1</text>
+    <rect x="492" y="118" width="48" height="30" rx="5" fill="#e7f5ee" stroke="#9dd3ba"/><text x="516" y="138" fill="#1f6b4a" font-weight="700">3</text>
+    <rect x="556" y="118" width="48" height="30" rx="5" fill="#eef7f2" stroke="#c3e3d3"/><text x="580" y="138" fill="#2f9e6e">3</text>
+    <rect x="620" y="118" width="48" height="30" rx="5" fill="#e7f5ee" stroke="#9dd3ba"/><text x="644" y="138" fill="#1f6b4a" font-weight="700">3</text>
+    <rect x="684" y="118" width="48" height="30" rx="5" fill="#f2f3f5" stroke="#e4e7ec"/><text x="708" y="138" fill="#6e6e73">5</text>
+    <rect x="748" y="118" width="48" height="30" rx="5" fill="#f2f3f5" stroke="#e4e7ec"/><text x="772" y="138" fill="#6e6e73">7</text>
+  </g>
+  <text x="516" y="166" font-size="9.5" fill="#1f6b4a" text-anchor="middle">↑ 最左 3 = idx1</text>
+  <text x="644" y="166" font-size="9.5" fill="#1f6b4a" text-anchor="middle">↑ 最右 3 = idx3</text>
+  <text x="30" y="138" font-size="11" font-weight="700" fill="#8a5a12">target = 3</text>
+
+  <!-- 面板 A：找左边界 -->
+  <rect x="30" y="182" width="680" height="356" rx="14" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="50" y="208" font-size="12.5" font-weight="700" fill="#20375e">A · 找左边界 binarySearchInsertion（== 也令 j=m−1，逼向左端）</text>
+
+  <!-- Row1 -->
+  <text x="38" y="234" font-size="11" font-weight="700" fill="#8a5a12">①</text>
+  <g font-size="11" text-anchor="middle">
+    <rect x="55" y="216" width="44" height="30" rx="5" fill="#fdf3e0" stroke="#e7c07a"/><text x="77" y="236" fill="#5a4a2a">1</text>
+    <rect x="102" y="216" width="44" height="30" rx="5" fill="#fdf3e0" stroke="#e7c07a"/><text x="124" y="236" fill="#5a4a2a">3</text>
+    <rect x="149" y="216" width="44" height="30" rx="5" fill="#eaf1fb" stroke="#4a7fd0" stroke-width="2"/><text x="171" y="236" fill="#20375e" font-weight="700">3</text>
+    <rect x="196" y="216" width="44" height="30" rx="5" fill="#fdf3e0" stroke="#e7c07a"/><text x="218" y="236" fill="#5a4a2a">3</text>
+    <rect x="243" y="216" width="44" height="30" rx="5" fill="#fdf3e0" stroke="#e7c07a"/><text x="265" y="236" fill="#5a4a2a">5</text>
+    <rect x="290" y="216" width="44" height="30" rx="5" fill="#fdf3e0" stroke="#e7c07a"/><text x="312" y="236" fill="#5a4a2a">7</text>
+  </g>
+  <text x="77" y="260" font-size="9" font-weight="700" fill="#4a7fd0" text-anchor="middle">i</text>
+  <text x="171" y="260" font-size="9" font-weight="700" fill="#4a7fd0" text-anchor="middle">m</text>
+  <text x="312" y="260" font-size="9" font-weight="700" fill="#4a7fd0" text-anchor="middle">j</text>
+  <text x="360" y="238" font-size="10" fill="#8a4038">i=0, j=5：m=2, nums[2]=3 == 3 → <tspan font-weight="700">不停</tspan>，j=m−1=1</text>
+
+  <!-- Row2 -->
+  <text x="38" y="298" font-size="11" font-weight="700" fill="#8a5a12">②</text>
+  <g font-size="11" text-anchor="middle">
+    <rect x="55" y="280" width="44" height="30" rx="5" fill="#eaf1fb" stroke="#4a7fd0" stroke-width="2"/><text x="77" y="300" fill="#20375e" font-weight="700">1</text>
+    <rect x="102" y="280" width="44" height="30" rx="5" fill="#fdf3e0" stroke="#e7c07a"/><text x="124" y="300" fill="#5a4a2a">3</text>
+    <rect x="149" y="280" width="44" height="30" rx="5" fill="#fbe6e3" stroke="#e8a79f"/><text x="171" y="300" fill="#c08a84">3</text>
+    <rect x="196" y="280" width="44" height="30" rx="5" fill="#fbe6e3" stroke="#e8a79f"/><text x="218" y="300" fill="#c08a84">3</text>
+    <rect x="243" y="280" width="44" height="30" rx="5" fill="#fbe6e3" stroke="#e8a79f"/><text x="265" y="300" fill="#c08a84">5</text>
+    <rect x="290" y="280" width="44" height="30" rx="5" fill="#fbe6e3" stroke="#e8a79f"/><text x="312" y="300" fill="#c08a84">7</text>
+  </g>
+  <text x="77" y="324" font-size="9" font-weight="700" fill="#4a7fd0" text-anchor="middle">i,m</text>
+  <text x="124" y="324" font-size="9" font-weight="700" fill="#4a7fd0" text-anchor="middle">j</text>
+  <text x="360" y="302" font-size="10" fill="#3a3a3c">i=0, j=1：m=0, nums[0]=1 &lt; 3 → i=m+1=1</text>
+
+  <!-- Row3 -->
+  <text x="38" y="362" font-size="11" font-weight="700" fill="#8a5a12">③</text>
+  <g font-size="11" text-anchor="middle">
+    <rect x="55" y="344" width="44" height="30" rx="5" fill="#fbe6e3" stroke="#e8a79f"/><text x="77" y="364" fill="#c08a84">1</text>
+    <rect x="102" y="344" width="44" height="30" rx="5" fill="#eaf1fb" stroke="#4a7fd0" stroke-width="2"/><text x="124" y="364" fill="#20375e" font-weight="700">3</text>
+    <rect x="149" y="344" width="44" height="30" rx="5" fill="#fbe6e3" stroke="#e8a79f"/><text x="171" y="364" fill="#c08a84">3</text>
+    <rect x="196" y="344" width="44" height="30" rx="5" fill="#fbe6e3" stroke="#e8a79f"/><text x="218" y="364" fill="#c08a84">3</text>
+    <rect x="243" y="344" width="44" height="30" rx="5" fill="#fbe6e3" stroke="#e8a79f"/><text x="265" y="364" fill="#c08a84">5</text>
+    <rect x="290" y="344" width="44" height="30" rx="5" fill="#fbe6e3" stroke="#e8a79f"/><text x="312" y="364" fill="#c08a84">7</text>
+  </g>
+  <text x="124" y="388" font-size="9" font-weight="700" fill="#4a7fd0" text-anchor="middle">i,j,m</text>
+  <text x="360" y="366" font-size="10" fill="#8a4038">i=1, j=1：m=1, nums[1]=3 == 3 → j=m−1=0；此时 i&gt;j 跳出</text>
+
+  <!-- 结果 -->
+  <rect x="50" y="410" width="610" height="52" rx="10" fill="#e7f5ee" stroke="#9dd3ba"/>
+  <text x="68" y="432" font-size="11" font-weight="700" fill="#1f6b4a">return i = 1</text>
+  <text x="168" y="432" font-size="10.5" fill="#3a3a3c">插入点 i 落在最左 3；leftEdge 再校验 nums[1]==3 ✓ → 最左边界 = 1</text>
+  <text x="68" y="452" font-size="9.5" fill="#6e6e73">若 nums[i]!=target 或 i==len，则 target 不存在，返回 -1。</text>
+  <text x="50" y="490" font-size="9.5" fill="#8e8e93">直觉：== 视作「还不够左」，把右界压到 m−1，循环停在最早那个 3 的位置。</text>
+  <text x="50" y="510" font-size="9.5" fill="#8e8e93">规模每步减半，总比较仍是 O(log n)，只是不在首个命中处提前退出。</text>
+
+  <!-- 面板 B：右边界 & 插入点 -->
+  <rect x="730" y="182" width="360" height="356" rx="14" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="750" y="208" font-size="12.5" font-weight="700" fill="#20375e">B · 插入点 &amp; 右边界</text>
+
+  <text x="750" y="238" font-size="10.5" fill="#3a3a3c"><tspan font-weight="700" fill="#8a5a12">插入点</tspan> = 首个 ≥ target 的下标</text>
+  <text x="750" y="258" font-size="10" fill="#6e6e73">= 保持有序前提下 target 应放入的位置</text>
+
+  <!-- 迷你数组 + 插入 caret（target=4 不存在） -->
+  <g font-size="10.5" text-anchor="middle">
+    <rect x="745" y="278" width="40" height="28" rx="5" fill="#f2f3f5" stroke="#e4e7ec"/><text x="765" y="297" fill="#6e6e73">1</text>
+    <rect x="787" y="278" width="40" height="28" rx="5" fill="#fdf3e0" stroke="#e7c07a"/><text x="807" y="297" fill="#5a4a2a">3</text>
+    <rect x="829" y="278" width="40" height="28" rx="5" fill="#fdf3e0" stroke="#e7c07a"/><text x="849" y="297" fill="#5a4a2a">3</text>
+    <rect x="871" y="278" width="40" height="28" rx="5" fill="#fdf3e0" stroke="#e7c07a"/><text x="891" y="297" fill="#5a4a2a">3</text>
+    <rect x="913" y="278" width="40" height="28" rx="5" fill="#f2f3f5" stroke="#e4e7ec"/><text x="933" y="297" fill="#6e6e73">5</text>
+    <rect x="955" y="278" width="40" height="28" rx="5" fill="#f2f3f5" stroke="#e4e7ec"/><text x="975" y="297" fill="#6e6e73">7</text>
+  </g>
+  <path d="M907 264 L917 264 L912 272 z" fill="#4a7fd0"/>
+  <text x="912" y="258" font-size="9" fill="#4a7fd0" text-anchor="middle">4 插这里</text>
+  <text x="912" y="322" font-size="9" fill="#20375e" text-anchor="middle">insertion(4) = idx4</text>
+  <text x="933" y="272" font-size="8" fill="#8e8e93" text-anchor="middle">[4]</text>
+
+  <!-- 右边界公式 -->
+  <rect x="750" y="338" width="320" height="120" rx="10" fill="#fbfbfd" stroke="#eceef1"/>
+  <text x="766" y="362" font-size="10.5" fill="#3a3a3c"><tspan font-weight="700" fill="#8a5a12">右边界(target)</tspan> = insertion(target+1) − 1</text>
+  <text x="766" y="386" font-size="10" fill="#6e6e73">最右一个 3：insertion(3+1) = insertion(4) = 4</text>
+  <text x="766" y="406" font-size="10" fill="#6e6e73">→ j = 4 − 1 = 3，校验 nums[3]==3 ✓</text>
+  <text x="766" y="430" font-size="10.5" fill="#1f6b4a" font-weight="700">最右 3 = idx3</text>
+  <text x="766" y="450" font-size="9" fill="#8e8e93">用「找 target+1 的左边界」的前一位，复用同一函数。</text>
+  <text x="750" y="486" font-size="9.5" fill="#8e8e93">一个 insertion 出口，派生出左边界、右边界、</text>
+  <text x="750" y="504" font-size="9.5" fill="#8e8e93">存在性判断与有序插入位置四种用途。</text>
+
+  <!-- 底部不变式 -->
+  <rect x="30" y="556" width="1060" height="120" rx="12" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="52" y="582" font-size="11" font-weight="700" fill="#20375e">区间不变式</text>
+  <text x="160" y="582" font-size="10.5" fill="#4a4a4f">整个过程维持「[i, j] 左侧全 &lt; target，右侧全 ≥ target」；跳出时 i 正好指向这条分界线。</text>
+  <text x="52" y="612" font-size="11" font-weight="700" fill="#8a5a12">对称性</text>
+  <text x="160" y="612" font-size="10.5" fill="#4a4a4f">== 时压右界 j=m−1 → 收敛到最左；若改为压左界 i=m+1 → 收敛到「最右 target 的后一位」。</text>
+  <text x="52" y="642" font-size="11" font-weight="700" fill="#1f6b4a">一码多用</text>
+  <text x="160" y="642" font-size="10.5" fill="#4a4a4f">找到 → i 是最左 target；没找到 → i 是有序插入位置。边界、存在性、插入点共享同一份收缩逻辑。</text>
+  <text x="52" y="666" font-size="9.5" fill="#8e8e93">易错点：== 分支若写成 return m 就退化为普通二分，无法定位边界。</text>
+</svg>

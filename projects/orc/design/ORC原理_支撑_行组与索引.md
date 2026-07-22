@@ -52,6 +52,7 @@ row group 级统计 + positions 是谓词下推的燃料(详见谓词下推篇):
 | 结构 | 定义 | 职责 |
 |---|---|---|
 | ROW_INDEX_STRIDE | `OrcConf.java:44` | row group 大小(默认 10000 行) |
+| stride 边界对齐 | 写侧 `WriterImpl.java:568` / 读侧 `RecordReaderImpl.java:1184` | 写读两端皆按同一 stride 算 row-group 边界 |
 | RowIndexEntry | (proto) | positions[] + row-group 列统计 |
 | ROW_INDEX stream | (Stream.Kind 6) | 存 row index(在 index area) |
 | pickRowGroups | `RecordReaderImpl.java:1177` | 按统计选读哪些 row group |

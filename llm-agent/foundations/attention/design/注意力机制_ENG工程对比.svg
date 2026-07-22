@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 560" font-family="-apple-system,'PingFang SC','Helvetica Neue',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.07"/>
+    </filter>
+  </defs>
+  <rect width="960" height="560" fill="#fbfbfd"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="#1d1d1f">注意力机制 · 工程落地三支柱</text>
+  <text x="30" y="54" font-size="12" fill="#6e6e73">算子实现、KV 结构、长上下文策略——三处决定注意力能否高效跑在真实系统上</text>
+
+  <!-- 支柱1 算子实现 -->
+  <g filter="url(#soft)"><rect x="40" y="90" width="280" height="300" rx="14" fill="#f3ecff" stroke="#5e5ce6" stroke-width="1.5"/></g>
+  <text x="70" y="124" font-size="13" font-weight="700" fill="#5e5ce6">① 算子实现</text>
+  <text x="70" y="156" font-size="10.5" fill="#6e6e73">优先 FlashAttention 融合核</text>
+  <text x="70" y="180" font-size="10.5" fill="#6e6e73">避免物化 n×n 分数矩阵</text>
+  <text x="70" y="204" font-size="10.5" fill="#6e6e73">online-softmax 增量归一</text>
+  <text x="70" y="228" font-size="10.5" fill="#6e6e73">显存 O(n)、访存大幅降低</text>
+  <text x="70" y="258" font-size="10.5" fill="#6e6e73">前向反向都可分块</text>
+  <text x="70" y="282" font-size="10.5" fill="#6e6e73">对齐硬件 SRAM 尺寸调块</text>
+  <text x="70" y="330" font-size="10" fill="#5e5ce6">选型：训练/长序列首选 Flash</text>
+  <text x="70" y="352" font-size="10" fill="#6e6e73">短序列朴素实现也够快</text>
+
+  <!-- 支柱2 KV 结构 -->
+  <g filter="url(#soft)"><rect x="340" y="90" width="280" height="300" rx="14" fill="#fff3ea" stroke="#f5873a" stroke-width="1.5"/></g>
+  <text x="370" y="124" font-size="13" font-weight="700" fill="#f5873a">② KV 结构</text>
+  <text x="370" y="156" font-size="10.5" fill="#6e6e73">MHA：每头独立 KV，表达强</text>
+  <text x="370" y="180" font-size="10.5" fill="#6e6e73">MQA：所有头共享一组 KV</text>
+  <text x="370" y="204" font-size="10.5" fill="#6e6e73">GQA：分组共享，折中方案</text>
+  <text x="370" y="228" font-size="10.5" fill="#6e6e73">KV 缓存越小，解码越快</text>
+  <text x="370" y="258" font-size="10.5" fill="#6e6e73">显存与吞吐的关键旋钮</text>
+  <text x="370" y="282" font-size="10.5" fill="#6e6e73">大模型推理普遍用 GQA</text>
+  <text x="370" y="330" font-size="10" fill="#f5873a">选型：推理吞吐敏感选 GQA/MQA</text>
+  <text x="370" y="352" font-size="10" fill="#6e6e73">质量优先保留 MHA</text>
+
+  <!-- 支柱3 长上下文 -->
+  <g filter="url(#soft)"><rect x="640" y="90" width="280" height="300" rx="14" fill="#e9fbf6" stroke="#2dd4bf" stroke-width="1.5"/></g>
+  <text x="670" y="124" font-size="13" font-weight="700" fill="#2dd4bf">③ 长上下文</text>
+  <text x="670" y="156" font-size="10.5" fill="#6e6e73">滑动窗口限制局部范围</text>
+  <text x="670" y="180" font-size="10.5" fill="#6e6e73">全局/汇聚位保留锚点</text>
+  <text x="670" y="204" font-size="10.5" fill="#6e6e73">块稀疏只算重要位置对</text>
+  <text x="670" y="228" font-size="10.5" fill="#6e6e73">线性注意力换 O(n) 复杂度</text>
+  <text x="670" y="258" font-size="10.5" fill="#6e6e73">配合位置外推扩窗口</text>
+  <text x="670" y="282" font-size="10.5" fill="#6e6e73">按任务权衡精度与长度</text>
+  <text x="670" y="330" font-size="10" fill="#2dd4bf">选型：超长文档才启用稀疏</text>
+  <text x="670" y="352" font-size="10" fill="#6e6e73">常规长度 Flash 已足够</text>
+
+  <!-- 决策带 -->
+  <g filter="url(#soft)"><rect x="40" y="420" width="880" height="110" rx="12" fill="#ffffff" stroke="#d2d2d7" stroke-width="1.2"/></g>
+  <text x="60" y="450" font-size="12" font-weight="600" fill="#5e5ce6">权衡速查</text>
+  <text x="60" y="478" font-size="10.5" fill="#6e6e73">· 训练/长序列 → FlashAttention；· 推理省显存 → GQA/MQA + KV 缓存；· 超长文本 → 稀疏/线性 + 外推</text>
+  <text x="60" y="502" font-size="10.5" fill="#6e6e73">· 质量优先 → MHA 全头 KV；· 数值一定要与朴素注意力对齐验证，防止近似方案悄悄掉点</text>
+  <text x="60" y="524" font-size="11" font-weight="600" fill="#5e5ce6">主线：先用 Flash 拿到无损加速，再按显存/长度压力逐步引入 GQA 与稀疏</text>
+</svg>

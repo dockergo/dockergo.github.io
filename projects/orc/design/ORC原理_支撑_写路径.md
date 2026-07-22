@@ -62,6 +62,7 @@
 | flushStripe | `WriterImpl.java:559` | 落一个 stripe,清零重来 |
 | MemoryManager | `WriterImpl.java:112` | 全局内存配额,多 writer 共享 |
 | close → writeFooter → writePostScript | `WriterImpl.java:804/691/630` | 收尾写 footer + postscript |
+| writeFileFooter / writePostScript(物理) | `PhysicalFsWriter.java:717` / `:475` | 物理落 footer(类型树/stripe 目录/文件统计)+ 不压缩 postscript |
 
 ## 调优要点（关键开关）
 

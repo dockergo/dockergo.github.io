@@ -1,0 +1,106 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="470" viewBox="0 0 980 470" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <marker id="cka" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#5b7db1"/></marker>
+    <filter id="cks" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+  </defs>
+  <rect width="980" height="470" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="700" fill="#1d1d1f">ScalarKernel 默认约定 · 框架代劳空值与内存，内核只填值</text>
+  <text x="30" y="50" font-size="10.5" fill="#6e6e73">INTERSECTION：框架按位与输入 validity 算好输出空值；PREALLOCATE：框架从内存池预分配输出——内核连 bitmap 都不碰</text>
+
+  <g font-size="10">
+    <rect x="30" y="60" width="16" height="11" rx="2" fill="#eef3fb" stroke="#cfe0f2"/><text x="52" y="69" fill="#3a3a3c">validity（空值 bitmap）</text>
+    <rect x="220" y="60" width="16" height="11" rx="2" fill="#d9f2e4" stroke="#9ed9ba"/><text x="242" y="69" fill="#3a3a3c">value（数据）</text>
+    <rect x="360" y="60" width="16" height="11" rx="2" fill="#f6f8fc" stroke="#cfe0f2"/><text x="382" y="69" fill="#3a3a3c">框架代劳（控制）</text>
+  </g>
+
+  <!-- 输入 a -->
+  <text x="30" y="104" font-size="10" font-weight="700" fill="#1c6b45">输入 a</text>
+  <g font-size="9.5" text-anchor="middle">
+    <rect x="30" y="112" width="26" height="22" fill="#eef3fb" stroke="#cfe0f2"/><text x="43" y="128" fill="#3f5c86">1</text>
+    <rect x="56" y="112" width="26" height="22" fill="#f4d7d5" stroke="#dba7a2"/><text x="69" y="128" fill="#a5342c">0</text>
+    <rect x="82" y="112" width="26" height="22" fill="#eef3fb" stroke="#cfe0f2"/><text x="95" y="128" fill="#3f5c86">1</text>
+    <rect x="30" y="136" width="26" height="22" fill="#d9f2e4" stroke="#9ed9ba"/><text x="43" y="152" fill="#1c6b45">5</text>
+    <rect x="56" y="136" width="26" height="22" fill="#d9f2e4" stroke="#9ed9ba"/><text x="69" y="152" fill="#1c6b45">·</text>
+    <rect x="82" y="136" width="26" height="22" fill="#d9f2e4" stroke="#9ed9ba"/><text x="95" y="152" fill="#1c6b45">7</text>
+  </g>
+  <!-- 输入 b -->
+  <text x="30" y="196" font-size="10" font-weight="700" fill="#1c6b45">输入 b</text>
+  <g font-size="9.5" text-anchor="middle">
+    <rect x="30" y="204" width="26" height="22" fill="#eef3fb" stroke="#cfe0f2"/><text x="43" y="220" fill="#3f5c86">1</text>
+    <rect x="56" y="204" width="26" height="22" fill="#eef3fb" stroke="#cfe0f2"/><text x="69" y="220" fill="#3f5c86">1</text>
+    <rect x="82" y="204" width="26" height="22" fill="#f4d7d5" stroke="#dba7a2"/><text x="95" y="220" fill="#a5342c">0</text>
+    <rect x="30" y="228" width="26" height="22" fill="#d9f2e4" stroke="#9ed9ba"/><text x="43" y="244" fill="#1c6b45">2</text>
+    <rect x="56" y="228" width="26" height="22" fill="#d9f2e4" stroke="#9ed9ba"/><text x="69" y="244" fill="#1c6b45">3</text>
+    <rect x="82" y="228" width="26" height="22" fill="#d9f2e4" stroke="#9ed9ba"/><text x="95" y="244" fill="#1c6b45">·</text>
+  </g>
+  <text x="30" y="272" font-size="8.5" fill="#8a9ab5">ExecSpan：只读列视图</text>
+  <text x="30" y="286" font-size="8.5" fill="#8a9ab5">（纯指针+长度，不持所有权）</text>
+
+  <!-- 框架步骤 1 INTERSECTION -->
+  <rect x="150" y="96" width="230" height="120" rx="12" fill="#f6f8fc" stroke="#cfe0f2" filter="url(#cks)"/>
+  <text x="166" y="118" font-size="11" font-weight="700" fill="#1b2a4a">① INTERSECTION（空值）</text>
+  <text x="166" y="136" font-size="9" fill="#5b7db1">框架按位与输入 validity → 输出 validity</text>
+  <g font-size="9.5" text-anchor="middle">
+    <text x="180" y="170" font-size="9" fill="#5b7db1" text-anchor="start">a &amp; b =</text>
+    <rect x="238" y="158" width="26" height="22" fill="#eef3fb" stroke="#cfe0f2"/><text x="251" y="174" fill="#3f5c86">1</text>
+    <rect x="264" y="158" width="26" height="22" fill="#f4d7d5" stroke="#dba7a2"/><text x="277" y="174" fill="#a5342c">0</text>
+    <rect x="290" y="158" width="26" height="22" fill="#f4d7d5" stroke="#dba7a2"/><text x="303" y="174" fill="#a5342c">0</text>
+  </g>
+  <text x="166" y="202" font-size="8.5" fill="#8a9ab5">任一输入 null → 输出 null，内核不必管</text>
+
+  <!-- 框架步骤 2 PREALLOCATE -->
+  <rect x="150" y="228" width="230" height="120" rx="12" fill="#f6f8fc" stroke="#cfe0f2" filter="url(#cks)"/>
+  <text x="166" y="250" font-size="11" font-weight="700" fill="#1b2a4a">② PREALLOCATE（内存）</text>
+  <text x="166" y="268" font-size="9" fill="#5b7db1">输出长度=输入，框架从内存池预分配</text>
+  <g font-size="9.5" text-anchor="middle">
+    <rect x="166" y="284" width="30" height="24" fill="#d9f2e4" stroke="#9ed9ba"/><text x="181" y="301" fill="#1c6b45">▢</text>
+    <rect x="196" y="284" width="30" height="24" fill="#d9f2e4" stroke="#9ed9ba"/><text x="211" y="301" fill="#1c6b45">▢</text>
+    <rect x="226" y="284" width="30" height="24" fill="#d9f2e4" stroke="#9ed9ba"/><text x="241" y="301" fill="#1c6b45">▢</text>
+  </g>
+  <text x="272" y="301" font-size="9" fill="#8a9ab5">空 value buffer 待填</text>
+  <text x="166" y="332" font-size="8.5" fill="#8a9ab5">KernelContext 提供 MemoryPool，一次分配</text>
+
+  <!-- 内核 -->
+  <rect x="418" y="150" width="216" height="150" rx="12" fill="#eafaf1" stroke="#b8e6cd" filter="url(#cks)"/>
+  <text x="434" y="174" font-size="11" font-weight="700" fill="#1c6b45">③ ArrayKernelExec</text>
+  <text x="434" y="192" font-size="9" fill="#2f7d57">内核只在 value buffer 上跑 SIMD 批循环</text>
+  <text x="434" y="210" font-size="9" fill="#2f7d57">只填值，连 validity bitmap 都不碰</text>
+  <rect x="434" y="222" width="184" height="30" rx="6" fill="#f5faf6" stroke="#bfe6cd"/>
+  <text x="526" y="242" font-size="9" fill="#2f7d57" text-anchor="middle">Status(ctx, ExecSpan, ExecResult*)</text>
+  <text x="434" y="272" font-size="8.5" fill="#8a9a8f">有状态内核（聚合）用 KernelState 开跑前初始化</text>
+  <text x="434" y="288" font-size="8.5" fill="#8a9a8f">类型已由 DispatchExact 定死 → 循环内无分支</text>
+
+  <!-- 输出 -->
+  <text x="672" y="140" font-size="10" font-weight="700" fill="#1c6b45">输出 a+b</text>
+  <g font-size="9.5" text-anchor="middle">
+    <rect x="672" y="148" width="26" height="22" fill="#eef3fb" stroke="#cfe0f2"/><text x="685" y="164" fill="#3f5c86">1</text>
+    <rect x="698" y="148" width="26" height="22" fill="#f4d7d5" stroke="#dba7a2"/><text x="711" y="164" fill="#a5342c">0</text>
+    <rect x="724" y="148" width="26" height="22" fill="#f4d7d5" stroke="#dba7a2"/><text x="737" y="164" fill="#a5342c">0</text>
+    <rect x="672" y="172" width="26" height="22" fill="#d9f2e4" stroke="#9ed9ba"/><text x="685" y="188" fill="#1c6b45">7</text>
+    <rect x="698" y="172" width="26" height="22" fill="#d9f2e4" stroke="#9ed9ba"/><text x="711" y="188" fill="#1c6b45">·</text>
+    <rect x="724" y="172" width="26" height="22" fill="#d9f2e4" stroke="#9ed9ba"/><text x="737" y="188" fill="#1c6b45">·</text>
+  </g>
+  <text x="672" y="216" font-size="8.5" fill="#8a9ab5">validity 由框架算好</text>
+  <text x="672" y="230" font-size="8.5" fill="#8a9ab5">value=5+2 只在有效槽有意义</text>
+
+  <line x1="112" y1="150" x2="148" y2="150" stroke="#5b7db1" stroke-width="1.5" marker-end="url(#cka)"/>
+  <line x1="112" y1="230" x2="148" y2="280" stroke="#5b7db1" stroke-width="1.5" marker-end="url(#cka)"/>
+  <line x1="382" y1="230" x2="416" y2="215" stroke="#5b7db1" stroke-width="1.5" marker-end="url(#cka)"/>
+  <line x1="634" y1="180" x2="668" y2="170" stroke="#5b7db1" stroke-width="1.5" marker-end="url(#cka)"/>
+
+  <!-- 对比带：VectorKernel 默认 -->
+  <rect x="780" y="96" width="170" height="252" rx="12" fill="#fbf2ea" stroke="#e6cdae" filter="url(#cks)"/>
+  <text x="865" y="120" font-size="10.5" font-weight="700" fill="#8a5a1f" text-anchor="middle">对比 · VectorKernel</text>
+  <text x="794" y="152" font-size="8" font-weight="700" fill="#b0651f">COMPUTED_NO_PREALLOCATE</text>
+  <text x="796" y="170" font-size="9" fill="#8a6d3b">输出空值内核自算</text>
+  <text x="796" y="200" font-size="9.5" font-weight="700" fill="#b0651f">NO_PREALLOCATE</text>
+  <text x="796" y="218" font-size="9" fill="#8a6d3b">输出长度事前未知</text>
+  <text x="796" y="232" font-size="9" fill="#8a6d3b">内核自分配</text>
+  <text x="796" y="262" font-size="9" fill="#8a6d3b">如 filter/unique：整</text>
+  <text x="796" y="276" font-size="9" fill="#8a6d3b">列相关、行数会变</text>
+  <text x="796" y="308" font-size="8.5" fill="#a58a5a">框架不代劳，交由</text>
+  <text x="796" y="322" font-size="8.5" fill="#a58a5a">内核全权负责</text>
+
+  <rect x="30" y="368" width="920" height="30" rx="9" fill="#f5faf6" stroke="#bfe6cd"/>
+  <text x="44" y="388" font-size="9.5" fill="#2f5a44">两个枚举（NullHandling / MemAllocation）定死框架代劳多少：ScalarKernel 逐元素默认全代劳、内核最省心；VectorKernel 输出形态未知则内核自管——这是"格式紧排 × 计算向量化互为因果"的落地。</text>
+</svg>

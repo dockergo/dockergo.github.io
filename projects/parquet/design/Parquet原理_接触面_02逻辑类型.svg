@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="440" viewBox="0 0 1000 440" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs><filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#7c5fe6"/></marker></defs>
+  <rect width="1000" height="440" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Parquet 原理 · 逻辑类型（union LogicalType 注解物理类型）</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">LogicalType 是加在物理类型上的语义标签;union 保证一个字段只挑一种逻辑语义;读者据此把原始字节解释成日期/小数/字符串等</text>
+
+  <!-- 左：物理类型基座 -->
+  <rect x="30" y="76" width="200" height="330" rx="12" fill="#e9f2ff" stroke="#a9ccf5" filter="url(#soft)"/>
+  <text x="130" y="100" font-size="11" font-weight="700" text-anchor="middle" fill="#0a3d78">物理类型（基座）</text>
+  <rect x="46" y="116" width="168" height="34" rx="7" fill="#fff" stroke="#a9ccf5"/><text x="130" y="138" font-size="9.4" text-anchor="middle" fill="#0a3d78">INT32 / INT64</text>
+  <rect x="46" y="158" width="168" height="34" rx="7" fill="#fff" stroke="#a9ccf5"/><text x="130" y="180" font-size="9.4" text-anchor="middle" fill="#0a3d78">BYTE_ARRAY</text>
+  <rect x="46" y="200" width="168" height="34" rx="7" fill="#fff" stroke="#a9ccf5"/><text x="130" y="222" font-size="9.4" text-anchor="middle" fill="#0a3d78">FIXED_LEN_BYTE_ARRAY</text>
+  <text x="130" y="266" font-size="8.6" text-anchor="middle" fill="#2a5a92">物理层只负责“多少字节、</text>
+  <text x="130" y="282" font-size="8.6" text-anchor="middle" fill="#2a5a92">怎么编码压缩”</text>
+  <text x="130" y="312" font-size="8.6" text-anchor="middle" fill="#5b7db1">无逻辑类型也能读出</text>
+  <text x="130" y="328" font-size="8.6" text-anchor="middle" fill="#5b7db1">原始字节</text>
+
+  <!-- 注解箭头 -->
+  <path d="M234,240 L280,240" stroke="#7c5fe6" stroke-width="1.8" fill="none" marker-end="url(#ar)"/>
+  <text x="240" y="232" font-size="8.4" fill="#7c5fe6">注解</text>
+
+  <!-- 右：逻辑类型 grid -->
+  <rect x="290" y="76" width="680" height="330" rx="12" fill="#f4eefb" stroke="#d9c7ec"/>
+  <text x="306" y="98" font-size="11" font-weight="700" fill="#3d2a5a">LogicalType（union · 择一）</text>
+
+  <g font-family="inherit">
+    <rect x="306" y="110" width="200" height="52" rx="9" fill="#fff" stroke="#d9c7ec" filter="url(#soft)"/>
+    <text x="320" y="131" font-size="10" font-weight="700" fill="#3d2a5a">StringType</text>
+    <text x="320" y="149" font-size="8.2" fill="#8a6db3">BYTE_ARRAY · UTF-8 字符串</text>
+
+    <rect x="522" y="110" width="200" height="52" rx="9" fill="#fff" stroke="#d9c7ec" filter="url(#soft)"/>
+    <text x="536" y="131" font-size="10" font-weight="700" fill="#3d2a5a">DecimalType</text>
+    <text x="536" y="149" font-size="8.2" fill="#8a6db3">precision / scale · 定点小数</text>
+
+    <rect x="738" y="110" width="216" height="52" rx="9" fill="#fff" stroke="#d9c7ec" filter="url(#soft)"/>
+    <text x="752" y="131" font-size="10" font-weight="700" fill="#3d2a5a">TimestampType</text>
+    <text x="752" y="149" font-size="8.2" fill="#8a6db3">isAdjustedToUTC · 单位</text>
+
+    <rect x="306" y="174" width="200" height="52" rx="9" fill="#fff" stroke="#d9c7ec" filter="url(#soft)"/>
+    <text x="320" y="195" font-size="10" font-weight="700" fill="#3d2a5a">IntType</text>
+    <text x="320" y="213" font-size="8.2" fill="#8a6db3">bitWidth · isSigned</text>
+
+    <rect x="522" y="174" width="200" height="52" rx="9" fill="#fff" stroke="#d9c7ec" filter="url(#soft)"/>
+    <text x="536" y="195" font-size="10" font-weight="700" fill="#3d2a5a">JsonType</text>
+    <text x="536" y="213" font-size="8.2" fill="#8a6db3">BYTE_ARRAY · JSON 文本</text>
+
+    <rect x="738" y="174" width="216" height="52" rx="9" fill="#fff" stroke="#d9c7ec" filter="url(#soft)"/>
+    <text x="752" y="195" font-size="10" font-weight="700" fill="#3d2a5a">VariantType</text>
+    <text x="752" y="213" font-size="8.2" fill="#8a6db3">半结构化 variant</text>
+
+    <rect x="306" y="238" width="200" height="52" rx="9" fill="#fff" stroke="#d9c7ec" filter="url(#soft)"/>
+    <text x="320" y="259" font-size="10" font-weight="700" fill="#3d2a5a">GeometryType</text>
+    <text x="320" y="277" font-size="8.2" fill="#8a6db3">地理空间几何</text>
+
+    <rect x="522" y="238" width="200" height="52" rx="9" fill="#fff" stroke="#d9c7ec" filter="url(#soft)"/>
+    <text x="536" y="259" font-size="10" font-weight="700" fill="#3d2a5a">Date / Time / Enum</text>
+    <text x="536" y="277" font-size="8.2" fill="#8a6db3">INT32/INT64 之上</text>
+
+    <rect x="738" y="238" width="216" height="52" rx="9" fill="#fff" stroke="#d9c7ec" filter="url(#soft)"/>
+    <text x="752" y="259" font-size="10" font-weight="700" fill="#3d2a5a">List / Map</text>
+    <text x="752" y="277" font-size="8.2" fill="#8a6db3">复合结构注解（分组节点）</text>
+  </g>
+
+  <rect x="306" y="304" width="648" height="88" rx="10" fill="#faf5ff" stroke="#e4d5f2"/>
+  <text x="322" y="326" font-size="9.4" fill="#6a4f9a">关键：LogicalType 只影响“怎么解释字节”与“怎么比较排序”（ColumnOrder 参考逻辑类型）,不改变物理编码与压缩。</text>
+  <text x="322" y="346" font-size="9.4" fill="#6a4f9a">向后兼容：不认识某逻辑类型的老读者仍可按物理类型读出原始值;新语义以“加注解”方式演进,不破坏格式。</text>
+  <text x="322" y="368" font-size="9" fill="#8a6db3">老文件走已弃用的 ConvertedType 字段;新文件用 logicalType,二者可并存以兼容。</text>
+</svg>

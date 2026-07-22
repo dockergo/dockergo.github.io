@@ -1,0 +1,101 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="784" viewBox="0 0 1180 784" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="aB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#4a7fd0"/></marker>
+    <marker id="aO" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#d9772f"/></marker>
+  </defs>
+  <rect width="1180" height="784" fill="#fbfbfd"/>
+
+  <!-- 判型标题带 -->
+  <text x="30" y="32" font-size="15" font-weight="700" fill="#1d1d1f">服务发现的核心是「怎么知道一个节点还活着」· 心跳续约（TTL Renewal）是同一个思想，两种不同的实现外壳</text>
+  <text x="30" y="53" font-size="10.5" fill="#6e6e73">续约不断 = 活着，停止续约、超时 = 判定死亡并清理——差异只在"租约是否显式对象"与"过期检查是逐一计时还是分桶批量"</text>
+
+  <!-- 图例 -->
+  <line x1="30" y1="82" x2="54" y2="82" stroke="#4a7fd0" stroke-width="2" marker-end="url(#aB)"/>
+  <text x="60" y="86" font-size="10" fill="#3a3a3c">etcd Lease 分支（显式租约对象）</text>
+  <line x1="278" y1="82" x2="302" y2="82" stroke="#d9772f" stroke-width="2" marker-end="url(#aO)"/>
+  <text x="308" y="86" font-size="10" fill="#3a3a3c">ZooKeeper Session 分支（隐式绑定连接）</text>
+  <rect x="576" y="76" width="16" height="12" rx="3" fill="#fbf3e2" stroke="#ecd6a8"/>
+  <text x="598" y="86" font-size="10" fill="#3a3a3c">琥珀底 = 该实现的额外强化机制（本图重点）</text>
+  <text x="1150" y="86" font-size="10" fill="#a1a1a6" text-anchor="end">已核实机制</text>
+  <line x1="30" y1="98" x2="1150" y2="98" stroke="#e4e7ec" stroke-width="1"/>
+
+  <!-- 共享概念：心跳续约思想 -->
+  <rect x="410" y="110" width="360" height="86" rx="14" fill="#ffffff" stroke="#d9dde4" filter="url(#soft)"/>
+  <text x="590" y="136" font-size="12.5" font-weight="700" fill="#1d1d1f" text-anchor="middle">心跳续约思想 · TTL Renewal</text>
+  <text x="590" y="156" font-size="9.5" fill="#4a4a4f" text-anchor="middle">按时"续约"证明活着；停止续约、超时 → 判定死亡 → 清理</text>
+  <text x="590" y="174" font-size="8.5" fill="#8a97ab" text-anchor="middle">同一思想，两种真实实现外壳 ↓</text>
+
+  <!-- 分叉箭头 -->
+  <line x1="478" y1="196" x2="332" y2="230" stroke="#4a7fd0" stroke-width="2" marker-end="url(#aB)"/>
+  <text x="352" y="212" font-size="9" fill="#2f5c98">显式租约对象</text>
+  <line x1="702" y1="196" x2="848" y2="230" stroke="#d9772f" stroke-width="2" marker-end="url(#aO)"/>
+  <text x="812" y="212" font-size="9" fill="#9a5f1c">隐式·绑定连接</text>
+
+  <!-- 左：etcd Lease -->
+  <rect x="50" y="234" width="520" height="420" rx="14" fill="#eaf1fb" stroke="#c6d9f2" filter="url(#soft)"/>
+  <text x="310" y="260" font-size="13" font-weight="700" fill="#20375e" text-anchor="middle">etcd Lease · 显式 TTL 租约</text>
+  <line x1="68" y1="268" x2="552" y2="268" stroke="#c6d9f2" stroke-width="1"/>
+
+  <rect x="70" y="278" width="480" height="64" rx="10" fill="#ffffff" stroke="#c6d9f2"/>
+  <text x="84" y="298" font-size="11" font-weight="700" fill="#20375e">① Grant(ttl) 建租约</text>
+  <text x="84" y="315" font-size="9" fill="#3a4a63">key 绑定 leaseID（Lessor 接口：Grant / Renew / Revoke）</text>
+  <text x="84" y="330" font-size="8.5" fill="#5a7099">一个 lease 可绑多个 key</text>
+
+  <rect x="70" y="352" width="480" height="64" rx="10" fill="#ffffff" stroke="#c6d9f2"/>
+  <text x="84" y="372" font-size="11" font-weight="700" fill="#20375e">② Renew(id) 续租</text>
+  <text x="84" y="389" font-size="9" fill="#3a4a63">客户端持续续租、重置到期时间——这就是"证明还活着"</text>
+  <text x="84" y="404" font-size="8.5" fill="#5a7099">停止续租 = 不再有人证明它活着</text>
+
+  <rect x="70" y="426" width="480" height="64" rx="10" fill="#ffffff" stroke="#c6d9f2"/>
+  <text x="84" y="446" font-size="11" font-weight="700" fill="#20375e">③ 周期性过期检查</text>
+  <text x="84" y="463" font-size="9" fill="#3a4a63">检测到期未续的租约</text>
+  <text x="84" y="478" font-size="8.5" fill="#5a7099">检出结果推入撤销 channel</text>
+
+  <rect x="70" y="500" width="480" height="64" rx="10" fill="#ffffff" stroke="#c6d9f2"/>
+  <text x="84" y="520" font-size="11" font-weight="700" fill="#20375e">④ 撤销 channel → Revoke(id)</text>
+  <text x="84" y="537" font-size="9" fill="#3a4a63">从撤销 channel 取出到期租约、触发 Revoke</text>
+  <text x="84" y="552" font-size="8.5" fill="#5a7099">Revoke 级联清理该 lease 名下所有 key</text>
+
+  <rect x="70" y="574" width="480" height="64" rx="10" fill="#fbf3e2" stroke="#ecd6a8"/>
+  <text x="84" y="594" font-size="11" font-weight="700" fill="#8a6417">⑤ Checkpointer：剩余 TTL 持久化进共识日志</text>
+  <text x="84" y="611" font-size="9" fill="#7a5a1a">把每个租约的剩余 TTL 周期性地写进共识日志</text>
+  <text x="84" y="626" font-size="8.5" fill="#9a7a3a">leader 换届 / 进程重启后仍能恢复准确剩余 TTL——不是简单的内存计时器</text>
+
+  <!-- 右：ZooKeeper Session -->
+  <rect x="610" y="234" width="520" height="420" rx="14" fill="#fbeee2" stroke="#ecc6a8" filter="url(#soft)"/>
+  <text x="870" y="260" font-size="13" font-weight="700" fill="#9a5f1c" text-anchor="middle">ZooKeeper Session · 会话 + 临时节点</text>
+  <line x1="628" y1="268" x2="1112" y2="268" stroke="#ecc6a8" stroke-width="1"/>
+
+  <rect x="630" y="278" width="480" height="64" rx="10" fill="#ffffff" stroke="#ecc6a8"/>
+  <text x="644" y="298" font-size="11" font-weight="700" fill="#9a5f1c">① 建立 session</text>
+  <text x="644" y="315" font-size="9" fill="#8a5a1c">SessionTrackerImpl 记录 session 与协商的 timeout</text>
+  <text x="644" y="330" font-size="8.5" fill="#b0854a">无显式租约对象，绑定的是这条连接本身</text>
+
+  <rect x="630" y="352" width="480" height="64" rx="10" fill="#ffffff" stroke="#ecc6a8"/>
+  <text x="644" y="372" font-size="11" font-weight="700" fill="#9a5f1c">② 心跳 / 请求续期</text>
+  <text x="644" y="389" font-size="9" fill="#8a5a1c">客户端心跳或任意请求触达即续期——同样是"证明还活着"</text>
+  <text x="644" y="404" font-size="8.5" fill="#b0854a">续的是连接生命周期，而非某个显式对象</text>
+
+  <rect x="630" y="426" width="480" height="64" rx="10" fill="#fbf3e2" stroke="#ecd6a8"/>
+  <text x="644" y="446" font-size="11" font-weight="700" fill="#8a6417">③ ExpiryQueue 分桶：roundToNextInterval</text>
+  <text x="644" y="463" font-size="9" fill="#7a5a1a">把过期时刻对齐到固定间隔的桶；续期 = 移到后面的桶</text>
+  <text x="644" y="478" font-size="8.5" fill="#9a7a3a">不是给每个 session 配一个单独计时器</text>
+
+  <rect x="630" y="500" width="480" height="64" rx="10" fill="#ffffff" stroke="#ecc6a8"/>
+  <text x="644" y="520" font-size="11" font-weight="700" fill="#9a5f1c">④ 到点整桶批量检查</text>
+  <text x="644" y="537" font-size="9" fill="#8a5a1c">到达某个桶的时间点，批量检查该桶所有到期 session</text>
+  <text x="644" y="552" font-size="8.5" fill="#b0854a">批量清理，而非逐个判定</text>
+
+  <rect x="630" y="574" width="480" height="64" rx="10" fill="#ffffff" stroke="#ecc6a8"/>
+  <text x="644" y="594" font-size="11" font-weight="700" fill="#9a5f1c">⑤ 临时节点随 session 消亡</text>
+  <text x="644" y="611" font-size="9" fill="#8a5a1c">session 过期 → 其临时节点（ephemeral node）一并被移除</text>
+  <text x="644" y="626" font-size="8.5" fill="#b0854a">会话在节点在，会话亡节点删</text>
+
+  <!-- 底部一句话总结 -->
+  <rect x="50" y="670" width="1080" height="94" rx="12" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="68" y="694" font-size="10.5" font-weight="700" fill="#1d1d1f">一句话</text>
+  <text x="130" y="694" font-size="10" fill="#4a4a4f">两者本质是同一个「心跳续约、超时即判定死亡」思想的不同实现外壳：<tspan font-weight="700" fill="#20375e">etcd</tspan> 做成显式 Lease 对象（Grant/Renew/Revoke + Checkpointer 持久化剩余 TTL 进共识日志）；</text>
+  <text x="130" y="712" font-size="10" fill="#4a4a4f"><tspan font-weight="700" fill="#9a5f1c">ZooKeeper</tspan> 做成隐式连接 Session（心跳续期 + ExpiryQueue 分桶批量过期 + 临时节点随会话消亡）。</text>
+  <text x="130" y="732" font-size="9" fill="#8a97ab">对上层用户（服务注册发现 / 分布式锁 / 选主）而言，节点消失的信号都是同一件事——「超时未续」。</text>
+</svg>

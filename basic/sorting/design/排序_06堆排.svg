@@ -1,0 +1,125 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="700" viewBox="0 0 1120 700" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="aB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#4a7fd0"/></marker>
+    <marker id="aR" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#d1544a"/></marker>
+    <marker id="aG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+  </defs>
+  <rect width="1120" height="700" fill="#fbfbfd"/>
+
+  <text x="30" y="34" font-size="17" font-weight="700" fill="#1d1d1f">O6 堆排序 · 建大顶堆 → 反复把堆顶换到末尾并下沉，末尾逐个排定</text>
+  <text x="30" y="56" font-size="11" fill="#6e6e73">数组即完全二叉树：节点 i 的孩子为 2i+1、2i+2。siftDown 让父节点与较大孩子交换、循环下沉，直到父 ≥ 子</text>
+
+  <!-- 图例 -->
+  <rect x="30" y="72" width="12" height="12" rx="2" fill="#4a7fd0"/><text x="48" y="82" font-size="10.5" fill="#3a3a3c">下沉路径 siftDown</text>
+  <rect x="200" y="72" width="12" height="12" rx="2" fill="#d1544a"/><text x="218" y="82" font-size="10.5" fill="#3a3a3c">堆顶 ↔ 末尾 交换</text>
+  <rect x="350" y="72" width="12" height="12" rx="2" fill="#2f9e6e"/><text x="368" y="82" font-size="10.5" fill="#3a3a3c">已排定末尾</text>
+  <rect x="470" y="72" width="12" height="12" rx="2" fill="#d99a2b"/><text x="488" y="82" font-size="10.5" fill="#3a3a3c">堆内元素</text>
+
+  <!-- ① 建堆 -->
+  <text x="30" y="112" font-size="12.5" font-weight="700" fill="#20375e">① 建堆：从最后一个非叶节点 i = n/2-1 起，自底向上逐个 siftDown，得到大顶堆</text>
+
+  <!-- 原始 flat 数组 -->
+  <text x="40" y="152" font-size="10.5" fill="#6e6e73">原始数组</text>
+  <g font-size="12.5" text-anchor="middle">
+    <rect x="120" y="136" width="46" height="30" rx="5" fill="#fdf3e0" stroke="#e7c07a"/><text x="143" y="157" fill="#8a5a12">3</text>
+    <rect x="168" y="136" width="46" height="30" rx="5" fill="#fdf3e0" stroke="#e7c07a"/><text x="191" y="157" fill="#8a5a12">5</text>
+    <rect x="216" y="136" width="46" height="30" rx="5" fill="#fdf3e0" stroke="#e7c07a"/><text x="239" y="157" fill="#8a5a12">1</text>
+    <rect x="264" y="136" width="46" height="30" rx="5" fill="#fdf3e0" stroke="#e7c07a"/><text x="287" y="157" fill="#8a5a12">6</text>
+    <rect x="312" y="136" width="46" height="30" rx="5" fill="#fdf3e0" stroke="#e7c07a"/><text x="335" y="157" fill="#8a5a12">2</text>
+  </g>
+  <text x="143" y="182" font-size="9" fill="#a1a1a6" text-anchor="middle">0</text>
+  <text x="191" y="182" font-size="9" fill="#a1a1a6" text-anchor="middle">1</text>
+  <text x="239" y="182" font-size="9" fill="#a1a1a6" text-anchor="middle">2</text>
+  <text x="287" y="182" font-size="9" fill="#a1a1a6" text-anchor="middle">3</text>
+  <text x="335" y="182" font-size="9" fill="#a1a1a6" text-anchor="middle">4</text>
+  <text x="120" y="212" font-size="10" fill="#6e6e73">对应的完全二叉树尚未满足堆序</text>
+  <line x1="380" y1="150" x2="430" y2="150" stroke="#4a7fd0" stroke-width="2" marker-end="url(#aB)"/>
+  <text x="405" y="140" font-size="9.5" fill="#20375e" text-anchor="middle">建堆</text>
+
+  <!-- 大顶堆树 -->
+  <text x="620" y="152" font-size="10.5" fill="#8a5a12">大顶堆 [6,5,1,3,2]（每个父 ≥ 子）</text>
+  <!-- 边 -->
+  <path d="M760 267 V292 H700 V320" fill="none" stroke="#d7d7dd" stroke-width="1.3"/>
+  <path d="M760 267 V292 H830 V320" fill="none" stroke="#d7d7dd" stroke-width="1.3"/>
+  <path d="M700 354 V378 H660 V405" fill="none" stroke="#d7d7dd" stroke-width="1.3"/>
+  <path d="M700 354 V378 H740 V405" fill="none" stroke="#d7d7dd" stroke-width="1.3"/>
+  <!-- 节点 -->
+  <g font-size="14" text-anchor="middle">
+    <circle cx="760" cy="250" r="18" fill="#fdf3e0" stroke="#e7c07a" stroke-width="1.5"/><text x="760" y="255" fill="#8a5a12">6</text>
+    <circle cx="700" cy="337" r="18" fill="#fdf3e0" stroke="#e7c07a" stroke-width="1.5"/><text x="700" y="342" fill="#8a5a12">5</text>
+    <circle cx="830" cy="337" r="18" fill="#fdf3e0" stroke="#e7c07a" stroke-width="1.5"/><text x="830" y="342" fill="#8a5a12">1</text>
+    <circle cx="660" cy="423" r="18" fill="#fdf3e0" stroke="#e7c07a" stroke-width="1.5"/><text x="660" y="428" fill="#8a5a12">3</text>
+    <circle cx="740" cy="423" r="18" fill="#fdf3e0" stroke="#e7c07a" stroke-width="1.5"/><text x="740" y="428" fill="#8a5a12">2</text>
+  </g>
+  <text x="784" y="250" font-size="9" fill="#a1a1a6">idx0</text>
+  <text x="672" y="333" font-size="9" fill="#a1a1a6" text-anchor="end">idx1</text>
+  <text x="854" y="337" font-size="9" fill="#a1a1a6">idx2</text>
+  <text x="632" y="423" font-size="9" fill="#a1a1a6" text-anchor="end">idx3</text>
+  <text x="764" y="423" font-size="9" fill="#a1a1a6">idx4</text>
+
+  <!-- 建堆说明 -->
+  <rect x="120" y="228" width="440" height="180" rx="12" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="140" y="254" font-size="12" font-weight="700" fill="#20375e">建堆为何 O(n) 而非 O(n log n)</text>
+  <text x="140" y="280" font-size="10.5" fill="#4a4a4f">从 i=1 (值 5) 起 siftDown：5 与较大孩子 6 交换。</text>
+  <text x="140" y="300" font-size="10.5" fill="#4a4a4f">再 i=0 (值 3)：与 6 换、再与 5 换，一路沉到底。</text>
+  <text x="140" y="326" font-size="10.5" fill="#4a4a4f">越靠近底层的节点越多、但下沉高度越小，加总</text>
+  <text x="140" y="346" font-size="10.5" fill="#4a4a4f">后 Σ(节点数 × 高度) 收敛到 O(n)。</text>
+  <text x="140" y="374" font-size="10" fill="#8a8a8f">注意：只需处理非叶节点（前一半），叶子自身即合法堆。</text>
+  <text x="140" y="394" font-size="10" fill="#2f6b4e">建成后：堆顶 idx0 恒为全局最大值。</text>
+
+  <!-- ② 取顶排定 -->
+  <text x="30" y="452" font-size="12.5" font-weight="700" fill="#20375e">② 取顶排定：堆顶(最大)与堆末交换 → 末尾排定 → 对缩小的堆 siftDown 复原，循环 n-1 次</text>
+
+  <g font-size="12.5" text-anchor="middle">
+    <text x="90" y="490" font-size="10.5" fill="#6e6e73" text-anchor="start">建堆后</text>
+    <rect x="180" y="474" width="48" height="30" rx="5" fill="#fdf3e0" stroke="#e7c07a"/><text x="204" y="495" fill="#8a5a12">6</text>
+    <rect x="234" y="474" width="48" height="30" rx="5" fill="#fdf3e0" stroke="#e7c07a"/><text x="258" y="495" fill="#8a5a12">5</text>
+    <rect x="288" y="474" width="48" height="30" rx="5" fill="#fdf3e0" stroke="#e7c07a"/><text x="312" y="495" fill="#8a5a12">1</text>
+    <rect x="342" y="474" width="48" height="30" rx="5" fill="#fdf3e0" stroke="#e7c07a"/><text x="366" y="495" fill="#8a5a12">3</text>
+    <rect x="396" y="474" width="48" height="30" rx="5" fill="#fdf3e0" stroke="#e7c07a"/><text x="420" y="495" fill="#8a5a12">2</text>
+
+    <text x="90" y="530" font-size="10.5" fill="#6e6e73" text-anchor="start">取顶①</text>
+    <rect x="180" y="514" width="48" height="30" rx="5" fill="#fdf3e0" stroke="#e7c07a"/><text x="204" y="535" fill="#8a5a12">5</text>
+    <rect x="234" y="514" width="48" height="30" rx="5" fill="#fdf3e0" stroke="#e7c07a"/><text x="258" y="535" fill="#8a5a12">3</text>
+    <rect x="288" y="514" width="48" height="30" rx="5" fill="#fdf3e0" stroke="#e7c07a"/><text x="312" y="535" fill="#8a5a12">1</text>
+    <rect x="342" y="514" width="48" height="30" rx="5" fill="#fdf3e0" stroke="#e7c07a"/><text x="366" y="535" fill="#8a5a12">2</text>
+    <rect x="396" y="514" width="48" height="30" rx="5" fill="#e5f3ec" stroke="#a9d8c0"/><text x="420" y="535" fill="#2f6b4e">6</text>
+
+    <text x="90" y="570" font-size="10.5" fill="#6e6e73" text-anchor="start">取顶②</text>
+    <rect x="180" y="554" width="48" height="30" rx="5" fill="#fdf3e0" stroke="#e7c07a"/><text x="204" y="575" fill="#8a5a12">3</text>
+    <rect x="234" y="554" width="48" height="30" rx="5" fill="#fdf3e0" stroke="#e7c07a"/><text x="258" y="575" fill="#8a5a12">2</text>
+    <rect x="288" y="554" width="48" height="30" rx="5" fill="#fdf3e0" stroke="#e7c07a"/><text x="312" y="575" fill="#8a5a12">1</text>
+    <rect x="342" y="554" width="48" height="30" rx="5" fill="#e5f3ec" stroke="#a9d8c0"/><text x="366" y="575" fill="#2f6b4e">5</text>
+    <rect x="396" y="554" width="48" height="30" rx="5" fill="#e5f3ec" stroke="#a9d8c0"/><text x="420" y="575" fill="#2f6b4e">6</text>
+
+    <text x="90" y="610" font-size="10.5" fill="#6e6e73" text-anchor="start">取顶③</text>
+    <rect x="180" y="594" width="48" height="30" rx="5" fill="#fdf3e0" stroke="#e7c07a"/><text x="204" y="615" fill="#8a5a12">2</text>
+    <rect x="234" y="594" width="48" height="30" rx="5" fill="#fdf3e0" stroke="#e7c07a"/><text x="258" y="615" fill="#8a5a12">1</text>
+    <rect x="288" y="594" width="48" height="30" rx="5" fill="#e5f3ec" stroke="#a9d8c0"/><text x="312" y="615" fill="#2f6b4e">3</text>
+    <rect x="342" y="594" width="48" height="30" rx="5" fill="#e5f3ec" stroke="#a9d8c0"/><text x="366" y="615" fill="#2f6b4e">5</text>
+    <rect x="396" y="594" width="48" height="30" rx="5" fill="#e5f3ec" stroke="#a9d8c0"/><text x="420" y="615" fill="#2f6b4e">6</text>
+
+    <text x="90" y="650" font-size="10.5" fill="#6e6e73" text-anchor="start">取顶④</text>
+    <rect x="180" y="634" width="48" height="30" rx="5" fill="#e5f3ec" stroke="#a9d8c0"/><text x="204" y="655" fill="#2f6b4e">1</text>
+    <rect x="234" y="634" width="48" height="30" rx="5" fill="#e5f3ec" stroke="#a9d8c0"/><text x="258" y="655" fill="#2f6b4e">2</text>
+    <rect x="288" y="634" width="48" height="30" rx="5" fill="#e5f3ec" stroke="#a9d8c0"/><text x="312" y="655" fill="#2f6b4e">3</text>
+    <rect x="342" y="634" width="48" height="30" rx="5" fill="#e5f3ec" stroke="#a9d8c0"/><text x="366" y="655" fill="#2f6b4e">5</text>
+    <rect x="396" y="634" width="48" height="30" rx="5" fill="#e5f3ec" stroke="#a9d8c0"/><text x="420" y="655" fill="#2f6b4e">6</text>
+  </g>
+  <text x="470" y="535" font-size="10.5" fill="#4a4a4f">6↔2 换到末尾排定，2 下沉复原堆</text>
+  <text x="470" y="575" font-size="10.5" fill="#4a4a4f">新堆顶 5 排定于倒数第二</text>
+  <text x="470" y="615" font-size="10.5" fill="#4a4a4f">3 排定；堆缩小到 [2,1]</text>
+  <text x="470" y="655" font-size="10.5" fill="#2f6b4e">最后一个自然有序，全部排定</text>
+
+  <!-- 复杂度 -->
+  <rect x="800" y="470" width="290" height="196" rx="12" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="820" y="496" font-size="12" font-weight="700" fill="#20375e">复杂度与性质</text>
+  <text x="820" y="522" font-size="10.5" fill="#4a4a4f">建堆　　　　<tspan font-weight="700" fill="#2f6b4e">O(n)</tspan></text>
+  <text x="820" y="544" font-size="10.5" fill="#4a4a4f">n-1 次取顶　<tspan font-weight="700" fill="#20375e">O(n log n)</tspan></text>
+  <text x="820" y="566" font-size="10.5" fill="#4a4a4f">合计（各情形）<tspan font-weight="700" fill="#20375e">O(n log n)</tspan></text>
+  <text x="820" y="588" font-size="10.5" fill="#4a4a4f">空间　　　　<tspan font-weight="700" fill="#20375e">O(1) · 原地</tspan></text>
+  <text x="820" y="610" font-size="10.5" fill="#4a4a4f">稳定性　　　<tspan font-weight="700" fill="#8a4038">不稳定</tspan></text>
+  <text x="820" y="638" font-size="10" fill="#6e6e73">优点：最坏也 O(n log n) 且原地；</text>
+  <text x="820" y="656" font-size="10" fill="#6e6e73">缺点：访存跳跃、缓存不友好，常慢于快排。</text>
+</svg>

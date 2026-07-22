@@ -24,10 +24,12 @@
 
 ## 深化 · 失败路径与边界
 
-- **work_mem 落盘退化**：Sort/HashAgg/HashJoin 的内存超 `work_mem` 时切到外部归并/批量落盘（临时文件），性能骤降；每个此类算子节点各占一份 work_mem，复杂计划 × 高并发易 OOM。
-- **并行的启动与限制**：并行 worker 是 fork 出的进程，有启动成本；小查询不值得并行。写操作、游标、`SERIALIZABLE`、含 parallel-unsafe 函数的查询会**退回串行**。worker 数还受 `max_parallel_workers`/`max_worker_processes` 全局池限制，池耗尽时优化器估的并行度拿不满。
-- **执行期错误**：唯一约束冲突、除零、类型转换失败等只在 Run 阶段暴露、触发事务回滚；`EXPLAIN`（不带 ANALYZE）只走到计划不执行，看不到这些。
-- **游标即长快照**：Portal 持有的游标沿用其快照，长时间不关等价长事务、压住死元组回收。
+| 场景 | 机理 | 后果 / 应对 |
+|---|---|---|
+| work_mem 落盘退化 | Sort/HashAgg/HashJoin 内存超 `work_mem` 切外部归并/落盘临时文件 | 性能骤降；每个此类算子各占一份 work_mem，复杂计划 × 高并发易 OOM |
+| 并行的启动与限制 | worker 是 fork 进程有启动成本；写/游标/SERIALIZABLE/parallel-unsafe 函数退回串行 | 小查询不值得并行；worker 数受 `max_parallel_workers`/`max_worker_processes` 池限制，池耗尽拿不满并行度 |
+| 执行期错误 | 唯一约束冲突、除零、类型转换失败只在 Run 阶段暴露 | 触发事务回滚；`EXPLAIN`（不带 ANALYZE）只走计划不执行看不到 |
+| 游标即长快照 | Portal 持有的游标沿用其快照 | 长时间不关等价长事务、压住死元组回收 |
 
 ---
 

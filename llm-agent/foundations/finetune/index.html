@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Fine-tuning · AI Agents 图谱</title>
+<style>
+:root{
+  --c-bg:#fbfbfd; --c-card:#ffffff; --c-card2:#f5f5f7; --c-ink:#1d1d1f;
+  --c-ink2:#6e6e73; --c-ink3:#a1a1a6; --c-line:#e6e6ea; --c-edge:#d2d2d7;
+  --c-panel:#ffffff; --c-shadow:rgba(0,0,0,.08);
+}
+html[data-theme="dark"]{
+  --c-bg:#0d0d0f; --c-card:#17171a; --c-card2:#1e1e22; --c-ink:#f2f2f5;
+  --c-ink2:#a1a1a6; --c-ink3:#6e6e73; --c-line:#2a2a30; --c-edge:#33333a;
+  --c-panel:#161619; --c-shadow:rgba(0,0,0,.5);
+  /* 架构图内联 SVG 结构中性色深色翻转(品牌强调色不变) */
+  --sc-bg:#17171a; --sc-panel:#1e1e22; --sc-ink:#e8e8ea; --sc-ink2:#c4c4c8;
+  --sc-sub:#9a9aa2; --sc-line:#33333a; --sc-line2:#3d3d45;
+  --sc-fill-blue:#16253d; --sc-fill-purple:#241d3a; --sc-fill-orange:#382214; --sc-fill-teal:#0f3330;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--c-bg);color:var(--c-ink);
+  font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif;
+  font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+header{position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:14px;
+  padding:12px 24px;background:color-mix(in srgb,var(--c-bg) 86%,transparent);
+  backdrop-filter:saturate(1.4) blur(14px);border-bottom:1px solid var(--c-line)}
+header .logo{display:inline-flex;align-items:center;flex:none}
+header .spacer{flex:1}
+.brand-intro{display:flex;flex-direction:column;align-items:flex-start;margin-left:6px;min-width:0}
+.brand-intro .bt{font-size:15px;font-weight:700;color:var(--c-ink);line-height:1.3}
+.brand-intro .bs{margin-top:3px;font-size:11.5px;color:var(--c-ink3);line-height:1.5}
+.icobtn{width:38px;height:38px;border-radius:50%;border:1px solid var(--c-line);
+  background:var(--c-panel);color:var(--c-ink2);cursor:pointer;display:inline-grid;
+  place-items:center;font-size:16px;flex:none;text-decoration:none}
+.tt-ico{font-size:16px;line-height:1}.tt-moon{display:none}
+html[data-theme="dark"] .tt-sun{display:none}html[data-theme="dark"] .tt-moon{display:inline}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 24px 80px}
+
+/* ---- 门户 hero ---- */
+.hero{margin:6px 0 26px}
+.hero h1{font-size:26px;font-weight:800;letter-spacing:.2px}
+.hero .sub{margin-top:8px;font-size:13.5px;color:var(--c-ink2);max-width:820px}
+.hero .back{display:inline-flex;align-items:center;gap:6px;margin-bottom:14px;
+  font-size:12.5px;color:var(--c-ink2);border:1px solid var(--c-line);
+  border-radius:999px;padding:5px 13px;background:var(--c-panel)}
+.hero .back:hover{color:var(--c-ink);border-color:var(--c-edge)}
+
+/* ---- 门户卡片栅格 ---- */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:18px}
+.card{position:relative;display:block;background:var(--c-card);border:1px solid var(--c-line);
+  border-radius:16px;padding:20px 20px 18px;overflow:hidden;transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease}
+.card:hover{transform:translateY(-3px);border-color:var(--acc);box-shadow:0 10px 30px var(--c-shadow)}
+.card .bar{position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--acc)}
+.card .k{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.6px;
+  color:var(--acc);text-transform:uppercase;margin-bottom:8px}
+.card h3{font-size:17px;font-weight:750;line-height:1.35;color:var(--c-ink)}
+.card .core{margin-top:9px;font-size:12.5px;color:var(--c-ink2);line-height:1.6}
+.card .tags{margin-top:14px;display:flex;flex-direction:column;gap:7px}
+.card .tag{display:flex;gap:8px;align-items:baseline;font-size:12px;color:var(--c-ink2)}
+.card .tag .n{font-weight:800;color:var(--acc);flex:none;font-variant-numeric:tabular-nums}
+.card .go{margin-top:16px;font-size:12px;font-weight:700;color:var(--acc);display:inline-flex;align-items:center;gap:5px}
+
+/* ---- 模块页 ---- */
+.judge{background:var(--c-card);border:1px solid var(--c-line);border-left:4px solid var(--acc);
+  border-radius:14px;padding:18px 22px;margin-bottom:26px}
+.judge .k{font-size:11px;font-weight:700;letter-spacing:.6px;color:var(--acc);text-transform:uppercase}
+.judge h1{font-size:22px;font-weight:800;line-height:1.34;margin-top:7px}
+.judge .core{margin-top:11px;font-size:13.5px;color:var(--c-ink2);line-height:1.7;max-width:900px}
+.secttl{display:flex;align-items:center;gap:11px;margin:34px 0 14px}
+.secttl .badge{flex:none;min-width:30px;height:30px;padding:0 9px;border-radius:9px;background:var(--acc);
+  color:#fff;font-weight:800;font-size:15px;display:inline-grid;place-items:center}
+.secttl .t{font-size:17px;font-weight:750}
+.secttl.eco .badge{background:var(--c-ink);color:var(--c-bg)}
+/* ── 垂直 TAB 布局 ── */
+.vt-wrap{display:flex;gap:22px;margin-top:26px;align-items:flex-start}
+.vt-nav{flex:none;width:236px;position:sticky;top:20px;display:flex;flex-direction:column;gap:8px}
+.vt-grp{font-size:11px;font-weight:800;letter-spacing:.04em;color:var(--c-ink3);
+  text-transform:none;margin:14px 4px 2px;padding-top:8px;border-top:1px solid var(--c-line)}
+.vt-grp:first-child{margin-top:0;padding-top:0;border-top:none}
+.vt-tab{display:flex;align-items:center;gap:10px;text-align:left;cursor:pointer;
+  background:var(--c-card);border:1px solid var(--c-line);border-radius:12px;
+  padding:12px 13px;color:var(--c-ink2);font:inherit;transition:.15s}
+.vt-tab:hover{border-color:var(--acc);color:var(--c-ink)}
+.vt-tab.active{background:var(--acc);border-color:var(--acc);color:#fff;box-shadow:0 4px 14px -6px var(--acc)}
+.vt-tab .vt-b{flex:none;min-width:26px;height:26px;padding:0 7px;border-radius:8px;
+  background:var(--c-card2);color:var(--acc);font-weight:800;font-size:13px;
+  display:inline-grid;place-items:center}
+.vt-tab.active .vt-b{background:rgba(255,255,255,.24);color:#fff}
+.vt-tab .vt-l{font-size:12.5px;font-weight:650;line-height:1.35}
+.vt-stage{flex:1;min-width:0}
+.vt-sec{display:none}
+.vt-sec.active{display:block;animation:vtfade .22s ease}
+.vt-sec .secttl{margin-top:0}
+@keyframes vtfade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media(max-width:820px){.vt-wrap{flex-direction:column}.vt-nav{position:static;width:100%;flex-direction:row;flex-wrap:wrap}.vt-tab{flex:1 1 44%}}
+.fig{background:var(--c-card);border:1px solid var(--c-line);border-radius:16px;
+  padding:16px;overflow:hidden}
+.fig img{display:block;width:100%;height:auto;border-radius:8px}
+.fig .figsvg{display:block;width:100%;height:auto;border-radius:8px}
+.blurb{margin-top:14px;background:var(--c-card);border:1px solid var(--c-line);
+  border-radius:14px;padding:15px 19px}
+.blurb p{font-size:13px;color:var(--c-ink2);line-height:1.75}
+.blurb p+p{margin-top:9px}
+.blurb b{color:var(--c-ink);font-weight:700}
+.blurb code{font-family:'SF Mono',ui-monospace,Menlo,monospace;font-size:.88em;
+  background:var(--c-card2);border:1px solid var(--c-line);border-radius:5px;padding:1px 5px;color:var(--acc)}
+.blurb a{color:var(--acc);text-decoration:none;
+  border-bottom:1px solid color-mix(in srgb,var(--acc) 40%,transparent);transition:border-color .15s}
+.blurb a:hover{border-bottom-color:var(--acc)}
+.refs{margin-top:30px;padding-top:18px;border-top:2px solid var(--c-line)}
+.reflist{margin-top:12px}
+.reflist p{margin:5px 0;font-size:12.5px;color:var(--c-ink2);line-height:1.7}
+.reflist a{color:var(--acc)}
+.miss{padding:40px;text-align:center;color:var(--c-ink3);font-size:13px;border:1px dashed var(--c-edge);border-radius:12px}
+.backrow{margin-top:44px;padding-top:22px;border-top:1px solid var(--c-line)}
+.backrow a{display:inline-flex;align-items:center;gap:7px;font-size:13px;color:var(--c-ink2);
+  border:1px solid var(--c-line);border-radius:999px;padding:8px 16px;background:var(--c-panel)}
+.backrow a:hover{color:var(--c-ink);border-color:var(--c-edge)}
+footer{max-width:1180px;margin:0 auto;padding:0 24px 40px;color:var(--c-ink3);font-size:11.5px}
+
+/* ---- 门户片区切换 tab + 片区标题条 ---- */
+.zbar{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap}
+.zseg{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:700;
+  color:var(--c-ink2);border:1px solid var(--c-line);border-radius:999px;
+  padding:8px 16px;background:var(--c-panel);transition:.15s}
+.zseg:hover{color:var(--c-ink);border-color:var(--c-edge)}
+.zseg.active{color:var(--c-ink);border-color:var(--c-ink);background:var(--c-card)}
+.zseg .zn{min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:var(--c-card2);
+  color:var(--c-ink2);font-size:11px;font-weight:800;display:inline-grid;place-items:center}
+.zone{margin-top:38px;scroll-margin-top:80px}
+.zone:first-of-type{margin-top:30px}
+.zhd{margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--c-line)}
+.zhd .zk{font-size:11px;font-weight:800;letter-spacing:.08em;color:var(--c-ink3);text-transform:uppercase}
+.zhd h2{font-size:20px;font-weight:800;margin-top:5px;color:var(--c-ink)}
+.zhd p{font-size:12.5px;color:var(--c-ink2);margin-top:6px;max-width:860px;line-height:1.65}
+</style>
+</head>
+<body>
+<header>
+  <a class="logo" href="../../../index.html#agent" title="返回 LLM & Agent 导航"><span class="icobtn"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg></span></a>
+  <div class="brand-intro">
+    <div class="bt">Fine-tuning</div>
+    <div class="bs">AI Agents 生态图谱 · 概念层机理（不点名具体框架）</div>
+  </div>
+  <div class="spacer"></div>
+  <button id="themeBtn" class="icobtn" title="切换深色 / 浅色主题" aria-label="切换主题"><span class="tt-ico tt-moon">☾</span><span class="tt-ico tt-sun">☀</span></button>
+</header>
+<div class="wrap" style="--acc:#f5873a">
+  <div class="judge">
+    <span class="k">FINETUNE · 定位</span>
+    <h1>Fine-tuning · 从基座到可用助手</h1>
+    <div class="core">基座只会续写，要变成听话的助手需两步：SFT 用示范数据教「怎么答」，RLHF/DPO 用偏好信号教「答得更好」，PEFT 让这一切低成本。</div>
+  </div>
+  <div class="vt-wrap"><nav class="vt-nav" aria-label="模块内容切换"><div class="vt-grp">概览 Overview</div><button class="vt-tab active" data-target="sec-eco"><span class="vt-b">◎</span><span class="vt-l">生态架构总图</span></button><div class="vt-grp">机制 · 监督微调</div><button class="vt-tab" data-target="sec-s1"><span class="vt-b">S1</span><span class="vt-l">指令数据 SFT</span></button><div class="vt-grp">机制 · 偏好对齐</div><button class="vt-tab" data-target="sec-s2"><span class="vt-b">S2</span><span class="vt-l">RLHF 与 DPO</span></button><div class="vt-grp">机制 · 参数高效</div><button class="vt-tab" data-target="sec-s3"><span class="vt-b">S3</span><span class="vt-l">LoRA / Adapter</span></button><div class="vt-grp">对比 Compare</div><button class="vt-tab" data-target="sec-cmp"><span class="vt-b">⇄</span><span class="vt-l">机制差异对比</span></button><div class="vt-grp">工程 Engineering</div><button class="vt-tab" data-target="sec-eng"><span class="vt-b">⚙</span><span class="vt-l">框架实现差异</span></button></nav><div class="vt-stage"><section class="vt-sec active" id="sec-eco" data-sec="sec-eco"><div class="secttl eco"><span class="badge">◎</span><span class="t">生态架构总图 · 这一模块如何在 Agent 系统中自洽拼合</span></div><div class="fig" role="img" aria-label="Fine-tuning 生态架构"><svg class="figsvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 470" font-family="-apple-system,'PingFang SC','Helvetica Neue',sans-serif">
+  <defs>
+    <filter id="s64_soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.07"/>
+    </filter>
+    <marker id="s64_aro" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#f5873a"/>
+    </marker>
+  </defs>
+  <rect width="960" height="470" fill="var(--sc-bg,#fbfbfd)"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="var(--sc-ink,#1d1d1f)">微调对齐 · 生态架构</text>
+  <text x="30" y="54" font-size="12" fill="var(--sc-sub,#6e6e73)">基座模型经指令微调学会听话，再经偏好对齐变得有用、安全、贴合人类意图</text>
+
+  <g filter="url(#s64_soft)"><rect x="30" y="96" width="170" height="72" rx="12" fill="var(--sc-fill-orange,#fff3ea)" stroke="#f5873a" stroke-width="1.5"/></g>
+  <text x="115" y="128" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">基座模型</text>
+  <text x="115" y="148" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">会补全，不会听话</text>
+
+  <g filter="url(#s64_soft)"><rect x="252" y="96" width="170" height="72" rx="12" fill="var(--sc-fill-orange,#fff3ea)" stroke="#f5873a" stroke-width="1.5"/></g>
+  <text x="337" y="128" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">指令微调 SFT</text>
+  <text x="337" y="148" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">学会遵循指令</text>
+
+  <g filter="url(#s64_soft)"><rect x="474" y="96" width="170" height="72" rx="12" fill="var(--sc-fill-orange,#fff3ea)" stroke="#f5873a" stroke-width="1.5"/></g>
+  <text x="559" y="128" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">偏好对齐</text>
+  <text x="559" y="148" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">RLHF / DPO</text>
+
+  <g filter="url(#s64_soft)"><rect x="696" y="96" width="212" height="72" rx="12" fill="var(--sc-fill-orange,#fff3ea)" stroke="#f5873a" stroke-width="1.5"/></g>
+  <text x="802" y="128" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">对齐后的助手</text>
+  <text x="802" y="148" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">有用·诚实·无害</text>
+
+  <path d="M200 132 L252 132" stroke="#f5873a" stroke-width="2.2" fill="none" marker-end="url(#s64_aro)"/>
+  <path d="M422 132 L474 132" stroke="#f5873a" stroke-width="2.2" fill="none" marker-end="url(#s64_aro)"/>
+  <path d="M644 132 L696 132" stroke="#f5873a" stroke-width="2.2" fill="none" marker-end="url(#s64_aro)"/>
+
+  <g filter="url(#s64_soft)"><rect x="30" y="212" width="288" height="150" rx="14" fill="var(--sc-panel,#ffffff)" stroke="#f5873a" stroke-width="1.4"/></g>
+  <text x="54" y="244" font-size="12.5" font-weight="600" fill="#f5873a">监督微调</text>
+  <text x="54" y="272" font-size="10.5" fill="var(--sc-sub,#6e6e73)">高质量指令-回答对</text>
+  <text x="54" y="294" font-size="10.5" fill="var(--sc-sub,#6e6e73)">教模型「怎么回话」</text>
+  <text x="54" y="316" font-size="10.5" fill="var(--sc-sub,#6e6e73)">数据质量 > 数量</text>
+  <text x="54" y="338" font-size="10.5" fill="var(--sc-sub,#6e6e73)">奠定指令遵循能力</text>
+
+  <g filter="url(#s64_soft)"><rect x="336" y="212" width="288" height="150" rx="14" fill="var(--sc-panel,#ffffff)" stroke="#f5873a" stroke-width="1.4"/></g>
+  <text x="360" y="244" font-size="12.5" font-weight="600" fill="#f5873a">偏好对齐</text>
+  <text x="360" y="272" font-size="10.5" fill="var(--sc-sub,#6e6e73)">用人类偏好排序优化</text>
+  <text x="360" y="294" font-size="10.5" fill="var(--sc-sub,#6e6e73)">RLHF：奖励模型 + PPO</text>
+  <text x="360" y="316" font-size="10.5" fill="var(--sc-sub,#6e6e73)">DPO：直接偏好优化</text>
+  <text x="360" y="338" font-size="10.5" fill="var(--sc-sub,#6e6e73)">对齐价值观与安全</text>
+
+  <g filter="url(#s64_soft)"><rect x="642" y="212" width="288" height="150" rx="14" fill="var(--sc-panel,#ffffff)" stroke="#f5873a" stroke-width="1.4"/></g>
+  <text x="666" y="244" font-size="12.5" font-weight="600" fill="#f5873a">参数高效</text>
+  <text x="666" y="272" font-size="10.5" fill="var(--sc-sub,#6e6e73)">只训练少量新增参数</text>
+  <text x="666" y="294" font-size="10.5" fill="var(--sc-sub,#6e6e73)">LoRA：低秩旁路矩阵</text>
+  <text x="666" y="316" font-size="10.5" fill="var(--sc-sub,#6e6e73)">Adapter / Prefix 等</text>
+  <text x="666" y="338" font-size="10.5" fill="var(--sc-sub,#6e6e73)">省显存、可插拔</text>
+
+  <text x="480" y="416" font-size="12" font-weight="600" fill="#f5873a" text-anchor="middle">主线：SFT 教「怎么答」，对齐调「答得好不好」，PEFT 让这一切更省成本</text>
+</svg></div><div class="blurb"><p>基座只会续写，要变成听话的助手需两步：SFT 用示范数据教「怎么答」，RLHF/DPO 用偏好信号教「答得更好」，PEFT 让这一切低成本。</p></div></section><section class="vt-sec" id="sec-s1" data-sec="sec-s1"><div class="secttl"><span class="badge">S1</span><span class="t">监督微调 · 指令数据 SFT</span></div><div class="fig" role="img" aria-label="监督微调 · 指令数据 SFT"><svg class="figsvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 470" font-family="-apple-system,'PingFang SC','Helvetica Neue',sans-serif">
+  <defs>
+    <filter id="s65_soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.07"/>
+    </filter>
+    <marker id="s65_aro" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#f5873a"/>
+    </marker>
+  </defs>
+  <rect width="960" height="470" fill="var(--sc-bg,#fbfbfd)"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="var(--sc-ink,#1d1d1f)">微调对齐 · 监督微调 SFT</text>
+  <text x="30" y="54" font-size="12" fill="var(--sc-sub,#6e6e73)">用「指令 - 优质回答」样本继续训练，把补全模型改造成会听话的助手</text>
+
+  <g filter="url(#s65_soft)"><rect x="30" y="92" width="240" height="120" rx="12" fill="var(--sc-fill-orange,#fff3ea)" stroke="#f5873a" stroke-width="1.4"/></g>
+  <text x="54" y="120" font-size="12" font-weight="600" fill="#f5873a">训练样本格式</text>
+  <text x="54" y="146" font-size="10.5" fill="var(--sc-ink,#1d1d1f)">指令：翻译成英文「你好」</text>
+  <text x="54" y="170" font-size="10.5" fill="var(--sc-ink,#1d1d1f)">回答：Hello</text>
+  <text x="54" y="196" font-size="10" fill="var(--sc-sub,#6e6e73)">仅对「回答」部分算损失</text>
+
+  <path d="M270 152 L322 152" stroke="#f5873a" stroke-width="2.2" fill="none" marker-end="url(#s65_aro)"/>
+
+  <g filter="url(#s65_soft)"><rect x="322" y="92" width="240" height="120" rx="12" fill="var(--sc-panel,#ffffff)" stroke="#f5873a" stroke-width="1.4"/></g>
+  <text x="346" y="120" font-size="12" font-weight="600" fill="#f5873a">基座 → 监督训练</text>
+  <text x="346" y="146" font-size="10.5" fill="var(--sc-sub,#6e6e73)">在基座权重上继续训练</text>
+  <text x="346" y="170" font-size="10.5" fill="var(--sc-sub,#6e6e73)">学习指令到回答的映射</text>
+  <text x="346" y="196" font-size="10.5" fill="var(--sc-sub,#6e6e73)">小学习率、少量 epoch</text>
+
+  <path d="M562 152 L614 152" stroke="#f5873a" stroke-width="2.2" fill="none" marker-end="url(#s65_aro)"/>
+
+  <g filter="url(#s65_soft)"><rect x="614" y="92" width="294" height="120" rx="12" fill="var(--sc-fill-orange,#fff3ea)" stroke="#f5873a" stroke-width="1.4"/></g>
+  <text x="638" y="120" font-size="12" font-weight="600" fill="#f5873a">得到指令模型</text>
+  <text x="638" y="146" font-size="10.5" fill="var(--sc-sub,#6e6e73)">能理解并遵循自然语言指令</text>
+  <text x="638" y="170" font-size="10.5" fill="var(--sc-sub,#6e6e73)">具备多任务泛化能力</text>
+  <text x="638" y="196" font-size="10.5" fill="var(--sc-sub,#6e6e73)">是后续偏好对齐的起点</text>
+
+  <g filter="url(#s65_soft)"><rect x="30" y="248" width="435" height="150" rx="14" fill="var(--sc-panel,#ffffff)" stroke="#f5873a" stroke-width="1.4"/></g>
+  <text x="54" y="280" font-size="12.5" font-weight="600" fill="#f5873a">为何数据质量是关键</text>
+  <text x="54" y="308" font-size="10.5" fill="var(--sc-sub,#6e6e73)">· 少量高质量样本胜过海量噪声</text>
+  <text x="54" y="332" font-size="10.5" fill="var(--sc-sub,#6e6e73)">· 多样性覆盖任务与风格分布</text>
+  <text x="54" y="356" font-size="10.5" fill="var(--sc-sub,#6e6e73)">· 回答需体现期望的格式与语气</text>
+  <text x="54" y="380" font-size="10.5" fill="var(--sc-sub,#6e6e73)">· 错误样本会被模型忠实模仿</text>
+
+  <g filter="url(#s65_soft)"><rect x="495" y="248" width="435" height="150" rx="14" fill="var(--sc-panel,#ffffff)" stroke="#f5873a" stroke-width="1.4"/></g>
+  <text x="519" y="280" font-size="12.5" font-weight="600" fill="#f5873a">SFT 能与不能</text>
+  <text x="519" y="308" font-size="10.5" fill="var(--sc-sub,#6e6e73)">· 能：激发基座已有的能力</text>
+  <text x="519" y="332" font-size="10.5" fill="var(--sc-sub,#6e6e73)">· 能：定型输出格式与行为</text>
+  <text x="519" y="356" font-size="10.5" fill="var(--sc-sub,#6e6e73)">· 难：注入大量全新知识</text>
+  <text x="519" y="380" font-size="10.5" fill="var(--sc-sub,#6e6e73)">· 难：精细权衡「好 vs 更好」</text>
+
+  <text x="480" y="440" font-size="12" font-weight="600" fill="#f5873a" text-anchor="middle">SFT 教会模型「怎么答」，但「答得多好」还要靠偏好对齐进一步打磨</text>
+</svg></div></section><section class="vt-sec" id="sec-s2" data-sec="sec-s2"><div class="secttl"><span class="badge">S2</span><span class="t">偏好对齐 · RLHF 与 DPO</span></div><div class="fig" role="img" aria-label="偏好对齐 · RLHF 与 DPO"><svg class="figsvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 480" font-family="-apple-system,'PingFang SC','Helvetica Neue',sans-serif">
+  <defs>
+    <filter id="s66_soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.07"/>
+    </filter>
+    <marker id="s66_aro" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#f5873a"/>
+    </marker>
+  </defs>
+  <rect width="960" height="480" fill="var(--sc-bg,#fbfbfd)"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="var(--sc-ink,#1d1d1f)">微调对齐 · 偏好对齐</text>
+  <text x="30" y="54" font-size="12" fill="var(--sc-sub,#6e6e73)">用「人更喜欢哪个回答」的偏好信号，把模型行为拉向有用、诚实、无害</text>
+
+  <g filter="url(#s66_soft)"><rect x="30" y="86" width="435" height="330" rx="14" fill="var(--sc-fill-orange,#fff3ea)" stroke="#f5873a" stroke-width="1.5"/></g>
+  <text x="56" y="118" font-size="13" font-weight="600" fill="#f5873a">RLHF · 强化学习对齐</text>
+  <g filter="url(#s66_soft)"><rect x="56" y="140" width="170" height="48" rx="8" fill="var(--sc-panel,#ffffff)" stroke="#f5873a" stroke-width="1.2"/></g>
+  <text x="141" y="169" font-size="10.5" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">① 收集人类偏好排序</text>
+  <path d="M141 188 L141 208" stroke="#f5873a" stroke-width="2" fill="none" marker-end="url(#s66_aro)"/>
+  <g filter="url(#s66_soft)"><rect x="56" y="210" width="170" height="48" rx="8" fill="var(--sc-panel,#ffffff)" stroke="#f5873a" stroke-width="1.2"/></g>
+  <text x="141" y="239" font-size="10.5" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">② 训练奖励模型 RM</text>
+  <path d="M141 258 L141 278" stroke="#f5873a" stroke-width="2" fill="none" marker-end="url(#s66_aro)"/>
+  <g filter="url(#s66_soft)"><rect x="56" y="280" width="170" height="48" rx="8" fill="var(--sc-panel,#ffffff)" stroke="#f5873a" stroke-width="1.2"/></g>
+  <text x="141" y="309" font-size="10.5" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">③ PPO 优化策略</text>
+  <text x="248" y="170" font-size="10" fill="var(--sc-sub,#6e6e73)">对同一问题的多个回答</text>
+  <text x="248" y="188" font-size="10" fill="var(--sc-sub,#6e6e73)">让人标注优劣顺序</text>
+  <text x="248" y="240" font-size="10" fill="var(--sc-sub,#6e6e73)">RM 学会给回答打分</text>
+  <text x="248" y="258" font-size="10" fill="var(--sc-sub,#6e6e73)">充当人类偏好的代理</text>
+  <text x="248" y="310" font-size="10" fill="var(--sc-sub,#6e6e73)">最大化奖励 + KL 约束</text>
+  <text x="248" y="328" font-size="10" fill="var(--sc-sub,#6e6e73)">防止偏离原模型太远</text>
+  <text x="56" y="360" font-size="10.5" fill="var(--sc-sub,#6e6e73)">效果强但流程复杂、训练不稳</text>
+  <text x="56" y="384" font-size="10.5" fill="var(--sc-sub,#6e6e73)">需维护 RM、策略、参考三套模型</text>
+
+  <g filter="url(#s66_soft)"><rect x="495" y="86" width="435" height="330" rx="14" fill="var(--sc-panel,#ffffff)" stroke="#f5873a" stroke-width="1.5"/></g>
+  <text x="521" y="118" font-size="13" font-weight="600" fill="#f5873a">DPO · 直接偏好优化</text>
+  <text x="521" y="148" font-size="11" fill="var(--sc-ink,#1d1d1f)">跳过奖励模型与强化学习</text>
+  <text x="521" y="176" font-size="10.5" fill="var(--sc-sub,#6e6e73)">· 直接在「优选 vs 劣选」对上优化</text>
+  <text x="521" y="200" font-size="10.5" fill="var(--sc-sub,#6e6e73)">· 用一个分类式损失拉高优选概率</text>
+  <text x="521" y="224" font-size="10.5" fill="var(--sc-sub,#6e6e73)">· 隐式等价于 RLHF 目标</text>
+  <text x="521" y="248" font-size="10.5" fill="var(--sc-sub,#6e6e73)">· 只需策略与参考两套模型</text>
+  <text x="521" y="286" font-size="11" font-weight="600" fill="var(--sc-ink,#1d1d1f)">优势</text>
+  <text x="521" y="310" font-size="10.5" fill="var(--sc-sub,#6e6e73)">· 实现简单、训练稳定</text>
+  <text x="521" y="334" font-size="10.5" fill="var(--sc-sub,#6e6e73)">· 计算成本更低</text>
+  <text x="521" y="358" font-size="10.5" fill="var(--sc-sub,#6e6e73)">· 已成开源社区主流选择</text>
+  <text x="521" y="390" font-size="10.5" fill="var(--sc-sub,#6e6e73)">代价：极致效果上限或略逊于精调 RLHF</text>
+
+  <text x="480" y="452" font-size="12" font-weight="600" fill="#f5873a" text-anchor="middle">共同目标：把「人类更偏好」的行为固化进模型，实现价值观与安全对齐</text>
+</svg></div></section><section class="vt-sec" id="sec-s3" data-sec="sec-s3"><div class="secttl"><span class="badge">S3</span><span class="t">参数高效 · LoRA / Adapter</span></div><div class="fig" role="img" aria-label="参数高效 · LoRA / Adapter"><svg class="figsvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 480" font-family="-apple-system,'PingFang SC','Helvetica Neue',sans-serif">
+  <defs>
+    <filter id="s67_soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.07"/>
+    </filter>
+    <marker id="s67_aro" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#f5873a"/>
+    </marker>
+  </defs>
+  <rect width="960" height="480" fill="var(--sc-bg,#fbfbfd)"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="var(--sc-ink,#1d1d1f)">微调对齐 · 参数高效 PEFT</text>
+  <text x="30" y="54" font-size="12" fill="var(--sc-sub,#6e6e73)">冻结绝大部分权重，只训练少量新增参数，用几张卡完成大模型定制</text>
+
+  <g filter="url(#s67_soft)"><rect x="30" y="86" width="435" height="330" rx="14" fill="var(--sc-fill-orange,#fff3ea)" stroke="#f5873a" stroke-width="1.5"/></g>
+  <text x="56" y="118" font-size="13" font-weight="600" fill="#f5873a">LoRA · 低秩旁路</text>
+  <g filter="url(#s67_soft)"><rect x="120" y="150" width="130" height="150" rx="10" fill="var(--sc-panel,#ffffff)" stroke="var(--sc-sub,#9aa0a6)" stroke-width="1.4" stroke-dasharray="4 3"/></g>
+  <text x="185" y="228" font-size="13" fill="var(--sc-sub,#9aa0a6)" text-anchor="middle">W（冻结）</text>
+  <text x="185" y="248" font-size="10" fill="var(--sc-sub,#9aa0a6)" text-anchor="middle">原始权重不更新</text>
+  <g filter="url(#s67_soft)"><rect x="300" y="160" width="120" height="52" rx="8" fill="var(--sc-panel,#ffffff)" stroke="#f5873a" stroke-width="1.3"/></g>
+  <text x="360" y="191" font-size="11" fill="#f5873a" text-anchor="middle">B（d×r）</text>
+  <path d="M360 212 L360 234" stroke="#f5873a" stroke-width="2" fill="none" marker-end="url(#s67_aro)"/>
+  <g filter="url(#s67_soft)"><rect x="300" y="236" width="120" height="52" rx="8" fill="var(--sc-panel,#ffffff)" stroke="#f5873a" stroke-width="1.3"/></g>
+  <text x="360" y="267" font-size="11" fill="#f5873a" text-anchor="middle">A（r×k）</text>
+  <text x="56" y="336" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)">ΔW = B · A ，秩 r 远小于原维度</text>
+  <text x="56" y="362" font-size="10.5" fill="var(--sc-sub,#6e6e73)">只训练 A、B 两个小矩阵，参数量降到千分之几</text>
+  <text x="56" y="386" font-size="10.5" fill="var(--sc-sub,#6e6e73)">推理时可合并回 W，零额外延迟</text>
+
+  <g filter="url(#s67_soft)"><rect x="495" y="86" width="435" height="330" rx="14" fill="var(--sc-panel,#ffffff)" stroke="#f5873a" stroke-width="1.5"/></g>
+  <text x="521" y="118" font-size="13" font-weight="600" fill="#f5873a">方法谱系</text>
+  <text x="521" y="150" font-size="11" font-weight="600" fill="var(--sc-ink,#1d1d1f)">· Adapter</text>
+  <text x="540" y="170" font-size="10.5" fill="var(--sc-sub,#6e6e73)">层间插入小瓶颈模块</text>
+  <text x="521" y="198" font-size="11" font-weight="600" fill="var(--sc-ink,#1d1d1f)">· Prefix / Prompt Tuning</text>
+  <text x="540" y="218" font-size="10.5" fill="var(--sc-sub,#6e6e73)">只学少量可训练前缀向量</text>
+  <text x="521" y="246" font-size="11" font-weight="600" fill="var(--sc-ink,#1d1d1f)">· LoRA</text>
+  <text x="540" y="266" font-size="10.5" fill="var(--sc-sub,#6e6e73)">低秩旁路，可插拔可合并</text>
+  <text x="521" y="294" font-size="11" font-weight="600" fill="var(--sc-ink,#1d1d1f)">· QLoRA</text>
+  <text x="540" y="314" font-size="10.5" fill="var(--sc-sub,#6e6e73)">4bit 量化底座 + LoRA，单卡微调 65B</text>
+  <text x="521" y="352" font-size="11" font-weight="600" fill="#f5873a">收益</text>
+  <text x="521" y="374" font-size="10.5" fill="var(--sc-sub,#6e6e73)">显存与存储大降，一底座挂多套适配器</text>
+  <text x="521" y="396" font-size="10.5" fill="var(--sc-sub,#6e6e73)">代价：极端任务上限或略逊全参微调</text>
+
+  <text x="480" y="452" font-size="12" font-weight="600" fill="#f5873a" text-anchor="middle">核心思想：少量可训练参数撬动大模型，省显存、可插拔、易落地</text>
+</svg></div></section><section class="vt-sec" id="sec-cmp" data-sec="sec-cmp"><div class="secttl"><span class="badge">⇄</span><span class="t">Fine-tuning · 核心机制差异对比</span></div><div class="fig" role="img" aria-label="Fine-tuning · 核心机制差异对比"><svg class="figsvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 520" font-family="-apple-system,'PingFang SC','Helvetica Neue',sans-serif">
+  <defs>
+    <filter id="s68_soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.07"/>
+    </filter>
+  </defs>
+  <rect width="960" height="520" fill="var(--sc-bg,#fbfbfd)"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="var(--sc-ink,#1d1d1f)">微调对齐 · 机制对比</text>
+  <text x="30" y="54" font-size="12" fill="var(--sc-sub,#6e6e73)">三类构件分别回答：教它怎么答、调它答得好不好、怎样低成本落地</text>
+
+  <g filter="url(#s68_soft)"><rect x="30" y="82" width="900" height="44" rx="10" fill="var(--sc-panel,#ffffff)" stroke="var(--sc-line,#e2e2e6)" stroke-width="1.2"/></g>
+  <text x="60" y="110" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)">构件</text>
+  <text x="230" y="110" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)">解决什么问题</text>
+  <text x="500" y="110" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)">核心做法</text>
+  <text x="770" y="110" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)">主要代价</text>
+
+  <g filter="url(#s68_soft)"><rect x="30" y="136" width="900" height="96" rx="10" fill="var(--sc-fill-orange,#fff3ea)" stroke="#f5873a" stroke-width="1.4"/></g>
+  <text x="60" y="190" font-size="12.5" font-weight="600" fill="#f5873a">监督微调 SFT</text>
+  <text x="230" y="178" font-size="11" fill="var(--sc-sub,#6e6e73)">基座只会续写，不会</text>
+  <text x="230" y="198" font-size="11" fill="var(--sc-sub,#6e6e73)">遵循指令、按格式回答</text>
+  <text x="500" y="178" font-size="11" fill="var(--sc-sub,#6e6e73)">用「指令-回答」样本</text>
+  <text x="500" y="198" font-size="11" fill="var(--sc-sub,#6e6e73)">做有监督续训</text>
+  <text x="770" y="178" font-size="11" fill="var(--sc-sub,#6e6e73)">依赖高质量标注</text>
+  <text x="770" y="198" font-size="11" fill="var(--sc-sub,#6e6e73)">数据质量 > 数量</text>
+
+  <g filter="url(#s68_soft)"><rect x="30" y="242" width="900" height="96" rx="10" fill="var(--sc-panel,#ffffff)" stroke="#f5873a" stroke-width="1.4"/></g>
+  <text x="60" y="296" font-size="12.5" font-weight="600" fill="#f5873a">偏好对齐</text>
+  <text x="230" y="284" font-size="11" fill="var(--sc-sub,#6e6e73)">会答但不一定有用、</text>
+  <text x="230" y="304" font-size="11" fill="var(--sc-sub,#6e6e73)">诚实、无害</text>
+  <text x="500" y="284" font-size="11" fill="var(--sc-sub,#6e6e73)">用人类偏好排序，经</text>
+  <text x="500" y="304" font-size="11" fill="var(--sc-sub,#6e6e73)">RLHF 或 DPO 优化</text>
+  <text x="770" y="284" font-size="11" fill="var(--sc-sub,#6e6e73)">偏好数据贵、RLHF</text>
+  <text x="770" y="304" font-size="11" fill="var(--sc-sub,#6e6e73)">训练复杂不稳</text>
+
+  <g filter="url(#s68_soft)"><rect x="30" y="348" width="900" height="96" rx="10" fill="var(--sc-panel,#ffffff)" stroke="#f5873a" stroke-width="1.4"/></g>
+  <text x="60" y="402" font-size="12.5" font-weight="600" fill="#f5873a">参数高效 PEFT</text>
+  <text x="230" y="390" font-size="11" fill="var(--sc-sub,#6e6e73)">全参微调太吃显存、</text>
+  <text x="230" y="410" font-size="11" fill="var(--sc-sub,#6e6e73)">存储成本高</text>
+  <text x="500" y="390" font-size="11" fill="var(--sc-sub,#6e6e73)">冻结底座，只训 LoRA</text>
+  <text x="500" y="410" font-size="11" fill="var(--sc-sub,#6e6e73)">等少量新增参数</text>
+  <text x="770" y="390" font-size="11" fill="var(--sc-sub,#6e6e73)">极端任务上限或</text>
+  <text x="770" y="410" font-size="11" fill="var(--sc-sub,#6e6e73)">略逊全参微调</text>
+
+  <text x="480" y="486" font-size="13" font-weight="600" fill="#f5873a" text-anchor="middle">SFT 教怎么答 · 对齐调好不好 · PEFT 省成本</text>
+</svg></div></section><section class="vt-sec" id="sec-eng" data-sec="sec-eng"><div class="secttl"><span class="badge">⚙</span><span class="t">Fine-tuning · 工程实现差异（真实框架落地取舍）</span></div><div class="fig" role="img" aria-label="Fine-tuning · 工程实现差异（真实框架落地取舍）"><svg class="figsvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 560" font-family="-apple-system,'PingFang SC','Helvetica Neue',sans-serif">
+  <defs>
+    <filter id="s69_soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.07"/>
+    </filter>
+  </defs>
+  <rect width="960" height="560" fill="var(--sc-bg,#fbfbfd)"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="var(--sc-ink,#1d1d1f)">微调对齐 · 工程对比</text>
+  <text x="30" y="54" font-size="12" fill="var(--sc-sub,#6e6e73)">从基座到可用助手的落地路线：先打底、再对齐、后省卡</text>
+
+  <g filter="url(#s69_soft)"><rect x="30" y="86" width="288" height="360" rx="14" fill="var(--sc-fill-orange,#fff3ea)" stroke="#f5873a" stroke-width="1.5"/></g>
+  <text x="54" y="120" font-size="13" font-weight="600" fill="#f5873a">① 先 SFT 打底</text>
+  <text x="54" y="152" font-size="10.5" fill="var(--sc-sub,#6e6e73)">精选高质量指令数据</text>
+  <text x="54" y="176" font-size="10.5" fill="var(--sc-sub,#6e6e73)">覆盖任务、格式、多轮对话</text>
+  <text x="54" y="200" font-size="10.5" fill="var(--sc-sub,#6e6e73)">宁缺毋滥，重清洗去重</text>
+  <text x="54" y="232" font-size="10.5" fill="var(--sc-sub,#6e6e73)">让模型先学会「听懂并照做」</text>
+  <text x="54" y="256" font-size="10.5" fill="var(--sc-sub,#6e6e73)">建立指令遵循与统一模板</text>
+  <text x="54" y="300" font-size="11" font-weight="600" fill="var(--sc-ink,#1d1d1f)">要点</text>
+  <text x="54" y="324" font-size="10.5" fill="var(--sc-sub,#6e6e73)">数据质量决定 SFT 上限</text>
+  <text x="54" y="348" font-size="10.5" fill="var(--sc-sub,#6e6e73)">先小规模验证再扩量</text>
+
+  <g filter="url(#s69_soft)"><rect x="336" y="86" width="288" height="360" rx="14" fill="var(--sc-panel,#ffffff)" stroke="#f5873a" stroke-width="1.5"/></g>
+  <text x="360" y="120" font-size="13" font-weight="600" fill="#f5873a">② 再对齐（轻量优先）</text>
+  <text x="360" y="152" font-size="10.5" fill="var(--sc-sub,#6e6e73)">优先选 DPO：实现简单稳定</text>
+  <text x="360" y="176" font-size="10.5" fill="var(--sc-sub,#6e6e73)">资源充足再考虑 RLHF-PPO</text>
+  <text x="360" y="200" font-size="10.5" fill="var(--sc-sub,#6e6e73)">偏好数据同样重质量与多样</text>
+  <text x="360" y="232" font-size="10.5" fill="var(--sc-sub,#6e6e73)">对齐有用性、诚实性、无害性</text>
+  <text x="360" y="256" font-size="10.5" fill="var(--sc-sub,#6e6e73)">用 KL 约束防止能力退化</text>
+  <text x="360" y="300" font-size="11" font-weight="600" fill="var(--sc-ink,#1d1d1f)">要点</text>
+  <text x="360" y="324" font-size="10.5" fill="var(--sc-sub,#6e6e73)">监控是否「对齐税」掉能力</text>
+  <text x="360" y="348" font-size="10.5" fill="var(--sc-sub,#6e6e73)">安全红队评测不可少</text>
+
+  <g filter="url(#s69_soft)"><rect x="642" y="86" width="288" height="360" rx="14" fill="var(--sc-panel,#ffffff)" stroke="#f5873a" stroke-width="1.5"/></g>
+  <text x="666" y="120" font-size="13" font-weight="600" fill="#f5873a">③ LoRA 落地省卡</text>
+  <text x="666" y="152" font-size="10.5" fill="var(--sc-sub,#6e6e73)">全流程用 LoRA / QLoRA</text>
+  <text x="666" y="176" font-size="10.5" fill="var(--sc-sub,#6e6e73)">单卡或少卡即可微调大模型</text>
+  <text x="666" y="200" font-size="10.5" fill="var(--sc-sub,#6e6e73)">一底座挂多套业务适配器</text>
+  <text x="666" y="232" font-size="10.5" fill="var(--sc-sub,#6e6e73)">推理可合并权重，零额外延迟</text>
+  <text x="666" y="256" font-size="10.5" fill="var(--sc-sub,#6e6e73)">存储只需保存小适配器</text>
+  <text x="666" y="300" font-size="11" font-weight="600" fill="var(--sc-ink,#1d1d1f)">要点</text>
+  <text x="666" y="324" font-size="10.5" fill="var(--sc-sub,#6e6e73)">选好秩 r 与目标层</text>
+  <text x="666" y="348" font-size="10.5" fill="var(--sc-sub,#6e6e73)">极致效果场景再评估全参</text>
+
+  <g filter="url(#s69_soft)"><rect x="30" y="466" width="900" height="66" rx="12" fill="var(--sc-panel,#ffffff)" stroke="var(--sc-line,#e2e2e6)" stroke-width="1.2"/></g>
+  <text x="54" y="496" font-size="11" font-weight="600" fill="var(--sc-ink,#1d1d1f)">权衡速查</text>
+  <text x="54" y="518" font-size="10.5" fill="var(--sc-sub,#6e6e73)">资源紧 → SFT + DPO + LoRA 轻量三件套；追极致效果 → 全参 + RLHF；多业务 → 共享底座挂多适配器</text>
+  <text x="480" y="556" font-size="12" font-weight="600" fill="#f5873a" text-anchor="middle" opacity="0">占位</text>
+</svg></div></section></div></div>
+  
+  <div class="backrow"><a href="../../../index.html#agent">← 返回 LLM & Agent 导航</a></div>
+</div>
+<footer>自包含离线图谱 · 以图为主：概览 + 机制分组图 + 机制对比 · 权威参考集中于底部 · 垂直 TAB 切换</footer>
+<script>
+(function(){
+  var root=document.documentElement;
+  var saved=localStorage.getItem('atlas-nav-theme');
+  if(saved==='dark') root.setAttribute('data-theme','dark');
+  function toggleTheme(){
+    var cur=root.getAttribute('data-theme')==='dark'?'':'dark';
+    if(cur) root.setAttribute('data-theme',cur); else root.removeAttribute('data-theme');
+    localStorage.setItem('atlas-nav-theme',cur||'light');
+  }
+  var tb=document.getElementById('themeBtn');
+  if(tb){tb.onclick=toggleTheme;}
+  var wrap=document.querySelector('.vt-wrap');
+  if(wrap){
+    var tabs=wrap.querySelectorAll('.vt-tab');
+    var secs=wrap.querySelectorAll('.vt-sec');
+    tabs.forEach(function(t){
+      t.addEventListener('click',function(){
+        var tgt=t.getAttribute('data-target');
+        tabs.forEach(function(x){x.classList.toggle('active',x===t);});
+        secs.forEach(function(s){s.classList.toggle('active',s.id===tgt);});
+      });
+    });
+  }
+  var zsegs=document.querySelectorAll('.zseg');
+  var zones=document.querySelectorAll('.zone');
+  if(zsegs.length&&zones.length){
+    zsegs.forEach(function(s){
+      s.addEventListener('click',function(){
+        zsegs.forEach(function(x){x.classList.toggle('active',x===s);});
+      });
+    });
+    if('IntersectionObserver' in window){
+      var io=new IntersectionObserver(function(es){
+        es.forEach(function(e){
+          if(e.isIntersecting){
+            var id=e.target.id;
+            zsegs.forEach(function(x){x.classList.toggle('active',x.getAttribute('href')==='#'+id);});
+          }
+        });
+      },{rootMargin:'-40% 0px -55% 0px'});
+      zones.forEach(function(z){io.observe(z);});
+    }
+  }
+})();
+</script>
+</body>
+</html>

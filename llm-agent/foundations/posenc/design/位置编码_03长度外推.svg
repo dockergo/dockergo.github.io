@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 560" font-family="-apple-system,'PingFang SC','Helvetica Neue',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.07"/>
+    </filter>
+  </defs>
+  <rect width="960" height="560" fill="#fbfbfd"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="#1d1d1f">长度外推 · 位置插值与 NTK 扩展窗口</text>
+  <text x="30" y="54" font-size="12" fill="#6e6e73">训练窗口有限，推理却要更长——通过缩放位置或频率，让模型无需重训就能扩窗</text>
+
+  <!-- 问题条 -->
+  <g filter="url(#soft)"><rect x="40" y="86" width="880" height="60" rx="10" fill="#fff3ea" stroke="#f5873a" stroke-width="1.3"/></g>
+  <text x="60" y="110" font-size="11" font-weight="600" fill="#f5873a">核心难题</text>
+  <text x="60" y="132" font-size="10.2" fill="#6e6e73">位置超出训练范围时，模型见到「没学过的位置/角度」，注意力分布崩坏、性能急剧下降</text>
+
+  <!-- 三种方案 -->
+  <g filter="url(#soft)"><rect x="40" y="166" width="280" height="260" rx="12" fill="#e9fbf6" stroke="#2dd4bf" stroke-width="1.4"/></g>
+  <text x="70" y="196" font-size="12" font-weight="700" fill="#2dd4bf">① 位置插值 PI</text>
+  <text x="60" y="226" font-size="10" fill="#6e6e73">把超长位置线性压缩</text>
+  <text x="60" y="248" font-size="10" fill="#6e6e73">回到训练区间内</text>
+  <text x="60" y="270" font-size="10" fill="#6e6e73">如 4k→扩到 16k</text>
+  <text x="60" y="292" font-size="10" fill="#6e6e73">位置除以缩放因子</text>
+  <text x="60" y="322" font-size="10" fill="#2dd4bf">优点：简单，少量微调即可</text>
+  <text x="60" y="344" font-size="10" fill="#6e6e73">代价：高频细节分辨率下降</text>
+
+  <g filter="url(#soft)"><rect x="340" y="166" width="280" height="260" rx="12" fill="#f3ecff" stroke="#5e5ce6" stroke-width="1.4"/></g>
+  <text x="370" y="196" font-size="12" font-weight="700" fill="#5e5ce6">② NTK-aware 缩放</text>
+  <text x="360" y="226" font-size="10" fill="#6e6e73">不等比缩放各频率</text>
+  <text x="360" y="248" font-size="10" fill="#6e6e73">低频多扩、高频少动</text>
+  <text x="360" y="270" font-size="10" fill="#6e6e73">保住局部分辨率</text>
+  <text x="360" y="292" font-size="10" fill="#6e6e73">YaRN 是其进阶版</text>
+  <text x="360" y="322" font-size="10" fill="#5e5ce6">优点：常可免微调直接扩窗</text>
+  <text x="360" y="344" font-size="10" fill="#6e6e73">代价：需调节缩放策略</text>
+
+  <g filter="url(#soft)"><rect x="640" y="166" width="280" height="260" rx="12" fill="#fff3ea" stroke="#f5873a" stroke-width="1.4"/></g>
+  <text x="670" y="196" font-size="12" font-weight="700" fill="#f5873a">③ 相对/局部方案</text>
+  <text x="660" y="226" font-size="10" fill="#6e6e73">ALiBi：给分数加</text>
+  <text x="660" y="248" font-size="10" fill="#6e6e73">距离线性偏置</text>
+  <text x="660" y="270" font-size="10" fill="#6e6e73">滑动窗口限制范围</text>
+  <text x="660" y="292" font-size="10" fill="#6e6e73">天生对长度不敏感</text>
+  <text x="660" y="322" font-size="10" fill="#f5873a">优点：外推性好、实现轻</text>
+  <text x="660" y="344" font-size="10" fill="#6e6e73">代价：长程建模能力受限</text>
+
+  <!-- 底部结论 -->
+  <g filter="url(#soft)"><rect x="40" y="450" width="880" height="92" rx="12" fill="#ffffff" stroke="#d2d2d7" stroke-width="1.2"/></g>
+  <text x="60" y="478" font-size="11" font-weight="600" fill="#2dd4bf">选型主线</text>
+  <text x="60" y="504" font-size="10.2" fill="#6e6e73">· 已用 RoPE 且要快速扩窗 → NTK/YaRN，多数免训练；· 可微调 → 位置插值更稳</text>
+  <text x="60" y="528" font-size="10.2" fill="#6e6e73">· 从头设计要天然外推 → ALiBi 或相对编码。核心是让「训练时没见过的长度」仍落在模型可泛化的区间</text>
+</svg>

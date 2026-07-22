@@ -1,0 +1,115 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="720" viewBox="0 0 1200 720" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="aP" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#8a5cae"/></marker>
+    <marker id="aA" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#c99a3a"/></marker>
+  </defs>
+  <rect width="1200" height="720" fill="#fbfbfd"/>
+
+  <text x="30" y="32" font-size="15" font-weight="700" fill="#1d1d1f">R3 · 无主 Quorum —— Dynamo/Cassandra 不设主节点，写发给多副本凑够 W 个确认、读联系多副本凑够 R 个响应，W+R&gt;N 保证两个集合必相交</text>
+  <text x="30" y="53" font-size="10.5" fill="#6e6e73">这里描述的是经典论文/公开文档中的通用 Quorum 模型，用于与主从、多主形成第三种拓扑的对比参照</text>
+
+  <!-- 概念参考角标（虚线 + 中性灰） -->
+  <rect x="900" y="24" width="270" height="34" rx="8" fill="#f4f4f6" stroke="#a1a1a6" stroke-width="1.3" stroke-dasharray="4 3"/>
+  <text x="1035" y="46" font-size="9.5" font-weight="700" fill="#6e6e73" text-anchor="middle">⚠ 概念参考 · 本仓库/本会话未做源码级核实</text>
+
+  <text x="30" y="84" font-size="10" fill="#3a3a3c">图例</text>
+  <line x1="70" y1="80" x2="94" y2="80" stroke="#8a5cae" stroke-width="2" marker-end="url(#aP)"/>
+  <text x="100" y="84" font-size="10" fill="#3a3a3c">写确认路径（凑够 W 个）</text>
+  <line x1="330" y1="80" x2="354" y2="80" stroke="#c99a3a" stroke-width="2" marker-end="url(#aA)"/>
+  <text x="360" y="84" font-size="10" fill="#3a3a3c">读确认路径（凑够 R 个）</text>
+  <text x="1170" y="84" font-size="9" fill="#a1a1a6" text-anchor="end">示例参数：N=5 · W=3 · R=3</text>
+  <line x1="30" y1="98" x2="1170" y2="98" stroke="#e4e7ec" stroke-width="1"/>
+
+  <!-- ============ Panel 1: 写路径 ============ -->
+  <rect x="30" y="112" width="550" height="270" rx="14" fill="#f4eefb" stroke="#dcc9ef" stroke-width="1.3" stroke-dasharray="6 4" filter="url(#soft)"/>
+  <text x="305" y="138" font-size="12.5" font-weight="700" fill="#6f3ea8" text-anchor="middle">写路径 · Coordinator 发给 N 个副本，凑够 W 个确认即返回成功</text>
+  <line x1="46" y1="148" x2="564" y2="148" stroke="#dcc9ef" stroke-width="1"/>
+
+  <rect x="270" y="162" width="70" height="40" rx="8" fill="#ffffff" stroke="#8a5cae"/>
+  <text x="305" y="186" font-size="9.5" font-weight="700" fill="#6f3ea8" text-anchor="middle">Client</text>
+
+  <rect x="90" y="240" width="60" height="56" rx="8" fill="#dcc9ef" stroke="#8a5cae" stroke-width="1.5"/>
+  <text x="120" y="272" font-size="10" font-weight="700" fill="#5a3a7a" text-anchor="middle">N1</text>
+  <text x="120" y="286" font-size="7.5" fill="#5a3a7a" text-anchor="middle">✓确认</text>
+
+  <rect x="180" y="240" width="60" height="56" rx="8" fill="#dcc9ef" stroke="#8a5cae" stroke-width="1.5"/>
+  <text x="210" y="272" font-size="10" font-weight="700" fill="#5a3a7a" text-anchor="middle">N2</text>
+  <text x="210" y="286" font-size="7.5" fill="#5a3a7a" text-anchor="middle">✓确认</text>
+
+  <rect x="270" y="240" width="60" height="56" rx="8" fill="#dcc9ef" stroke="#8a5cae" stroke-width="1.5"/>
+  <text x="300" y="272" font-size="10" font-weight="700" fill="#5a3a7a" text-anchor="middle">N3</text>
+  <text x="300" y="286" font-size="7.5" fill="#5a3a7a" text-anchor="middle">✓确认</text>
+
+  <rect x="360" y="240" width="60" height="56" rx="8" fill="#f4f4f6" stroke="#c9c9cf" stroke-dasharray="3 2"/>
+  <text x="390" y="272" font-size="10" font-weight="700" fill="#8a8a90" text-anchor="middle">N4</text>
+  <text x="390" y="286" font-size="7.5" fill="#a1a1a6" text-anchor="middle">未等待</text>
+
+  <rect x="450" y="240" width="60" height="56" rx="8" fill="#f4f4f6" stroke="#c9c9cf" stroke-dasharray="3 2"/>
+  <text x="480" y="272" font-size="10" font-weight="700" fill="#8a8a90" text-anchor="middle">N5</text>
+  <text x="480" y="286" font-size="7.5" fill="#a1a1a6" text-anchor="middle">未等待</text>
+
+  <line x1="290" y1="204" x2="130" y2="238" stroke="#8a5cae" stroke-width="1.6" marker-end="url(#aP)"/>
+  <line x1="305" y1="204" x2="215" y2="238" stroke="#8a5cae" stroke-width="1.6" marker-end="url(#aP)"/>
+  <line x1="315" y1="204" x2="300" y2="238" stroke="#8a5cae" stroke-width="1.6" marker-end="url(#aP)"/>
+  <line x1="325" y1="204" x2="390" y2="238" stroke="#c9c9cf" stroke-width="1.4" stroke-dasharray="3 2"/>
+  <line x1="335" y1="204" x2="480" y2="238" stroke="#c9c9cf" stroke-width="1.4" stroke-dasharray="3 2"/>
+
+  <rect x="90" y="312" width="240" height="26" rx="6" fill="#dcc9ef" stroke="#8a5cae"/>
+  <text x="210" y="330" font-size="9" font-weight="700" fill="#5a3a7a" text-anchor="middle">W=3 个确认凑够 → 写成功</text>
+
+  <text x="46" y="360" font-size="8.5" fill="#5a3a7a">概念层：具体发给哪 N 个副本、如何选择，由一致性哈希等机制决定（此处不展开）</text>
+
+  <!-- ============ Panel 2: 读路径 + 重叠证明 ============ -->
+  <rect x="610" y="112" width="560" height="270" rx="14" fill="#fdf8ec" stroke="#ecd6a8" stroke-width="1.3" stroke-dasharray="6 4" filter="url(#soft)"/>
+  <text x="890" y="138" font-size="12.5" font-weight="700" fill="#8a6417" text-anchor="middle">读路径 · Coordinator 联系 N 个副本，凑够 R 个响应取最新版本</text>
+  <line x1="626" y1="148" x2="1154" y2="148" stroke="#ecd6a8" stroke-width="1"/>
+
+  <rect x="670" y="240" width="60" height="56" rx="8" fill="#f4f4f6" stroke="#c9c9cf" stroke-dasharray="3 2"/>
+  <text x="700" y="272" font-size="10" font-weight="700" fill="#8a8a90" text-anchor="middle">N1</text>
+  <text x="700" y="286" font-size="7.5" fill="#a1a1a6" text-anchor="middle">未联系</text>
+
+  <rect x="760" y="240" width="60" height="56" rx="8" fill="#f4f4f6" stroke="#c9c9cf" stroke-dasharray="3 2"/>
+  <text x="790" y="272" font-size="10" font-weight="700" fill="#8a8a90" text-anchor="middle">N2</text>
+  <text x="790" y="286" font-size="7.5" fill="#a1a1a6" text-anchor="middle">未联系</text>
+
+  <rect x="850" y="240" width="60" height="56" rx="8" fill="#f3e4bd" stroke="#c99a3a" stroke-width="2.4"/>
+  <text x="880" y="272" font-size="10" font-weight="700" fill="#7a5a1a" text-anchor="middle">N3</text>
+  <text x="880" y="286" font-size="7.5" fill="#8a6417" text-anchor="middle">✓响应</text>
+
+  <rect x="940" y="240" width="60" height="56" rx="8" fill="#fbf3e2" stroke="#c99a3a" stroke-width="1.5"/>
+  <text x="970" y="272" font-size="10" font-weight="700" fill="#8a6417" text-anchor="middle">N4</text>
+  <text x="970" y="286" font-size="7.5" fill="#8a6417" text-anchor="middle">✓响应</text>
+
+  <rect x="1030" y="240" width="60" height="56" rx="8" fill="#fbf3e2" stroke="#c99a3a" stroke-width="1.5"/>
+  <text x="1060" y="272" font-size="10" font-weight="700" fill="#8a6417" text-anchor="middle">N5</text>
+  <text x="1060" y="286" font-size="7.5" fill="#8a6417" text-anchor="middle">✓响应</text>
+
+  <line x1="855" y1="204" x2="880" y2="238" stroke="#c99a3a" stroke-width="1.6" marker-end="url(#aA)"/>
+  <line x1="870" y1="204" x2="970" y2="238" stroke="#c99a3a" stroke-width="1.6" marker-end="url(#aA)"/>
+  <line x1="885" y1="204" x2="1060" y2="238" stroke="#c99a3a" stroke-width="1.6" marker-end="url(#aA)"/>
+  <line x1="835" y1="204" x2="700" y2="238" stroke="#c9c9cf" stroke-width="1.4" stroke-dasharray="3 2"/>
+  <line x1="845" y1="204" x2="790" y2="238" stroke="#c9c9cf" stroke-width="1.4" stroke-dasharray="3 2"/>
+
+  <rect x="850" y="162" width="70" height="40" rx="8" fill="#ffffff" stroke="#c99a3a"/>
+  <text x="885" y="186" font-size="9.5" font-weight="700" fill="#8a6417" text-anchor="middle">Client</text>
+
+  <rect x="850" y="312" width="240" height="26" rx="6" fill="#fbf3e2" stroke="#c99a3a"/>
+  <text x="970" y="330" font-size="9" font-weight="700" fill="#8a6417" text-anchor="middle">R=3 个响应凑够 → 取最新版本返回</text>
+
+  <text x="626" y="360" font-size="8.5" fill="#8a6417">N3 同时出现在写确认与读响应集合中 —— 这不是巧合，是 W+R&gt;N 的代数结果</text>
+
+  <!-- ============ 底部结论 ============ -->
+  <rect x="30" y="408" width="1140" height="72" rx="10" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="600" y="438" font-size="12" font-weight="700" fill="#1d1d1f" text-anchor="middle">W + R &gt; N ⇒ 写副本集合与读副本集合必然相交（本例 3+3&gt;5）</text>
+  <text x="600" y="460" font-size="9.5" fill="#6e6e73" text-anchor="middle">保证的只是"读能看到至少一个已写副本"，具体取到新版本还是旧版本、如何做版本仲裁，仍取决于实现细节（此处不展开）</text>
+
+  <rect x="30" y="496" width="1140" height="120" rx="10" fill="#f4f4f6" stroke="#a1a1a6" stroke-dasharray="5 3"/>
+  <text x="50" y="522" font-size="10.5" font-weight="700" fill="#6e6e73">诚实边界</text>
+  <text x="50" y="544" font-size="9" fill="#6e6e73">本页描述的 N/R/W、Coordinator 转发、版本仲裁等，均来自 Dynamo 论文（DeCandia et al., SOSP 2007）与 Cassandra 公开文档中的通用模型表述，</text>
+  <text x="50" y="562" font-size="9" fill="#6e6e73">属于"概念参考"层级 —— 本仓库/本会话没有对 Cassandra 或类 Dynamo 系统做源码级验证（未逐行核对具体版本的 Coordinator 实现、</text>
+  <text x="50" y="580" font-size="9" fill="#6e6e73">超时重试、读修复 Read Repair、Hinted Handoff 等细节），因此不能与 R1（Postgres WAL）、R2（ClickHouse Keeper）享有同等的"已核实"置信度。</text>
+  <text x="50" y="602" font-size="9" fill="#6e6e73">如需在生产决策中依赖这些细节，请对照目标版本的源码或官方文档重新核实。</text>
+
+  <text x="30" y="700" font-size="9" fill="#8a97ab">对比主从/多主：无主没有"写只能去一个地方"的约束，也没有固定的异步扩散方向——一切以 N/R/W 三个数字为杠杆（概念层）。</text>
+</svg>

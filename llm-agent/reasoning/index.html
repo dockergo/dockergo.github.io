@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Reasoning &amp; Planning · AI Agents 图谱</title>
+<style>
+:root{
+  --c-bg:#fbfbfd; --c-card:#ffffff; --c-card2:#f5f5f7; --c-ink:#1d1d1f;
+  --c-ink2:#6e6e73; --c-ink3:#a1a1a6; --c-line:#e6e6ea; --c-edge:#d2d2d7;
+  --c-panel:#ffffff; --c-shadow:rgba(0,0,0,.08);
+}
+html[data-theme="dark"]{
+  --c-bg:#0d0d0f; --c-card:#17171a; --c-card2:#1e1e22; --c-ink:#f2f2f5;
+  --c-ink2:#a1a1a6; --c-ink3:#6e6e73; --c-line:#2a2a30; --c-edge:#33333a;
+  --c-panel:#161619; --c-shadow:rgba(0,0,0,.5);
+  /* 架构图内联 SVG 结构中性色深色翻转(品牌强调色不变) */
+  --sc-bg:#17171a; --sc-panel:#1e1e22; --sc-ink:#e8e8ea; --sc-ink2:#c4c4c8;
+  --sc-sub:#9a9aa2; --sc-line:#33333a; --sc-line2:#3d3d45;
+  --sc-fill-blue:#16253d; --sc-fill-purple:#241d3a; --sc-fill-orange:#382214; --sc-fill-teal:#0f3330;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--c-bg);color:var(--c-ink);
+  font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif;
+  font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+header{position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:14px;
+  padding:12px 24px;background:color-mix(in srgb,var(--c-bg) 86%,transparent);
+  backdrop-filter:saturate(1.4) blur(14px);border-bottom:1px solid var(--c-line)}
+header .logo{display:inline-flex;align-items:center;flex:none}
+header .spacer{flex:1}
+.brand-intro{display:flex;flex-direction:column;align-items:flex-start;margin-left:6px;min-width:0}
+.brand-intro .bt{font-size:15px;font-weight:700;color:var(--c-ink);line-height:1.3}
+.brand-intro .bs{margin-top:3px;font-size:11.5px;color:var(--c-ink3);line-height:1.5}
+.icobtn{width:38px;height:38px;border-radius:50%;border:1px solid var(--c-line);
+  background:var(--c-panel);color:var(--c-ink2);cursor:pointer;display:inline-grid;
+  place-items:center;font-size:16px;flex:none;text-decoration:none}
+.tt-ico{font-size:16px;line-height:1}.tt-moon{display:none}
+html[data-theme="dark"] .tt-sun{display:none}html[data-theme="dark"] .tt-moon{display:inline}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 24px 80px}
+
+/* ---- 门户 hero ---- */
+.hero{margin:6px 0 26px}
+.hero h1{font-size:26px;font-weight:800;letter-spacing:.2px}
+.hero .sub{margin-top:8px;font-size:13.5px;color:var(--c-ink2);max-width:820px}
+.hero .back{display:inline-flex;align-items:center;gap:6px;margin-bottom:14px;
+  font-size:12.5px;color:var(--c-ink2);border:1px solid var(--c-line);
+  border-radius:999px;padding:5px 13px;background:var(--c-panel)}
+.hero .back:hover{color:var(--c-ink);border-color:var(--c-edge)}
+
+/* ---- 门户卡片栅格 ---- */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:18px}
+.card{position:relative;display:block;background:var(--c-card);border:1px solid var(--c-line);
+  border-radius:16px;padding:20px 20px 18px;overflow:hidden;transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease}
+.card:hover{transform:translateY(-3px);border-color:var(--acc);box-shadow:0 10px 30px var(--c-shadow)}
+.card .bar{position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--acc)}
+.card .k{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.6px;
+  color:var(--acc);text-transform:uppercase;margin-bottom:8px}
+.card h3{font-size:17px;font-weight:750;line-height:1.35;color:var(--c-ink)}
+.card .core{margin-top:9px;font-size:12.5px;color:var(--c-ink2);line-height:1.6}
+.card .tags{margin-top:14px;display:flex;flex-direction:column;gap:7px}
+.card .tag{display:flex;gap:8px;align-items:baseline;font-size:12px;color:var(--c-ink2)}
+.card .tag .n{font-weight:800;color:var(--acc);flex:none;font-variant-numeric:tabular-nums}
+.card .go{margin-top:16px;font-size:12px;font-weight:700;color:var(--acc);display:inline-flex;align-items:center;gap:5px}
+
+/* ---- 模块页 ---- */
+.judge{background:var(--c-card);border:1px solid var(--c-line);border-left:4px solid var(--acc);
+  border-radius:14px;padding:18px 22px;margin-bottom:26px}
+.judge .k{font-size:11px;font-weight:700;letter-spacing:.6px;color:var(--acc);text-transform:uppercase}
+.judge h1{font-size:22px;font-weight:800;line-height:1.34;margin-top:7px}
+.judge .core{margin-top:11px;font-size:13.5px;color:var(--c-ink2);line-height:1.7;max-width:900px}
+.secttl{display:flex;align-items:center;gap:11px;margin:34px 0 14px}
+.secttl .badge{flex:none;min-width:30px;height:30px;padding:0 9px;border-radius:9px;background:var(--acc);
+  color:#fff;font-weight:800;font-size:15px;display:inline-grid;place-items:center}
+.secttl .t{font-size:17px;font-weight:750}
+.secttl.eco .badge{background:var(--c-ink);color:var(--c-bg)}
+/* ── 垂直 TAB 布局 ── */
+.vt-wrap{display:flex;gap:22px;margin-top:26px;align-items:flex-start}
+.vt-nav{flex:none;width:236px;position:sticky;top:20px;display:flex;flex-direction:column;gap:8px}
+.vt-grp{font-size:11px;font-weight:800;letter-spacing:.04em;color:var(--c-ink3);
+  text-transform:none;margin:14px 4px 2px;padding-top:8px;border-top:1px solid var(--c-line)}
+.vt-grp:first-child{margin-top:0;padding-top:0;border-top:none}
+.vt-tab{display:flex;align-items:center;gap:10px;text-align:left;cursor:pointer;
+  background:var(--c-card);border:1px solid var(--c-line);border-radius:12px;
+  padding:12px 13px;color:var(--c-ink2);font:inherit;transition:.15s}
+.vt-tab:hover{border-color:var(--acc);color:var(--c-ink)}
+.vt-tab.active{background:var(--acc);border-color:var(--acc);color:#fff;box-shadow:0 4px 14px -6px var(--acc)}
+.vt-tab .vt-b{flex:none;min-width:26px;height:26px;padding:0 7px;border-radius:8px;
+  background:var(--c-card2);color:var(--acc);font-weight:800;font-size:13px;
+  display:inline-grid;place-items:center}
+.vt-tab.active .vt-b{background:rgba(255,255,255,.24);color:#fff}
+.vt-tab .vt-l{font-size:12.5px;font-weight:650;line-height:1.35}
+.vt-stage{flex:1;min-width:0}
+.vt-sec{display:none}
+.vt-sec.active{display:block;animation:vtfade .22s ease}
+.vt-sec .secttl{margin-top:0}
+@keyframes vtfade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media(max-width:820px){.vt-wrap{flex-direction:column}.vt-nav{position:static;width:100%;flex-direction:row;flex-wrap:wrap}.vt-tab{flex:1 1 44%}}
+.fig{background:var(--c-card);border:1px solid var(--c-line);border-radius:16px;
+  padding:16px;overflow:hidden}
+.fig img{display:block;width:100%;height:auto;border-radius:8px}
+.fig .figsvg{display:block;width:100%;height:auto;border-radius:8px}
+.blurb{margin-top:14px;background:var(--c-card);border:1px solid var(--c-line);
+  border-radius:14px;padding:15px 19px}
+.blurb p{font-size:13px;color:var(--c-ink2);line-height:1.75}
+.blurb p+p{margin-top:9px}
+.blurb b{color:var(--c-ink);font-weight:700}
+.blurb code{font-family:'SF Mono',ui-monospace,Menlo,monospace;font-size:.88em;
+  background:var(--c-card2);border:1px solid var(--c-line);border-radius:5px;padding:1px 5px;color:var(--acc)}
+.blurb a{color:var(--acc);text-decoration:none;
+  border-bottom:1px solid color-mix(in srgb,var(--acc) 40%,transparent);transition:border-color .15s}
+.blurb a:hover{border-bottom-color:var(--acc)}
+.refs{margin-top:30px;padding-top:18px;border-top:2px solid var(--c-line)}
+.reflist{margin-top:12px}
+.reflist p{margin:5px 0;font-size:12.5px;color:var(--c-ink2);line-height:1.7}
+.reflist a{color:var(--acc)}
+.miss{padding:40px;text-align:center;color:var(--c-ink3);font-size:13px;border:1px dashed var(--c-edge);border-radius:12px}
+.backrow{margin-top:44px;padding-top:22px;border-top:1px solid var(--c-line)}
+.backrow a{display:inline-flex;align-items:center;gap:7px;font-size:13px;color:var(--c-ink2);
+  border:1px solid var(--c-line);border-radius:999px;padding:8px 16px;background:var(--c-panel)}
+.backrow a:hover{color:var(--c-ink);border-color:var(--c-edge)}
+footer{max-width:1180px;margin:0 auto;padding:0 24px 40px;color:var(--c-ink3);font-size:11.5px}
+
+/* ---- 门户片区切换 tab + 片区标题条 ---- */
+.zbar{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap}
+.zseg{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:700;
+  color:var(--c-ink2);border:1px solid var(--c-line);border-radius:999px;
+  padding:8px 16px;background:var(--c-panel);transition:.15s}
+.zseg:hover{color:var(--c-ink);border-color:var(--c-edge)}
+.zseg.active{color:var(--c-ink);border-color:var(--c-ink);background:var(--c-card)}
+.zseg .zn{min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:var(--c-card2);
+  color:var(--c-ink2);font-size:11px;font-weight:800;display:inline-grid;place-items:center}
+.zone{margin-top:38px;scroll-margin-top:80px}
+.zone:first-of-type{margin-top:30px}
+.zhd{margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--c-line)}
+.zhd .zk{font-size:11px;font-weight:800;letter-spacing:.08em;color:var(--c-ink3);text-transform:uppercase}
+.zhd h2{font-size:20px;font-weight:800;margin-top:5px;color:var(--c-ink)}
+.zhd p{font-size:12.5px;color:var(--c-ink2);margin-top:6px;max-width:860px;line-height:1.65}
+</style>
+</head>
+<body>
+<header>
+  <a class="logo" href="../../index.html#agent" title="返回 LLM & Agent 导航"><span class="icobtn"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg></span></a>
+  <div class="brand-intro">
+    <div class="bt">Reasoning &amp; Planning</div>
+    <div class="bs">AI Agents 生态图谱 · 概念层机理（不点名具体框架）</div>
+  </div>
+  <div class="spacer"></div>
+  <button id="themeBtn" class="icobtn" title="切换深色 / 浅色主题" aria-label="切换主题"><span class="tt-ico tt-moon">☾</span><span class="tt-ico tt-sun">☀</span></button>
+</header>
+<div class="wrap" style="--acc:#0a84ff">
+  <div class="judge">
+    <span class="k">REASONING · 定位</span>
+    <h1>Reasoning & Planning · Agent 推理与规划循环</h1>
+    <div class="core">把「一次问答」变成「感知→思考→行动→观察」的闭环：LLM 在每一步依据历史轨迹决定下一动作，直到目标达成或预算耗尽。</div>
+  </div>
+  <div class="vt-wrap"><nav class="vt-nav" aria-label="模块内容切换"><div class="vt-grp">概览 Overview</div><button class="vt-tab active" data-target="sec-eco"><span class="vt-b">◎</span><span class="vt-l">生态架构总图</span></button><div class="vt-grp">机制 · ReAct</div><button class="vt-tab" data-target="sec-r1"><span class="vt-b">R1</span><span class="vt-l">思考-行动-观察交织</span></button><div class="vt-grp">机制 · Plan-and-Execute</div><button class="vt-tab" data-target="sec-r2"><span class="vt-b">R2</span><span class="vt-l">先规划全局再逐步执行</span></button><div class="vt-grp">机制 · Reflexion</div><button class="vt-tab" data-target="sec-r3"><span class="vt-b">R3</span><span class="vt-l">失败反思写入记忆重试</span></button><div class="vt-grp">机制 · Tree-of-Thoughts</div><button class="vt-tab" data-target="sec-r4"><span class="vt-b">R4</span><span class="vt-l">多分支搜索 + 自评剪枝</span></button><div class="vt-grp">对比 Compare</div><button class="vt-tab" data-target="sec-cmp"><span class="vt-b">⇄</span><span class="vt-l">机制差异对比</span></button><div class="vt-grp">工程 Engineering</div><button class="vt-tab" data-target="sec-eng"><span class="vt-b">⚙</span><span class="vt-l">框架实现差异</span></button></nav><div class="vt-stage"><section class="vt-sec active" id="sec-eco" data-sec="sec-eco"><div class="secttl eco"><span class="badge">◎</span><span class="t">生态架构总图 · 这一模块如何在 Agent 系统中自洽拼合</span></div><div class="fig" role="img" aria-label="Reasoning &amp; Planning 生态架构"><svg class="figsvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 620" font-family="-apple-system,'PingFang SC','Helvetica Neue',sans-serif">
+  <defs>
+    <filter id="s1_soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.07"/>
+    </filter>
+    <marker id="s1_ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="var(--sc-line2,#b8b8bf)"/>
+    </marker>
+    <marker id="s1_arh" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#0a84ff"/>
+    </marker>
+  </defs>
+  <rect width="960" height="620" fill="var(--sc-bg,#fbfbfd)"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="var(--sc-ink,#1d1d1f)">Agent 推理循环 · 生态架构</text>
+  <text x="30" y="54" font-size="12" fill="var(--sc-sub,#6e6e73)">目标 → 感知 → 思考 → 行动 → 观察 → 回环，直到目标达成或预算耗尽</text>
+
+  <!-- 输入：用户目标 -->
+  <g filter="url(#s1_soft)">
+    <rect x="40" y="240" width="130" height="72" rx="12" fill="var(--sc-fill-blue,#eef4ff)" stroke="#0a84ff" stroke-width="1.5"/>
+  </g>
+  <text x="105" y="272" font-size="13" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">用户目标</text>
+  <text x="105" y="292" font-size="11" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">Task / Query</text>
+
+  <!-- 核心：LLM 推理内核 -->
+  <g filter="url(#s1_soft)">
+    <rect x="360" y="120" width="240" height="380" rx="16" fill="var(--sc-panel,#ffffff)" stroke="var(--sc-line,#d2d2d7)" stroke-width="1.5"/>
+  </g>
+  <text x="480" y="150" font-size="13" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">推理内核 Reasoning Kernel</text>
+
+  <!-- 思考 -->
+  <g filter="url(#s1_soft)"><rect x="390" y="172" width="180" height="60" rx="10" fill="var(--sc-fill-purple,#f3ecff)" stroke="#a78bfa" stroke-width="1.4"/></g>
+  <text x="480" y="198" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">Thought · 思考</text>
+  <text x="480" y="217" font-size="10.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">规划下一步 / 拆解子目标</text>
+
+  <!-- 行动 -->
+  <g filter="url(#s1_soft)"><rect x="390" y="248" width="180" height="60" rx="10" fill="var(--sc-fill-blue,#eef4ff)" stroke="#0a84ff" stroke-width="1.4"/></g>
+  <text x="480" y="274" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">Action · 行动</text>
+  <text x="480" y="293" font-size="10.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">选工具 / 生成调用意图</text>
+
+  <!-- 观察 -->
+  <g filter="url(#s1_soft)"><rect x="390" y="324" width="180" height="60" rx="10" fill="var(--sc-fill-teal,#e9fbf6)" stroke="#2dd4bf" stroke-width="1.4"/></g>
+  <text x="480" y="350" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">Observation · 观察</text>
+  <text x="480" y="369" font-size="10.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">吸收结果 / 更新认知</text>
+
+  <!-- 终止判定 -->
+  <g filter="url(#s1_soft)"><rect x="390" y="400" width="180" height="56" rx="10" fill="var(--sc-fill-orange,#fff3ea)" stroke="#f5873a" stroke-width="1.4"/></g>
+  <text x="480" y="424" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">Stop? · 终止判定</text>
+  <text x="480" y="442" font-size="10.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">达成 / 超预算 / 兜底</text>
+
+  <!-- 内部循环箭头 思考->行动->观察->思考 -->
+  <path d="M480 232 L480 246" stroke="#0a84ff" stroke-width="2" marker-end="url(#s1_arh)"/>
+  <path d="M480 308 L480 322" stroke="#2dd4bf" stroke-width="2" marker-end="url(#s1_ar)"/>
+  <path d="M390 354 C 340 354 340 202 388 202" stroke="#a78bfa" stroke-width="1.6" fill="none" stroke-dasharray="6 4" marker-end="url(#s1_ar)"/>
+  <text x="330" y="280" font-size="10" fill="#a78bfa" text-anchor="middle" transform="rotate(-90 330 280)">循环回灌</text>
+  <path d="M480 384 L480 398" stroke="#f5873a" stroke-width="1.6" stroke-dasharray="3 3" marker-end="url(#s1_ar)"/>
+
+  <!-- 右侧：外部行动能力 -->
+  <g filter="url(#s1_soft)"><rect x="700" y="150" width="220" height="70" rx="12" fill="var(--sc-fill-purple,#f3ecff)" stroke="#a78bfa" stroke-width="1.4"/></g>
+  <text x="810" y="180" font-size="12.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">工具 / 环境</text>
+  <text x="810" y="200" font-size="10.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">API · 代码 · 检索 · 世界</text>
+
+  <g filter="url(#s1_soft)"><rect x="700" y="250" width="220" height="70" rx="12" fill="var(--sc-fill-teal,#e9fbf6)" stroke="#2dd4bf" stroke-width="1.4"/></g>
+  <text x="810" y="280" font-size="12.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">记忆系统</text>
+  <text x="810" y="300" font-size="10.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">轨迹 · 反思 · 长期知识</text>
+
+  <g filter="url(#s1_soft)"><rect x="700" y="350" width="220" height="70" rx="12" fill="var(--sc-fill-blue,#eef4ff)" stroke="#0a84ff" stroke-width="1.4"/></g>
+  <text x="810" y="380" font-size="12.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">上下文窗口</text>
+  <text x="810" y="400" font-size="10.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">历史轨迹拼装为 prompt</text>
+
+  <!-- 目标 -> 内核 -->
+  <path d="M170 276 C 260 276 280 200 388 200" stroke="#0a84ff" stroke-width="2.4" fill="none" marker-end="url(#s1_arh)"/>
+
+  <!-- 行动 -> 工具 -->
+  <path d="M570 278 C 640 278 640 190 698 188" stroke="#0a84ff" stroke-width="2" fill="none" marker-end="url(#s1_arh)"/>
+  <!-- 工具 -> 观察 (结果回灌) -->
+  <path d="M810 220 C 810 340 640 350 572 352" stroke="#2dd4bf" stroke-width="1.8" fill="none" marker-end="url(#s1_ar)"/>
+  <!-- 观察/思考 <-> 记忆 -->
+  <path d="M572 300 C 640 300 640 285 698 285" stroke="#2dd4bf" stroke-width="1.6" fill="none" stroke-dasharray="6 4" marker-end="url(#s1_ar)"/>
+  <!-- 上下文 -> 思考 (每步注入) -->
+  <path d="M700 385 C 640 420 610 240 572 205" stroke="#a78bfa" stroke-width="1.6" fill="none" stroke-dasharray="6 4" marker-end="url(#s1_ar)"/>
+
+  <!-- 终止 -> 输出 -->
+  <g filter="url(#s1_soft)"><rect x="360" y="520" width="240" height="60" rx="12" fill="var(--sc-panel,#ffffff)" stroke="#f5873a" stroke-width="1.5"/></g>
+  <text x="480" y="548" font-size="12.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">最终答案 / 交付物</text>
+  <text x="480" y="567" font-size="10.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">Final Answer</text>
+  <path d="M480 456 L480 518" stroke="#f5873a" stroke-width="1.8" stroke-dasharray="3 3" marker-end="url(#s1_ar)"/>
+
+  <!-- 图例铭牌 -->
+  <g filter="url(#s1_soft)"><rect x="620" y="470" width="300" height="118" rx="10" fill="var(--sc-panel,#ffffff)" stroke="var(--sc-line,#d2d2d7)" stroke-width="1.2"/></g>
+  <text x="636" y="492" font-size="11" font-weight="600" fill="var(--sc-ink,#1d1d1f)">路径图例</text>
+  <line x1="636" y1="508" x2="668" y2="508" stroke="#0a84ff" stroke-width="2.4"/>
+  <text x="676" y="512" font-size="10.5" fill="var(--sc-sub,#6e6e73)">Hot 主行动流（目标→思考→行动）</text>
+  <line x1="636" y1="528" x2="668" y2="528" stroke="#a78bfa" stroke-width="1.6" stroke-dasharray="6 4"/>
+  <text x="676" y="532" font-size="10.5" fill="var(--sc-sub,#6e6e73)">Control 决策/上下文注入</text>
+  <line x1="636" y1="548" x2="668" y2="548" stroke="#2dd4bf" stroke-width="1.8"/>
+  <text x="676" y="552" font-size="10.5" fill="var(--sc-sub,#6e6e73)">State 观察结果 / 记忆读写</text>
+  <line x1="636" y1="568" x2="668" y2="568" stroke="#f5873a" stroke-width="1.6" stroke-dasharray="3 3"/>
+  <text x="676" y="572" font-size="10.5" fill="var(--sc-sub,#6e6e73)">Failure/Exit 终止与兜底</text>
+</svg></div><div class="blurb"><p>大模型天生只会「一次问答」，要变成自主 <b>Agent</b>，核心是套上<b>推理循环</b>：思考→行动→观察反复迭代直到收敛。它是 Agent 的心脏——向外调工具/记忆/知识，向内维护不断增长的*轨迹*。四种搏动方式（ReAct、Plan-Execute、Reflexion、ToT）本质是在「探索广度×纠错能力×成本」间取不同平衡点，见生态图。</p></div></section><section class="vt-sec" id="sec-r1" data-sec="sec-r1"><div class="secttl"><span class="badge">R1</span><span class="t">ReAct · 思考-行动-观察交织</span></div><div class="fig" role="img" aria-label="ReAct · 思考-行动-观察交织"><svg class="figsvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 520" font-family="-apple-system,'PingFang SC','Helvetica Neue',sans-serif">
+  <defs>
+    <filter id="s2_soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.07"/></filter>
+    <marker id="s2_ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="var(--sc-line2,#b8b8bf)"/></marker>
+    <marker id="s2_arh" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#0a84ff"/></marker>
+  </defs>
+  <rect width="960" height="520" fill="var(--sc-bg,#fbfbfd)"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="var(--sc-ink,#1d1d1f)">ReAct · 思考-行动-观察交织</text>
+  <text x="30" y="54" font-size="12" fill="var(--sc-sub,#6e6e73)">推理(Reasoning)与行动(Acting)交错进行：每次思考产出一个动作，动作结果反哺下一次思考</text>
+
+  <!-- 三步循环环形布局 -->
+  <g filter="url(#s2_soft)"><rect x="120" y="120" width="200" height="88" rx="12" fill="var(--sc-fill-purple,#f3ecff)" stroke="#a78bfa" stroke-width="1.5"/></g>
+  <text x="220" y="152" font-size="13" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">Thought</text>
+  <text x="220" y="174" font-size="11" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">「我需要先查一下</text>
+  <text x="220" y="190" font-size="11" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">当前汇率」</text>
+
+  <g filter="url(#s2_soft)"><rect x="640" y="120" width="200" height="88" rx="12" fill="var(--sc-fill-blue,#eef4ff)" stroke="#0a84ff" stroke-width="1.5"/></g>
+  <text x="740" y="152" font-size="13" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">Action</text>
+  <text x="740" y="174" font-size="11" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">search[USD to CNY]</text>
+  <text x="740" y="190" font-size="11" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">调用工具</text>
+
+  <g filter="url(#s2_soft)"><rect x="380" y="330" width="200" height="88" rx="12" fill="var(--sc-fill-teal,#e9fbf6)" stroke="#2dd4bf" stroke-width="1.5"/></g>
+  <text x="480" y="362" font-size="13" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">Observation</text>
+  <text x="480" y="384" font-size="11" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">「1 USD = 7.2 CNY」</text>
+  <text x="480" y="400" font-size="11" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">工具返回结果</text>
+
+  <!-- 环形箭头 -->
+  <path d="M320 160 L636 160" stroke="#0a84ff" stroke-width="2.2" marker-end="url(#s2_arh)"/>
+  <text x="478" y="150" font-size="10.5" fill="#0a84ff" text-anchor="middle">思考决定动作</text>
+  <path d="M740 208 C 740 300 600 360 582 372" stroke="#2dd4bf" stroke-width="1.9" fill="none" marker-end="url(#s2_ar)"/>
+  <text x="700" y="300" font-size="10.5" fill="#2dd4bf" text-anchor="middle">执行得观察</text>
+  <path d="M378 372 C 200 360 220 260 220 210" stroke="#a78bfa" stroke-width="1.7" fill="none" stroke-dasharray="6 4" marker-end="url(#s2_ar)"/>
+  <text x="230" y="300" font-size="10.5" fill="#a78bfa" text-anchor="middle">观察反哺思考</text>
+
+  <!-- 轨迹累积说明 -->
+  <g filter="url(#s2_soft)"><rect x="620" y="300" width="300" height="150" rx="12" fill="var(--sc-panel,#ffffff)" stroke="var(--sc-line,#d2d2d7)" stroke-width="1.3"/></g>
+  <text x="640" y="326" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)">关键机理：轨迹即上下文</text>
+  <text x="640" y="350" font-size="11" fill="var(--sc-sub,#6e6e73)">每轮的 Thought/Action/Observation</text>
+  <text x="640" y="368" font-size="11" fill="var(--sc-sub,#6e6e73)">全部追加进上下文，成为下一轮</text>
+  <text x="640" y="386" font-size="11" fill="var(--sc-sub,#6e6e73)">推理的依据 → 让模型「记得」</text>
+  <text x="640" y="404" font-size="11" fill="var(--sc-sub,#6e6e73)">自己刚做过什么、看到了什么。</text>
+  <text x="640" y="428" font-size="11" fill="#f5873a">风险：轨迹越长，token 成本越高，</text>
+  <text x="640" y="444" font-size="11" fill="#f5873a">易积累错误 → 需截断/摘要。</text>
+
+  <!-- 图例 -->
+  <g filter="url(#s2_soft)"><rect x="40" y="330" width="300" height="120" rx="10" fill="var(--sc-panel,#ffffff)" stroke="var(--sc-line,#d2d2d7)" stroke-width="1.2"/></g>
+  <text x="56" y="352" font-size="11" font-weight="600" fill="var(--sc-ink,#1d1d1f)">路径图例</text>
+  <line x1="56" y1="370" x2="88" y2="370" stroke="#0a84ff" stroke-width="2.2"/><text x="96" y="374" font-size="10.5" fill="var(--sc-sub,#6e6e73)">Hot 思考→动作主流</text>
+  <line x1="56" y1="392" x2="88" y2="392" stroke="#2dd4bf" stroke-width="1.9"/><text x="96" y="396" font-size="10.5" fill="var(--sc-sub,#6e6e73)">State 执行产生观察</text>
+  <line x1="56" y1="414" x2="88" y2="414" stroke="#a78bfa" stroke-width="1.7" stroke-dasharray="6 4"/><text x="96" y="418" font-size="10.5" fill="var(--sc-sub,#6e6e73)">Control 观察反哺决策</text>
+  <line x1="56" y1="436" x2="88" y2="436" stroke="#f5873a" stroke-width="1.7" stroke-dasharray="3 3"/><text x="96" y="440" font-size="10.5" fill="var(--sc-sub,#6e6e73)">Failure 长轨迹风险</text>
+</svg></div><div class="blurb"><p><b>ReAct = Reasoning + Acting</b>，最基础形态：每轮产出 Thought/Action/Observation，观察回灌上下文触发下一轮。精髓是「让思考落地为可验证的行动」——用外部反馈校准，代价是<b>轨迹即上下文</b>、越滚越长易跑偏死循环。工程必配 <b>max_steps 上限</b>与<b>重复动作熔断</b>。机制见图。</p></div></section><section class="vt-sec" id="sec-r2" data-sec="sec-r2"><div class="secttl"><span class="badge">R2</span><span class="t">Plan-and-Execute · 先规划全局再逐步执行</span></div><div class="fig" role="img" aria-label="Plan-and-Execute · 先规划全局再逐步执行"><svg class="figsvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 500" font-family="-apple-system,'PingFang SC','Helvetica Neue',sans-serif">
+  <defs>
+    <filter id="s3_soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.07"/></filter>
+    <marker id="s3_ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="var(--sc-line2,#b8b8bf)"/></marker>
+    <marker id="s3_arh" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#0a84ff"/></marker>
+  </defs>
+  <rect width="960" height="500" fill="var(--sc-bg,#fbfbfd)"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="var(--sc-ink,#1d1d1f)">Plan-and-Execute · 先规划全局，再逐步执行</text>
+  <text x="30" y="54" font-size="12" fill="var(--sc-sub,#6e6e73)">与 ReAct 逐步试探不同：先由 Planner 产出完整计划，Executor 顺序执行；偏差时重规划</text>
+
+  <!-- Planner -->
+  <g filter="url(#s3_soft)"><rect x="40" y="150" width="180" height="90" rx="12" fill="var(--sc-fill-purple,#f3ecff)" stroke="#a78bfa" stroke-width="1.5"/></g>
+  <text x="130" y="182" font-size="13" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">Planner · 规划器</text>
+  <text x="130" y="204" font-size="10.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">一次性拆出</text>
+  <text x="130" y="220" font-size="10.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">有序子任务列表</text>
+
+  <!-- 计划列表 -->
+  <g filter="url(#s3_soft)"><rect x="300" y="110" width="260" height="180" rx="12" fill="var(--sc-panel,#ffffff)" stroke="var(--sc-line,#d2d2d7)" stroke-width="1.4"/></g>
+  <text x="316" y="134" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)">Plan · 静态计划</text>
+  <g><rect x="316" y="146" width="228" height="30" rx="7" fill="var(--sc-fill-blue,#eef4ff)" stroke="#0a84ff" stroke-width="1.1"/><text x="326" y="166" font-size="11" fill="var(--sc-ink,#1d1d1f)">① 检索航班信息</text></g>
+  <g><rect x="316" y="182" width="228" height="30" rx="7" fill="var(--sc-fill-blue,#eef4ff)" stroke="#0a84ff" stroke-width="1.1"/><text x="326" y="202" font-size="11" fill="var(--sc-ink,#1d1d1f)">② 比价并筛选</text></g>
+  <g><rect x="316" y="218" width="228" height="30" rx="7" fill="var(--sc-fill-blue,#eef4ff)" stroke="#0a84ff" stroke-width="1.1"/><text x="326" y="238" font-size="11" fill="var(--sc-ink,#1d1d1f)">③ 生成预订摘要</text></g>
+  <text x="316" y="272" font-size="10.5" fill="var(--sc-sub,#6e6e73)">子任务间可有依赖（DAG）</text>
+
+  <!-- Executor -->
+  <g filter="url(#s3_soft)"><rect x="640" y="150" width="180" height="90" rx="12" fill="var(--sc-fill-blue,#eef4ff)" stroke="#0a84ff" stroke-width="1.5"/></g>
+  <text x="730" y="182" font-size="13" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">Executor · 执行器</text>
+  <text x="730" y="204" font-size="10.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">逐个执行子任务</text>
+  <text x="730" y="220" font-size="10.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">（可调工具/子Agent）</text>
+
+  <path d="M220 195 L296 195" stroke="#a78bfa" stroke-width="2" marker-end="url(#s3_ar)"/>
+  <path d="M560 195 L636 195" stroke="#0a84ff" stroke-width="2.2" marker-end="url(#s3_arh)"/>
+
+  <!-- Replan 回环 -->
+  <g filter="url(#s3_soft)"><rect x="640" y="320" width="180" height="70" rx="12" fill="var(--sc-fill-orange,#fff3ea)" stroke="#f5873a" stroke-width="1.5"/></g>
+  <text x="730" y="350" font-size="12.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">结果偏离预期？</text>
+  <text x="730" y="370" font-size="10.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">触发 Replan 重规划</text>
+  <path d="M730 240 L730 318" stroke="#2dd4bf" stroke-width="1.8" marker-end="url(#s3_ar)"/>
+  <text x="748" y="285" font-size="10" fill="#2dd4bf">执行结果</text>
+  <path d="M640 355 C 300 420 130 340 130 244" stroke="#f5873a" stroke-width="1.7" fill="none" stroke-dasharray="6 4" marker-end="url(#s3_ar)"/>
+  <text x="400" y="440" font-size="10.5" fill="#f5873a" text-anchor="middle">偏差 → 回到 Planner 重新规划（Control 回路）</text>
+
+  <!-- 优势铭牌 -->
+  <g filter="url(#s3_soft)"><rect x="40" y="300" width="520" height="120" rx="12" fill="var(--sc-panel,#ffffff)" stroke="var(--sc-line,#d2d2d7)" stroke-width="1.3"/></g>
+  <text x="58" y="326" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)">为什么要先规划？</text>
+  <text x="58" y="350" font-size="11" fill="var(--sc-sub,#6e6e73)">• 全局视野：先想清整体路径，减少走一步看一步的短视决策</text>
+  <text x="58" y="372" font-size="11" fill="var(--sc-sub,#6e6e73)">• 省 token：规划由强模型做一次，执行可交给廉价模型/并行</text>
+  <text x="58" y="394" font-size="11" fill="var(--sc-sub,#6e6e73)">• 可并行：无依赖的子任务可同时执行，缩短端到端时延</text>
+  <text x="58" y="414" font-size="11" fill="#f5873a">代价：计划可能过时，需 Replan 机制兜底动态环境</text>
+
+  <!-- 图例 -->
+  <g filter="url(#s3_soft)"><rect x="620" y="410" width="300" height="72" rx="10" fill="var(--sc-panel,#ffffff)" stroke="var(--sc-line,#d2d2d7)" stroke-width="1.2"/></g>
+  <line x1="636" y1="432" x2="668" y2="432" stroke="#0a84ff" stroke-width="2.2"/><text x="676" y="436" font-size="10" fill="var(--sc-sub,#6e6e73)">Hot 规划→执行主流</text>
+  <line x1="636" y1="452" x2="668" y2="452" stroke="#2dd4bf" stroke-width="1.8"/><text x="676" y="456" font-size="10" fill="var(--sc-sub,#6e6e73)">State 执行结果</text>
+  <line x1="636" y1="472" x2="668" y2="472" stroke="#f5873a" stroke-width="1.7" stroke-dasharray="6 4"/><text x="676" y="476" font-size="10" fill="var(--sc-sub,#6e6e73)">Control 重规划回路</text>
+</svg></div><div class="blurb"><p><b>Plan-and-Execute</b> 把推理拆两段：<b>Planner</b> 一次性产出带依赖的子任务 DAG，<b>Executor</b> 逐个执行（可再开子 Agent）。收益是全局视野、强模型规划一次+小模型/并行执行省成本。关键是 <b>Replan 回路</b>——执行偏离即带新信息重规划，弥合「静态蓝图 vs 动态现实」。见图。</p></div></section><section class="vt-sec" id="sec-r3" data-sec="sec-r3"><div class="secttl"><span class="badge">R3</span><span class="t">Reflexion · 失败反思写入记忆重试</span></div><div class="fig" role="img" aria-label="Reflexion · 失败反思写入记忆重试"><svg class="figsvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 520" font-family="-apple-system,'PingFang SC','Helvetica Neue',sans-serif">
+  <defs>
+    <filter id="s4_soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.07"/></filter>
+    <marker id="s4_ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="var(--sc-line2,#b8b8bf)"/></marker>
+    <marker id="s4_arh" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#0a84ff"/></marker>
+  </defs>
+  <rect width="960" height="520" fill="var(--sc-bg,#fbfbfd)"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="var(--sc-ink,#1d1d1f)">Reflexion · 自我反思与重试</text>
+  <text x="30" y="54" font-size="12" fill="var(--sc-sub,#6e6e73)">失败不是终点：把错误转成语言反思，写入记忆，指导下一次尝试</text>
+
+  <!-- Actor -->
+  <g filter="url(#s4_soft)"><rect x="60" y="120" width="180" height="90" rx="12" fill="var(--sc-fill-blue,#eef4ff)" stroke="#0a84ff" stroke-width="1.5"/></g>
+  <text x="150" y="152" font-size="13" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">Actor · 执行者</text>
+  <text x="150" y="174" font-size="10.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">按当前策略产生</text>
+  <text x="150" y="190" font-size="10.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">一次完整尝试(trajectory)</text>
+
+  <!-- Evaluator -->
+  <g filter="url(#s4_soft)"><rect x="390" y="120" width="180" height="90" rx="12" fill="var(--sc-fill-teal,#e6fbf6)" stroke="#2dd4bf" stroke-width="1.5"/></g>
+  <text x="480" y="152" font-size="13" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">Evaluator · 评估者</text>
+  <text x="480" y="174" font-size="10.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">打分/单测/规则判定</text>
+  <text x="480" y="190" font-size="10.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">给出成功或失败信号</text>
+
+  <!-- Self-Reflection -->
+  <g filter="url(#s4_soft)"><rect x="720" y="120" width="180" height="90" rx="12" fill="var(--sc-fill-purple,#f3ecff)" stroke="#a78bfa" stroke-width="1.5"/></g>
+  <text x="810" y="148" font-size="13" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">Self-Reflection</text>
+  <text x="810" y="170" font-size="10.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">用语言总结</text>
+  <text x="810" y="186" font-size="10.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">「为何失败/如何改」</text>
+
+  <path d="M240 165 L386 165" stroke="#0a84ff" stroke-width="2.2" marker-end="url(#s4_arh)"/>
+  <text x="313" y="156" font-size="10" fill="#0a84ff" text-anchor="middle">轨迹</text>
+  <path d="M570 165 L716 165" stroke="#f5873a" stroke-width="1.8" stroke-dasharray="3 3" marker-end="url(#s4_ar)"/>
+  <text x="643" y="156" font-size="10" fill="#f5873a" text-anchor="middle">失败信号</text>
+
+  <!-- 反思记忆库 -->
+  <g filter="url(#s4_soft)"><rect x="330" y="290" width="300" height="120" rx="12" fill="var(--sc-panel,#ffffff)" stroke="var(--sc-line,#d2d2d7)" stroke-width="1.4"/></g>
+  <text x="480" y="316" font-size="12.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">反思记忆 · Reflection Memory</text>
+  <text x="348" y="342" font-size="10.5" fill="var(--sc-sub,#6e6e73)">「上次因未校验边界值报错」</text>
+  <text x="348" y="362" font-size="10.5" fill="var(--sc-sub,#6e6e73)">「应先读文档再调 API」</text>
+  <text x="348" y="386" font-size="10" fill="#a78bfa">经验以自然语言累积，注入下轮 prompt</text>
+
+  <path d="M810 210 C 810 260 660 300 632 330" stroke="#a78bfa" stroke-width="1.8" fill="none" marker-end="url(#s4_ar)"/>
+  <text x="770" y="270" font-size="10" fill="#a78bfa">写入反思</text>
+  <!--重试回环 -->
+  <path d="M330 350 C 120 380 150 240 150 214" stroke="#f5873a" stroke-width="1.8" fill="none" stroke-dasharray="6 4" marker-end="url(#s4_ar)"/>
+  <text x="150" y="270" font-size="10.5" fill="#f5873a" text-anchor="middle">带经验重试</text>
+
+  <!-- 成功出口 -->
+  <g filter="url(#s4_soft)"><rect x="390" y="440" width="180" height="56" rx="12" fill="var(--sc-fill-orange,#fff3ea)" stroke="#f5873a" stroke-width="1.5"/></g>
+  <text x="480" y="474" font-size="12.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">评估通过 → 终止输出</text>
+  <path d="M480 410 L480 438" stroke="#2dd4bf" stroke-width="1.8" marker-end="url(#s4_ar)"/>
+
+  <!-- 图例 -->
+  <g filter="url(#s4_soft)"><rect x="640" y="424" width="280" height="76" rx="10" fill="var(--sc-panel,#ffffff)" stroke="var(--sc-line,#d2d2d7)" stroke-width="1.2"/></g>
+  <line x1="656" y1="448" x2="688" y2="448" stroke="#0a84ff" stroke-width="2.2"/><text x="696" y="452" font-size="10" fill="var(--sc-sub,#6e6e73)">Hot 尝试轨迹</text>
+  <line x1="656" y1="468" x2="688" y2="468" stroke="#a78bfa" stroke-width="1.8"/><text x="696" y="472" font-size="10" fill="var(--sc-sub,#6e6e73)">Control 反思写入记忆</text>
+  <line x1="656" y1="488" x2="688" y2="488" stroke="#f5873a" stroke-width="1.7" stroke-dasharray="6 4"/><text x="696" y="492" font-size="10" fill="var(--sc-sub,#6e6e73)">Failure 失败→带经验重试</text>
+</svg></div><div class="blurb"><p><b>Reflexion</b> 解决「失败怎么办」：不盲目重试，而让失败长记性——<b>Evaluator</b> 评判轨迹，模型做 <b>Self-Reflection</b> 用自然语言总结教训写入<b>反思记忆</b>，下轮注入 prompt。它用「语言化自我批评」替代 RL 奖励信号，无需更新权重即可跨尝试学习。前提是任务<b>可评估</b>。见图。</p></div></section><section class="vt-sec" id="sec-r4" data-sec="sec-r4"><div class="secttl"><span class="badge">R4</span><span class="t">Tree-of-Thoughts · 多分支搜索 + 自评剪枝</span></div><div class="fig" role="img" aria-label="Tree-of-Thoughts · 多分支搜索 + 自评剪枝"><svg class="figsvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540" font-family="-apple-system,'PingFang SC','Helvetica Neue',sans-serif">
+  <defs>
+    <filter id="s5_soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.07"/></filter>
+    <marker id="s5_ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="var(--sc-line2,#b8b8bf)"/></marker>
+    <marker id="s5_arh" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#0a84ff"/></marker>
+  </defs>
+  <rect width="960" height="540" fill="var(--sc-bg,#fbfbfd)"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="var(--sc-ink,#1d1d1f)">Tree of Thoughts · 多路径探索与回溯</text>
+  <text x="30" y="54" font-size="12" fill="var(--sc-sub,#6e6e73)">不再线性一条路走到黑：把推理展开成树，评估每个分支，剪枝差路、保留优路</text>
+
+  <!-- root -->
+  <g filter="url(#s5_soft)"><rect x="410" y="90" width="140" height="52" rx="12" fill="var(--sc-fill-blue,#eef4ff)" stroke="#0a84ff" stroke-width="1.6"/></g>
+  <text x="480" y="122" font-size="12.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">问题根节点</text>
+
+  <!-- level1 三分支 -->
+  <g filter="url(#s5_soft)"><rect x="150" y="220" width="150" height="60" rx="11" fill="var(--sc-fill-purple,#f3ecff)" stroke="#a78bfa" stroke-width="1.4"/></g>
+  <text x="225" y="246" font-size="11.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">思路 A</text>
+  <text x="225" y="266" font-size="10" fill="#2dd4bf" text-anchor="middle">评分 0.8 ✓保留</text>
+
+  <g filter="url(#s5_soft)"><rect x="405" y="220" width="150" height="60" rx="11" fill="var(--sc-fill-purple,#f3ecff)" stroke="#a78bfa" stroke-width="1.4"/></g>
+  <text x="480" y="246" font-size="11.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">思路 B</text>
+  <text x="480" y="266" font-size="10" fill="#f5873a" text-anchor="middle">评分 0.3 ✗剪枝</text>
+
+  <g filter="url(#s5_soft)"><rect x="660" y="220" width="150" height="60" rx="11" fill="var(--sc-fill-purple,#f3ecff)" stroke="#a78bfa" stroke-width="1.4"/></g>
+  <text x="735" y="246" font-size="11.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">思路 C</text>
+  <text x="735" y="266" font-size="10" fill="#2dd4bf" text-anchor="middle">评分 0.6 ✓保留</text>
+
+  <path d="M455 142 L250 218" stroke="#0a84ff" stroke-width="1.8" marker-end="url(#s5_arh)"/>
+  <path d="M480 142 L480 218" stroke="#f5873a" stroke-width="1.6" stroke-dasharray="3 3" marker-end="url(#s5_ar)"/>
+  <path d="M505 142 L710 218" stroke="#0a84ff" stroke-width="1.8" marker-end="url(#s5_arh)"/>
+
+  <!-- level2 从A/C展开 -->
+  <g filter="url(#s5_soft)"><rect x="120" y="360" width="130" height="52" rx="10" fill="var(--sc-fill-teal,#e6fbf6)" stroke="#2dd4bf" stroke-width="1.3"/></g>
+  <text x="185" y="391" font-size="11" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">A-1 深化</text>
+  <g filter="url(#s5_soft)"><rect x="270" y="360" width="130" height="52" rx="10" fill="var(--sc-fill-teal,#e6fbf6)" stroke="#2dd4bf" stroke-width="1.3"/></g>
+  <text x="335" y="391" font-size="11" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">A-2 深化</text>
+  <g filter="url(#s5_soft)"><rect x="670" y="360" width="130" height="52" rx="10" fill="var(--sc-fill-teal,#e6fbf6)" stroke="#2dd4bf" stroke-width="1.3"/></g>
+  <text x="735" y="391" font-size="11" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">C-1 深化</text>
+
+  <path d="M210 280 L185 358" stroke="#2dd4bf" stroke-width="1.6" marker-end="url(#s5_ar)"/>
+  <path d="M250 280 L335 358" stroke="#2dd4bf" stroke-width="1.6" marker-end="url(#s5_ar)"/>
+  <path d="M735 280 L735 358" stroke="#2dd4bf" stroke-width="1.6" marker-end="url(#s5_ar)"/>
+
+  <!-- 最优路径出口 -->
+  <g filter="url(#s5_soft)"><rect x="270" y="452" width="200" height="52" rx="12" fill="var(--sc-fill-orange,#fff3ea)" stroke="#f5873a" stroke-width="1.6"/></g>
+  <text x="370" y="484" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">最优路径 A-2 → 最终解</text>
+  <path d="M335 412 L360 450" stroke="#0a84ff" stroke-width="2.2" marker-end="url(#s5_arh)"/>
+
+  <!-- 搜索策略铭牌 -->
+  <g filter="url(#s5_soft)"><rect x="520" y="430" width="290" height="90" rx="11" fill="var(--sc-panel,#ffffff)" stroke="var(--sc-line,#d2d2d7)" stroke-width="1.3"/></g>
+  <text x="538" y="454" font-size="11.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)">搜索控制</text>
+  <text x="538" y="476" font-size="10.5" fill="var(--sc-sub,#6e6e73)">BFS/DFS 遍历 · LLM 自评每节点价值</text>
+  <text x="538" y="496" font-size="10.5" fill="var(--sc-sub,#6e6e73)">保留 Top-k 分支，回溯换路，剪掉低分</text>
+  <text x="538" y="514" font-size="10" fill="#f5873a">代价：分支越多，token 与时延成倍上升</text>
+
+  <!-- 图例 -->
+  <g filter="url(#s5_soft)"><rect x="30" y="452" width="220" height="72" rx="10" fill="var(--sc-panel,#ffffff)" stroke="var(--sc-line,#d2d2d7)" stroke-width="1.2"/></g>
+  <line x1="46" y1="476" x2="78" y2="476" stroke="#0a84ff" stroke-width="2.2"/><text x="86" y="480" font-size="10" fill="var(--sc-sub,#6e6e73)">Hot 展开/选优</text>
+  <line x1="46" y1="496" x2="78" y2="496" stroke="#2dd4bf" stroke-width="1.6"/><text x="86" y="500" font-size="10" fill="var(--sc-sub,#6e6e73)">State 深化节点</text>
+  <line x1="46" y1="516" x2="78" y2="516" stroke="#f5873a" stroke-width="1.6" stroke-dasharray="3 3"/><text x="86" y="520" font-size="10" fill="var(--sc-sub,#6e6e73)">Failure 低分剪枝</text>
+</svg></div><div class="blurb"><p><b>Tree of Thoughts（ToT）</b> 把推理显式展开成<b>树</b>：每个关键节点生成多候选分支，评分后<b>保留高分、剪掉低分、必要时回溯</b>。借用 BFS/DFS 骨架，把 LLM 当节点扩展器+价值评估器，对试错型难题显著提升成功率。代价是 <b>分支数×深度 = token 与时延成倍膨胀</b>，属高价值场景专用「重武器」。见图。</p></div></section><section class="vt-sec" id="sec-cmp" data-sec="sec-cmp"><div class="secttl"><span class="badge">⇄</span><span class="t">Reasoning &amp; Planning · 核心机制差异对比</span></div><div class="fig" role="img" aria-label="Reasoning &amp; Planning · 核心机制差异对比"><svg class="figsvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 520" font-family="-apple-system,'PingFang SC','Helvetica Neue',sans-serif">
+  <defs>
+    <filter id="s6_soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.07"/></filter>
+  </defs>
+  <rect width="960" height="520" fill="var(--sc-bg,#fbfbfd)"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="var(--sc-ink,#1d1d1f)">四种推理范式 · 横向对比</text>
+  <text x="30" y="54" font-size="12" fill="var(--sc-sub,#6e6e73)">从线性试探到树状搜索：探索广度、纠错能力、成本随复杂度递增</text>
+
+  <!-- 表头 -->
+  <g font-size="11" font-weight="600" fill="var(--sc-ink,#1d1d1f)">
+    <text x="150" y="96" text-anchor="middle">范式</text>
+    <text x="330" y="96" text-anchor="middle">推理结构</text>
+    <text x="500" y="96" text-anchor="middle">纠错方式</text>
+    <text x="660" y="96" text-anchor="middle">适用场景</text>
+    <text x="850" y="96" text-anchor="middle">成本</text>
+  </g>
+  <line x1="30" y1="108" x2="930" y2="108" stroke="var(--sc-line,#d2d2d7)" stroke-width="1.2"/>
+
+  <!-- ReAct -->
+  <g filter="url(#s6_soft)"><rect x="40" y="122" width="200" height="76" rx="10" fill="var(--sc-fill-blue,#eef4ff)" stroke="#0a84ff" stroke-width="1.4"/></g>
+  <text x="140" y="152" font-size="12.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">ReAct</text>
+  <text x="140" y="174" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">思考→行动→观察</text>
+  <text x="140" y="190" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">线性循环</text>
+  <text x="330" y="166" font-size="10.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">线性单链</text>
+  <text x="500" y="166" font-size="10.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">靠观察即时修正</text>
+  <text x="660" y="166" font-size="10.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">工具型交互任务</text>
+  <text x="850" y="166" font-size="10.5" fill="#2dd4bf" text-anchor="middle">低</text>
+
+  <!-- Plan-Execute -->
+<g filter="url(#s6_soft)"><rect x="40" y="212" width="200" height="76" rx="10" fill="var(--sc-fill-purple,#f3ecff)" stroke="#a78bfa" stroke-width="1.4"/></g>
+  <text x="140" y="242" font-size="12.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">Plan-Execute</text>
+  <text x="140" y="264" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">先规划全局</text>
+  <text x="140" y="280" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">再逐步执行</text>
+  <text x="330" y="256" font-size="10.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">计划+执行两段</text>
+  <text x="500" y="256" font-size="10.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">偏差触发重规划</text>
+  <text x="660" y="256" font-size="10.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">多步长流程任务</text>
+  <text x="850" y="256" font-size="10.5" fill="#2dd4bf" text-anchor="middle">中</text>
+
+  <!-- Reflexion -->
+  <g filter="url(#s6_soft)"><rect x="40" y="302" width="200" height="76" rx="10" fill="var(--sc-fill-teal,#e6fbf6)" stroke="#2dd4bf" stroke-width="1.4"/></g>
+  <text x="140" y="332" font-size="12.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">Reflexion</text>
+  <text x="140" y="354" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">失败→语言反思</text>
+  <text x="140" y="370" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">带经验重试</text>
+  <text x="330" y="346" font-size="10.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">多轮迭代</text>
+  <text x="500" y="346" font-size="10.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">显式自我反思记忆</text>
+  <text x="660" y="346" font-size="10.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">可验证/可评分任务</text>
+  <text x="850" y="346" font-size="10.5" fill="#f5873a" text-anchor="middle">中高</text>
+
+  <!-- ToT -->
+  <g filter="url(#s6_soft)"><rect x="40" y="392" width="200" height="76" rx="10" fill="var(--sc-fill-orange,#fff3ea)" stroke="#f5873a" stroke-width="1.4"/></g>
+  <text x="140" y="422" font-size="12.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">Tree of Thoughts</text>
+  <text x="140" y="444" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">多分支展开</text>
+  <text x="140" y="460" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">评估+剪枝+回溯</text>
+  <text x="330" y="436" font-size="10.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">树状搜索</text>
+  <text x="500" y="436" font-size="10.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">剪枝差路换优路</text>
+  <text x="660" y="436" font-size="10.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">高难度求解/规划</text>
+  <text x="850" y="436" font-size="10.5" fill="#f5873a" text-anchor="middle">高</text>
+
+  <text x="480" y="500" font-size="11" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">选型原则：能用简单范式解决就不上复杂搜索 —— 复杂度换准确率，成本随之抬升</text>
+</svg></div><div class="blurb ml"><p>四范式构成<b>复杂度/成本/纠错能力递增</b>谱系：ReAct 线性单链靠即时观察、Plan-Execute 两段靠重规划、Reflexion 靠反思记忆跨尝试、ToT 树搜索靠剪枝回溯。选型第一原则：<b>能用简单范式就不上复杂搜索</b>——先问清「任务真需要多路径探索吗」。四维对照见图。</p></div></section><section class="vt-sec" id="sec-eng" data-sec="sec-eng"><div class="secttl"><span class="badge">⚙</span><span class="t">Reasoning &amp; Planning · 工程实现差异（真实框架落地取舍）</span></div><div class="fig" role="img" aria-label="Reasoning &amp; Planning · 工程实现差异（真实框架落地取舍）"><svg class="figsvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 500" font-family="-apple-system,'PingFang SC','Helvetica Neue',sans-serif">
+  <defs>
+    <filter id="s7_soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.07"/></filter>
+    <marker id="s7_ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="var(--sc-line2,#b8b8bf)"/></marker>
+  </defs>
+  <rect width="960" height="500" fill="var(--sc-bg,#fbfbfd)"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="var(--sc-ink,#1d1d1f)">工程落地 · 推理循环的生产要点</text>
+  <text x="30" y="54" font-size="12" fill="var(--sc-sub,#6e6e73)">从 demo 到生产：控制步数、防死循环、可观测、可回滚</text>
+
+  <!-- 三大工程支柱 -->
+  <g filter="url(#s7_soft)"><rect x="40" y="90" width="280" height="180" rx="12" fill="var(--sc-fill-blue,#eef4ff)" stroke="#0a84ff" stroke-width="1.4"/></g>
+  <text x="180" y="118" font-size="13" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">循环控制</text>
+  <text x="58" y="146" font-size="10.5" fill="var(--sc-sub,#6e6e73)">• max_steps 硬上限，超限强制终止</text>
+  <text x="58" y="170" font-size="10.5" fill="var(--sc-sub,#6e6e73)">• 重复动作检测：连续相同调用即熔断</text>
+  <text x="58" y="194" font-size="10.5" fill="var(--sc-sub,#6e6e73)">• 预算护栏：token/成本/时延三重阈值</text>
+  <text x="58" y="218" font-size="10.5" fill="var(--sc-sub,#6e6e73)">• 明确终止条件，避免无限 ReAct</text>
+  <text x="58" y="242" font-size="10" fill="#f5873a">死循环是线上最常见故障</text>
+
+  <g filter="url(#s7_soft)"><rect x="340" y="90" width="280" height="180" rx="12" fill="var(--sc-fill-teal,#e6fbf6)" stroke="#2dd4bf" stroke-width="1.4"/></g>
+  <text x="480" y="118" font-size="13" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">可观测性</text>
+  <text x="358" y="146" font-size="10.5" fill="var(--sc-sub,#6e6e73)">• 全轨迹落盘：每步 T/A/O 结构化日志</text>
+  <text x="358" y="170" font-size="10.5" fill="var(--sc-sub,#6e6e73)">• Trace 打点：定位在哪一步跑偏</text>
+  <text x="358" y="194" font-size="10.5" fill="var(--sc-sub,#6e6e73)">• 回放能力：用轨迹复现问题</text>
+  <text x="358" y="218" font-size="10.5" fill="var(--sc-sub,#6e6e73)">• 步级指标：成功率/平均步数/工具错误率</text>
+  <text x="358" y="242" font-size="10" fill="#2dd4bf">无可观测 = 无法调试黑盒</text>
+
+  <g filter="url(#s7_soft)"><rect x="640" y="90" width="280" height="180" rx="12" fill="var(--sc-fill-purple,#f3ecff)" stroke="#a78bfa" stroke-width="1.4"/></g>
+  <text x="780" y="118" font-size="13" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">鲁棒性</text>
+  <text x="658" y="146" font-size="10.5" fill="var(--sc-sub,#6e6e73)">• 工具失败重试 + 指数退避</text>
+  <text x="658" y="170" font-size="10.5" fill="var(--sc-sub,#6e6e73)">• 输出格式校验，解析失败即纠偏</text>
+  <text x="658" y="194" font-size="10.5" fill="var(--sc-sub,#6e6e73)">• 人在环 (HITL)：高风险动作需审批</text>
+  <text x="658" y="218" font-size="10.5" fill="var(--sc-sub,#6e6e73)">• 幂等与可回滚：副作用动作要能撤销</text>
+  <text x="658" y="242" font-size="10" fill="#a78bfa">给 Agent 装刹车，而非只给油门</text>
+
+  <!-- 成本/时延权衡带 -->
+  <g filter="url(#s7_soft)"><rect x="40" y="300" width="880" height="90" rx="12" fill="var(--sc-panel,#ffffff)" stroke="var(--sc-line,#d2d2d7)" stroke-width="1.3"/></g>
+  <text x="60" y="326" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)">成本-质量权衡</text>
+  <text x="60" y="350" font-size="10.5" fill="var(--sc-sub,#6e6e73)">强模型做规划/反思，廉价模型做执行 · 简单请求短路直答，复杂请求才开多步循环</text>
+  <text x="60" y="372" font-size="10.5" fill="var(--sc-sub,#6e6e73)">缓存工具结果与前缀 · 并行无依赖子任务 · 用 ReAct 兜底、ToT 仅在高价值场景启用</text>
+
+  <!-- 底部准则 -->
+  <text x="480" y="430" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">工程铁律：先能停、能看、能回滚，再谈更聪明的推理</text>
+  <g>
+    <rect x="290" y="450" width="380" height="34" rx="9" fill="var(--sc-fill-orange,#fff3ea)" stroke="#f5873a" stroke-width="1.2"/>
+    <text x="480" y="472" font-size="10.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">步数上限 · 全链路 Trace · HITL 审批 · 幂等回滚 —— 四件套缺一不可</text>
+  </g>
+</svg></div><div class="blurb ml"><p>推理循环工程重心不在「更聪明」，而在「<b>能停、能看、能回滚</b>」：<b>循环控制</b>——max_steps 硬上限、重复动作熔断、token/成本/时延三重预算；<b>可观测性</b>——T/A/O 结构化落盘+Trace 回放，定位跑偏点；<b>鲁棒性</b>——工具重试退避、输出校验、高风险动作 HITL 审批、副作用幂等可回滚。铁律：<b>先装刹车再加油门</b>。四件套详见图。</p></div></section></div></div>
+  <section class="refs"><div class="secttl"><span class="badge">§</span><span class="t">参考文献 · 权威来源（论文 / 官方文档）</span></div><div class="blurb reflist"><p>本模块为原理示意，聚焦机制而非特定实现。延伸阅读：ReAct（Yao et al., 2022）、Reflexion（Shinn et al., 2023）、Tree of Thoughts（Yao et al., 2023）、Plan-and-Solve / Plan-and-Execute 相关工作，以及 LangGraph、AutoGPT、OpenAI Agents SDK 等框架文档。</p></div></section>
+  <div class="backrow"><a href="../../index.html#agent">← 返回 LLM & Agent 导航</a></div>
+</div>
+<footer>自包含离线图谱 · 以图为主：概览 + 机制分组图 + 机制对比 · 权威参考集中于底部 · 垂直 TAB 切换</footer>
+<script>
+(function(){
+  var root=document.documentElement;
+  var saved=localStorage.getItem('atlas-nav-theme');
+  if(saved==='dark') root.setAttribute('data-theme','dark');
+  function toggleTheme(){
+    var cur=root.getAttribute('data-theme')==='dark'?'':'dark';
+    if(cur) root.setAttribute('data-theme',cur); else root.removeAttribute('data-theme');
+    localStorage.setItem('atlas-nav-theme',cur||'light');
+  }
+  var tb=document.getElementById('themeBtn');
+  if(tb){tb.onclick=toggleTheme;}
+  var wrap=document.querySelector('.vt-wrap');
+  if(wrap){
+    var tabs=wrap.querySelectorAll('.vt-tab');
+    var secs=wrap.querySelectorAll('.vt-sec');
+    tabs.forEach(function(t){
+      t.addEventListener('click',function(){
+        var tgt=t.getAttribute('data-target');
+        tabs.forEach(function(x){x.classList.toggle('active',x===t);});
+        secs.forEach(function(s){s.classList.toggle('active',s.id===tgt);});
+      });
+    });
+  }
+  var zsegs=document.querySelectorAll('.zseg');
+  var zones=document.querySelectorAll('.zone');
+  if(zsegs.length&&zones.length){
+    zsegs.forEach(function(s){
+      s.addEventListener('click',function(){
+        zsegs.forEach(function(x){x.classList.toggle('active',x===s);});
+      });
+    });
+    if('IntersectionObserver' in window){
+      var io=new IntersectionObserver(function(es){
+        es.forEach(function(e){
+          if(e.isIntersecting){
+            var id=e.target.id;
+            zsegs.forEach(function(x){x.classList.toggle('active',x.getAttribute('href')==='#'+id);});
+          }
+        });
+      },{rootMargin:'-40% 0px -55% 0px'});
+      zones.forEach(function(z){io.observe(z);});
+    }
+  }
+})();
+</script>
+</body>
+</html>

@@ -17,7 +17,9 @@
 
 ## 二、ObjectMonitor 内部：owner / 队列 / 重入计数
 
-膨胀后的 `ObjectMonitor`（`runtime/objectMonitor.hpp`）几个关键字段决定互斥/排队/可重入：**`_owner`** 当前持有者（CAS 成功即获锁；源码特意把它隔到独立缓存行 `:103-138` 减少伪共享）；**`_recursions`**（`:52`）重入计数——同一线程重入只递增、归零才真正释放，这就是 `synchronized` 可重入的实现；**入口队列/等待集**——竞争线程排入口队列，`wait`（`:1732`）先释放锁并挂起、`notify`（`:2108`）把一个等待者移回入口；**去膨胀 deflate**（`:785`）把长期不竞争的 monitor 回收、markWord 恢复无锁/轻量态。由此得一条常被忽视的因果：**`wait()`/`notify()` 与从 JNI 进入的锁一定是重量级的**——它们要用 monitor 的等待集与阻塞队列，无法用 markWord 一个 CAS 位表达。
+![ObjectMonitor 内部 · owner + entry_list + wait_set + 重入计数与去膨胀](OpenJDK原理_支撑_同步与Java内存模型_03ObjectMonitor内部.svg)
+
+膨胀后的 `ObjectMonitor`（`runtime/objectMonitor.hpp`）：**`_owner`** 当前持有者（隔到独立缓存行 `:103-138` 减少伪共享）、**`_recursions`**（`:52`）重入计数（归零才真正释放，这就是 `synchronized` 可重入的实现）、**入口队列/等待集**（`wait` `:1732` 释放锁并挂起、`notify` `:2108` 把等待者移回入口）、**去膨胀 deflate**（`:785`）把长期不竞争的 monitor 回收、markWord 恢复无锁/轻量态。字段协作与「`wait()`/`notify()`、JNI 进入的锁一定是重量级的」这条因果见图。
 
 ## 三、markWord：锁状态的编码位置
 

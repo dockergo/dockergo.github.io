@@ -6,11 +6,7 @@
 
 ![后台调度全景](ClickHouse原理_后台_01全景.svg)
 
-ClickHouse 的后台工作由两类载体承接：
-- **MergeTreeBackgroundExecutor**（`MergeTreeBackgroundExecutor.h:296`）：跑"重任务"（merge/mutate/move/fetch），有独立线程池与运行时队列（`RoundRobinRuntimeQueue`/`PriorityRuntimeQueue`/`DynamicRuntimeQueue`，`:107/:194/:260`）。
-- **BackgroundSchedulePool**（`Core/BackgroundSchedulePool.h`）：跑"轻周期任务"（复制队列拉取、清理、心跳等定时活）。
-
-**核心定位（呼应全景框架）**：后台任务不是又一个能力域，而是横切各域的"执行时机"维度——存储的 merge、DML 的 mutation、复制的 fetch、集群的 move、优化的统计刷新，其异步部分统一在这里被调度。
+图注：后台工作由两类载体承接——**MergeTreeBackgroundExecutor** 跑"重任务"（merge/mutate/move/fetch），有独立线程池与运行时队列（RoundRobin/Priority/Dynamic 三种）；**BackgroundSchedulePool** 跑"轻周期任务"（复制队列拉取、清理、心跳等定时活）。后台任务不是又一个能力域，而是横切各域的"执行时机"维度——存储 merge、DML mutation、复制 fetch、集群 move、优化统计刷新，其异步部分统一在此调度。
 
 ---
 

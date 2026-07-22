@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 580" font-family="-apple-system,'PingFang SC','Helvetica Neue',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.07"/>
+    </filter>
+  </defs>
+  <rect width="960" height="580" fill="#fbfbfd"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="#1d1d1f">高效注意力 · 因果掩码与 FlashAttention</text>
+  <text x="30" y="54" font-size="12" fill="#6e6e73">掩码约束「能看谁」；分块 IO 感知实现约束「算得多快、占多少显存」</text>
+
+  <!-- 左：因果掩码 -->
+  <g filter="url(#soft)"><rect x="40" y="90" width="430" height="230" rx="12" fill="#ffffff" stroke="#5e5ce6" stroke-width="1.4"/></g>
+  <text x="60" y="118" font-size="12" font-weight="600" fill="#5e5ce6">因果掩码（下三角）</text>
+  <text x="60" y="140" font-size="10" fill="#6e6e73">自回归生成时，位置 i 只能看 ≤ i 的 token</text>
+  <!-- 5x5 网格 -->
+  <g>
+    <rect x="120" y="160" width="220" height="140" fill="none" stroke="#d2d2d7" stroke-width="1"/>
+    <line x1="120" y1="188" x2="340" y2="188" stroke="#e5e5ea"/>
+    <line x1="120" y1="216" x2="340" y2="216" stroke="#e5e5ea"/>
+    <line x1="120" y1="244" x2="340" y2="244" stroke="#e5e5ea"/>
+    <line x1="120" y1="272" x2="340" y2="272" stroke="#e5e5ea"/>
+    <line x1="164" y1="160" x2="164" y2="300" stroke="#e5e5ea"/>
+    <line x1="208" y1="160" x2="208" y2="300" stroke="#e5e5ea"/>
+    <line x1="252" y1="160" x2="252" y2="300" stroke="#e5e5ea"/>
+    <line x1="296" y1="160" x2="296" y2="300" stroke="#e5e5ea"/>
+    <rect x="120" y="160" width="44" height="28" fill="#e9e6ff"/>
+    <rect x="120" y="188" width="88" height="28" fill="#e9e6ff"/>
+    <rect x="120" y="216" width="132" height="28" fill="#e9e6ff"/>
+    <rect x="120" y="244" width="176" height="28" fill="#e9e6ff"/>
+    <rect x="120" y="272" width="220" height="28" fill="#e9e6ff"/>
+  </g>
+  <text x="230" y="318" font-size="9.5" fill="#6e6e73" text-anchor="middle">紫格=可见，右上=屏蔽为 −∞</text>
+
+  <!-- 右：FlashAttention -->
+  <g filter="url(#soft)"><rect x="490" y="90" width="430" height="230" rx="12" fill="#ffffff" stroke="#2dd4bf" stroke-width="1.4"/></g>
+  <text x="510" y="118" font-size="12" font-weight="600" fill="#2dd4bf">FlashAttention（分块 · IO 感知）</text>
+  <text x="510" y="146" font-size="10" fill="#6e6e73">· 分块加载 Q/K/V 到片上 SRAM，避免写回完整 n×n 分数矩阵</text>
+  <text x="510" y="170" font-size="10" fill="#6e6e73">· online-softmax 增量累计，显存从 O(n²) 降到 O(n)</text>
+  <text x="510" y="194" font-size="10" fill="#6e6e73">· 结果与标准注意力数值等价，仅优化访存与算子融合</text>
+  <g filter="url(#soft)"><rect x="510" y="216" width="180" height="44" rx="8" fill="#e9fbf6" stroke="#2dd4bf" stroke-width="1.2"/></g>
+  <text x="600" y="243" font-size="10.5" font-weight="600" fill="#1d1d1f" text-anchor="middle">分块 Tile 逐块计算</text>
+  <g filter="url(#soft)"><rect x="710" y="216" width="180" height="44" rx="8" fill="#e9fbf6" stroke="#2dd4bf" stroke-width="1.2"/></g>
+  <text x="800" y="243" font-size="10.5" font-weight="600" fill="#1d1d1f" text-anchor="middle">HBM 访存大幅下降</text>
+  <text x="510" y="296" font-size="9.5" fill="#6e6e73">瓶颈从计算转向访存，长序列训练/推理都显著提速</text>
+
+  <!-- 底部：稀疏/线性化补充 -->
+  <g filter="url(#soft)"><rect x="40" y="350" width="880" height="200" rx="12" fill="#ffffff" stroke="#d2d2d7" stroke-width="1.2"/></g>
+  <text x="60" y="378" font-size="12" font-weight="600" fill="#5e5ce6">突破 O(n²) 的其他路线</text>
+  <text x="60" y="406" font-size="10.5" fill="#6e6e73">· 稀疏注意力：滑窗 / 全局 token / 块稀疏，只算部分位置对，适合超长文档</text>
+  <text x="60" y="432" font-size="10.5" fill="#6e6e73">· 线性注意力：用核函数近似 softmax，复杂度降到 O(n)，牺牲部分精度</text>
+  <text x="60" y="458" font-size="10.5" fill="#6e6e73">· GQA / MQA：多个 Query 头共享一组 KV，缩小 KV 缓存、加速推理解码</text>
+  <text x="60" y="484" font-size="10.5" fill="#6e6e73">· 滑动窗口 + 汇聚位：兼顾局部细节与全局锚点，长上下文常见组合</text>
+  <text x="60" y="522" font-size="11" font-weight="600" fill="#5e5ce6">主线：掩码决定语义正确性，高效实现决定能否把注意力用到长序列与大模型上</text>
+</svg>

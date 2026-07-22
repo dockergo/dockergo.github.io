@@ -1,0 +1,116 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1150" height="650" viewBox="0 0 1150 650" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="aB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#4a7fd0"/></marker>
+    <marker id="aG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+    <marker id="aA" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#c99a3a"/></marker>
+  </defs>
+  <rect width="1150" height="650" fill="#fbfbfd"/>
+
+  <!-- 判型标题带 -->
+  <text x="30" y="32" font-size="15" font-weight="700" fill="#1d1d1f">Redis Cluster · 固定哈希槎——槎总数恒为 16384，节点增减只搬槎的归属，不改变槎总数这一层间接映射</text>
+  <text x="30" y="53" font-size="10.5" fill="#6e6e73">key 先经 CRC16 映射到槎，再查槎→节点表；resharding 期间 MOVED 与 ASK 两种重定向应对「永久迁移」与「迁移中」两种状态</text>
+
+  <!-- 图例 -->
+  <line x1="30" y1="80" x2="54" y2="80" stroke="#4a7fd0" stroke-width="2" marker-end="url(#aB)"/>
+  <text x="60" y="84" font-size="10" fill="#3a3a3c">寻址路径 · key → 槎 → 节点</text>
+  <line x1="270" y1="80" x2="294" y2="80" stroke="#2f9e6e" stroke-width="2" marker-end="url(#aG)"/>
+  <text x="300" y="84" font-size="10" fill="#3a3a3c">MOVED · 永久重定向</text>
+  <line x1="470" y1="80" x2="494" y2="80" stroke="#c99a3a" stroke-width="2" stroke-dasharray="5 3" marker-end="url(#aA)"/>
+  <text x="500" y="84" font-size="10" fill="#3a3a3c">ASK · 迁移中临时重定向</text>
+  <text x="1120" y="84" font-size="10" fill="#a1a1a6" text-anchor="end">源码级已核实</text>
+  <line x1="30" y1="98" x2="1120" y2="98" stroke="#e4e7ec" stroke-width="1"/>
+
+  <!-- Panel A: 寻址路径 -->
+  <rect x="30" y="112" width="520" height="300" rx="14" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="52" y="138" font-size="13" font-weight="700" fill="#1d1d1f">① 寻址：keyHashSlot 把 key 映射到 0~16383 的固定槎位</text>
+
+  <rect x="52" y="156" width="140" height="60" rx="10" fill="#eaf1fb" stroke="#c6d9f2"/>
+  <text x="122" y="180" font-size="11" font-weight="700" fill="#20375e" text-anchor="middle">客户端 key</text>
+  <text x="122" y="200" font-size="9" fill="#3a4a63" text-anchor="middle">如 user:1000</text>
+
+  <rect x="234" y="146" width="290" height="88" rx="10" fill="#eaf1fb" stroke="#c6d9f2"/>
+  <text x="250" y="168" font-size="10.5" font-weight="700" fill="#20375e">keyHashSlot(key)</text>
+  <text x="250" y="188" font-size="9.5" fill="#3a4a63">CRC16(key) mod 16384</text>
+  <text x="250" y="206" font-size="9" fill="#3a4a63">{...} hash-tag：花括号内子串命中时</text>
+  <text x="250" y="222" font-size="9" fill="#3a4a63">只对花括号内内容求 CRC16，强制多 key 同槎</text>
+
+  <line x1="192" y1="186" x2="232" y2="186" stroke="#4a7fd0" stroke-width="1.8" marker-end="url(#aB)"/>
+
+  <rect x="52" y="256" width="472" height="66" rx="10" fill="#eaf6f0" stroke="#bfe3d1"/>
+  <text x="68" y="278" font-size="10.5" font-weight="700" fill="#2f6b4e">CLUSTER_SLOTS = 1 &lt;&lt; 14 = 16384</text>
+  <text x="68" y="298" font-size="9.5" fill="#3f8a63">槎总数是编译期常量，不随节点增减而改变——这是「固定」的含义所在</text>
+
+  <line x1="379" y1="234" x2="288" y2="254" stroke="#4a7fd0" stroke-width="1.8" marker-end="url(#aB)"/>
+  <text x="300" y="248" font-size="8.5" fill="#2f5c98">落到固定槎位</text>
+
+  <rect x="52" y="340" width="472" height="56" rx="10" fill="#fff" stroke="#d9dde4"/>
+  <text x="68" y="362" font-size="9.5" fill="#4a4a4f">节点持有的是「一段槎位区间的集合」，不是数据本身的静态划分——</text>
+  <text x="68" y="380" font-size="9.5" fill="#4a4a4f">加/减节点时搬的是槎（及其归属 key），槎总数 16384 始终不变。</text>
+
+  <!-- Panel B: 迁移路径 MOVED vs ASK -->
+  <rect x="570" y="112" width="550" height="300" rx="14" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="592" y="138" font-size="13" font-weight="700" fill="#1d1d1f">② 迁移期重定向：getNodeByQuery 判定 MOVED / ASK，clusterRedirectClient 执行跳转</text>
+
+  <!-- MOVED -->
+  <rect x="592" y="156" width="250" height="128" rx="10" fill="#eaf6f0" stroke="#bfe3d1"/>
+  <text x="608" y="180" font-size="11" font-weight="700" fill="#2f6b4e">MOVED · 永久迁移完成</text>
+  <text x="608" y="200" font-size="9.5" fill="#3f8a63">槎已彻底迁到新节点，旧节点</text>
+  <text x="608" y="218" font-size="9.5" fill="#3f8a63">收到该槎请求时返回 MOVED</text>
+  <text x="608" y="236" font-size="9.5" fill="#3f8a63">客户端应更新本地路由表，</text>
+  <text x="608" y="254" font-size="9.5" fill="#3f8a63">后续直连新节点，无需再跳转</text>
+  <text x="608" y="272" font-size="8.5" fill="#5f9c81">语义：路由表过期，一次性纠正</text>
+
+  <!-- ASK -->
+  <rect x="862" y="156" width="238" height="128" rx="10" fill="#fbf3e2" stroke="#ecd6a8"/>
+  <text x="878" y="180" font-size="11" font-weight="700" fill="#8a6417">ASK · 迁移进行中</text>
+  <text x="878" y="200" font-size="9.5" fill="#7a5a1a">该 key 所在槎正在迁移，部分</text>
+  <text x="878" y="218" font-size="9.5" fill="#7a5a1a">key 已到新节点、部分仍在旧节点</text>
+  <text x="878" y="236" font-size="9.5" fill="#7a5a1a">客户端需先对新节点发 ASKING</text>
+  <text x="878" y="254" font-size="9.5" fill="#7a5a1a">命令，再重发原请求，仅对本次</text>
+  <text x="878" y="272" font-size="8.5" fill="#a98a4a">语义：临时窗口内的一次性许可，不更新路由表</text>
+
+  <!-- 共同执行路径 -->
+  <rect x="592" y="300" width="508" height="94" rx="10" fill="#eaf1fb" stroke="#c6d9f2"/>
+  <text x="608" y="322" font-size="10.5" font-weight="700" fill="#20375e">共同实现路径</text>
+  <text x="608" y="342" font-size="9.5" fill="#3a4a63">getNodeByQuery 依据槎位查路由表，判定应转 MOVED 还是 ASK</text>
+  <text x="608" y="360" font-size="9.5" fill="#3a4a63">clusterRedirectClient 负责客户端侧执行跳转（切节点 / 补发 ASKING）</text>
+  <text x="608" y="378" font-size="8.5" fill="#5a7099">两种重定向复用同一套判定与跳转骨架，区别只在「是否持久更新路由表」</text>
+
+  <line x1="842" y1="220" x2="860" y2="220" stroke="#c99a3a" stroke-width="1.6" stroke-dasharray="4 3"/>
+  <text x="844" y="212" font-size="8" fill="#8a97ab">迁移完成后收敛为</text>
+
+  <!-- Panel C: 槎迁移期的路由收敛时间轴 -->
+  <rect x="30" y="428" width="1090" height="196" rx="14" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="52" y="454" font-size="13" font-weight="700" fill="#1d1d1f">③ 一次 resharding 的路由收敛：新旧路由短暂并存，最终统一为 MOVED 常态</text>
+
+  <rect x="60" y="470" width="250" height="120" rx="9" fill="#eaf6f0" stroke="#bfe3d1"/>
+  <text x="185" y="494" font-size="10.5" font-weight="700" fill="#2f6b4e" text-anchor="middle">t0 · 迁移未开始</text>
+  <text x="76" y="516" font-size="9" fill="#3f8a63">槎 X 完整位于节点 A</text>
+  <text x="76" y="534" font-size="9" fill="#3f8a63">客户端直接命中 A，无重定向</text>
+  <text x="76" y="556" font-size="8.5" fill="#5f9c81">路由表：槎 X → A</text>
+
+  <rect x="340" y="470" width="290" height="120" rx="9" fill="#fbf3e2" stroke="#ecd6a8"/>
+  <text x="485" y="494" font-size="10.5" font-weight="700" fill="#8a6417" text-anchor="middle">t1 · 迁移进行中</text>
+  <text x="356" y="516" font-size="9" fill="#7a5a1a">key 逐个从 A 搬到 B，槎 X 状态跨两节点</text>
+  <text x="356" y="534" font-size="9" fill="#7a5a1a">命中 A 且 key 已搬 → ASK 到 B（需 ASKING）</text>
+  <text x="356" y="556" font-size="8.5" fill="#a98a4a">路由表暂不更新，仅按次跳转</text>
+
+  <rect x="660" y="470" width="270" height="120" rx="9" fill="#eaf6f0" stroke="#bfe3d1"/>
+  <text x="795" y="494" font-size="10.5" font-weight="700" fill="#2f6b4e" text-anchor="middle">t2 · 迁移完成</text>
+  <text x="676" y="516" font-size="9" fill="#3f8a63">槎 X 全部 key 已在 B</text>
+  <text x="676" y="534" font-size="9" fill="#3f8a63">命中 A → 返回 MOVED，客户端</text>
+  <text x="676" y="552" font-size="9" fill="#3f8a63">更新路由表为槎 X → B</text>
+  <text x="676" y="572" font-size="8.5" fill="#5f9c81">路由表：槎 X → B（收敛）</text>
+
+  <line x1="310" y1="530" x2="338" y2="530" stroke="#4a7fd0" stroke-width="1.8" marker-end="url(#aB)"/>
+  <line x1="630" y1="530" x2="658" y2="530" stroke="#4a7fd0" stroke-width="1.8" marker-end="url(#aB)"/>
+
+  <text x="960" y="500" font-size="9.5" font-weight="700" fill="#1d1d1f">不变量</text>
+  <text x="948" y="522" font-size="8.5" fill="#4a4a4f">槎总数 16384 全程</text>
+  <text x="948" y="538" font-size="8.5" fill="#4a4a4f">不变，只有槎的</text>
+  <text x="948" y="554" font-size="8.5" fill="#4a4a4f">归属节点在变——</text>
+  <text x="948" y="570" font-size="8.5" fill="#4a4a4f">这就是「固定哈希</text>
+  <text x="948" y="586" font-size="8.5" fill="#4a4a4f">槎」区别于一致性</text>
+  <text x="948" y="602" font-size="8.5" fill="#4a4a4f">哈希环的地方。</text>
+</svg>

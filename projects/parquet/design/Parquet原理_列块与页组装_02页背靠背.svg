@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="410" viewBox="0 0 1000 410" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs><filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ac" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#7c5fe6"/></marker></defs>
+  <rect width="1000" height="410" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Parquet 原理 · 页背靠背：字典页居首，数据页可跳</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">列块内页与页首尾相接、无间隔;字典页(若有)必须最前;每页自带 header,读者能只读需要的页、跳过其余</text>
+
+  <!-- 页序列 -->
+  <rect x="30" y="80" width="150" height="70" rx="10" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+  <text x="105" y="106" font-size="9.6" font-weight="700" text-anchor="middle" fill="#5a3410">字典页</text>
+  <text x="105" y="124" font-size="8" text-anchor="middle" fill="#93762e">居首·至多一个</text>
+  <text x="105" y="140" font-size="8" text-anchor="middle" fill="#93762e">去重值(PLAIN)</text>
+
+  <rect x="188" y="80" width="180" height="70" rx="10" fill="#f3f9ff" stroke="#bcd8f5" filter="url(#soft)"/>
+  <text x="278" y="106" font-size="9.6" font-weight="700" text-anchor="middle" fill="#0a3d78">DataPage 0</text>
+  <text x="278" y="124" font-size="8" text-anchor="middle" fill="#2a5a92">行 0–9999</text>
+  <text x="278" y="140" font-size="8" text-anchor="middle" fill="#2a5a92">min=1 max=50</text>
+
+  <rect x="376" y="80" width="180" height="70" rx="10" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="466" y="106" font-size="9.6" font-weight="700" text-anchor="middle" fill="#1b2a4a">DataPage 1（跳过）</text>
+  <text x="466" y="124" font-size="8" text-anchor="middle" fill="#7fa0c4">行 10000–19999</text>
+  <text x="466" y="140" font-size="8" text-anchor="middle" fill="#7fa0c4">min=51 max=99</text>
+
+  <rect x="564" y="80" width="180" height="70" rx="10" fill="#f3f9ff" stroke="#bcd8f5" filter="url(#soft)"/>
+  <text x="654" y="106" font-size="9.6" font-weight="700" text-anchor="middle" fill="#0a3d78">DataPage 2</text>
+  <text x="654" y="124" font-size="8" text-anchor="middle" fill="#2a5a92">行 20000–29999</text>
+  <text x="654" y="140" font-size="8" text-anchor="middle" fill="#2a5a92">min=100 max=180</text>
+
+  <rect x="752" y="80" width="180" height="70" rx="10" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="842" y="106" font-size="9.6" font-weight="700" text-anchor="middle" fill="#1b2a4a">DataPage 3 …</text>
+  <text x="842" y="124" font-size="8" text-anchor="middle" fill="#7fa0c4">背靠背继续</text>
+  <text x="842" y="140" font-size="8" text-anchor="middle" fill="#7fa0c4">无 padding</text>
+
+  <!-- 无间隔标注 -->
+  <text x="184" y="168" font-size="8" fill="#a1a1a6">↑ 页尾即下页头，字节连续</text>
+
+  <!-- 查询 value=120 跳页 -->
+  <rect x="30" y="196" width="902" height="60" rx="12" fill="#faf5ff" stroke="#e4d5f2" filter="url(#soft)"/>
+  <text x="46" y="220" font-size="10.5" font-weight="700" fill="#3d2a5a">查询 value = 120 → PageIndex 判 min/max，仅命中 DataPage 2</text>
+  <path d="M654,190 L654,150" stroke="#7c5fe6" stroke-width="1.8" fill="none" marker-end="url(#ac)"/>
+  <text x="46" y="242" font-size="8.8" fill="#6a4f9a">Page0[1,50] 不含 → 跳;Page1[51,99] 不含 → 跳;Page2[100,180] 含 → 解压读取;直接 seek 到 Page2 偏移。</text>
+
+  <rect x="30" y="278" width="902" height="120" rx="12" fill="#e9f2ff" stroke="#a9ccf5" filter="url(#soft)"/>
+  <text x="46" y="302" font-size="11" font-weight="700" fill="#0a3d78">为什么“背靠背 + 每页自带 header”能高效跳页</text>
+  <text x="46" y="326" font-size="9.4" fill="#2a5a92">· 每页 PageHeader 记 compressed_page_size → 读者按大小算出下一页偏移,可只读 header 就跨过整页</text>
+  <text x="46" y="346" font-size="9.4" fill="#2a5a92">· 字典页居首 → 数据页解下标前一定已加载字典;偏移由 dictionary_page_offset / data_page_offset 直接给出</text>
+  <text x="46" y="366" font-size="9.4" fill="#2a5a92">· 结合尾部 OffsetIndex（PageLocation 记每页 offset/size/first_row_index）→ 无需线性扫,直接跳到目标页</text>
+  <text x="46" y="388" font-size="8.6" fill="#5b7db1">页边界即压缩/编码/CRC 的边界:跳过的页完全不解压、不解码,I/O 与 CPU 双省。</text>
+</svg>

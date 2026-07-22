@@ -16,6 +16,10 @@
 
 ## 拓展 · CRI 调用到子系统映射
 
+![CRI 调用映射](Containerd原理_支撑_CRI插件_03调用映射.svg)
+
+图释薄编排层复用厚子系统：CRI plugin 只翻译/编排，把每个 CRI 调用拆成对既有子系统的调用，自身不含进程管理代码。各调用精确落点见下表。
+
 | kubelet 调用 | CRI plugin 动作 | 复用的 containerd 子系统 | 落点 |
 |---|---|---|---|
 | PullImage | 拉镜像 | content store + snapshotter + transfer | — |

@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Agent Memory · AI Agents 图谱</title>
+<style>
+:root{
+  --c-bg:#fbfbfd; --c-card:#ffffff; --c-card2:#f5f5f7; --c-ink:#1d1d1f;
+  --c-ink2:#6e6e73; --c-ink3:#a1a1a6; --c-line:#e6e6ea; --c-edge:#d2d2d7;
+  --c-panel:#ffffff; --c-shadow:rgba(0,0,0,.08);
+}
+html[data-theme="dark"]{
+  --c-bg:#0d0d0f; --c-card:#17171a; --c-card2:#1e1e22; --c-ink:#f2f2f5;
+  --c-ink2:#a1a1a6; --c-ink3:#6e6e73; --c-line:#2a2a30; --c-edge:#33333a;
+  --c-panel:#161619; --c-shadow:rgba(0,0,0,.5);
+  /* 架构图内联 SVG 结构中性色深色翻转(品牌强调色不变) */
+  --sc-bg:#17171a; --sc-panel:#1e1e22; --sc-ink:#e8e8ea; --sc-ink2:#c4c4c8;
+  --sc-sub:#9a9aa2; --sc-line:#33333a; --sc-line2:#3d3d45;
+  --sc-fill-blue:#16253d; --sc-fill-purple:#241d3a; --sc-fill-orange:#382214; --sc-fill-teal:#0f3330;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--c-bg);color:var(--c-ink);
+  font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif;
+  font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+header{position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:14px;
+  padding:12px 24px;background:color-mix(in srgb,var(--c-bg) 86%,transparent);
+  backdrop-filter:saturate(1.4) blur(14px);border-bottom:1px solid var(--c-line)}
+header .logo{display:inline-flex;align-items:center;flex:none}
+header .spacer{flex:1}
+.brand-intro{display:flex;flex-direction:column;align-items:flex-start;margin-left:6px;min-width:0}
+.brand-intro .bt{font-size:15px;font-weight:700;color:var(--c-ink);line-height:1.3}
+.brand-intro .bs{margin-top:3px;font-size:11.5px;color:var(--c-ink3);line-height:1.5}
+.icobtn{width:38px;height:38px;border-radius:50%;border:1px solid var(--c-line);
+  background:var(--c-panel);color:var(--c-ink2);cursor:pointer;display:inline-grid;
+  place-items:center;font-size:16px;flex:none;text-decoration:none}
+.tt-ico{font-size:16px;line-height:1}.tt-moon{display:none}
+html[data-theme="dark"] .tt-sun{display:none}html[data-theme="dark"] .tt-moon{display:inline}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 24px 80px}
+
+/* ---- 门户 hero ---- */
+.hero{margin:6px 0 26px}
+.hero h1{font-size:26px;font-weight:800;letter-spacing:.2px}
+.hero .sub{margin-top:8px;font-size:13.5px;color:var(--c-ink2);max-width:820px}
+.hero .back{display:inline-flex;align-items:center;gap:6px;margin-bottom:14px;
+  font-size:12.5px;color:var(--c-ink2);border:1px solid var(--c-line);
+  border-radius:999px;padding:5px 13px;background:var(--c-panel)}
+.hero .back:hover{color:var(--c-ink);border-color:var(--c-edge)}
+
+/* ---- 门户卡片栅格 ---- */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:18px}
+.card{position:relative;display:block;background:var(--c-card);border:1px solid var(--c-line);
+  border-radius:16px;padding:20px 20px 18px;overflow:hidden;transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease}
+.card:hover{transform:translateY(-3px);border-color:var(--acc);box-shadow:0 10px 30px var(--c-shadow)}
+.card .bar{position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--acc)}
+.card .k{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.6px;
+  color:var(--acc);text-transform:uppercase;margin-bottom:8px}
+.card h3{font-size:17px;font-weight:750;line-height:1.35;color:var(--c-ink)}
+.card .core{margin-top:9px;font-size:12.5px;color:var(--c-ink2);line-height:1.6}
+.card .tags{margin-top:14px;display:flex;flex-direction:column;gap:7px}
+.card .tag{display:flex;gap:8px;align-items:baseline;font-size:12px;color:var(--c-ink2)}
+.card .tag .n{font-weight:800;color:var(--acc);flex:none;font-variant-numeric:tabular-nums}
+.card .go{margin-top:16px;font-size:12px;font-weight:700;color:var(--acc);display:inline-flex;align-items:center;gap:5px}
+
+/* ---- 模块页 ---- */
+.judge{background:var(--c-card);border:1px solid var(--c-line);border-left:4px solid var(--acc);
+  border-radius:14px;padding:18px 22px;margin-bottom:26px}
+.judge .k{font-size:11px;font-weight:700;letter-spacing:.6px;color:var(--acc);text-transform:uppercase}
+.judge h1{font-size:22px;font-weight:800;line-height:1.34;margin-top:7px}
+.judge .core{margin-top:11px;font-size:13.5px;color:var(--c-ink2);line-height:1.7;max-width:900px}
+.secttl{display:flex;align-items:center;gap:11px;margin:34px 0 14px}
+.secttl .badge{flex:none;min-width:30px;height:30px;padding:0 9px;border-radius:9px;background:var(--acc);
+  color:#fff;font-weight:800;font-size:15px;display:inline-grid;place-items:center}
+.secttl .t{font-size:17px;font-weight:750}
+.secttl.eco .badge{background:var(--c-ink);color:var(--c-bg)}
+/* ── 垂直 TAB 布局 ── */
+.vt-wrap{display:flex;gap:22px;margin-top:26px;align-items:flex-start}
+.vt-nav{flex:none;width:236px;position:sticky;top:20px;display:flex;flex-direction:column;gap:8px}
+.vt-grp{font-size:11px;font-weight:800;letter-spacing:.04em;color:var(--c-ink3);
+  text-transform:none;margin:14px 4px 2px;padding-top:8px;border-top:1px solid var(--c-line)}
+.vt-grp:first-child{margin-top:0;padding-top:0;border-top:none}
+.vt-tab{display:flex;align-items:center;gap:10px;text-align:left;cursor:pointer;
+  background:var(--c-card);border:1px solid var(--c-line);border-radius:12px;
+  padding:12px 13px;color:var(--c-ink2);font:inherit;transition:.15s}
+.vt-tab:hover{border-color:var(--acc);color:var(--c-ink)}
+.vt-tab.active{background:var(--acc);border-color:var(--acc);color:#fff;box-shadow:0 4px 14px -6px var(--acc)}
+.vt-tab .vt-b{flex:none;min-width:26px;height:26px;padding:0 7px;border-radius:8px;
+  background:var(--c-card2);color:var(--acc);font-weight:800;font-size:13px;
+  display:inline-grid;place-items:center}
+.vt-tab.active .vt-b{background:rgba(255,255,255,.24);color:#fff}
+.vt-tab .vt-l{font-size:12.5px;font-weight:650;line-height:1.35}
+.vt-stage{flex:1;min-width:0}
+.vt-sec{display:none}
+.vt-sec.active{display:block;animation:vtfade .22s ease}
+.vt-sec .secttl{margin-top:0}
+@keyframes vtfade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media(max-width:820px){.vt-wrap{flex-direction:column}.vt-nav{position:static;width:100%;flex-direction:row;flex-wrap:wrap}.vt-tab{flex:1 1 44%}}
+.fig{background:var(--c-card);border:1px solid var(--c-line);border-radius:16px;
+  padding:16px;overflow:hidden}
+.fig img{display:block;width:100%;height:auto;border-radius:8px}
+.fig .figsvg{display:block;width:100%;height:auto;border-radius:8px}
+.blurb{margin-top:14px;background:var(--c-card);border:1px solid var(--c-line);
+  border-radius:14px;padding:15px 19px}
+.blurb p{font-size:13px;color:var(--c-ink2);line-height:1.75}
+.blurb p+p{margin-top:9px}
+.blurb b{color:var(--c-ink);font-weight:700}
+.blurb code{font-family:'SF Mono',ui-monospace,Menlo,monospace;font-size:.88em;
+  background:var(--c-card2);border:1px solid var(--c-line);border-radius:5px;padding:1px 5px;color:var(--acc)}
+.blurb a{color:var(--acc);text-decoration:none;
+  border-bottom:1px solid color-mix(in srgb,var(--acc) 40%,transparent);transition:border-color .15s}
+.blurb a:hover{border-bottom-color:var(--acc)}
+.refs{margin-top:30px;padding-top:18px;border-top:2px solid var(--c-line)}
+.reflist{margin-top:12px}
+.reflist p{margin:5px 0;font-size:12.5px;color:var(--c-ink2);line-height:1.7}
+.reflist a{color:var(--acc)}
+.miss{padding:40px;text-align:center;color:var(--c-ink3);font-size:13px;border:1px dashed var(--c-edge);border-radius:12px}
+.backrow{margin-top:44px;padding-top:22px;border-top:1px solid var(--c-line)}
+.backrow a{display:inline-flex;align-items:center;gap:7px;font-size:13px;color:var(--c-ink2);
+  border:1px solid var(--c-line);border-radius:999px;padding:8px 16px;background:var(--c-panel)}
+.backrow a:hover{color:var(--c-ink);border-color:var(--c-edge)}
+footer{max-width:1180px;margin:0 auto;padding:0 24px 40px;color:var(--c-ink3);font-size:11.5px}
+
+/* ---- 门户片区切换 tab + 片区标题条 ---- */
+.zbar{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap}
+.zseg{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:700;
+  color:var(--c-ink2);border:1px solid var(--c-line);border-radius:999px;
+  padding:8px 16px;background:var(--c-panel);transition:.15s}
+.zseg:hover{color:var(--c-ink);border-color:var(--c-edge)}
+.zseg.active{color:var(--c-ink);border-color:var(--c-ink);background:var(--c-card)}
+.zseg .zn{min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:var(--c-card2);
+  color:var(--c-ink2);font-size:11px;font-weight:800;display:inline-grid;place-items:center}
+.zone{margin-top:38px;scroll-margin-top:80px}
+.zone:first-of-type{margin-top:30px}
+.zhd{margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--c-line)}
+.zhd .zk{font-size:11px;font-weight:800;letter-spacing:.08em;color:var(--c-ink3);text-transform:uppercase}
+.zhd h2{font-size:20px;font-weight:800;margin-top:5px;color:var(--c-ink)}
+.zhd p{font-size:12.5px;color:var(--c-ink2);margin-top:6px;max-width:860px;line-height:1.65}
+</style>
+</head>
+<body>
+<header>
+  <a class="logo" href="../../index.html#agent" title="返回 LLM & Agent 导航"><span class="icobtn"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg></span></a>
+  <div class="brand-intro">
+    <div class="bt">Agent Memory</div>
+    <div class="bs">AI Agents 生态图谱 · 概念层机理（不点名具体框架）</div>
+  </div>
+  <div class="spacer"></div>
+  <button id="themeBtn" class="icobtn" title="切换深色 / 浅色主题" aria-label="切换主题"><span class="tt-ico tt-moon">☾</span><span class="tt-ico tt-sun">☀</span></button>
+</header>
+<div class="wrap" style="--acc:#2dd4bf">
+  <div class="judge">
+    <span class="k">MEMORY · 定位</span>
+    <h1>Agent Memory · 智能体记忆系统</h1>
+    <div class="core">上下文窗口是易失的工作台,长期记忆是可回溯的仓库:写入-检索-遗忘三态循环,让 Agent 跨会话保持连贯与个性化。</div>
+  </div>
+  <div class="vt-wrap"><nav class="vt-nav" aria-label="模块内容切换"><div class="vt-grp">概览 Overview</div><button class="vt-tab active" data-target="sec-eco"><span class="vt-b">◎</span><span class="vt-l">生态架构总图</span></button><div class="vt-grp">机制 · 短期/工作记忆</div><button class="vt-tab" data-target="sec-m1"><span class="vt-b">M1</span><span class="vt-l">对话缓冲与滚动摘要</span></button><div class="vt-grp">机制 · 长期记忆</div><button class="vt-tab" data-target="sec-m2"><span class="vt-b">M2</span><span class="vt-l">向量化存储与语义检索</span></button><div class="vt-grp">机制 · 记忆管理</div><button class="vt-tab" data-target="sec-m3"><span class="vt-b">M3</span><span class="vt-l">写入判定与遗忘衰减</span></button><div class="vt-grp">对比 Compare</div><button class="vt-tab" data-target="sec-cmp"><span class="vt-b">⇄</span><span class="vt-l">机制差异对比</span></button><div class="vt-grp">工程 Engineering</div><button class="vt-tab" data-target="sec-eng"><span class="vt-b">⚙</span><span class="vt-l">框架实现差异</span></button></nav><div class="vt-stage"><section class="vt-sec active" id="sec-eco" data-sec="sec-eco"><div class="secttl eco"><span class="badge">◎</span><span class="t">生态架构总图 · 这一模块如何在 Agent 系统中自洽拼合</span></div><div class="fig" role="img" aria-label="Agent Memory 生态架构"><svg class="figsvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 600" font-family="-apple-system,'PingFang SC','Helvetica Neue',sans-serif">
+  <defs>
+    <filter id="s15_soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.07"/></filter>
+    <marker id="s15_arh" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#0a84ff"/></marker>
+    <marker id="s15_ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="var(--sc-line2,#b8b8bf)"/></marker>
+    <marker id="s15_art" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#2dd4bf"/></marker>
+  </defs>
+  <rect width="960" height="600" fill="var(--sc-bg,#fbfbfd)"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="var(--sc-ink,#1d1d1f)">Agent 记忆系统 · 生态架构</text>
+  <text x="30" y="54" font-size="12" fill="var(--sc-sub,#6e6e73)">模型的上下文窗口是有限且短暂的「工作记忆」——记忆系统的使命是让 Agent 跨越单轮与单次会话，记住该记住的</text>
+
+  <!-- 推理内核 -->
+  <g filter="url(#s15_soft)"><rect x="360" y="90" width="240" height="80" rx="13" fill="var(--sc-fill-blue,#eef4ff)" stroke="#0a84ff" stroke-width="1.6"/></g>
+  <text x="480" y="122" font-size="13" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">推理内核 (LLM)</text>
+  <text x="480" y="146" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">上下文窗口 = 有限的工作记忆</text>
+
+  <!-- 短期记忆 -->
+  <g filter="url(#s15_soft)"><rect x="60" y="230" width="250" height="150" rx="13" fill="var(--sc-fill-blue,#eef4ff)" stroke="#0a84ff" stroke-width="1.5"/></g>
+  <text x="185" y="260" font-size="12.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">短期记忆</text>
+  <text x="82" y="288" font-size="10" fill="var(--sc-sub,#6e6e73)">• 当前会话的对话缓冲</text>
+  <text x="82" y="310" font-size="10" fill="var(--sc-sub,#6e6e73)">• 滚动摘要压缩历史</text>
+  <text x="82" y="332" font-size="10" fill="var(--sc-sub,#6e6e73)">• 随窗口滑动而遗忘</text>
+  <text x="82" y="356" font-size="9.5" fill="#0a84ff">生命周期 = 一次会话</text>
+
+  <!-- 长期记忆 -->
+  <g filter="url(#s15_soft)"><rect x="355" y="230" width="250" height="150" rx="13" fill="var(--sc-fill-teal,#e6fbf6)" stroke="#2dd4bf" stroke-width="1.5"/></g>
+  <text x="480" y="260" font-size="12.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">长期记忆</text>
+  <text x="377" y="288" font-size="10" fill="var(--sc-sub,#6e6e73)">• 向量库持久化存储</text>
+  <text x="377" y="310" font-size="10" fill="var(--sc-sub,#6e6e73)">• 按需语义检索召回</text>
+  <text x="377" y="332" font-size="10" fill="var(--sc-sub,#6e6e73)">• 跨会话、跨天可用</text>
+  <text x="377" y="356" font-size="9.5" fill="#2dd4bf">生命周期 = 持久</text>
+
+  <!-- 记忆管理 -->
+  <g filter="url(#s15_soft)"><rect x="650" y="230" width="250" height="150" rx="13" fill="var(--sc-fill-purple,#f3ecff)" stroke="#a78bfa" stroke-width="1.5"/></g>
+  <text x="775" y="260" font-size="12.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">记忆管理</text>
+  <text x="672" y="288" font-size="10" fill="var(--sc-sub,#6e6e73)">• 写入判定：什么值得记</text>
+  <text x="672" y="310" font-size="10" fill="var(--sc-sub,#6e6e73)">• 遗忘衰减与去重</text>
+  <text x="672" y="332" font-size="10" fill="var(--sc-sub,#6e6e73)">• 短期→长期的固化</text>
+  <text x="672" y="356" font-size="9.5" fill="#a78bfa">控制面：治理记忆质量</text>
+
+  <path d="M420 172 L250 226" stroke="#0a84ff" stroke-width="2" marker-end="url(#s15_arh)"/>
+  <path d="M480 172 L480 226" stroke="#2dd4bf" stroke-width="2" marker-end="url(#s15_art)"/>
+  <path d="M540 172 L710 226" stroke="#a78bfa" stroke-width="1.8" stroke-dasharray="6 4" marker-end="url(#s15_ar)"/>
+  <path d="M310 300 L352 300" stroke="#a78bfa" stroke-width="1.6" stroke-dasharray="6 4" marker-end="url(#s15_ar)"/>
+  <path d="M648 300 L608 300" stroke="#a78bfa" stroke-width="1.6" stroke-dasharray="6 4" marker-end="url(#s15_ar)"/>
+
+  <!-- 三机制铺垫 -->
+  <g filter="url(#s15_soft)"><rect x="60" y="420" width="840" height="150" rx="13" fill="var(--sc-panel,#ffffff)" stroke="var(--sc-line,#d2d2d7)" stroke-width="1.3"/></g>
+  <text x="80" y="448" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)">本模块的三条机理线</text>
+  <text x="80" y="474" font-size="10.5" fill="var(--sc-sub,#6e6e73)">M1 短期记忆：对话缓冲 + 滚动摘要，在有限窗口内保住最相关的近期上下文</text>
+  <text x="80" y="498" font-size="10.5" fill="var(--sc-sub,#6e6e73)">M2 长期记忆：把知识与经验向量化存入外部库，按需语义检索召回，突破窗口限制</text>
+  <text x="80" y="522" font-size="10.5" fill="var(--sc-sub,#6e6e73)">M3 记忆管理：决定什么该写入、何时遗忘、如何去重与固化——记忆的质量取决于治理</text>
+  <text x="80" y="550" font-size="10" fill="#f5873a">核心张力：记得越多越聪明，但噪声记忆会污染检索、拖累推理——写入与遗忘同等重要</text>
+
+  <!-- 图例 -->
+  <g filter="url(#s15_soft)"><rect x="670" y="70" width="230" height="12" rx="0" fill="none"/></g>
+  <line x1="678" y1="588" x2="700" y2="588" stroke="#0a84ff" stroke-width="2"/><text x="706" y="591" font-size="9" fill="var(--sc-sub,#6e6e73)">读写热路径</text>
+  <line x1="778" y1="588" x2="800" y2="588" stroke="#a78bfa" stroke-width="2" stroke-dasharray="6 4"/><text x="806" y="591" font-size="9" fill="var(--sc-sub,#6e6e73)">控制/管理</text>
+</svg></div><div class="blurb"><p>记忆系统要解决根本矛盾：模型上下文窗口既有限又短暂（一段「工作记忆」，会话结束即清空）。要让 Agent 跨会话记住该记住的，需在窗口外搭三层协作——短期记忆保住近期上下文、长期记忆持久化并按需召回、记忆管理决定写入/遗忘/去重。核心张力：<b>记得越多未必越聪明</b>，噪声记忆反污染检索，「写入」与「遗忘」同等重要。见生态图。</p></div></section><section class="vt-sec" id="sec-m1" data-sec="sec-m1"><div class="secttl"><span class="badge">M1</span><span class="t">短期/工作记忆 · 对话缓冲与滚动摘要</span></div><div class="fig" role="img" aria-label="短期/工作记忆 · 对话缓冲与滚动摘要"><svg class="figsvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 500" font-family="-apple-system,'PingFang SC','Helvetica Neue',sans-serif">
+  <defs>
+    <filter id="s16_soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.07"/></filter>
+    <marker id="s16_arh" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#0a84ff"/></marker>
+    <marker id="s16_ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="var(--sc-line2,#b8b8bf)"/></marker>
+  </defs>
+  <rect width="960" height="500" fill="var(--sc-bg,#fbfbfd)"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="var(--sc-ink,#1d1d1f)">短期记忆 · 对话缓冲与滚动摘要</text>
+  <text x="30" y="54" font-size="12" fill="var(--sc-sub,#6e6e73)">上下文窗口有限，塞不下全部历史——用「近期原文 + 早期摘要」的策略在预算内保住最相关信息</text>
+
+  <!-- 完整历史 -->
+  <g filter="url(#s16_soft)"><rect x="60" y="100" width="200" height="320" rx="12" fill="var(--sc-panel,#f5f5f7)" stroke="var(--sc-line,#d2d2d7)" stroke-width="1.2"/></g>
+  <text x="160" y="126" font-size="11.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">完整对话历史</text>
+  <text x="160" y="146" font-size="9" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">不断增长，超出窗口</text>
+  <g><rect x="80" y="160" width="160" height="30" rx="6" fill="var(--sc-panel,#ffffff)" stroke="var(--sc-line,#e0e0e5)"/><text x="90" y="180" font-size="9" fill="var(--sc-sub,#86868b)">turn 1 ~ 早期</text></g>
+  <g><rect x="80" y="196" width="160" height="30" rx="6" fill="var(--sc-panel,#ffffff)" stroke="var(--sc-line,#e0e0e5)"/><text x="90" y="216" font-size="9" fill="var(--sc-sub,#86868b)">turn 2 ~ 早期</text></g>
+  <g><rect x="80" y="232" width="160" height="30" rx="6" fill="var(--sc-panel,#ffffff)" stroke="var(--sc-line,#e0e0e5)"/><text x="90" y="252" font-size="9" fill="var(--sc-sub,#86868b)">turn 3 ~ 中段</text></g>
+  <g><rect x="80" y="300" width="160" height="30" rx="6" fill="var(--sc-fill-blue,#eef4ff)" stroke="#0a84ff"/><text x="90" y="320" font-size="9" fill="#0a84ff">turn N-1 (近期)</text></g>
+  <g><rect x="80" y="336" width="160" height="30" rx="6" fill="var(--sc-fill-blue,#eef4ff)" stroke="#0a84ff"/><text x="90" y="356" font-size="9" fill="#0a84ff">turn N (近期)</text></g>
+
+  <!-- 摘要器 -->
+  <g filter="url(#s16_soft)"><rect x="340" y="160" width="180" height="90" rx="12" fill="var(--sc-fill-purple,#f3ecff)" stroke="#a78bfa" stroke-width="1.5"/></g>
+  <text x="430" y="192" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">摘要器</text>
+  <text x="430" y="214" font-size="9.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">把早期原文</text>
+  <text x="430" y="232" font-size="9.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">压缩成滚动摘要</text>
+
+  <!-- 组装的上下文 -->
+  <g filter="url(#s16_soft)"><rect x="600" y="100" width="300" height="320" rx="12" fill="var(--sc-fill-blue,#eef4ff)" stroke="#0a84ff" stroke-width="1.6"/></g>
+  <text x="750" y="126" font-size="11.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">送入模型的工作记忆</text>
+  <text x="750" y="146" font-size="9" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">= 摘要 + 近期原文，卡在窗口预算内</text>
+  <g><rect x="624" y="164" width="252" height="70" rx="8" fill="var(--sc-fill-purple,#f3ecff)" stroke="#a78bfa"/><text x="640" y="190" font-size="10" fill="#a78bfa">【早期对话摘要】</text><text x="640" y="212" font-size="9" fill="var(--sc-sub,#6e6e73)">用户目标 / 已确认事实 / 关键决策…</text></g>
+  <g><rect x="624" y="248" width="252" height="34" rx="8" fill="var(--sc-panel,#ffffff)" stroke="#0a84ff"/><text x="640" y="270" font-size="9.5" fill="#0a84ff">turn N-1 原文（保真）</text></g>
+  <g><rect x="624" y="290" width="252" height="34" rx="8" fill="var(--sc-panel,#ffffff)" stroke="#0a84ff"/><text x="640" y="312" font-size="9.5" fill="#0a84ff">turn N 原文（保真）</text></g>
+  <text x="624" y="356" font-size="9.5" fill="var(--sc-sub,#6e6e73)">近期保原文避免信息损失，早期用摘要节省 token</text>
+  <text x="624" y="378" font-size="9.5" fill="#f5873a">权衡：摘要越激进越省钱，但可能丢掉后来才用到的细节</text>
+
+  <path d="M260 210 L336 205" stroke="var(--sc-line2,#b8b8bf)" stroke-width="1.6" marker-end="url(#s16_ar)"/>
+  <path d="M520 200 L596 190" stroke="#a78bfa" stroke-width="1.8" marker-end="url(#s16_ar)"/>
+  <path d="M260 340 C420 420 470 400 620 290" stroke="#0a84ff" stroke-width="1.6" fill="none" marker-end="url(#s16_arh)"/>
+</svg></div><div class="blurb"><p><b>短期记忆</b>解决「当前会话如何在有限窗口保持连贯」。对话缓冲原样带最近若干轮，撑爆窗口后引入<b>滚动摘要</b>——早期对话压成摘要（保留目标/已确认事实/关键决策）、近期保留原文。送模型的是「早期摘要+近期原文」，卡在 token 预算内又兼顾保真。权衡在摘要激进程度：压越狠越省钱、越可能丢后续细节。见图。</p></div></section><section class="vt-sec" id="sec-m2" data-sec="sec-m2"><div class="secttl"><span class="badge">M2</span><span class="t">长期记忆 · 向量化存储与语义检索</span></div><div class="fig" role="img" aria-label="长期记忆 · 向量化存储与语义检索"><svg class="figsvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 500" font-family="-apple-system,'PingFang SC','Helvetica Neue',sans-serif">
+  <defs>
+    <filter id="s17_soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.07"/></filter>
+    <marker id="s17_arh" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#0a84ff"/></marker>
+    <marker id="s17_art" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#2dd4bf"/></marker>
+  </defs>
+  <rect width="960" height="500" fill="var(--sc-bg,#fbfbfd)"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="var(--sc-ink,#1d1d1f)">长期记忆 · 向量化存储与语义检索</text>
+  <text x="30" y="54" font-size="12" fill="var(--sc-sub,#6e6e73)">把值得留存的知识与经验编码为向量存入外部库，用时按语义相似度召回——突破上下文窗口的容量上限</text>
+
+  <!-- 写入路径 -->
+  <text x="60" y="94" font-size="11.5" font-weight="600" fill="#2dd4bf">写入 (Write)</text>
+  <g filter="url(#s17_soft)"><rect x="60" y="106" width="150" height="60" rx="10" fill="var(--sc-fill-teal,#e6fbf6)" stroke="#2dd4bf" stroke-width="1.4"/></g>
+  <text x="135" y="134" font-size="10.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">记忆片段</text>
+  <text x="135" y="153" font-size="9" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">事实/经验/偏好</text>
+  <g filter="url(#s17_soft)"><rect x="260" y="106" width="150" height="60" rx="10" fill="var(--sc-panel,#ffffff)" stroke="var(--sc-line,#d2d2d7)" stroke-width="1.2"/></g>
+  <text x="335" y="134" font-size="10.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">Embedding</text>
+  <text x="335" y="153" font-size="9" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">编码为向量</text>
+
+  <!-- 向量库 -->
+  <g filter="url(#s17_soft)"><rect x="470" y="86" width="220" height="220" rx="14" fill="var(--sc-fill-teal,#e6fbf6)" stroke="#2dd4bf" stroke-width="1.6"/></g>
+  <text x="580" y="114" font-size="12.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">向量数据库</text>
+  <text x="580" y="134" font-size="9" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">(vector, metadata, text)</text>
+  <g><rect x="492" y="150" width="176" height="26" rx="6" fill="var(--sc-panel,#ffffff)" stroke="var(--sc-fill-teal,#c9efe7)"/><text x="502" y="168" font-size="9" fill="var(--sc-sub,#6e6e73)">vec · 用户偏爱简洁回复</text></g>
+  <g><rect x="492" y="182" width="176" height="26" rx="6" fill="var(--sc-panel,#ffffff)" stroke="var(--sc-fill-teal,#c9efe7)"/><text x="502" y="200" font-size="9" fill="var(--sc-sub,#6e6e73)">vec · 项目部署在 K8s</text></g>
+  <g><rect x="492" y="214" width="176" height="26" rx="6" fill="var(--sc-panel,#ffffff)" stroke="var(--sc-fill-teal,#c9efe7)"/><text x="502" y="232" font-size="9" fill="var(--sc-sub,#6e6e73)">vec · 上次修复的 bug…</text></g>
+  <text x="580" y="272" font-size="9" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">ANN 索引，支持相似度检索</text>
+  <text x="580" y="292" font-size="9" fill="#2dd4bf" text-anchor="middle">持久化 · 跨会话可用</text>
+
+  <!-- 读取路径 -->
+  <text x="60" y="360" font-size="11.5" font-weight="600" fill="#0a84ff">读取 (Recall)</text>
+  <g filter="url(#s17_soft)"><rect x="60" y="372" width="180" height="60" rx="10" fill="var(--sc-fill-blue,#eef4ff)" stroke="#0a84ff" stroke-width="1.4"/></g>
+  <text x="150" y="400" font-size="10.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">当前 query / 意图</text>
+  <text x="150" y="419" font-size="9" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">编码为查询向量</text>
+  <g filter="url(#s17_soft)"><rect x="740" y="372" width="160" height="60" rx="10" fill="var(--sc-fill-blue,#eef4ff)" stroke="#0a84ff" stroke-width="1.4"/></g>
+  <text x="820" y="400" font-size="10.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">Top-k 记忆</text>
+  <text x="820" y="419" font-size="9" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">拼入上下文</text>
+
+  <path d="M210 136 L256 136" stroke="#2dd4bf" stroke-width="1.8" marker-end="url(#s17_art)"/>
+  <path d="M410 136 L466 150" stroke="#2dd4bf" stroke-width="1.8" marker-end="url(#s17_art)"/>
+  <path d="M240 402 C400 402 420 250 470 220" stroke="#0a84ff" stroke-width="1.6" fill="none" marker-end="url(#s17_arh)"/>
+  <path d="M690 240 C760 300 780 340 800 368" stroke="#0a84ff" stroke-width="1.6" fill="none" marker-end="url(#s17_arh)"/>
+  <text x="360" y="470" font-size="10" fill="#f5873a">要点：召回质量 = 写入质量 × 检索质量；存了噪声记忆，检索只会更快地喂回噪声</text>
+</svg></div><div class="blurb"><p><b>长期记忆</b>突破窗口容量：记忆片段经 Embedding 编码为向量，连同原文+元数据存入向量库；用时 query 编码后 ANN 检索召回 Top-k 拼进上下文。写入与读取以向量库为枢纽，让 Agent 跨会话调用历史经验。关键定律：<b>召回质量 = 写入质量 × 检索质量</b>——存进噪声只会更快喂回噪声，价值高度依赖前置写入治理。见图。</p></div></section><section class="vt-sec" id="sec-m3" data-sec="sec-m3"><div class="secttl"><span class="badge">M3</span><span class="t">记忆管理 · 写入判定与遗忘衰减</span></div><div class="fig" role="img" aria-label="记忆管理 · 写入判定与遗忘衰减"><svg class="figsvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 520" font-family="-apple-system,'PingFang SC','Helvetica Neue',sans-serif">
+  <defs>
+    <filter id="s18_soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.07"/></filter>
+    <marker id="s18_arh" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#0a84ff"/></marker>
+    <marker id="s18_arp" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#a78bfa"/></marker>
+    <marker id="s18_arf" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#f5873a"/></marker>
+  </defs>
+  <rect width="960" height="520" fill="var(--sc-bg,#fbfbfd)"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="var(--sc-ink,#1d1d1f)">记忆管理 · 写入判定与遗忘衰减</text>
+  <text x="30" y="54" font-size="12" fill="var(--sc-sub,#6e6e73)">记忆不是「越多越好」——治理层决定什么该被记住、什么该被遗忘，防止噪声污染检索</text>
+
+  <!-- 写入判定 -->
+  <g filter="url(#s18_soft)"><rect x="60" y="100" width="200" height="90" rx="12" fill="var(--sc-fill-blue,#eef4ff)" stroke="#0a84ff" stroke-width="1.5"/></g>
+  <text x="160" y="130" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">新信息产生</text>
+  <text x="160" y="152" font-size="9.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">对话/工具结果/结论</text>
+  <text x="160" y="172" font-size="9.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">候选记忆片段</text>
+
+  <g filter="url(#s18_soft)"><rect x="340" y="90" width="220" height="110" rx="12" fill="var(--sc-fill-purple,#f3ecff)" stroke="#a78bfa" stroke-width="1.5"/></g>
+  <text x="450" y="118" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">写入判定</text>
+  <text x="360" y="144" font-size="9.5" fill="var(--sc-sub,#6e6e73)">• 是否长期有用？(偏好/事实)</text>
+  <text x="360" y="166" font-size="9.5" fill="var(--sc-sub,#6e6e73)">• 是否已存在？(去重/合并)</text>
+  <text x="360" y="188" font-size="9.5" fill="var(--sc-sub,#6e6e73)">• 敏感信息不入库</text>
+
+  <!-- 记忆库 -->
+  <g filter="url(#s18_soft)"><rect x="660" y="90" width="240" height="110" rx="12" fill="var(--sc-fill-teal,#e6fbf6)" stroke="#2dd4bf" stroke-width="1.5"/></g>
+  <text x="780" y="118" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">长期记忆库</text>
+  <text x="680" y="144" font-size="9.5" fill="var(--sc-sub,#6e6e73)">存入的每条带时间戳/权重</text>
+  <text x="680" y="166" font-size="9.5" fill="var(--sc-sub,#6e6e73)">短期记忆定期固化到这里</text>
+  <text x="680" y="188" font-size="9.5" fill="#2dd4bf">质量 > 数量</text>
+
+  <path d="M260 145 L336 145" stroke="#0a84ff" stroke-width="1.8" marker-end="url(#s18_arh)"/>
+  <path d="M560 145 L656 145" stroke="#a78bfa" stroke-width="1.8" marker-end="url(#s18_arp)"/>
+
+  <!-- 遗忘衰减 -->
+  <g filter="url(#s18_soft)"><rect x="340" y="250" width="220" height="120" rx="12" fill="var(--sc-fill-orange,#fff3ea)" stroke="#f5873a" stroke-width="1.5"/></g>
+  <text x="450" y="278" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">遗忘 / 衰减</text>
+  <text x="360" y="304" font-size="9.5" fill="var(--sc-sub,#6e6e73)">• 时间衰减：久未命中降权</text>
+  <text x="360" y="326" font-size="9.5" fill="var(--sc-sub,#6e6e73)">• 容量淘汰：超限逐出最冷</text>
+  <text x="360" y="348" font-size="9.5" fill="var(--sc-sub,#6e6e73)">• 冲突消解：新事实覆盖旧</text>
+
+  <path d="M780 200 C780 250 620 300 562 310" stroke="#f5873a" stroke-width="1.6" stroke-dasharray="3 3" fill="none" marker-end="url(#s18_arf)"/>
+  <path d="M338 310 C260 310 240 220 258 195" stroke="#f5873a" stroke-width="1.6" stroke-dasharray="3 3" fill="none"/>
+  <text x="150" y="290" font-size="9.5" fill="#f5873a">被遗忘的记忆</text>
+  <text x="150" y="310" font-size="9.5" fill="#f5873a">不再参与检索</text>
+
+  <!-- 底部要点 -->
+  <g filter="url(#s18_soft)"><rect x="60" y="410" width="840" height="90" rx="12" fill="var(--sc-panel,#ffffff)" stroke="var(--sc-line,#d2d2d7)" stroke-width="1.3"/></g>
+  <text x="80" y="438" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)">为什么遗忘和记住同等重要</text>
+  <text x="80" y="462" font-size="10.5" fill="var(--sc-sub,#6e6e73)">• 无限累积的记忆会让向量库充满陈旧、重复、矛盾的条目，检索精度反而下降</text>
+  <text x="80" y="484" font-size="10.5" fill="var(--sc-sub,#6e6e73)">• 主动遗忘让记忆库保持「高信噪比」，是长期运行 Agent 不退化的关键治理手段</text>
+</svg></div><div class="blurb"><p><b>记忆管理</b>是防退化的治理层：<b>写入判定</b>把关（是否长期有用/是否已存在去重合并/是否敏感不入库，并打时间戳与来源）；<b>遗忘衰减</b>反向瘦身（久未命中降权、超容量淘汰最冷、新事实覆盖旧）。遗忘与记住同等重要——无限累积会让向量库塞满陈旧矛盾条目、检索精度不升反降。短期重要内容经此层固化进长期。见图。</p></div></section><section class="vt-sec" id="sec-cmp" data-sec="sec-cmp"><div class="secttl"><span class="badge">⇄</span><span class="t">Agent Memory · 核心机制差异对比</span></div><div class="fig" role="img" aria-label="Agent Memory · 核心机制差异对比"><svg class="figsvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 480" font-family="-apple-system,'PingFang SC','Helvetica Neue',sans-serif">
+  <defs>
+    <filter id="s19_soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.07"/></filter>
+  </defs>
+  <rect width="960" height="480" fill="var(--sc-bg,#fbfbfd)"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="var(--sc-ink,#1d1d1f)">短期 vs 长期记忆 · 机制对比</text>
+  <text x="30" y="54" font-size="12" fill="var(--sc-sub,#6e6e73)">两者不是二选一，而是互补的两层——工作记忆保当下连贯，持久记忆保跨会话经验</text>
+
+  <!-- 表头 -->
+  <g filter="url(#s19_soft)"><rect x="30" y="80" width="900" height="42" rx="10" fill="var(--sc-fill-blue,#eef4ff)" stroke="#0a84ff" stroke-width="1.3"/></g>
+  <text x="150" y="106" font-size="11.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">维度</text>
+  <text x="420" y="106" font-size="11.5" font-weight="600" fill="#0a84ff" text-anchor="middle">短期记忆 (工作记忆)</text>
+  <text x="720" y="106" font-size="11.5" font-weight="600" fill="#2dd4bf" text-anchor="middle">长期记忆 (持久记忆)</text>
+
+  <g filter="url(#s19_soft)"><rect x="30" y="132" width="900" height="52" rx="10" fill="var(--sc-panel,#ffffff)" stroke="var(--sc-line,#d2d2d7)" stroke-width="1.1"/></g>
+  <text x="150" y="163" font-size="10.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">载体</text>
+  <text x="420" y="163" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">上下文窗口内的对话缓冲/摘要</text>
+  <text x="720" y="163" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">外部向量库 / 数据库</text>
+
+  <g filter="url(#s19_soft)"><rect x="30" y="194" width="900" height="52" rx="10" fill="var(--sc-panel,#ffffff)" stroke="var(--sc-line,#d2d2d7)" stroke-width="1.1"/></g>
+  <text x="150" y="225" font-size="10.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">生命周期</text>
+  <text x="420" y="225" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">一次会话，随窗口滑动遗忘</text>
+  <text x="720" y="225" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">持久，跨会话/跨天可用</text>
+
+  <g filter="url(#s19_soft)"><rect x="30" y="256" width="900" height="52" rx="10" fill="var(--sc-panel,#ffffff)" stroke="var(--sc-line,#d2d2d7)" stroke-width="1.1"/></g>
+  <text x="150" y="287" font-size="10.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">访问方式</text>
+  <text x="420" y="287" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">全量在场，直接可见</text>
+  <text x="720" y="287" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">按需语义检索 Top-k 召回</text>
+
+  <g filter="url(#s19_soft)"><rect x="30" y="318" width="900" height="52" rx="10" fill="var(--sc-panel,#ffffff)" stroke="var(--sc-line,#d2d2d7)" stroke-width="1.1"/></g>
+  <text x="150" y="349" font-size="10.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">主要瓶颈</text>
+  <text x="420" y="349" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">窗口容量与 token 成本</text>
+  <text x="720" y="349" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">检索精度与记忆治理</text>
+
+  <g filter="url(#s19_soft)"><rect x="30" y="380" width="900" height="60" rx="10" fill="var(--sc-fill-purple,#f3ecff)" stroke="#a78bfa" stroke-width="1.2"/></g>
+  <text x="150" y="415" font-size="10.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">典型协作</text>
+  <text x="675" y="415" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">短期记忆的重要内容经写入判定固化为长期记忆；长期记忆按需召回后注入短期工作记忆</text>
+</svg></div><div class="blurb ml"><p>短期与长期是互补两层：载体（窗口内 vs 外部向量库）、生命周期（随窗口滑动只活一次会话 vs 持久跨会话）、访问（全量在场 vs Top-k 召回）、瓶颈（窗口容量/token vs 检索精度/治理）。典型协作是闭环——短期中长期有用者固化进长期库，长期相关记忆检索回注短期，一进一出构成完整记忆循环。四维对照见图。</p></div></section><section class="vt-sec" id="sec-eng" data-sec="sec-eng"><div class="secttl"><span class="badge">⚙</span><span class="t">Agent Memory · 工程实现差异（真实框架落地取舍）</span></div><div class="fig" role="img" aria-label="Agent Memory · 工程实现差异（真实框架落地取舍）"><svg class="figsvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 500" font-family="-apple-system,'PingFang SC','Helvetica Neue',sans-serif">
+  <defs>
+    <filter id="s20_soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.07"/></filter>
+  </defs>
+  <rect width="960" height="500" fill="var(--sc-bg,#fbfbfd)"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="var(--sc-ink,#1d1d1f)">记忆系统的工程铁律</text>
+  <text x="30" y="54" font-size="12" fill="var(--sc-sub,#6e6e73)">记忆让 Agent 从「无状态问答」进化为「有连续性的助手」，但记忆本身需要被严肃治理</text>
+
+  <g filter="url(#s20_soft)"><rect x="30" y="80" width="290" height="180" rx="13" fill="var(--sc-fill-blue,#eef4ff)" stroke="#0a84ff" stroke-width="1.5"/></g>
+  <text x="175" y="108" font-size="12.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">① 写什么进记忆</text>
+  <text x="52" y="138" font-size="10" fill="var(--sc-sub,#6e6e73)">• 只记长期有用：偏好/事实/结论</text>
+  <text x="52" y="160" font-size="10" fill="var(--sc-sub,#6e6e73)">• 写入前去重、合并，避免膨胀</text>
+  <text x="52" y="182" font-size="10" fill="var(--sc-sub,#6e6e73)">• 敏感信息（密钥/隐私）不入库</text>
+  <text x="52" y="204" font-size="10" fill="var(--sc-sub,#6e6e73)">• 附时间戳与来源，便于消解冲突</text>
+  <text x="52" y="230" font-size="9.5" fill="#0a84ff">写入判定是记忆质量的第一道闸</text>
+
+  <g filter="url(#s20_soft)"><rect x="335" y="80" width="290" height="180" rx="13" fill="var(--sc-fill-teal,#e6fbf6)" stroke="#2dd4bf" stroke-width="1.5"/></g>
+  <text x="480" y="108" font-size="12.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">② 怎么读回来</text>
+  <text x="357" y="138" font-size="10" fill="var(--sc-sub,#6e6e73)">• 语义检索 Top-k，控制注入量</text>
+  <text x="357" y="160" font-size="10" fill="var(--sc-sub,#6e6e73)">• 相关性阈值过滤，宁缺毋滥</text>
+  <text x="357" y="182" font-size="10" fill="var(--sc-sub,#6e6e73)">• 召回内容标注来源，防幻觉</text>
+  <text x="357" y="204" font-size="10" fill="var(--sc-sub,#6e6e73)">• 与短期上下文合并去冗</text>
+  <text x="357" y="230" font-size="9.5" fill="#2dd4bf">召回噪声会直接污染推理</text>
+
+  <g filter="url(#s20_soft)"><rect x="640" y="80" width="290" height="180" rx="13" fill="var(--sc-fill-orange,#fff3ea)" stroke="#f5873a" stroke-width="1.5"/></g>
+  <text x="785" y="108" font-size="12.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">③ 何时遗忘</text>
+  <text x="662" y="138" font-size="10" fill="var(--sc-sub,#6e6e73)">• 时间衰减 + 冷数据淘汰</text>
+  <text x="662" y="160" font-size="10" fill="var(--sc-sub,#6e6e73)">• 新事实覆盖过期旧事实</text>
+  <text x="662" y="182" font-size="10" fill="var(--sc-sub,#6e6e73)">• 容量上限，防无限增长</text>
+  <text x="662" y="204" font-size="10" fill="var(--sc-sub,#6e6e73)">• 支持用户主动「忘记」</text>
+  <text x="662" y="230" font-size="9.5" fill="#f5873a">不遗忘 = 长期退化</text>
+
+  <g filter="url(#s20_soft)"><rect x="30" y="290" width="900" height="180" rx="13" fill="var(--sc-panel,#ffffff)" stroke="var(--sc-line,#d2d2d7)" stroke-width="1.3"/></g>
+  <text x="52" y="320" font-size="12.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)">核心权衡：记忆越多 ≠ 越聪明</text>
+  <text x="52" y="350" font-size="10.5" fill="var(--sc-sub,#6e6e73)">• 信噪比优先：一条精准记忆胜过十条冗余记忆，检索精度随库噪声上升而下降</text>
+  <text x="52" y="374" font-size="10.5" fill="var(--sc-sub,#6e6e73)">• 成本平衡：短期记忆吃 token 成本，长期记忆吃存储与检索成本，需按场景分配</text>
+  <text x="52" y="398" font-size="10.5" fill="var(--sc-sub,#6e6e73)">• 隐私合规：记忆持久化意味着数据留存，需明确保留策略、脱敏与用户删除权</text>
+  <text x="52" y="422" font-size="10.5" fill="var(--sc-sub,#6e6e73)">• 可解释：记忆应可追溯来源，让「Agent 为何这么答」可审计，避免黑盒漂移</text>
+  <text x="52" y="452" font-size="10" fill="#a78bfa">一句话：记忆系统的工程重心不在「存」，而在「治」——写入判定、召回过滤与遗忘策略三位一体</text>
+</svg></div><div class="blurb ml"><p>三条铁律：<b>写什么进记忆</b>——只记长期有用的偏好/事实/结论，写前去重合并、敏感不入库、附时间戳来源（写入判定是质量第一闸）；<b>怎么读回来</b>——语义检索 Top-k 设相关性阈值宁缺毋滥、标注来源防幻觉、合并去冗（召回噪声直接污染推理）；<b>何时遗忘</b>——时间衰减+冷数据淘汰、新覆旧、设容量上限、支持用户主动忘记。核心：信噪比优先，重心不在「存」而在「治」。详见图。</p><p><b>2025 前沿</b>：记忆正从「被动向量库」走向「自主治理」——按用途分三维（情景记忆 episodic 记事件、语义记忆 semantic 记事实、程序记忆 procedural 记技能/流程），按需分型召回而非一锅烩；A-MEM 等<b>智能体记忆</b>让 Agent 自己写笔记、建链接、动态改写旧记忆（类比 Zettelkasten 卡片盒），而非只读；MemGPT 的分页思想演进为<b>分层记忆架构</b>（热记忆常驻窗口、温记忆快取、冷记忆归档），由 Agent 自主调页。工程共识随之升级：「有无记忆的差距，往往大于换个更强模型的差距」。可观测性成硬指标：须能追踪每条召回记忆的来源与命中率、审计写入/遗忘决策、复盘「为何记住/为何忘记」，否则记忆系统会在无人察觉中悄然退化。</p></div></section></div></div>
+  <section class="refs"><div class="secttl"><span class="badge">§</span><span class="t">参考文献 · 权威来源（论文 / 官方文档）</span></div><div class="blurb reflist"><p>延伸阅读：MemGPT（把上下文管理类比操作系统分页）；Generative Agents（斯坦福小镇，记忆流 + 反思 + 检索评分）；LangChain / LlamaIndex 的 Memory 与向量检索模块；各类向量数据库（FAISS、Milvus、pgvector 等）的 ANN 检索原理；以及关于记忆写入策略、遗忘机制与 Agent 隐私合规的工程实践资料。A-MEM（Agentic Memory，让 Agent 自主组织与演化记忆网络）；记忆的情景/语义/程序三维分类综述（Write-Manage-Read 闭环）。</p></div></section>
+  <div class="backrow"><a href="../../index.html#agent">← 返回 LLM & Agent 导航</a></div>
+</div>
+<footer>自包含离线图谱 · 以图为主：概览 + 机制分组图 + 机制对比 · 权威参考集中于底部 · 垂直 TAB 切换</footer>
+<script>
+(function(){
+  var root=document.documentElement;
+  var saved=localStorage.getItem('atlas-nav-theme');
+  if(saved==='dark') root.setAttribute('data-theme','dark');
+  function toggleTheme(){
+    var cur=root.getAttribute('data-theme')==='dark'?'':'dark';
+    if(cur) root.setAttribute('data-theme',cur); else root.removeAttribute('data-theme');
+    localStorage.setItem('atlas-nav-theme',cur||'light');
+  }
+  var tb=document.getElementById('themeBtn');
+  if(tb){tb.onclick=toggleTheme;}
+  var wrap=document.querySelector('.vt-wrap');
+  if(wrap){
+    var tabs=wrap.querySelectorAll('.vt-tab');
+    var secs=wrap.querySelectorAll('.vt-sec');
+    tabs.forEach(function(t){
+      t.addEventListener('click',function(){
+        var tgt=t.getAttribute('data-target');
+        tabs.forEach(function(x){x.classList.toggle('active',x===t);});
+        secs.forEach(function(s){s.classList.toggle('active',s.id===tgt);});
+      });
+    });
+  }
+  var zsegs=document.querySelectorAll('.zseg');
+  var zones=document.querySelectorAll('.zone');
+  if(zsegs.length&&zones.length){
+    zsegs.forEach(function(s){
+      s.addEventListener('click',function(){
+        zsegs.forEach(function(x){x.classList.toggle('active',x===s);});
+      });
+    });
+    if('IntersectionObserver' in window){
+      var io=new IntersectionObserver(function(es){
+        es.forEach(function(e){
+          if(e.isIntersecting){
+            var id=e.target.id;
+            zsegs.forEach(function(x){x.classList.toggle('active',x.getAttribute('href')==='#'+id);});
+          }
+        });
+      },{rootMargin:'-40% 0px -55% 0px'});
+      zones.forEach(function(z){io.observe(z);});
+    }
+  }
+})();
+</script>
+</body>
+</html>

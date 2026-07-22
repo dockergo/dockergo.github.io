@@ -1,0 +1,96 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="700" viewBox="0 0 1120 700" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="aB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#4a7fd0"/></marker>
+    <marker id="aR" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#d1544a"/></marker>
+    <marker id="aG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+  </defs>
+  <rect width="1120" height="700" fill="#fbfbfd"/>
+
+  <text x="30" y="34" font-size="17" font-weight="700" fill="#1d1d1f">H3 · 开放寻址：冲突则线性探测下一个空位；删除用 TOMBSTONE 懒标记而非置空</text>
+  <text x="30" y="56" font-size="11" fill="#6e6e73">全部键值住在同一数组，index = (index+1) % capacity 顺移探测（源自 hash_map_open_addressing.go）；示例 capacity=8</text>
+
+  <!-- 图例 -->
+  <rect x="30" y="72" width="12" height="12" rx="2" fill="#4a7fd0"/><text x="48" y="82" font-size="10.5" fill="#3a3a3c">探测流</text>
+  <rect x="130" y="72" width="12" height="12" rx="2" fill="#d99a2b"/><text x="148" y="82" font-size="10.5" fill="#3a3a3c">占用槽</text>
+  <rect x="220" y="72" width="12" height="12" rx="2" fill="#2f9e6e"/><text x="238" y="82" font-size="10.5" fill="#3a3a3c">命中</text>
+  <rect x="300" y="72" width="12" height="12" rx="2" fill="#d1544a"/><text x="318" y="82" font-size="10.5" fill="#3a3a3c">冲突 / 错误查找</text>
+  <rect x="470" y="72" width="12" height="12" rx="2" fill="#8a6fd0"/><text x="488" y="82" font-size="10.5" fill="#3a3a3c">TOMBSTONE 墓碑</text>
+
+  <!-- ① 插入探测 -->
+  <text x="30" y="116" font-size="12" font-weight="700" fill="#20375e">① 插入：3、11、19 均 %8 = 3，冲突时沿数组顺移到首个空槽</text>
+  <g font-size="12" text-anchor="middle">
+    <rect x="60" y="146" width="64" height="40" fill="#f4f4f6" stroke="#d7d7dd"/><text x="92" y="170" fill="#a1a1a6">·</text>
+    <rect x="124" y="146" width="64" height="40" fill="#f4f4f6" stroke="#d7d7dd"/><text x="156" y="170" fill="#a1a1a6">·</text>
+    <rect x="188" y="146" width="64" height="40" fill="#f4f4f6" stroke="#d7d7dd"/><text x="220" y="170" fill="#a1a1a6">·</text>
+    <rect x="252" y="146" width="64" height="40" fill="#fdf3e0" stroke="#e7c07a"/><text x="284" y="170" fill="#8a5a12" font-weight="700">3</text>
+    <rect x="316" y="146" width="64" height="40" fill="#fdf3e0" stroke="#e7c07a"/><text x="348" y="170" fill="#8a5a12" font-weight="700">11</text>
+    <rect x="380" y="146" width="64" height="40" fill="#fdf3e0" stroke="#e7c07a"/><text x="412" y="170" fill="#8a5a12" font-weight="700">19</text>
+    <rect x="444" y="146" width="64" height="40" fill="#f4f4f6" stroke="#d7d7dd"/><text x="476" y="170" fill="#a1a1a6">·</text>
+    <rect x="508" y="146" width="64" height="40" fill="#f4f4f6" stroke="#d7d7dd"/><text x="540" y="170" fill="#a1a1a6">·</text>
+  </g>
+  <g font-size="9.5" text-anchor="middle" fill="#8e8e93">
+    <text x="92" y="200">[0]</text><text x="156" y="200">[1]</text><text x="220" y="200">[2]</text><text x="284" y="200">[3]</text><text x="348" y="200">[4]</text><text x="412" y="200">[5]</text><text x="476" y="200">[6]</text><text x="540" y="200">[7]</text>
+  </g>
+  <!-- 探测 19: 3->4->5 -->
+  <path d="M284 140 L284 128 L412 128 L412 140" fill="none" stroke="#d1544a" stroke-width="1.8" stroke-dasharray="5 3" marker-end="url(#aR)"/>
+  <text x="600" y="120" font-size="10.5" fill="#8a4038">put(19)：[3] 占 → [4] 占 → [5] 空，落位</text>
+
+  <rect x="600" y="140" width="490" height="70" rx="10" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="618" y="164" font-size="10.5" font-weight="700" fill="#20375e">findBucket 探测规则</text>
+  <text x="618" y="184" font-size="10" fill="#4a4a4f">从 hashFunc(key) 起，槽非空且 key 不符就 (index+1)%cap 前进；</text>
+  <text x="618" y="200" font-size="10" fill="#4a4a4f">遇空槽（nil）即停 —— 空槽是探测链的「终点」信号。</text>
+
+  <!-- ② 删除 TOMBSTONE -->
+  <text x="30" y="256" font-size="12" font-weight="700" fill="#20375e">② 删除 remove(11)：不置空，而是写入 TOMBSTONE 墓碑标记（懒删除）</text>
+  <g font-size="12" text-anchor="middle">
+    <rect x="252" y="278" width="64" height="40" fill="#fdf3e0" stroke="#e7c07a"/><text x="284" y="302" fill="#8a5a12" font-weight="700">3</text>
+    <rect x="316" y="278" width="64" height="40" fill="#efeaf9" stroke="#8a6fd0" stroke-width="1.6"/><text x="348" y="298" fill="#5a3fb0" font-size="10" font-weight="700">墓碑</text><text x="348" y="312" fill="#8a6fd0" font-size="9">TOMB</text>
+    <rect x="380" y="278" width="64" height="40" fill="#fdf3e0" stroke="#e7c07a"/><text x="412" y="302" fill="#8a5a12" font-weight="700">19</text>
+  </g>
+  <g font-size="9.5" text-anchor="middle" fill="#8e8e93"><text x="284" y="332">[3]</text><text x="348" y="332">[4]</text><text x="412" y="332">[5]</text></g>
+  <text x="470" y="292" font-size="10.5" fill="#5a3fb0">buckets[4] = TOMBSTONE（源码：remove 用墓碑覆盖）</text>
+  <text x="470" y="310" font-size="10" fill="#6e6e73">墓碑对查找「透明可越过」，对插入「视同空位可复用」。</text>
+
+  <!-- ③ 为何不能置空 -->
+  <text x="30" y="374" font-size="12" font-weight="700" fill="#20375e">③ 为何不能直接置空 nil —— 会截断探测链，让后续键「凭空消失」</text>
+
+  <!-- 左：置空(错) -->
+  <rect x="30" y="392" width="520" height="230" rx="12" fill="#ffffff" stroke="#e8a79f" filter="url(#soft)"/>
+  <text x="52" y="418" font-size="12.5" font-weight="700" fill="#8a4038">✗ 若直接置 nil</text>
+  <g font-size="12" text-anchor="middle">
+    <rect x="150" y="440" width="64" height="40" fill="#fdf3e0" stroke="#e7c07a"/><text x="182" y="464" fill="#8a5a12" font-weight="700">3</text>
+    <rect x="214" y="440" width="64" height="40" fill="#f4f4f6" stroke="#d7d7dd" stroke-dasharray="3 2"/><text x="246" y="464" fill="#a1a1a6">nil</text>
+    <rect x="278" y="440" width="64" height="40" fill="#fdf3e0" stroke="#e7c07a"/><text x="310" y="464" fill="#8a5a12" font-weight="700">19</text>
+  </g>
+  <g font-size="9.5" text-anchor="middle" fill="#8e8e93"><text x="182" y="494">[3]</text><text x="246" y="494">[4]</text><text x="310" y="494">[5]</text></g>
+  <path d="M182 434 L182 420 L246 420 L246 434" fill="none" stroke="#d1544a" stroke-width="1.8" stroke-dasharray="5 3" marker-end="url(#aR)"/>
+  <text x="52" y="524" font-size="10.5" fill="#8a4038">get(19)：[3] 占但 key≠ → 探到 [4] = nil</text>
+  <text x="52" y="544" font-size="11" font-weight="700" fill="#d1544a">→ 探测在此终止，误判 19 不存在！</text>
+  <text x="52" y="566" font-size="10" fill="#6e6e73">19 明明在 [5]，却因中途出现空槽被判定「未找到」，</text>
+  <text x="52" y="582" font-size="10" fill="#6e6e73">删一个键破坏了同探测链上其它键的可达性。</text>
+  <text x="52" y="606" font-size="10" fill="#8a4038">根因：空槽是探测终点，中途置空等于剪断了链。</text>
+
+  <!-- 右：墓碑(对) -->
+  <rect x="570" y="392" width="520" height="230" rx="12" fill="#ffffff" stroke="#a9dcc6" filter="url(#soft)"/>
+  <text x="592" y="418" font-size="12.5" font-weight="700" fill="#1f6b4a">✓ 用 TOMBSTONE 墓碑</text>
+  <g font-size="12" text-anchor="middle">
+    <rect x="690" y="440" width="64" height="40" fill="#fdf3e0" stroke="#e7c07a"/><text x="722" y="464" fill="#8a5a12" font-weight="700">3</text>
+    <rect x="754" y="440" width="64" height="40" fill="#efeaf9" stroke="#8a6fd0" stroke-width="1.6"/><text x="786" y="460" fill="#5a3fb0" font-size="10" font-weight="700">墓碑</text><text x="786" y="474" fill="#8a6fd0" font-size="9">TOMB</text>
+    <rect x="818" y="440" width="64" height="40" fill="#fdf3e0" stroke="#e7c07a"/><text x="850" y="464" fill="#8a5a12" font-weight="700">19</text>
+  </g>
+  <g font-size="9.5" text-anchor="middle" fill="#8e8e93"><text x="722" y="494">[3]</text><text x="786" y="494">[4]</text><text x="850" y="494">[5]</text></g>
+  <path d="M722 434 L722 420 L850 420 L850 434" fill="none" stroke="#2f9e6e" stroke-width="1.8" marker-end="url(#aG)"/>
+  <text x="786" y="414" font-size="9.5" fill="#2f6b4e" text-anchor="middle">越过墓碑继续探测</text>
+  <text x="592" y="524" font-size="10.5" fill="#2f6b4e">get(19)：[3] key≠ → [4] 墓碑（非空，跳过）→ [5]</text>
+  <text x="592" y="544" font-size="11" font-weight="700" fill="#2f9e6e">→ 命中 19，探测链完好无损</text>
+  <text x="592" y="566" font-size="10" fill="#6e6e73">墓碑既非空、亦非有效键：查找时穿过，插入时可复用</text>
+  <text x="592" y="582" font-size="10" fill="#6e6e73">（findBucket 记录首个墓碑位，把新键回填过去）。</text>
+  <text x="592" y="606" font-size="10" fill="#8a4038">代价：墓碑堆积会拉长探测链，需靠 rehash 清理。</text>
+
+  <!-- 底部 -->
+  <rect x="30" y="640" width="1060" height="46" rx="10" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="52" y="662" font-size="10.5" font-weight="700" fill="#20375e">负载因子上限</text>
+  <text x="150" y="662" font-size="10" fill="#4a4a4f">开放寻址所有键挤在同一数组，装得越满探测越长，故 loadThres 必须留有余量（本实现 2/3），超过即扩容 rehash。</text>
+  <text x="52" y="678" font-size="9.5" fill="#6e6e73">对比链式地址：链式可容忍 loadFactor &gt; 1（桶挂长链），开放寻址一旦接近满就急剧退化。</text>
+</svg>

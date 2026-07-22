@@ -120,8 +120,15 @@ def check_portal(root, proj_keys):
         fails.append(f"portal 孤儿×{len(orphans)}(不在任何 lens):{','.join(orphans)}")
     # (2) 死链:lens 引用项目无 index.html(兼容 projects/<name>/ 新布局 + <name>-design/ 旧布局)
     proot = os.path.join(root, "projects")
+    # 目录名索引(小写→真实名),兼容 gen.py 的归一化约定:逻辑键小写,目录名可能大写(如 ffmpeg↔FFmpeg)
+    dir_lower = {}
+    if os.path.isdir(proot):
+        for d in os.listdir(proot):
+            dir_lower.setdefault(d.lower(), d)
     def _proj_idx(k):
-        for cand in (os.path.join(proot, k, "index.html"),
+        real = dir_lower.get(k.lower(), k)  # 大小写不敏感回退到真实目录名
+        for cand in (os.path.join(proot, real, "index.html"),
+                     os.path.join(proot, k, "index.html"),
                      os.path.join(root, k + "-design", "index.html")):
             if os.path.isfile(cand):
                 return cand
@@ -129,11 +136,55 @@ def check_portal(root, proj_keys):
     for k in sorted(lens_keys):
         if not _proj_idx(k):
             fails.append(f"portal 死链:{k} -> 无 index.html")
-    # (3) 关系视角(INDUSTRY/STANDARDS/PEOPLE)的 proj 关联键须能下钻(∈ 真实项目)
+    # (3) 关系视角(INDUSTRY/STANDARDS/PEOPLE)的 proj/projs 关联键须能下钻(∈ 真实项目)
+    #   页面渲染端 build_relation_view() 兼容 proj 单键 + projs 数组,自检须同解析(否则 projs 里的错键静默漏检)
     rel_projs = set(re.findall(r'"proj":\s*"([a-z0-9-]+)"', s))
+    for arr in re.findall(r'"projs":\s*\[([^\]]*)\]', s):
+        rel_projs |= set(re.findall(r'"([a-z0-9-]+)"', arr))
     for k in sorted(rel_projs):
         if not _proj_idx(k):
             fails.append(f"portal 关系视角死链:{k} -> 无 index.html")
+    return fails
+
+
+def check_scenarios(root):
+    """业务场景引用完整性(不改数据模型,只校验已有结构):
+      - slug 唯一 + 对应 scenarios/<slug>/index.html 真实存在(无死链);
+      - 每个场景 flow:节点 id 唯一、edges 的 f/t 端点都在节点集合内、funnel 与 lanes 非空;
+    读根 gen.py 的 SCENARIOS。"""
+    fails = []
+    rg = os.path.join(root, "gen.py")
+    if not os.path.isfile(rg):
+        return []
+    s = open(rg, encoding="utf-8").read()
+    if "SCENARIOS" not in s:
+        return []
+    seg = s[s.index("SCENARIOS"):]
+    slugs = re.findall(r'"slug":\s*"([a-z0-9-]+)"', seg)
+    dup = sorted({x for x in slugs if slugs.count(x) > 1})
+    if dup:
+        fails.append(f"场景 slug 重复×{len(dup)}:{','.join(dup)}")
+    # 生成页死链
+    for slug in sorted(set(slugs)):
+        if not os.path.isfile(os.path.join(root, "scenarios", slug, "index.html")):
+            fails.append(f"场景死链:{slug} -> 无 scenarios/{slug}/index.html")
+    # 按 slug 边界切块,逐场景校验 flow 引用完整性
+    idxs = [m.start() for m in re.finditer(r'"slug":\s*"[a-z0-9-]+"', seg)] + [len(seg)]
+    for i in range(len(idxs) - 1):
+        block = seg[idxs[i]:idxs[i + 1]]
+        slug = re.search(r'"slug":\s*"([a-z0-9-]+)"', block).group(1)
+        fm = re.search(r'"flow":\s*\{', block)
+        if not fm:
+            continue
+        node_ids = re.findall(r'"id":\s*"([^"]+)"', block)
+        dupn = sorted({x for x in node_ids if node_ids.count(x) > 1})
+        if dupn:
+            fails.append(f"{slug} flow 节点id重复:{','.join(dupn)}")
+        nodeset = set(node_ids)
+        for f, t in re.findall(r'\{"f":\s*"([^"]+)",\s*"t":\s*"([^"]+)"', block):
+            for endp in (f, t):
+                if endp not in nodeset:
+                    fails.append(f"{slug} flow 边端点无效:{endp}(不在节点集)")
     return fails
 
 
@@ -163,6 +214,14 @@ def main():
             print(f"FAIL portal        {f}")
     else:
         print("ok   portal (一级:无孤儿/无死链)")
+    # 业务场景引用完整性自检
+    sf = check_scenarios(ROOT)
+    if sf:
+        bad += 1
+        for f in sf:
+            print(f"FAIL scenarios     {f}")
+    else:
+        print("ok   scenarios (slug唯一/无死链/flow端点有效)")
     print(f"\n{'ALL GREEN' if not bad else str(bad)+' PROJECT(S) FAIL'} · {len(projs)} checked")
     sys.exit(1 if bad else 0)
 

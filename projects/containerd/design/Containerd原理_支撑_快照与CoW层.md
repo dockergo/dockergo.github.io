@@ -30,6 +30,10 @@
 
 ## 拓展 · 从镜像到容器 rootfs
 
+![CoW 层栈](Containerd原理_支撑_快照与CoW层_03CoW层栈.svg)
+
+图释写时复制层栈：镜像层链作 overlay 的 lowerdir（只读、跨容器共享），容器可写层作 upperdir，写只落顶层（copy-up）、读自上而下穿透。逐层落点见下表。
+
 | 步骤 | 快照操作 | 结果 |
 |---|---|---|
 | 1 | 解包镜像第 1 层 | Prepare→写入→Commit → Committed 快照 A |

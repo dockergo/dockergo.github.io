@@ -1,0 +1,107 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1160" height="680" viewBox="0 0 1160 680" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+  </defs>
+  <rect width="1160" height="680" fill="#fbfbfd"/>
+
+  <text x="30" y="32" font-size="15" font-weight="700" fill="#1d1d1f">同一个 Kafka，三个正交问题 · 这张对比表的三列不是"三个项目"，是同一个 Kafka 内核针对三个互不重叠问题各自长出的机制</text>
+  <text x="30" y="53" font-size="10.5" fill="#6e6e73">行 = 消息系统必须回答的三个问题；列 = Kafka 分别用哪套机制回答——列间没有替代关系，也不是同一问题反复讲三遍</text>
+
+  <!-- 列头 -->
+  <rect x="30" y="72" width="176" height="40" rx="9" fill="#eef0f3" stroke="#e4e7ec"/>
+  <text x="118" y="97" font-size="12" font-weight="700" fill="#4a4a4f" text-anchor="middle">正交问题</text>
+  <rect x="212" y="72" width="300" height="40" rx="9" fill="#f4eefb" stroke="#dcc9ef"/>
+  <text x="362" y="97" font-size="12.5" font-weight="800" fill="#6f3ea8" text-anchor="middle">M1 · Topic/Partition 广播</text>
+  <rect x="518" y="72" width="300" height="40" rx="9" fill="#f4eefb" stroke="#dcc9ef"/>
+  <text x="668" y="97" font-size="12.5" font-weight="800" fill="#6f3ea8" text-anchor="middle">M2 · Consumer Group Rebalance</text>
+  <rect x="824" y="72" width="306" height="40" rx="9" fill="#f4eefb" stroke="#dcc9ef"/>
+  <text x="977" y="97" font-size="12.5" font-weight="800" fill="#6f3ea8" text-anchor="middle">M3 · 幂等 + 事务 Producer</text>
+
+  <!-- 行1：广播给谁 -->
+  <rect x="30" y="120" width="176" height="128" rx="9" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="46" y="150" font-size="11.5" font-weight="700" fill="#1d1d1f">① 广播给谁</text>
+  <text x="46" y="172" font-size="9" fill="#8a97ab">同一份数据，多少个</text>
+  <text x="46" y="186" font-size="9" fill="#8a97ab">订阅方各能收到</text>
+  <text x="46" y="204" font-size="9" fill="#8a97ab">完整一份</text>
+
+  <rect x="212" y="120" width="300" height="128" rx="9" fill="#fff" stroke="#dcc9ef" stroke-width="1.4"/>
+  <text x="228" y="146" font-size="10" font-weight="700" fill="#6f3ea8">这是 M1 的主场 ★</text>
+  <text x="228" y="166" font-size="9.5" fill="#4a4a4f">任意多个 Consumer Group 各自</text>
+  <text x="228" y="182" font-size="9.5" fill="#4a4a4f">维护独立 offset，都能完整重读</text>
+  <text x="228" y="198" font-size="9.5" fill="#4a4a4f">整个 Topic —— 组间是广播语义</text>
+  <text x="228" y="222" font-size="8.5" fill="#8a97ab">回答方式：Topic/Partition + 每 Group 独立位移</text>
+
+  <rect x="518" y="120" width="300" height="128" rx="9" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="534" y="146" font-size="10" font-weight="700" fill="#8a97ab">M2 不回答这个问题</text>
+  <text x="534" y="166" font-size="9.5" fill="#a1a1a6">Rebalance 发生在单个 Group</text>
+  <text x="534" y="182" font-size="9.5" fill="#a1a1a6">内部；有多少个 Group 各自</text>
+  <text x="534" y="198" font-size="9.5" fill="#a1a1a6">读到几份，是 M1 的职责</text>
+
+  <rect x="824" y="120" width="306" height="128" rx="9" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="840" y="146" font-size="10" font-weight="700" fill="#8a97ab">M3 不回答这个问题</text>
+  <text x="840" y="166" font-size="9.5" fill="#a1a1a6">投递语义只关心"这条消息</text>
+  <text x="840" y="182" font-size="9.5" fill="#a1a1a6">写没写成、读者会不会看到</text>
+  <text x="840" y="198" font-size="9.5" fill="#a1a1a6">重复"，与广播范围无关</text>
+
+  <!-- 行2：谁分摊 -->
+  <rect x="30" y="256" width="176" height="128" rx="9" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="46" y="286" font-size="11.5" font-weight="700" fill="#1d1d1f">② 谁分摊</text>
+  <text x="46" y="308" font-size="9" fill="#8a97ab">组内消费负载</text>
+  <text x="46" y="322" font-size="9" fill="#8a97ab">怎么在成员间</text>
+  <text x="46" y="336" font-size="9" fill="#8a97ab">切分不重叠</text>
+
+  <rect x="212" y="256" width="300" height="128" rx="9" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="228" y="282" font-size="10" font-weight="700" fill="#8a97ab">M1 不回答这个问题</text>
+  <text x="228" y="302" font-size="9.5" fill="#a1a1a6">M1 讲的是"Group 之间"的</text>
+  <text x="228" y="318" font-size="9.5" fill="#a1a1a6">关系（互不相关的广播）；</text>
+  <text x="228" y="334" font-size="9.5" fill="#a1a1a6">"Group 内部"怎么分工不属于它</text>
+
+  <rect x="518" y="256" width="300" height="128" rx="9" fill="#fff" stroke="#dcc9ef" stroke-width="1.4"/>
+  <text x="534" y="282" font-size="10" font-weight="700" fill="#6f3ea8">这是 M2 的主场 ★</text>
+  <text x="534" y="302" font-size="9.5" fill="#4a4a4f">Group Coordinator 在成员变动</text>
+  <text x="534" y="318" font-size="9.5" fill="#4a4a4f">时触发 rebalance，保证组内每个</text>
+  <text x="534" y="334" font-size="9.5" fill="#4a4a4f">partition 恰好分给一个 member</text>
+  <text x="534" y="358" font-size="8.5" fill="#8a97ab">回答方式：JoinGroup/SyncGroup + assignor 策略</text>
+
+  <rect x="824" y="256" width="306" height="128" rx="9" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="840" y="282" font-size="10" font-weight="700" fill="#8a97ab">M3 不回答这个问题</text>
+  <text x="840" y="302" font-size="9.5" fill="#a1a1a6">幂等/事务机制在单个</text>
+  <text x="840" y="318" font-size="9.5" fill="#a1a1a6">partition/producer 粒度工作，</text>
+  <text x="840" y="334" font-size="9.5" fill="#a1a1a6">不涉及谁读哪个 partition</text>
+
+  <!-- 行3：丢不丢重不重 -->
+  <rect x="30" y="392" width="176" height="128" rx="9" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="46" y="422" font-size="11.5" font-weight="700" fill="#1d1d1f">③ 丢不丢 / 重不重</text>
+  <text x="46" y="444" font-size="9" fill="#8a97ab">投递可靠性：会不会</text>
+  <text x="46" y="458" font-size="9" fill="#8a97ab">丢消息、会不会因</text>
+  <text x="46" y="472" font-size="9" fill="#8a97ab">重试产生重复</text>
+
+  <rect x="212" y="392" width="300" height="128" rx="9" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="228" y="418" font-size="10" font-weight="700" fill="#8a97ab">M1 不回答这个问题</text>
+  <text x="228" y="438" font-size="9.5" fill="#a1a1a6">广播模型只决定"读者能</text>
+  <text x="228" y="454" font-size="9.5" fill="#a1a1a6">不能重复读到"，不决定</text>
+  <text x="228" y="470" font-size="9.5" fill="#a1a1a6">"写入本身丢不丢/重不重"</text>
+
+  <rect x="518" y="392" width="300" height="128" rx="9" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="534" y="418" font-size="10" font-weight="700" fill="#8a97ab">M2 不回答这个问题</text>
+  <text x="534" y="438" font-size="9.5" fill="#a1a1a6">Rebalance 决定"谁读哪个</text>
+  <text x="534" y="454" font-size="9.5" fill="#a1a1a6">partition"，分配切换期间的</text>
+  <text x="534" y="470" font-size="9.5" fill="#a1a1a6">offset 提交策略才涉及重复消费</text>
+
+  <rect x="824" y="392" width="306" height="128" rx="9" fill="#fff" stroke="#dcc9ef" stroke-width="1.4"/>
+  <text x="840" y="418" font-size="10" font-weight="700" fill="#6f3ea8">这是 M3 的主场 ★</text>
+  <text x="840" y="438" font-size="9.5" fill="#4a4a4f">checkSequence + findDuplicateBatch</text>
+  <text x="840" y="454" font-size="9.5" fill="#4a4a4f">去重写；事务原子多分区写 +</text>
+  <text x="840" y="470" font-size="9.5" fill="#4a4a4f">read_committed 隔离未提交数据</text>
+  <text x="840" y="494" font-size="8.5" fill="#8a97ab">回答方式：PID+序列号去重 + 事务 marker</text>
+
+  <!-- 底部横向说明：三问互相独立 -->
+  <rect x="30" y="530" width="1100" height="42" rx="9" fill="#eaf1fb" stroke="#c6d9f2"/>
+  <text x="580" y="556" font-size="10" fill="#20375e" text-anchor="middle">三行两两独立：一个系统可以"广播做得好、分摊做得差"，也可以"分摊均衡、投递语义却是 at-most-once"—— 三者互不蕴含，这正是要分三张图讲的原因</text>
+
+  <!-- 底部结论 banner -->
+  <rect x="30" y="584" width="1100" height="80" rx="12" fill="#f2f0fa" stroke="#d3c6ee" filter="url(#soft)"/>
+  <text x="48" y="610" font-size="11" font-weight="700" fill="#5a3a7a">为什么三个变体都点名 Kafka，而不是凑数</text>
+  <text x="48" y="632" font-size="10" fill="#4a4a4f">同一个 Kafka，三个正交的设计问题，三套不同机制各自回答一个问题 —— 这不是重复，是消息系统必须同时解决的三件事：</text>
+  <text x="48" y="652" font-size="10" fill="#4a4a4f">M1（Topic/Partition 广播）、M2（Group Coordinator 分摊）、M3（幂等+事务投递语义）分别落在①②③三行，彼此没有交集，也没有一个能替代另一个。</text>
+</svg>

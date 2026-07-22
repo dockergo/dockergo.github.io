@@ -4,14 +4,14 @@
     <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
   </defs>
   <rect width="1000" height="480" fill="#fbfbfd"/>
-  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">RDB 快照：SAVE 阻塞 vs BGSAVE fork 子进程（rdb.c:2070）</text>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">RDB 快照：SAVE 阻塞 vs BGSAVE fork 子进程</text>
   <text x="30" y="49" font-size="10.5" fill="#a1a1a6">生产用 BGSAVE；先写 temp 再 rename+fsync，保证不留半个损坏文件</text>
 
   <!-- SAVE path -->
   <rect x="30" y="76" width="440" height="150" rx="12" fill="#fdeef2" stroke="#f6c9d6" filter="url(#soft)"/>
   <text x="50" y="100" font-size="12" font-weight="700" fill="#c02a56">SAVE（阻塞，生产禁用）</text>
   <g text-anchor="middle" font-size="9.5">
-    <rect x="50" y="116" width="180" height="44" rx="8" fill="#fff" stroke="#f6c9d6"/><text x="140" y="135" fill="#c02a56">主线程直接 rdbSave</text><text x="140" y="150" fill="#88304a" font-size="8.5">rdb.c:4825</text>
+    <rect x="50" y="116" width="180" height="44" rx="8" fill="#fff" stroke="#f6c9d6"/><text x="140" y="135" fill="#c02a56">主线程直接 rdbSave</text>
     <rect x="270" y="116" width="180" height="44" rx="8" fill="#fdeef2" stroke="#f6c9d6"/><text x="360" y="135" fill="#c02a56">全程阻塞所有命令</text><text x="360" y="150" fill="#88304a" font-size="8.5">大实例可卡数秒</text>
   </g>
   <line x1="230" y1="138" x2="268" y2="138" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
@@ -31,12 +31,12 @@
   <text x="730" y="210" font-size="9" fill="#5cb88a" text-anchor="middle">父进程照常处理读写，仅 fork 瞬间有微小停顿</text>
 
   <!-- atomic write -->
-  <text x="40" y="262" font-size="11" font-weight="700" fill="#7a5a1e">原子写盘（rdb.c:2032-2055）</text>
+  <text x="40" y="262" font-size="11" font-weight="700" fill="#7a5a1e">原子写盘</text>
   <g text-anchor="middle" font-size="9.5">
     <rect x="60" y="276" width="180" height="46" rx="8" fill="#fdf3e5" stroke="#f0d9b5" filter="url(#soft)"/><text x="150" y="298" fill="#7a5a1e">写 temp-&lt;pid&gt;.rdb</text><text x="150" y="313" fill="#b08535" font-size="8.5">临时文件</text>
     <rect x="290" y="276" width="180" height="46" rx="8" fill="#fdf3e5" stroke="#f0d9b5" filter="url(#soft)"/><text x="380" y="298" fill="#7a5a1e">rename → dump.rdb</text><text x="380" y="313" fill="#b08535" font-size="8.5">原子替换</text>
     <rect x="520" y="276" width="180" height="46" rx="8" fill="#fdf3e5" stroke="#f0d9b5" filter="url(#soft)"/><text x="610" y="298" fill="#7a5a1e">fsync 目录</text><text x="610" y="313" fill="#b08535" font-size="8.5">确保元数据落盘</text>
-    <rect x="750" y="276" width="200" height="46" rx="8" fill="#eafaf1" stroke="#b8e6cd" filter="url(#soft)"/><text x="850" y="298" fill="#1c6b45">dirty=0 lastsave=now</text><text x="850" y="313" fill="#3a9b6e" font-size="8.5">rdb.c:2063</text>
+    <rect x="750" y="276" width="200" height="46" rx="8" fill="#eafaf1" stroke="#b8e6cd" filter="url(#soft)"/><text x="850" y="298" fill="#1c6b45">dirty=0 lastsave=now</text>
   </g>
   <line x1="240" y1="299" x2="288" y2="299" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
   <line x1="470" y1="299" x2="518" y2="299" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
@@ -47,6 +47,6 @@
   <text x="50" y="368" font-size="11" font-weight="600" fill="#1d1d1f">触发时机</text>
   <text x="50" y="390" font-size="10" fill="#4a4a4f">· save 配置点（默认 3600s/1改、300s/100改、60s/10000改）—— serverCron 每轮检查 dirty 与距上次保存时间</text>
   <text x="50" y="410" font-size="10" fill="#4a4a4f">· 手动 BGSAVE ｜ 复制全量同步（主库为新从库生成 RDB）｜ SHUTDOWN 关机前</text>
-  <text x="50" y="432" font-size="10" fill="#4a4a4f">· 条件：dirty ≥ 改动阈值 且 距上次保存 &gt; 秒数阈值 且 上次 BGSAVE 成功（server.c:1699）</text>
+  <text x="50" y="432" font-size="10" fill="#4a4a4f">· 条件：dirty ≥ 改动阈值 且 距上次保存 &gt; 秒数阈值 且 上次 BGSAVE 成功</text>
   <text x="50" y="452" font-size="9" fill="#86868b">stop-writes-on-bgsave-error=yes：BGSAVE 失败时拒绝写入，防止数据无保护地继续堆积</text>
 </svg>

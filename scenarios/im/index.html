@@ -1,0 +1,375 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>即时通讯 IM · 核心技术点</title><style>
+:root{--c-bg:#f5f6f8;--c-panel:#ffffff;--c-line:#e2e5ea;--c-ink:#1b1c20;--c-sub:#5c5f68;--c-soft:#eef0f4}
+:root[data-theme=dark]{--c-bg:#0f1013;--c-panel:#1a1c22;--c-line:#31343d;--c-ink:#e8e8ea;--c-sub:#9a9aa2;--c-soft:#20222a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--c-bg);color:var(--c-ink);font:14px/1.6 -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;transition:background .25s,color .25s}
+.wrap{max-width:1120px;margin:0 auto;padding:28px 24px 64px}
+header.top{position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:14px;
+  padding:12px 24px;background:color-mix(in srgb,var(--c-bg) 86%,transparent);
+  backdrop-filter:saturate(1.4) blur(14px);-webkit-backdrop-filter:saturate(1.4) blur(14px);
+  border-bottom:1px solid var(--c-line)}
+header.top .logo{display:inline-flex;align-items:center;flex:none}
+header.top .spacer{flex:1}
+.brand-intro{display:flex;flex-direction:column;align-items:flex-start;margin-left:6px;min-width:0}
+.brand-intro .bt{font-size:15px;font-weight:700;color:var(--c-ink);line-height:1.3}
+.brand-intro .bs{margin-top:3px;font-size:11.5px;color:var(--c-sub);line-height:1.5}
+.icobtn{width:38px;height:38px;border-radius:50%;border:1px solid var(--c-line);
+  background:var(--c-panel);color:var(--c-sub);cursor:pointer;display:inline-grid;
+  place-items:center;font-size:16px;flex:none;text-decoration:none;transition:.15s}
+.icobtn:hover{color:var(--c-ink);border-color:var(--accent)}
+.tt-ico{font-size:16px;line-height:1}.tt-sun{display:none}
+:root[data-theme=dark] .tt-moon{display:none}:root[data-theme=dark] .tt-sun{display:inline}
+.hero{padding:18px 22px;border-radius:16px;background:var(--c-panel);border:1px solid var(--c-line);border-left:4px solid var(--accent);margin-bottom:26px}
+.hero .lay{font-size:12px;color:var(--accent);font-weight:600;letter-spacing:.4px}
+.hero h1{margin:6px 0 8px;font-size:24px;letter-spacing:-.3px}
+.hero .en{color:var(--c-sub);font-size:13px}
+.hero .tag{margin-top:10px;color:var(--c-ink);font-size:14.5px;line-height:1.7}
+.arch-canvas{background:var(--c-panel);border:1px solid var(--c-line);border-radius:16px;padding:18px;margin-bottom:30px;overflow:auto}
+.arch-svg{width:100%;height:auto;display:block}
+.arch-svg .ag-bg{fill:var(--c-panel)}
+.arch-svg .ag-card{fill:var(--c-panel);stroke:var(--c-line);stroke-width:1.2}
+.arch-svg .ag-band{fill:var(--c-soft)}
+.arch-svg .ag-sub{fill:var(--c-sub)}
+.arch-svg .ag-title{fill:var(--c-ink)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px}
+.grp{background:var(--c-panel);border:1px solid var(--c-line);border-radius:14px;padding:16px 18px}
+.grp h3{margin:0 0 12px;font-size:15px;color:var(--accent);padding-bottom:8px;border-bottom:1px solid var(--c-line)}
+.grp ul{list-style:none;margin:0;padding:0}
+.grp li{padding:8px 0;border-bottom:1px dashed var(--c-line)}
+.grp li:last-child{border-bottom:none}
+.grp li b{display:block;font-size:13.5px;color:var(--c-ink);margin-bottom:2px}
+.grp li span{font-size:12.5px;color:var(--c-sub);line-height:1.6}
+.grp li .dp{display:block;margin-top:7px;padding:9px 11px;font-size:12px;line-height:1.7;
+  color:var(--c-ink);background:var(--c-soft);border-left:2px solid var(--accent);border-radius:6px}
+.dims{display:flex;flex-direction:column;gap:6px;margin-top:9px}
+.dm{display:flex;flex-direction:column;gap:2px;padding:7px 11px;border-radius:8px;
+  border-left:3px solid var(--c-line);background:var(--c-soft)}
+.dm-h{font-size:11px;font-weight:800;letter-spacing:.02em;opacity:.92}
+.dm-t{font-size:11.5px;line-height:1.65;color:var(--c-sub)}
+.dm-trade{border-left-color:var(--accent)}
+.dm-trade .dm-h{color:var(--accent)}
+.dm-scale{border-left-color:#2ea043}
+.dm-scale .dm-h{color:#2ea043}
+.dm-fail{border-left-color:#e0562d}
+.dm-fail .dm-h{color:#e0562d}
+.insight{background:var(--c-panel);border:1px solid var(--c-line);border-radius:16px;
+  padding:20px 24px;margin-top:26px;border-top:3px solid var(--accent)}
+.insight h2{margin:0 0 10px;font-size:16px;color:var(--c-ink)}
+.insight p{margin:0;font-size:13.5px;line-height:1.85;color:var(--c-sub)}
+.flow-desc{background:var(--c-panel);border:1px solid var(--c-line);border-radius:16px;padding:18px 22px;margin-bottom:26px}
+.flow-desc h2{margin:0 0 6px;font-size:16px;color:var(--c-ink)}
+.fl-hint{margin:0 0 14px;font-size:12.5px;color:var(--c-sub)}
+.flow-desc .fl-hint .fl-b{color:#c0392b;font-weight:600}
+.sc-sec{margin-top:30px}
+.sc-sec>h2{margin:0 0 14px;font-size:18px;color:var(--c-ink);padding-left:11px;border-left:4px solid var(--accent)}
+.sc-essence{background:var(--c-panel);border:1px solid var(--c-line);border-radius:16px;padding:20px 24px;border-top:3px solid var(--accent)}
+.sc-essence p{margin:0;font-size:14px;line-height:1.9;color:var(--c-sub)}
+.req-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+.req-col{background:var(--c-panel);border:1px solid var(--c-line);border-radius:14px;padding:16px 18px}
+.req-col.req-wide{grid-column:1/-1}
+.req-col h3{margin:0 0 12px;font-size:14px;color:var(--accent)}
+.req-col ul{list-style:none;margin:0;padding:0}
+.req-col ul li{padding:6px 0 6px 18px;position:relative;font-size:13px;line-height:1.7;color:var(--c-sub);border-bottom:1px dashed var(--c-line)}
+.req-col ul li:last-child{border-bottom:none}
+.req-col ul li:before{content:"";position:absolute;left:2px;top:13px;width:6px;height:6px;border-radius:50%;background:var(--accent)}
+.req-col ul.cons li:before{background:#e0562d}
+.qtab,.dtab{width:100%;border-collapse:collapse;font-size:12.5px}
+.qtab th,.dtab th{text-align:left;padding:9px 12px;color:var(--c-sub);font-weight:700;border-bottom:2px solid var(--c-line);font-size:12px}
+.qtab td,.dtab td{padding:9px 12px;border-bottom:1px solid var(--c-line);line-height:1.65;color:var(--c-sub);vertical-align:top}
+.qtab .qk{color:var(--c-ink);font-weight:700;white-space:nowrap}
+.qtab .qv{color:var(--accent);font-weight:600;white-space:nowrap}
+.dtab{background:var(--c-panel);border:1px solid var(--c-line);border-radius:14px;overflow:hidden}
+.dtab .de{color:var(--c-ink);font-weight:700;white-space:nowrap}
+.dtab .ds{color:var(--accent);font-weight:600;white-space:nowrap}
+.sc-tension{background:var(--c-panel);border:1px solid var(--c-line);border-radius:16px;padding:20px 24px}
+.tn-wrap{display:flex;align-items:stretch;gap:0;position:relative}
+.tn-side{flex:1;padding:14px 16px;border-radius:12px;background:var(--c-soft)}
+.tn-side.tn-l{border:1px solid var(--accent)}
+.tn-side.tn-r{border:1px solid #2ea043}
+.tn-lbl{font-size:13.5px;font-weight:800;margin-bottom:10px}
+.tn-l .tn-lbl{color:var(--accent)}.tn-r .tn-lbl{color:#2ea043}
+.tn-side ul{list-style:none;margin:0;padding:0}
+.tn-side li{padding:5px 0;font-size:12.5px;line-height:1.6;color:var(--c-sub);border-bottom:1px dashed var(--c-line)}
+.tn-side li:last-child{border-bottom:none}
+.tn-vs{align-self:center;margin:0 14px;font-size:12px;font-weight:800;color:var(--c-sub);background:var(--c-bg);border:1px solid var(--c-line);border-radius:50%;width:38px;height:38px;display:grid;place-items:center;flex:none}
+.tn-core{margin-top:16px;padding:12px 16px;font-size:13px;line-height:1.75;color:var(--c-ink);background:var(--c-soft);border-left:3px solid var(--accent);border-radius:8px}
+.sc-pitfall ul.pit{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:10px}
+.sc-pitfall ul.pit li{padding:11px 14px 11px 34px;position:relative;font-size:12.5px;line-height:1.65;color:var(--c-sub);background:var(--c-panel);border:1px solid var(--c-line);border-left:3px solid #e0562d;border-radius:10px}
+.sc-pitfall ul.pit li:before{content:"\2715";position:absolute;left:13px;top:11px;color:#e0562d;font-weight:800;font-size:12px}
+.rm-wrap{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+.rm-step{background:var(--c-panel);border:1px solid var(--c-line);border-radius:14px;padding:16px 18px;border-top:3px solid var(--accent)}
+.rm-stage{font-size:12px;font-weight:800;color:#fff;background:var(--accent);display:inline-block;padding:3px 12px;border-radius:20px;margin-bottom:10px}
+.rm-focus{font-size:14px;font-weight:700;color:var(--c-ink);margin-bottom:7px}
+.rm-detail{font-size:12.5px;line-height:1.7;color:var(--c-sub)}
+.sc-takeaway ul.tk{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:10px}
+.sc-takeaway ul.tk li{padding:11px 14px 11px 34px;position:relative;font-size:12.5px;line-height:1.65;color:var(--c-ink);background:var(--c-soft);border-radius:10px}
+.sc-takeaway ul.tk li:before{content:"\2713";position:absolute;left:13px;top:11px;color:#2ea043;font-weight:800;font-size:12px}
+footer{margin-top:40px;text-align:center;color:var(--c-sub);font-size:12px}
+</style></head><body style="--accent:#0a84ff"><header class="top"><a class="logo" href="../../index.html#scenario" title="返回业务场景导航"><span class="icobtn"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg></span></a><div class="brand-intro"><div class="bt">业务场景</div><div class="bs">分布式系统落地全景 · 核心技术点架构图</div></div><div class="spacer"></div><button id="tt" class="icobtn" title="切换深色 / 浅色主题" aria-label="切换主题"><span class="tt-ico tt-moon">&#9790;</span><span class="tt-ico tt-sun">&#9728;</span></button></header><div class="wrap"><div class="hero"><div class="lay">社交互动层</div><h1>即时通讯 IM</h1><div class="en">Instant Messaging</div><div class="tag">私聊 / 群聊 / 已读回执 —— 亿级长连接下的实时消息投递,核心是「长连接管理 + 可靠投递 + 读写扩散」。</div></div><div class="arch-canvas"><svg xmlns="http://www.w3.org/2000/svg" class="arch-svg" viewBox="0 0 1080 1538" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Text','PingFang SC',sans-serif">
+<defs><filter id="scSoft" x="-6%" y="-6%" width="112%" height="112%"><feDropShadow dx="0" dy="2" stdDeviation="6" flood-color="#0a0a0a" flood-opacity="0.08"/></filter><marker id="scArr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#0a84ff"/></marker><marker id="scArrB" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#c0392b"/></marker><marker id="scArr2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2d7d46"/></marker></defs>
+<rect x="0" y="0" width="1080" height="1538" class="ag-bg"/>
+<text x="26" y="42" font-size="20" font-weight="800" class="ag-title">即时通讯 IM · 全景</text>
+<text x="26" y="70" font-size="12.5" class="ag-sub">社交互动层 · Instant Messaging · 数据流拓扑 + 技术矩阵 + 核心张力 + 洞察 + 踩坑 + 心法</text>
+<text x="26" y="112" font-size="15" font-weight="800" fill="#0a84ff">① 端到端数据流 · 沿箭头为请求/数据流转,红虚线为回流/补偿</text>
+<rect x="26.0" y="126" width="192.8" height="30" rx="9" fill="#0a84ff" opacity="0.12"/>
+<text x="38.0" y="146" font-size="12" font-weight="700" fill="#0a84ff" text-anchor="start">发送端</text>
+<rect x="162.8" y="132.5" width="46.0" height="17" rx="8.5" fill="#0a84ff" opacity="0.9"/>
+<text x="185.8" y="144.4" font-size="9.5" font-weight="700" fill="#ffffff" text-anchor="middle">1000万</text>
+<rect x="234.8" y="126" width="192.8" height="30" rx="9" fill="#0a84ff" opacity="0.12"/>
+<text x="246.8" y="146" font-size="12" font-weight="700" fill="#0a84ff" text-anchor="start">接入</text>
+<rect x="371.6" y="132.5" width="46.0" height="17" rx="8.5" fill="#0a84ff" opacity="0.9"/>
+<text x="394.6" y="144.4" font-size="9.5" font-weight="700" fill="#ffffff" text-anchor="middle">50万/s</text>
+<rect x="443.6" y="126" width="192.8" height="30" rx="9" fill="#0a84ff" opacity="0.12"/>
+<text x="455.6" y="146" font-size="12" font-weight="700" fill="#0a84ff" text-anchor="start">逻辑 / 存储</text>
+<rect x="574.0" y="132.5" width="52.4" height="17" rx="8.5" fill="#0a84ff" opacity="0.9"/>
+<text x="600.2" y="144.4" font-size="9.5" font-weight="700" fill="#ffffff" text-anchor="middle">500万/s</text>
+<rect x="652.4" y="126" width="192.8" height="30" rx="9" fill="#0a84ff" opacity="0.12"/>
+<text x="664.4" y="146" font-size="12" font-weight="700" fill="#0a84ff" text-anchor="start">路由 / 下行</text>
+<rect x="782.8" y="132.5" width="52.4" height="17" rx="8.5" fill="#0a84ff" opacity="0.9"/>
+<text x="809.0" y="144.4" font-size="9.5" font-weight="700" fill="#ffffff" text-anchor="middle">300万/s</text>
+<rect x="861.2" y="126" width="192.8" height="30" rx="9" fill="#0a84ff" opacity="0.12"/>
+<text x="873.2" y="146" font-size="12" font-weight="700" fill="#0a84ff" text-anchor="start">接收端</text>
+<rect x="991.6" y="132.5" width="52.4" height="17" rx="8.5" fill="#0a84ff" opacity="0.9"/>
+<text x="1017.8" y="144.4" font-size="9.5" font-weight="700" fill="#ffffff" text-anchor="middle">290万/s</text>
+<path d="M218.8,251.0 C226.8,251.0 226.8,251.0 234.8,251.0" fill="none" stroke="#0a84ff" stroke-width="1.6" marker-end="url(#scArr)" opacity="0.8"/>
+<rect x="200.8" y="234.0" width="46.0" height="15" rx="4" class="ag-bg" opacity="0.92"/>
+<text x="223.8" y="245.0" font-size="10" class="ag-sub" text-anchor="middle">长连上行</text>
+<path d="M427.6,251.0 C435.6,251.0 435.6,203.0 443.6,203.0" fill="none" stroke="#0a84ff" stroke-width="1.6" marker-end="url(#scArr)" opacity="0.8"/>
+<rect x="419.1" y="210.0" width="27.0" height="15" rx="4" class="ag-bg" opacity="0.92"/>
+<text x="432.6" y="221.0" font-size="10" class="ag-sub" text-anchor="middle">投递</text>
+<path d="M636.4,203.0 C540.0,203.0 540.0,299.0 443.6,299.0" fill="none" stroke="#0a84ff" stroke-width="1.6" marker-end="url(#scArr)" opacity="0.8"/>
+<rect x="558.4" y="234.0" width="36.5" height="15" rx="4" class="ag-bg" opacity="0.92"/>
+<text x="576.6" y="245.0" font-size="10" class="ag-sub" text-anchor="middle">先落库</text>
+<path d="M636.4,203.0 C644.4,203.0 644.4,203.0 652.4,203.0" fill="none" stroke="#0a84ff" stroke-width="1.6" marker-end="url(#scArr)" opacity="0.8"/>
+<rect x="613.6" y="186.0" width="55.5" height="15" rx="4" class="ag-bg" opacity="0.92"/>
+<text x="641.4" y="197.0" font-size="10" class="ag-sub" text-anchor="middle">查在线路由</text>
+<path d="M845.2,203.0 C853.2,203.0 853.2,251.0 861.2,251.0" fill="none" stroke="#0a84ff" stroke-width="1.6" marker-end="url(#scArr)" opacity="0.8"/>
+<rect x="827.2" y="210.0" width="46.0" height="15" rx="4" class="ag-bg" opacity="0.92"/>
+<text x="850.2" y="221.0" font-size="10" class="ag-sub" text-anchor="middle">在线直投</text>
+<path d="M845.2,203.0 C748.8,203.0 748.8,299.0 652.4,299.0" fill="none" stroke="#0a84ff" stroke-width="1.6" marker-end="url(#scArr)" opacity="0.8"/>
+<rect x="757.7" y="234.0" width="55.5" height="15" rx="4" class="ag-bg" opacity="0.92"/>
+<text x="785.4" y="245.0" font-size="10" class="ag-sub" text-anchor="middle">离线转推送</text>
+<path d="M861.2,265.0 C748.8,265.0 748.8,217.0 636.4,217.0" fill="none" stroke="#c0392b" stroke-width="1.4" stroke-dasharray="5 4" marker-end="url(#scArrB)" opacity="0.85"/>
+<rect x="716.3" y="242.0" width="65.0" height="15" rx="4" class="ag-bg" opacity="0.92"/>
+<text x="748.8" y="253.0" font-size="10" fill="#c0392b" text-anchor="middle">ACK 确认</text>
+<rect x="26.0" y="218.0" width="192.8" height="66" rx="11" class="ag-card" stroke="#0a84ff" stroke-width="1.4" filter="url(#scSoft)"/>
+<text x="122.4" y="242.0" font-size="12.5" font-weight="700" class="ag-title" text-anchor="middle">发送方客户端</text>
+<text x="122.4" y="260.0" font-size="9.5" class="ag-sub" text-anchor="middle">生成 msgId,长连上行</text>
+<rect x="234.8" y="218.0" width="192.8" height="66" rx="11" class="ag-card" stroke="#0a84ff" stroke-width="1.4" filter="url(#scSoft)"/>
+<text x="331.2" y="242.0" font-size="12.5" font-weight="700" class="ag-title" text-anchor="middle">接入网关</text>
+<text x="331.2" y="260.0" font-size="9.5" class="ag-sub" text-anchor="middle">维持长连,uid→网关路由</text>
+<rect x="443.6" y="170.0" width="192.8" height="66" rx="11" class="ag-card" stroke="#0a84ff" stroke-width="1.4" filter="url(#scSoft)"/>
+<text x="540.0" y="194.0" font-size="12.5" font-weight="700" class="ag-title" text-anchor="middle">消息逻辑层</text>
+<text x="540.0" y="212.0" font-size="9.5" class="ag-sub" text-anchor="middle">去重、定 seq、扩散</text>
+<rect x="443.6" y="266.0" width="192.8" height="66" rx="11" class="ag-card" stroke="#0a84ff" stroke-width="1.4" filter="url(#scSoft)"/>
+<text x="540.0" y="290.0" font-size="12.5" font-weight="700" class="ag-title" text-anchor="middle">消息存储</text>
+<text x="540.0" y="308.0" font-size="9.5" class="ag-sub" text-anchor="middle">先落库,离线暂存</text>
+<rect x="652.4" y="170.0" width="192.8" height="66" rx="11" class="ag-card" stroke="#0a84ff" stroke-width="1.4" filter="url(#scSoft)"/>
+<text x="748.8" y="194.0" font-size="12.5" font-weight="700" class="ag-title" text-anchor="middle">在线路由</text>
+<text x="748.8" y="212.0" font-size="9.5" class="ag-sub" text-anchor="middle">查收方连在哪台网关</text>
+<rect x="652.4" y="266.0" width="192.8" height="66" rx="11" class="ag-card" stroke="#0a84ff" stroke-width="1.4" filter="url(#scSoft)"/>
+<text x="748.8" y="290.0" font-size="12.5" font-weight="700" class="ag-title" text-anchor="middle">系统推送</text>
+<text x="748.8" y="308.0" font-size="9.5" class="ag-sub" text-anchor="middle">离线转 APNs / FCM</text>
+<rect x="861.2" y="218.0" width="192.8" height="66" rx="11" class="ag-card" stroke="#0a84ff" stroke-width="1.4" filter="url(#scSoft)"/>
+<text x="957.6" y="242.0" font-size="12.5" font-weight="700" class="ag-title" text-anchor="middle">接收方客户端</text>
+<text x="957.6" y="260.0" font-size="9.5" class="ag-sub" text-anchor="middle">回 ACK,拉离线增量</text>
+<text x="26" y="382" font-size="15" font-weight="800" fill="#0a84ff">② 关键技术 · 机制矩阵(广度:按技术域分组)</text>
+<rect x="26.0" y="398.0" width="130.0" height="28" rx="7" fill="#0a84ff" opacity="0.92"/>
+<text x="91.0" y="416.4" font-size="12.5" font-weight="800" fill="#ffffff" text-anchor="middle">长连接 · 接入</text>
+<rect x="169.0" y="398.0" width="182.6" height="28" rx="14" fill="#0a84ff" opacity="0.1" stroke="#0a84ff" stroke-width="1"/>
+<text x="260.3" y="416.2" font-size="12" font-weight="600" fill="#0a84ff" text-anchor="middle">WebSocket 长连接</text>
+<rect x="360.6" y="398.0" width="85.0" height="28" rx="14" fill="#0a84ff" opacity="0.1" stroke="#0a84ff" stroke-width="1"/>
+<text x="403.1" y="416.2" font-size="12" font-weight="600" fill="#0a84ff" text-anchor="middle">接入层路由</text>
+<rect x="454.6" y="398.0" width="85.0" height="28" rx="14" fill="#0a84ff" opacity="0.1" stroke="#0a84ff" stroke-width="1"/>
+<text x="497.1" y="416.2" font-size="12" font-weight="600" fill="#0a84ff" text-anchor="middle">心跳与重连</text>
+<rect x="26.0" y="438.0" width="143.0" height="28" rx="7" fill="#0a84ff" opacity="0.92"/>
+<text x="97.5" y="456.4" font-size="12.5" font-weight="800" fill="#ffffff" text-anchor="middle">可靠投递 · 一致</text>
+<rect x="182.0" y="438.0" width="121.6" height="28" rx="14" fill="#0a84ff" opacity="0.1" stroke="#0a84ff" stroke-width="1"/>
+<text x="242.8" y="456.2" font-size="12" font-weight="600" fill="#0a84ff" text-anchor="middle">ACK 确认机制</text>
+<rect x="312.6" y="438.0" width="133.8" height="28" rx="14" fill="#0a84ff" opacity="0.1" stroke="#0a84ff" stroke-width="1"/>
+<text x="379.5" y="456.2" font-size="12" font-weight="600" fill="#0a84ff" text-anchor="middle">消息去重 / 有序</text>
+<rect x="455.4" y="438.0" width="72.8" height="28" rx="14" fill="#0a84ff" opacity="0.1" stroke="#0a84ff" stroke-width="1"/>
+<text x="491.8" y="456.2" font-size="12" font-weight="600" fill="#0a84ff" text-anchor="middle">离线消息</text>
+<rect x="26.0" y="478.0" width="117.0" height="28" rx="7" fill="#0a84ff" opacity="0.92"/>
+<text x="84.5" y="496.4" font-size="12.5" font-weight="800" fill="#ffffff" text-anchor="middle">群聊 · 扩散</text>
+<rect x="156.0" y="478.0" width="146.0" height="28" rx="14" fill="#0a84ff" opacity="0.1" stroke="#0a84ff" stroke-width="1"/>
+<text x="229.0" y="496.2" font-size="12" font-weight="600" fill="#0a84ff" text-anchor="middle">写扩散 vs 读扩散</text>
+<rect x="311.0" y="478.0" width="85.0" height="28" rx="14" fill="#0a84ff" opacity="0.1" stroke="#0a84ff" stroke-width="1"/>
+<text x="353.5" y="496.2" font-size="12" font-weight="600" fill="#0a84ff" text-anchor="middle">群消息同步</text>
+<rect x="405.0" y="478.0" width="146.0" height="28" rx="14" fill="#0a84ff" opacity="0.1" stroke="#0a84ff" stroke-width="1"/>
+<text x="478.0" y="496.2" font-size="12" font-weight="600" fill="#0a84ff" text-anchor="middle">已读回执 / 未读数</text>
+<text x="26" y="550" font-size="15" font-weight="800" fill="#0a84ff">③ 核心张力 · 本质矛盾(深度:一对相互拉扯的力)</text>
+<rect x="26.0" y="564.0" width="469.0" height="168.0" rx="12" fill="#c0392b" opacity="0.07" stroke="#c0392b" stroke-width="1.3"/>
+<text x="260.5" y="585.0" font-size="13" font-weight="800" fill="#c0392b" text-anchor="middle">实时 · 低延迟推送</text>
+<rect x="40.0" y="594.0" width="441.0" height="24" rx="7" fill="#c0392b" opacity="0.11"/>
+<text x="260.5" y="610.0" font-size="11.5" class="ag-title" text-anchor="middle">WebSocket 长连主动推</text>
+<rect x="40.0" y="626.0" width="441.0" height="24" rx="7" fill="#c0392b" opacity="0.11"/>
+<text x="260.5" y="642.0" font-size="11.5" class="ag-title" text-anchor="middle">接入路由查目标连</text>
+<rect x="40.0" y="658.0" width="441.0" height="24" rx="7" fill="#c0392b" opacity="0.11"/>
+<text x="260.5" y="674.0" font-size="11.5" class="ag-title" text-anchor="middle">心跳保活 + 弱网重连</text>
+<rect x="40.0" y="690.0" width="441.0" height="24" rx="7" fill="#c0392b" opacity="0.11"/>
+<text x="260.5" y="706.0" font-size="11.5" class="ag-title" text-anchor="middle">离线转系统推送兜底</text>
+<rect x="585.0" y="564.0" width="469.0" height="168.0" rx="12" fill="#2d7d46" opacity="0.07" stroke="#2d7d46" stroke-width="1.3"/>
+<text x="819.5" y="585.0" font-size="13" font-weight="800" fill="#2d7d46" text-anchor="middle">可靠 · 不丢不重有序</text>
+<rect x="599.0" y="594.0" width="441.0" height="24" rx="7" fill="#2d7d46" opacity="0.11"/>
+<text x="819.5" y="610.0" font-size="11.5" class="ag-title" text-anchor="middle">应用层 ACK 保不丢</text>
+<rect x="599.0" y="626.0" width="441.0" height="24" rx="7" fill="#2d7d46" opacity="0.11"/>
+<text x="819.5" y="642.0" font-size="11.5" class="ag-title" text-anchor="middle">msgId 去重 / seq 有序</text>
+<rect x="599.0" y="658.0" width="441.0" height="24" rx="7" fill="#2d7d46" opacity="0.11"/>
+<text x="819.5" y="674.0" font-size="11.5" class="ag-title" text-anchor="middle">离线消息增量补齐</text>
+<rect x="599.0" y="690.0" width="441.0" height="24" rx="7" fill="#2d7d46" opacity="0.11"/>
+<text x="819.5" y="706.0" font-size="11.5" class="ag-title" text-anchor="middle">大群读扩散省存储</text>
+<circle cx="540.0" cy="648.0" r="24" class="ag-bg" stroke="#0a84ff" stroke-width="1.6"/>
+<text x="540.0" y="656.0" font-size="22" text-anchor="middle">⚡</text>
+<path d="M514.0,648.0 L499.0,648.0" stroke="#c0392b" stroke-width="1.6" marker-end="url(#scArrB)"/>
+<path d="M566.0,648.0 L581.0,648.0" stroke="#2d7d46" stroke-width="1.6" marker-end="url(#scArr2)"/>
+<text x="26" y="750.0" font-size="11.5" class="ag-sub">◆ 本质是在海量长连接上兼顾实时与可靠;TCP 可靠不等于</text>
+<text x="26" y="767.0" font-size="11.5" class="ag-sub">◆ 应用可靠,群聊放大存储与扩散难题,只能按规模取舍。</text>
+<text x="26" y="816" font-size="15" font-weight="800" fill="#0a84ff">④ 本质洞察 · 一句话看穿这个场景</text>
+<rect x="26" y="828.0" width="1028" height="118" rx="12" class="ag-card" stroke="#0a84ff" stroke-width="1.4"/>
+<rect x="26" y="828.0" width="4" height="118" rx="2" fill="#0a84ff"/>
+<text x="50" y="858.0" font-size="13" class="ag-title">IM 的本质是「在海量长连接上做可靠、有序、实时的消息投递」——两大命门是长连接管理(百万级连接的接入、路由、保活)和消息可靠性(不丢、不重、有序)。最反</text>
+<text x="50" y="878.0" font-size="13" class="ag-title">直觉的一点:TCP 可靠不等于应用可靠,客户端收到 TCP 包不代表处理成功,必须做应用层 ACK,否则「已发未达」照样丢消息。群聊放大了一切难题:万人大</text>
+<text x="50" y="898.0" font-size="13" class="ag-title">群若沿用单聊的写扩散(每人存一份),存储和写入直接爆炸,必须切读扩散(共享消息表 + 各自已读位点)。已读回执 / 未读数看似小功能,却是高频写的重灾区,</text>
+<text x="50" y="918.0" font-size="13" class="ag-title">必须靠位点合并而非逐条记录。真正的护城河在长连接的稳定性与消息投递的一致性保证。</text>
+<text x="26" y="992" font-size="15" font-weight="800" fill="#0a84ff">⑤ 失败模式 · 真实踩过的坑(反例:这样做会崩)</text>
+<rect x="26.0" y="1006.0" width="506.0" height="62" rx="10" class="ag-card" stroke="#e0562d" stroke-width="1" stroke-opacity="0.5"/>
+<circle cx="46.0" cy="1026.0" r="8" fill="#e0562d" opacity="0.14"/>
+<text x="46.0" y="1029.5" font-size="11" font-weight="800" fill="#e0562d" text-anchor="middle">✕</text>
+<text x="62.0" y="1026.0" font-size="11.5" class="ag-sub">只依赖 TCP 不做应用 ACK:客户端崩溃时消息「已发未达」,可达率直</text>
+<text x="62.0" y="1044.0" font-size="11.5" class="ag-sub">接崩</text>
+<rect x="548.0" y="1006.0" width="506.0" height="44" rx="10" class="ag-card" stroke="#e0562d" stroke-width="1" stroke-opacity="0.5"/>
+<circle cx="568.0" cy="1026.0" r="8" fill="#e0562d" opacity="0.14"/>
+<text x="568.0" y="1029.5" font-size="11" font-weight="800" fill="#e0562d" text-anchor="middle">✕</text>
+<text x="584.0" y="1026.0" font-size="11.5" class="ag-sub">群聊全用写扩散:万人大群每人存一份,存储和写入瞬间爆炸</text>
+<rect x="26.0" y="1080.0" width="506.0" height="44" rx="10" class="ag-card" stroke="#e0562d" stroke-width="1" stroke-opacity="0.5"/>
+<circle cx="46.0" cy="1100.0" r="8" fill="#e0562d" opacity="0.14"/>
+<text x="46.0" y="1103.5" font-size="11" font-weight="800" fill="#e0562d" text-anchor="middle">✕</text>
+<text x="62.0" y="1100.0" font-size="11.5" class="ag-sub">离线群消息给每人存一份:大群离线存储爆炸,应存引用 + 拉时聚合</text>
+<rect x="548.0" y="1062.0" width="506.0" height="44" rx="10" class="ag-card" stroke="#e0562d" stroke-width="1" stroke-opacity="0.5"/>
+<circle cx="568.0" cy="1082.0" r="8" fill="#e0562d" opacity="0.14"/>
+<text x="568.0" y="1085.5" font-size="11" font-weight="800" fill="#e0562d" text-anchor="middle">✕</text>
+<text x="584.0" y="1082.0" font-size="11.5" class="ag-sub">已读回执逐条记录每人状态:高频写 + 存储放大,应只维护已读位点</text>
+<rect x="26.0" y="1136.0" width="506.0" height="44" rx="10" class="ag-card" stroke="#e0562d" stroke-width="1" stroke-opacity="0.5"/>
+<circle cx="46.0" cy="1156.0" r="8" fill="#e0562d" opacity="0.14"/>
+<text x="46.0" y="1159.5" font-size="11" font-weight="800" fill="#e0562d" text-anchor="middle">✕</text>
+<text x="62.0" y="1156.0" font-size="11.5" class="ag-sub">心跳间隔不合理:太长留大量死连接耗资源,太短误杀活连接又费电费流量</text>
+<rect x="548.0" y="1118.0" width="506.0" height="44" rx="10" class="ag-card" stroke="#e0562d" stroke-width="1" stroke-opacity="0.5"/>
+<circle cx="568.0" cy="1138.0" r="8" fill="#e0562d" opacity="0.14"/>
+<text x="568.0" y="1141.5" font-size="11" font-weight="800" fill="#e0562d" text-anchor="middle">✕</text>
+<text x="584.0" y="1138.0" font-size="11.5" class="ag-sub">网关扩缩容不更新路由:消息投到已断开的网关直接丢失</text>
+<rect x="26.0" y="1192.0" width="506.0" height="44" rx="10" class="ag-card" stroke="#e0562d" stroke-width="1" stroke-opacity="0.5"/>
+<circle cx="46.0" cy="1212.0" r="8" fill="#e0562d" opacity="0.14"/>
+<text x="46.0" y="1215.5" font-size="11" font-weight="800" fill="#e0562d" text-anchor="middle">✕</text>
+<text x="62.0" y="1212.0" font-size="11.5" class="ag-sub">seq 不做单调保证:多端 / 重投导致乱序,对话逻辑错乱</text>
+<text x="26" y="1284" font-size="15" font-weight="800" fill="#0a84ff">⑥ 设计心法 · 沉淀出的正解(正例:应该这样做)</text>
+<rect x="26.0" y="1298.0" width="506.0" height="62" rx="10" fill="#2ea043" fill-opacity="0.06" stroke="#2ea043" stroke-width="1" stroke-opacity="0.45"/>
+<circle cx="46.0" cy="1318.0" r="8" fill="#2ea043" opacity="0.16"/>
+<text x="46.0" y="1321.5" font-size="11" font-weight="800" fill="#2ea043" text-anchor="middle">✓</text>
+<text x="62.0" y="1318.0" font-size="11.5" class="ag-title">应用层 ACK 是底线:TCP 可靠只到网络层,消息可达必须靠应用确认 </text>
+<text x="62.0" y="1336.0" font-size="11.5" class="ag-title">+ 重投兜底</text>
+<rect x="548.0" y="1298.0" width="506.0" height="44" rx="10" fill="#2ea043" fill-opacity="0.06" stroke="#2ea043" stroke-width="1" stroke-opacity="0.45"/>
+<circle cx="568.0" cy="1318.0" r="8" fill="#2ea043" opacity="0.16"/>
+<text x="568.0" y="1321.5" font-size="11" font-weight="800" fill="#2ea043" text-anchor="middle">✓</text>
+<text x="584.0" y="1318.0" font-size="11.5" class="ag-title">按群规模切扩散:小群写扩散读得快,大群读扩散省存储,阈值分流别一刀切</text>
+<rect x="26.0" y="1372.0" width="506.0" height="62" rx="10" fill="#2ea043" fill-opacity="0.06" stroke="#2ea043" stroke-width="1" stroke-opacity="0.45"/>
+<circle cx="46.0" cy="1392.0" r="8" fill="#2ea043" opacity="0.16"/>
+<text x="46.0" y="1395.5" font-size="11" font-weight="800" fill="#2ea043" text-anchor="middle">✓</text>
+<text x="62.0" y="1392.0" font-size="11.5" class="ag-title">位点思维治高频:已读 / 未读 / 增量拉取都用 seq 位点,避免逐条</text>
+<text x="62.0" y="1410.0" font-size="11.5" class="ag-title">记录的写放大</text>
+<rect x="548.0" y="1354.0" width="506.0" height="44" rx="10" fill="#2ea043" fill-opacity="0.06" stroke="#2ea043" stroke-width="1" stroke-opacity="0.45"/>
+<circle cx="568.0" cy="1374.0" r="8" fill="#2ea043" opacity="0.16"/>
+<text x="568.0" y="1377.5" font-size="11" font-weight="800" fill="#2ea043" text-anchor="middle">✓</text>
+<text x="584.0" y="1374.0" font-size="11.5" class="ag-title">长连接稳定性是命门:心跳、重连、路由更新一环出错就大面积掉线丢消息</text>
+<rect x="26.0" y="1446.0" width="506.0" height="44" rx="10" fill="#2ea043" fill-opacity="0.06" stroke="#2ea043" stroke-width="1" stroke-opacity="0.45"/>
+<circle cx="46.0" cy="1466.0" r="8" fill="#2ea043" opacity="0.16"/>
+<text x="46.0" y="1469.5" font-size="11" font-weight="800" fill="#2ea043" text-anchor="middle">✓</text>
+<text x="62.0" y="1466.0" font-size="11.5" class="ag-title">为弱网和多端设计:移动端断连是常态,多端登录是刚需,同步与兜底不能省</text>
+</svg></div><div class="sc-sec"><h2>核心技术点</h2><div class="grid"><div class="grp"><h3>长连接 · 接入</h3><ul><li><b>WebSocket 长连接</b><span>客户端与接入网关维持长连,双向实时推送,替代轮询</span><span class="dp">长连接省去反复握手、支持服务端主动推。海量连接的核心挑战是单机连接数(靠 epoll / 多路复用扛百万连)与心跳保活(检测死连接、及时清理)。失败模式:心跳间隔不合理,要么误杀活连接要么留大量死连接耗资源。</span></li><li><b>接入层路由</b><span>用户→接入网关的映射存 Redis,消息按路由找到目标长连</span><span class="dp">谁连在哪台网关须实时可查(uid→gateway 映射)。下行消息先查路由再投递到对应网关。难点:网关扩缩容 / 宕机时路由需快速更新,否则消息投到已断开的网关丢失。</span></li><li><b>心跳与重连</b><span>客户端定时心跳,断线指数退避重连,离线转推送</span><span class="dp">心跳检活 + 断线重连保证连接可用性。移动端弱网频繁断连,重连要指数退避避免风暴。彻底离线则转 APNs / FCM 系统推送,保证消息不漏。</span></li></ul></div><div class="grp"><h3>可靠投递 · 一致</h3><ul><li><b>ACK 确认机制</b><span>消息投递需应用层 ACK,未确认则重投,保证不丢</span><span class="dp">TCP 可靠不等于应用可靠(收到未必处理成功)。须应用层 ACK:发送→存储→投递→客户端 ACK→标记已达。失败模式:只依赖 TCP 不做应用 ACK,客户端崩溃时消息「已发未达」丢失。</span></li><li><b>消息去重 / 有序</b><span>客户端生成 msgId 幂等去重,序列号保证会话内有序</span><span class="dp">重投会导致重复,靠客户端 msgId + 服务端去重。会话内有序靠单调递增 seq(而非依赖到达顺序)。难点:多端登录时各端 seq 同步,避免消息乱序或丢失。</span></li><li><b>离线消息</b><span>离线期间消息暂存,上线后按 seq 增量拉取补齐</span><span class="dp">用户离线时消息存离线库,上线后带最后已读 seq 拉增量。难点:海量离线消息的存储与拉取分页,群消息离线不能给每人存一份(存储爆炸),须存引用 + 拉时聚合。</span></li></ul></div><div class="grp"><h3>群聊 · 扩散</h3><ul><li><b>写扩散 vs 读扩散</b><span>小群写扩散(each 收件箱)、大群读扩散(共享消息表)</span><span class="dp">与 Feed 同理:小群成员少,写扩散每人存一份读快;万人大群写扩散爆炸,改读扩散存一份共享消息表、读时拉取。分界靠群成员数阈值。</span></li><li><b>群消息同步</b><span>群内共享 seq,成员按各自已读位点拉增量</span><span class="dp">大群共享一条消息序列,每个成员维护自己的已读 seq,拉取时按位点增量同步。好处:消息只存一份,成员各自推进进度。难点:超大群在线成员同时拉取的读放大。</span></li><li><b>已读回执 / 未读数</b><span>已读位点上报,未读数增量计算,高频写合并</span><span class="dp">已读回执 = 上报已读 seq;未读数 = 最新 seq − 已读 seq。高频写(每条已读都上报)须合并批量。大群已读回执若给每条消息记录每人状态会存储爆炸,通常只维护位点。</span></li></ul></div></div></div><div class="sc-sec"><div class="insight"><h2>本质洞察</h2><p>IM 的本质是「在海量长连接上做可靠、有序、实时的消息投递」——两大命门是长连接管理(百万级连接的接入、路由、保活)和消息可靠性(不丢、不重、有序)。最反直觉的一点:TCP 可靠不等于应用可靠,客户端收到 TCP 包不代表处理成功,必须做应用层 ACK,否则「已发未达」照样丢消息。群聊放大了一切难题:万人大群若沿用单聊的写扩散(每人存一份),存储和写入直接爆炸,必须切读扩散(共享消息表 + 各自已读位点)。已读回执 / 未读数看似小功能,却是高频写的重灾区,必须靠位点合并而非逐条记录。真正的护城河在长连接的稳定性与消息投递的一致性保证。</p></div></div><div class="sc-sec"><h2>设计张力</h2><div class="sc-tension"><div class="tn-wrap"><div class="tn-side tn-l"><div class="tn-lbl">实时 · 低延迟推送</div><ul><li>WebSocket 长连主动推</li><li>接入路由查目标连</li><li>心跳保活 + 弱网重连</li><li>离线转系统推送兜底</li></ul></div><div class="tn-vs">VS</div><div class="tn-side tn-r"><div class="tn-lbl">可靠 · 不丢不重有序</div><ul><li>应用层 ACK 保不丢</li><li>msgId 去重 / seq 有序</li><li>离线消息增量补齐</li><li>大群读扩散省存储</li></ul></div></div><div class="tn-core">本质是在海量长连接上兼顾实时与可靠;TCP 可靠不等于应用可靠,群聊放大存储与扩散难题,只能按规模取舍。</div></div></div><div class="sc-sec"><h2>容量漏斗</h2><div class="arch-canvas"><svg xmlns="http://www.w3.org/2000/svg" class="arch-svg" viewBox="0 0 1080 572" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Text','PingFang SC',sans-serif">
+<defs><filter id="fnSoft" x="-6%" y="-6%" width="112%" height="112%"><feDropShadow dx="0" dy="2" stdDeviation="6" flood-color="#0a0a0a" flood-opacity="0.10"/></filter></defs>
+<defs><marker id="fnArr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#0a84ff" opacity="0.6"/></marker></defs>
+<rect x="0" y="0" width="1080" height="572" class="ag-bg"/>
+<text x="40" y="42" font-size="20" font-weight="800" class="ag-title">即时通讯 IM · 容量漏斗</text>
+<text x="40" y="70" font-size="12.5" class="ag-sub">入口洪峰到有效结果的逐级过滤 · 每一层都在用最小代价挡掉注定失败的请求</text>
+<rect x="40.0" y="92" width="1000.0" height="74" rx="14" fill="#0a84ff" opacity="0.140" stroke="#0a84ff" stroke-width="1.2" filter="url(#fnSoft)"/>
+<text x="540.0" y="119" font-size="13.5" font-weight="700" class="ag-title" text-anchor="middle">在线长连接数</text>
+<text x="540.0" y="144" font-size="18" font-weight="800" fill="#0a84ff" text-anchor="middle">1000万</text>
+<text x="1052.0" y="133.0" font-size="11" class="ag-sub" text-anchor="start">单机百万连,靠多路复用扛</text>
+<path d="M540.0 167 L540.0 180" stroke="#0a84ff" stroke-width="1.4" opacity="0.5" marker-end="url(#fnArr)"/>
+<rect x="127.5" y="182" width="825.0" height="74" rx="14" fill="#0a84ff" opacity="0.165" stroke="#0a84ff" stroke-width="1.2" filter="url(#fnSoft)"/>
+<text x="540.0" y="209" font-size="13.5" font-weight="700" class="ag-title" text-anchor="middle">消息上行</text>
+<text x="540.0" y="234" font-size="18" font-weight="800" fill="#0a84ff" text-anchor="middle">50万/s</text>
+<text x="964.5" y="223.0" font-size="11" class="ag-sub" text-anchor="start">发送峰值,先落存储再投递</text>
+<path d="M540.0 257 L540.0 270" stroke="#0a84ff" stroke-width="1.4" opacity="0.5" marker-end="url(#fnArr)"/>
+<rect x="215.0" y="272" width="650.0" height="74" rx="14" fill="#0a84ff" opacity="0.190" stroke="#0a84ff" stroke-width="1.2" filter="url(#fnSoft)"/>
+<text x="540.0" y="299" font-size="13.5" font-weight="700" class="ag-title" text-anchor="middle">写/读扩散</text>
+<text x="540.0" y="324" font-size="18" font-weight="800" fill="#0a84ff" text-anchor="middle">500万/s</text>
+<text x="877.0" y="313.0" font-size="11" class="ag-sub" text-anchor="start">群聊放大,大群走读扩散</text>
+<path d="M540.0 347 L540.0 360" stroke="#0a84ff" stroke-width="1.4" opacity="0.5" marker-end="url(#fnArr)"/>
+<rect x="302.5" y="362" width="475.0" height="74" rx="14" fill="#0a84ff" opacity="0.215" stroke="#0a84ff" stroke-width="1.2" filter="url(#fnSoft)"/>
+<text x="540.0" y="389" font-size="13.5" font-weight="700" class="ag-title" text-anchor="middle">下行投递</text>
+<text x="540.0" y="414" font-size="18" font-weight="800" fill="#0a84ff" text-anchor="middle">300万/s</text>
+<text x="789.5" y="403.0" font-size="11" class="ag-sub" text-anchor="start">查路由投目标网关长连</text>
+<path d="M540.0 437 L540.0 450" stroke="#0a84ff" stroke-width="1.4" opacity="0.5" marker-end="url(#fnArr)"/>
+<rect x="390.0" y="452" width="300.0" height="74" rx="14" fill="#0a84ff" opacity="0.240" stroke="#0a84ff" stroke-width="1.2" filter="url(#fnSoft)"/>
+<text x="540.0" y="479" font-size="13.5" font-weight="700" class="ag-title" text-anchor="middle">ACK 确认</text>
+<text x="540.0" y="504" font-size="18" font-weight="800" fill="#0a84ff" text-anchor="middle">290万/s</text>
+<text x="702.0" y="493.0" font-size="11" class="ag-sub" text-anchor="start">未确认重投,保证不丢</text>
+</svg></div></div><div class="sc-sec"><h2>核心数据流</h2><div class="arch-canvas"><svg xmlns="http://www.w3.org/2000/svg" class="arch-svg" viewBox="0 0 1080 342" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Text','PingFang SC',sans-serif">
+<defs><filter id="scSoft" x="-6%" y="-6%" width="112%" height="112%"><feDropShadow dx="0" dy="2" stdDeviation="6" flood-color="#0a0a0a" flood-opacity="0.08"/></filter><marker id="scArr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#0a84ff"/></marker><marker id="scArrB" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#c0392b"/></marker></defs>
+<rect x="0" y="0" width="1080" height="342" class="ag-bg"/>
+<text x="26" y="42" font-size="20" font-weight="800" class="ag-title">即时通讯 IM · 端到端数据流</text>
+<text x="26" y="70" font-size="12.5" class="ag-sub">社交互动层 · Instant Messaging · 沿箭头方向为请求 / 数据流转,红色虚线为回流 / 补偿</text>
+<rect x="26.0" y="92" width="192.8" height="30" rx="9" fill="#0a84ff" opacity="0.12"/>
+<text x="122.4" y="112" font-size="12" font-weight="700" fill="#0a84ff" text-anchor="middle">发送端</text>
+<rect x="234.8" y="92" width="192.8" height="30" rx="9" fill="#0a84ff" opacity="0.12"/>
+<text x="331.2" y="112" font-size="12" font-weight="700" fill="#0a84ff" text-anchor="middle">接入</text>
+<rect x="443.6" y="92" width="192.8" height="30" rx="9" fill="#0a84ff" opacity="0.12"/>
+<text x="540.0" y="112" font-size="12" font-weight="700" fill="#0a84ff" text-anchor="middle">逻辑 / 存储</text>
+<rect x="652.4" y="92" width="192.8" height="30" rx="9" fill="#0a84ff" opacity="0.12"/>
+<text x="748.8" y="112" font-size="12" font-weight="700" fill="#0a84ff" text-anchor="middle">路由 / 下行</text>
+<rect x="861.2" y="92" width="192.8" height="30" rx="9" fill="#0a84ff" opacity="0.12"/>
+<text x="957.6" y="112" font-size="12" font-weight="700" fill="#0a84ff" text-anchor="middle">接收端</text>
+<path d="M218.8,217.0 C226.8,217.0 226.8,217.0 234.8,217.0" fill="none" stroke="#0a84ff" stroke-width="1.6" marker-end="url(#scArr)" opacity="0.8"/>
+<rect x="200.8" y="200.0" width="46.0" height="15" rx="4" class="ag-bg" opacity="0.92"/>
+<text x="223.8" y="211.0" font-size="10" class="ag-sub" text-anchor="middle">长连上行</text>
+<path d="M427.6,217.0 C435.6,217.0 435.6,169.0 443.6,169.0" fill="none" stroke="#0a84ff" stroke-width="1.6" marker-end="url(#scArr)" opacity="0.8"/>
+<rect x="419.1" y="176.0" width="27.0" height="15" rx="4" class="ag-bg" opacity="0.92"/>
+<text x="432.6" y="187.0" font-size="10" class="ag-sub" text-anchor="middle">投递</text>
+<path d="M636.4,169.0 C540.0,169.0 540.0,265.0 443.6,265.0" fill="none" stroke="#0a84ff" stroke-width="1.6" marker-end="url(#scArr)" opacity="0.8"/>
+<rect x="558.4" y="200.0" width="36.5" height="15" rx="4" class="ag-bg" opacity="0.92"/>
+<text x="576.6" y="211.0" font-size="10" class="ag-sub" text-anchor="middle">先落库</text>
+<path d="M636.4,169.0 C644.4,169.0 644.4,169.0 652.4,169.0" fill="none" stroke="#0a84ff" stroke-width="1.6" marker-end="url(#scArr)" opacity="0.8"/>
+<rect x="613.6" y="152.0" width="55.5" height="15" rx="4" class="ag-bg" opacity="0.92"/>
+<text x="641.4" y="163.0" font-size="10" class="ag-sub" text-anchor="middle">查在线路由</text>
+<path d="M845.2,169.0 C853.2,169.0 853.2,217.0 861.2,217.0" fill="none" stroke="#0a84ff" stroke-width="1.6" marker-end="url(#scArr)" opacity="0.8"/>
+<rect x="827.2" y="176.0" width="46.0" height="15" rx="4" class="ag-bg" opacity="0.92"/>
+<text x="850.2" y="187.0" font-size="10" class="ag-sub" text-anchor="middle">在线直投</text>
+<path d="M845.2,169.0 C748.8,169.0 748.8,265.0 652.4,265.0" fill="none" stroke="#0a84ff" stroke-width="1.6" marker-end="url(#scArr)" opacity="0.8"/>
+<rect x="757.7" y="200.0" width="55.5" height="15" rx="4" class="ag-bg" opacity="0.92"/>
+<text x="785.4" y="211.0" font-size="10" class="ag-sub" text-anchor="middle">离线转推送</text>
+<path d="M861.2,231.0 C748.8,231.0 748.8,183.0 636.4,183.0" fill="none" stroke="#c0392b" stroke-width="1.4" stroke-dasharray="5 4" marker-end="url(#scArrB)" opacity="0.85"/>
+<rect x="716.3" y="208.0" width="65.0" height="15" rx="4" class="ag-bg" opacity="0.92"/>
+<text x="748.8" y="219.0" font-size="10" fill="#c0392b" text-anchor="middle">ACK 确认</text>
+<rect x="26.0" y="184.0" width="192.8" height="66" rx="11" class="ag-card" stroke="#0a84ff" stroke-width="1.4" filter="url(#scSoft)"/>
+<text x="122.4" y="208.0" font-size="12.5" font-weight="700" class="ag-title" text-anchor="middle">发送方客户端</text>
+<text x="122.4" y="226.0" font-size="9.5" class="ag-sub" text-anchor="middle">生成 msgId,长连上行</text>
+<rect x="234.8" y="184.0" width="192.8" height="66" rx="11" class="ag-card" stroke="#0a84ff" stroke-width="1.4" filter="url(#scSoft)"/>
+<text x="331.2" y="208.0" font-size="12.5" font-weight="700" class="ag-title" text-anchor="middle">接入网关</text>
+<text x="331.2" y="226.0" font-size="9.5" class="ag-sub" text-anchor="middle">维持长连,uid→网关路由</text>
+<rect x="443.6" y="136.0" width="192.8" height="66" rx="11" class="ag-card" stroke="#0a84ff" stroke-width="1.4" filter="url(#scSoft)"/>
+<text x="540.0" y="160.0" font-size="12.5" font-weight="700" class="ag-title" text-anchor="middle">消息逻辑层</text>
+<text x="540.0" y="178.0" font-size="9.5" class="ag-sub" text-anchor="middle">去重、定 seq、扩散</text>
+<rect x="443.6" y="232.0" width="192.8" height="66" rx="11" class="ag-card" stroke="#0a84ff" stroke-width="1.4" filter="url(#scSoft)"/>
+<text x="540.0" y="256.0" font-size="12.5" font-weight="700" class="ag-title" text-anchor="middle">消息存储</text>
+<text x="540.0" y="274.0" font-size="9.5" class="ag-sub" text-anchor="middle">先落库,离线暂存</text>
+<rect x="652.4" y="136.0" width="192.8" height="66" rx="11" class="ag-card" stroke="#0a84ff" stroke-width="1.4" filter="url(#scSoft)"/>
+<text x="748.8" y="160.0" font-size="12.5" font-weight="700" class="ag-title" text-anchor="middle">在线路由</text>
+<text x="748.8" y="178.0" font-size="9.5" class="ag-sub" text-anchor="middle">查收方连在哪台网关</text>
+<rect x="652.4" y="232.0" width="192.8" height="66" rx="11" class="ag-card" stroke="#0a84ff" stroke-width="1.4" filter="url(#scSoft)"/>
+<text x="748.8" y="256.0" font-size="12.5" font-weight="700" class="ag-title" text-anchor="middle">系统推送</text>
+<text x="748.8" y="274.0" font-size="9.5" class="ag-sub" text-anchor="middle">离线转 APNs / FCM</text>
+<rect x="861.2" y="184.0" width="192.8" height="66" rx="11" class="ag-card" stroke="#0a84ff" stroke-width="1.4" filter="url(#scSoft)"/>
+<text x="957.6" y="208.0" font-size="12.5" font-weight="700" class="ag-title" text-anchor="middle">接收方客户端</text>
+<text x="957.6" y="226.0" font-size="9.5" class="ag-sub" text-anchor="middle">回 ACK,拉离线增量</text>
+</svg></div></div><div class="sc-sec"><h2>需求根基</h2><div class="req-grid"><div class="req-col"><h3>功能需求</h3><ul><li>单聊 / 群聊 / 系统通知的实时消息收发,支持文本、图片、语音等多媒体</li><li>长连接接入:WebSocket 长连、心跳保活、断线重连、多端登录同步</li><li>可靠投递:应用层 ACK、消息去重(msgId)、会话内有序(seq)、失败重投</li><li>离线消息:离线暂存、上线按已读位点增量拉取、离线转系统推送</li><li>群聊扩散:小群写扩散、大群读扩散、已读回执与未读数</li></ul></div><div class="req-col req-wide"><h3>质量指标</h3><table class="qtab"><tr><th>维度</th><th>目标</th><th>说明</th></tr><tr><td class="qk">消息可达率</td><td class="qv">&gt; 99.99%</td><td>IM 生命线,靠应用层 ACK + 重投 + 离线补齐,不能丢</td></tr><tr><td class="qk">端到端延迟</td><td class="qv">&lt; 200ms</td><td>在线消息秒达才有实时感,靠长连主动推而非轮询</td></tr><tr><td class="qk">单机连接数</td><td class="qv">百万级</td><td>海量长连的核心指标,靠 epoll / 多路复用扛</td></tr><tr><td class="qk">消息有序</td><td class="qv">会话内严格有序</td><td>靠单调递增 seq,乱序会让对话逻辑错乱</td></tr><tr><td class="qk">多端一致</td><td class="qv">各端进度同步</td><td>多端登录各端 seq 同步,消息不重不漏</td></tr></table></div><div class="req-col req-wide"><h3>关键约束</h3><ul class="cons"><li>TCP 可靠 ≠ 应用可靠:客户端崩溃时消息「已发未达」,必须应用层 ACK 兜底</li><li>群聊放大存储与扩散:万人大群写扩散爆炸,须按群规模切读扩散</li><li>移动端弱网频繁断连:重连要指数退避避免风暴,离线要转系统推送</li></ul></div></div></div><div class="sc-sec"><h2>存储选型</h2><table class="dtab"><tr><th>数据实体</th><th>存储方案</th><th>选型理由</th></tr><tr><td class="de">消息内容</td><td class="ds">分布式存储(HBase 类)</td><td>海量、按会话+seq 范围读</td></tr><tr><td class="de">会话 / 收件箱</td><td class="ds">KV + seq 索引</td><td>写扩散每人一份,按 seq 拉增量</td></tr><tr><td class="de">在线路由(uid→网关)</td><td class="ds">Redis KV</td><td>高频读写,实时可查</td></tr><tr><td class="de">离线消息</td><td class="ds">离线库 + 引用</td><td>群消息存引用,拉时聚合</td></tr><tr><td class="de">已读位点 / 未读数</td><td class="ds">KV(位点)</td><td>高频写合并,只存位点</td></tr><tr><td class="de">群成员关系</td><td class="ds">关系存储</td><td>扩散时查成员,大群缓存</td></tr></table></div><div class="sc-sec"><h2>演进路线</h2><div class="rm-wrap"><div class="rm-step"><span class="rm-stage">MVP</span><div class="rm-focus">单聊长连</div><div class="rm-detail">WebSocket + ACK + 单机路由,写扩散</div></div><div class="rm-step"><span class="rm-stage">成长期</span><div class="rm-focus">群聊 + 离线</div><div class="rm-detail">读写扩散分流、离线消息、系统推送兜底</div></div><div class="rm-step"><span class="rm-stage">成熟期</span><div class="rm-focus">海量 + 多端</div><div class="rm-detail">百万长连、多端同步、大群读扩散优化</div></div></div></div><div class="sc-sec sc-pitfall"><h2>常见踩坑</h2><ul class="pit"><li>只依赖 TCP 不做应用 ACK:客户端崩溃时消息「已发未达」,可达率直接崩</li><li>群聊全用写扩散:万人大群每人存一份,存储和写入瞬间爆炸</li><li>离线群消息给每人存一份:大群离线存储爆炸,应存引用 + 拉时聚合</li><li>已读回执逐条记录每人状态:高频写 + 存储放大,应只维护已读位点</li><li>心跳间隔不合理:太长留大量死连接耗资源,太短误杀活连接又费电费流量</li><li>网关扩缩容不更新路由:消息投到已断开的网关直接丢失</li><li>seq 不做单调保证:多端 / 重投导致乱序,对话逻辑错乱</li></ul></div><div class="sc-sec sc-takeaway"><h2>设计心法</h2><ul class="tk"><li>应用层 ACK 是底线:TCP 可靠只到网络层,消息可达必须靠应用确认 + 重投兜底</li><li>按群规模切扩散:小群写扩散读得快,大群读扩散省存储,阈值分流别一刀切</li><li>位点思维治高频:已读 / 未读 / 增量拉取都用 seq 位点,避免逐条记录的写放大</li><li>长连接稳定性是命门:心跳、重连、路由更新一环出错就大面积掉线丢消息</li><li>为弱网和多端设计:移动端断连是常态,多端登录是刚需,同步与兜底不能省</li></ul></div><footer>业务场景 · 分布式系统落地全景 · 核心技术点架构图</footer></div><script>(function(){var r=document.documentElement,KEY="atlas-nav-theme";function ap(t){if(t==="dark")r.setAttribute("data-theme","dark");else r.removeAttribute("data-theme");}var s="light";try{s=localStorage.getItem(KEY)||"light";}catch(e){}ap(s);var tt=document.getElementById("tt");if(tt)tt.onclick=function(){var n=r.getAttribute("data-theme")==="dark"?"light":"dark";ap(n);try{localStorage.setItem(KEY,n);}catch(e){}};})();</script></body></html>

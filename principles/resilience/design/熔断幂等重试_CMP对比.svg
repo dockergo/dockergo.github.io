@@ -1,0 +1,144 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1160" height="800" viewBox="0 0 1160 800" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="aP" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#8a5cae"/></marker>
+  </defs>
+  <rect width="1160" height="800" fill="#fbfbfd"/>
+
+  <text x="30" y="32" font-size="15" font-weight="700" fill="#1d1d1f">熔断/幂等/重试跨项目取舍对比 · nginx / gRPC 是网络型熔断，StarRocks 是资源型熔断——触发条件本质不同；幂等（B4）与重试（B5）则是配对关系，不是并列变体</text>
+  <text x="30" y="53" font-size="10.5" fill="#6e6e73">上表对比三种熔断在 4 个维度上的取舍；下方单列出 B4+B5 配对，说明"重试为何必须配幂等"</text>
+
+  <!-- 列头 -->
+  <rect x="30" y="72" width="190" height="42" rx="9" fill="#eef0f3" stroke="#e4e7ec"/>
+  <text x="125" y="98" font-size="12" font-weight="700" fill="#4a4a4f" text-anchor="middle">对比维度</text>
+
+  <rect x="228" y="72" width="290" height="42" rx="9" fill="#e4f4f4" stroke="#bfe1e1"/>
+  <text x="373" y="92" font-size="12.5" font-weight="800" fill="#1a6d70" text-anchor="middle">nginx 被动健康检查 · B1</text>
+  <text x="373" y="108" font-size="8.5" fill="#4a8a8c" text-anchor="middle">网络型 · 反向代理</text>
+
+  <rect x="526" y="72" width="290" height="42" rx="9" fill="#eaf1fb" stroke="#c6d9f2"/>
+  <text x="671" y="92" font-size="12.5" font-weight="800" fill="#20375e" text-anchor="middle">gRPC outlier_detection · B2</text>
+  <text x="671" y="108" font-size="8.5" fill="#5a7099" text-anchor="middle">网络型 · 客户端负载均衡</text>
+
+  <rect x="824" y="72" width="290" height="42" rx="9" fill="#fbeee2" stroke="#ecc6a8"/>
+  <text x="969" y="92" font-size="12.5" font-weight="800" fill="#9a5f1c" text-anchor="middle">StarRocks 资源熔断 · B3</text>
+  <text x="969" y="108" font-size="8.5" fill="#b0854a" text-anchor="middle">资源型 · 分析型查询集群</text>
+
+  <!-- 行① 触发条件 -->
+  <rect x="30" y="148" width="190" height="96" rx="9" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="46" y="178" font-size="11.5" font-weight="700" fill="#1d1d1f">① 触发条件</text>
+  <text x="46" y="200" font-size="9" fill="#8a97ab">网络故障率</text>
+  <text x="46" y="214" font-size="9" fill="#8a97ab">还是资源超限</text>
+
+  <rect x="228" y="148" width="290" height="96" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="242" y="174" font-size="10" font-weight="700" fill="#1a6d70">远端响应质量</text>
+  <text x="242" y="194" font-size="9.5" fill="#4a4a4f">超时 / 5xx / 429 累计次数</text>
+  <text x="242" y="210" font-size="9.5" fill="#4a4a4f">（fails 计数）触发判定</text>
+  <text x="242" y="228" font-size="8.5" fill="#8a97ab">判据 = 远端表现出的故障</text>
+
+  <rect x="526" y="148" width="290" height="96" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="540" y="174" font-size="10" font-weight="700" fill="#20375e">调用结果统计</text>
+  <text x="540" y="194" font-size="9.5" fill="#4a4a4f">success_rate / failure_percentage</text>
+  <text x="540" y="210" font-size="9.5" fill="#4a4a4f">越过统计阈值触发驱逐</text>
+  <text x="540" y="228" font-size="8.5" fill="#8a97ab">判据 = 远端表现出的故障</text>
+
+  <rect x="824" y="148" width="290" height="96" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="838" y="174" font-size="10" font-weight="700" fill="#9a5f1c">本次查询资源消耗</text>
+  <text x="838" y="194" font-size="9.5" fill="#4a4a4f">CPU 秒数 / 内存 / 扫描行数</text>
+  <text x="838" y="210" font-size="9.5" fill="#4a4a4f">越界即终止，与远端是否故障无关</text>
+  <text x="838" y="228" font-size="8.5" font-weight="700" fill="#c9502f">判据 = 本地资源是否超支</text>
+
+  <!-- 行② 状态机 -->
+  <rect x="30" y="252" width="190" height="96" rx="9" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="46" y="282" font-size="11.5" font-weight="700" fill="#1d1d1f">② 状态机形态</text>
+  <text x="46" y="304" font-size="9" fill="#8a97ab">显式 open/half-open</text>
+  <text x="46" y="318" font-size="9" fill="#8a97ab">还是隐式窗口 / 无状态机</text>
+
+  <rect x="228" y="252" width="290" height="96" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="242" y="278" font-size="10" font-weight="700" fill="#1a6d70">隐式：fails + fail_timeout</text>
+  <text x="242" y="298" font-size="9.5" fill="#4a4a4f">无独立 half-open 状态；</text>
+  <text x="242" y="314" font-size="9.5" fill="#4a4a4f">窗口过后用真实请求做探测</text>
+  <text x="242" y="332" font-size="8.5" fill="#8a97ab">效果等价半开，实现更轻量</text>
+
+  <rect x="526" y="252" width="290" height="96" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="540" y="278" font-size="10" font-weight="700" fill="#20375e">显式：EndpointState + multiplier</text>
+  <text x="540" y="298" font-size="9.5" fill="#4a4a4f">主动 eject / uneject；</text>
+  <text x="540" y="314" font-size="9.5" fill="#4a4a4f">重复驱逐退避时间成倍增长</text>
+  <text x="540" y="332" font-size="8.5" fill="#8a97ab">比 nginx 更精细的显式跟踪</text>
+
+  <rect x="824" y="252" width="290" height="96" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="838" y="278" font-size="10" font-weight="700" fill="#9a5f1c">无状态机：一次性终止判定</text>
+  <text x="838" y="298" font-size="9.5" fill="#4a4a4f">不存在"冷却后重新探测</text>
+  <text x="838" y="314" font-size="9.5" fill="#4a4a4f">同一查询"的语义</text>
+  <text x="838" y="332" font-size="8.5" font-weight="700" fill="#c9502f">因为问题在查询本身而非节点健康</text>
+
+  <!-- 行③ 保护对象 -->
+  <rect x="30" y="356" width="190" height="96" rx="9" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="46" y="386" font-size="11.5" font-weight="700" fill="#1d1d1f">③ 保护对象</text>
+  <text x="46" y="408" font-size="9" fill="#8a97ab">熔断在保护</text>
+  <text x="46" y="422" font-size="9" fill="#8a97ab">什么不被拖垮</text>
+
+  <rect x="228" y="356" width="290" height="96" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="242" y="382" font-size="10" font-weight="700" fill="#1a6d70">调用方 · 避免打到坏节点</text>
+  <text x="242" y="402" font-size="9.5" fill="#4a4a4f">保护的是"请求不要发给</text>
+  <text x="242" y="418" font-size="9.5" fill="#4a4a4f">已知有问题的目标"</text>
+
+  <rect x="526" y="356" width="290" height="96" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="540" y="382" font-size="10" font-weight="700" fill="#20375e">调用方 · client-side LB 视角</text>
+  <text x="540" y="402" font-size="9.5" fill="#4a4a4f">同样是避免打到坏端点，</text>
+  <text x="540" y="418" font-size="9.5" fill="#4a4a4f">但由 xDS 集中下发策略</text>
+
+  <rect x="824" y="356" width="290" height="96" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="838" y="382" font-size="10" font-weight="700" fill="#9a5f1c">集群资源 · 避免被单查询耗尽</text>
+  <text x="838" y="402" font-size="9.5" fill="#4a4a4f">保护的是 BE 节点的 CPU/</text>
+  <text x="838" y="418" font-size="9.5" fill="#4a4a4f">内存不被一个失控大查询占满</text>
+
+  <!-- 行④ 典型场景 -->
+  <rect x="30" y="460" width="190" height="96" rx="9" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="46" y="490" font-size="11.5" font-weight="700" fill="#1d1d1f">④ 典型场景</text>
+  <text x="46" y="512" font-size="9" fill="#8a97ab">最常在什么</text>
+  <text x="46" y="526" font-size="9" fill="#8a97ab">场景里用到</text>
+
+  <rect x="228" y="460" width="290" height="96" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="242" y="486" font-size="10" font-weight="700" fill="#1a6d70">反向代理 / 负载均衡</text>
+  <text x="242" y="506" font-size="9.5" fill="#4a4a4f">后端实例重启、短暂过载时</text>
+  <text x="242" y="522" font-size="9.5" fill="#4a4a4f">自动摘除，恢复后自动纳回</text>
+
+  <rect x="526" y="460" width="290" height="96" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="540" y="486" font-size="10" font-weight="700" fill="#20375e">微服务间 RPC 调用</text>
+  <text x="540" y="506" font-size="9.5" fill="#4a4a4f">服务网格 / xDS 生态下，</text>
+  <text x="540" y="522" font-size="9.5" fill="#4a4a4f">统一策略下发到所有客户端</text>
+
+  <rect x="824" y="460" width="290" height="96" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="838" y="486" font-size="10" font-weight="700" fill="#9a5f1c">分析型查询集群</text>
+  <text x="838" y="506" font-size="9.5" fill="#4a4a4f">多租户共享集群时，防止</text>
+  <text x="838" y="522" font-size="9.5" fill="#4a4a4f">一个失控大查询影响其他查询</text>
+
+  <!-- 分隔说明 -->
+  <line x1="30" y1="576" x2="1114" y2="576" stroke="#e4e7ec" stroke-width="1"/>
+  <text x="30" y="598" font-size="12" font-weight="700" fill="#1d1d1f">B4 + B5 配对 · 幂等与重试不是两个并列变体，是"因为幂等，重试才安全"的因果关系</text>
+
+  <!-- B4+B5 配对区块 -->
+  <rect x="30" y="612" width="1084" height="128" rx="14" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+
+  <rect x="50" y="630" width="460" height="92" rx="10" fill="#f4eefb" stroke="#dcc9ef"/>
+  <text x="70" y="652" font-size="11" font-weight="700" fill="#6f3ea8">B4 · Kafka 幂等生产者</text>
+  <text x="70" y="672" font-size="9.5" fill="#5a3a7a">PID + 每分区严格递增序列号；broker 端</text>
+  <text x="70" y="688" font-size="9.5" fill="#5a3a7a">checkSequence + findDuplicateBatch 识别</text>
+  <text x="70" y="704" font-size="9.5" fill="#5a3a7a">并丢弃重复 batch → 重试不会重复写入</text>
+
+  <line x1="522" y1="676" x2="608" y2="676" stroke="#8a5cae" stroke-width="2.2" marker-end="url(#aP)"/>
+  <text x="565" y="666" font-size="9" font-weight="700" fill="#5a3a7a" text-anchor="middle">幂等</text>
+  <text x="565" y="694" font-size="8.5" fill="#5a3a7a" text-anchor="middle">使重试</text>
+  <text x="565" y="706" font-size="8.5" fill="#5a3a7a" text-anchor="middle">安全</text>
+
+  <rect x="614" y="630" width="460" height="92" rx="10" fill="#e4f4f4" stroke="#bfe1e1"/>
+  <text x="634" y="652" font-size="11" font-weight="700" fill="#1a6d70">B5 · nginx proxy_next_upstream</text>
+  <text x="634" y="672" font-size="9.5" fill="#1a6d70">失败自动改投下一个 upstream；</text>
+  <text x="634" y="688" font-size="9.5" fill="#1a6d70">若被重试的是非幂等方法（如非幂等 POST），</text>
+  <text x="634" y="704" font-size="9.5" fill="#8a4038" font-weight="700">缺少 B4 式去重机制时有真实副作用风险</text>
+
+  <!-- 底部一句话总括 -->
+  <rect x="30" y="754" width="1084" height="34" rx="10" fill="#fbf3e2" stroke="#ecd6a8"/>
+  <text x="48" y="776" font-size="9.5" fill="#7a5a1a"><tspan font-weight="700" fill="#8a6417">重试为何必须配幂等：</tspan>重试的本质是"让同一个操作有机会被执行超过一次"——这件事安全与否，完全取决于"执行超过一次"本不本身有副作用。B4 从 broker 端消除了这个副作用，B5 没有，所以 B5 的重试安全性只能靠请求本身幂等来兜底。</text>
+</svg>

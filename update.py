@@ -68,6 +68,10 @@ def discover_projects():
     tgen = os.path.join(HERE, "topics", "gen.py")
     if os.path.isfile(tgen):
         out.append(("topics", os.path.join(HERE, "topics"), tgen))
+    # 架构原理模式页(principles/gen.py,现无门户,直出 8 个详情页)同理,末位追加
+    prgen = os.path.join(HERE, "principles", "gen.py")
+    if os.path.isfile(prgen):
+        out.append(("principles", os.path.join(HERE, "principles"), prgen))
     return out
 
 

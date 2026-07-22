@@ -42,10 +42,12 @@
 
 ## 深化 · 失败路径与边界
 
-- **计划编译期错误 vs 执行期错误**：绑定失败（列不存在、类型不匹配）在 Analyze 阶段就报错、不进执行；而唯一约束冲突、除零、`work_mem` 不足落盘等在 Execute 阶段才暴露——`EXPLAIN`（不带 ANALYZE）只跑到计划、不触发执行期错误。
-- **估计失真选坏计划**：`cost_*` 全依赖 `pg_statistic`；统计陈旧或多列相关（如 city 与 zip 强相关）导致基数估偏，可能把该走 Hash Join 的选成 Nested Loop、慢几个数量级。多列相关用 `CREATE STATISTICS` 扩展统计缓解。
-- **work_mem 与并发相乘爆内存**：每个 Sort/Hash/Agg 节点各占最多 `work_mem`，一条复杂计划可能有多个此类节点，再乘以并发连接数——设太大会 OOM。
-- **游标与快照**：RR/Serializable 下打开的游标沿用事务快照，长时间持有游标等价于长事务，会压住死元组回收。
+| 场景 | 机理 | 后果 / 应对 |
+|---|---|---|
+| 编译期 vs 执行期错误 | 绑定失败（列不存在/类型不匹配）在 Analyze 报错；约束冲突、除零、`work_mem` 落盘在 Execute 才暴露 | `EXPLAIN`（不带 ANALYZE）只跑到计划、不触发执行期错误 |
+| 估计失真选坏计划 | `cost_*` 全依赖 `pg_statistic`；统计陈旧或多列相关致基数估偏 | 该走 Hash Join 选成 Nested Loop、慢几个数量级；多列相关用 `CREATE STATISTICS` |
+| work_mem × 并发爆内存 | 每个 Sort/Hash/Agg 节点各占最多 `work_mem` | 一条复杂计划多个此类节点再乘并发连接数，设太大会 OOM |
+| 游标与快照 | RR/Serializable 下游标沿用事务快照 | 长时间持有游标等价长事务，压住死元组回收 |
 
 ---
 

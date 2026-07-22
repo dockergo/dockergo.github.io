@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Tool Use · AI Agents 图谱</title>
+<style>
+:root{
+  --c-bg:#fbfbfd; --c-card:#ffffff; --c-card2:#f5f5f7; --c-ink:#1d1d1f;
+  --c-ink2:#6e6e73; --c-ink3:#a1a1a6; --c-line:#e6e6ea; --c-edge:#d2d2d7;
+  --c-panel:#ffffff; --c-shadow:rgba(0,0,0,.08);
+}
+html[data-theme="dark"]{
+  --c-bg:#0d0d0f; --c-card:#17171a; --c-card2:#1e1e22; --c-ink:#f2f2f5;
+  --c-ink2:#a1a1a6; --c-ink3:#6e6e73; --c-line:#2a2a30; --c-edge:#33333a;
+  --c-panel:#161619; --c-shadow:rgba(0,0,0,.5);
+  /* 架构图内联 SVG 结构中性色深色翻转(品牌强调色不变) */
+  --sc-bg:#17171a; --sc-panel:#1e1e22; --sc-ink:#e8e8ea; --sc-ink2:#c4c4c8;
+  --sc-sub:#9a9aa2; --sc-line:#33333a; --sc-line2:#3d3d45;
+  --sc-fill-blue:#16253d; --sc-fill-purple:#241d3a; --sc-fill-orange:#382214; --sc-fill-teal:#0f3330;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--c-bg);color:var(--c-ink);
+  font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif;
+  font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+header{position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:14px;
+  padding:12px 24px;background:color-mix(in srgb,var(--c-bg) 86%,transparent);
+  backdrop-filter:saturate(1.4) blur(14px);border-bottom:1px solid var(--c-line)}
+header .logo{display:inline-flex;align-items:center;flex:none}
+header .spacer{flex:1}
+.brand-intro{display:flex;flex-direction:column;align-items:flex-start;margin-left:6px;min-width:0}
+.brand-intro .bt{font-size:15px;font-weight:700;color:var(--c-ink);line-height:1.3}
+.brand-intro .bs{margin-top:3px;font-size:11.5px;color:var(--c-ink3);line-height:1.5}
+.icobtn{width:38px;height:38px;border-radius:50%;border:1px solid var(--c-line);
+  background:var(--c-panel);color:var(--c-ink2);cursor:pointer;display:inline-grid;
+  place-items:center;font-size:16px;flex:none;text-decoration:none}
+.tt-ico{font-size:16px;line-height:1}.tt-moon{display:none}
+html[data-theme="dark"] .tt-sun{display:none}html[data-theme="dark"] .tt-moon{display:inline}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 24px 80px}
+
+/* ---- 门户 hero ---- */
+.hero{margin:6px 0 26px}
+.hero h1{font-size:26px;font-weight:800;letter-spacing:.2px}
+.hero .sub{margin-top:8px;font-size:13.5px;color:var(--c-ink2);max-width:820px}
+.hero .back{display:inline-flex;align-items:center;gap:6px;margin-bottom:14px;
+  font-size:12.5px;color:var(--c-ink2);border:1px solid var(--c-line);
+  border-radius:999px;padding:5px 13px;background:var(--c-panel)}
+.hero .back:hover{color:var(--c-ink);border-color:var(--c-edge)}
+
+/* ---- 门户卡片栅格 ---- */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:18px}
+.card{position:relative;display:block;background:var(--c-card);border:1px solid var(--c-line);
+  border-radius:16px;padding:20px 20px 18px;overflow:hidden;transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease}
+.card:hover{transform:translateY(-3px);border-color:var(--acc);box-shadow:0 10px 30px var(--c-shadow)}
+.card .bar{position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--acc)}
+.card .k{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.6px;
+  color:var(--acc);text-transform:uppercase;margin-bottom:8px}
+.card h3{font-size:17px;font-weight:750;line-height:1.35;color:var(--c-ink)}
+.card .core{margin-top:9px;font-size:12.5px;color:var(--c-ink2);line-height:1.6}
+.card .tags{margin-top:14px;display:flex;flex-direction:column;gap:7px}
+.card .tag{display:flex;gap:8px;align-items:baseline;font-size:12px;color:var(--c-ink2)}
+.card .tag .n{font-weight:800;color:var(--acc);flex:none;font-variant-numeric:tabular-nums}
+.card .go{margin-top:16px;font-size:12px;font-weight:700;color:var(--acc);display:inline-flex;align-items:center;gap:5px}
+
+/* ---- 模块页 ---- */
+.judge{background:var(--c-card);border:1px solid var(--c-line);border-left:4px solid var(--acc);
+  border-radius:14px;padding:18px 22px;margin-bottom:26px}
+.judge .k{font-size:11px;font-weight:700;letter-spacing:.6px;color:var(--acc);text-transform:uppercase}
+.judge h1{font-size:22px;font-weight:800;line-height:1.34;margin-top:7px}
+.judge .core{margin-top:11px;font-size:13.5px;color:var(--c-ink2);line-height:1.7;max-width:900px}
+.secttl{display:flex;align-items:center;gap:11px;margin:34px 0 14px}
+.secttl .badge{flex:none;min-width:30px;height:30px;padding:0 9px;border-radius:9px;background:var(--acc);
+  color:#fff;font-weight:800;font-size:15px;display:inline-grid;place-items:center}
+.secttl .t{font-size:17px;font-weight:750}
+.secttl.eco .badge{background:var(--c-ink);color:var(--c-bg)}
+/* ── 垂直 TAB 布局 ── */
+.vt-wrap{display:flex;gap:22px;margin-top:26px;align-items:flex-start}
+.vt-nav{flex:none;width:236px;position:sticky;top:20px;display:flex;flex-direction:column;gap:8px}
+.vt-grp{font-size:11px;font-weight:800;letter-spacing:.04em;color:var(--c-ink3);
+  text-transform:none;margin:14px 4px 2px;padding-top:8px;border-top:1px solid var(--c-line)}
+.vt-grp:first-child{margin-top:0;padding-top:0;border-top:none}
+.vt-tab{display:flex;align-items:center;gap:10px;text-align:left;cursor:pointer;
+  background:var(--c-card);border:1px solid var(--c-line);border-radius:12px;
+  padding:12px 13px;color:var(--c-ink2);font:inherit;transition:.15s}
+.vt-tab:hover{border-color:var(--acc);color:var(--c-ink)}
+.vt-tab.active{background:var(--acc);border-color:var(--acc);color:#fff;box-shadow:0 4px 14px -6px var(--acc)}
+.vt-tab .vt-b{flex:none;min-width:26px;height:26px;padding:0 7px;border-radius:8px;
+  background:var(--c-card2);color:var(--acc);font-weight:800;font-size:13px;
+  display:inline-grid;place-items:center}
+.vt-tab.active .vt-b{background:rgba(255,255,255,.24);color:#fff}
+.vt-tab .vt-l{font-size:12.5px;font-weight:650;line-height:1.35}
+.vt-stage{flex:1;min-width:0}
+.vt-sec{display:none}
+.vt-sec.active{display:block;animation:vtfade .22s ease}
+.vt-sec .secttl{margin-top:0}
+@keyframes vtfade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media(max-width:820px){.vt-wrap{flex-direction:column}.vt-nav{position:static;width:100%;flex-direction:row;flex-wrap:wrap}.vt-tab{flex:1 1 44%}}
+.fig{background:var(--c-card);border:1px solid var(--c-line);border-radius:16px;
+  padding:16px;overflow:hidden}
+.fig img{display:block;width:100%;height:auto;border-radius:8px}
+.fig .figsvg{display:block;width:100%;height:auto;border-radius:8px}
+.blurb{margin-top:14px;background:var(--c-card);border:1px solid var(--c-line);
+  border-radius:14px;padding:15px 19px}
+.blurb p{font-size:13px;color:var(--c-ink2);line-height:1.75}
+.blurb p+p{margin-top:9px}
+.blurb b{color:var(--c-ink);font-weight:700}
+.blurb code{font-family:'SF Mono',ui-monospace,Menlo,monospace;font-size:.88em;
+  background:var(--c-card2);border:1px solid var(--c-line);border-radius:5px;padding:1px 5px;color:var(--acc)}
+.blurb a{color:var(--acc);text-decoration:none;
+  border-bottom:1px solid color-mix(in srgb,var(--acc) 40%,transparent);transition:border-color .15s}
+.blurb a:hover{border-bottom-color:var(--acc)}
+.refs{margin-top:30px;padding-top:18px;border-top:2px solid var(--c-line)}
+.reflist{margin-top:12px}
+.reflist p{margin:5px 0;font-size:12.5px;color:var(--c-ink2);line-height:1.7}
+.reflist a{color:var(--acc)}
+.miss{padding:40px;text-align:center;color:var(--c-ink3);font-size:13px;border:1px dashed var(--c-edge);border-radius:12px}
+.backrow{margin-top:44px;padding-top:22px;border-top:1px solid var(--c-line)}
+.backrow a{display:inline-flex;align-items:center;gap:7px;font-size:13px;color:var(--c-ink2);
+  border:1px solid var(--c-line);border-radius:999px;padding:8px 16px;background:var(--c-panel)}
+.backrow a:hover{color:var(--c-ink);border-color:var(--c-edge)}
+footer{max-width:1180px;margin:0 auto;padding:0 24px 40px;color:var(--c-ink3);font-size:11.5px}
+
+/* ---- 门户片区切换 tab + 片区标题条 ---- */
+.zbar{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap}
+.zseg{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:700;
+  color:var(--c-ink2);border:1px solid var(--c-line);border-radius:999px;
+  padding:8px 16px;background:var(--c-panel);transition:.15s}
+.zseg:hover{color:var(--c-ink);border-color:var(--c-edge)}
+.zseg.active{color:var(--c-ink);border-color:var(--c-ink);background:var(--c-card)}
+.zseg .zn{min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:var(--c-card2);
+  color:var(--c-ink2);font-size:11px;font-weight:800;display:inline-grid;place-items:center}
+.zone{margin-top:38px;scroll-margin-top:80px}
+.zone:first-of-type{margin-top:30px}
+.zhd{margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--c-line)}
+.zhd .zk{font-size:11px;font-weight:800;letter-spacing:.08em;color:var(--c-ink3);text-transform:uppercase}
+.zhd h2{font-size:20px;font-weight:800;margin-top:5px;color:var(--c-ink)}
+.zhd p{font-size:12.5px;color:var(--c-ink2);margin-top:6px;max-width:860px;line-height:1.65}
+</style>
+</head>
+<body>
+<header>
+  <a class="logo" href="../../index.html#agent" title="返回 LLM & Agent 导航"><span class="icobtn"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg></span></a>
+  <div class="brand-intro">
+    <div class="bt">Tool Use</div>
+    <div class="bs">AI Agents 生态图谱 · 概念层机理（不点名具体框架）</div>
+  </div>
+  <div class="spacer"></div>
+  <button id="themeBtn" class="icobtn" title="切换深色 / 浅色主题" aria-label="切换主题"><span class="tt-ico tt-moon">☾</span><span class="tt-ico tt-sun">☀</span></button>
+</header>
+<div class="wrap" style="--acc:#a78bfa">
+  <div class="judge">
+    <span class="k">TOOLUSE · 定位</span>
+    <h1>Tool Use · 工具调用与外部行动</h1>
+    <div class="core">给语言模型装上「手」:模型输出结构化调用意图,运行时执行真实副作用,再把结果回灌上下文——语言与世界由此闭环。</div>
+  </div>
+  <div class="vt-wrap"><nav class="vt-nav" aria-label="模块内容切换"><div class="vt-grp">概览 Overview</div><button class="vt-tab active" data-target="sec-eco"><span class="vt-b">◎</span><span class="vt-l">生态架构总图</span></button><div class="vt-grp">机制 · Function Calling</div><button class="vt-tab" data-target="sec-t1"><span class="vt-b">T1</span><span class="vt-l">Schema 约束的结构化调用</span></button><div class="vt-grp">机制 · 工具路由</div><button class="vt-tab" data-target="sec-t2"><span class="vt-b">T2</span><span class="vt-l">海量工具的检索式选择</span></button><div class="vt-grp">机制 · MCP 协议</div><button class="vt-tab" data-target="sec-t3"><span class="vt-b">T3</span><span class="vt-l">标准化工具/资源接入层</span></button><div class="vt-grp">机制 · 代码执行</div><button class="vt-tab" data-target="sec-t4"><span class="vt-b">T4</span><span class="vt-l">沙箱内 Code-as-Action</span></button><div class="vt-grp">对比 Compare</div><button class="vt-tab" data-target="sec-cmp"><span class="vt-b">⇄</span><span class="vt-l">机制差异对比</span></button><div class="vt-grp">工程 Engineering</div><button class="vt-tab" data-target="sec-eng"><span class="vt-b">⚙</span><span class="vt-l">框架实现差异</span></button></nav><div class="vt-stage"><section class="vt-sec active" id="sec-eco" data-sec="sec-eco"><div class="secttl eco"><span class="badge">◎</span><span class="t">生态架构总图 · 这一模块如何在 Agent 系统中自洽拼合</span></div><div class="fig" role="img" aria-label="Tool Use 生态架构"><svg class="figsvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 600" font-family="-apple-system,'PingFang SC','Helvetica Neue',sans-serif">
+  <defs>
+    <filter id="s8_soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.07"/></filter>
+    <marker id="s8_ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="var(--sc-line2,#b8b8bf)"/></marker>
+    <marker id="s8_arh" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#0a84ff"/></marker>
+  </defs>
+  <rect width="960" height="600" fill="var(--sc-bg,#fbfbfd)"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="var(--sc-ink,#1d1d1f)">工具调用 · 生态架构</text>
+  <text x="30" y="54" font-size="12" fill="var(--sc-sub,#6e6e73)">工具是 Agent 伸向外部世界的手：模型只负责「决定调什么、传什么参」，真正的执行交给外部系统</text>
+
+  <!-- 推理内核 -->
+  <g filter="url(#s8_soft)"><rect x="60" y="120" width="200" height="120" rx="14" fill="var(--sc-fill-blue,#eef4ff)" stroke="#0a84ff" stroke-width="1.6"/></g>
+  <text x="160" y="152" font-size="13" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">推理内核 (LLM)</text>
+  <text x="160" y="178" font-size="10.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">决定「调哪个工具」</text>
+  <text x="160" y="196" font-size="10.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">生成结构化参数</text>
+  <text x="160" y="220" font-size="10" fill="#0a84ff" text-anchor="middle">自己不执行副作用</text>
+
+  <!-- 工具选择/路由 -->
+  <g filter="url(#s8_soft)"><rect x="380" y="90" width="200" height="90" rx="12" fill="var(--sc-fill-purple,#f3ecff)" stroke="#a78bfa" stroke-width="1.5"/></g>
+  <text x="480" y="120" font-size="12.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">工具选择 / 路由</text>
+  <text x="480" y="142" font-size="10.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">工具多时先检索候选</text>
+  <text x="480" y="160" font-size="10.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">再让模型定夺</text>
+
+  <!-- 协议接入层 -->
+  <g filter="url(#s8_soft)"><rect x="380" y="220" width="200" height="90" rx="12" fill="var(--sc-fill-teal,#e6fbf6)" stroke="#2dd4bf" stroke-width="1.5"/></g>
+  <text x="480" y="250" font-size="12.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">协议接入层 (MCP)</text>
+  <text x="480" y="272" font-size="10.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">标准化工具/资源发现</text>
+  <text x="480" y="290" font-size="10.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">一次对接，处处可用</text>
+
+  <!-- 外部工具 -->
+  <g filter="url(#s8_soft)"><rect x="700" y="70" width="210" height="60" rx="11" fill="var(--sc-panel,#ffffff)" stroke="var(--sc-line,#d2d2d7)" stroke-width="1.3"/></g>
+  <text x="805" y="105" font-size="11.5" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">API / 数据库 / 搜索</text>
+  <g filter="url(#s8_soft)"><rect x="700" y="150" width="210" height="60" rx="11" fill="var(--sc-panel,#ffffff)" stroke="var(--sc-line,#d2d2d7)" stroke-width="1.3"/></g>
+  <text x="805" y="185" font-size="11.5" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">代码沙箱 (Code Interp)</text>
+  <g filter="url(#s8_soft)"><rect x="700" y="230" width="210" height="60" rx="11" fill="var(--sc-panel,#ffffff)" stroke="var(--sc-line,#d2d2d7)" stroke-width="1.3"/></g>
+  <text x="805" y="265" font-size="11.5" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">文件系统 / 浏览器</text>
+
+  <path d="M260 160 L376 130" stroke="#0a84ff" stroke-width="2.2" marker-end="url(#s8_arh)"/>
+  <text x="318" y="132" font-size="10" fill="#0a84ff">选工具</text>
+  <path d="M580 135 C 640 160 640 200 618 250" stroke="#a78bfa" stroke-width="1.8" fill="none" marker-end="url(#s8_ar)"/>
+  <path d="M580 255 L696 200" stroke="#2dd4bf" stroke-width="1.8" marker-end="url(#s8_ar)"/>
+  <path d="M580 255 L696 100" stroke="#2dd4bf" stroke-width="1.6" marker-end="url(#s8_ar)"/>
+  <path d="M580 265 L696 260" stroke="#2dd4bf" stroke-width="1.6" marker-end="url(#s8_ar)"/>
+
+  <!-- 观察结果回流 -->
+  <path d="M700 290 C 300 380 160 300 160 244" stroke="#2dd4bf" stroke-width="1.8" fill="none" stroke-dasharray="0" marker-end="url(#s8_ar)"/>
+  <text x="430" y="360" font-size="10.5" fill="#2dd4bf" text-anchor="middle">工具返回结果 (Observation) 回流推理内核，进入下一轮</text>
+
+  <!-- 四大机制铺垫 -->
+  <g filter="url(#s8_soft)"><rect x="60" y="400" width="850" height="120" rx="12" fill="var(--sc-panel,#ffffff)" stroke="var(--sc-line,#d2d2d7)" stroke-width="1.3"/></g>
+  <text x="80" y="428" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)">本模块四张机理图</text>
+  <text x="80" y="454" font-size="10.5" fill="var(--sc-sub,#6e6e73)">T1 结构化调用：用 JSON Schema 约束模型「怎么传参」，把自由文本变成可执行调用</text>
+  <text x="80" y="476" font-size="10.5" fill="var(--sc-sub,#6e6e73)">T2 工具路由：工具成百上千时，先向量检索出 Top-k 候选再交给模型，防上下文爆炸</text>
+  <text x="80" y="498" font-size="10.5" fill="var(--sc-sub,#6e6e73)">T3 MCP 协议：工具接入的「USB-C」，统一发现与调用；T4 代码执行：让模型写代码当动作</text>
+
+  <!-- 图例 -->
+  <g filter="url(#s8_soft)"><rect x="620" y="330" width="290" height="60" rx="10" fill="var(--sc-panel,#ffffff)" stroke="var(--sc-line,#d2d2d7)" stroke-width="1.2"/></g>
+  <line x1="636" y1="352" x2="668" y2="352" stroke="#0a84ff" stroke-width="2.2"/><text x="676" y="356" font-size="10" fill="var(--sc-sub,#6e6e73)">Hot 调用主流</text>
+  <line x1="636" y1="374" x2="668" y2="374" stroke="#2dd4bf" stroke-width="1.8"/><text x="676" y="378" font-size="10" fill="var(--sc-sub,#6e6e73)">State 结果回流</text>
+  <line x1="790" y1="352" x2="822" y2="352" stroke="#a78bfa" stroke-width="1.8"/><text x="830" y="356" font-size="10" fill="var(--sc-sub,#6e6e73)">Control 路由</text>
+</svg></div><div class="blurb"><p>工具调用是 Agent 触达外部世界的唯一出口——模型只会生成文本，所有「行动」都必须落到一次工具调用。它同时是能力放大器与风险汇聚点：接入越多能力越强、攻击面也越大。围绕「模型如何决定并发起一次动作」，沉淀出四种递进机制（结构化调用、工具路由、MCP、Code-as-Action），按工具规模/安全预算/编排复杂度组合使用，见生态图。</p></div></section><section class="vt-sec" id="sec-t1" data-sec="sec-t1"><div class="secttl"><span class="badge">T1</span><span class="t">Function Calling · Schema 约束的结构化调用</span></div><div class="fig" role="img" aria-label="Function Calling · Schema 约束的结构化调用"><svg class="figsvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 500" font-family="-apple-system,'PingFang SC','Helvetica Neue',sans-serif">
+  <defs>
+    <filter id="s9_soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.07"/></filter>
+    <marker id="s9_arh" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#0a84ff"/></marker>
+    <marker id="s9_ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="var(--sc-line2,#b8b8bf)"/></marker>
+  </defs>
+  <rect width="960" height="500" fill="var(--sc-bg,#fbfbfd)"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="var(--sc-ink,#1d1d1f)">结构化调用 · Schema 约束下的 Function Calling</text>
+  <text x="30" y="54" font-size="12" fill="var(--sc-sub,#6e6e73)">给模型一份工具「说明书」(JSON Schema)，它就能吐出机器可直接执行的调用，而非自由文本</text>
+
+  <!-- 工具定义 -->
+  <g filter="url(#s9_soft)"><rect x="40" y="90" width="270" height="180" rx="12" fill="var(--sc-fill-purple,#f3ecff)" stroke="#a78bfa" stroke-width="1.5"/></g>
+  <text x="58" y="116" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)">① 工具定义 (Schema)</text>
+  <text x="58" y="140" font-size="10.5" fill="var(--sc-sub,#6e6e73)">name: get_weather</text>
+  <text x="58" y="160" font-size="10.5" fill="var(--sc-sub,#6e6e73)">desc: 查询某城市天气</text>
+  <text x="58" y="180" font-size="10.5" fill="var(--sc-sub,#6e6e73)">params:</text>
+  <text x="72" y="200" font-size="10.5" fill="var(--sc-sub,#6e6e73)">city: string (必填)</text>
+  <text x="72" y="220" font-size="10.5" fill="var(--sc-sub,#6e6e73)">unit: enum[C,F]</text>
+  <text x="58" y="248" font-size="10" fill="#a78bfa">描述质量直接决定选对率</text>
+
+  <!-- 模型输出 -->
+  <g filter="url(#s9_soft)"><rect x="360" y="110" width="250" height="140" rx="12" fill="var(--sc-fill-blue,#eef4ff)" stroke="#0a84ff" stroke-width="1.5"/></g>
+  <text x="378" y="136" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)">② 模型输出结构化调用</text>
+  <text x="378" y="162" font-size="10.5" fill="var(--sc-sub,#6e6e73)">{ "tool": "get_weather",</text>
+  <text x="392" y="182" font-size="10.5" fill="var(--sc-sub,#6e6e73)">"args": {</text>
+  <text x="406" y="202" font-size="10.5" fill="var(--sc-sub,#6e6e73)">"city": "北京",</text>
+  <text x="406" y="222" font-size="10.5" fill="var(--sc-sub,#6e6e73)">"unit": "C" } }</text>
+
+  <!-- 校验/执行 -->
+  <g filter="url(#s9_soft)"><rect x="660" y="110" width="250" height="140" rx="12" fill="var(--sc-fill-teal,#e6fbf6)" stroke="#2dd4bf" stroke-width="1.5"/></g>
+  <text x="678" y="136" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)">③ 校验 → 执行</text>
+  <text x="678" y="162" font-size="10.5" fill="var(--sc-sub,#6e6e73)">按 Schema 校验参数类型</text>
+  <text x="678" y="184" font-size="10.5" fill="var(--sc-sub,#6e6e73)">通过 → 调真实函数</text>
+  <text x="678" y="206" font-size="10.5" fill="#f5873a">不通过 → 报错回喂模型纠偏</text>
+  <text x="678" y="230" font-size="10.5" fill="var(--sc-sub,#6e6e73)">结果结构化返回</text>
+
+  <path d="M310 180 L356 180" stroke="#a78bfa" stroke-width="2" marker-end="url(#s9_ar)"/>
+  <path d="M610 180 L656 180" stroke="#0a84ff" stroke-width="2.2" marker-end="url(#s9_arh)"/>
+
+  <!-- 结果回流 -->
+  <path d="M785 250 C 785 330 480 340 300 300" stroke="#2dd4bf" stroke-width="1.8" fill="none" marker-end="url(#s9_ar)"/>
+  <text x="540" y="330" font-size="10.5" fill="#2dd4bf" text-anchor="middle">结果 (Observation) 回流模型，进入下一轮推理</text>
+
+  <!-- 要点铭牌 -->
+  <g filter="url(#s9_soft)"><rect x="40" y="370" width="870" height="110" rx="12" fill="var(--sc-panel,#ffffff)" stroke="var(--sc-line,#d2d2d7)" stroke-width="1.3"/></g>
+  <text x="60" y="396" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)">为什么要结构化？</text>
+  <text x="60" y="420" font-size="10.5" fill="var(--sc-sub,#6e6e73)">• 可执行：JSON 能被程序直接解析调用，无需正则去猜自由文本里的意图</text>
+  <text x="60" y="442" font-size="10.5" fill="var(--sc-sub,#6e6e73)">• 可校验：类型/枚举/必填由 Schema 兜底，非法参数在执行前就被拦下</text>
+  <text x="60" y="464" font-size="10.5" fill="#f5873a">• 工具描述即 prompt：名字与说明写得越清楚，模型选错、传错的概率越低</text>
+</svg></div><div class="blurb"><p><b>结构化调用（Function Calling）</b> 最基础可靠：Schema 声明工具→模型输出 JSON→程序校验后执行→结果回流。关键认知：<b>工具描述与 Schema 本身就是 prompt</b>，命名清晰+参数自解释+带示例直接决定调用正确率；校验须严格、失败要把可读错误喂回模型自修正。局限是工具增多则全量 Schema 塞爆上下文。见图。</p></div></section><section class="vt-sec" id="sec-t2" data-sec="sec-t2"><div class="secttl"><span class="badge">T2</span><span class="t">工具路由 · 海量工具的检索式选择</span></div><div class="fig" role="img" aria-label="工具路由 · 海量工具的检索式选择"><svg class="figsvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 500" font-family="-apple-system,'PingFang SC','Helvetica Neue',sans-serif">
+  <defs>
+    <filter id="s10_soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.07"/></filter>
+    <marker id="s10_arh" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#0a84ff"/></marker>
+    <marker id="s10_ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="var(--sc-line2,#b8b8bf)"/></marker>
+  </defs>
+  <rect width="960" height="500" fill="var(--sc-bg,#fbfbfd)"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="var(--sc-ink,#1d1d1f)">工具路由 · 海量工具下的检索式选择</text>
+  <text x="30" y="54" font-size="12" fill="var(--sc-sub,#6e6e73)">工具成百上千时，全塞进 prompt 会撑爆上下文、拖慢选择——先检索再交给模型</text>
+
+  <!-- 用户意图 -->
+  <g filter="url(#s10_soft)"><rect x="40" y="150" width="160" height="80" rx="12" fill="var(--sc-fill-blue,#eef4ff)" stroke="#0a84ff" stroke-width="1.5"/></g>
+  <text x="120" y="182" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">用户意图</text>
+  <text x="120" y="204" font-size="10.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">「帮我订张机票」</text>
+
+  <!-- 工具库 -->
+  <g filter="url(#s10_soft)"><rect x="280" y="90" width="200" height="200" rx="12" fill="var(--sc-panel,#ffffff)" stroke="var(--sc-line,#d2d2d7)" stroke-width="1.4"/></g>
+  <text x="380" y="116" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">工具库 (N=1000+)</text>
+  <text x="298" y="140" font-size="9.5" fill="var(--sc-sub,#a1a1a6)">每个工具的名称+描述</text>
+  <text x="298" y="156" font-size="9.5" fill="var(--sc-sub,#a1a1a6)">预先向量化建索引</text>
+  <g><rect x="298" y="168" width="164" height="24" rx="6" fill="var(--sc-fill-purple,#f3ecff)"/><text x="308" y="184" font-size="9.5" fill="var(--sc-ink,#1d1d1f)">flight_search …</text></g>
+  <g><rect x="298" y="198" width="164" height="24" rx="6" fill="var(--sc-fill-purple,#f3ecff)"/><text x="308" y="214" font-size="9.5" fill="var(--sc-ink,#1d1d1f)">hotel_book …</text></g>
+  <g><rect x="298" y="228" width="164" height="24" rx="6" fill="var(--sc-panel,#f5f5f7)"/><text x="308" y="244" font-size="9.5" fill="var(--sc-sub,#a1a1a6)">weather / stock / …</text></g>
+  <text x="298" y="272" font-size="9.5" fill="var(--sc-sub,#a1a1a6)">全量塞进上下文 = 灾难</text>
+
+  <!-- 语义检索 -->
+  <g filter="url(#s10_soft)"><rect x="560" y="120" width="170" height="80" rx="12" fill="var(--sc-fill-purple,#f3ecff)" stroke="#a78bfa" stroke-width="1.5"/></g>
+  <text x="645" y="150" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">语义检索</text>
+  <text x="645" y="172" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">意图向量 × 工具向量</text>
+  <text x="645" y="188" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">取 Top-k 候选</text>
+
+  <!-- Top-k -->
+  <g filter="url(#s10_soft)"><rect x="560" y="230" width="170" height="90" rx="12" fill="var(--sc-fill-teal,#e6fbf6)" stroke="#2dd4bf" stroke-width="1.5"/></g>
+  <text x="645" y="256" font-size="11.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">候选工具集 (k=5)</text>
+  <text x="645" y="278" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">flight_search</text>
+  <text x="645" y="296" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">hotel_book …</text>
+
+  <!-- 模型决策 -->
+  <g filter="url(#s10_soft)"><rect x="790" y="170" width="140" height="100" rx="12" fill="var(--sc-fill-blue,#eef4ff)" stroke="#0a84ff" stroke-width="1.6"/></g>
+  <text x="860" y="204" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">模型定夺</text>
+  <text x="860" y="226" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">仅在 k 个候选中</text>
+  <text x="860" y="244" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">选择并传参</text>
+
+  <path d="M200 190 L276 190" stroke="#0a84ff" stroke-width="2.2" marker-end="url(#s10_arh)"/>
+  <path d="M480 170 L556 165" stroke="#a78bfa" stroke-width="1.8" marker-end="url(#s10_ar)"/>
+  <path d="M645 200 L645 228" stroke="#a78bfa" stroke-width="1.8" marker-end="url(#s10_ar)"/>
+  <path d="M730 270 L788 235" stroke="#2dd4bf" stroke-width="2" marker-end="url(#s10_ar)"/>
+
+  <!-- 要点 -->
+  <g filter="url(#s10_soft)"><rect x="40" y="360" width="890" height="120" rx="12" fill="var(--sc-panel,#ffffff)" stroke="var(--sc-line,#d2d2d7)" stroke-width="1.3"/></g>
+  <text x="60" y="386" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)">路由的价值</text>
+  <text x="60" y="410" font-size="10.5" fill="var(--sc-sub,#6e6e73)">• 省上下文：只把最相关的 k 个工具描述放进 prompt，token 与选择噪声双降</text>
+  <text x="60" y="432" font-size="10.5" fill="var(--sc-sub,#6e6e73)">• 更准更快：候选变少，模型选对率上升、决策时延下降</text>
+  <text x="60" y="454" font-size="10.5" fill="var(--sc-sub,#6e6e73)">• 可分层：先粗筛「工具类别」，再细选「具体工具」，适配超大工具生态</text>
+  <text x="60" y="474" font-size="10" fill="#f5873a">风险：检索漏召会让正确工具进不了候选集——需兼顾召回率与 k 值</text>
+</svg></div><div class="blurb"><p><b>工具路由（Tool Retrieval）</b> 应对数百上千工具：工具描述向量化建索引，运行时按意图语义检索取 Top-k 候选，只把这一小撮 Schema 交模型精排。本质是「检索召回+模型精排」两级。阿喀琉斯之踵在召回层——<b>漏召即等于工具失效</b>，索引质量与召回策略是生命线。见图。</p></div></section><section class="vt-sec" id="sec-t3" data-sec="sec-t3"><div class="secttl"><span class="badge">T3</span><span class="t">MCP 协议 · 标准化工具/资源接入层</span></div><div class="fig" role="img" aria-label="MCP 协议 · 标准化工具/资源接入层"><svg class="figsvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 520" font-family="-apple-system,'PingFang SC','Helvetica Neue',sans-serif">
+  <defs>
+    <filter id="s11_soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.07"/></filter>
+    <marker id="s11_arh" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#0a84ff"/></marker>
+    <marker id="s11_ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="var(--sc-line2,#b8b8bf)"/></marker>
+  </defs>
+  <rect width="960" height="520" fill="var(--sc-bg,#fbfbfd)"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="var(--sc-ink,#1d1d1f)">MCP · 工具接入的「USB-C」标准协议</text>
+  <text x="30" y="54" font-size="12" fill="var(--sc-sub,#6e6e73)">Model Context Protocol：把「模型如何发现并调用工具/资源」标准化，一次实现处处复用</text>
+
+  <!-- Host -->
+  <g filter="url(#s11_soft)"><rect x="60" y="120" width="220" height="240" rx="14" fill="var(--sc-fill-blue,#eef4ff)" stroke="#0a84ff" stroke-width="1.6"/></g>
+  <text x="170" y="150" font-size="13" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">MCP Host (Agent 应用)</text>
+  <g filter="url(#s11_soft)"><rect x="86" y="176" width="168" height="70" rx="10" fill="var(--sc-panel,#ffffff)" stroke="var(--sc-line,#d2d2d7)" stroke-width="1.2"/></g>
+  <text x="170" y="206" font-size="11" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">MCP Client A</text>
+  <text x="170" y="226" font-size="9.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">与一个 Server 1:1 连接</text>
+  <g filter="url(#s11_soft)"><rect x="86" y="262" width="168" height="70" rx="10" fill="var(--sc-panel,#ffffff)" stroke="var(--sc-line,#d2d2d7)" stroke-width="1.2"/></g>
+  <text x="170" y="292" font-size="11" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">MCP Client B</text>
+  <text x="170" y="312" font-size="9.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">多 Client 并存</text>
+
+  <!-- 协议通道 -->
+  <g filter="url(#s11_soft)"><rect x="360" y="180" width="200" height="160" rx="12" fill="var(--sc-fill-purple,#f3ecff)" stroke="#a78bfa" stroke-width="1.5"/></g>
+  <text x="460" y="208" font-size="12.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">标准协议 (JSON-RPC)</text>
+  <text x="378" y="236" font-size="10.5" fill="var(--sc-sub,#6e6e73)">• tools/list 发现工具</text>
+  <text x="378" y="258" font-size="10.5" fill="var(--sc-sub,#6e6e73)">• tools/call 调用工具</text>
+  <text x="378" y="280" font-size="10.5" fill="var(--sc-sub,#6e6e73)">• resources 读取资源</text>
+  <text x="378" y="302" font-size="10.5" fill="var(--sc-sub,#6e6e73)">• prompts 复用模板</text>
+  <text x="378" y="326" font-size="10" fill="#a78bfa">统一语义，与传输层解耦</text>
+
+  <!-- Servers -->
+  <g filter="url(#s11_soft)"><rect x="640" y="120" width="270" height="66" rx="11" fill="var(--sc-fill-teal,#e6fbf6)" stroke="#2dd4bf" stroke-width="1.4"/></g>
+  <text x="775" y="148" font-size="11.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">MCP Server · GitHub</text>
+  <text x="775" y="168" font-size="9.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">暴露 repo/issue/PR 工具</text>
+  <g filter="url(#s11_soft)"><rect x="640" y="200" width="270" height="66" rx="11" fill="var(--sc-fill-teal,#e6fbf6)" stroke="#2dd4bf" stroke-width="1.4"/></g>
+  <text x="775" y="228" font-size="11.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">MCP Server · 数据库</text>
+  <text x="775" y="248" font-size="9.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">暴露 query/schema 工具</text>
+  <g filter="url(#s11_soft)"><rect x="640" y="280" width="270" height="66" rx="11" fill="var(--sc-fill-teal,#e6fbf6)" stroke="#2dd4bf" stroke-width="1.4"/></g>
+  <text x="775" y="308" font-size="11.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">MCP Server · 文件系统</text>
+  <text x="775" y="328" font-size="9.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">暴露 read/write 工具</text>
+
+  <path d="M280 210 L356 220" stroke="#0a84ff" stroke-width="2" marker-end="url(#s11_arh)"/>
+  <path d="M280 296 L356 290" stroke="#0a84ff" stroke-width="2" marker-end="url(#s11_arh)"/>
+  <path d="M560 230 L636 155" stroke="#a78bfa" stroke-width="1.8" marker-end="url(#s11_ar)"/>
+  <path d="M560 250 L636 233" stroke="#a78bfa" stroke-width="1.8" marker-end="url(#s11_ar)"/>
+  <path d="M560 270 L636 310" stroke="#a78bfa" stroke-width="1.8" marker-end="url(#s11_ar)"/>
+
+  <!-- 价值 -->
+  <g filter="url(#s11_soft)"><rect x="60" y="390" width="850" height="110" rx="12" fill="var(--sc-panel,#ffffff)" stroke="var(--sc-line,#d2d2d7)" stroke-width="1.3"/></g>
+  <text x="80" y="416" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)">为什么需要一个协议？</text>
+  <text x="80" y="440" font-size="10.5" fill="var(--sc-sub,#6e6e73)">• 解耦：Agent 不必为每个工具写专属适配，Server 端一次实现即可被任意 Host 复用（M×N → M+N）</text>
+  <text x="80" y="462" font-size="10.5" fill="var(--sc-sub,#6e6e73)">• 可发现：Host 运行时动态 tools/list 拉取能力清单，工具热插拔无需改 Agent 代码</text>
+  <text x="80" y="484" font-size="10" fill="#f5873a">• 安全边界：Server 侧统一鉴权与权限控制；引入第三方 Server 需评估供应链风险</text>
+</svg></div><div class="blurb"><p><b>MCP（Model Context Protocol）</b> 标准化「接入」：无协议时 M 应用×N 工具是 M×N 适配成本；MCP 用 Host 跑 Client、工具方跑 Server、统一 tools/list、tools/call、resources 经 JSON-RPC 对话，一次实现任意复用，成本降为 <b>M+N</b> 且可热插拔。是工具生态的「USB-C」。代价是第三方 Server 带来供应链与权限风险，需 Server 侧统一鉴权。见图。</p></div></section><section class="vt-sec" id="sec-t4" data-sec="sec-t4"><div class="secttl"><span class="badge">T4</span><span class="t">代码执行 · 沙箱内 Code-as-Action</span></div><div class="fig" role="img" aria-label="代码执行 · 沙箱内 Code-as-Action"><svg class="figsvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 520" font-family="-apple-system,'PingFang SC','Helvetica Neue',sans-serif">
+  <defs>
+    <filter id="s12_soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.07"/></filter>
+    <marker id="s12_arh" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#0a84ff"/></marker>
+    <marker id="s12_ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="var(--sc-line2,#b8b8bf)"/></marker>
+    <marker id="s12_arf" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#f5873a"/></marker>
+  </defs>
+  <rect width="960" height="520" fill="var(--sc-bg,#fbfbfd)"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="var(--sc-ink,#1d1d1f)">Code-as-Action · 代码即动作</text>
+  <text x="30" y="54" font-size="12" fill="var(--sc-sub,#6e6e73)">与其逐个调用离散工具，不如让模型直接生成代码，在沙箱中执行——一段代码即可编排循环、分支与多工具组合</text>
+
+  <!-- 模型 -->
+  <g filter="url(#s12_soft)"><rect x="60" y="110" width="180" height="90" rx="12" fill="var(--sc-fill-blue,#eef4ff)" stroke="#0a84ff" stroke-width="1.6"/></g>
+  <text x="150" y="142" font-size="12.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">推理内核</text>
+  <text x="150" y="164" font-size="9.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">生成一段可执行代码</text>
+  <text x="150" y="184" font-size="9.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">而非单个工具 JSON</text>
+
+  <!-- 沙箱 -->
+  <g filter="url(#s12_soft)"><rect x="330" y="90" width="300" height="230" rx="14" fill="var(--sc-fill-orange,#fff3ea)" stroke="#f5873a" stroke-width="1.6"/></g>
+  <text x="480" y="118" font-size="13" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">隔离沙箱 (Sandbox)</text>
+  <g filter="url(#s12_soft)"><rect x="352" y="136" width="256" height="60" rx="9" fill="var(--sc-panel,#ffffff)" stroke="var(--sc-line,#d2d2d7)" stroke-width="1.1"/></g>
+  <text x="368" y="160" font-size="10" fill="var(--sc-ink,#1d1d1f)">result = search(q); df = load(result)</text>
+  <text x="368" y="180" font-size="10" fill="var(--sc-ink,#1d1d1f)">return summarize(df.filter(...))</text>
+  <text x="480" y="222" font-size="10.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">解释器执行 · 资源/时间/网络受限</text>
+  <text x="480" y="244" font-size="10.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">无外泄权限 · 崩溃可回收</text>
+  <text x="480" y="272" font-size="10" fill="#f5873a" text-anchor="middle">安全红线：绝不在主环境执行 LLM 生成代码</text>
+  <text x="480" y="296" font-size="10" fill="#f5873a" text-anchor="middle">超时/内存/系统调用全部设限</text>
+
+  <!-- 工具库 -->
+  <g filter="url(#s12_soft)"><rect x="720" y="110" width="180" height="90" rx="12" fill="var(--sc-fill-teal,#e6fbf6)" stroke="#2dd4bf" stroke-width="1.4"/></g>
+  <text x="810" y="142" font-size="12.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">工具作为函数库</text>
+  <text x="810" y="164" font-size="9.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">search / load / http</text>
+  <text x="810" y="184" font-size="9.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">以 API 形式注入沙箱</text>
+
+  <path d="M240 155 L326 175" stroke="#0a84ff" stroke-width="2" marker-end="url(#s12_arh)"/>
+  <path d="M632 165 L716 155" stroke="#2dd4bf" stroke-width="1.8" marker-end="url(#s12_ar)"/>
+  <path d="M480 320 L480 360" stroke="#f5873a" stroke-width="1.8" stroke-dasharray="3 3" marker-end="url(#s12_arf)"/>
+  <path d="M400 372 C300 400 220 300 150 205" stroke="#0a84ff" stroke-width="1.6" fill="none" marker-end="url(#s12_arh)"/>
+
+  <g filter="url(#s12_soft)"><rect x="330" y="360" width="300" height="40" rx="9" fill="var(--sc-panel,#ffffff)" stroke="var(--sc-line,#d2d2d7)" stroke-width="1.2"/></g>
+  <text x="480" y="385" font-size="10.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">执行结果 / 异常栈 → 回流为观察</text>
+
+  <!-- 权衡 -->
+  <g filter="url(#s12_soft)"><rect x="60" y="420" width="840" height="80" rx="12" fill="var(--sc-panel,#ffffff)" stroke="var(--sc-line,#d2d2d7)" stroke-width="1.3"/></g>
+  <text x="80" y="446" font-size="11.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)">取舍</text>
+  <text x="80" y="468" font-size="10.5" fill="var(--sc-sub,#6e6e73)">✓ 强表达力：一段代码内完成循环/条件/多工具编排，token 与轮次远少于逐个 function call</text>
+  <text x="80" y="488" font-size="10.5" fill="var(--sc-sub,#6e6e73)">✗ 代价：必须投入沙箱与安全治理；调试观测更复杂，错误恢复需捕获异常栈并反馈重写</text>
+</svg></div><div class="blurb"><p><b>Code-as-Action</b> 把动作推到极致：模型直接生成代码在隔离沙箱执行，一次完成循环/分支/多工具组合（工具以函数库注入）。表达力与 token 效率远高于逐个 function call，适合复杂多步编排。代价是安全从「校验参数」升级为「隔离执行环境」硬约束——超时/内存/网络/系统调用全设限，绝不在主环境跑。见图。</p></div></section><section class="vt-sec" id="sec-cmp" data-sec="sec-cmp"><div class="secttl"><span class="badge">⇄</span><span class="t">Tool Use · 核心机制差异对比</span></div><div class="fig" role="img" aria-label="Tool Use · 核心机制差异对比"><svg class="figsvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 520" font-family="-apple-system,'PingFang SC','Helvetica Neue',sans-serif">
+  <defs>
+    <filter id="s13_soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.07"/></filter>
+  </defs>
+  <rect width="960" height="520" fill="var(--sc-bg,#fbfbfd)"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="var(--sc-ink,#1d1d1f)">四种工具调用机制横向对比</text>
+  <text x="30" y="54" font-size="12" fill="var(--sc-sub,#6e6e73)">从「模型如何决定并发起动作」的角度对齐差异，据此按工具规模与安全预算取舍</text>
+
+  <!-- 表头 -->
+  <g filter="url(#s13_soft)"><rect x="30" y="80" width="900" height="42" rx="10" fill="var(--sc-fill-blue,#eef4ff)" stroke="#0a84ff" stroke-width="1.3"/></g>
+  <text x="120" y="106" font-size="11.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">机制</text>
+  <text x="320" y="106" font-size="11.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">核心做法</text>
+  <text x="560" y="106" font-size="11.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">适用场景</text>
+  <text x="800" y="106" font-size="11.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">主要风险</text>
+
+  <!-- 行1 -->
+  <g filter="url(#s13_soft)"><rect x="30" y="132" width="900" height="84" rx="10" fill="var(--sc-panel,#ffffff)" stroke="var(--sc-line,#d2d2d7)" stroke-width="1.1"/></g>
+  <text x="120" y="164" font-size="11" font-weight="600" fill="#0a84ff" text-anchor="middle">结构化调用</text>
+  <text x="120" y="184" font-size="9" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">Function Calling</text>
+  <text x="320" y="170" font-size="9.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">按 Schema 输出 JSON，程序校验后执行</text>
+  <text x="560" y="170" font-size="9.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">工具数量少而明确</text>
+  <text x="800" y="170" font-size="9.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">工具多时 prompt 膨胀</text>
+
+  <!-- 行2 -->
+  <g filter="url(#s13_soft)"><rect x="30" y="226" width="900" height="84" rx="10" fill="var(--sc-panel,#ffffff)" stroke="var(--sc-line,#d2d2d7)" stroke-width="1.1"/></g>
+  <text x="120" y="258" font-size="11" font-weight="600" fill="#a78bfa" text-anchor="middle">工具路由</text>
+  <text x="120" y="278" font-size="9" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">Tool Retrieval</text>
+  <text x="320" y="264" font-size="9.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">语义检索 Top-k 候选，再交模型定夺</text>
+  <text x="560" y="264" font-size="9.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">工具规模大（N≥百）</text>
+  <text x="800" y="264" font-size="9.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">召回不全则工具漏用</text>
+
+  <!-- 行3 -->
+  <g filter="url(#s13_soft)"><rect x="30" y="320" width="900" height="84" rx="10" fill="var(--sc-panel,#ffffff)" stroke="var(--sc-line,#d2d2d7)" stroke-width="1.1"/></g>
+  <text x="120" y="352" font-size="11" font-weight="600" fill="#2dd4bf" text-anchor="middle">MCP 协议</text>
+  <text x="120" y="372" font-size="9" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">标准接入</text>
+  <text x="320" y="358" font-size="9.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">标准协议动态发现/调用外部 Server</text>
+  <text x="560" y="358" font-size="9.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">跨系统、生态复用</text>
+  <text x="800" y="358" font-size="9.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">第三方 Server 供应链风险</text>
+
+  <!-- 行4 -->
+  <g filter="url(#s13_soft)"><rect x="30" y="414" width="900" height="84" rx="10" fill="var(--sc-panel,#ffffff)" stroke="var(--sc-line,#d2d2d7)" stroke-width="1.1"/></g>
+  <text x="120" y="446" font-size="11" font-weight="600" fill="#f5873a" text-anchor="middle">代码执行</text>
+  <text x="120" y="466" font-size="9" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">Code-as-Action</text>
+  <text x="320" y="452" font-size="9.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">生成代码在沙箱内编排多工具</text>
+  <text x="560" y="452" font-size="9.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">复杂编排、循环/分支</text>
+  <text x="800" y="452" font-size="9.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">须沙箱隔离，治理成本高</text>
+</svg></div><div class="blurb ml"><p>取舍主线是「规模与复杂度」：工具少用结构化调用，规模上千用路由，跨系统复用用 MCP，复杂编排用 Code-as-Action。各自风险不同——结构化怕 prompt 膨胀、路由怕漏召、MCP 怕供应链、代码执行怕沙箱逃逸。真实系统多为组合（MCP 接入+路由筛选+代码编排）。四维对照见图。</p></div></section><section class="vt-sec" id="sec-eng" data-sec="sec-eng"><div class="secttl"><span class="badge">⚙</span><span class="t">Tool Use · 工程实现差异（真实框架落地取舍）</span></div><div class="fig" role="img" aria-label="Tool Use · 工程实现差异（真实框架落地取舍）"><svg class="figsvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 500" font-family="-apple-system,'PingFang SC','Helvetica Neue',sans-serif">
+  <defs>
+    <filter id="s14_soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.07"/></filter>
+  </defs>
+  <rect width="960" height="500" fill="var(--sc-bg,#fbfbfd)"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="var(--sc-ink,#1d1d1f)">工具调用的工程铁律</text>
+  <text x="30" y="54" font-size="12" fill="var(--sc-sub,#6e6e73)">工具调用是 Agent 触达外部世界的唯一出口——它既是能力放大器，也是最大的风险面</text>
+
+  <!-- 三支柱 -->
+  <g filter="url(#s14_soft)"><rect x="30" y="80" width="290" height="180" rx="13" fill="var(--sc-fill-blue,#eef4ff)" stroke="#0a84ff" stroke-width="1.5"/></g>
+  <text x="175" y="108" font-size="12.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">① 契约即接口</text>
+  <text x="52" y="138" font-size="10" fill="var(--sc-sub,#6e6e73)">• 工具描述/Schema 就是给模型的 prompt</text>
+  <text x="52" y="160" font-size="10" fill="var(--sc-sub,#6e6e73)">• 命名、参数、示例决定调用成败</text>
+  <text x="52" y="182" font-size="10" fill="var(--sc-sub,#6e6e73)">• 输出必须结构化并强校验</text>
+  <text x="52" y="204" font-size="10" fill="var(--sc-sub,#6e6e73)">• 校验失败要给模型可读的报错重试</text>
+  <text x="52" y="230" font-size="9.5" fill="#0a84ff">写好工具文档 = 一半的准确率</text>
+
+  <g filter="url(#s14_soft)"><rect x="335" y="80" width="290" height="180" rx="13" fill="var(--sc-fill-orange,#fff3ea)" stroke="#f5873a" stroke-width="1.5"/></g>
+  <text x="480" y="108" font-size="12.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">② 安全与权限</text>
+  <text x="357" y="138" font-size="10" fill="var(--sc-sub,#6e6e73)">• 最小权限：只授必要的工具与范围</text>
+  <text x="357" y="160" font-size="10" fill="var(--sc-sub,#6e6e73)">• 危险操作需人工确认 / 二次审批</text>
+  <text x="357" y="182" font-size="10" fill="var(--sc-sub,#6e6e73)">• 代码执行强制沙箱隔离</text>
+  <text x="357" y="204" font-size="10" fill="var(--sc-sub,#6e6e73)">• 警惕注入：工具返回内容可能是攻击</text>
+  <text x="357" y="230" font-size="9.5" fill="#f5873a">越权与注入是头号事故来源</text>
+
+  <g filter="url(#s14_soft)"><rect x="640" y="80" width="290" height="180" rx="13" fill="var(--sc-fill-teal,#e6fbf6)" stroke="#2dd4bf" stroke-width="1.5"/></g>
+  <text x="785" y="108" font-size="12.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">③ 可靠与观测</text>
+  <text x="662" y="138" font-size="10" fill="var(--sc-sub,#6e6e73)">• 超时/重试/幂等：外部调用会失败</text>
+  <text x="662" y="160" font-size="10" fill="var(--sc-sub,#6e6e73)">• 记录每次调用的入参/结果/耗时</text>
+  <text x="662" y="182" font-size="10" fill="var(--sc-sub,#6e6e73)">• 限流与熔断，防止级联雪崩</text>
+  <text x="662" y="204" font-size="10" fill="var(--sc-sub,#6e6e73)">• 结果回流为观察，闭合推理循环</text>
+  <text x="662" y="230" font-size="9.5" fill="#2dd4bf">可观测性是调试 Agent 的地基</text>
+
+  <!-- 底部权衡 -->
+  <g filter="url(#s14_soft)"><rect x="30" y="290" width="900" height="180" rx="13" fill="var(--sc-panel,#ffffff)" stroke="var(--sc-line,#d2d2d7)" stroke-width="1.3"/></g>
+  <text x="52" y="320" font-size="12.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)">规模决定机制选择</text>
+  <text x="52" y="350" font-size="10.5" fill="var(--sc-sub,#6e6e73)">• 少量工具 → 直接 Function Calling，全量塞进 prompt 最简单可靠</text>
+  <text x="52" y="374" font-size="10.5" fill="var(--sc-sub,#6e6e73)">• 数百上千工具 → 工具路由（语义检索 Top-k），控制上下文长度与干扰</text>
+  <text x="52" y="398" font-size="10.5" fill="var(--sc-sub,#6e6e73)">• 跨系统 / 生态复用 → MCP 协议标准化接入，M×N 适配降为 M+N</text>
+  <text x="52" y="422" font-size="10.5" fill="var(--sc-sub,#6e6e73)">• 复杂多步编排 → Code-as-Action，用沙箱换取表达力（附带治理成本）</text>
+  <text x="52" y="452" font-size="10" fill="#a78bfa">没有银弹：按工具规模、安全预算与编排复杂度组合使用，而非二选一</text>
+</svg></div><div class="blurb ml"><p>三条铁律：<b>契约即接口</b>——工具描述/Schema 就是 prompt，写好文档拿到一半准确率，输出强校验、失败可读回退；<b>安全与权限</b>——最小权限、危险操作人工确认、代码执行强制沙箱、警惕工具返回内容的提示注入（越权与注入是头号事故源）；<b>可靠与观测</b>——超时/重试/幂等，记录每次调用入参/结果/耗时，限流熔断防级联雪崩，结果回流闭合推理循环。详见图。</p><p><b>2025 前沿</b>：MCP 已从「一种方案」变为<b>事实标准</b>——自 Anthropic 开源后被主流厂商与工具方普遍采纳，公开可用的 MCP Server 已达数千量级，覆盖数据库、代码仓、浏览器、云服务等，Agent 中间层的「USB-C」形态基本坐实。这带来两个工程重心迁移：其一，能力接入不再靠一个个手写适配，而是<b>从 Server 生态里挑装</b>，选型时更看重 Server 的可信度与权限边界；其二，工具供给爆炸后，<b>工具路由（Tool Retrieval）与输出治理</b>从可选项变为必备项——上千工具不可能全塞进上下文，且第三方 Server 的返回需统一裁剪、鉴权与提示注入防护，供应链安全成为头号治理面。</p></div></section></div></div>
+  <section class="refs"><div class="secttl"><span class="badge">§</span><span class="t">参考文献 · 权威来源（论文 / 官方文档）</span></div><div class="blurb reflist"><p>延伸阅读：OpenAI Function Calling 文档；Anthropic Model Context Protocol（MCP）规范与官方 Server 实现；Toolformer、Gorilla 等大规模工具调用研究；CodeAct / Code-as-Action 相关论文；以及各类工具检索（Tool Retrieval）与 Agent 安全（提示注入、沙箱隔离）的工程实践资料。</p></div></section>
+  <div class="backrow"><a href="../../index.html#agent">← 返回 LLM & Agent 导航</a></div>
+</div>
+<footer>自包含离线图谱 · 以图为主：概览 + 机制分组图 + 机制对比 · 权威参考集中于底部 · 垂直 TAB 切换</footer>
+<script>
+(function(){
+  var root=document.documentElement;
+  var saved=localStorage.getItem('atlas-nav-theme');
+  if(saved==='dark') root.setAttribute('data-theme','dark');
+  function toggleTheme(){
+    var cur=root.getAttribute('data-theme')==='dark'?'':'dark';
+    if(cur) root.setAttribute('data-theme',cur); else root.removeAttribute('data-theme');
+    localStorage.setItem('atlas-nav-theme',cur||'light');
+  }
+  var tb=document.getElementById('themeBtn');
+  if(tb){tb.onclick=toggleTheme;}
+  var wrap=document.querySelector('.vt-wrap');
+  if(wrap){
+    var tabs=wrap.querySelectorAll('.vt-tab');
+    var secs=wrap.querySelectorAll('.vt-sec');
+    tabs.forEach(function(t){
+      t.addEventListener('click',function(){
+        var tgt=t.getAttribute('data-target');
+        tabs.forEach(function(x){x.classList.toggle('active',x===t);});
+        secs.forEach(function(s){s.classList.toggle('active',s.id===tgt);});
+      });
+    });
+  }
+  var zsegs=document.querySelectorAll('.zseg');
+  var zones=document.querySelectorAll('.zone');
+  if(zsegs.length&&zones.length){
+    zsegs.forEach(function(s){
+      s.addEventListener('click',function(){
+        zsegs.forEach(function(x){x.classList.toggle('active',x===s);});
+      });
+    });
+    if('IntersectionObserver' in window){
+      var io=new IntersectionObserver(function(es){
+        es.forEach(function(e){
+          if(e.isIntersecting){
+            var id=e.target.id;
+            zsegs.forEach(function(x){x.classList.toggle('active',x.getAttribute('href')==='#'+id);});
+          }
+        });
+      },{rootMargin:'-40% 0px -55% 0px'});
+      zones.forEach(function(z){io.observe(z);});
+    }
+  }
+})();
+</script>
+</body>
+</html>

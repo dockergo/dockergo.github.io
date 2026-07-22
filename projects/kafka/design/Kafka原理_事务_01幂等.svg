@@ -9,7 +9,7 @@
 
   <!-- producer side -->
   <rect x="30" y="74" width="480" height="196" rx="14" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
-  <text x="46" y="98" font-size="11" font-weight="700" fill="#3d2a5a">生产者侧 · 分配 PID + 序列号（enable.idempotence 默认 true · ProducerConfig.java:543）</text>
+  <text x="46" y="98" font-size="11" font-weight="700" fill="#3d2a5a">生产者侧 · 分配 PID + 序列号（enable.idempotence 默认 true）</text>
 
   <rect x="48" y="112" width="444" height="66" rx="10" fill="#faf4fb" stroke="#e2d2ee"/>
   <text x="270" y="134" font-size="9.6" font-weight="600" fill="#5a3d78" text-anchor="middle">每个生产者领一个 PID(producer id)</text>
@@ -18,15 +18,15 @@
 
   <rect x="48" y="186" width="444" height="66" rx="10" fill="#faf4fb" stroke="#e2d2ee"/>
   <text x="270" y="208" font-size="9.6" font-weight="600" fill="#5a3d78" text-anchor="middle">drain 时 setProducerState(pid, seq, isTxn)</text>
-  <text x="270" y="228" font-size="8.6" fill="#8a6db0" text-anchor="middle">RecordAccumulator.java:927</text>
+  <text x="270" y="228" font-size="8.6" fill="#8a6db0" text-anchor="middle"></text>
   <text x="270" y="244" font-size="8.6" fill="#8a6db0" text-anchor="middle">批带上 PID + 序列号发往 Broker</text>
 
   <!-- broker side -->
   <rect x="546" y="74" width="504" height="196" rx="14" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
-  <text x="562" y="98" font-size="11" font-weight="700" fill="#5a3410">Broker 侧 · 序列校验（ProducerAppendInfo.checkSequence · storage/…:156）</text>
+  <text x="562" y="98" font-size="11" font-weight="700" fill="#5a3410">Broker 侧 · 序列校验（ProducerAppendInfo.checkSequence）</text>
 
   <rect x="562" y="112" width="472" height="44" rx="9" fill="#eafaf1" stroke="#bfe0cd"/>
-  <text x="798" y="132" font-size="9.4" font-weight="600" fill="#12402a" text-anchor="middle">nextSeq == lastSeq + 1 → 连续,正常追加(:196)</text>
+  <text x="798" y="132" font-size="9.4" font-weight="600" fill="#12402a" text-anchor="middle">nextSeq == lastSeq + 1 → 连续,正常追加</text>
   <text x="798" y="148" font-size="8.4" fill="#2f6f4f" text-anchor="middle">序列连续,写入日志并更新 lastSeq</text>
 
   <rect x="562" y="162" width="472" height="44" rx="9" fill="#f3f7fc" stroke="#cfe0f2"/>
@@ -44,14 +44,14 @@
   <rect x="30" y="288" width="1020" height="72" rx="13" fill="#fbeaea" stroke="#e7c3c3" filter="url(#soft)"/>
   <text x="46" y="312" font-size="11" font-weight="700" fill="#4a1414">前提要求（否则重试可能乱序）</text>
   <g font-size="9" text-anchor="middle">
-    <rect x="46" y="322" width="490" height="28" rx="7" fill="#fff" stroke="#e7c3c3"/><text x="291" y="340" fill="#7a2a2a">max.in.flight ≤ 5（ProducerConfig.java:279）· 限制在途请求数保序</text>
+    <rect x="46" y="322" width="490" height="28" rx="7" fill="#fff" stroke="#e7c3c3"/><text x="291" y="340" fill="#7a2a2a">max.in.flight ≤ 5 · 限制在途请求数保序</text>
     <rect x="546" y="322" width="488" height="28" rx="7" fill="#fff" stroke="#e7c3c3"/><text x="790" y="340" fill="#7a2a2a">acks=all · 全部 ISR 确认(配合序列校验才安全)</text>
   </g>
 
   <!-- effect -->
   <rect x="30" y="376" width="1020" height="60" rx="13" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
   <text x="540" y="400" font-size="11" font-weight="700" fill="#12402a" text-anchor="middle">效果:单个生产者对单个分区,单会话不重复不乱序（exactly-once per partition per session）</text>
-  <text x="540" y="422" font-size="8.8" fill="#2f6f4f" text-anchor="middle">但跨分区、跨会话不保证 —— 那要事务。PID/序列的分区状态由 ProducerStateManager(storage/…:70)维护</text>
+  <text x="540" y="422" font-size="8.8" fill="#2f6f4f" text-anchor="middle">但跨分区、跨会话不保证 —— 那要事务。PID/序列的分区状态由 ProducerStateManager 维护</text>
 
   <text x="30" y="464" font-size="8.8" fill="#a1a1a6">误区:幂等生产者 = 精确一次 —— 幂等只保单生产者单分区单会话不重不乱;端到端 EOS 还需事务 + read_committed(见后两图)</text>
 </svg>

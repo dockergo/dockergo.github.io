@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="700" viewBox="0 0 1120 700" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="aB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#4a7fd0"/></marker>
+    <marker id="aG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+    <marker id="aA" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#d99a2b"/></marker>
+  </defs>
+  <rect width="1120" height="700" fill="#fbfbfd"/>
+
+  <text x="30" y="34" font-size="17" font-weight="700" fill="#1d1d1f">最小路径和 · 二维 DP：dp[i][j] = min(dp[i-1][j], dp[i][j-1]) + grid[i][j]</text>
+  <text x="30" y="56" font-size="11" fill="#6e6e73">从左上走到右下，每步只能向右或向下；每格的最小代价 = 上方与左方两个来路中较小者，加上本格权重。首行首列只有一条来路</text>
+
+  <!-- 图例 -->
+  <rect x="30" y="72" width="12" height="12" rx="2" fill="#8a6fd0"/><text x="48" y="82" font-size="10.5" fill="#3a3a3c">首行 / 首列边界</text>
+  <rect x="170" y="72" width="12" height="12" rx="2" fill="#4a7fd0"/><text x="188" y="82" font-size="10.5" fill="#3a3a3c">上 / 左 转移来源</text>
+  <rect x="310" y="72" width="12" height="12" rx="2" fill="#d99a2b"/><text x="328" y="82" font-size="10.5" fill="#3a3a3c">dp 当前格</text>
+  <rect x="420" y="72" width="12" height="12" rx="2" fill="#2f9e6e"/><text x="438" y="82" font-size="10.5" fill="#3a3a3c">最优路径回溯</text>
+
+  <!-- ① 输入网格 -->
+  <text x="30" y="112" font-size="12" font-weight="700" fill="#8a5a12">① 输入网格 grid（权重）</text>
+  <g font-size="15" text-anchor="middle" fill="#4a4a4f">
+    <rect x="90" y="128" width="66" height="56" fill="#ffffff" stroke="#c9ccd2"/><text x="123" y="162">1</text>
+    <rect x="156" y="128" width="66" height="56" fill="#ffffff" stroke="#c9ccd2"/><text x="189" y="162">3</text>
+    <rect x="222" y="128" width="66" height="56" fill="#ffffff" stroke="#c9ccd2"/><text x="255" y="162">1</text>
+    <rect x="90" y="184" width="66" height="56" fill="#ffffff" stroke="#c9ccd2"/><text x="123" y="218">1</text>
+    <rect x="156" y="184" width="66" height="56" fill="#ffffff" stroke="#c9ccd2"/><text x="189" y="218">5</text>
+    <rect x="222" y="184" width="66" height="56" fill="#ffffff" stroke="#c9ccd2"/><text x="255" y="218">1</text>
+    <rect x="90" y="240" width="66" height="56" fill="#ffffff" stroke="#c9ccd2"/><text x="123" y="274">4</text>
+    <rect x="156" y="240" width="66" height="56" fill="#ffffff" stroke="#c9ccd2"/><text x="189" y="274">2</text>
+    <rect x="222" y="240" width="66" height="56" fill="#ffffff" stroke="#c9ccd2"/><text x="255" y="274">1</text>
+  </g>
+  <text x="72" y="162" font-size="9" fill="#a1a1a6" text-anchor="end">起</text>
+  <text x="300" y="278" font-size="9" fill="#a1a1a6">终</text>
+  <text x="90" y="316" font-size="9.5" fill="#6e6e73">3×3 示例，起点 (0,0)=1，终点 (2,2)=1</text>
+
+  <!-- 转移规则 -->
+  <rect x="330" y="120" width="260" height="180" rx="12" fill="#eaf1fb" stroke="#4a7fd0" stroke-width="1.3" filter="url(#soft)"/>
+  <text x="348" y="144" font-size="12" font-weight="700" fill="#20375e">转移：每格取「较小来路 + 本格」</text>
+  <rect x="410" y="158" width="70" height="30" rx="5" fill="#dbe8fa" stroke="#9dbdea"/><text x="445" y="178" font-size="10.5" fill="#20375e" text-anchor="middle">上 dp[i-1][j]</text>
+  <rect x="348" y="204" width="70" height="30" rx="5" fill="#dbe8fa" stroke="#9dbdea"/><text x="383" y="224" font-size="10.5" fill="#20375e" text-anchor="middle">左 dp[i][j-1]</text>
+  <rect x="472" y="204" width="88" height="30" rx="5" fill="#fdf3e0" stroke="#e7c07a"/><text x="516" y="224" font-size="11" font-weight="700" fill="#8a5a12" text-anchor="middle">dp[i][j]</text>
+  <path d="M445 188 V204 H500 V204" fill="none" stroke="#4a7fd0" stroke-width="1.5" marker-end="url(#aA)"/>
+  <path d="M418 219 H468" fill="none" stroke="#4a7fd0" stroke-width="1.5" marker-end="url(#aA)"/>
+  <text x="470" y="258" font-size="10" fill="#3a4a63">= min(上, 左) + grid[i][j]</text>
+  <text x="348" y="280" font-size="9.5" fill="#6e6e73">首行只能从左来、首列只能从上来，</text>
+  <text x="348" y="294" font-size="9.5" fill="#6e6e73">故边界为前缀累加（无 min 可选）。</text>
+
+  <!-- ② dp 表 -->
+  <text x="640" y="112" font-size="12" font-weight="700" fill="#8a5a12">② dp 表逐格填充（绿框为最优路径，回溯自终点）</text>
+  <g font-size="15" text-anchor="middle" font-weight="700">
+    <!-- row0 边界 -->
+    <rect x="700" y="128" width="70" height="56" fill="#e6f4ec" stroke="#2f9e6e" stroke-width="1.6"/><text x="735" y="162" fill="#1f6b47">1</text>
+    <rect x="770" y="128" width="70" height="56" fill="#e6f4ec" stroke="#2f9e6e" stroke-width="1.6"/><text x="805" y="162" fill="#1f6b47">4</text>
+    <rect x="840" y="128" width="70" height="56" fill="#e6f4ec" stroke="#2f9e6e" stroke-width="1.6"/><text x="875" y="162" fill="#1f6b47">5</text>
+    <!-- row1 -->
+    <rect x="700" y="184" width="70" height="56" fill="#f0ebfb" stroke="#c9b8ec"/><text x="735" y="218" fill="#5b45a0">2</text>
+    <rect x="770" y="184" width="70" height="56" fill="#fdf3e0" stroke="#e7c07a"/><text x="805" y="218" fill="#8a5a12">7</text>
+    <rect x="840" y="184" width="70" height="56" fill="#e6f4ec" stroke="#2f9e6e" stroke-width="1.6"/><text x="875" y="218" fill="#1f6b47">6</text>
+    <!-- row2 -->
+    <rect x="700" y="240" width="70" height="56" fill="#f0ebfb" stroke="#c9b8ec"/><text x="735" y="274" fill="#5b45a0">6</text>
+    <rect x="770" y="240" width="70" height="56" fill="#fdf3e0" stroke="#e7c07a"/><text x="805" y="274" fill="#8a5a12">8</text>
+    <rect x="840" y="240" width="70" height="56" fill="#d7efe1" stroke="#2f9e6e" stroke-width="2"/><text x="875" y="274" fill="#1f6b47">7</text>
+  </g>
+  <!-- 首行首列 markers -->
+  <text x="690" y="118" font-size="9" fill="#5b45a0" text-anchor="middle">首行 / 首列＝前缀和（紫 / 绿边界）</text>
+  <!-- optimal path arrows (backtrack green): (2,2)<-(1,2)<-(0,2)<-(0,1)<-(0,0) -->
+  <line x1="875" y1="240" x2="875" y2="186" stroke="#2f9e6e" stroke-width="2.4" marker-end="url(#aG)"/>
+  <line x1="875" y1="184" x2="875" y2="130" stroke="#2f9e6e" stroke-width="2.4"/>
+  <line x1="840" y1="156" x2="772" y2="156" stroke="#2f9e6e" stroke-width="2.4"/>
+  <line x1="770" y1="156" x2="702" y2="156" stroke="#2f9e6e" stroke-width="2.4"/>
+  <text x="928" y="266" font-size="9.5" fill="#1f6b47">↑ 从终点沿「被选中的较小来路」回退</text>
+  <text x="928" y="282" font-size="9.5" fill="#6e6e73">得最优走法（本例先右到底再向下）</text>
+
+  <!-- ③ 单格计算演示 -->
+  <text x="30" y="360" font-size="12" font-weight="700" fill="#8a5a12">③ 单格计算：以中心格 dp[1][1] 为例</text>
+  <rect x="40" y="374" width="520" height="110" rx="12" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="60" y="400" font-size="11" fill="#4a4a4f">上方来路 dp[0][1] = <tspan font-weight="700" fill="#4a7fd0">4</tspan>　　左方来路 dp[1][0] = <tspan font-weight="700" fill="#4a7fd0">2</tspan>　　本格 grid[1][1] = <tspan font-weight="700" fill="#8a5a12">5</tspan></text>
+  <text x="60" y="428" font-size="12" fill="#4a4a4f">dp[1][1] = min(4, 2) + 5 = <tspan font-weight="700" fill="#8a5a12">2 + 5 = 7</tspan></text>
+  <text x="60" y="454" font-size="10" fill="#6e6e73">选中「左」这条来路（2 &lt; 4），因此回溯时 dp[1][1] 的前驱是它左边的格子。</text>
+  <text x="60" y="472" font-size="9.5" fill="#6e6e73">整表按 i、j 双重循环从左上到右下填充，每格 O(1)，总复杂度 O(n·m)。</text>
+
+  <!-- ④ 最优路径 -->
+  <text x="600" y="360" font-size="12" font-weight="700" fill="#8a5a12">④ 最优路径与代价</text>
+  <rect x="600" y="374" width="490" height="110" rx="12" fill="#ffffff" stroke="#2f9e6e" stroke-width="1.3" filter="url(#soft)"/>
+  <text x="620" y="400" font-size="11" fill="#4a4a4f">走法：(0,0)→(0,1)→(0,2)→(1,2)→(2,2)</text>
+  <text x="620" y="426" font-size="11" fill="#4a4a4f">权重：1 + 3 + 1 + 1 + 1 = <tspan font-weight="700" fill="#1f6b47">7</tspan>　＝ dp[2][2]</text>
+  <text x="620" y="452" font-size="10" fill="#6e6e73">dp 表只需记「最优值」即可求出答案；若还要还原走法，</text>
+  <text x="620" y="470" font-size="10" fill="#6e6e73">从终点按转移选择反向回溯即可（绿色箭头）。</text>
+
+  <!-- ⑤ 空间压缩 -->
+  <text x="30" y="524" font-size="12" font-weight="700" fill="#8a5a12">⑤ 空间压缩：dp[i][j] 只依赖上一行与本行左邻 → 用一维 dp[m] 按行滚动覆盖</text>
+  <rect x="40" y="538" width="1040" height="130" rx="12" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="60" y="564" font-size="11" font-weight="700" fill="#20375e">二维 dp[n][m]　O(n·m) 空间</text>
+  <line x1="330" y1="558" x2="380" y2="558" stroke="#d99a2b" stroke-width="1.8" marker-end="url(#aA)"/>
+  <text x="400" y="564" font-size="11" font-weight="700" fill="#1f6b47">一维 dp[m]　O(m) 空间</text>
+  <text x="60" y="592" font-size="10.5" fill="#4a4a4f">处理第 i 行时，dp[j] 中「尚未更新」的旧值恰是上一行 dp[i-1][j]（上方来路），</text>
+  <text x="60" y="612" font-size="10.5" fill="#4a4a4f">刚更新过的 dp[j-1] 就是本行左邻 dp[i][j-1]（左方来路）：dp[j] = min(dp[j], dp[j-1]) + grid[i][j]。</text>
+  <text x="60" y="634" font-size="10" fill="#6e6e73">首列特殊处理 dp[0] += grid[i][0]（无左邻）。逐行从左到右覆盖，一维数组即可完成全表推导。</text>
+  <text x="60" y="654" font-size="9.5" fill="#8a5a12">代价与爬楼梯压缩相同：省了空间，但无法再回溯完整路径，只得到最小代价数值。</text>
+</svg>

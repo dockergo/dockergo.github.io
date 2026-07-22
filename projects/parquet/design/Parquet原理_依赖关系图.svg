@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="560" viewBox="0 0 1080 560" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="560" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Parquet 原理 · 能力域依赖关系图（A→B：A 依赖 B）</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">实线 = 数据流 / 调用,虚线 = 约束;文件布局是被依赖最多的核心枢纽,箭头汇入;类型系统(path_in_schema)为贯穿基座,横切所有域</text>
+
+  <!-- legend -->
+  <rect x="770" y="72" width="272" height="52" rx="10" fill="#f7f7f9" stroke="#e3e3e8"/>
+  <path d="M786,92 L826,92" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="834" y="95" font-size="8.8" fill="#6e6e73">实线：数据流 / 组装</text>
+  <path d="M786,112 L826,112" stroke="#c7c7cc" stroke-width="1.5" stroke-dasharray="5 4" fill="none" marker-end="url(#ar)"/>
+  <text x="834" y="115" font-size="8.8" fill="#6e6e73">虚线：path_in_schema 约束</text>
+
+  <!-- ===== edges (before nodes) ===== -->
+  <!-- Dremel → 列编码 -->
+  <path d="M258,208 L258,236 L318,236" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <!-- 列编码 → 压缩与页 -->
+  <path d="M408,262 L408,300" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <!-- 压缩与页 → 列块与页组装 -->
+  <path d="M498,326 L558,326" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <!-- 统计与排序 → 列块与页组装 -->
+  <path d="M690,262 L690,300" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <!-- 布隆 → 列块与页组装 -->
+  <path d="M868,262 L868,290 L770,290 L770,300" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <!-- PageIndex → 统计与排序 -->
+  <path d="M830,182 L760,182" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <!-- 列块与页组装 → 文件布局 -->
+  <path d="M664,352 L664,392" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <!-- PageIndex → 文件布局(tail) -->
+  <path d="M940,208 L940,412 L720,412" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <!-- 写路径 → 列块与页组装 -->
+  <path d="M300,110 L300,326 L342,326" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <!-- 读路径 → PageIndex -->
+  <path d="M956,110 L956,166" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <!-- 读路径 → 文件布局 -->
+  <path d="M1000,110 L1000,432 L720,432" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <!-- 全部 ⇢ 类型系统（贯穿基座，虚线示意） -->
+  <path d="M540,462 L540,490" stroke="#c7c7cc" stroke-width="1.5" stroke-dasharray="5 4" fill="none" marker-end="url(#ar)"/>
+  <path d="M218,262 L218,490" stroke="#c7c7cc" stroke-width="1.5" stroke-dasharray="5 4" fill="none" marker-end="url(#ar)"/>
+
+  <!-- ===== nodes ===== -->
+  <!-- 写路径 -->
+  <rect x="210" y="84" width="180" height="46" rx="11" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+  <text x="300" y="106" font-size="10.5" font-weight="700" text-anchor="middle" fill="#5a3410">写路径</text>
+  <text x="300" y="122" font-size="8" text-anchor="middle" fill="#93762e">缓冲 → 编码 → 落盘</text>
+  <!-- 读路径 -->
+  <rect x="866" y="84" width="180" height="46" rx="11" fill="#e9f2ff" stroke="#a9ccf5" filter="url(#soft)"/>
+  <text x="956" y="106" font-size="10.5" font-weight="700" text-anchor="middle" fill="#0a3d78">读路径</text>
+  <text x="956" y="122" font-size="8" text-anchor="middle" fill="#2a5a92">尾读 → 裁剪 → 解码</text>
+
+  <!-- 层 B -->
+  <rect x="118" y="160" width="200" height="48" rx="11" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="218" y="181" font-size="10" font-weight="700" text-anchor="middle" fill="#12402a">Dremel 嵌套编码</text>
+  <text x="218" y="197" font-size="8" text-anchor="middle" fill="#2f6f5f">def / rep 级</text>
+
+  <rect x="330" y="160" width="160" height="48" rx="11" fill="#e9f2ff" stroke="#a9ccf5" filter="url(#soft)"/>
+  <text x="410" y="181" font-size="10" font-weight="700" text-anchor="middle" fill="#0a3d78">列编码</text>
+  <text x="410" y="197" font-size="8" text-anchor="middle" fill="#2a5a92">PLAIN/字典/DELTA</text>
+
+  <rect x="610" y="160" width="160" height="48" rx="11" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+  <text x="690" y="181" font-size="10" font-weight="700" text-anchor="middle" fill="#5a3410">统计与排序</text>
+  <text x="690" y="197" font-size="8" text-anchor="middle" fill="#93762e">min/max · order</text>
+
+  <rect x="830" y="160" width="180" height="48" rx="11" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="920" y="181" font-size="10" font-weight="700" text-anchor="middle" fill="#12402a">PageIndex + 布隆</text>
+  <text x="920" y="197" font-size="8" text-anchor="middle" fill="#2f6f5f">每页 min/max · 等值</text>
+
+  <!-- 布隆 单列(为箭头) -->
+  <rect x="828" y="214" width="82" height="0" fill="none"/>
+
+  <!-- 层 C -->
+  <rect x="330" y="300" width="168" height="52" rx="11" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+  <text x="414" y="323" font-size="10" font-weight="700" text-anchor="middle" fill="#5a3410">压缩与页</text>
+  <text x="414" y="339" font-size="8" text-anchor="middle" fill="#93762e">四型页 + codec + CRC</text>
+
+  <rect x="558" y="300" width="212" height="52" rx="11" fill="#e9f2ff" stroke="#a9ccf5" filter="url(#soft)"/>
+  <text x="664" y="323" font-size="10" font-weight="700" text-anchor="middle" fill="#0a3d78">列块与页组装</text>
+  <text x="664" y="339" font-size="8" text-anchor="middle" fill="#2a5a92">页背靠背 · ColumnMetaData</text>
+
+  <!-- 层 D 枢纽 -->
+  <rect x="380" y="392" width="340" height="56" rx="12" fill="#fdf1e0" stroke="#e8c99a" stroke-width="1.6" filter="url(#soft)"/>
+  <text x="550" y="416" font-size="11.5" font-weight="700" text-anchor="middle" fill="#5a3410">文件布局（核心枢纽）</text>
+  <text x="550" y="435" font-size="8.4" text-anchor="middle" fill="#93762e">PAR1 + 行组 + FileMetaData 尾置 + 长度 + PAR1 · 单遍写</text>
+
+  <!-- 层 E 基座 -->
+  <rect x="118" y="490" width="892" height="48" rx="12" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="564" y="512" font-size="10.5" font-weight="700" text-anchor="middle" fill="#3d2a5a">类型系统与 schema 树（贯穿基座）</text>
+  <text x="564" y="528" font-size="8.4" text-anchor="middle" fill="#8a6db3">8 物理 Type + LogicalType 注解 · SchemaElement 深度优先扁平 · path_in_schema 定位每列 · 决定 max def/rep 级</text>
+</svg>

@@ -1,0 +1,116 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="700" viewBox="0 0 1120 700" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="aB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#4a7fd0"/></marker>
+    <marker id="aG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+    <marker id="aA" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#d99a2b"/></marker>
+    <marker id="aR" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#d1544a"/></marker>
+  </defs>
+  <rect width="1120" height="700" fill="#fbfbfd"/>
+
+  <text x="30" y="34" font-size="17" font-weight="700" fill="#1d1d1f">BT1 · 框架：前序遍历找「值为 7」的路径 —— 演示 path 入栈 / 出栈与约束剪枝</text>
+  <text x="30" y="56" font-size="11" fill="#6e6e73">进入结点即把它压入 path；命中 val=7 就记录整条路径；不合法结点（val=3）直接剪掉整棵子树；返回前必须把结点弹出 path，恢复现场</text>
+
+  <!-- 图例 -->
+  <rect x="30" y="72" width="12" height="12" rx="2" fill="#d99a2b"/><text x="48" y="82" font-size="10.5" fill="#3a3a3c">path 栈（状态）</text>
+  <rect x="180" y="72" width="12" height="12" rx="2" fill="#4a7fd0"/><text x="198" y="82" font-size="10.5" fill="#3a3a3c">尝试 · 进入结点</text>
+  <rect x="330" y="72" width="12" height="12" rx="2" fill="#2f9e6e"/><text x="348" y="82" font-size="10.5" fill="#3a3a3c">命中 7 · 记录解</text>
+  <rect x="480" y="72" width="12" height="12" rx="2" fill="#d1544a"/><text x="498" y="82" font-size="10.5" fill="#3a3a3c">剪枝：val=3 不合法</text>
+  <line x1="660" y1="78" x2="686" y2="78" stroke="#8a6fd0" stroke-width="1.6" stroke-dasharray="4 3"/><text x="692" y="82" font-size="10.5" fill="#3a3a3c">回退（出栈）</text>
+
+  <!-- ===== ① 示例树 ===== -->
+  <text x="30" y="112" font-size="12" font-weight="700" fill="#20375e">① 示例树与 DFS 前序访问顺序（①②③④ 为访问次序；节点 3 触发约束剪枝，其整棵子树包含的 7 也永不可达）</text>
+
+  <!-- edges -->
+  <path d="M250 156 V186 H150 V214" fill="none" stroke="#4a7fd0" stroke-width="1.5"/>
+  <path d="M250 156 V186 H360 V214" fill="none" stroke="#d1544a" stroke-width="1.6" stroke-dasharray="5 3"/>
+  <path d="M150 246 V276 H95 V304" fill="none" stroke="#4a7fd0" stroke-width="1.4"/>
+  <path d="M150 246 V276 H205 V304" fill="none" stroke="#4a7fd0" stroke-width="1.4"/>
+  <path d="M360 246 V276 H305 V304" fill="none" stroke="#d7d7dd" stroke-width="1.3" stroke-dasharray="4 3"/>
+  <path d="M360 246 V276 H415 V304" fill="none" stroke="#d7d7dd" stroke-width="1.3" stroke-dasharray="4 3"/>
+  <!-- 剪枝叉 on 1->3 edge -->
+  <line x1="290" y1="182" x2="306" y2="198" stroke="#d1544a" stroke-width="2"/><line x1="306" y1="182" x2="290" y2="198" stroke="#d1544a" stroke-width="2"/>
+
+  <!-- nodes -->
+  <rect x="227" y="126" width="46" height="30" rx="8" fill="#fdf3e0" stroke="#d99a2b" stroke-width="1.5"/><text x="250" y="146" font-size="13" font-weight="700" fill="#8a5a12" text-anchor="middle">1</text>
+  <text x="250" y="120" font-size="9" fill="#4a7fd0" text-anchor="middle">①</text>
+
+  <rect x="127" y="214" width="46" height="30" rx="8" fill="#e6f4ec" stroke="#2f9e6e" stroke-width="1.6"/><text x="150" y="234" font-size="13" font-weight="700" fill="#1f6b47" text-anchor="middle">7</text>
+  <text x="150" y="208" font-size="9" fill="#4a7fd0" text-anchor="middle">②命中</text>
+
+  <rect x="337" y="214" width="46" height="30" rx="8" fill="#fbe6e3" stroke="#d1544a" stroke-width="1.6"/><text x="360" y="234" font-size="13" font-weight="700" fill="#8a4038" text-anchor="middle">3</text>
+  <text x="360" y="208" font-size="9" fill="#8a4038" text-anchor="middle">✗剪枝</text>
+
+  <rect x="72" y="304" width="46" height="30" rx="8" fill="#eaf1fb" stroke="#c6d9f2"/><text x="95" y="324" font-size="12" fill="#20375e" text-anchor="middle">4</text>
+  <text x="95" y="352" font-size="9" fill="#6e6e73" text-anchor="middle">③</text>
+  <rect x="182" y="304" width="46" height="30" rx="8" fill="#eaf1fb" stroke="#c6d9f2"/><text x="205" y="324" font-size="12" fill="#20375e" text-anchor="middle">5</text>
+  <text x="205" y="352" font-size="9" fill="#6e6e73" text-anchor="middle">④</text>
+
+  <rect x="282" y="304" width="46" height="30" rx="8" fill="#f4f4f6" stroke="#d7d7dd" stroke-dasharray="3 2"/><text x="305" y="324" font-size="12" fill="#a1a1a6" text-anchor="middle">6</text>
+  <rect x="392" y="304" width="46" height="30" rx="8" fill="#f4f4f6" stroke="#d7d7dd" stroke-dasharray="3 2"/><text x="415" y="324" font-size="12" fill="#a1a1a6" text-anchor="middle">7</text>
+  <text x="360" y="360" font-size="9" fill="#a1a1a6" text-anchor="middle">不可达（子树被剪）</text>
+
+  <text x="60" y="396" font-size="10" fill="#8a4038">约束剪枝 isValid：choice≠nil 且 choice.Val≠3 —— 进入 3 前就拒绝，省下整棵右子树的搜索</text>
+
+  <!-- ===== ② path 栈快照 ===== -->
+  <text x="560" y="112" font-size="12" font-weight="700" fill="#8a5a12">② path 栈随 DFS 的入栈 / 出栈（横向时间线）</text>
+
+  <!-- baseline -->
+  <line x1="560" y1="392" x2="1090" y2="392" stroke="#d7d7dd" stroke-width="1.2"/>
+
+  <!-- snapshot t1: [1] -->
+  <rect x="575" y="368" width="54" height="22" rx="4" fill="#fdf3e0" stroke="#e7c07a"/><text x="602" y="383" font-size="11" fill="#8a5a12" text-anchor="middle">1</text>
+  <text x="602" y="358" font-size="9" fill="#4a7fd0" text-anchor="middle">进 1</text>
+
+  <!-- t2: [1,7] record -->
+  <rect x="665" y="368" width="54" height="22" rx="4" fill="#fdf3e0" stroke="#e7c07a"/><text x="692" y="383" font-size="11" fill="#8a5a12" text-anchor="middle">1</text>
+  <rect x="665" y="344" width="54" height="22" rx="4" fill="#e6f4ec" stroke="#2f9e6e" stroke-width="1.4"/><text x="692" y="359" font-size="11" fill="#1f6b47" text-anchor="middle">7</text>
+  <text x="692" y="334" font-size="9" fill="#1f6b47" text-anchor="middle">记录✓</text>
+
+  <!-- t3: [1,7,4] -->
+  <rect x="755" y="368" width="54" height="22" rx="4" fill="#fdf3e0" stroke="#e7c07a"/><text x="782" y="383" font-size="11" fill="#8a5a12" text-anchor="middle">1</text>
+  <rect x="755" y="344" width="54" height="22" rx="4" fill="#fdf3e0" stroke="#e7c07a"/><text x="782" y="359" font-size="11" fill="#8a5a12" text-anchor="middle">7</text>
+  <rect x="755" y="320" width="54" height="22" rx="4" fill="#eaf1fb" stroke="#c6d9f2"/><text x="782" y="335" font-size="11" fill="#20375e" text-anchor="middle">4</text>
+  <text x="782" y="310" font-size="9" fill="#6e6e73" text-anchor="middle">进4→退</text>
+
+  <!-- t4: [1,7,5] -->
+  <rect x="845" y="368" width="54" height="22" rx="4" fill="#fdf3e0" stroke="#e7c07a"/><text x="872" y="383" font-size="11" fill="#8a5a12" text-anchor="middle">1</text>
+  <rect x="845" y="344" width="54" height="22" rx="4" fill="#fdf3e0" stroke="#e7c07a"/><text x="872" y="359" font-size="11" fill="#8a5a12" text-anchor="middle">7</text>
+  <rect x="845" y="320" width="54" height="22" rx="4" fill="#eaf1fb" stroke="#c6d9f2"/><text x="872" y="335" font-size="11" fill="#20375e" text-anchor="middle">5</text>
+  <text x="872" y="310" font-size="9" fill="#6e6e73" text-anchor="middle">进5→退</text>
+
+  <!-- t5: [1] popped, try 3 pruned -->
+  <rect x="935" y="368" width="54" height="22" rx="4" fill="#fdf3e0" stroke="#e7c07a"/><text x="962" y="383" font-size="11" fill="#8a5a12" text-anchor="middle">1</text>
+  <text x="962" y="358" font-size="9" fill="#8a4038" text-anchor="middle">回到 1</text>
+  <rect x="1005" y="344" width="70" height="46" rx="6" fill="#fbe6e3" stroke="#e8a79f"/><text x="1040" y="365" font-size="9.5" fill="#8a4038" text-anchor="middle">试 3</text><text x="1040" y="380" font-size="9.5" fill="#8a4038" text-anchor="middle">剪枝✗</text>
+
+  <!-- arrows between snapshots -->
+  <path d="M629 380 H663" fill="none" stroke="#8a6fd0" stroke-width="1.4" marker-end="url(#aB)"/>
+  <path d="M719 380 H753" fill="none" stroke="#8a6fd0" stroke-width="1.4" marker-end="url(#aB)"/>
+  <path d="M809 380 H843" fill="none" stroke="#8a6fd0" stroke-width="1.4" marker-end="url(#aB)" stroke-dasharray="4 3"/>
+  <path d="M899 380 H933" fill="none" stroke="#8a6fd0" stroke-width="1.4" marker-end="url(#aB)" stroke-dasharray="4 3"/>
+  <path d="M989 380 H1003" fill="none" stroke="#d1544a" stroke-width="1.4" marker-end="url(#aR)"/>
+  <text x="825" y="404" font-size="9" fill="#8a6fd0" text-anchor="middle">虚线 = 出栈回退</text>
+
+  <!-- ===== ③ 记录的解 + 要点 ===== -->
+  <rect x="40" y="432" width="1044" height="66" rx="12" fill="#e6f4ec" stroke="#a8ddc3"/>
+  <text x="62" y="458" font-size="12" font-weight="700" fill="#1f6b47">记录的解</text>
+  <text x="150" y="458" font-size="11" fill="#2a5a43">唯一路径 [1, 7] —— path 末尾 val=7 时记录一份「拷贝」（append([]…)），而非引用，避免后续出栈把已存的解改掉。</text>
+  <text x="62" y="482" font-size="10.5" fill="#2a5a43">注意：3 的子树里也有一个 7，但因约束剪枝在进入 3 之前就被拒绝，那条 [1,3,7] 从不产生 —— 剪枝改变的是「结果」，不只是速度。</text>
+
+  <rect x="40" y="512" width="516" height="152" rx="12" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="62" y="538" font-size="12" font-weight="700" fill="#20375e">为什么要「进入即压栈、返回即弹栈」</text>
+  <text x="62" y="562" font-size="10.5" fill="#4a4a4f">• path 是一路共享的可变栈，代表「当前所在的那条路径」。</text>
+  <text x="62" y="584" font-size="10.5" fill="#4a4a4f">• 递归深入前压入当前结点；回到上一层前弹出它。</text>
+  <text x="62" y="606" font-size="10.5" fill="#4a4a4f">• 压 / 弹严格成对，兄弟分支才能共用同一个 path。</text>
+  <text x="62" y="628" font-size="10.5" fill="#8a4038">• 忘记弹栈 → path 越积越长，所有后续路径全污染。</text>
+  <text x="62" y="650" font-size="10.5" fill="#2f6b4e">• 前序遍历顺序：根 → 左 → 右，命中判断在压栈之后。</text>
+
+  <rect x="568" y="512" width="516" height="152" rx="12" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="590" y="538" font-size="12" font-weight="700" fill="#8a5a12">框架四要素（本例的具体实现）</text>
+  <text x="590" y="562" font-size="10.5" fill="#4a4a4f">isSolution：path 非空且末尾结点 val = 7</text>
+  <text x="590" y="584" font-size="10.5" fill="#4a4a4f">isValid：choice ≠ nil 且 choice.Val ≠ 3（约束剪枝）</text>
+  <text x="590" y="606" font-size="10.5" fill="#4a4a4f">makeChoice：path 追加 choice</text>
+  <text x="590" y="628" font-size="10.5" fill="#4a4a4f">undoChoice：path 弹出末尾</text>
+  <text x="590" y="650" font-size="10.5" fill="#6e6e73">换一道题，只需换这四个函数，控制流一字不改。</text>
+</svg>

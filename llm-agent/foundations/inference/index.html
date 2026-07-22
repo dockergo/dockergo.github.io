@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Inference · AI Agents 图谱</title>
+<style>
+:root{
+  --c-bg:#fbfbfd; --c-card:#ffffff; --c-card2:#f5f5f7; --c-ink:#1d1d1f;
+  --c-ink2:#6e6e73; --c-ink3:#a1a1a6; --c-line:#e6e6ea; --c-edge:#d2d2d7;
+  --c-panel:#ffffff; --c-shadow:rgba(0,0,0,.08);
+}
+html[data-theme="dark"]{
+  --c-bg:#0d0d0f; --c-card:#17171a; --c-card2:#1e1e22; --c-ink:#f2f2f5;
+  --c-ink2:#a1a1a6; --c-ink3:#6e6e73; --c-line:#2a2a30; --c-edge:#33333a;
+  --c-panel:#161619; --c-shadow:rgba(0,0,0,.5);
+  /* 架构图内联 SVG 结构中性色深色翻转(品牌强调色不变) */
+  --sc-bg:#17171a; --sc-panel:#1e1e22; --sc-ink:#e8e8ea; --sc-ink2:#c4c4c8;
+  --sc-sub:#9a9aa2; --sc-line:#33333a; --sc-line2:#3d3d45;
+  --sc-fill-blue:#16253d; --sc-fill-purple:#241d3a; --sc-fill-orange:#382214; --sc-fill-teal:#0f3330;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--c-bg);color:var(--c-ink);
+  font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif;
+  font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+header{position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:14px;
+  padding:12px 24px;background:color-mix(in srgb,var(--c-bg) 86%,transparent);
+  backdrop-filter:saturate(1.4) blur(14px);border-bottom:1px solid var(--c-line)}
+header .logo{display:inline-flex;align-items:center;flex:none}
+header .spacer{flex:1}
+.brand-intro{display:flex;flex-direction:column;align-items:flex-start;margin-left:6px;min-width:0}
+.brand-intro .bt{font-size:15px;font-weight:700;color:var(--c-ink);line-height:1.3}
+.brand-intro .bs{margin-top:3px;font-size:11.5px;color:var(--c-ink3);line-height:1.5}
+.icobtn{width:38px;height:38px;border-radius:50%;border:1px solid var(--c-line);
+  background:var(--c-panel);color:var(--c-ink2);cursor:pointer;display:inline-grid;
+  place-items:center;font-size:16px;flex:none;text-decoration:none}
+.tt-ico{font-size:16px;line-height:1}.tt-moon{display:none}
+html[data-theme="dark"] .tt-sun{display:none}html[data-theme="dark"] .tt-moon{display:inline}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 24px 80px}
+
+/* ---- 门户 hero ---- */
+.hero{margin:6px 0 26px}
+.hero h1{font-size:26px;font-weight:800;letter-spacing:.2px}
+.hero .sub{margin-top:8px;font-size:13.5px;color:var(--c-ink2);max-width:820px}
+.hero .back{display:inline-flex;align-items:center;gap:6px;margin-bottom:14px;
+  font-size:12.5px;color:var(--c-ink2);border:1px solid var(--c-line);
+  border-radius:999px;padding:5px 13px;background:var(--c-panel)}
+.hero .back:hover{color:var(--c-ink);border-color:var(--c-edge)}
+
+/* ---- 门户卡片栅格 ---- */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:18px}
+.card{position:relative;display:block;background:var(--c-card);border:1px solid var(--c-line);
+  border-radius:16px;padding:20px 20px 18px;overflow:hidden;transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease}
+.card:hover{transform:translateY(-3px);border-color:var(--acc);box-shadow:0 10px 30px var(--c-shadow)}
+.card .bar{position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--acc)}
+.card .k{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.6px;
+  color:var(--acc);text-transform:uppercase;margin-bottom:8px}
+.card h3{font-size:17px;font-weight:750;line-height:1.35;color:var(--c-ink)}
+.card .core{margin-top:9px;font-size:12.5px;color:var(--c-ink2);line-height:1.6}
+.card .tags{margin-top:14px;display:flex;flex-direction:column;gap:7px}
+.card .tag{display:flex;gap:8px;align-items:baseline;font-size:12px;color:var(--c-ink2)}
+.card .tag .n{font-weight:800;color:var(--acc);flex:none;font-variant-numeric:tabular-nums}
+.card .go{margin-top:16px;font-size:12px;font-weight:700;color:var(--acc);display:inline-flex;align-items:center;gap:5px}
+
+/* ---- 模块页 ---- */
+.judge{background:var(--c-card);border:1px solid var(--c-line);border-left:4px solid var(--acc);
+  border-radius:14px;padding:18px 22px;margin-bottom:26px}
+.judge .k{font-size:11px;font-weight:700;letter-spacing:.6px;color:var(--acc);text-transform:uppercase}
+.judge h1{font-size:22px;font-weight:800;line-height:1.34;margin-top:7px}
+.judge .core{margin-top:11px;font-size:13.5px;color:var(--c-ink2);line-height:1.7;max-width:900px}
+.secttl{display:flex;align-items:center;gap:11px;margin:34px 0 14px}
+.secttl .badge{flex:none;min-width:30px;height:30px;padding:0 9px;border-radius:9px;background:var(--acc);
+  color:#fff;font-weight:800;font-size:15px;display:inline-grid;place-items:center}
+.secttl .t{font-size:17px;font-weight:750}
+.secttl.eco .badge{background:var(--c-ink);color:var(--c-bg)}
+/* ── 垂直 TAB 布局 ── */
+.vt-wrap{display:flex;gap:22px;margin-top:26px;align-items:flex-start}
+.vt-nav{flex:none;width:236px;position:sticky;top:20px;display:flex;flex-direction:column;gap:8px}
+.vt-grp{font-size:11px;font-weight:800;letter-spacing:.04em;color:var(--c-ink3);
+  text-transform:none;margin:14px 4px 2px;padding-top:8px;border-top:1px solid var(--c-line)}
+.vt-grp:first-child{margin-top:0;padding-top:0;border-top:none}
+.vt-tab{display:flex;align-items:center;gap:10px;text-align:left;cursor:pointer;
+  background:var(--c-card);border:1px solid var(--c-line);border-radius:12px;
+  padding:12px 13px;color:var(--c-ink2);font:inherit;transition:.15s}
+.vt-tab:hover{border-color:var(--acc);color:var(--c-ink)}
+.vt-tab.active{background:var(--acc);border-color:var(--acc);color:#fff;box-shadow:0 4px 14px -6px var(--acc)}
+.vt-tab .vt-b{flex:none;min-width:26px;height:26px;padding:0 7px;border-radius:8px;
+  background:var(--c-card2);color:var(--acc);font-weight:800;font-size:13px;
+  display:inline-grid;place-items:center}
+.vt-tab.active .vt-b{background:rgba(255,255,255,.24);color:#fff}
+.vt-tab .vt-l{font-size:12.5px;font-weight:650;line-height:1.35}
+.vt-stage{flex:1;min-width:0}
+.vt-sec{display:none}
+.vt-sec.active{display:block;animation:vtfade .22s ease}
+.vt-sec .secttl{margin-top:0}
+@keyframes vtfade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media(max-width:820px){.vt-wrap{flex-direction:column}.vt-nav{position:static;width:100%;flex-direction:row;flex-wrap:wrap}.vt-tab{flex:1 1 44%}}
+.fig{background:var(--c-card);border:1px solid var(--c-line);border-radius:16px;
+  padding:16px;overflow:hidden}
+.fig img{display:block;width:100%;height:auto;border-radius:8px}
+.fig .figsvg{display:block;width:100%;height:auto;border-radius:8px}
+.blurb{margin-top:14px;background:var(--c-card);border:1px solid var(--c-line);
+  border-radius:14px;padding:15px 19px}
+.blurb p{font-size:13px;color:var(--c-ink2);line-height:1.75}
+.blurb p+p{margin-top:9px}
+.blurb b{color:var(--c-ink);font-weight:700}
+.blurb code{font-family:'SF Mono',ui-monospace,Menlo,monospace;font-size:.88em;
+  background:var(--c-card2);border:1px solid var(--c-line);border-radius:5px;padding:1px 5px;color:var(--acc)}
+.blurb a{color:var(--acc);text-decoration:none;
+  border-bottom:1px solid color-mix(in srgb,var(--acc) 40%,transparent);transition:border-color .15s}
+.blurb a:hover{border-bottom-color:var(--acc)}
+.refs{margin-top:30px;padding-top:18px;border-top:2px solid var(--c-line)}
+.reflist{margin-top:12px}
+.reflist p{margin:5px 0;font-size:12.5px;color:var(--c-ink2);line-height:1.7}
+.reflist a{color:var(--acc)}
+.miss{padding:40px;text-align:center;color:var(--c-ink3);font-size:13px;border:1px dashed var(--c-edge);border-radius:12px}
+.backrow{margin-top:44px;padding-top:22px;border-top:1px solid var(--c-line)}
+.backrow a{display:inline-flex;align-items:center;gap:7px;font-size:13px;color:var(--c-ink2);
+  border:1px solid var(--c-line);border-radius:999px;padding:8px 16px;background:var(--c-panel)}
+.backrow a:hover{color:var(--c-ink);border-color:var(--c-edge)}
+footer{max-width:1180px;margin:0 auto;padding:0 24px 40px;color:var(--c-ink3);font-size:11.5px}
+
+/* ---- 门户片区切换 tab + 片区标题条 ---- */
+.zbar{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap}
+.zseg{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:700;
+  color:var(--c-ink2);border:1px solid var(--c-line);border-radius:999px;
+  padding:8px 16px;background:var(--c-panel);transition:.15s}
+.zseg:hover{color:var(--c-ink);border-color:var(--c-edge)}
+.zseg.active{color:var(--c-ink);border-color:var(--c-ink);background:var(--c-card)}
+.zseg .zn{min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:var(--c-card2);
+  color:var(--c-ink2);font-size:11px;font-weight:800;display:inline-grid;place-items:center}
+.zone{margin-top:38px;scroll-margin-top:80px}
+.zone:first-of-type{margin-top:30px}
+.zhd{margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--c-line)}
+.zhd .zk{font-size:11px;font-weight:800;letter-spacing:.08em;color:var(--c-ink3);text-transform:uppercase}
+.zhd h2{font-size:20px;font-weight:800;margin-top:5px;color:var(--c-ink)}
+.zhd p{font-size:12.5px;color:var(--c-ink2);margin-top:6px;max-width:860px;line-height:1.65}
+</style>
+</head>
+<body>
+<header>
+  <a class="logo" href="../../../index.html#agent" title="返回 LLM & Agent 导航"><span class="icobtn"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg></span></a>
+  <div class="brand-intro">
+    <div class="bt">Inference</div>
+    <div class="bs">AI Agents 生态图谱 · 概念层机理（不点名具体框架）</div>
+  </div>
+  <div class="spacer"></div>
+  <button id="themeBtn" class="icobtn" title="切换深色 / 浅色主题" aria-label="切换主题"><span class="tt-ico tt-moon">☾</span><span class="tt-ico tt-sun">☀</span></button>
+</header>
+<div class="wrap" style="--acc:#c084fc">
+  <div class="judge">
+    <span class="k">INFERENCE · 定位</span>
+    <h1>Inference · 让大模型跑得起、跑得快</h1>
+    <div class="core">推理成本集中在自回归解码与显存带宽：KV-Cache 省重算、量化蒸馏压体积、连续批处理与 PagedAttention 榨干吞吐。</div>
+  </div>
+  <div class="vt-wrap"><nav class="vt-nav" aria-label="模块内容切换"><div class="vt-grp">概览 Overview</div><button class="vt-tab active" data-target="sec-eco"><span class="vt-b">◎</span><span class="vt-l">生态架构总图</span></button><div class="vt-grp">机制 · KV-Cache</div><button class="vt-tab" data-target="sec-i1"><span class="vt-b">I1</span><span class="vt-l">缓存历史键值免重算</span></button><div class="vt-grp">机制 · 模型压缩</div><button class="vt-tab" data-target="sec-i2"><span class="vt-b">I2</span><span class="vt-l">量化 / 蒸馏 / 剪枝</span></button><div class="vt-grp">机制 · 服务调度</div><button class="vt-tab" data-target="sec-i3"><span class="vt-b">I3</span><span class="vt-l">连续批处理 + PagedAttention</span></button><div class="vt-grp">对比 Compare</div><button class="vt-tab" data-target="sec-cmp"><span class="vt-b">⇄</span><span class="vt-l">机制差异对比</span></button><div class="vt-grp">工程 Engineering</div><button class="vt-tab" data-target="sec-eng"><span class="vt-b">⚙</span><span class="vt-l">框架实现差异</span></button></nav><div class="vt-stage"><section class="vt-sec active" id="sec-eco" data-sec="sec-eco"><div class="secttl eco"><span class="badge">◎</span><span class="t">生态架构总图 · 这一模块如何在 Agent 系统中自洽拼合</span></div><div class="fig" role="img" aria-label="Inference 生态架构"><svg class="figsvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 470" font-family="-apple-system,'PingFang SC','Helvetica Neue',sans-serif">
+  <defs>
+    <filter id="s70_soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.07"/>
+    </filter>
+    <marker id="s70_arp" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#c084fc"/>
+    </marker>
+  </defs>
+  <rect width="960" height="470" fill="var(--sc-bg,#fbfbfd)"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="var(--sc-ink,#1d1d1f)">推理优化 · 生态架构</text>
+  <text x="30" y="54" font-size="12" fill="var(--sc-sub,#6e6e73)">让训练好的模型跑得更快、更省、更能扛并发——从请求到高吞吐服务的全链路</text>
+
+  <g filter="url(#s70_soft)"><rect x="30" y="96" width="150" height="70" rx="12" fill="var(--sc-fill-purple,#f3e8ff)" stroke="#c084fc" stroke-width="1.5"/></g>
+  <text x="105" y="127" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">用户请求</text>
+  <text x="105" y="147" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">prompt 输入</text>
+  <path d="M180 131 L214 131" stroke="#c084fc" stroke-width="2.2" fill="none" marker-end="url(#s70_arp)"/>
+
+  <g filter="url(#s70_soft)"><rect x="216" y="96" width="150" height="70" rx="12" fill="var(--sc-fill-purple,#f3e8ff)" stroke="#c084fc" stroke-width="1.5"/></g>
+  <text x="291" y="127" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">模型压缩</text>
+  <text x="291" y="147" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">量化 / 蒸馏 / 剪枝</text>
+  <path d="M366 131 L400 131" stroke="#c084fc" stroke-width="2.2" fill="none" marker-end="url(#s70_arp)"/>
+
+  <g filter="url(#s70_soft)"><rect x="402" y="96" width="150" height="70" rx="12" fill="var(--sc-fill-purple,#f3e8ff)" stroke="#c084fc" stroke-width="1.5"/></g>
+  <text x="477" y="127" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">KV 缓存</text>
+  <text x="477" y="147" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">历史键值免重算</text>
+  <path d="M552 131 L586 131" stroke="#c084fc" stroke-width="2.2" fill="none" marker-end="url(#s70_arp)"/>
+
+  <g filter="url(#s70_soft)"><rect x="588" y="96" width="150" height="70" rx="12" fill="var(--sc-fill-purple,#f3e8ff)" stroke="#c084fc" stroke-width="1.5"/></g>
+  <text x="663" y="127" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">服务调度</text>
+  <text x="663" y="147" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">连续批处理</text>
+  <path d="M738 131 L772 131" stroke="#c084fc" stroke-width="2.2" fill="none" marker-end="url(#s70_arp)"/>
+
+  <g filter="url(#s70_soft)"><rect x="774" y="96" width="156" height="70" rx="12" fill="var(--sc-fill-purple,#f3e8ff)" stroke="#c084fc" stroke-width="1.5"/></g>
+  <text x="852" y="127" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">高吞吐服务</text>
+  <text x="852" y="147" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">低延迟 · 高并发</text>
+
+  <text x="30" y="210" font-size="13" font-weight="600" fill="var(--sc-ink,#1d1d1f)">三层机理</text>
+
+  <g filter="url(#s70_soft)"><rect x="30" y="226" width="290" height="180" rx="14" fill="var(--sc-panel,#ffffff)" stroke="#c084fc" stroke-width="1.5"/></g>
+  <text x="54" y="258" font-size="13" font-weight="600" fill="#c084fc">① KV 缓存</text>
+  <text x="54" y="288" font-size="11" fill="var(--sc-sub,#6e6e73)">自回归逐 token 生成时，</text>
+  <text x="54" y="308" font-size="11" fill="var(--sc-sub,#6e6e73)">缓存历史键值避免重复计算</text>
+  <text x="54" y="336" font-size="11" fill="var(--sc-sub,#6e6e73)">把 O(n²) 重算降为增量计算，</text>
+  <text x="54" y="356" font-size="11" fill="var(--sc-sub,#6e6e73)">是解码提速的基石</text>
+  <text x="54" y="386" font-size="10.5" fill="var(--sc-sub,#9aa0a6)">代价：显存随上下文线性增长</text>
+
+  <g filter="url(#s70_soft)"><rect x="336" y="226" width="290" height="180" rx="14" fill="var(--sc-panel,#ffffff)" stroke="#c084fc" stroke-width="1.5"/></g>
+  <text x="360" y="258" font-size="13" font-weight="600" fill="#c084fc">② 模型压缩</text>
+  <text x="360" y="288" font-size="11" fill="var(--sc-sub,#6e6e73)">量化降精度、蒸馏教小模型、</text>
+  <text x="360" y="308" font-size="11" fill="var(--sc-sub,#6e6e73)">剪枝去冗余</text>
+  <text x="360" y="336" font-size="11" fill="var(--sc-sub,#6e6e73)">缩小模型体积与算力开销，</text>
+  <text x="360" y="356" font-size="11" fill="var(--sc-sub,#6e6e73)">让大模型能上小设备</text>
+  <text x="360" y="386" font-size="10.5" fill="var(--sc-sub,#9aa0a6)">代价：可能损失少量精度</text>
+
+  <g filter="url(#s70_soft)"><rect x="642" y="226" width="288" height="180" rx="14" fill="var(--sc-panel,#ffffff)" stroke="#c084fc" stroke-width="1.5"/></g>
+  <text x="666" y="258" font-size="13" font-weight="600" fill="#c084fc">③ 服务调度</text>
+  <text x="666" y="288" font-size="11" fill="var(--sc-sub,#6e6e73)">连续批处理动态拼批、</text>
+  <text x="666" y="308" font-size="11" fill="var(--sc-sub,#6e6e73)">PagedAttention 分页管理显存</text>
+  <text x="666" y="336" font-size="11" fill="var(--sc-sub,#6e6e73)">把 GPU 吃满，</text>
+  <text x="666" y="356" font-size="11" fill="var(--sc-sub,#6e6e73)">大幅提升吞吐与并发</text>
+  <text x="666" y="386" font-size="10.5" fill="var(--sc-sub,#9aa0a6)">代价：调度与显存管理更复杂</text>
+
+  <text x="480" y="444" font-size="12" font-weight="600" fill="#c084fc" text-anchor="middle">缓存免重算 · 压缩降开销 · 调度提吞吐——三管齐下把模型跑到极致</text>
+</svg></div><div class="blurb"><p>推理成本集中在自回归解码与显存带宽：KV-Cache 省重算、量化蒸馏压体积、连续批处理与 PagedAttention 榨干吞吐。</p></div></section><section class="vt-sec" id="sec-i1" data-sec="sec-i1"><div class="secttl"><span class="badge">I1</span><span class="t">KV-Cache · 缓存历史键值免重算</span></div><div class="fig" role="img" aria-label="KV-Cache · 缓存历史键值免重算"><svg class="figsvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 480" font-family="-apple-system,'PingFang SC','Helvetica Neue',sans-serif">
+  <defs>
+    <filter id="s71_soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.07"/>
+    </filter>
+    <marker id="s71_arp" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#c084fc"/>
+    </marker>
+  </defs>
+  <rect width="960" height="480" fill="var(--sc-bg,#fbfbfd)"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="var(--sc-ink,#1d1d1f)">推理优化 · KV 缓存</text>
+  <text x="30" y="54" font-size="12" fill="var(--sc-sub,#6e6e73)">自回归解码时缓存历史 token 的键值，避免每步重复计算整个序列</text>
+
+  <g filter="url(#s71_soft)"><rect x="30" y="86" width="435" height="300" rx="14" fill="var(--sc-fill-purple,#f3e8ff)" stroke="#c084fc" stroke-width="1.5"/></g>
+  <text x="56" y="118" font-size="13" font-weight="600" fill="#c084fc">无缓存：每步重算全序列</text>
+  <text x="56" y="150" font-size="10.5" fill="var(--sc-sub,#6e6e73)">生成第 t 个 token 时</text>
+  <g filter="url(#s71_soft)"><rect x="56" y="166" width="60" height="40" rx="6" fill="var(--sc-panel,#ffffff)" stroke="#c084fc" stroke-width="1.1"/></g>
+  <text x="86" y="191" font-size="11" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">t1</text>
+  <g filter="url(#s71_soft)"><rect x="122" y="166" width="60" height="40" rx="6" fill="var(--sc-panel,#ffffff)" stroke="#c084fc" stroke-width="1.1"/></g>
+  <text x="152" y="191" font-size="11" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">t2</text>
+  <g filter="url(#s71_soft)"><rect x="188" y="166" width="60" height="40" rx="6" fill="var(--sc-panel,#ffffff)" stroke="#c084fc" stroke-width="1.1"/></g>
+  <text x="218" y="191" font-size="11" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">t3</text>
+  <g filter="url(#s71_soft)"><rect x="254" y="166" width="60" height="40" rx="6" fill="var(--sc-panel,#ffffff)" stroke="#c084fc" stroke-width="1.1"/></g>
+  <text x="284" y="191" font-size="11" fill="#c084fc" text-anchor="middle">t4?</text>
+  <text x="56" y="238" font-size="10.5" fill="var(--sc-sub,#6e6e73)">t1、t2、t3 的键值被反复重新计算</text>
+  <text x="56" y="262" font-size="10.5" fill="var(--sc-sub,#6e6e73)">序列越长，重复计算量越大</text>
+  <text x="56" y="300" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)">复杂度 ≈ O(n²)</text>
+  <text x="56" y="326" font-size="10.5" fill="var(--sc-sub,#9aa0a6)">大量算力浪费在已算过的历史上</text>
+
+  <g filter="url(#s71_soft)"><rect x="495" y="86" width="435" height="300" rx="14" fill="var(--sc-panel,#ffffff)" stroke="#c084fc" stroke-width="1.5"/></g>
+  <text x="521" y="118" font-size="13" font-weight="600" fill="#c084fc">有缓存：只算新 token</text>
+  <text x="521" y="150" font-size="10.5" fill="var(--sc-sub,#6e6e73)">历史 K/V 存入缓存，直接复用</text>
+  <g filter="url(#s71_soft)"><rect x="521" y="166" width="180" height="40" rx="6" fill="var(--sc-fill-purple,#f3e8ff)" stroke="#c084fc" stroke-width="1.1"/></g>
+  <text x="611" y="191" font-size="10.5" fill="#c084fc" text-anchor="middle">KV Cache: t1 t2 t3</text>
+  <path d="M711 186 L735 186" stroke="#c084fc" stroke-width="2" fill="none" marker-end="url(#s71_arp)"/>
+  <g filter="url(#s71_soft)"><rect x="737" y="166" width="60" height="40" rx="6" fill="var(--sc-panel,#ffffff)" stroke="#c084fc" stroke-width="1.1"/></g>
+  <text x="767" y="191" font-size="11" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">t4</text>
+  <text x="521" y="238" font-size="10.5" fill="var(--sc-sub,#6e6e73)">只对新 token 计算 Q，与缓存 K/V 做注意力</text>
+  <text x="521" y="262" font-size="10.5" fill="var(--sc-sub,#6e6e73)">每步只新增一行键值，追加进缓存</text>
+  <text x="521" y="300" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)">单步复杂度 ≈ O(n)</text>
+  <text x="521" y="326" font-size="10.5" fill="var(--sc-sub,#9aa0a6)">代价：缓存显存随上下文长度线性增长</text>
+  <text x="521" y="350" font-size="10.5" fill="var(--sc-sub,#9aa0a6)">催生 MQA/GQA、量化缓存、分页管理</text>
+
+  <text x="480" y="440" font-size="12" font-weight="600" fill="#c084fc" text-anchor="middle">空间换时间：用显存缓存历史键值，把逐 token 解码从重算变增量计算</text>
+</svg></div></section><section class="vt-sec" id="sec-i2" data-sec="sec-i2"><div class="secttl"><span class="badge">I2</span><span class="t">模型压缩 · 量化 / 蒸馏 / 剪枝</span></div><div class="fig" role="img" aria-label="模型压缩 · 量化 / 蒸馏 / 剪枝"><svg class="figsvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 480" font-family="-apple-system,'PingFang SC','Helvetica Neue',sans-serif">
+  <defs>
+    <filter id="s72_soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.07"/>
+    </filter>
+    <marker id="s72_arp" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#c084fc"/>
+    </marker>
+  </defs>
+  <rect width="960" height="480" fill="var(--sc-bg,#fbfbfd)"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="var(--sc-ink,#1d1d1f)">推理优化 · 模型压缩</text>
+  <text x="30" y="54" font-size="12" fill="var(--sc-sub,#6e6e73)">在尽量保住精度的前提下缩小模型，让它更快、更省、更能上小设备</text>
+
+  <g filter="url(#s72_soft)"><rect x="30" y="90" width="288" height="290" rx="14" fill="var(--sc-fill-purple,#f3e8ff)" stroke="#c084fc" stroke-width="1.5"/></g>
+  <text x="54" y="122" font-size="13" font-weight="600" fill="#c084fc">① 量化</text>
+  <text x="54" y="150" font-size="10.5" fill="var(--sc-sub,#6e6e73)">降低权重/激活的数值精度</text>
+  <text x="54" y="176" font-size="11" fill="var(--sc-ink,#1d1d1f)">FP16 → INT8 → INT4</text>
+  <text x="54" y="204" font-size="10.5" fill="var(--sc-sub,#6e6e73)">· 显存与带宽成倍下降</text>
+  <text x="54" y="228" font-size="10.5" fill="var(--sc-sub,#6e6e73)">· 支持 PTQ 训练后量化</text>
+  <text x="54" y="252" font-size="10.5" fill="var(--sc-sub,#6e6e73)">· 与 QAT 量化感知训练</text>
+  <text x="54" y="288" font-size="11" font-weight="600" fill="var(--sc-ink,#1d1d1f)">最常用、性价比高</text>
+  <text x="54" y="314" font-size="10.5" fill="var(--sc-sub,#9aa0a6)">代价：过低比特可能掉精度</text>
+
+  <g filter="url(#s72_soft)"><rect x="336" y="90" width="288" height="290" rx="14" fill="var(--sc-panel,#ffffff)" stroke="#c084fc" stroke-width="1.5"/></g>
+  <text x="360" y="122" font-size="13" font-weight="600" fill="#c084fc">② 蒸馏</text>
+  <text x="360" y="150" font-size="10.5" fill="var(--sc-sub,#6e6e73)">大模型当老师教小模型</text>
+  <g filter="url(#s72_soft)"><rect x="360" y="166" width="110" height="42" rx="8" fill="var(--sc-fill-purple,#f3e8ff)" stroke="#c084fc" stroke-width="1.1"/></g>
+  <text x="415" y="192" font-size="10.5" fill="#c084fc" text-anchor="middle">教师大模型</text>
+  <path d="M470 187 L494 187" stroke="#c084fc" stroke-width="2" fill="none" marker-end="url(#s72_arp)"/>
+  <g filter="url(#s72_soft)"><rect x="496" y="166" width="104" height="42" rx="8" fill="var(--sc-panel,#ffffff)" stroke="#c084fc" stroke-width="1.1"/></g>
+  <text x="548" y="192" font-size="10.5" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">学生小模型</text>
+  <text x="360" y="236" font-size="10.5" fill="var(--sc-sub,#6e6e73)">学生模仿教师的软标签/中间表示</text>
+  <text x="360" y="260" font-size="10.5" fill="var(--sc-sub,#6e6e73)">小模型学到大模型的知识与泛化</text>
+  <text x="360" y="296" font-size="11" font-weight="600" fill="var(--sc-ink,#1d1d1f)">体积小、可自主部署</text>
+  <text x="360" y="322" font-size="10.5" fill="var(--sc-sub,#9aa0a6)">代价：需额外训练、上限受教师限</text>
+
+  <g filter="url(#s72_soft)"><rect x="642" y="90" width="288" height="290" rx="14" fill="var(--sc-panel,#ffffff)" stroke="#c084fc" stroke-width="1.5"/></g>
+  <text x="666" y="122" font-size="13" font-weight="600" fill="#c084fc">③ 剪枝</text>
+  <text x="666" y="150" font-size="10.5" fill="var(--sc-sub,#6e6e73)">去掉冗余的权重或结构</text>
+  <text x="666" y="178" font-size="10.5" fill="var(--sc-sub,#6e6e73)">· 非结构化：剪单个权重</text>
+  <text x="666" y="202" font-size="10.5" fill="var(--sc-sub,#6e6e73)">· 结构化：剪整头/整层</text>
+  <text x="666" y="226" font-size="10.5" fill="var(--sc-sub,#6e6e73)">· 剪后再微调恢复精度</text>
+  <text x="666" y="262" font-size="10.5" fill="var(--sc-sub,#6e6e73)">结构化剪枝更易获得实际加速</text>
+  <text x="666" y="296" font-size="11" font-weight="600" fill="var(--sc-ink,#1d1d1f)">减参降算力</text>
+  <text x="666" y="322" font-size="10.5" fill="var(--sc-sub,#9aa0a6)">代价：非结构化难落地为真实提速</text>
+
+  <text x="480" y="440" font-size="12" font-weight="600" fill="#c084fc" text-anchor="middle">量化降精度 · 蒸馏换小模型 · 剪枝去冗余——常组合使用，精度与效率的权衡</text>
+</svg></div></section><section class="vt-sec" id="sec-i3" data-sec="sec-i3"><div class="secttl"><span class="badge">I3</span><span class="t">服务调度 · 连续批处理 + PagedAttention</span></div><div class="fig" role="img" aria-label="服务调度 · 连续批处理 + PagedAttention"><svg class="figsvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 480" font-family="-apple-system,'PingFang SC','Helvetica Neue',sans-serif">
+  <defs>
+    <filter id="s73_soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.07"/>
+    </filter>
+    <marker id="s73_arp" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#c084fc"/>
+    </marker>
+  </defs>
+  <rect width="960" height="480" fill="var(--sc-bg,#fbfbfd)"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="var(--sc-ink,#1d1d1f)">推理优化 · 服务调度</text>
+  <text x="30" y="54" font-size="12" fill="var(--sc-sub,#6e6e73)">把 GPU 吃满：动态拼批 + 分页显存，让吞吐与并发最大化</text>
+
+  <g filter="url(#s73_soft)"><rect x="30" y="86" width="435" height="300" rx="14" fill="var(--sc-fill-purple,#f3e8ff)" stroke="#c084fc" stroke-width="1.5"/></g>
+  <text x="56" y="118" font-size="13" font-weight="600" fill="#c084fc">连续批处理</text>
+  <text x="56" y="146" font-size="10.5" fill="var(--sc-sub,#6e6e73)">静态批：等最慢的请求，GPU 空转</text>
+  <g filter="url(#s73_soft)"><rect x="56" y="162" width="80" height="34" rx="6" fill="var(--sc-panel,#ffffff)" stroke="#c084fc" stroke-width="1.1"/></g>
+  <text x="96" y="184" font-size="10" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">req A</text>
+  <g filter="url(#s73_soft)"><rect x="144" y="162" width="80" height="34" rx="6" fill="var(--sc-panel,#ffffff)" stroke="#c084fc" stroke-width="1.1"/></g>
+  <text x="184" y="184" font-size="10" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">req B</text>
+  <g filter="url(#s73_soft)"><rect x="232" y="162" width="80" height="34" rx="6" fill="var(--sc-panel,#ffffff)" stroke="#c084fc" stroke-width="1.1"/></g>
+  <text x="272" y="184" font-size="10" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">req C</text>
+  <text x="56" y="228" font-size="10.5" fill="var(--sc-sub,#6e6e73)">连续批：某请求结束立刻插入新请求</text>
+  <text x="56" y="252" font-size="10.5" fill="var(--sc-sub,#6e6e73)">每一步都动态重组当前批次</text>
+  <text x="56" y="276" font-size="10.5" fill="var(--sc-sub,#6e6e73)">GPU 几乎不空转，吞吐大幅提升</text>
+  <text x="56" y="314" font-size="11" font-weight="600" fill="var(--sc-ink,#1d1d1f)">又称 in-flight batching</text>
+  <text x="56" y="340" font-size="10.5" fill="var(--sc-sub,#9aa0a6)">iteration 级调度，vLLM/TGI 标配</text>
+
+  <g filter="url(#s73_soft)"><rect x="495" y="86" width="435" height="300" rx="14" fill="var(--sc-panel,#ffffff)" stroke="#c084fc" stroke-width="1.5"/></g>
+  <text x="521" y="118" font-size="13" font-weight="600" fill="#c084fc">PagedAttention · 显存分页</text>
+  <text x="521" y="146" font-size="10.5" fill="var(--sc-sub,#6e6e73)">仿操作系统虚拟内存，把 KV 缓存</text>
+  <text x="521" y="166" font-size="10.5" fill="var(--sc-sub,#6e6e73)">切成固定大小的「块」按需分配</text>
+  <g filter="url(#s73_soft)"><rect x="521" y="182" width="52" height="34" rx="5" fill="var(--sc-fill-purple,#f3e8ff)" stroke="#c084fc" stroke-width="1"/></g>
+  <g filter="url(#s73_soft)"><rect x="579" y="182" width="52" height="34" rx="5" fill="var(--sc-fill-purple,#f3e8ff)" stroke="#c084fc" stroke-width="1"/></g>
+  <g filter="url(#s73_soft)"><rect x="637" y="182" width="52" height="34" rx="5" fill="var(--sc-panel,#ffffff)" stroke="#c084fc" stroke-width="1"/></g>
+  <g filter="url(#s73_soft)"><rect x="695" y="182" width="52" height="34" rx="5" fill="var(--sc-fill-purple,#f3e8ff)" stroke="#c084fc" stroke-width="1"/></g>
+  <text x="521" y="248" font-size="10.5" fill="var(--sc-sub,#6e6e73)">· 消除显存碎片，利用率接近 100%</text>
+  <text x="521" y="272" font-size="10.5" fill="var(--sc-sub,#6e6e73)">· 相同前缀的块可共享，省显存</text>
+  <text x="521" y="296" font-size="10.5" fill="var(--sc-sub,#6e6e73)">· 支撑更大批次、更长上下文</text>
+  <text x="521" y="332" font-size="11" font-weight="600" fill="var(--sc-ink,#1d1d1f)">显存管理是高并发的关键</text>
+  <text x="521" y="358" font-size="10.5" fill="var(--sc-sub,#9aa0a6)">代价：调度器与内存管理更复杂</text>
+
+  <text x="480" y="440" font-size="12" font-weight="600" fill="#c084fc" text-anchor="middle">连续批处理提利用率 · PagedAttention 管好显存——共同把服务吞吐推到极致</text>
+</svg></div></section><section class="vt-sec" id="sec-cmp" data-sec="sec-cmp"><div class="secttl"><span class="badge">⇄</span><span class="t">Inference · 核心机制差异对比</span></div><div class="fig" role="img" aria-label="Inference · 核心机制差异对比"><svg class="figsvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 520" font-family="-apple-system,'PingFang SC','Helvetica Neue',sans-serif">
+  <defs>
+    <filter id="s74_soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.07"/>
+    </filter>
+  </defs>
+  <rect width="960" height="520" fill="var(--sc-bg,#fbfbfd)"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="var(--sc-ink,#1d1d1f)">推理优化 · 机制对比</text>
+  <text x="30" y="54" font-size="12" fill="var(--sc-sub,#6e6e73)">三类构件分别回答：怎样免重算、怎样降开销、怎样提吞吐</text>
+
+  <g filter="url(#s74_soft)"><rect x="30" y="82" width="900" height="44" rx="10" fill="var(--sc-panel,#ffffff)" stroke="var(--sc-line,#e2e2e6)" stroke-width="1.2"/></g>
+  <text x="60" y="110" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)">构件</text>
+  <text x="230" y="110" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)">解决什么问题</text>
+  <text x="500" y="110" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)">核心做法</text>
+  <text x="770" y="110" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)">主要代价</text>
+
+  <g filter="url(#s74_soft)"><rect x="30" y="136" width="900" height="96" rx="10" fill="var(--sc-fill-purple,#f3e8ff)" stroke="#c084fc" stroke-width="1.4"/></g>
+  <text x="60" y="190" font-size="12.5" font-weight="600" fill="#c084fc">KV 缓存</text>
+  <text x="230" y="178" font-size="11" fill="var(--sc-sub,#6e6e73)">自回归每步重算全序列</text>
+  <text x="230" y="198" font-size="11" fill="var(--sc-sub,#6e6e73)">算力大量浪费</text>
+  <text x="500" y="178" font-size="11" fill="var(--sc-sub,#6e6e73)">缓存历史键值，只算</text>
+  <text x="500" y="198" font-size="11" fill="var(--sc-sub,#6e6e73)">新 token 的注意力</text>
+  <text x="770" y="178" font-size="11" fill="var(--sc-sub,#6e6e73)">显存随上下文</text>
+  <text x="770" y="198" font-size="11" fill="var(--sc-sub,#6e6e73)">长度线性增长</text>
+
+  <g filter="url(#s74_soft)"><rect x="30" y="242" width="900" height="96" rx="10" fill="var(--sc-panel,#ffffff)" stroke="#c084fc" stroke-width="1.4"/></g>
+  <text x="60" y="296" font-size="12.5" font-weight="600" fill="#c084fc">模型压缩</text>
+  <text x="230" y="284" font-size="11" fill="var(--sc-sub,#6e6e73)">模型太大，显存与</text>
+  <text x="230" y="304" font-size="11" fill="var(--sc-sub,#6e6e73)">算力开销高</text>
+  <text x="500" y="284" font-size="11" fill="var(--sc-sub,#6e6e73)">量化降精度、蒸馏换</text>
+  <text x="500" y="304" font-size="11" fill="var(--sc-sub,#6e6e73)">小模型、剪枝去冗余</text>
+  <text x="770" y="284" font-size="11" fill="var(--sc-sub,#6e6e73)">可能损失少量</text>
+  <text x="770" y="304" font-size="11" fill="var(--sc-sub,#6e6e73)">精度</text>
+
+  <g filter="url(#s74_soft)"><rect x="30" y="348" width="900" height="96" rx="10" fill="var(--sc-panel,#ffffff)" stroke="#c084fc" stroke-width="1.4"/></g>
+  <text x="60" y="402" font-size="12.5" font-weight="600" fill="#c084fc">服务调度</text>
+  <text x="230" y="390" font-size="11" fill="var(--sc-sub,#6e6e73)">静态批 GPU 空转，</text>
+  <text x="230" y="410" font-size="11" fill="var(--sc-sub,#6e6e73)">吞吐与并发上不去</text>
+  <text x="500" y="390" font-size="11" fill="var(--sc-sub,#6e6e73)">连续批处理动态拼批 +</text>
+  <text x="500" y="410" font-size="11" fill="var(--sc-sub,#6e6e73)">PagedAttention 分页显存</text>
+  <text x="770" y="390" font-size="11" fill="var(--sc-sub,#6e6e73)">调度与显存</text>
+  <text x="770" y="410" font-size="11" fill="var(--sc-sub,#6e6e73)">管理更复杂</text>
+
+  <text x="480" y="486" font-size="13" font-weight="600" fill="#c084fc" text-anchor="middle">缓存免重算 · 压缩降开销 · 调度提吞吐</text>
+</svg></div></section><section class="vt-sec" id="sec-eng" data-sec="sec-eng"><div class="secttl"><span class="badge">⚙</span><span class="t">Inference · 工程实现差异（真实框架落地取舍）</span></div><div class="fig" role="img" aria-label="Inference · 工程实现差异（真实框架落地取舍）"><svg class="figsvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 560" font-family="-apple-system,'PingFang SC','Helvetica Neue',sans-serif">
+  <defs>
+    <filter id="s75_soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.07"/>
+    </filter>
+  </defs>
+  <rect width="960" height="560" fill="var(--sc-bg,#fbfbfd)"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="var(--sc-ink,#1d1d1f)">推理优化 · 工程对比</text>
+  <text x="30" y="54" font-size="12" fill="var(--sc-sub,#6e6e73)">上线一套高性能推理服务的落地路线：先压模型、再优解码、后扛并发</text>
+
+  <g filter="url(#s75_soft)"><rect x="30" y="86" width="288" height="360" rx="14" fill="var(--sc-fill-purple,#f3e8ff)" stroke="#c084fc" stroke-width="1.5"/></g>
+  <text x="54" y="120" font-size="13" font-weight="600" fill="#c084fc">① 先压模型</text>
+  <text x="54" y="152" font-size="10.5" fill="var(--sc-sub,#6e6e73)">按目标硬件选量化精度</text>
+  <text x="54" y="176" font-size="10.5" fill="var(--sc-sub,#6e6e73)">INT8/INT4，权衡精度损失</text>
+  <text x="54" y="200" font-size="10.5" fill="var(--sc-sub,#6e6e73)">资源紧可蒸馏出小模型</text>
+  <text x="54" y="232" font-size="10.5" fill="var(--sc-sub,#6e6e73)">结构化剪枝获取真实加速</text>
+  <text x="54" y="256" font-size="10.5" fill="var(--sc-sub,#6e6e73)">压后务必评测精度回归</text>
+  <text x="54" y="300" font-size="11" font-weight="600" fill="var(--sc-ink,#1d1d1f)">要点</text>
+  <text x="54" y="324" font-size="10.5" fill="var(--sc-sub,#6e6e73)">量化性价比最高，优先尝试</text>
+  <text x="54" y="348" font-size="10.5" fill="var(--sc-sub,#6e6e73)">精度敏感场景保留高精度层</text>
+
+  <g filter="url(#s75_soft)"><rect x="336" y="86" width="288" height="360" rx="14" fill="var(--sc-panel,#ffffff)" stroke="#c084fc" stroke-width="1.5"/></g>
+  <text x="360" y="120" font-size="13" font-weight="600" fill="#c084fc">② 再优解码</text>
+  <text x="360" y="152" font-size="10.5" fill="var(--sc-sub,#6e6e73)">默认开启 KV 缓存</text>
+  <text x="360" y="176" font-size="10.5" fill="var(--sc-sub,#6e6e73)">长上下文用 MQA/GQA 省缓存</text>
+  <text x="360" y="200" font-size="10.5" fill="var(--sc-sub,#6e6e73)">必要时量化 KV 缓存</text>
+  <text x="360" y="232" font-size="10.5" fill="var(--sc-sub,#6e6e73)">用 FlashAttention 加速算子</text>
+  <text x="360" y="256" font-size="10.5" fill="var(--sc-sub,#6e6e73)">可叠加投机解码提速</text>
+  <text x="360" y="300" font-size="11" font-weight="600" fill="var(--sc-ink,#1d1d1f)">要点</text>
+  <text x="360" y="324" font-size="10.5" fill="var(--sc-sub,#6e6e73)">盯紧首 token 延迟与吞吐</text>
+  <text x="360" y="348" font-size="10.5" fill="var(--sc-sub,#6e6e73)">缓存显存是长文本瓶颈</text>
+
+  <g filter="url(#s75_soft)"><rect x="642" y="86" width="288" height="360" rx="14" fill="var(--sc-panel,#ffffff)" stroke="#c084fc" stroke-width="1.5"/></g>
+  <text x="666" y="120" font-size="13" font-weight="600" fill="#c084fc">③ 后扛并发</text>
+  <text x="666" y="152" font-size="10.5" fill="var(--sc-sub,#6e6e73)">用 vLLM/TGI 等成熟框架</text>
+  <text x="666" y="176" font-size="10.5" fill="var(--sc-sub,#6e6e73)">开启连续批处理拉满 GPU</text>
+  <text x="666" y="200" font-size="10.5" fill="var(--sc-sub,#6e6e73)">PagedAttention 管好显存</text>
+  <text x="666" y="232" font-size="10.5" fill="var(--sc-sub,#6e6e73)">相同前缀共享块，省显存</text>
+  <text x="666" y="256" font-size="10.5" fill="var(--sc-sub,#6e6e73)">按 SLA 做多副本与负载均衡</text>
+  <text x="666" y="300" font-size="11" font-weight="600" fill="var(--sc-ink,#1d1d1f)">要点</text>
+  <text x="666" y="324" font-size="10.5" fill="var(--sc-sub,#6e6e73)">平衡吞吐与单请求延迟</text>
+  <text x="666" y="348" font-size="10.5" fill="var(--sc-sub,#6e6e73)">监控显存利用率与排队</text>
+
+  <g filter="url(#s75_soft)"><rect x="30" y="466" width="900" height="66" rx="12" fill="var(--sc-panel,#ffffff)" stroke="var(--sc-line,#e2e2e6)" stroke-width="1.2"/></g>
+  <text x="54" y="496" font-size="11" font-weight="600" fill="var(--sc-ink,#1d1d1f)">权衡速查</text>
+  <text x="54" y="518" font-size="10.5" fill="var(--sc-sub,#6e6e73)">边缘/端侧 → 压缩优先；在线高并发 → 连续批 + PagedAttention；长文本 → GQA + KV 量化 + 分页显存</text>
+</svg></div></section></div></div>
+  
+  <div class="backrow"><a href="../../../index.html#agent">← 返回 LLM & Agent 导航</a></div>
+</div>
+<footer>自包含离线图谱 · 以图为主：概览 + 机制分组图 + 机制对比 · 权威参考集中于底部 · 垂直 TAB 切换</footer>
+<script>
+(function(){
+  var root=document.documentElement;
+  var saved=localStorage.getItem('atlas-nav-theme');
+  if(saved==='dark') root.setAttribute('data-theme','dark');
+  function toggleTheme(){
+    var cur=root.getAttribute('data-theme')==='dark'?'':'dark';
+    if(cur) root.setAttribute('data-theme',cur); else root.removeAttribute('data-theme');
+    localStorage.setItem('atlas-nav-theme',cur||'light');
+  }
+  var tb=document.getElementById('themeBtn');
+  if(tb){tb.onclick=toggleTheme;}
+  var wrap=document.querySelector('.vt-wrap');
+  if(wrap){
+    var tabs=wrap.querySelectorAll('.vt-tab');
+    var secs=wrap.querySelectorAll('.vt-sec');
+    tabs.forEach(function(t){
+      t.addEventListener('click',function(){
+        var tgt=t.getAttribute('data-target');
+        tabs.forEach(function(x){x.classList.toggle('active',x===t);});
+        secs.forEach(function(s){s.classList.toggle('active',s.id===tgt);});
+      });
+    });
+  }
+  var zsegs=document.querySelectorAll('.zseg');
+  var zones=document.querySelectorAll('.zone');
+  if(zsegs.length&&zones.length){
+    zsegs.forEach(function(s){
+      s.addEventListener('click',function(){
+        zsegs.forEach(function(x){x.classList.toggle('active',x===s);});
+      });
+    });
+    if('IntersectionObserver' in window){
+      var io=new IntersectionObserver(function(es){
+        es.forEach(function(e){
+          if(e.isIntersecting){
+            var id=e.target.id;
+            zsegs.forEach(function(x){x.classList.toggle('active',x.getAttribute('href')==='#'+id);});
+          }
+        });
+      },{rootMargin:'-40% 0px -55% 0px'});
+      zones.forEach(function(z){io.observe(z);});
+    }
+  }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Pre-training · AI Agents 图谱</title>
+<style>
+:root{
+  --c-bg:#fbfbfd; --c-card:#ffffff; --c-card2:#f5f5f7; --c-ink:#1d1d1f;
+  --c-ink2:#6e6e73; --c-ink3:#a1a1a6; --c-line:#e6e6ea; --c-edge:#d2d2d7;
+  --c-panel:#ffffff; --c-shadow:rgba(0,0,0,.08);
+}
+html[data-theme="dark"]{
+  --c-bg:#0d0d0f; --c-card:#17171a; --c-card2:#1e1e22; --c-ink:#f2f2f5;
+  --c-ink2:#a1a1a6; --c-ink3:#6e6e73; --c-line:#2a2a30; --c-edge:#33333a;
+  --c-panel:#161619; --c-shadow:rgba(0,0,0,.5);
+  /* 架构图内联 SVG 结构中性色深色翻转(品牌强调色不变) */
+  --sc-bg:#17171a; --sc-panel:#1e1e22; --sc-ink:#e8e8ea; --sc-ink2:#c4c4c8;
+  --sc-sub:#9a9aa2; --sc-line:#33333a; --sc-line2:#3d3d45;
+  --sc-fill-blue:#16253d; --sc-fill-purple:#241d3a; --sc-fill-orange:#382214; --sc-fill-teal:#0f3330;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--c-bg);color:var(--c-ink);
+  font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif;
+  font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+header{position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:14px;
+  padding:12px 24px;background:color-mix(in srgb,var(--c-bg) 86%,transparent);
+  backdrop-filter:saturate(1.4) blur(14px);border-bottom:1px solid var(--c-line)}
+header .logo{display:inline-flex;align-items:center;flex:none}
+header .spacer{flex:1}
+.brand-intro{display:flex;flex-direction:column;align-items:flex-start;margin-left:6px;min-width:0}
+.brand-intro .bt{font-size:15px;font-weight:700;color:var(--c-ink);line-height:1.3}
+.brand-intro .bs{margin-top:3px;font-size:11.5px;color:var(--c-ink3);line-height:1.5}
+.icobtn{width:38px;height:38px;border-radius:50%;border:1px solid var(--c-line);
+  background:var(--c-panel);color:var(--c-ink2);cursor:pointer;display:inline-grid;
+  place-items:center;font-size:16px;flex:none;text-decoration:none}
+.tt-ico{font-size:16px;line-height:1}.tt-moon{display:none}
+html[data-theme="dark"] .tt-sun{display:none}html[data-theme="dark"] .tt-moon{display:inline}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 24px 80px}
+
+/* ---- 门户 hero ---- */
+.hero{margin:6px 0 26px}
+.hero h1{font-size:26px;font-weight:800;letter-spacing:.2px}
+.hero .sub{margin-top:8px;font-size:13.5px;color:var(--c-ink2);max-width:820px}
+.hero .back{display:inline-flex;align-items:center;gap:6px;margin-bottom:14px;
+  font-size:12.5px;color:var(--c-ink2);border:1px solid var(--c-line);
+  border-radius:999px;padding:5px 13px;background:var(--c-panel)}
+.hero .back:hover{color:var(--c-ink);border-color:var(--c-edge)}
+
+/* ---- 门户卡片栅格 ---- */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:18px}
+.card{position:relative;display:block;background:var(--c-card);border:1px solid var(--c-line);
+  border-radius:16px;padding:20px 20px 18px;overflow:hidden;transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease}
+.card:hover{transform:translateY(-3px);border-color:var(--acc);box-shadow:0 10px 30px var(--c-shadow)}
+.card .bar{position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--acc)}
+.card .k{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.6px;
+  color:var(--acc);text-transform:uppercase;margin-bottom:8px}
+.card h3{font-size:17px;font-weight:750;line-height:1.35;color:var(--c-ink)}
+.card .core{margin-top:9px;font-size:12.5px;color:var(--c-ink2);line-height:1.6}
+.card .tags{margin-top:14px;display:flex;flex-direction:column;gap:7px}
+.card .tag{display:flex;gap:8px;align-items:baseline;font-size:12px;color:var(--c-ink2)}
+.card .tag .n{font-weight:800;color:var(--acc);flex:none;font-variant-numeric:tabular-nums}
+.card .go{margin-top:16px;font-size:12px;font-weight:700;color:var(--acc);display:inline-flex;align-items:center;gap:5px}
+
+/* ---- 模块页 ---- */
+.judge{background:var(--c-card);border:1px solid var(--c-line);border-left:4px solid var(--acc);
+  border-radius:14px;padding:18px 22px;margin-bottom:26px}
+.judge .k{font-size:11px;font-weight:700;letter-spacing:.6px;color:var(--acc);text-transform:uppercase}
+.judge h1{font-size:22px;font-weight:800;line-height:1.34;margin-top:7px}
+.judge .core{margin-top:11px;font-size:13.5px;color:var(--c-ink2);line-height:1.7;max-width:900px}
+.secttl{display:flex;align-items:center;gap:11px;margin:34px 0 14px}
+.secttl .badge{flex:none;min-width:30px;height:30px;padding:0 9px;border-radius:9px;background:var(--acc);
+  color:#fff;font-weight:800;font-size:15px;display:inline-grid;place-items:center}
+.secttl .t{font-size:17px;font-weight:750}
+.secttl.eco .badge{background:var(--c-ink);color:var(--c-bg)}
+/* ── 垂直 TAB 布局 ── */
+.vt-wrap{display:flex;gap:22px;margin-top:26px;align-items:flex-start}
+.vt-nav{flex:none;width:236px;position:sticky;top:20px;display:flex;flex-direction:column;gap:8px}
+.vt-grp{font-size:11px;font-weight:800;letter-spacing:.04em;color:var(--c-ink3);
+  text-transform:none;margin:14px 4px 2px;padding-top:8px;border-top:1px solid var(--c-line)}
+.vt-grp:first-child{margin-top:0;padding-top:0;border-top:none}
+.vt-tab{display:flex;align-items:center;gap:10px;text-align:left;cursor:pointer;
+  background:var(--c-card);border:1px solid var(--c-line);border-radius:12px;
+  padding:12px 13px;color:var(--c-ink2);font:inherit;transition:.15s}
+.vt-tab:hover{border-color:var(--acc);color:var(--c-ink)}
+.vt-tab.active{background:var(--acc);border-color:var(--acc);color:#fff;box-shadow:0 4px 14px -6px var(--acc)}
+.vt-tab .vt-b{flex:none;min-width:26px;height:26px;padding:0 7px;border-radius:8px;
+  background:var(--c-card2);color:var(--acc);font-weight:800;font-size:13px;
+  display:inline-grid;place-items:center}
+.vt-tab.active .vt-b{background:rgba(255,255,255,.24);color:#fff}
+.vt-tab .vt-l{font-size:12.5px;font-weight:650;line-height:1.35}
+.vt-stage{flex:1;min-width:0}
+.vt-sec{display:none}
+.vt-sec.active{display:block;animation:vtfade .22s ease}
+.vt-sec .secttl{margin-top:0}
+@keyframes vtfade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media(max-width:820px){.vt-wrap{flex-direction:column}.vt-nav{position:static;width:100%;flex-direction:row;flex-wrap:wrap}.vt-tab{flex:1 1 44%}}
+.fig{background:var(--c-card);border:1px solid var(--c-line);border-radius:16px;
+  padding:16px;overflow:hidden}
+.fig img{display:block;width:100%;height:auto;border-radius:8px}
+.fig .figsvg{display:block;width:100%;height:auto;border-radius:8px}
+.blurb{margin-top:14px;background:var(--c-card);border:1px solid var(--c-line);
+  border-radius:14px;padding:15px 19px}
+.blurb p{font-size:13px;color:var(--c-ink2);line-height:1.75}
+.blurb p+p{margin-top:9px}
+.blurb b{color:var(--c-ink);font-weight:700}
+.blurb code{font-family:'SF Mono',ui-monospace,Menlo,monospace;font-size:.88em;
+  background:var(--c-card2);border:1px solid var(--c-line);border-radius:5px;padding:1px 5px;color:var(--acc)}
+.blurb a{color:var(--acc);text-decoration:none;
+  border-bottom:1px solid color-mix(in srgb,var(--acc) 40%,transparent);transition:border-color .15s}
+.blurb a:hover{border-bottom-color:var(--acc)}
+.refs{margin-top:30px;padding-top:18px;border-top:2px solid var(--c-line)}
+.reflist{margin-top:12px}
+.reflist p{margin:5px 0;font-size:12.5px;color:var(--c-ink2);line-height:1.7}
+.reflist a{color:var(--acc)}
+.miss{padding:40px;text-align:center;color:var(--c-ink3);font-size:13px;border:1px dashed var(--c-edge);border-radius:12px}
+.backrow{margin-top:44px;padding-top:22px;border-top:1px solid var(--c-line)}
+.backrow a{display:inline-flex;align-items:center;gap:7px;font-size:13px;color:var(--c-ink2);
+  border:1px solid var(--c-line);border-radius:999px;padding:8px 16px;background:var(--c-panel)}
+.backrow a:hover{color:var(--c-ink);border-color:var(--c-edge)}
+footer{max-width:1180px;margin:0 auto;padding:0 24px 40px;color:var(--c-ink3);font-size:11.5px}
+
+/* ---- 门户片区切换 tab + 片区标题条 ---- */
+.zbar{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap}
+.zseg{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:700;
+  color:var(--c-ink2);border:1px solid var(--c-line);border-radius:999px;
+  padding:8px 16px;background:var(--c-panel);transition:.15s}
+.zseg:hover{color:var(--c-ink);border-color:var(--c-edge)}
+.zseg.active{color:var(--c-ink);border-color:var(--c-ink);background:var(--c-card)}
+.zseg .zn{min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:var(--c-card2);
+  color:var(--c-ink2);font-size:11px;font-weight:800;display:inline-grid;place-items:center}
+.zone{margin-top:38px;scroll-margin-top:80px}
+.zone:first-of-type{margin-top:30px}
+.zhd{margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--c-line)}
+.zhd .zk{font-size:11px;font-weight:800;letter-spacing:.08em;color:var(--c-ink3);text-transform:uppercase}
+.zhd h2{font-size:20px;font-weight:800;margin-top:5px;color:var(--c-ink)}
+.zhd p{font-size:12.5px;color:var(--c-ink2);margin-top:6px;max-width:860px;line-height:1.65}
+</style>
+</head>
+<body>
+<header>
+  <a class="logo" href="../../../index.html#agent" title="返回 LLM & Agent 导航"><span class="icobtn"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg></span></a>
+  <div class="brand-intro">
+    <div class="bt">Pre-training</div>
+    <div class="bs">AI Agents 生态图谱 · 概念层机理（不点名具体框架）</div>
+  </div>
+  <div class="spacer"></div>
+  <button id="themeBtn" class="icobtn" title="切换深色 / 浅色主题" aria-label="切换主题"><span class="tt-ico tt-moon">☾</span><span class="tt-ico tt-sun">☀</span></button>
+</header>
+<div class="wrap" style="--acc:#4a9eff">
+  <div class="judge">
+    <span class="k">PRETRAIN · 定位</span>
+    <h1>Pre-training · 从海量文本自监督学习</h1>
+    <div class="core">在无标注语料上用「预测下一个 token」自监督学习：数据配比、tokenizer、Scaling Law 与训练稳定性共同决定基座能力上限。</div>
+  </div>
+  <div class="vt-wrap"><nav class="vt-nav" aria-label="模块内容切换"><div class="vt-grp">概览 Overview</div><button class="vt-tab active" data-target="sec-eco"><span class="vt-b">◎</span><span class="vt-l">生态架构总图</span></button><div class="vt-grp">机制 · 训练目标</div><button class="vt-tab" data-target="sec-e1"><span class="vt-b">E1</span><span class="vt-l">自回归 vs 掩码语言建模</span></button><div class="vt-grp">机制 · 数据与分词</div><button class="vt-tab" data-target="sec-e2"><span class="vt-b">E2</span><span class="vt-l">语料清洗与 BPE 分词</span></button><div class="vt-grp">机制 · 规模法则</div><button class="vt-tab" data-target="sec-e3"><span class="vt-b">E3</span><span class="vt-l">Scaling Law 与算力配比</span></button><div class="vt-grp">对比 Compare</div><button class="vt-tab" data-target="sec-cmp"><span class="vt-b">⇄</span><span class="vt-l">机制差异对比</span></button><div class="vt-grp">工程 Engineering</div><button class="vt-tab" data-target="sec-eng"><span class="vt-b">⚙</span><span class="vt-l">框架实现差异</span></button></nav><div class="vt-stage"><section class="vt-sec active" id="sec-eco" data-sec="sec-eco"><div class="secttl eco"><span class="badge">◎</span><span class="t">生态架构总图 · 这一模块如何在 Agent 系统中自洽拼合</span></div><div class="fig" role="img" aria-label="Pre-training 生态架构"><svg class="figsvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 470" font-family="-apple-system,'PingFang SC','Helvetica Neue',sans-serif">
+  <defs>
+    <filter id="s58_soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.07"/>
+    </filter>
+    <marker id="s58_arb" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#4a9eff"/>
+    </marker>
+  </defs>
+  <rect width="960" height="470" fill="var(--sc-bg,#fbfbfd)"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="var(--sc-ink,#1d1d1f)">预训练 · 生态架构</text>
+  <text x="30" y="54" font-size="12" fill="var(--sc-sub,#6e6e73)">海量语料经清洗分词，在自监督目标下反复训练，规模决定能力上限</text>
+
+  <g filter="url(#s58_soft)"><rect x="30" y="96" width="150" height="72" rx="12" fill="var(--sc-fill-blue,#eaf3ff)" stroke="#4a9eff" stroke-width="1.5"/></g>
+  <text x="105" y="128" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">原始语料</text>
+  <text x="105" y="148" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">网页/书籍/代码</text>
+
+  <g filter="url(#s58_soft)"><rect x="212" y="96" width="150" height="72" rx="12" fill="var(--sc-fill-blue,#eaf3ff)" stroke="#4a9eff" stroke-width="1.5"/></g>
+  <text x="287" y="128" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">清洗与分词</text>
+  <text x="287" y="148" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">去重/过滤/BPE</text>
+
+  <g filter="url(#s58_soft)"><rect x="394" y="96" width="150" height="72" rx="12" fill="var(--sc-fill-blue,#eaf3ff)" stroke="#4a9eff" stroke-width="1.5"/></g>
+  <text x="469" y="128" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">自监督目标</text>
+  <text x="469" y="148" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">预测下一个 token</text>
+
+  <g filter="url(#s58_soft)"><rect x="576" y="96" width="150" height="72" rx="12" fill="var(--sc-fill-blue,#eaf3ff)" stroke="#4a9eff" stroke-width="1.5"/></g>
+  <text x="651" y="128" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">大规模训练</text>
+  <text x="651" y="148" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">算力/数据/参数</text>
+
+  <g filter="url(#s58_soft)"><rect x="758" y="96" width="150" height="72" rx="12" fill="var(--sc-fill-blue,#eaf3ff)" stroke="#4a9eff" stroke-width="1.5"/></g>
+  <text x="833" y="128" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">基座模型</text>
+  <text x="833" y="148" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">通用语言能力</text>
+
+  <path d="M180 132 L212 132" stroke="#4a9eff" stroke-width="2.2" fill="none" marker-end="url(#s58_arb)"/>
+  <path d="M362 132 L394 132" stroke="#4a9eff" stroke-width="2.2" fill="none" marker-end="url(#s58_arb)"/>
+  <path d="M544 132 L576 132" stroke="#4a9eff" stroke-width="2.2" fill="none" marker-end="url(#s58_arb)"/>
+  <path d="M726 132 L758 132" stroke="#4a9eff" stroke-width="2.2" fill="none" marker-end="url(#s58_arb)"/>
+
+  <g filter="url(#s58_soft)"><rect x="30" y="212" width="288" height="150" rx="14" fill="var(--sc-panel,#ffffff)" stroke="#4a9eff" stroke-width="1.4"/></g>
+  <text x="54" y="244" font-size="12.5" font-weight="600" fill="#4a9eff">训练目标</text>
+  <text x="54" y="272" font-size="10.5" fill="var(--sc-sub,#6e6e73)">自回归 (GPT) vs 掩码 (BERT)</text>
+  <text x="54" y="294" font-size="10.5" fill="var(--sc-sub,#6e6e73)">生成式主导当代大模型</text>
+  <text x="54" y="316" font-size="10.5" fill="var(--sc-sub,#6e6e73)">逐 token 最大化似然</text>
+  <text x="54" y="338" font-size="10.5" fill="var(--sc-sub,#6e6e73)">无需人工标注</text>
+
+  <g filter="url(#s58_soft)"><rect x="336" y="212" width="288" height="150" rx="14" fill="var(--sc-panel,#ffffff)" stroke="#4a9eff" stroke-width="1.4"/></g>
+  <text x="360" y="244" font-size="12.5" font-weight="600" fill="#4a9eff">数据分词</text>
+  <text x="360" y="272" font-size="10.5" fill="var(--sc-sub,#6e6e73)">质量重于数量：去重去毒</text>
+  <text x="360" y="294" font-size="10.5" fill="var(--sc-sub,#6e6e73)">BPE/BBPE 子词切分</text>
+  <text x="360" y="316" font-size="10.5" fill="var(--sc-sub,#6e6e73)">配比决定领域能力</text>
+  <text x="360" y="338" font-size="10.5" fill="var(--sc-sub,#6e6e73)">语料即模型的世界</text>
+
+  <g filter="url(#s58_soft)"><rect x="642" y="212" width="288" height="150" rx="14" fill="var(--sc-panel,#ffffff)" stroke="#4a9eff" stroke-width="1.4"/></g>
+  <text x="666" y="244" font-size="12.5" font-weight="600" fill="#4a9eff">规模法则</text>
+  <text x="666" y="272" font-size="10.5" fill="var(--sc-sub,#6e6e73)">损失随规模幂律下降</text>
+  <text x="666" y="294" font-size="10.5" fill="var(--sc-sub,#6e6e73)">参数/数据/算力三者配比</text>
+  <text x="666" y="316" font-size="10.5" fill="var(--sc-sub,#6e6e73)">Chinchilla 最优比例</text>
+  <text x="666" y="338" font-size="10.5" fill="var(--sc-sub,#6e6e73)">可预测的性能外推</text>
+
+  <text x="480" y="416" font-size="12" font-weight="600" fill="#4a9eff" text-anchor="middle">主线：目标定「学什么」，数据定「学得好不好」，规模定「能到多强」</text>
+</svg></div><div class="blurb"><p>在无标注语料上用「预测下一个 token」自监督学习：数据配比、tokenizer、Scaling Law 与训练稳定性共同决定基座能力上限。</p></div></section><section class="vt-sec" id="sec-e1" data-sec="sec-e1"><div class="secttl"><span class="badge">E1</span><span class="t">训练目标 · 自回归 vs 掩码语言建模</span></div><div class="fig" role="img" aria-label="训练目标 · 自回归 vs 掩码语言建模"><svg class="figsvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 480" font-family="-apple-system,'PingFang SC','Helvetica Neue',sans-serif">
+  <defs>
+    <filter id="s59_soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.07"/>
+    </filter>
+  </defs>
+  <rect width="960" height="480" fill="var(--sc-bg,#fbfbfd)"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="var(--sc-ink,#1d1d1f)">预训练 · 训练目标</text>
+  <text x="30" y="54" font-size="12" fill="var(--sc-sub,#6e6e73)">自回归预测「下一个词」与掩码还原「被遮词」，都是从文本中自造监督信号</text>
+
+  <g filter="url(#s59_soft)"><rect x="30" y="86" width="435" height="330" rx="14" fill="var(--sc-fill-blue,#eaf3ff)" stroke="#4a9eff" stroke-width="1.5"/></g>
+  <text x="56" y="118" font-size="13" font-weight="600" fill="#4a9eff">自回归 · Causal LM (GPT)</text>
+  <text x="56" y="146" font-size="11" fill="var(--sc-ink,#1d1d1f)">给定前文，预测下一个 token</text>
+
+  <g><rect x="56" y="170" width="60" height="34" rx="6" fill="var(--sc-panel,#ffffff)" stroke="#4a9eff" stroke-width="1.2"/><text x="86" y="192" font-size="11" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">猫</text></g>
+  <g><rect x="126" y="170" width="60" height="34" rx="6" fill="var(--sc-panel,#ffffff)" stroke="#4a9eff" stroke-width="1.2"/><text x="156" y="192" font-size="11" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">坐</text></g>
+  <g><rect x="196" y="170" width="60" height="34" rx="6" fill="var(--sc-panel,#ffffff)" stroke="#4a9eff" stroke-width="1.2"/><text x="226" y="192" font-size="11" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">在</text></g>
+  <g><rect x="266" y="170" width="60" height="34" rx="6" fill="var(--sc-fill-blue,#dbeafe)" stroke="#4a9eff" stroke-width="1.4" stroke-dasharray="4 3"/><text x="296" y="192" font-size="11" font-weight="600" fill="#4a9eff" text-anchor="middle">?</text></g>
+  <text x="56" y="236" font-size="10.5" fill="var(--sc-sub,#6e6e73)">只能看左侧上下文（单向）</text>
+  <text x="56" y="258" font-size="10.5" fill="var(--sc-sub,#6e6e73)">目标：最大化 P(词ₜ | 词₁..ₜ₋₁)</text>
+  <text x="56" y="286" font-size="11" font-weight="600" fill="var(--sc-ink,#1d1d1f)">优势</text>
+  <text x="56" y="308" font-size="10.5" fill="var(--sc-sub,#6e6e73)">· 天生适配文本生成</text>
+  <text x="56" y="330" font-size="10.5" fill="var(--sc-sub,#6e6e73)">· 训练即推理，范式统一</text>
+  <text x="56" y="352" font-size="10.5" fill="var(--sc-sub,#6e6e73)">· 主流大模型 (GPT/LLaMA) 采用</text>
+  <text x="56" y="386" font-size="10.5" fill="var(--sc-sub,#6e6e73)">局限：不能利用右侧上下文</text>
+
+  <g filter="url(#s59_soft)"><rect x="495" y="86" width="435" height="330" rx="14" fill="var(--sc-fill-blue,#eaf3ff)" stroke="#4a9eff" stroke-width="1.5"/></g>
+  <text x="521" y="118" font-size="13" font-weight="600" fill="#4a9eff">掩码 · Masked LM (BERT)</text>
+  <text x="521" y="146" font-size="11" fill="var(--sc-ink,#1d1d1f)">遮住部分 token，双向还原</text>
+
+  <g><rect x="521" y="170" width="60" height="34" rx="6" fill="var(--sc-panel,#ffffff)" stroke="#4a9eff" stroke-width="1.2"/><text x="551" y="192" font-size="11" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">猫</text></g>
+  <g><rect x="591" y="170" width="60" height="34" rx="6" fill="var(--sc-fill-blue,#dbeafe)" stroke="#4a9eff" stroke-width="1.4" stroke-dasharray="4 3"/><text x="621" y="192" font-size="10" font-weight="600" fill="#4a9eff" text-anchor="middle">MASK</text></g>
+  <g><rect x="661" y="170" width="60" height="34" rx="6" fill="var(--sc-panel,#ffffff)" stroke="#4a9eff" stroke-width="1.2"/><text x="691" y="192" font-size="11" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">在</text></g>
+  <g><rect x="731" y="170" width="60" height="34" rx="6" fill="var(--sc-panel,#ffffff)" stroke="#4a9eff" stroke-width="1.2"/><text x="761" y="192" font-size="11" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">垫</text></g>
+  <text x="521" y="236" font-size="10.5" fill="var(--sc-sub,#6e6e73)">左右上下文都可见（双向）</text>
+  <text x="521" y="258" font-size="10.5" fill="var(--sc-sub,#6e6e73)">目标：还原被 MASK 的 token</text>
+  <text x="521" y="286" font-size="11" font-weight="600" fill="var(--sc-ink,#1d1d1f)">优势</text>
+  <text x="521" y="308" font-size="10.5" fill="var(--sc-sub,#6e6e73)">· 双向语境，理解任务强</text>
+  <text x="521" y="330" font-size="10.5" fill="var(--sc-sub,#6e6e73)">· 适合分类/抽取等判别任务</text>
+  <text x="521" y="352" font-size="10.5" fill="var(--sc-sub,#6e6e73)">· 编码器架构代表</text>
+  <text x="521" y="386" font-size="10.5" fill="var(--sc-sub,#6e6e73)">局限：不直接支持自由生成</text>
+
+  <text x="480" y="452" font-size="12" font-weight="600" fill="#4a9eff" text-anchor="middle">共同点：都从原始文本自造标签，无需人工标注即可学习语言规律</text>
+</svg></div></section><section class="vt-sec" id="sec-e2" data-sec="sec-e2"><div class="secttl"><span class="badge">E2</span><span class="t">数据与分词 · 语料清洗与 BPE 分词</span></div><div class="fig" role="img" aria-label="数据与分词 · 语料清洗与 BPE 分词"><svg class="figsvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 480" font-family="-apple-system,'PingFang SC','Helvetica Neue',sans-serif">
+  <defs>
+    <filter id="s60_soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.07"/>
+    </filter>
+    <marker id="s60_arb" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#4a9eff"/>
+    </marker>
+  </defs>
+  <rect width="960" height="480" fill="var(--sc-bg,#fbfbfd)"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="var(--sc-ink,#1d1d1f)">预训练 · 数据与分词</text>
+  <text x="30" y="54" font-size="12" fill="var(--sc-sub,#6e6e73)">脏数据经多级清洗与配比，再由 BPE 切成子词，喂给模型的质量决定能力</text>
+
+  <text x="30" y="92" font-size="12.5" font-weight="600" fill="#4a9eff">数据清洗流水线</text>
+  <g filter="url(#s60_soft)"><rect x="30" y="104" width="150" height="60" rx="10" fill="var(--sc-fill-blue,#eaf3ff)" stroke="#4a9eff" stroke-width="1.4"/></g>
+  <text x="105" y="130" font-size="11" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">原始爬取</text>
+  <text x="105" y="150" font-size="9.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">网页/PDF/代码</text>
+  <g filter="url(#s60_soft)"><rect x="212" y="104" width="150" height="60" rx="10" fill="var(--sc-fill-blue,#eaf3ff)" stroke="#4a9eff" stroke-width="1.4"/></g>
+  <text x="287" y="130" font-size="11" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">质量过滤</text>
+  <text x="287" y="150" font-size="9.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">语言/困惑度/规则</text>
+  <g filter="url(#s60_soft)"><rect x="394" y="104" width="150" height="60" rx="10" fill="var(--sc-fill-blue,#eaf3ff)" stroke="#4a9eff" stroke-width="1.4"/></g>
+  <text x="469" y="130" font-size="11" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">去重</text>
+  <text x="469" y="150" font-size="9.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">MinHash/精确</text>
+  <g filter="url(#s60_soft)"><rect x="576" y="104" width="150" height="60" rx="10" fill="var(--sc-fill-blue,#eaf3ff)" stroke="#4a9eff" stroke-width="1.4"/></g>
+  <text x="651" y="130" font-size="11" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">去毒去隐私</text>
+  <text x="651" y="150" font-size="9.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">有害/PII 过滤</text>
+  <g filter="url(#s60_soft)"><rect x="758" y="104" width="150" height="60" rx="10" fill="var(--sc-fill-blue,#eaf3ff)" stroke="#4a9eff" stroke-width="1.4"/></g>
+  <text x="833" y="130" font-size="11" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">配比混合</text>
+  <text x="833" y="150" font-size="9.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">领域权重采样</text>
+  <path d="M180 134 L212 134" stroke="#4a9eff" stroke-width="2" fill="none" marker-end="url(#s60_arb)"/>
+  <path d="M362 134 L394 134" stroke="#4a9eff" stroke-width="2" fill="none" marker-end="url(#s60_arb)"/>
+  <path d="M544 134 L576 134" stroke="#4a9eff" stroke-width="2" fill="none" marker-end="url(#s60_arb)"/>
+  <path d="M726 134 L758 134" stroke="#4a9eff" stroke-width="2" fill="none" marker-end="url(#s60_arb)"/>
+
+  <g filter="url(#s60_soft)"><rect x="30" y="200" width="435" height="216" rx="14" fill="var(--sc-panel,#ffffff)" stroke="#4a9eff" stroke-width="1.4"/></g>
+  <text x="56" y="232" font-size="12.5" font-weight="600" fill="#4a9eff">BPE 子词分词</text>
+  <text x="56" y="258" font-size="10.5" fill="var(--sc-sub,#6e6e73)">从字符起步，反复合并高频相邻对</text>
+  <text x="56" y="288" font-size="11" fill="var(--sc-ink,#1d1d1f)">"lower" → l o w e r</text>
+  <text x="56" y="312" font-size="11" fill="var(--sc-ink,#1d1d1f)">合并 (e,r) → l o w er</text>
+  <text x="56" y="336" font-size="11" fill="var(--sc-ink,#1d1d1f)">合并 (low) → low er</text>
+  <text x="56" y="368" font-size="10.5" fill="var(--sc-sub,#6e6e73)">兼顾词表大小与未登录词覆盖</text>
+  <text x="56" y="392" font-size="10.5" fill="var(--sc-sub,#6e6e73)">BBPE 在字节级操作，天然跨语言</text>
+
+  <g filter="url(#s60_soft)"><rect x="495" y="200" width="435" height="216" rx="14" fill="var(--sc-panel,#ffffff)" stroke="#4a9eff" stroke-width="1.4"/></g>
+  <text x="521" y="232" font-size="12.5" font-weight="600" fill="#4a9eff">为何数据是第一生产力</text>
+  <text x="521" y="260" font-size="10.5" fill="var(--sc-sub,#6e6e73)">· 质量 > 数量：脏数据拖垮上限</text>
+  <text x="521" y="286" font-size="10.5" fill="var(--sc-sub,#6e6e73)">· 去重防止记忆与过拟合</text>
+  <text x="521" y="312" font-size="10.5" fill="var(--sc-sub,#6e6e73)">· 配比决定领域与语言能力</text>
+  <text x="521" y="338" font-size="10.5" fill="var(--sc-sub,#6e6e73)">· 代码/数学数据提升推理</text>
+  <text x="521" y="368" font-size="11" font-weight="600" fill="var(--sc-ink,#1d1d1f)">语料即模型所见的整个世界</text>
+
+  <text x="480" y="452" font-size="12" font-weight="600" fill="#4a9eff" text-anchor="middle">清洗决定「学到什么」，分词决定「怎么表示」，二者共同框定能力边界</text>
+</svg></div></section><section class="vt-sec" id="sec-e3" data-sec="sec-e3"><div class="secttl"><span class="badge">E3</span><span class="t">规模法则 · Scaling Law 与算力配比</span></div><div class="fig" role="img" aria-label="规模法则 · Scaling Law 与算力配比"><svg class="figsvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 480" font-family="-apple-system,'PingFang SC','Helvetica Neue',sans-serif">
+  <defs>
+    <filter id="s61_soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.07"/>
+    </filter>
+  </defs>
+  <rect width="960" height="480" fill="var(--sc-bg,#fbfbfd)"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="var(--sc-ink,#1d1d1f)">预训练 · 规模法则</text>
+  <text x="30" y="54" font-size="12" fill="var(--sc-sub,#6e6e73)">损失随参数、数据、算力以幂律下降，给定预算下三者存在最优配比</text>
+
+  <g filter="url(#s61_soft)"><rect x="30" y="86" width="435" height="330" rx="14" fill="var(--sc-panel,#ffffff)" stroke="#4a9eff" stroke-width="1.4"/></g>
+  <text x="56" y="116" font-size="12.5" font-weight="600" fill="#4a9eff">损失 - 算力：幂律曲线</text>
+  <line x1="80" y1="370" x2="440" y2="370" stroke="var(--sc-line,#d2d2d7)" stroke-width="1.5"/>
+  <line x1="80" y1="150" x2="80" y2="370" stroke="var(--sc-line,#d2d2d7)" stroke-width="1.5"/>
+  <text x="260" y="398" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">算力 (对数)</text>
+  <text x="60" y="260" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle" transform="rotate(-90 60 260)">损失</text>
+  <path d="M96 172 C170 250 280 320 428 352" stroke="#4a9eff" stroke-width="2.6" fill="none"/>
+  <circle cx="130" cy="216" r="4" fill="#4a9eff"/>
+  <circle cx="240" cy="300" r="4" fill="#4a9eff"/>
+  <circle cx="360" cy="342" r="4" fill="#4a9eff"/>
+  <text x="150" y="210" font-size="9.5" fill="var(--sc-sub,#6e6e73)">小模型</text>
+  <text x="378" y="336" font-size="9.5" fill="var(--sc-sub,#6e6e73)">大模型</text>
+  <text x="56" y="352" font-size="10" fill="var(--sc-sub,#6e6e73)">规律平滑可预测：小规模实验外推大模型</text>
+
+  <g filter="url(#s61_soft)"><rect x="495" y="86" width="435" height="160" rx="14" fill="var(--sc-fill-blue,#eaf3ff)" stroke="#4a9eff" stroke-width="1.5"/></g>
+  <text x="521" y="116" font-size="12.5" font-weight="600" fill="#4a9eff">三要素配比</text>
+  <text x="521" y="144" font-size="10.5" fill="var(--sc-sub,#6e6e73)">· 参数量 N：模型容量</text>
+  <text x="521" y="168" font-size="10.5" fill="var(--sc-sub,#6e6e73)">· 数据量 D：训练 token 数</text>
+  <text x="521" y="192" font-size="10.5" fill="var(--sc-sub,#6e6e73)">· 算力 C ≈ 6 · N · D</text>
+  <text x="521" y="220" font-size="10.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)">给定 C，需在 N 与 D 间取平衡</text>
+
+  <g filter="url(#s61_soft)"><rect x="495" y="262" width="435" height="154" rx="14" fill="var(--sc-fill-blue,#eaf3ff)" stroke="#4a9eff" stroke-width="1.5"/></g>
+  <text x="521" y="292" font-size="12.5" font-weight="600" fill="#4a9eff">Chinchilla 最优</text>
+  <text x="521" y="320" font-size="10.5" fill="var(--sc-sub,#6e6e73)">· 早期模型「参数过大、数据不足」</text>
+  <text x="521" y="344" font-size="10.5" fill="var(--sc-sub,#6e6e73)">· 最优比例约 20 token / 参数</text>
+  <text x="521" y="368" font-size="10.5" fill="var(--sc-sub,#6e6e73)">· 同算力下更小但喂更多数据更强</text>
+  <text x="521" y="394" font-size="10.5" fill="var(--sc-sub,#6e6e73)">· 推理成本还会进一步压小模型</text>
+
+  <text x="480" y="452" font-size="12" font-weight="600" fill="#4a9eff" text-anchor="middle">主线：规模法则把「加多少算力换多少性能」变成可计算、可规划的工程问题</text>
+</svg></div></section><section class="vt-sec" id="sec-cmp" data-sec="sec-cmp"><div class="secttl"><span class="badge">⇄</span><span class="t">Pre-training · 核心机制差异对比</span></div><div class="fig" role="img" aria-label="Pre-training · 核心机制差异对比"><svg class="figsvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 520" font-family="-apple-system,'PingFang SC','Helvetica Neue',sans-serif">
+  <defs>
+    <filter id="s62_soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.07"/>
+    </filter>
+  </defs>
+  <rect width="960" height="520" fill="var(--sc-bg,#fbfbfd)"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="var(--sc-ink,#1d1d1f)">预训练 · 三种机理对比</text>
+  <text x="30" y="54" font-size="12" fill="var(--sc-sub,#6e6e73)">目标定「学什么」，数据定「学得好不好」，规模定「能到多强」</text>
+
+  <g filter="url(#s62_soft)"><rect x="30" y="80" width="900" height="44" rx="8" fill="var(--sc-panel,#f5f5f7)" stroke="var(--sc-line,#d2d2d7)" stroke-width="1"/></g>
+  <text x="120" y="108" font-size="11.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">构件</text>
+  <text x="360" y="108" font-size="11.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">解决什么问题</text>
+  <text x="600" y="108" font-size="11.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">核心做法</text>
+  <text x="830" y="108" font-size="11.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">主要代价</text>
+
+  <g filter="url(#s62_soft)"><rect x="30" y="134" width="900" height="96" rx="8" fill="var(--sc-panel,#ffffff)" stroke="#4a9eff" stroke-width="1.3"/></g>
+  <text x="120" y="188" font-size="12" font-weight="600" fill="#4a9eff" text-anchor="middle">训练目标</text>
+  <text x="360" y="176" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">如何无标注学语言</text>
+  <text x="360" y="196" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">监督信号从哪来</text>
+  <text x="600" y="176" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">自回归/掩码</text>
+  <text x="600" y="196" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">从文本自造标签</text>
+  <text x="830" y="188" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">目标决定能力偏向</text>
+
+  <g filter="url(#s62_soft)"><rect x="30" y="240" width="900" height="96" rx="8" fill="var(--sc-panel,#ffffff)" stroke="#4a9eff" stroke-width="1.3"/></g>
+  <text x="120" y="294" font-size="12" font-weight="600" fill="#4a9eff" text-anchor="middle">数据分词</text>
+  <text x="360" y="282" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">脏数据拖垮上限</text>
+  <text x="360" y="302" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">如何表示文本</text>
+  <text x="600" y="282" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">清洗去重配比</text>
+  <text x="600" y="302" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">BPE 子词切分</text>
+  <text x="830" y="294" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">清洗成本高</text>
+
+  <g filter="url(#s62_soft)"><rect x="30" y="346" width="900" height="96" rx="8" fill="var(--sc-panel,#ffffff)" stroke="#4a9eff" stroke-width="1.3"/></g>
+  <text x="120" y="400" font-size="12" font-weight="600" fill="#4a9eff" text-anchor="middle">规模法则</text>
+  <text x="360" y="388" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">预算如何分配</text>
+  <text x="360" y="408" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">性能能到多高</text>
+  <text x="600" y="388" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">参数/数据/算力配比</text>
+  <text x="600" y="408" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">幂律外推</text>
+  <text x="830" y="400" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">算力昂贵</text>
+
+  <text x="480" y="486" font-size="12" font-weight="600" fill="#4a9eff" text-anchor="middle">一句话：目标给方向，数据给养分，规模给上限——三者共同锻造基座能力</text>
+</svg></div></section><section class="vt-sec" id="sec-eng" data-sec="sec-eng"><div class="secttl"><span class="badge">⚙</span><span class="t">Pre-training · 工程实现差异（真实框架落地取舍）</span></div><div class="fig" role="img" aria-label="Pre-training · 工程实现差异（真实框架落地取舍）"><svg class="figsvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 560" font-family="-apple-system,'PingFang SC','Helvetica Neue',sans-serif">
+  <defs>
+    <filter id="s63_soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.07"/>
+    </filter>
+  </defs>
+  <rect width="960" height="560" fill="var(--sc-bg,#fbfbfd)"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="var(--sc-ink,#1d1d1f)">预训练 · 工程三支柱</text>
+  <text x="30" y="54" font-size="12" fill="var(--sc-sub,#6e6e73)">先算好规模配比，再堆数据流水线，最后靠分布式与稳定性把训练跑完</text>
+
+  <g filter="url(#s63_soft)"><rect x="30" y="86" width="288" height="360" rx="14" fill="var(--sc-fill-blue,#eaf3ff)" stroke="#4a9eff" stroke-width="1.5"/></g>
+  <text x="56" y="122" font-size="13" font-weight="600" fill="#4a9eff">① 规模规划</text>
+  <text x="56" y="150" font-size="11" fill="var(--sc-ink,#1d1d1f)">先用小实验定配比</text>
+  <text x="56" y="178" font-size="10.5" fill="var(--sc-sub,#6e6e73)">· 按算力预算反推 N/D</text>
+  <text x="56" y="200" font-size="10.5" fill="var(--sc-sub,#6e6e73)">· Chinchilla 约 20 token/参数</text>
+  <text x="56" y="222" font-size="10.5" fill="var(--sc-sub,#6e6e73)">· 小规模拟合幂律再外推</text>
+  <text x="56" y="244" font-size="10.5" fill="var(--sc-sub,#6e6e73)">· 兼顾推理成本压模型</text>
+  <text x="56" y="278" font-size="10.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)">目标：省算力买最多能力</text>
+
+  <g filter="url(#s63_soft)"><rect x="336" y="86" width="288" height="360" rx="14" fill="var(--sc-fill-blue,#eaf3ff)" stroke="#4a9eff" stroke-width="1.5"/></g>
+  <text x="362" y="122" font-size="13" font-weight="600" fill="#4a9eff">② 数据工程</text>
+  <text x="362" y="150" font-size="11" fill="var(--sc-ink,#1d1d1f)">质量与配比决定上限</text>
+  <text x="362" y="178" font-size="10.5" fill="var(--sc-sub,#6e6e73)">· 大规模去重与质量过滤</text>
+  <text x="362" y="200" font-size="10.5" fill="var(--sc-sub,#6e6e73)">· 领域配比与课程采样</text>
+  <text x="362" y="222" font-size="10.5" fill="var(--sc-sub,#6e6e73)">· 代码/数学增强推理</text>
+  <text x="362" y="244" font-size="10.5" fill="var(--sc-sub,#6e6e73)">· 训练前充分预处理落盘</text>
+  <text x="362" y="278" font-size="10.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)">目标：喂对、喂干净、喂够量</text>
+
+  <g filter="url(#s63_soft)"><rect x="642" y="86" width="288" height="360" rx="14" fill="var(--sc-fill-blue,#eaf3ff)" stroke="#4a9eff" stroke-width="1.5"/></g>
+  <text x="668" y="122" font-size="13" font-weight="600" fill="#4a9eff">③ 分布式训练</text>
+  <text x="668" y="150" font-size="11" fill="var(--sc-ink,#1d1d1f)">把大模型跑起来跑稳</text>
+  <text x="668" y="178" font-size="10.5" fill="var(--sc-sub,#6e6e73)">· 数据/张量/流水线并行</text>
+  <text x="668" y="200" font-size="10.5" fill="var(--sc-sub,#6e6e73)">· 混合精度与 ZeRO 省显存</text>
+  <text x="668" y="222" font-size="10.5" fill="var(--sc-sub,#6e6e73)">· checkpoint 容错续训</text>
+  <text x="668" y="244" font-size="10.5" fill="var(--sc-sub,#6e6e73)">· 监控 loss 尖峰与发散</text>
+  <text x="668" y="278" font-size="10.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)">目标：数月训练不中断</text>
+
+  <g filter="url(#s63_soft)"><rect x="30" y="466" width="900" height="66" rx="12" fill="var(--sc-panel,#ffffff)" stroke="var(--sc-line,#d2d2d7)" stroke-width="1"/></g>
+  <text x="52" y="494" font-size="11.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)">权衡速查</text>
+  <text x="52" y="516" font-size="10.5" fill="var(--sc-sub,#6e6e73)">算力有限先保数据质量 · 数据够了再放大参数 · 集群越大越要押注容错与稳定性</text>
+  <text x="480" y="552" font-size="12" font-weight="600" fill="#4a9eff" text-anchor="middle">主线：规划给方向，数据给养分，分布式把两者在真实集群上兑现</text>
+</svg></div></section></div></div>
+  
+  <div class="backrow"><a href="../../../index.html#agent">← 返回 LLM & Agent 导航</a></div>
+</div>
+<footer>自包含离线图谱 · 以图为主：概览 + 机制分组图 + 机制对比 · 权威参考集中于底部 · 垂直 TAB 切换</footer>
+<script>
+(function(){
+  var root=document.documentElement;
+  var saved=localStorage.getItem('atlas-nav-theme');
+  if(saved==='dark') root.setAttribute('data-theme','dark');
+  function toggleTheme(){
+    var cur=root.getAttribute('data-theme')==='dark'?'':'dark';
+    if(cur) root.setAttribute('data-theme',cur); else root.removeAttribute('data-theme');
+    localStorage.setItem('atlas-nav-theme',cur||'light');
+  }
+  var tb=document.getElementById('themeBtn');
+  if(tb){tb.onclick=toggleTheme;}
+  var wrap=document.querySelector('.vt-wrap');
+  if(wrap){
+    var tabs=wrap.querySelectorAll('.vt-tab');
+    var secs=wrap.querySelectorAll('.vt-sec');
+    tabs.forEach(function(t){
+      t.addEventListener('click',function(){
+        var tgt=t.getAttribute('data-target');
+        tabs.forEach(function(x){x.classList.toggle('active',x===t);});
+        secs.forEach(function(s){s.classList.toggle('active',s.id===tgt);});
+      });
+    });
+  }
+  var zsegs=document.querySelectorAll('.zseg');
+  var zones=document.querySelectorAll('.zone');
+  if(zsegs.length&&zones.length){
+    zsegs.forEach(function(s){
+      s.addEventListener('click',function(){
+        zsegs.forEach(function(x){x.classList.toggle('active',x===s);});
+      });
+    });
+    if('IntersectionObserver' in window){
+      var io=new IntersectionObserver(function(es){
+        es.forEach(function(e){
+          if(e.isIntersecting){
+            var id=e.target.id;
+            zsegs.forEach(function(x){x.classList.toggle('active',x.getAttribute('href')==='#'+id);});
+          }
+        });
+      },{rootMargin:'-40% 0px -55% 0px'});
+      zones.forEach(function(z){io.observe(z);});
+    }
+  }
+})();
+</script>
+</body>
+</html>

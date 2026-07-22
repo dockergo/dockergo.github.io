@@ -16,6 +16,10 @@
 
 ## 拓展 · shim 生命周期方法
 
+![shim 生命周期泳道](Containerd原理_支撑_运行时shim_03生命周期泳道.svg)
+
+图释 containerd 侧与 shim/runc 侧的分工泳道：containerd 只经 TTRPC 持连接、下派各阶段动作，shim 守着容器；daemon 重启由 LoadExistingShims 按 bootstrap.json 重连接管。各阶段落点见下表。
+
 | 阶段 | containerd 侧 | shim 侧 / 底层 |
 |---|---|---|
 | 启动 shim | shim_manager.go:208 Start | shim 二进制 `start` fork 常驻进程 |

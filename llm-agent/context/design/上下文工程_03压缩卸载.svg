@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 520" font-family="-apple-system,'PingFang SC','Helvetica Neue',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.07"/></filter>
+    <marker id="arf" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#f5873a"/></marker>
+    <marker id="art" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#2dd4bf"/></marker>
+  </defs>
+  <rect width="960" height="520" fill="#fbfbfd"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="#1d1d1f">C3 · 压缩与卸载：摘要压缩 + 外部卸载</text>
+  <text x="30" y="54" font-size="12" fill="#6e6e73">长任务的历史会撑爆窗口——把旧内容摘要成短文,或把细节卸载到外部存储,让 Agent 跑得更久</text>
+
+  <!-- 压缩路 -->
+  <text x="240" y="92" font-size="12" font-weight="600" fill="#f5873a" text-anchor="middle">压缩 (Compact)</text>
+  <g filter="url(#soft)"><rect x="60" y="108" width="360" height="52" rx="11" fill="#fff3ea" stroke="#f5873a" stroke-width="1.4"/></g>
+  <text x="240" y="130" font-size="9.5" fill="#1d1d1f" text-anchor="middle">冗长的历史轮次 / 大段工具输出</text>
+  <text x="240" y="148" font-size="9" fill="#6e6e73" text-anchor="middle">占满窗口、包含大量无关细节</text>
+  <path d="M240 162 L240 194" stroke="#f5873a" stroke-width="1.6" marker-end="url(#arf)"/>
+  <text x="330" y="182" font-size="9" fill="#f5873a">LLM 摘要</text>
+  <g filter="url(#soft)"><rect x="120" y="198" width="240" height="46" rx="11" fill="#fff3ea" stroke="#f5873a" stroke-width="1.6"/></g>
+  <text x="240" y="220" font-size="9.5" fill="#1d1d1f" text-anchor="middle">压缩后的要点摘要</text>
+  <text x="240" y="237" font-size="9" fill="#6e6e73" text-anchor="middle">保留结论/决策,丢弃过程噪声</text>
+
+  <!-- 卸载路 -->
+  <text x="720" y="92" font-size="12" font-weight="600" fill="#2dd4bf" text-anchor="middle">卸载 (Offload)</text>
+  <g filter="url(#soft)"><rect x="540" y="108" width="360" height="52" rx="11" fill="#e6fbf6" stroke="#2dd4bf" stroke-width="1.4"/></g>
+  <text x="720" y="130" font-size="9.5" fill="#1d1d1f" text-anchor="middle">完整细节写入外部存储</text>
+  <text x="720" y="148" font-size="9" fill="#6e6e73" text-anchor="middle">文件 / 向量库 / KV 存储</text>
+  <path d="M720 162 L720 194" stroke="#2dd4bf" stroke-width="1.6" marker-end="url(#art)"/>
+  <text x="810" y="182" font-size="9" fill="#2dd4bf">留指针</text>
+  <g filter="url(#soft)"><rect x="600" y="198" width="240" height="46" rx="11" fill="#e6fbf6" stroke="#2dd4bf" stroke-width="1.6"/></g>
+  <text x="720" y="220" font-size="9.5" fill="#1d1d1f" text-anchor="middle">上下文里只留引用/句柄</text>
+  <text x="720" y="237" font-size="9" fill="#6e6e73" text-anchor="middle">需要时按需取回(检索)</text>
+
+  <g filter="url(#soft)"><rect x="40" y="270" width="880" height="230" rx="13" fill="#ffffff" stroke="#d2d2d7" stroke-width="1.3"/></g>
+  <text x="60" y="298" font-size="11.5" font-weight="600" fill="#1d1d1f">两条路何时用、怎么权衡</text>
+  <text x="60" y="324" font-size="10.5" fill="#6e6e73">• 压缩:适合"过程可丢、结论要留"的历史。触发条件如窗口占用超阈值、或每 N 轮滚动摘要一次</text>
+  <text x="60" y="348" font-size="10.5" fill="#6e6e73">  风险:摘要是有损的,可能丢掉后续才用得上的细节 → 关键事实要显式保留或同时卸载原文</text>
+  <text x="60" y="372" font-size="10.5" fill="#6e6e73">• 卸载:适合"细节要留、但当前用不上"的大块内容(长文档、代码库、日志)。上下文只放指针</text>
+  <text x="60" y="396" font-size="10.5" fill="#6e6e73">  代价:取回需一次额外检索/IO,增加延迟 → 与 RAG 天然衔接,把上下文窗口当"工作台"而非仓库</text>
+  <text x="60" y="424" font-size="10.5" fill="#6e6e73">• 组合拳:近期历史保原文、中期历史压成摘要、远期细节卸载到外部——形成分级的"上下文内存层级"</text>
+  <text x="60" y="454" font-size="10" fill="#c084fc">本质:上下文窗口是稀缺的一级缓存,压缩降精度换空间,卸载换 IO 保细节,二者共同延长 Agent 续航</text>
+  <text x="60" y="480" font-size="10" fill="#f5873a">底线:无论压缩还是卸载,都要保证"能力不失真"——关键状态与未决任务绝不能在压缩中悄悄丢失</text>
+</svg>

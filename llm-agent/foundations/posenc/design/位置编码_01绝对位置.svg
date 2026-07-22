@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 560" font-family="-apple-system,'PingFang SC','Helvetica Neue',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.07"/>
+    </filter>
+    <marker id="arv" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#2dd4bf"/>
+    </marker>
+  </defs>
+  <rect width="960" height="560" fill="#fbfbfd"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="#1d1d1f">绝对位置编码 · 正弦编码与可学习编码</text>
+  <text x="30" y="54" font-size="12" fill="#6e6e73">给每个位置一个固定长度的向量，直接加到 token 嵌入上</text>
+
+  <!-- 左：正弦 -->
+  <g filter="url(#soft)"><rect x="40" y="90" width="430" height="360" rx="12" fill="#ffffff" stroke="#2dd4bf" stroke-width="1.4"/></g>
+  <text x="60" y="118" font-size="12" font-weight="600" fill="#2dd4bf">正弦位置编码（Sinusoidal）</text>
+  <text x="60" y="142" font-size="10" fill="#6e6e73">PE(pos,2i)=sin(pos/10000^(2i/d))</text>
+  <text x="60" y="162" font-size="10" fill="#6e6e73">PE(pos,2i+1)=cos(pos/10000^(2i/d))</text>
+  <!-- 波形示意 -->
+  <path d="M60 260 Q100 210 140 260 T220 260 T300 260 T380 260 T440 260" stroke="#2dd4bf" stroke-width="1.8" fill="none"/>
+  <path d="M60 300 Q120 250 180 300 T300 300 T420 300" stroke="#5e5ce6" stroke-width="1.6" fill="none"/>
+  <path d="M60 340 Q140 290 220 340 T380 340" stroke="#f5873a" stroke-width="1.4" fill="none"/>
+  <text x="60" y="374" font-size="10" fill="#6e6e73">不同维度用不同频率的正余弦</text>
+  <text x="60" y="396" font-size="10" fill="#6e6e73">优点：无参、可外推到更长位置</text>
+  <text x="60" y="418" font-size="10" fill="#6e6e73">相邻位置编码平滑，含相对信息</text>
+
+  <!-- 右：可学习 -->
+  <g filter="url(#soft)"><rect x="490" y="90" width="430" height="360" rx="12" fill="#ffffff" stroke="#5e5ce6" stroke-width="1.4"/></g>
+  <text x="510" y="118" font-size="12" font-weight="600" fill="#5e5ce6">可学习位置编码（Learned）</text>
+  <text x="510" y="142" font-size="10" fill="#6e6e73">位置 0..L-1 各一个可训练向量</text>
+  <!-- 表示为一列格子 -->
+  <g>
+    <rect x="530" y="170" width="120" height="30" rx="5" fill="#f3ecff" stroke="#5e5ce6" stroke-width="1.1"/>
+    <text x="590" y="190" font-size="10" fill="#1d1d1f" text-anchor="middle">pos 0 向量</text>
+    <rect x="530" y="208" width="120" height="30" rx="5" fill="#f3ecff" stroke="#5e5ce6" stroke-width="1.1"/>
+    <text x="590" y="228" font-size="10" fill="#1d1d1f" text-anchor="middle">pos 1 向量</text>
+    <rect x="530" y="246" width="120" height="30" rx="5" fill="#f3ecff" stroke="#5e5ce6" stroke-width="1.1"/>
+    <text x="590" y="266" font-size="10" fill="#1d1d1f" text-anchor="middle">pos 2 向量</text>
+    <text x="590" y="298" font-size="12" fill="#6e6e73" text-anchor="middle">⋮</text>
+  </g>
+  <text x="510" y="330" font-size="10" fill="#6e6e73">优点：数据驱动，可拟合任意模式</text>
+  <text x="510" y="352" font-size="10" fill="#6e6e73">缺点：超过训练长度 L 无编码可用</text>
+  <text x="510" y="374" font-size="10" fill="#6e6e73">难以外推，BERT/GPT-2 采用此法</text>
+
+  <!-- 底部结论 -->
+  <g filter="url(#soft)"><rect x="40" y="470" width="880" height="72" rx="12" fill="#e9fbf6" stroke="#2dd4bf" stroke-width="1.3"/></g>
+  <text x="60" y="498" font-size="11" font-weight="600" fill="#2dd4bf">共同点与局限</text>
+  <text x="60" y="522" font-size="10.2" fill="#6e6e73">两者都是「加法式绝对编码」，直接叠加到嵌入；可学习式更灵活但外推差，正弦式天然可外推——这正是 RoPE 等相对方案要改进的地方</text>
+</svg>

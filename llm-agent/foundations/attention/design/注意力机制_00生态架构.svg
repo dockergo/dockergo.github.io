@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 600" font-family="-apple-system,'PingFang SC','Helvetica Neue',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.07"/>
+    </filter>
+    <marker id="arp" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#5e5ce6"/>
+    </marker>
+    <marker id="arg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="960" height="600" fill="#fbfbfd"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="#1d1d1f">注意力机制 · 生态架构</text>
+  <text x="30" y="54" font-size="12" fill="#6e6e73">Query·Key 打分 → softmax 归一 → 对 Value 加权求和；多头并行、掩码约束、高效实现</text>
+
+  <!-- 输入 -->
+  <g filter="url(#soft)"><rect x="40" y="270" width="140" height="80" rx="12" fill="#eef4ff" stroke="#0a84ff" stroke-width="1.4"/></g>
+  <text x="110" y="302" font-size="12" font-weight="600" fill="#1d1d1f" text-anchor="middle">输入表征</text>
+  <text x="110" y="324" font-size="10" fill="#6e6e73" text-anchor="middle">每个 token 一个向量</text>
+
+  <!-- QKV 投影 -->
+  <g filter="url(#soft)"><rect x="220" y="256" width="150" height="108" rx="12" fill="#f3ecff" stroke="#5e5ce6" stroke-width="1.5"/></g>
+  <text x="295" y="286" font-size="12" font-weight="600" fill="#1d1d1f" text-anchor="middle">QKV 投影</text>
+  <text x="295" y="308" font-size="10" fill="#6e6e73" text-anchor="middle">线性映射出</text>
+  <text x="295" y="326" font-size="10" fill="#6e6e73" text-anchor="middle">Query / Key / Value</text>
+  <text x="295" y="350" font-size="10" fill="#5e5ce6" text-anchor="middle">三种角色</text>
+
+  <!-- 打分 -->
+  <g filter="url(#soft)"><rect x="410" y="256" width="150" height="108" rx="12" fill="#f3ecff" stroke="#5e5ce6" stroke-width="1.5"/></g>
+  <text x="485" y="286" font-size="12" font-weight="600" fill="#1d1d1f" text-anchor="middle">相关性打分</text>
+  <text x="485" y="308" font-size="10" fill="#6e6e73" text-anchor="middle">Q·K 点积 / √d</text>
+  <text x="485" y="326" font-size="10" fill="#6e6e73" text-anchor="middle">softmax 归一化</text>
+  <text x="485" y="350" font-size="10" fill="#5e5ce6" text-anchor="middle">谁该关注谁</text>
+
+  <!-- 加权聚合 -->
+  <g filter="url(#soft)"><rect x="600" y="256" width="150" height="108" rx="12" fill="#e9fbf6" stroke="#2dd4bf" stroke-width="1.5"/></g>
+  <text x="675" y="286" font-size="12" font-weight="600" fill="#1d1d1f" text-anchor="middle">加权求和</text>
+  <text x="675" y="308" font-size="10" fill="#6e6e73" text-anchor="middle">按权重聚合 Value</text>
+  <text x="675" y="326" font-size="10" fill="#6e6e73" text-anchor="middle">得上下文表征</text>
+  <text x="675" y="350" font-size="10" fill="#2dd4bf" text-anchor="middle">融合全序列信息</text>
+
+  <!-- 输出 -->
+  <g filter="url(#soft)"><rect x="790" y="270" width="130" height="80" rx="12" fill="#eef4ff" stroke="#0a84ff" stroke-width="1.4"/></g>
+  <text x="855" y="302" font-size="12" font-weight="600" fill="#1d1d1f" text-anchor="middle">上下文输出</text>
+  <text x="855" y="324" font-size="10" fill="#6e6e73" text-anchor="middle">送入 FFN</text>
+
+  <!-- 主流 -->
+  <path d="M180 310 L218 310" stroke="#5e5ce6" stroke-width="2.4" marker-end="url(#arp)"/>
+  <path d="M370 310 L408 310" stroke="#5e5ce6" stroke-width="2.4" marker-end="url(#arp)"/>
+  <path d="M560 310 L598 310" stroke="#5e5ce6" stroke-width="2.4" marker-end="url(#arp)"/>
+  <path d="M750 310 L788 310" stroke="#2dd4bf" stroke-width="2.4" marker-end="url(#arp)"/>
+
+  <!-- 三大机理标注 -->
+  <g filter="url(#soft)"><rect x="40" y="400" width="880" height="160" rx="12" fill="#ffffff" stroke="#d2d2d7" stroke-width="1.2"/></g>
+  <text x="60" y="428" font-size="12" font-weight="600" fill="#5e5ce6">三层机理如何拼合</text>
+  <text x="60" y="456" font-size="10.5" fill="#6e6e73">· 缩放点积（N1）：注意力的最小计算单元 —— QK 点积除以 √d 再 softmax，避免大维度下梯度饱和</text>
+  <text x="60" y="482" font-size="10.5" fill="#6e6e73">· 多头注意力（N2）：把表征切成多份，各头在不同子空间并行学习不同关系，再拼接投影融合</text>
+  <text x="60" y="508" font-size="10.5" fill="#6e6e73">· 高效注意力（N3）：因果掩码保证自回归只看左侧；FlashAttention 等在不改语义下省显存、提速度</text>
+  <text x="60" y="538" font-size="11" font-weight="600" fill="#5e5ce6">主线：点积定「打分」，多头定「视角」，高效实现定「能否规模化」</text>
+</svg>

@@ -5,15 +5,15 @@
   </defs>
   <rect width="1060" height="560" fill="#fbfbfd"/>
   <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">clickhouse-keeper：NuRaft 实现的 Raft 协调器，替代 ZooKeeper</text>
-  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">KeeperServer (h:22) 包装 nuraft::raft_server (:40) · StateMachine (:39) 应用日志到 KeeperStorage (:236)</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">KeeperServer 包装 nuraft::raft_server · StateMachine 应用日志到 KeeperStorage</text>
 
   <!-- layered architecture -->
   <g text-anchor="middle">
     <rect x="330" y="76" width="400" height="52" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/><text x="530" y="98" font-size="11" font-weight="600" fill="#1b2a4a">ZooKeeper 兼容 API（客户端无感）</text><text x="530" y="116" font-size="8.5" fill="#5b7db1">上层 ReplicatedMergeTree/DDLWorker 照常用 ZK 协议</text>
-    <rect x="330" y="144" width="400" height="52" rx="11" fill="#f3f7fc" stroke="#cfe0f2" filter="url(#soft)"/><text x="530" y="164" font-size="11" font-weight="600" fill="#274a78">KeeperDispatcher（请求路由，:28）</text><text x="530" y="182" font-size="8.5" fill="#5b7db1">读走本地、写走 Raft</text>
-    <rect x="330" y="212" width="400" height="52" rx="11" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/><text x="530" y="232" font-size="11" font-weight="600" fill="#12402a">KeeperServer + NuRaft raft_server（:22,:40）</text><text x="530" y="250" font-size="8.5" fill="#2f6f4f">C++ 原生 Raft · 无需 JVM</text>
-    <rect x="330" y="280" width="400" height="52" rx="11" fill="#f6f2fb" stroke="#d9c9ec" filter="url(#soft)"/><text x="530" y="300" font-size="11" font-weight="600" fill="#3d2a5a">KeeperStateMachine（:39, nuraft::state_machine）</text><text x="530" y="318" font-size="8.5" fill="#7a5da5">应用已提交日志</text>
-    <rect x="330" y="348" width="400" height="52" rx="11" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/><text x="530" y="368" font-size="11" font-weight="600" fill="#5a3410">KeeperStorage（:236, 内存 znode 树）</text><text x="530" y="386" font-size="8.5" fill="#93762e">最终状态：znode 键值树 + 快照</text>
+    <rect x="330" y="144" width="400" height="52" rx="11" fill="#f3f7fc" stroke="#cfe0f2" filter="url(#soft)"/><text x="530" y="164" font-size="11" font-weight="600" fill="#274a78">KeeperDispatcher（请求路由）</text><text x="530" y="182" font-size="8.5" fill="#5b7db1">读走本地、写走 Raft</text>
+    <rect x="330" y="212" width="400" height="52" rx="11" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/><text x="530" y="232" font-size="11" font-weight="600" fill="#12402a">KeeperServer + NuRaft raft_server</text><text x="530" y="250" font-size="8.5" fill="#2f6f4f">C++ 原生 Raft · 无需 JVM</text>
+    <rect x="330" y="280" width="400" height="52" rx="11" fill="#f6f2fb" stroke="#d9c9ec" filter="url(#soft)"/><text x="530" y="300" font-size="11" font-weight="600" fill="#3d2a5a">KeeperStateMachine（nuraft::state_machine）</text><text x="530" y="318" font-size="8.5" fill="#7a5da5">应用已提交日志</text>
+    <rect x="330" y="348" width="400" height="52" rx="11" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/><text x="530" y="368" font-size="11" font-weight="600" fill="#5a3410">KeeperStorage（内存 znode 树）</text><text x="530" y="386" font-size="8.5" fill="#93762e">最终状态：znode 键值树 + 快照</text>
   </g>
   <g stroke="#c7c7cc" stroke-width="1.4" fill="none">
     <line x1="530" y1="128" x2="530" y2="144" marker-end="url(#ar)"/>

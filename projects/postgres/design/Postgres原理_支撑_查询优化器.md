@@ -27,12 +27,14 @@ Join 顺序的搜索空间随表数**阶乘级**爆炸，PostgreSQL 两套策略
 
 ## 深化 · 失败路径与边界
 
-- **基数估计崩塌**：多列强相关（如 city 与 zip）时优化器默认按列独立相乘估选择率、严重偏低，可能把该 Hash Join 选成 Nested Loop、慢几个数量级；用 `CREATE STATISTICS (dependencies, ndistinct)` 补多列统计，或 `pg_hint_plan` 强制。
-- **统计陈旧**：大批量导入/删除后未 ANALYZE，直方图/MCV 反映旧分布 → 坏计划；autovacuum 的 ANALYZE 触发有滞后，导入后应手动 ANALYZE。
-- **GEQO 非确定性**：超阈值切 GEQO 后同一查询可能得到不同计划（含随机性），对稳定性敏感的场景可调高 `geqo_threshold` 或 `geqo_seed`。
-- **规划开销反噬**：表极多或 prepared statement 用 generic plan 时，规划本身可能比执行还慢；`plan_cache_mode` 可控 generic vs custom plan 选择。
-- **参数不敏感（generic plan）**：预编译语句沿用泛化计划，遇到倾斜参数（某值命中极多）会选错扫描；PG 会在前几次执行后比较 custom/generic 代价再决定。
-- **join_collapse_limit 截断搜索**：`FROM` 里超过 `join_collapse_limit`（默认 8）个表时优化器不再展平子查询、按书写顺序固定部分 Join，可能错过更优序；手写大 Join 或视图嵌套深时需留意。
+| 场景 | 机理 | 后果 / 应对 |
+|---|---|---|
+| 基数估计崩塌 | 多列强相关（city 与 zip）时按列独立相乘估选择率、严重偏低 | 该 Hash Join 选成 Nested Loop 慢几个数量级；`CREATE STATISTICS (dependencies, ndistinct)` 或 `pg_hint_plan` |
+| 统计陈旧 | 大批量导入/删除后未 ANALYZE，直方图/MCV 反映旧分布 | 坏计划；autovacuum 的 ANALYZE 触发有滞后，导入后应手动 ANALYZE |
+| GEQO 非确定性 | 超阈值切 GEQO 后同一查询可能得不同计划（含随机性） | 稳定性敏感场景调高 `geqo_threshold` 或固定 `geqo_seed` |
+| 规划开销反噬 | 表极多或 prepared 用 generic plan 时规划本身可能比执行慢 | `plan_cache_mode` 控 generic vs custom plan 选择 |
+| 参数不敏感 | 预编译语句沿用泛化计划，遇倾斜参数（某值命中极多）选错扫描 | PG 在前几次执行后比较 custom/generic 代价再决定 |
+| join_collapse_limit 截断 | `FROM` 超 `join_collapse_limit`（默认 8）表时不再展平、按书写序固定部分 Join | 可能错过更优序；手写大 Join 或视图嵌套深时需留意 |
 
 ---
 

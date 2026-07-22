@@ -1,0 +1,116 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="660" viewBox="0 0 1120 660" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="aB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#4a7fd0"/></marker>
+    <marker id="aG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+    <marker id="aA" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#d99a2b"/></marker>
+  </defs>
+  <rect width="1120" height="660" fill="#fbfbfd"/>
+
+  <text x="30" y="34" font-size="17" font-weight="700" fill="#1d1d1f">图 · 邻接表：每个顶点挂一条「邻居链」，只存真实存在的边</text>
+  <text x="30" y="56" font-size="11" fill="#6e6e73">map[顶点] → 邻居切片。空间 O(V+E) 随边数增长，稀疏图省空间；查一条边要遍历该顶点的邻居链，O(deg)</text>
+
+  <!-- 图例 -->
+  <rect x="30" y="72" width="12" height="12" rx="2" fill="#4a7fd0"/><text x="48" y="82" font-size="10.5" fill="#3a3a3c">顶点 / 边</text>
+  <rect x="150" y="72" width="12" height="12" rx="2" fill="#d99a2b"/><text x="168" y="82" font-size="10.5" fill="#3a3a3c">链头（顶点）</text>
+  <rect x="290" y="72" width="12" height="12" rx="2" fill="#eaf1fb" stroke="#c6d9f2"/><text x="308" y="82" font-size="10.5" fill="#3a3a3c">邻居节点</text>
+  <line x1="420" y1="78" x2="444" y2="78" stroke="#2f9e6e" stroke-width="1.8" marker-end="url(#aG)"/><text x="450" y="82" font-size="10.5" fill="#3a3a3c">一条无向边 → 两条链各存一份</text>
+
+  <!-- ===== 左：图 ===== -->
+  <text x="30" y="116" font-size="12" font-weight="700" fill="#20375e">同一张图</text>
+  <rect x="30" y="128" width="300" height="300" rx="12" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <g stroke="#4a7fd0" stroke-width="2">
+    <line x1="180" y1="182" x2="105" y2="258"/>
+    <line x1="180" y1="182" x2="255" y2="258"/>
+    <line x1="105" y1="258" x2="105" y2="348"/>
+    <line x1="105" y1="258" x2="255" y2="348"/>
+    <line x1="255" y1="258" x2="255" y2="348"/>
+  </g>
+  <line x1="180" y1="182" x2="105" y2="258" stroke="#2f9e6e" stroke-width="3"/>
+  <g font-size="13" font-weight="700" text-anchor="middle">
+    <circle cx="180" cy="182" r="20" fill="#eaf1fb" stroke="#4a7fd0" stroke-width="1.6"/><text x="180" y="187" fill="#20375e">1</text>
+    <circle cx="105" cy="258" r="20" fill="#eaf1fb" stroke="#4a7fd0" stroke-width="1.6"/><text x="105" y="263" fill="#20375e">2</text>
+    <circle cx="255" cy="258" r="20" fill="#eaf1fb" stroke="#4a7fd0" stroke-width="1.6"/><text x="255" y="263" fill="#20375e">3</text>
+    <circle cx="105" cy="348" r="20" fill="#eaf1fb" stroke="#4a7fd0" stroke-width="1.6"/><text x="105" y="353" fill="#20375e">4</text>
+    <circle cx="255" cy="348" r="20" fill="#eaf1fb" stroke="#4a7fd0" stroke-width="1.6"/><text x="255" y="353" fill="#20375e">5</text>
+  </g>
+  <text x="180" y="392" font-size="10" fill="#2f6b4e" text-anchor="middle">绿边 (1,2)：进 1 的链，也进 2 的链</text>
+  <text x="180" y="412" font-size="10" fill="#6e6e73" text-anchor="middle">5 条边 → 邻居项共 10 个（每边两份）</text>
+
+  <!-- ===== 中：邻接表 ===== -->
+  <text x="360" y="116" font-size="12" font-weight="700" fill="#8a5a12">邻接表 adjList：顶点 → 邻居链（链内顺序 = 加边顺序）</text>
+  <rect x="360" y="128" width="378" height="300" rx="12" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <g font-size="12" text-anchor="middle">
+    <!-- 1 -> 2 -> 3 -->
+    <rect x="378" y="150" width="40" height="30" rx="6" fill="#fdf3e0" stroke="#e7c07a"/><text x="398" y="170" fill="#8a5a12" font-weight="700">1</text>
+    <rect x="450" y="150" width="40" height="30" rx="6" fill="#e3f4ec" stroke="#2f9e6e"/><text x="470" y="170" fill="#1f6b4a">2</text>
+    <rect x="522" y="150" width="40" height="30" rx="6" fill="#eaf1fb" stroke="#c6d9f2"/><text x="542" y="170" fill="#20375e">3</text>
+    <!-- 2 -> 1 -> 4 -> 5 -->
+    <rect x="378" y="196" width="40" height="30" rx="6" fill="#fdf3e0" stroke="#e7c07a"/><text x="398" y="216" fill="#8a5a12" font-weight="700">2</text>
+    <rect x="450" y="196" width="40" height="30" rx="6" fill="#e3f4ec" stroke="#2f9e6e"/><text x="470" y="216" fill="#1f6b4a">1</text>
+    <rect x="522" y="196" width="40" height="30" rx="6" fill="#eaf1fb" stroke="#c6d9f2"/><text x="542" y="216" fill="#20375e">4</text>
+    <rect x="594" y="196" width="40" height="30" rx="6" fill="#eaf1fb" stroke="#c6d9f2"/><text x="614" y="216" fill="#20375e">5</text>
+    <!-- 3 -> 1 -> 5 -->
+    <rect x="378" y="242" width="40" height="30" rx="6" fill="#fdf3e0" stroke="#e7c07a"/><text x="398" y="262" fill="#8a5a12" font-weight="700">3</text>
+    <rect x="450" y="242" width="40" height="30" rx="6" fill="#eaf1fb" stroke="#c6d9f2"/><text x="470" y="262" fill="#20375e">1</text>
+    <rect x="522" y="242" width="40" height="30" rx="6" fill="#eaf1fb" stroke="#c6d9f2"/><text x="542" y="262" fill="#20375e">5</text>
+    <!-- 4 -> 2 -->
+    <rect x="378" y="288" width="40" height="30" rx="6" fill="#fdf3e0" stroke="#e7c07a"/><text x="398" y="308" fill="#8a5a12" font-weight="700">4</text>
+    <rect x="450" y="288" width="40" height="30" rx="6" fill="#eaf1fb" stroke="#c6d9f2"/><text x="470" y="308" fill="#20375e">2</text>
+    <!-- 5 -> 2 -> 3 -->
+    <rect x="378" y="334" width="40" height="30" rx="6" fill="#fdf3e0" stroke="#e7c07a"/><text x="398" y="354" fill="#8a5a12" font-weight="700">5</text>
+    <rect x="450" y="334" width="40" height="30" rx="6" fill="#eaf1fb" stroke="#c6d9f2"/><text x="470" y="354" fill="#20375e">2</text>
+    <rect x="522" y="334" width="40" height="30" rx="6" fill="#eaf1fb" stroke="#c6d9f2"/><text x="542" y="354" fill="#20375e">3</text>
+  </g>
+  <!-- 链箭头 -->
+  <g stroke="#8a5a12" stroke-width="1.6" fill="none">
+    <line x1="418" y1="165" x2="450" y2="165" marker-end="url(#aA)"/><line x1="490" y1="165" x2="522" y2="165" marker-end="url(#aA)"/>
+    <line x1="418" y1="211" x2="450" y2="211" marker-end="url(#aA)"/><line x1="490" y1="211" x2="522" y2="211" marker-end="url(#aA)"/><line x1="562" y1="211" x2="594" y2="211" marker-end="url(#aA)"/>
+    <line x1="418" y1="257" x2="450" y2="257" marker-end="url(#aA)"/><line x1="490" y1="257" x2="522" y2="257" marker-end="url(#aA)"/>
+    <line x1="418" y1="303" x2="450" y2="303" marker-end="url(#aA)"/>
+    <line x1="418" y1="349" x2="450" y2="349" marker-end="url(#aA)"/><line x1="490" y1="349" x2="522" y2="349" marker-end="url(#aA)"/>
+  </g>
+  <text x="378" y="392" font-size="10" fill="#6e6e73">顶点 4 只连 2，链最短；顶点 2 度数最大，链最长</text>
+  <text x="378" y="410" font-size="10" fill="#2f6b4e">绿节点：边 (1,2) 在 1 与 2 两条链里各出现一次</text>
+
+  <!-- ===== 右：操作 ===== -->
+  <text x="758" y="116" font-size="12" font-weight="700" fill="#20375e">操作与代价</text>
+  <rect x="758" y="128" width="332" height="80" rx="12" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="776" y="152" font-size="11" font-weight="700" fill="#d99a2b">查一条边 (i,j)　O(deg i)</text>
+  <text x="776" y="174" font-size="10" fill="#4a4a4f">要遍历 i 的邻居链，逐个比对是否等于 j</text>
+  <text x="776" y="194" font-size="10" fill="#6e6e73">这是相对矩阵 O(1) 的代价：查边不再是常数</text>
+
+  <rect x="758" y="218" width="332" height="80" rx="12" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="776" y="242" font-size="11" font-weight="700" fill="#2f6b4e">加边 / 删边　O(1) / O(deg)</text>
+  <text x="776" y="264" font-size="10" fill="#4a4a4f">加边：两条链各 append 一项（均摊 O(1)）</text>
+  <text x="776" y="284" font-size="10" fill="#4a4a4f">删边：两条链各删一项（DeleteSliceElms）</text>
+
+  <rect x="758" y="308" width="332" height="82" rx="12" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="776" y="332" font-size="11" font-weight="700" fill="#2f6b4e">加顶点　O(1)</text>
+  <text x="776" y="354" font-size="10" fill="#4a4a4f">只需在 map 里新建一条空链，无需触碰其它顶点</text>
+  <text x="776" y="374" font-size="10" fill="#6e6e73">对比矩阵的加行加列，这里几乎零成本</text>
+
+  <rect x="758" y="400" width="332" height="72" rx="12" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="776" y="424" font-size="11" font-weight="700" fill="#d99a2b">删顶点　O(V+E)</text>
+  <text x="776" y="446" font-size="10" fill="#4a4a4f">删自身链后，还要遍历所有其它链，删掉指向它的边</text>
+  <text x="776" y="464" font-size="10" fill="#6e6e73">唯一偏重的操作，但仍与边数线性相关</text>
+
+  <!-- 底部性质 -->
+  <rect x="30" y="446" width="700" height="186" rx="14" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="48" y="472" font-size="12" font-weight="700" fill="#1d1d1f">为什么这样设计</text>
+  <text x="48" y="498" font-size="10.5" fill="#4a4a4f">邻接表只为「真实存在的边」花空间：一条边占两个邻居项，总量 O(V+E)。</text>
+  <text x="48" y="518" font-size="10.5" fill="#4a4a4f">真实世界的图几乎都稀疏（E≪V²），于是邻接表比矩阵省下大片空洞。</text>
+  <text x="48" y="540" font-size="10.5" fill="#4a4a4f">代价体现在「查一条特定边」要扫邻居链；但遍历算法要的正是</text>
+  <text x="48" y="560" font-size="10.5" fill="#4a4a4f">「给我某顶点的所有邻居」——邻接表天然一步给到，所以 BFS/DFS</text>
+  <text x="48" y="580" font-size="10.5" fill="#4a4a4f">都构建在它之上（见 G3、G4）。</text>
+  <text x="48" y="606" font-size="10" fill="#6e6e73">本实现用 map[Vertex][]Vertex；工业实现常用「数组下标 + 链表/CSR」进一步压缩。</text>
+
+  <!-- 右下小结 -->
+  <rect x="758" y="490" width="332" height="142" rx="14" fill="#eef4fb" stroke="#c6d9f2"/>
+  <text x="776" y="516" font-size="11" font-weight="700" fill="#20375e">一句话</text>
+  <text x="776" y="540" font-size="10.5" fill="#20375e">矩阵按「位置」找边（O(1) 查，O(V²) 存）；</text>
+  <text x="776" y="560" font-size="10.5" fill="#20375e">邻接表按「顶点」找邻居（O(V+E) 存，查边 O(deg)）。</text>
+  <text x="776" y="584" font-size="10.5" fill="#20375e">稀疏 + 常增删 + 要遍历邻居 → 邻接表；</text>
+  <text x="776" y="604" font-size="10.5" fill="#20375e">稠密 + 顶点固定 + 频繁随机查边 → 矩阵。</text>
+  <text x="776" y="624" font-size="10" fill="#6e6e73">详见 CMP 对比图。</text>
+</svg>

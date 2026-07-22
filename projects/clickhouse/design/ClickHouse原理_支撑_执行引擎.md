@@ -6,7 +6,7 @@
 
 ![Processors 框架](ClickHouse原理_执行_01框架.svg)
 
-执行的原子是 **IProcessor**（`IProcessor.h:119`）——一个有输入/输出 Port 的算子节点。它不主动跑，而是由调度器问它"现在能做什么"：`prepare` 返回一个 **Status**（`IProcessor.h:134`）：`NeedData`（等上游数据）、`PortFull`（下游满、等消费）、`Ready`（可执行 `work`）、`Finished`（完成）、`Async`（异步等待）、`ExpandPipeline`（动态扩图）。数据在 Processor 间以 **Chunk**（一批列，向量化单位）经 Port 流动。这套"状态机 + 端口"设计让执行图能被通用调度器驱动。
+图注：执行的原子是 **IProcessor**——一个有输入/输出 Port 的算子节点，不主动跑，而由调度器问它"现在能做什么"。`prepare` 返回一个 **Status**：`NeedData`（等上游）、`PortFull`（下游满）、`Ready`（可 `work`）、`Finished`、`Async`、`ExpandPipeline`（动态扩图）。数据以 **Chunk**（一批列，向量化单位）经 Port 流动。这套"状态机 + 端口"设计让执行图能被通用调度器驱动。
 
 ---
 
@@ -14,11 +14,11 @@
 
 ![列式内存模型](ClickHouse原理_执行_02列式内存.svg)
 
-- **IColumn**（`IColumn.h:80`，COW 写时复制）：一列数据的内存表示（`ColumnVector`/`ColumnString`/`ColumnArray`/`ColumnNullable`…），连续存储、SIMD 友好。
+- **IColumn**（COW 写时复制）：一列数据的内存表示（`ColumnVector`/`ColumnString`/`ColumnArray`/`ColumnNullable`…），连续存储、SIMD 友好。
 - **IDataType**：列的类型与（反）序列化逻辑。
-- **Block**（`Block.h:30`）：一组同长度的列 + 列名/类型——是"内存中的一段表"。Chunk 是 Block 的执行期载体（去掉列名，只留数据 + 行数）。
+- **Block**：一组同长度的列 + 列名/类型——是"内存中的一段表"。Chunk 是 Block 的执行期载体（去掉列名，只留数据 + 行数）。
 
-向量化的本质：算子一次处理**一整列的一批值**（而非逐行），把函数调用/分支开销摊薄到成千上万行上，充分利用 CPU 缓存与 SIMD。
+图注：向量化的本质——算子一次处理**一整列的一批值**（而非逐行），把函数调用/分支开销摊薄到成千上万行上，充分利用 CPU 缓存与 SIMD。
 
 ---
 
@@ -26,7 +26,7 @@
 
 ![Pipeline 构建](ClickHouse原理_执行_03Pipeline构建.svg)
 
-`QueryPipelineBuilder`（`QueryPipelineBuilder.h`）把逻辑 QueryPlan 逐 Step `updatePipeline` 展开成物理 **QueryPipeline**——一张 IProcessor 组成的有向图。一个逻辑算子（如 AggregatingStep）会展开成**多路并行** Processor（宽度 = `max_threads`），中间用 Resize/Merge 节点收束。这一步把"做什么"（逻辑）变成"用多少并行、怎么连线"（物理）。
+图注：`QueryPipelineBuilder` 把逻辑 QueryPlan 逐 Step `updatePipeline` 展开成物理 **QueryPipeline**——一张 IProcessor 组成的有向图。一个逻辑算子（如 AggregatingStep）会展开成**多路并行** Processor（宽度 = `max_threads`），中间用 Resize/Merge 节点收束。这一步把"做什么"（逻辑）变成"用多少并行、怎么连线"（物理）。
 
 ---
 
@@ -34,7 +34,7 @@
 
 ![调度执行](ClickHouse原理_执行_04调度.svg)
 
-`PipelineExecutor::execute`（`PipelineExecutor.cpp:125`）驱动整张图。它构建 **ExecutingGraph**（`ExecutingGraph.h:17`）追踪每个 Processor 的就绪状态，以 **pull 模型**运行：空闲线程从图里找 `Ready` 的 Processor 执行 `work`，数据不足就顺 Port 向上游要（`NeedData`）。这是一种 work-stealing 式的并行——没有中央协调线程，线程各自从图中取可执行节点，天然负载均衡。`max_threads`（默认 0=CPU 核数，`Settings.cpp:206`）决定线程池大小。
+图注：`PipelineExecutor::execute` 驱动整张图——构建 **ExecutingGraph** 追踪每个 Processor 的就绪状态，以 **pull 模型**运行：空闲线程从图里找 `Ready` 的 Processor 执行 `work`，数据不足就顺 Port 向上游要（`NeedData`）。这是 work-stealing 式并行——无中央协调线程，线程各自从图中取可执行节点，天然负载均衡。`max_threads`（默认 0=CPU 核数）决定线程池大小。
 
 ---
 
@@ -46,9 +46,9 @@
 |---|---|---|
 | 表达式 | `ExpressionTransform` | 按列批量算表达式 |
 | 过滤 | `FilterTransform` | 按掩码筛行 |
-| 聚合 | `AggregatingTransform` + `Aggregator` | 每线程部分聚合 → 合并；大基数切 two-level（阈值 100000，`Settings.cpp:962`） |
+| 聚合 | `AggregatingTransform` + `Aggregator` | 每线程部分聚合 → 合并；大基数切 two-level（阈值 100000 行） |
 | 有序聚合 | `AggregatingInOrderTransform` | 利用输入有序省哈希表 |
-| Join | `HashJoin`（`HashJoin.h:110`）/ `GraceHashJoin`（`GraceHashJoin.h:44`）/ 排序归并 | 按 `join_algorithm` 择优 |
+| Join | `HashJoin` / `GraceHashJoin` / 排序归并 | 按 `join_algorithm` 择优 |
 | 排序 | `PartialSorting` + `MergeSorting` | 分块排序 → 归并 |
 
 （聚合/join 的选择逻辑见「DQL 数据查询」深化篇。）
@@ -59,7 +59,7 @@
 
 ![向量化与并行](ClickHouse原理_执行_06并行度.svg)
 
-两个性能杠杆叠加：**向量化**（一次算一列批，摊薄开销）× **并行度**（`max_threads` 路 Processor 同时跑）。大分析查询把 `max_threads` 设大吃满 CPU；高并发点查/小查询设小以保隔离、避免线程争抢。并行度与「资源与负载」的并发控制、内存追踪协同——线程越多，峰值内存越高。
+图注：两个性能杠杆叠加——**向量化**（一次算一列批，摊薄开销）× **并行度**（`max_threads` 路 Processor 同时跑）。大分析查询把 `max_threads` 设大吃满 CPU；高并发点查/小查询设小以保隔离、避免线程争抢。并行度与「资源与负载」的并发控制、内存追踪协同——线程越多，峰值内存越高。
 
 ---
 
@@ -76,7 +76,7 @@
 
 ## 调优要点（关键开关）
 
-- `max_threads`：单查询并行度（默认 0=CPU 核数，`Settings.cpp:206`）。
+- `max_threads`：单查询并行度（默认 0=CPU 核数）。
 - `max_block_size`：Chunk 行数上限（影响向量化批大小与内存）。
 - `max_memory_usage`：单查询内存上限，超限 spill 或报错。
 - `join_algorithm`：join 算法偏好（见 DQL 篇）。

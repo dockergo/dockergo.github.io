@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="450" viewBox="0 0 1000 450" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs><filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ac" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#7c5fe6"/></marker></defs>
+  <rect width="1000" height="450" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Parquet 原理 · 读路径裁列裁页：三层收窄 + 解码 rep/def 组装</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">拿到全图后逐层缩小要读字节:按 path_in_schema 裁列 → 按 PageIndex/统计裁页 → 只解压命中页 → 用重复级/定义级组装回嵌套行</text>
+
+  <!-- 三步收窄 -->
+  <rect x="30" y="72" width="300" height="180" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="46" y="96" font-size="11" font-weight="700" fill="#12402a">① 裁列（列裁剪）</text>
+  <text x="46" y="118" font-size="9" fill="#2f6f5f">查询只投影 name、age 两列</text>
+  <g text-anchor="middle" font-size="8.4">
+    <rect x="46" y="130" width="128" height="30" rx="6" fill="#eafaf1" stroke="#8fce9f"/><text x="110" y="150" fill="#12402a">name ✓ 读</text>
+    <rect x="186" y="130" width="128" height="30" rx="6" fill="#eafaf1" stroke="#8fce9f"/><text x="250" y="150" fill="#12402a">age ✓ 读</text>
+    <rect x="46" y="166" width="128" height="30" rx="6" fill="#f7f7f9" stroke="#e3e3e8"/><text x="110" y="186" fill="#8a8a90">addr ✗ 跳</text>
+    <rect x="186" y="166" width="128" height="30" rx="6" fill="#f7f7f9" stroke="#e3e3e8"/><text x="250" y="186" fill="#8a8a90">salary ✗ 跳</text>
+  </g>
+  <text x="46" y="216" font-size="8.6" fill="#2f6f5f">按 path_in_schema 匹配列块，只读命中列的 ColumnChunk。</text>
+  <text x="46" y="236" font-size="8.4" fill="#4c8567">列存的立身之本：不碰未投影列的任何字节。</text>
+
+  <path d="M336,162 L376,162" stroke="#7c5fe6" stroke-width="1.8" fill="none" marker-end="url(#ac)"/>
+
+  <rect x="382" y="72" width="300" height="180" rx="12" fill="#e9f2ff" stroke="#a9ccf5" filter="url(#soft)"/>
+  <text x="398" y="96" font-size="11" font-weight="700" fill="#0a3d78">② 裁页（两级裁块/页）</text>
+  <text x="398" y="118" font-size="9" fill="#2a5a92">谓词 WHERE age = 30：</text>
+  <text x="398" y="140" font-size="9" fill="#2a5a92">· 行组级 Statistics min/max 先裁整行组</text>
+  <text x="398" y="160" font-size="9" fill="#2a5a92">· 布隆过滤器裁等值列块</text>
+  <text x="398" y="180" font-size="9" fill="#2a5a92">· PageIndex 逐页 min/max 选候选页</text>
+  <text x="398" y="200" font-size="9" fill="#2a5a92">· OffsetIndex 把页号翻成字节偏移</text>
+  <text x="398" y="224" font-size="8.6" fill="#5b7db1">层层递进：行组 → 列块 → 页，逐级缩小读取范围。</text>
+  <text x="398" y="242" font-size="8.4" fill="#7fa0c4">裁剪保守：命中页仍需逐值精确校验谓词。</text>
+
+  <path d="M688,162 L728,162" stroke="#7c5fe6" stroke-width="1.8" fill="none" marker-end="url(#ac)"/>
+
+  <rect x="734" y="72" width="236" height="180" rx="12" fill="#faf5ff" stroke="#e4d5f2" filter="url(#soft)"/>
+  <text x="750" y="96" font-size="11" font-weight="700" fill="#3d2a5a">③ 只解压命中页</text>
+  <text x="750" y="118" font-size="9" fill="#6a4f9a">· seek 到页偏移读该页</text>
+  <text x="750" y="138" font-size="9" fill="#6a4f9a">· 按 codec 解压</text>
+  <text x="750" y="158" font-size="9" fill="#6a4f9a">· 有字典先读字典页</text>
+  <text x="750" y="178" font-size="9" fill="#6a4f9a">· 解页头 → 解码值/级别</text>
+  <rect x="750" y="192" width="204" height="48" rx="8" fill="#f5eefc" stroke="#e4d5f2"/>
+  <text x="852" y="212" font-size="8.6" text-anchor="middle" fill="#3d2a5a">未命中的页整段不解压</text>
+  <text x="852" y="230" font-size="8.4" text-anchor="middle" fill="#6a4f9a">CPU 解码量随命中页数下降</text>
+
+  <!-- 底部：rep/def 组装 -->
+  <rect x="30" y="266" width="940" height="126" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="46" y="290" font-size="11" font-weight="700" fill="#1b2a4a">④ 解码 rep/def 组装回嵌套行（Dremel 逆过程）</text>
+  <g text-anchor="middle" font-size="8.6">
+    <rect x="46" y="302" width="200" height="66" rx="8" fill="#f3f9ff" stroke="#bcd8f5"/><text x="146" y="326" font-weight="700" fill="#0a3d78">定义级 def</text><text x="146" y="346" fill="#2a5a92">该值/其祖先是否为 null</text><text x="146" y="362" fill="#5b7db1">还原缺失层级</text>
+    <rect x="262" y="302" width="200" height="66" rx="8" fill="#f3f9ff" stroke="#bcd8f5"/><text x="362" y="326" font-weight="700" fill="#0a3d78">重复级 rep</text><text x="362" y="346" fill="#2a5a92">该值从哪一层开始新列表</text><text x="362" y="362" fill="#5b7db1">还原 list 边界</text>
+    <rect x="478" y="302" width="200" height="66" rx="8" fill="#f3f9ff" stroke="#bcd8f5"/><text x="578" y="326" font-weight="700" fill="#0a3d78">叶子值序列</text><text x="578" y="346" fill="#2a5a92">扁平存储的实际值</text><text x="578" y="362" fill="#5b7db1">按 def/rep 归位</text>
+  </g>
+  <path d="M682,335 L720,335" stroke="#7c5fe6" stroke-width="1.8" fill="none" marker-end="url(#ac)"/>
+  <rect x="726" y="302" width="228" height="66" rx="8" fill="#f0faf3" stroke="#bfe0cd"/>
+  <text x="840" y="326" font-size="9" font-weight="700" text-anchor="middle" fill="#12402a">重建嵌套记录</text>
+  <text x="840" y="346" font-size="8.4" text-anchor="middle" fill="#2f6f5f">struct/list/map 层级复原</text>
+  <text x="840" y="362" font-size="8.4" text-anchor="middle" fill="#4c8567">多列按行序对齐拼回整行</text>
+
+  <rect x="30" y="404" width="940" height="34" rx="9" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+  <text x="46" y="425" font-size="9.2" fill="#5a3410">一句话：读路径 = 裁列（path_in_schema）+ 裁页（统计/布隆/PageIndex）+ 解压命中页 + rep/def 组装，读得越少、算得越少。</text>
+</svg>

@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="548" viewBox="0 0 980 548" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="vns" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+  </defs>
+  <rect width="980" height="548" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="700" fill="#1d1d1f">变长 / 嵌套 / 编码类型的物理 buffer 布局 · 一列 = 元数据 + 若干对齐 Buffer</text>
+  <text x="30" y="50" font-size="10.5" fill="#6e6e73">定长只需 validity+value；变长加 offset、列表加 child、结构每字段一列、字典用 index+去重字典</text>
+
+  <!-- 图例 -->
+  <g font-size="10">
+    <rect x="30" y="60" width="16" height="11" rx="2" fill="#eef3fb" stroke="#cfe0f2"/><text x="52" y="69" fill="#3a3a3c">validity（空值）</text>
+    <rect x="182" y="60" width="16" height="11" rx="2" fill="#fdeecf" stroke="#e6c98a"/><text x="204" y="69" fill="#3a3a3c">offset / index（结构 buffer）</text>
+    <rect x="392" y="60" width="16" height="11" rx="2" fill="#d9f2e4" stroke="#9ed9ba"/><text x="414" y="69" fill="#3a3a3c">value / child（数据）</text>
+  </g>
+
+  <!-- 面板 A：变长 String -->
+  <rect x="30" y="86" width="450" height="200" rx="12" fill="#f9fbff" stroke="#dfe9f5" filter="url(#vns)"/>
+  <text x="46" y="108" font-size="11.5" font-weight="700" fill="#1b2a4a">变长 String ["ab", null, "cde"]</text>
+  <text x="46" y="126" font-size="9" fill="#5b7db1">validity + offset + value（3 个 buffer）</text>
+  <g font-size="10" text-anchor="middle">
+    <text x="46" y="150" font-size="9" fill="#7488a5" text-anchor="start">validity</text>
+    <rect x="120" y="140" width="40" height="24" fill="#eef3fb" stroke="#cfe0f2"/><text x="140" y="156" fill="#3f5c86">1</text>
+    <rect x="160" y="140" width="40" height="24" fill="#f4d7d5" stroke="#dba7a2"/><text x="180" y="156" fill="#a5342c">0</text>
+    <rect x="200" y="140" width="40" height="24" fill="#eef3fb" stroke="#cfe0f2"/><text x="220" y="156" fill="#3f5c86">1</text>
+  </g>
+  <g font-size="10" text-anchor="middle">
+    <text x="46" y="188" font-size="9" fill="#8a6d3b" text-anchor="start">offset</text>
+    <rect x="120" y="178" width="36" height="24" fill="#fdeecf" stroke="#e6c98a"/><text x="138" y="194" fill="#b0651f">0</text>
+    <rect x="156" y="178" width="36" height="24" fill="#fdeecf" stroke="#e6c98a"/><text x="174" y="194" fill="#b0651f">2</text>
+    <rect x="192" y="178" width="36" height="24" fill="#fdeecf" stroke="#e6c98a"/><text x="210" y="194" fill="#b0651f">2</text>
+    <rect x="228" y="178" width="36" height="24" fill="#fdeecf" stroke="#e6c98a"/><text x="246" y="194" fill="#b0651f">5</text>
+  </g>
+  <g font-size="10" text-anchor="middle">
+    <text x="46" y="228" font-size="9" fill="#2f7d57" text-anchor="start">value</text>
+    <rect x="120" y="218" width="30" height="24" fill="#d9f2e4" stroke="#9ed9ba"/><text x="135" y="234" fill="#1c6b45">a</text>
+    <rect x="150" y="218" width="30" height="24" fill="#d9f2e4" stroke="#9ed9ba"/><text x="165" y="234" fill="#1c6b45">b</text>
+    <rect x="180" y="218" width="30" height="24" fill="#d9f2e4" stroke="#9ed9ba"/><text x="195" y="234" fill="#1c6b45">c</text>
+    <rect x="210" y="218" width="30" height="24" fill="#d9f2e4" stroke="#9ed9ba"/><text x="225" y="234" fill="#1c6b45">d</text>
+    <rect x="240" y="218" width="30" height="24" fill="#d9f2e4" stroke="#9ed9ba"/><text x="255" y="234" fill="#1c6b45">e</text>
+  </g>
+  <text x="290" y="232" font-size="9" fill="#5a4a3a">第 i 值 = value[off[i]:off[i+1]]</text>
+  <text x="290" y="248" font-size="9" fill="#8a9ab5">off[0:2]="ab"，off[2:2]=""(null)</text>
+  <text x="290" y="264" font-size="9" fill="#8a9ab5">off[2:5]="cde"</text>
+
+  <!-- 面板 B：列表 List -->
+  <rect x="500" y="86" width="450" height="200" rx="12" fill="#f9fbff" stroke="#dfe9f5" filter="url(#vns)"/>
+  <text x="516" y="108" font-size="11.5" font-weight="700" fill="#1b2a4a">列表 List [[1,2],[3]]</text>
+  <text x="516" y="126" font-size="9" fill="#5b7db1">validity + offset + 一个子数组 child_data</text>
+  <g font-size="10" text-anchor="middle">
+    <text x="516" y="158" font-size="9" fill="#8a6d3b" text-anchor="start">offset</text>
+    <rect x="600" y="148" width="36" height="24" fill="#fdeecf" stroke="#e6c98a"/><text x="618" y="164" fill="#b0651f">0</text>
+    <rect x="636" y="148" width="36" height="24" fill="#fdeecf" stroke="#e6c98a"/><text x="654" y="164" fill="#b0651f">2</text>
+    <rect x="672" y="148" width="36" height="24" fill="#fdeecf" stroke="#e6c98a"/><text x="690" y="164" fill="#b0651f">3</text>
+  </g>
+  <text x="720" y="164" font-size="9" fill="#8a9ab5">offset 划分每行区间</text>
+  <rect x="600" y="196" width="240" height="66" rx="8" fill="#eafaf1" stroke="#b8e6cd"/>
+  <text x="614" y="214" font-size="9" fill="#1c6b45">child_data（子数组 = 一个完整 Array）</text>
+  <g font-size="10" text-anchor="middle">
+    <rect x="614" y="224" width="34" height="26" fill="#d9f2e4" stroke="#9ed9ba"/><text x="631" y="241" fill="#1c6b45">1</text>
+    <rect x="648" y="224" width="34" height="26" fill="#d9f2e4" stroke="#9ed9ba"/><text x="665" y="241" fill="#1c6b45">2</text>
+    <rect x="682" y="224" width="34" height="26" fill="#d9f2e4" stroke="#9ed9ba"/><text x="699" y="241" fill="#1c6b45">3</text>
+  </g>
+  <text x="732" y="243" font-size="9" fill="#2f7d57">行0=[0:2] 行1=[2:3]</text>
+
+  <!-- 面板 C：嵌套 Struct -->
+  <rect x="30" y="298" width="450" height="200" rx="12" fill="#f9fbff" stroke="#dfe9f5" filter="url(#vns)"/>
+  <text x="46" y="320" font-size="11.5" font-weight="700" fill="#1b2a4a">嵌套 Struct{ id:Int, name:Str }</text>
+  <text x="46" y="338" font-size="9" fill="#5b7db1">无 value buffer；只有 validity + 每字段一个 child 列</text>
+  <rect x="46" y="352" width="200" height="128" rx="8" fill="#eafaf1" stroke="#b8e6cd"/>
+  <text x="60" y="370" font-size="9.5" fill="#1c6b45">child[0] · id 列（定长 Int）</text>
+  <g font-size="10" text-anchor="middle">
+    <rect x="60" y="380" width="40" height="26" fill="#d9f2e4" stroke="#9ed9ba"/><text x="80" y="397" fill="#1c6b45">7</text>
+    <rect x="100" y="380" width="40" height="26" fill="#d9f2e4" stroke="#9ed9ba"/><text x="120" y="397" fill="#1c6b45">8</text>
+  </g>
+  <text x="60" y="428" font-size="9.5" fill="#1c6b45">child[1] · name 列（变长 Str）</text>
+  <g font-size="10" text-anchor="middle">
+    <rect x="60" y="438" width="56" height="26" fill="#d9f2e4" stroke="#9ed9ba"/><text x="88" y="455" fill="#1c6b45">"a"</text>
+    <rect x="116" y="438" width="56" height="26" fill="#d9f2e4" stroke="#9ed9ba"/><text x="144" y="455" fill="#1c6b45">"bc"</text>
+  </g>
+  <text x="266" y="404" font-size="9" fill="#8a9ab5">每字段自成一列</text>
+  <text x="266" y="420" font-size="9" fill="#8a9ab5">按列独立存 / 传</text>
+  <text x="266" y="436" font-size="9" fill="#8a9ab5">顶层仅 validity</text>
+
+  <!-- 面板 D：字典编码 Dictionary -->
+  <rect x="500" y="298" width="450" height="200" rx="12" fill="#f9fbff" stroke="#dfe9f5" filter="url(#vns)"/>
+  <text x="516" y="320" font-size="11.5" font-weight="700" fill="#1b2a4a">字典编码 Dictionary（逻辑≠物理）</text>
+  <text x="516" y="338" font-size="9" fill="#5b7db1">逻辑一列字符串，物理 = 小整数 index + 去重字典</text>
+  <g font-size="10" text-anchor="middle">
+    <text x="516" y="368" font-size="9" fill="#8a6d3b" text-anchor="start">indices</text>
+    <rect x="600" y="358" width="34" height="24" fill="#fdeecf" stroke="#e6c98a"/><text x="617" y="374" fill="#b0651f">0</text>
+    <rect x="634" y="358" width="34" height="24" fill="#fdeecf" stroke="#e6c98a"/><text x="651" y="374" fill="#b0651f">1</text>
+    <rect x="668" y="358" width="34" height="24" fill="#fdeecf" stroke="#e6c98a"/><text x="685" y="374" fill="#b0651f">0</text>
+    <rect x="702" y="358" width="34" height="24" fill="#fdeecf" stroke="#e6c98a"/><text x="719" y="374" fill="#b0651f">2</text>
+  </g>
+  <rect x="600" y="406" width="210" height="66" rx="8" fill="#eafaf1" stroke="#b8e6cd"/>
+  <text x="614" y="424" font-size="9" fill="#1c6b45">dictionary（去重值，只存一份）</text>
+  <g font-size="10" text-anchor="middle">
+    <rect x="614" y="434" width="52" height="28" fill="#d9f2e4" stroke="#9ed9ba"/><text x="640" y="452" fill="#1c6b45">"CN"</text>
+    <rect x="666" y="434" width="52" height="28" fill="#d9f2e4" stroke="#9ed9ba"/><text x="692" y="452" fill="#1c6b45">"US"</text>
+    <rect x="718" y="434" width="52" height="28" fill="#d9f2e4" stroke="#9ed9ba"/><text x="744" y="452" fill="#1c6b45">"JP"</text>
+  </g>
+  <text x="828" y="378" font-size="9" fill="#8a9ab5">值 = dict[index]</text>
+  <text x="828" y="444" font-size="9" fill="#8a9ab5">低基数列大幅省内存</text>
+  <text x="828" y="460" font-size="9" fill="#8a9ab5">IPC 专发 DictionaryBatch</text>
+
+  <rect x="30" y="508" width="920" height="30" rx="9" fill="#fbf2ea" stroke="#e6cdae"/>
+  <text x="44" y="528" font-size="9.5" fill="#5a4a3a">共同规律：validity bitmap 记空值（可缺省=全非空），offset/index 是结构 buffer，真实数据在 value/child——同一份 buffer 布局被切片、compute、IPC/C-Data/Flight 原样复用。</text>
+</svg>

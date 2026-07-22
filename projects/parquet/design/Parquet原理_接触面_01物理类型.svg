@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="420" viewBox="0 0 1000 420" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs><filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter></defs>
+  <rect width="1000" height="420" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Parquet 原理 · 8 种物理类型（enum Type）</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">物理类型是磁盘上真正存储的基元;只有 8 种,一切复杂语义靠 LogicalType 注解叠加在其上</text>
+
+  <!-- 8 type boxes 4x2 -->
+  <g>
+    <rect x="30" y="76" width="220" height="70" rx="11" fill="#e9f2ff" stroke="#a9ccf5" filter="url(#soft)"/>
+    <text x="46" y="100" font-size="12" font-weight="700" fill="#0a3d78">BOOLEAN</text>
+    <text x="46" y="122" font-size="8.6" fill="#2a5a92">1 bit · 位打包</text>
+    <text x="46" y="137" font-size="8.6" fill="#2a5a92">真/假</text>
+
+    <rect x="266" y="76" width="220" height="70" rx="11" fill="#e9f2ff" stroke="#a9ccf5" filter="url(#soft)"/>
+    <text x="282" y="100" font-size="12" font-weight="700" fill="#0a3d78">INT32</text>
+    <text x="282" y="122" font-size="8.6" fill="#2a5a92">32 位整数</text>
+    <text x="282" y="137" font-size="8.6" fill="#2a5a92">承载 date / int8-32 等</text>
+
+    <rect x="502" y="76" width="220" height="70" rx="11" fill="#e9f2ff" stroke="#a9ccf5" filter="url(#soft)"/>
+    <text x="518" y="100" font-size="12" font-weight="700" fill="#0a3d78">INT64</text>
+    <text x="518" y="122" font-size="8.6" fill="#2a5a92">64 位整数</text>
+    <text x="518" y="137" font-size="8.6" fill="#2a5a92">承载 timestamp / int64</text>
+
+    <rect x="738" y="76" width="232" height="70" rx="11" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+    <text x="754" y="100" font-size="12" font-weight="700" fill="#5a3410">INT96</text>
+    <text x="754" y="122" font-size="8.6" fill="#93762e">已弃用 · 老 timestamp</text>
+    <text x="754" y="137" font-size="8.6" fill="#93762e">新写不应再产生</text>
+
+    <rect x="30" y="162" width="220" height="70" rx="11" fill="#e9f2ff" stroke="#a9ccf5" filter="url(#soft)"/>
+    <text x="46" y="186" font-size="12" font-weight="700" fill="#0a3d78">FLOAT</text>
+    <text x="46" y="208" font-size="8.6" fill="#2a5a92">32 位 IEEE754</text>
+    <text x="46" y="223" font-size="8.6" fill="#2a5a92">单精度浮点</text>
+
+    <rect x="266" y="162" width="220" height="70" rx="11" fill="#e9f2ff" stroke="#a9ccf5" filter="url(#soft)"/>
+    <text x="282" y="186" font-size="12" font-weight="700" fill="#0a3d78">DOUBLE</text>
+    <text x="282" y="208" font-size="8.6" fill="#2a5a92">64 位 IEEE754</text>
+    <text x="282" y="223" font-size="8.6" fill="#2a5a92">双精度浮点</text>
+
+    <rect x="502" y="162" width="220" height="70" rx="11" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+    <text x="518" y="186" font-size="12" font-weight="700" fill="#12402a">BYTE_ARRAY</text>
+    <text x="518" y="208" font-size="8.6" fill="#2f6f5f">变长字节串</text>
+    <text x="518" y="223" font-size="8.6" fill="#2f6f5f">承载 string / json / 二进制</text>
+
+    <rect x="738" y="162" width="232" height="70" rx="11" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+    <text x="754" y="186" font-size="12" font-weight="700" fill="#12402a">FIXED_LEN_BYTE_ARRAY</text>
+    <text x="754" y="208" font-size="8.6" fill="#2f6f5f">定长字节串（type_length）</text>
+    <text x="754" y="223" font-size="8.6" fill="#2f6f5f">承载 decimal / uuid / float16</text>
+  </g>
+
+  <!-- 注解关系 -->
+  <rect x="30" y="256" width="940" height="130" rx="12" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="48" y="280" font-size="11" font-weight="700" fill="#3d2a5a">物理类型 → 逻辑类型：一层薄注解</text>
+  <text x="48" y="302" font-size="9.4" fill="#6a4f9a">同一物理类型可承载多种逻辑语义。例：INT32 物理层只是 4 字节整数,加 LogicalType 注解后可表示 DATE、DECIMAL(精度≤9)、TIME、无符号整数。</text>
+  <text x="48" y="320" font-size="9.4" fill="#6a4f9a">BYTE_ARRAY + StringType(UTF8) = 字符串;FIXED_LEN_BYTE_ARRAY + DecimalType = 高精度定点数。</text>
+  <text x="48" y="344" font-size="9.4" fill="#6a4f9a">好处：编码器/压缩器只需面对 8 种基元,读者无逻辑类型知识也能读出原始字节;语义与物理解耦。</text>
+  <text x="48" y="368" font-size="9" fill="#8a6db3">SchemaElement.type 存物理类型;logicalType 字段（可选）叠加语义;老文件用已弃用的 ConvertedType。</text>
+</svg>

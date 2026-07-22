@@ -14,6 +14,12 @@
 
 图示 `Slice(offset, length)` **不复制任何 buffer**：构造新 `ArrayData` 共享同一批 `shared_ptr<Buffer>`，只把 `offset` 改成新起点、`length` 改成新长度。**不变量**：因所有取值（含 validity bitmap）都用 `i+offset` 定位，切片视图天然正确。这是 Arrow 单机内"零拷贝"的微观来源——切片、拼接、compute 输出都能廉价复用底层内存（如 Abs 复用输入 validity）；行式结构取子集常需复制一段连续行，Arrow 只改两个整数。
 
+## 三、变长 / 嵌套 / 编码类型的物理布局
+
+![变长与嵌套布局](Arrow原理_核心_列式内存格式_03变长与嵌套布局.svg)
+
+图示定长之外的四类布局：**变长 String** = validity + offset + value（第 i 值 = `value[off[i]:off[i+1]]`）；**列表 List** = validity + offset + 一个子数组 `child_data`（offset 划分每行区间）；**嵌套 Struct** 无 value buffer、只有 validity + 每字段一个 child 列；**字典编码 Dictionary** = 小整数 indices + 去重 dictionary（逻辑一列字符串、物理省内存，IPC 专发 DictionaryBatch）。**不变量**：validity 可缺省（=全非空），offset/index 是结构 buffer、真实数据在 value/child——同一份 buffer 布局被切片 / compute / IPC / C-Data / Flight 原样复用。逐类锚点见下表。
+
 ## 深化 · 逻辑空值 vs 物理 validity bitmap
 
 多数类型用 `buffers[0]` 的 validity bitmap 表达空值。但 union、run-end-encoded、dictionary 等类型**没有顶层 validity bitmap**，空值是"逻辑的"：`MayHaveLogicalNulls()`（data.h:470）对这些类型分派到 `internal::UnionMayHaveLogicalNulls` / `RunEndEncodedMayHaveLogicalNulls` / `DictionaryMayHaveLogicalNulls`（data.h:43-49 声明）判断；`ComputeLogicalNullCount()`（data.h:495）按需重算。所以正确写法是先 `HasValidityBitmap()` 再决定是否直接读 bitmap，否则会漏掉这些类型的逻辑空值。

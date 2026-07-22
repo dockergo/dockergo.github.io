@@ -1,0 +1,133 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="680" viewBox="0 0 1120 680" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+  </defs>
+  <rect width="1120" height="680" fill="#fbfbfd"/>
+
+  <text x="30" y="34" font-size="17" font-weight="700" fill="#1d1d1f">堆 · 对比：求 TopK / 优先队列，堆 vs 排序数组 vs 平衡 BST</text>
+  <text x="30" y="56" font-size="11" fill="#6e6e73">核心分野：堆只维护「父子偏序」→ 取极值极快但无全序；排序数组/BST 维护「全序」→ 能范围查询但插入更贵。选谁取决于「要不要有序」与「动态与否」</text>
+
+  <!-- 图例 -->
+  <circle cx="36" cy="78" r="5" fill="#2f9e6e"/><text x="46" y="82" font-size="10.5" fill="#3a3a3c">强项</text>
+  <circle cx="120" cy="78" r="5" fill="#d99a2b"/><text x="130" y="82" font-size="10.5" fill="#3a3a3c">折中 / 有条件</text>
+  <circle cx="260" cy="78" r="5" fill="#d1544a"/><text x="270" y="82" font-size="10.5" fill="#3a3a3c">弱项 / 不支持</text>
+  <text x="400" y="82" font-size="10" fill="#8a97ab">n = 元素总数，k = 取前 k 个（k ≪ n）</text>
+
+  <!-- 表头 -->
+  <rect x="40" y="100" width="240" height="40" fill="#eef1f5" stroke="#e4e7ec"/>
+  <rect x="280" y="100" width="267" height="40" fill="#e9f0fb" stroke="#e4e7ec"/>
+  <rect x="547" y="100" width="267" height="40" fill="#f4f4f6" stroke="#e4e7ec"/>
+  <rect x="814" y="100" width="266" height="40" fill="#f4f4f6" stroke="#e4e7ec"/>
+  <text x="56" y="125" font-size="12" font-weight="700" fill="#3a3a3c">维度</text>
+  <text x="413" y="125" font-size="12.5" font-weight="700" fill="#20375e" text-anchor="middle">二叉堆 (数组)</text>
+  <text x="680" y="125" font-size="12.5" font-weight="700" fill="#5a4a2a" text-anchor="middle">排序数组</text>
+  <text x="947" y="125" font-size="12.5" font-weight="700" fill="#3a3a3c" text-anchor="middle">平衡 BST</text>
+
+  <!-- 行辅助宏：8 行，每行 h=46，起点 y=140 -->
+  <!-- 行底纹 -->
+  <g>
+    <rect x="40" y="140" width="1040" height="46" fill="#ffffff"/>
+    <rect x="40" y="186" width="1040" height="46" fill="#fafbfc"/>
+    <rect x="40" y="232" width="1040" height="46" fill="#ffffff"/>
+    <rect x="40" y="278" width="1040" height="46" fill="#fafbfc"/>
+    <rect x="40" y="324" width="1040" height="46" fill="#ffffff"/>
+    <rect x="40" y="370" width="1040" height="46" fill="#fafbfc"/>
+    <rect x="40" y="416" width="1040" height="46" fill="#ffffff"/>
+    <rect x="40" y="462" width="1040" height="46" fill="#fafbfc"/>
+  </g>
+
+  <!-- 竖分隔 -->
+  <g stroke="#e4e7ec" stroke-width="1">
+    <line x1="280" y1="100" x2="280" y2="508"/>
+    <line x1="547" y1="100" x2="547" y2="508"/>
+    <line x1="814" y1="100" x2="814" y2="508"/>
+  </g>
+  <rect x="40" y="100" width="1040" height="408" fill="none" stroke="#e4e7ec"/>
+
+  <!-- 行内容 -->
+  <!-- 维度标签 -->
+  <g font-size="11.5" font-weight="700" fill="#3a3a3c">
+    <text x="56" y="169">插入一个元素</text>
+    <text x="56" y="215">查极值 (最值)</text>
+    <text x="56" y="261">弹出极值</text>
+    <text x="56" y="307">建结构</text>
+    <text x="56" y="353">求 TopK</text>
+    <text x="56" y="399">有序遍历 / 范围查询</text>
+    <text x="56" y="445">动态数据流</text>
+    <text x="56" y="491">内存 / 局部性</text>
+  </g>
+
+  <!-- 二叉堆列 (中心 413) -->
+  <g font-size="11" text-anchor="middle">
+    <text x="413" y="169" fill="#2f6b4e" font-weight="700">O(log n)　●</text>
+    <text x="413" y="215" fill="#2f6b4e" font-weight="700">O(1) 堆顶　●</text>
+    <text x="413" y="261" fill="#2f6b4e" font-weight="700">O(log n)　●</text>
+    <text x="413" y="307" fill="#2f6b4e" font-weight="700">O(n) 自底向上　●</text>
+    <text x="413" y="353" fill="#2f6b4e" font-weight="700">O(n log k)　●</text>
+    <text x="413" y="399" fill="#b03a30" font-weight="700">不支持　●</text>
+    <text x="413" y="445" fill="#2f6b4e" font-weight="700">极佳 · O(k) 内存　●</text>
+    <text x="413" y="491" fill="#2f6b4e" font-weight="700">连续数组 · 优　●</text>
+  </g>
+  <!-- 二叉堆列 圆点 -->
+  <g>
+    <circle cx="520" cy="165" r="4" fill="#2f9e6e"/><circle cx="520" cy="211" r="4" fill="#2f9e6e"/><circle cx="520" cy="257" r="4" fill="#2f9e6e"/>
+    <circle cx="520" cy="303" r="4" fill="#2f9e6e"/><circle cx="520" cy="349" r="4" fill="#2f9e6e"/><circle cx="520" cy="395" r="4" fill="#d1544a"/>
+    <circle cx="520" cy="441" r="4" fill="#2f9e6e"/><circle cx="520" cy="487" r="4" fill="#2f9e6e"/>
+  </g>
+
+  <!-- 排序数组列 (中心 680) -->
+  <g font-size="11" text-anchor="middle">
+    <text x="672" y="169" fill="#b03a30" font-weight="700">O(n) 需搬移</text>
+    <text x="672" y="215" fill="#2f6b4e" font-weight="700">O(1) 端点</text>
+    <text x="672" y="261" fill="#8a5a12" font-weight="700">尾O(1) / 头O(n)</text>
+    <text x="672" y="307" fill="#8a5a12" font-weight="700">O(n log n)</text>
+    <text x="672" y="353" fill="#8a5a12" font-weight="700">预排后 O(k)</text>
+    <text x="672" y="399" fill="#2f6b4e" font-weight="700">天然有序</text>
+    <text x="672" y="445" fill="#b03a30" font-weight="700">差 · 每插 O(n)</text>
+    <text x="672" y="491" fill="#2f6b4e" font-weight="700">连续内存 · 优</text>
+  </g>
+  <g>
+    <circle cx="800" cy="165" r="4" fill="#d1544a"/><circle cx="800" cy="211" r="4" fill="#2f9e6e"/><circle cx="800" cy="257" r="4" fill="#d99a2b"/>
+    <circle cx="800" cy="303" r="4" fill="#d99a2b"/><circle cx="800" cy="349" r="4" fill="#d99a2b"/><circle cx="800" cy="395" r="4" fill="#2f9e6e"/>
+    <circle cx="800" cy="441" r="4" fill="#d1544a"/><circle cx="800" cy="487" r="4" fill="#2f9e6e"/>
+  </g>
+
+  <!-- 平衡BST列 (中心 947) -->
+  <g font-size="11" text-anchor="middle">
+    <text x="939" y="169" fill="#2f6b4e" font-weight="700">O(log n)</text>
+    <text x="939" y="215" fill="#8a5a12" font-weight="700">O(log n)*</text>
+    <text x="939" y="261" fill="#8a5a12" font-weight="700">O(log n)</text>
+    <text x="939" y="307" fill="#8a5a12" font-weight="700">O(n log n)</text>
+    <text x="939" y="353" fill="#2f6b4e" font-weight="700">中序前缀 O(k)</text>
+    <text x="939" y="399" fill="#2f6b4e" font-weight="700">中序有序 · 范围</text>
+    <text x="939" y="445" fill="#2f6b4e" font-weight="700">好</text>
+    <text x="939" y="491" fill="#8a5a12" font-weight="700">指针 · 一般</text>
+  </g>
+  <g>
+    <circle cx="1060" cy="165" r="4" fill="#2f9e6e"/><circle cx="1060" cy="211" r="4" fill="#d99a2b"/><circle cx="1060" cy="257" r="4" fill="#d99a2b"/>
+    <circle cx="1060" cy="303" r="4" fill="#d99a2b"/><circle cx="1060" cy="349" r="4" fill="#2f9e6e"/><circle cx="1060" cy="395" r="4" fill="#2f9e6e"/>
+    <circle cx="1060" cy="441" r="4" fill="#2f9e6e"/><circle cx="1060" cy="487" r="4" fill="#d99a2b"/>
+  </g>
+
+  <text x="547" y="526" font-size="9" fill="#8a97ab" text-anchor="middle">* 平衡 BST 若额外缓存最值指针，查极值可降到 O(1)；范围/前驱后继查询是它相对堆的独有能力</text>
+
+  <!-- 选型直觉 -->
+  <text x="40" y="556" font-size="12" font-weight="700" fill="#20375e">选型直觉</text>
+  <rect x="40" y="568" width="337" height="96" rx="12" fill="#e9f0fb" stroke="#c6d9f2"/>
+  <text x="60" y="592" font-size="11.5" font-weight="700" fill="#20375e">选二叉堆</text>
+  <text x="60" y="613" font-size="10" fill="#4a4a4f">只反复「取极值」且数据动态到来：</text>
+  <text x="60" y="631" font-size="10" fill="#4a4a4f">优先队列、流式 TopK、Dijkstra。</text>
+  <text x="60" y="651" font-size="10" fill="#2f6b4e">不需要全序时的最省结构。</text>
+
+  <rect x="391" y="568" width="337" height="96" rx="12" fill="#fdf6ea" stroke="#e7c07a"/>
+  <text x="411" y="592" font-size="11.5" font-weight="700" fill="#8a5a12">选排序数组</text>
+  <text x="411" y="613" font-size="10" fill="#4a4a4f">数据静态、一次性求 TopK 且 k 近 n，</text>
+  <text x="411" y="631" font-size="10" fill="#4a4a4f">或本就需要有序输出/二分查找。</text>
+  <text x="411" y="651" font-size="10" fill="#b03a30">忌频繁插入（每次 O(n) 搬移）。</text>
+
+  <rect x="742" y="568" width="338" height="96" rx="12" fill="#f4f4f6" stroke="#d7d7dd"/>
+  <text x="762" y="592" font-size="11.5" font-weight="700" fill="#3a3a3c">选平衡 BST</text>
+  <text x="762" y="613" font-size="10" fill="#4a4a4f">既要动态增删、又要有序遍历 /</text>
+  <text x="762" y="631" font-size="10" fill="#4a4a4f">范围查询 / 前驱后继。</text>
+  <text x="762" y="651" font-size="10" fill="#8a5a12">功能最全，但常数与内存开销更大。</text>
+</svg>

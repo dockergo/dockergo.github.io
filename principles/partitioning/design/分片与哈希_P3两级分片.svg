@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1140" height="640" viewBox="0 0 1140 640" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="aP" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#8a5cae"/></marker>
+    <marker id="aB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#4a7fd0"/></marker>
+  </defs>
+  <rect width="1140" height="640" fill="#fbfbfd"/>
+
+  <!-- 判型标题带 -->
+  <text x="30" y="32" font-size="15" font-weight="700" fill="#1d1d1f">Doris 两级分片 · 第一级 Range/List 分区是显式静态划分，第二级 Hash 分桶数在建表时给定——两层都是「先声明、后落地」</text>
+  <text x="30" y="53" font-size="10.5" fill="#6e6e73">thrift TPartitionType / TDistributionType 两个独立枚举确认这是显式区分的两级模型，而非一层哈希的简化描述</text>
+
+  <!-- 图例 -->
+  <line x1="30" y1="80" x2="54" y2="80" stroke="#8a5cae" stroke-width="2" marker-end="url(#aP)"/>
+  <text x="60" y="84" font-size="10" fill="#3a3a3c">第一级 · PARTITION BY RANGE|LIST</text>
+  <line x1="330" y1="80" x2="354" y2="80" stroke="#4a7fd0" stroke-width="2" marker-end="url(#aB)"/>
+  <text x="360" y="84" font-size="10" fill="#3a3a3c">第二级 · DISTRIBUTED BY HASH(...) BUCKETS n</text>
+  <text x="1110" y="84" font-size="10" fill="#a1a1a6" text-anchor="end">源码级已核实</text>
+  <line x1="30" y1="98" x2="1110" y2="98" stroke="#e4e7ec" stroke-width="1"/>
+
+  <!-- 第一级：分区 -->
+  <rect x="30" y="112" width="1080" height="180" rx="14" fill="#f4eefb" stroke="#dcc9ef" filter="url(#soft)"/>
+  <text x="52" y="138" font-size="13" font-weight="700" fill="#6f3ea8">① 第一级 · PARTITION BY RANGE|LIST(...) —— 范围 / 枚举分区，建表时或后续显式 ADD PARTITION 声明</text>
+
+  <rect x="52" y="156" width="248" height="112" rx="10" fill="#ffffff" stroke="#dcc9ef"/>
+  <text x="68" y="180" font-size="10.5" font-weight="700" fill="#6f3ea8">分区 p202401</text>
+  <text x="68" y="200" font-size="9" fill="#5a3a7a">RANGE：[2024-01-01, 2024-02-01)</text>
+  <text x="68" y="220" font-size="9" fill="#5a3a7a">或 LIST：枚举值集合</text>
+  <text x="68" y="244" font-size="8.5" fill="#8a97ab">每个分区是独立的物理单元，</text>
+  <text x="68" y="260" font-size="8.5" fill="#8a97ab">拥有各自的第二级分桶</text>
+
+  <rect x="316" y="156" width="248" height="112" rx="10" fill="#ffffff" stroke="#dcc9ef"/>
+  <text x="332" y="180" font-size="10.5" font-weight="700" fill="#6f3ea8">分区 p202402</text>
+  <text x="332" y="200" font-size="9" fill="#5a3a7a">RANGE：[2024-02-01, 2024-03-01)</text>
+  <text x="332" y="220" font-size="9" fill="#5a3a7a">或 LIST：枚举值集合</text>
+  <text x="332" y="244" font-size="8.5" fill="#8a97ab">分区边界由 RANGE/LIST 子句</text>
+  <text x="332" y="260" font-size="8.5" fill="#8a97ab">显式声明，非隐式推导</text>
+
+  <rect x="580" y="156" width="248" height="112" rx="10" fill="#fff" stroke="#dcc9ef" stroke-dasharray="4 3"/>
+  <text x="704" y="180" font-size="10.5" font-weight="700" fill="#8a5cae" text-anchor="middle">分区 p202403 …</text>
+  <text x="704" y="204" font-size="9" fill="#8a5cae" text-anchor="middle">新增分区通过</text>
+  <text x="704" y="222" font-size="9" fill="#8a5cae" text-anchor="middle">ADD PARTITION 追加</text>
+  <text x="704" y="244" font-size="8.5" fill="#a186b8" text-anchor="middle">本身较轻量</text>
+
+  <rect x="844" y="156" width="244" height="112" rx="10" fill="#ffffff" stroke="#dcc9ef"/>
+  <text x="860" y="180" font-size="10.5" font-weight="700" fill="#6f3ea8">thrift 定义确认</text>
+  <text x="860" y="200" font-size="9" fill="#5a3a7a">TPartitionType 枚举：</text>
+  <text x="860" y="218" font-size="9" fill="#5a3a7a">RANGE / LIST / UNPARTITIONED</text>
+  <text x="860" y="240" font-size="8.5" fill="#8a97ab">与第二级 TDistributionType 是</text>
+  <text x="860" y="256" font-size="8.5" fill="#8a97ab">两个独立枚举，非同一层</text>
+
+  <text x="52" y="288" font-size="9" fill="#8a5cae">分区是最外层的物理隔离边界：可独立管理生命周期（如按时间分区滚动删除），但本身不决定数据在节点间怎么散布——那是第二级的事。</text>
+
+  <!-- 第一级到第二级的连接 -->
+  <line x1="176" y1="292" x2="176" y2="310" stroke="#4a7fd0" stroke-width="2" marker-end="url(#aB)"/>
+  <text x="188" y="306" font-size="9" fill="#2f5c98">每个分区内部再分桶</text>
+
+  <!-- 第二级：分桶 -->
+  <rect x="30" y="318" width="1080" height="220" rx="14" fill="#eaf1fb" stroke="#c6d9f2" filter="url(#soft)"/>
+  <text x="52" y="344" font-size="13" font-weight="700" fill="#20375e">② 第二级 · DISTRIBUTED BY HASH(...) BUCKETS n —— 哈希分桶，桶数 n 建表时给定</text>
+  <text x="52" y="364" font-size="9.5" fill="#3a4a63">以分区 p202401 为例：其内部数据按 HASH(key) 打到 n 个桶，桶再分布到各存储节点</text>
+
+  <g font-size="9.5" text-anchor="middle" fill="#20375e">
+    <rect x="52" y="382" width="120" height="46" rx="8" fill="#d7e5f7" stroke="#9db8de"/><text x="112" y="410">bucket 0</text>
+    <rect x="182" y="382" width="120" height="46" rx="8" fill="#d7e5f7" stroke="#9db8de"/><text x="242" y="410">bucket 1</text>
+    <rect x="312" y="382" width="120" height="46" rx="8" fill="#d7e5f7" stroke="#9db8de"/><text x="372" y="410">bucket 2</text>
+    <rect x="442" y="382" width="120" height="46" rx="8" fill="#d7e5f7" stroke="#9db8de"/><text x="502" y="410">bucket 3</text>
+    <rect x="572" y="382" width="120" height="46" rx="8" fill="#d7e5f7" stroke="#9db8de"/><text x="632" y="410">…</text>
+    <rect x="702" y="382" width="120" height="46" rx="8" fill="#d7e5f7" stroke="#9db8de"/><text x="762" y="410">bucket n-1</text>
+  </g>
+  <text x="52" y="446" font-size="8.5" fill="#5a7099">桶数 n 是建表时的静态参数（如 BUCKETS 32），不会因节点增减自动改变</text>
+
+  <rect x="852" y="382" width="236" height="120" rx="10" fill="#ffffff" stroke="#c6d9f2"/>
+  <text x="868" y="404" font-size="10" font-weight="700" fill="#20375e">thrift 定义确认</text>
+  <text x="868" y="424" font-size="9" fill="#3a4a63">TDistributionType 枚举：</text>
+  <text x="868" y="442" font-size="9" fill="#3a4a63">HASH / RANDOM</text>
+  <text x="868" y="464" font-size="8.5" fill="#8a97ab">与 TPartitionType 显式分离，</text>
+  <text x="868" y="480" font-size="8.5" fill="#8a97ab">证明两级模型是独立建模的</text>
+
+  <line x1="112" y1="428" x2="112" y2="460" stroke="#4a7fd0" stroke-width="1.6"/>
+  <line x1="242" y1="428" x2="242" y2="460" stroke="#4a7fd0" stroke-width="1.6"/>
+  <line x1="372" y1="428" x2="372" y2="460" stroke="#4a7fd0" stroke-width="1.6"/>
+  <line x1="502" y1="428" x2="502" y2="460" stroke="#4a7fd0" stroke-width="1.6"/>
+  <line x1="762" y1="428" x2="762" y2="460" stroke="#4a7fd0" stroke-width="1.6"/>
+  <path d="M112 460 L112 476 L762 476 L762 460" fill="none" stroke="#4a7fd0" stroke-width="1.6"/>
+  <line x1="437" y1="476" x2="437" y2="494" stroke="#4a7fd0" stroke-width="1.8" marker-end="url(#aB)"/>
+
+  <rect x="52" y="494" width="770" height="34" rx="8" fill="#ffffff" stroke="#c6d9f2"/>
+  <text x="437" y="516" font-size="9.5" fill="#2f4a70" text-anchor="middle">桶再按副本策略分布到各存储节点；加节点后新增副本 / 迁移桶，仍以「桶」为最小搬迁单元</text>
+
+  <!-- 底部：扩容代价小结 -->
+  <rect x="30" y="552" width="1080" height="70" rx="13" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="48" y="576" font-size="10.5" font-weight="700" fill="#1d1d1f">为什么两级模型的扩容代价在三者中最高</text>
+  <text x="48" y="598" font-size="9.5" fill="#4a4a4f">新增 Range 分区本身较轻（ADD PARTITION 只声明新区间）；但每个既有分区的桶数在建表时已固定，加节点后要让 bucket 在更多节点间重新均衡，通常需要重分区（对既有分区重写数据），这是两级模型里代价最高的部分。</text>
+</svg>

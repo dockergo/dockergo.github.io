@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="450" viewBox="0 0 1000 450" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs><filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter></defs>
+  <rect width="1000" height="450" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Parquet 原理 · 重复级（repetition level）：值在第几层重复</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">repetition level = 当前值相对上一个值,在“哪一层 repeated 列表”里开始重复;0 表示进入一条新记录,大于 0 表示同一记录内某层追加元素</text>
+
+  <text x="30" y="80" font-size="11" font-weight="700" fill="#1b2a4a">示例：字段 doc.names（LIST）中再嵌 LIST（doc.names[].langs[]）→ max rep level = 2</text>
+
+  <!-- 记录示意 -->
+  <rect x="30" y="94" width="450" height="150" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="46" y="116" font-size="10" font-weight="700" fill="#1b2a4a">两条记录（嵌套列表）</text>
+  <text x="46" y="138" font-size="9" fill="#5b7db1">记录0: names=[ [en, fr], [de] ]</text>
+  <text x="46" y="158" font-size="9" fill="#5b7db1">记录1: names=[ [zh] ]</text>
+  <text x="46" y="188" font-size="8.6" fill="#7fa0c4">扁平化后的值序列：</text>
+  <text x="46" y="208" font-size="9" fill="#1b2a4a">en, fr, de, zh</text>
+  <text x="46" y="230" font-size="8.4" fill="#8a8a90">仅靠值序列无法还原嵌套 → 需要 rep level</text>
+
+  <!-- rep level 表 -->
+  <rect x="500" y="94" width="470" height="150" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="516" y="116" font-size="10" font-weight="700" fill="#12402a">对应 repetition level 序列</text>
+  <g font-size="9">
+    <text x="516" y="140" fill="#2f6f5f">en → rep 0（新记录开头）</text>
+    <text x="516" y="160" fill="#2f6f5f">fr → rep 2（内层 langs 列表追加）</text>
+    <text x="516" y="180" fill="#2f6f5f">de → rep 1（外层 names 列表追加新子列表）</text>
+    <text x="516" y="200" fill="#2f6f5f">zh → rep 0（进入记录1，全新记录）</text>
+  </g>
+  <text x="516" y="228" font-size="8.4" fill="#4c8567">读者据 rep=0 切记录、rep=1 切外层元素、rep=2 切内层元素</text>
+
+  <!-- 数值条带 -->
+  <text x="30" y="278" font-size="11" font-weight="700" fill="#5a3410">值 + rep 级 + def 级 三元组（一列一起存）</text>
+  <g font-size="9.5" text-anchor="middle">
+    <rect x="30" y="290" width="120" height="46" rx="8" fill="#e9f2ff" stroke="#a9ccf5"/><text x="90" y="312" font-weight="700" fill="#0a3d78">en</text><text x="90" y="328" font-size="8" fill="#2a5a92">rep0 · def(max)</text>
+    <rect x="160" y="290" width="120" height="46" rx="8" fill="#e9f2ff" stroke="#a9ccf5"/><text x="220" y="312" font-weight="700" fill="#0a3d78">fr</text><text x="220" y="328" font-size="8" fill="#2a5a92">rep2 · def(max)</text>
+    <rect x="290" y="290" width="120" height="46" rx="8" fill="#e9f2ff" stroke="#a9ccf5"/><text x="350" y="312" font-weight="700" fill="#0a3d78">de</text><text x="350" y="328" font-size="8" fill="#2a5a92">rep1 · def(max)</text>
+    <rect x="420" y="290" width="120" height="46" rx="8" fill="#e9f2ff" stroke="#a9ccf5"/><text x="480" y="312" font-weight="700" fill="#0a3d78">zh</text><text x="480" y="328" font-size="8" fill="#2a5a92">rep0 · def(max)</text>
+  </g>
+
+  <rect x="30" y="356" width="940" height="72" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="48" y="380" font-size="9.6" fill="#1b2a4a">协作：repetition level 负责“横向”还原列表边界（哪条记录/哪层重复）,definition level 负责“纵向”还原 null 发生在哪层。</text>
+  <text x="48" y="400" font-size="9.6" fill="#5b7db1">两者合起来,把任意嵌套（LIST/MAP/STRUCT 混合）无损压平进单列的值序列——这就是 Dremel 的核心（Google 论文）。</text>
+  <text x="48" y="420" font-size="8.6" fill="#7fa0c4">非嵌套且 required 的列 max rep=max def=0,则 rep/def 级都可省略,只存值;层级用 RLE 编码,重复度越高越省。</text>
+</svg>

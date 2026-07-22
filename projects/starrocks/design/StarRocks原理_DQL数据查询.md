@@ -10,9 +10,9 @@
 
 ![StarRocks 查询执行全景](StarRocks原理_DQL_01执行全景.svg)
 
-从连接到结果:`ConnectProcessor.dispatch`(`fe/.../qe/ConnectProcessor.java:965`)路由 MySQL 命令,`handleQuery`(`:651`)调 `SqlParser.parse(...)`(`:498`)、建 `StmtExecutor`(`:586`)、`execute`(`:601`)。`StmtExecutor.execute`(`qe/StmtExecutor.java:922`)的 `generateExecPlan`(`:801`)调 `StatementPlanner.plan(...)`(`:829`)。
+从连接到结果:`ConnectProcessor` 路由 MySQL 命令 → `handleQuery` 建 `StmtExecutor` → `execute` 的 `generateExecPlan` 调 `StatementPlanner.plan`。FE 侧一条链把文本推进到可执行计划,坐标见深化表。
 
-`StatementPlanner.plan`(`sql/StatementPlanner.java:114`)三步:(a) `analyzeStatement`(`:135`)、(b) `Authorizer.check(stmt, session)`(`:139`,鉴权)、(c) `createQueryPlan`(`:153`)。
+`StatementPlanner.plan` 三步:(a) `analyzeStatement` 语义分析、(b) `Authorizer.check` 鉴权(不过关不生成计划)、(c) `createQueryPlan` 出物理计划。
 
 ---
 
@@ -20,9 +20,9 @@
 
 ![StarRocks 解析与分析](StarRocks原理_DQL_02解析分析.svg)
 
-`SqlParser.parse(sql, sessionVariable)`(`sql/parser/SqlParser.java:80`)按方言分支(trino / starrocks)。StarRocks 路径 `parseWithStarRocksDialect`(`:168`)用 ANTLR `StarRocksParser::sqlStatements`(`:171`)建语法树、`HintCollector` 收 hint(`:178`)、`AstBuilder.visitSingleStatement`(`:184`)构建 `StatementBase`(AST)。
+`SqlParser.parse` 按方言分支(trino / starrocks)。StarRocks 路径用 ANTLR `StarRocksParser` 建语法树、`HintCollector` 收 hint、`AstBuilder` 构建 `StatementBase`(AST)。
 
-`Analyzer.analyze`(`sql/analyzer/Analyzer.java:199`)委托 `AnalyzerVisitor`(`:203`)做语义分析:解析库表列、类型检查、展开 `*`、绑定函数——把 AST 变成语义完整、可规划的形态。
+`Analyzer.analyze` 委托 `AnalyzerVisitor` 做语义分析:解析库表列、类型检查、展开 `*`、绑定函数——把 AST 变成语义完整、可规划的形态。
 
 ---
 
@@ -30,7 +30,7 @@
 
 ![StarRocks 计划生成与分布式化](StarRocks原理_DQL_03计划生成.svg)
 
-`createQueryPlan`(`StatementPlanner.java:319`):`RelationTransformer.transformWithSelectLimit`(`:333`)把 AST 转成逻辑计划 `LogicalPlan`;`Optimizer.optimize(...)`(`:347`,Cascades CBO,见优化技术篇)产出物理 `OptExpression`;`PlanFragmentBuilder.createPhysicalPlan(...)`(`sql/plan/PlanFragmentBuilder.java:279`)切成 **PlanFragment**——扫描 fragment 用 `DataPartition.RANDOM` 播种,根 fragment 在 `ExchangeNode` 下用 `UNPARTITIONED` 汇聚(`:338`)。`ExchangeNode`(`planner/ExchangeNode.java:75`)`toThrift` 发 `EXCHANGE_NODE`,数据经所在 fragment 的 `DataStreamSink` 移动。
+`createQueryPlan` 三步:`RelationTransformer` 把 AST 转逻辑计划 `LogicalPlan`;`Optimizer.optimize`(Cascades CBO,见优化技术篇)产出物理 `OptExpression`;`PlanFragmentBuilder.createPhysicalPlan` 切成 **PlanFragment**——扫描 fragment 用 `DataPartition.RANDOM` 播种,根 fragment 在 `ExchangeNode` 下用 `UNPARTITIONED` 汇聚。`ExchangeNode` 是分布式化的骨架,数据经 `DataStreamSink` 在 fragment 间移动。
 
 ---
 
@@ -38,9 +38,9 @@
 
 ![StarRocks MPP 分发执行](StarRocks原理_DQL_04MPP分发.svg)
 
-物理计划切成 fragment 后由**协调器**分发。`DefaultCoordinator`(`qe/DefaultCoordinator.java:135`)`startScheduling`(`:566`)→ `prepareExec`(`:577`,内部 `CoordinatorPreprocessor.prepareExec` `:225` → `computeFragmentInstances` `:269`,扫描范围经 `FragmentScanRangeAssignment` 分派)→ `deliverExecFragments`(`:681`)。`Deployer`(`qe/scheduler/Deployer.java:164`)`deployFragments` 异步部署实例(`:210`),每 BE 经 `FragmentInstanceExecState`(`qe/scheduler/dag/FragmentInstanceExecState.java:198`)`execPlanFragmentAsync` RPC 下发 `TExecPlanFragmentParams`。
+物理计划切成 fragment 后由**协调器**分发:`DefaultCoordinator.startScheduling → prepareExec`(经 `CoordinatorPreprocessor` 算实例、`FragmentScanRangeAssignment` 分派扫描范围)`→ deliverExecFragments`,再由 `Deployer.deployFragments` 异步部署,每 BE 经 `FragmentInstanceExecState` 的 `execPlanFragmentAsync` RPC 下发 `TExecPlanFragmentParams`。
 
-单 worker 有快路径 `SingleNodeSchedule`(`DefaultCoordinator.java:699`);多 worker 走 `AllAtOnceExecutionSchedule`/`PhasedExecutionSchedule`。BE 侧 `PInternalServiceImplBase::exec_plan_fragment`(`be/src/service/internal_service.cpp:301`)→ `_exec_plan_fragment_by_pipeline`(`:633`)建 `FragmentExecutor`(见执行引擎篇)。
+单 worker 有快路径 `SingleNodeSchedule`;多 worker 走 `AllAtOnceExecutionSchedule` / `PhasedExecutionSchedule`。BE 侧 `PInternalServiceImplBase::exec_plan_fragment → _exec_plan_fragment_by_pipeline` 建 `FragmentExecutor`(见执行引擎篇)。
 
 ---
 
@@ -56,6 +56,9 @@
 | PlanFragmentBuilder | `sql/plan/PlanFragmentBuilder.java:279` | 物理计划→Fragment |
 | DefaultCoordinator | `qe/DefaultCoordinator.java:135` | Fragment 分发与协调 |
 | Deployer | `qe/scheduler/Deployer.java:164` | 实例异步部署 BE |
+| ExchangeNode | `planner/ExchangeNode.java:75` | fragment 间重分布/汇聚骨架 |
+| FragmentInstanceExecState | `qe/scheduler/dag/FragmentInstanceExecState.java:198` | 每实例 RPC 下发状态 |
+| exec_plan_fragment | `be/src/service/internal_service.cpp:301` | BE 侧 RPC 入口→建 FragmentExecutor |
 
 ## 调优要点（关键开关）
 

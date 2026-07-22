@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="720" viewBox="0 0 1200 720" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="aG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+    <marker id="aN" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#8a97ab"/></marker>
+  </defs>
+  <rect width="1200" height="720" fill="#fbfbfd"/>
+
+  <text x="30" y="32" font-size="15" font-weight="700" fill="#1d1d1f">R2 · 多主复制 —— ClickHouse 任意副本都能接受写入，本地处理后点对点异步扩散；Keeper 只管协调簿记，不进写路径也不进读路径</text>
+  <text x="30" y="53" font-size="10.5" fill="#6e6e73">官方文档定性为"asynchronous multi-master"：没有 leader 选举、没有主库指定、没有写转发；一致性窗口等于副本间的同步延迟</text>
+
+  <line x1="30" y1="70" x2="1170" y2="98" stroke="none"/>
+  <text x="30" y="84" font-size="10" fill="#3a3a3c">图例</text>
+  <line x1="70" y1="80" x2="94" y2="80" stroke="#2f9e6e" stroke-width="2" stroke-dasharray="5 3" marker-end="url(#aG)" marker-start="url(#aG)"/>
+  <text x="100" y="84" font-size="10" fill="#3a3a3c">数据体 · 点对点异步传播</text>
+  <line x1="330" y1="80" x2="354" y2="80" stroke="#8a97ab" stroke-width="2" stroke-dasharray="2 2" marker-end="url(#aN)"/>
+  <text x="360" y="84" font-size="10" fill="#3a3a3c">元数据簿记 · 仅协调用途</text>
+  <line x1="30" y1="98" x2="1170" y2="98" stroke="#e4e7ec" stroke-width="1"/>
+
+  <!-- ============ Panel 1: 写入路径机制 ============ -->
+  <rect x="30" y="112" width="1140" height="240" rx="14" fill="#eaf6f0" stroke="#bfe3d1" filter="url(#soft)"/>
+  <text x="50" y="138" font-size="12.5" font-weight="700" fill="#2f6b4e">写入路径 · 任意副本可接受 INSERT / ALTER</text>
+  <line x1="46" y1="148" x2="1154" y2="148" stroke="#bfe3d1" stroke-width="1"/>
+
+  <rect x="90" y="168" width="220" height="86" rx="10" fill="#ffffff" stroke="#bfe3d1"/>
+  <text x="200" y="192" font-size="12" font-weight="700" fill="#2f6b4e" text-anchor="middle">副本 A</text>
+  <text x="200" y="210" font-size="8.5" fill="#3f8a63" text-anchor="middle">收到 INSERT</text>
+  <text x="200" y="226" font-size="8.5" fill="#3f8a63" text-anchor="middle">本地写入 Part</text>
+  <text x="200" y="242" font-size="8.5" fill="#3f8a63" text-anchor="middle">→ 立即对客户端返回成功</text>
+
+  <rect x="490" y="168" width="220" height="86" rx="10" fill="#ffffff" stroke="#bfe3d1"/>
+  <text x="600" y="192" font-size="12" font-weight="700" fill="#2f6b4e" text-anchor="middle">副本 B</text>
+  <text x="600" y="210" font-size="8.5" fill="#3f8a63" text-anchor="middle">收到 ALTER</text>
+  <text x="600" y="226" font-size="8.5" fill="#3f8a63" text-anchor="middle">本地执行</text>
+  <text x="600" y="242" font-size="8.5" fill="#3f8a63" text-anchor="middle">→ 立即对客户端返回成功</text>
+
+  <rect x="890" y="168" width="220" height="86" rx="10" fill="#ffffff" stroke="#bfe3d1"/>
+  <text x="1000" y="192" font-size="12" font-weight="700" fill="#2f6b4e" text-anchor="middle">副本 C</text>
+  <text x="1000" y="210" font-size="8.5" fill="#3f8a63" text-anchor="middle">暂无写入</text>
+  <text x="1000" y="226" font-size="8.5" fill="#3f8a63" text-anchor="middle">等待接收扩散</text>
+  <text x="1000" y="242" font-size="8.5" fill="#3f8a63" text-anchor="middle">→ 处理完成后本地可见</text>
+
+  <line x1="310" y1="200" x2="488" y2="200" stroke="#2f9e6e" stroke-width="1.8" stroke-dasharray="5 3" marker-end="url(#aG)"/>
+  <line x1="710" y1="211" x2="888" y2="211" stroke="#2f9e6e" stroke-width="1.8" stroke-dasharray="5 3" marker-end="url(#aG)"/>
+  <path d="M600,256 C600,300 800,300 1000,256" fill="none" stroke="#2f9e6e" stroke-width="1.8" stroke-dasharray="5 3" marker-end="url(#aG)"/>
+  <path d="M200,256 C200,308 700,320 890,222" fill="none" stroke="#2f9e6e" stroke-width="1.8" stroke-dasharray="5 3" marker-end="url(#aG)"/>
+  <text x="399" y="196" font-size="8" fill="#2f6b4e" text-anchor="middle">异步扩散 Part</text>
+  <text x="800" y="207" font-size="8" fill="#2f6b4e" text-anchor="middle">异步扩散 ALTER</text>
+
+  <text x="90" y="290" font-size="9" fill="#2f6b4e">任意副本收到写入都先在本地完整处理（不等其他副本确认），再把结果异步扩散给其余副本</text>
+  <text x="90" y="308" font-size="9" fill="#2f6b4e">没有"谁是主"的概念：A/B/C 三个副本在写入路径上完全对等，扩散方向由谁先收到写决定，而非固定拓扑</text>
+  <text x="90" y="330" font-size="8.5" fill="#8a97ab">数据体（Part 文件本身）在副本之间直接点对点传输，不经过 Keeper 中转</text>
+
+  <!-- ============ Panel 2: Keeper 角色边界 ============ -->
+  <rect x="30" y="368" width="1140" height="300" rx="14" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="50" y="394" font-size="12.5" font-weight="700" fill="#1d1d1f">Keeper 的角色边界 · 只做协调簿记，不进数据路径</text>
+  <line x1="46" y1="404" x2="1154" y2="404" stroke="#e4e7ec" stroke-width="1"/>
+
+  <rect x="480" y="424" width="240" height="70" rx="10" fill="#f6f7f9" stroke="#d7d7dd"/>
+  <text x="600" y="450" font-size="11.5" font-weight="700" fill="#4a4a4f" text-anchor="middle">Keeper</text>
+  <text x="600" y="468" font-size="8.5" fill="#8a97ab" text-anchor="middle">存副本元信息 · 每次 INSERT 约写</text>
+  <text x="600" y="482" font-size="8.5" fill="#8a97ab" text-anchor="middle">10 条事务性记录用于协调簿记</text>
+
+  <line x1="200" y1="500" x2="480" y2="469" stroke="#8a97ab" stroke-width="1.4" stroke-dasharray="2 2" marker-end="url(#aN)"/>
+  <line x1="1000" y1="500" x2="720" y2="469" stroke="#8a97ab" stroke-width="1.4" stroke-dasharray="2 2" marker-end="url(#aN)"/>
+  <text x="380" y="474" font-size="8" fill="#8a97ab" text-anchor="middle">上报元数据变更</text>
+  <text x="820" y="474" font-size="8" fill="#8a97ab" text-anchor="middle">上报元数据变更</text>
+
+  <rect x="90" y="514" width="220" height="46" rx="8" fill="#eaf6f0" stroke="#bfe3d1"/>
+  <text x="200" y="542" font-size="10" font-weight="700" fill="#2f6b4e" text-anchor="middle">副本 A / B / C（写路径）</text>
+  <rect x="890" y="514" width="220" height="46" rx="8" fill="#eaf6f0" stroke="#bfe3d1"/>
+  <text x="1000" y="542" font-size="10" font-weight="700" fill="#2f6b4e" text-anchor="middle">SELECT 查询路径</text>
+
+  <line x1="1000" y1="514" x2="1000" y2="502" stroke="#c0533a" stroke-width="2"/>
+  <text x="1000" y="580" font-size="8.5" fill="#9a3a2f" text-anchor="middle">✕ 不经过 Keeper —— 直接查本地/副本数据</text>
+  <text x="200" y="580" font-size="8.5" fill="#3f8a63" text-anchor="middle">✕ 数据体不经过 Keeper —— 副本间直接传输</text>
+
+  <rect x="90" y="600" width="1020" height="52" rx="9" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="110" y="622" font-size="9.5" font-weight="700" fill="#1d1d1f">结论：这是真正的多主异步 —— 一致性窗口 = 副本同步延迟</text>
+  <text x="110" y="640" font-size="8.5" fill="#6e6e73">Keeper 承担的是"记账"角色（协调各副本各自处理到了哪一步），既不是写入的路由入口，也不是查询的必经之路</text>
+
+  <text x="30" y="700" font-size="9" fill="#8a97ab">对比主从：Postgres 的 Standby 不能接受写；ClickHouse 的每个副本都能接受写——这是"多主"与"主从"的根本分歧点。</text>
+</svg>

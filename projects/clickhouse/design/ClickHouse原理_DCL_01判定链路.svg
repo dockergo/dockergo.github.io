@@ -5,13 +5,13 @@
   </defs>
   <rect width="1060" height="580" fill="#fbfbfd"/>
   <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">权限判定链路：每条查询经 ContextAccess 鉴权</text>
-  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">ContextAccess::checkAccess (ContextAccess.h:74) → calculateAccessRights (:404) → isGranted (:634)</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">ContextAccess::checkAccess → calculateAccessRights → isGranted</text>
 
   <g text-anchor="middle">
     <rect x="40" y="88" width="160" height="66" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/><text x="120" y="114" font-size="10.5" font-weight="600" fill="#1b2a4a">查询到达</text><text x="120" y="132" font-size="8.5" fill="#5b7db1">已认证的用户上下文</text><text x="120" y="146" font-size="8.5" fill="#5b7db1">要访问某库.表.列</text>
-    <rect x="240" y="88" width="180" height="66" rx="12" fill="#f3f7fc" stroke="#cfe0f2" filter="url(#soft)"/><text x="330" y="108" font-size="10.5" font-weight="600" fill="#274a78">ContextAccess</text><text x="330" y="126" font-size="8.5" fill="#5b7db1">checkAccess(flags, db, table)</text><text x="330" y="140" font-size="8.5" fill="#5b7db1">:74</text>
-    <rect x="460" y="88" width="200" height="66" rx="12" fill="#f3f7fc" stroke="#cfe0f2" filter="url(#soft)"/><text x="560" y="108" font-size="10.5" font-weight="600" fill="#274a78">calculateAccessRights</text><text x="560" y="126" font-size="8.5" fill="#5b7db1">聚合直接权限 + 角色权限</text><text x="560" y="140" font-size="8.5" fill="#5b7db1">+ 隐式权限 :404,:407</text>
-    <rect x="700" y="88" width="180" height="66" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/><text x="790" y="108" font-size="10.5" font-weight="600" fill="#12402a">isGranted 判定</text><text x="790" y="126" font-size="8.5" fill="#2f6f4f">在权限树上匹配</text><text x="790" y="140" font-size="8.5" fill="#2f6f4f">:634</text>
+    <rect x="240" y="88" width="180" height="66" rx="12" fill="#f3f7fc" stroke="#cfe0f2" filter="url(#soft)"/><text x="330" y="108" font-size="10.5" font-weight="600" fill="#274a78">ContextAccess</text><text x="330" y="126" font-size="8.5" fill="#5b7db1">checkAccess(flags, db, table)</text>
+    <rect x="460" y="88" width="200" height="66" rx="12" fill="#f3f7fc" stroke="#cfe0f2" filter="url(#soft)"/><text x="560" y="108" font-size="10.5" font-weight="600" fill="#274a78">calculateAccessRights</text><text x="560" y="126" font-size="8.5" fill="#5b7db1">聚合直接权限 + 角色权限</text><text x="560" y="140" font-size="8.5" fill="#5b7db1">+ 隐式权限</text>
+    <rect x="700" y="88" width="180" height="66" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/><text x="790" y="108" font-size="10.5" font-weight="600" fill="#12402a">isGranted 判定</text><text x="790" y="126" font-size="8.5" fill="#2f6f4f">在权限树上匹配</text>
   </g>
   <g stroke="#c7c7cc" stroke-width="1.5" fill="none">
     <line x1="200" y1="121" x2="240" y2="121" marker-end="url(#ar)"/>
@@ -28,18 +28,18 @@
   </g>
 
   <rect x="40" y="240" width="480" height="150" rx="13" fill="#fdf9f0" stroke="#efe3cd"/>
-  <text x="280" y="264" font-size="11.5" font-weight="700" fill="#7a5a1e" text-anchor="middle">判定中的短路（checkAccessImplHelper :570）</text>
-  <text x="60" y="288" font-size="9.5" fill="#93762e">· 用户已被删除 → 抛 UNKNOWN_USER（:577）</text>
-  <text x="60" y="308" font-size="9.5" fill="#93762e">· full_access（如内部查询）→ 直接放行（:581）</text>
-  <text x="60" y="328" font-size="9.5" fill="#93762e">· 否则取含隐式权限的 AccessRights（:620）</text>
-  <text x="60" y="348" font-size="9.5" fill="#93762e">· acs 在权限树上逐级 isGranted 匹配（:634）</text>
+  <text x="280" y="264" font-size="11.5" font-weight="700" fill="#7a5a1e" text-anchor="middle">判定中的短路（checkAccessImplHelper）</text>
+  <text x="60" y="288" font-size="9.5" fill="#93762e">用户已被删除 → 抛 UNKNOWN_USER</text>
+  <text x="60" y="308" font-size="9.5" fill="#93762e">full_access（如内部查询）→ 直接放行</text>
+  <text x="60" y="328" font-size="9.5" fill="#93762e">否则取含隐式权限的 AccessRights</text>
+  <text x="60" y="348" font-size="9.5" fill="#93762e">acs 在权限树上逐级 isGranted 匹配</text>
   <text x="60" y="372" font-size="9" fill="#b08843">失败即抛异常或返回 false</text>
 
   <rect x="540" y="240" width="480" height="150" rx="13" fill="#f6f2fb" stroke="#d9c9ec"/>
-  <text x="780" y="264" font-size="11.5" font-weight="700" fill="#3d2a5a" text-anchor="middle">中枢 AccessControl（AccessControl.h:57）</text>
+  <text x="780" y="264" font-size="11.5" font-weight="700" fill="#3d2a5a" text-anchor="middle">中枢 AccessControl</text>
   <text x="560" y="288" font-size="9.5" fill="#7a5da5">· 持有各类缓存：context_access / role / row_policy</text>
-  <text x="560" y="308" font-size="9.5" fill="#7a5da5">　/ quota / settings_profiles（:271-275）</text>
-  <text x="560" y="328" font-size="9.5" fill="#7a5da5">· 认证入口 authenticate（:131）</text>
+  <text x="560" y="308" font-size="9.5" fill="#7a5da5">/ quota / settings_profiles</text>
+  <text x="560" y="328" font-size="9.5" fill="#7a5da5">认证入口 authenticate</text>
   <text x="560" y="348" font-size="9.5" fill="#7a5da5">· 管理多后端 AccessStorage（见存储后端篇）</text>
   <text x="560" y="372" font-size="9" fill="#9a7cc4">缓存让每查询鉴权无需重算全量权限</text>
 

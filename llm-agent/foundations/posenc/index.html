@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Positional Encoding · AI Agents 图谱</title>
+<style>
+:root{
+  --c-bg:#fbfbfd; --c-card:#ffffff; --c-card2:#f5f5f7; --c-ink:#1d1d1f;
+  --c-ink2:#6e6e73; --c-ink3:#a1a1a6; --c-line:#e6e6ea; --c-edge:#d2d2d7;
+  --c-panel:#ffffff; --c-shadow:rgba(0,0,0,.08);
+}
+html[data-theme="dark"]{
+  --c-bg:#0d0d0f; --c-card:#17171a; --c-card2:#1e1e22; --c-ink:#f2f2f5;
+  --c-ink2:#a1a1a6; --c-ink3:#6e6e73; --c-line:#2a2a30; --c-edge:#33333a;
+  --c-panel:#161619; --c-shadow:rgba(0,0,0,.5);
+  /* 架构图内联 SVG 结构中性色深色翻转(品牌强调色不变) */
+  --sc-bg:#17171a; --sc-panel:#1e1e22; --sc-ink:#e8e8ea; --sc-ink2:#c4c4c8;
+  --sc-sub:#9a9aa2; --sc-line:#33333a; --sc-line2:#3d3d45;
+  --sc-fill-blue:#16253d; --sc-fill-purple:#241d3a; --sc-fill-orange:#382214; --sc-fill-teal:#0f3330;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--c-bg);color:var(--c-ink);
+  font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif;
+  font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+header{position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:14px;
+  padding:12px 24px;background:color-mix(in srgb,var(--c-bg) 86%,transparent);
+  backdrop-filter:saturate(1.4) blur(14px);border-bottom:1px solid var(--c-line)}
+header .logo{display:inline-flex;align-items:center;flex:none}
+header .spacer{flex:1}
+.brand-intro{display:flex;flex-direction:column;align-items:flex-start;margin-left:6px;min-width:0}
+.brand-intro .bt{font-size:15px;font-weight:700;color:var(--c-ink);line-height:1.3}
+.brand-intro .bs{margin-top:3px;font-size:11.5px;color:var(--c-ink3);line-height:1.5}
+.icobtn{width:38px;height:38px;border-radius:50%;border:1px solid var(--c-line);
+  background:var(--c-panel);color:var(--c-ink2);cursor:pointer;display:inline-grid;
+  place-items:center;font-size:16px;flex:none;text-decoration:none}
+.tt-ico{font-size:16px;line-height:1}.tt-moon{display:none}
+html[data-theme="dark"] .tt-sun{display:none}html[data-theme="dark"] .tt-moon{display:inline}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 24px 80px}
+
+/* ---- 门户 hero ---- */
+.hero{margin:6px 0 26px}
+.hero h1{font-size:26px;font-weight:800;letter-spacing:.2px}
+.hero .sub{margin-top:8px;font-size:13.5px;color:var(--c-ink2);max-width:820px}
+.hero .back{display:inline-flex;align-items:center;gap:6px;margin-bottom:14px;
+  font-size:12.5px;color:var(--c-ink2);border:1px solid var(--c-line);
+  border-radius:999px;padding:5px 13px;background:var(--c-panel)}
+.hero .back:hover{color:var(--c-ink);border-color:var(--c-edge)}
+
+/* ---- 门户卡片栅格 ---- */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:18px}
+.card{position:relative;display:block;background:var(--c-card);border:1px solid var(--c-line);
+  border-radius:16px;padding:20px 20px 18px;overflow:hidden;transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease}
+.card:hover{transform:translateY(-3px);border-color:var(--acc);box-shadow:0 10px 30px var(--c-shadow)}
+.card .bar{position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--acc)}
+.card .k{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.6px;
+  color:var(--acc);text-transform:uppercase;margin-bottom:8px}
+.card h3{font-size:17px;font-weight:750;line-height:1.35;color:var(--c-ink)}
+.card .core{margin-top:9px;font-size:12.5px;color:var(--c-ink2);line-height:1.6}
+.card .tags{margin-top:14px;display:flex;flex-direction:column;gap:7px}
+.card .tag{display:flex;gap:8px;align-items:baseline;font-size:12px;color:var(--c-ink2)}
+.card .tag .n{font-weight:800;color:var(--acc);flex:none;font-variant-numeric:tabular-nums}
+.card .go{margin-top:16px;font-size:12px;font-weight:700;color:var(--acc);display:inline-flex;align-items:center;gap:5px}
+
+/* ---- 模块页 ---- */
+.judge{background:var(--c-card);border:1px solid var(--c-line);border-left:4px solid var(--acc);
+  border-radius:14px;padding:18px 22px;margin-bottom:26px}
+.judge .k{font-size:11px;font-weight:700;letter-spacing:.6px;color:var(--acc);text-transform:uppercase}
+.judge h1{font-size:22px;font-weight:800;line-height:1.34;margin-top:7px}
+.judge .core{margin-top:11px;font-size:13.5px;color:var(--c-ink2);line-height:1.7;max-width:900px}
+.secttl{display:flex;align-items:center;gap:11px;margin:34px 0 14px}
+.secttl .badge{flex:none;min-width:30px;height:30px;padding:0 9px;border-radius:9px;background:var(--acc);
+  color:#fff;font-weight:800;font-size:15px;display:inline-grid;place-items:center}
+.secttl .t{font-size:17px;font-weight:750}
+.secttl.eco .badge{background:var(--c-ink);color:var(--c-bg)}
+/* ── 垂直 TAB 布局 ── */
+.vt-wrap{display:flex;gap:22px;margin-top:26px;align-items:flex-start}
+.vt-nav{flex:none;width:236px;position:sticky;top:20px;display:flex;flex-direction:column;gap:8px}
+.vt-grp{font-size:11px;font-weight:800;letter-spacing:.04em;color:var(--c-ink3);
+  text-transform:none;margin:14px 4px 2px;padding-top:8px;border-top:1px solid var(--c-line)}
+.vt-grp:first-child{margin-top:0;padding-top:0;border-top:none}
+.vt-tab{display:flex;align-items:center;gap:10px;text-align:left;cursor:pointer;
+  background:var(--c-card);border:1px solid var(--c-line);border-radius:12px;
+  padding:12px 13px;color:var(--c-ink2);font:inherit;transition:.15s}
+.vt-tab:hover{border-color:var(--acc);color:var(--c-ink)}
+.vt-tab.active{background:var(--acc);border-color:var(--acc);color:#fff;box-shadow:0 4px 14px -6px var(--acc)}
+.vt-tab .vt-b{flex:none;min-width:26px;height:26px;padding:0 7px;border-radius:8px;
+  background:var(--c-card2);color:var(--acc);font-weight:800;font-size:13px;
+  display:inline-grid;place-items:center}
+.vt-tab.active .vt-b{background:rgba(255,255,255,.24);color:#fff}
+.vt-tab .vt-l{font-size:12.5px;font-weight:650;line-height:1.35}
+.vt-stage{flex:1;min-width:0}
+.vt-sec{display:none}
+.vt-sec.active{display:block;animation:vtfade .22s ease}
+.vt-sec .secttl{margin-top:0}
+@keyframes vtfade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media(max-width:820px){.vt-wrap{flex-direction:column}.vt-nav{position:static;width:100%;flex-direction:row;flex-wrap:wrap}.vt-tab{flex:1 1 44%}}
+.fig{background:var(--c-card);border:1px solid var(--c-line);border-radius:16px;
+  padding:16px;overflow:hidden}
+.fig img{display:block;width:100%;height:auto;border-radius:8px}
+.fig .figsvg{display:block;width:100%;height:auto;border-radius:8px}
+.blurb{margin-top:14px;background:var(--c-card);border:1px solid var(--c-line);
+  border-radius:14px;padding:15px 19px}
+.blurb p{font-size:13px;color:var(--c-ink2);line-height:1.75}
+.blurb p+p{margin-top:9px}
+.blurb b{color:var(--c-ink);font-weight:700}
+.blurb code{font-family:'SF Mono',ui-monospace,Menlo,monospace;font-size:.88em;
+  background:var(--c-card2);border:1px solid var(--c-line);border-radius:5px;padding:1px 5px;color:var(--acc)}
+.blurb a{color:var(--acc);text-decoration:none;
+  border-bottom:1px solid color-mix(in srgb,var(--acc) 40%,transparent);transition:border-color .15s}
+.blurb a:hover{border-bottom-color:var(--acc)}
+.refs{margin-top:30px;padding-top:18px;border-top:2px solid var(--c-line)}
+.reflist{margin-top:12px}
+.reflist p{margin:5px 0;font-size:12.5px;color:var(--c-ink2);line-height:1.7}
+.reflist a{color:var(--acc)}
+.miss{padding:40px;text-align:center;color:var(--c-ink3);font-size:13px;border:1px dashed var(--c-edge);border-radius:12px}
+.backrow{margin-top:44px;padding-top:22px;border-top:1px solid var(--c-line)}
+.backrow a{display:inline-flex;align-items:center;gap:7px;font-size:13px;color:var(--c-ink2);
+  border:1px solid var(--c-line);border-radius:999px;padding:8px 16px;background:var(--c-panel)}
+.backrow a:hover{color:var(--c-ink);border-color:var(--c-edge)}
+footer{max-width:1180px;margin:0 auto;padding:0 24px 40px;color:var(--c-ink3);font-size:11.5px}
+
+/* ---- 门户片区切换 tab + 片区标题条 ---- */
+.zbar{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap}
+.zseg{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:700;
+  color:var(--c-ink2);border:1px solid var(--c-line);border-radius:999px;
+  padding:8px 16px;background:var(--c-panel);transition:.15s}
+.zseg:hover{color:var(--c-ink);border-color:var(--c-edge)}
+.zseg.active{color:var(--c-ink);border-color:var(--c-ink);background:var(--c-card)}
+.zseg .zn{min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:var(--c-card2);
+  color:var(--c-ink2);font-size:11px;font-weight:800;display:inline-grid;place-items:center}
+.zone{margin-top:38px;scroll-margin-top:80px}
+.zone:first-of-type{margin-top:30px}
+.zhd{margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--c-line)}
+.zhd .zk{font-size:11px;font-weight:800;letter-spacing:.08em;color:var(--c-ink3);text-transform:uppercase}
+.zhd h2{font-size:20px;font-weight:800;margin-top:5px;color:var(--c-ink)}
+.zhd p{font-size:12.5px;color:var(--c-ink2);margin-top:6px;max-width:860px;line-height:1.65}
+</style>
+</head>
+<body>
+<header>
+  <a class="logo" href="../../../index.html#agent" title="返回 LLM & Agent 导航"><span class="icobtn"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg></span></a>
+  <div class="brand-intro">
+    <div class="bt">Positional Encoding</div>
+    <div class="bs">AI Agents 生态图谱 · 概念层机理（不点名具体框架）</div>
+  </div>
+  <div class="spacer"></div>
+  <button id="themeBtn" class="icobtn" title="切换深色 / 浅色主题" aria-label="切换主题"><span class="tt-ico tt-moon">☾</span><span class="tt-ico tt-sun">☀</span></button>
+</header>
+<div class="wrap" style="--acc:#2dd4bf">
+  <div class="judge">
+    <span class="k">POSENC · 定位</span>
+    <h1>Positional Encoding · 给序列注入顺序</h1>
+    <div class="core">自注意力本身对顺序无感，必须显式告诉模型「谁在前谁在后」：从正弦绝对位置，到可学习、再到旋转式相对位置。</div>
+  </div>
+  <div class="vt-wrap"><nav class="vt-nav" aria-label="模块内容切换"><div class="vt-grp">概览 Overview</div><button class="vt-tab active" data-target="sec-eco"><span class="vt-b">◎</span><span class="vt-l">生态架构总图</span></button><div class="vt-grp">机制 · 绝对位置</div><button class="vt-tab" data-target="sec-p1"><span class="vt-b">P1</span><span class="vt-l">正弦编码与可学习编码</span></button><div class="vt-grp">机制 · 相对位置</div><button class="vt-tab" data-target="sec-p2"><span class="vt-b">P2</span><span class="vt-l">RoPE 旋转位置编码</span></button><div class="vt-grp">机制 · 长度外推</div><button class="vt-tab" data-target="sec-p3"><span class="vt-b">P3</span><span class="vt-l">插值与 NTK 扩展窗口</span></button><div class="vt-grp">对比 Compare</div><button class="vt-tab" data-target="sec-cmp"><span class="vt-b">⇄</span><span class="vt-l">机制差异对比</span></button><div class="vt-grp">工程 Engineering</div><button class="vt-tab" data-target="sec-eng"><span class="vt-b">⚙</span><span class="vt-l">框架实现差异</span></button></nav><div class="vt-stage"><section class="vt-sec active" id="sec-eco" data-sec="sec-eco"><div class="secttl eco"><span class="badge">◎</span><span class="t">生态架构总图 · 这一模块如何在 Agent 系统中自洽拼合</span></div><div class="fig" role="img" aria-label="Positional Encoding 生态架构"><svg class="figsvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 600" font-family="-apple-system,'PingFang SC','Helvetica Neue',sans-serif">
+  <defs>
+    <filter id="s52_soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.07"/>
+    </filter>
+    <marker id="s52_arv" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#2dd4bf"/>
+    </marker>
+  </defs>
+  <rect width="960" height="600" fill="var(--sc-bg,#fbfbfd)"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="var(--sc-ink,#1d1d1f)">位置编码 · 生态架构</text>
+  <text x="30" y="54" font-size="12" fill="var(--sc-sub,#6e6e73)">自注意力本身对顺序无感，位置编码把「谁在前谁在后」的信息注入表征</text>
+
+  <!-- token 序列 -->
+  <g filter="url(#s52_soft)"><rect x="40" y="120" width="150" height="70" rx="12" fill="var(--sc-fill-blue,#eef4ff)" stroke="#0a84ff" stroke-width="1.4"/></g>
+  <text x="115" y="150" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">Token 嵌入</text>
+  <text x="115" y="172" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">只含语义，无顺序</text>
+
+  <!-- 位置信息 -->
+  <g filter="url(#s52_soft)"><rect x="40" y="260" width="150" height="70" rx="12" fill="var(--sc-fill-teal,#e9fbf6)" stroke="#2dd4bf" stroke-width="1.5"/></g>
+  <text x="115" y="290" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">位置信息</text>
+  <text x="115" y="312" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">第几个 token</text>
+
+  <!-- 注入方式 -->
+  <g filter="url(#s52_soft)"><rect x="260" y="190" width="200" height="130" rx="12" fill="var(--sc-fill-teal,#e9fbf6)" stroke="#2dd4bf" stroke-width="1.5"/></g>
+  <text x="360" y="222" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">位置编码注入</text>
+  <text x="360" y="248" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">加到嵌入上（绝对）</text>
+  <text x="360" y="270" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">或旋转 QK（相对）</text>
+  <text x="360" y="298" font-size="10" fill="#2dd4bf" text-anchor="middle">让注意力感知距离</text>
+
+  <!-- 注意力 -->
+  <g filter="url(#s52_soft)"><rect x="530" y="190" width="180" height="130" rx="12" fill="var(--sc-fill-purple,#f3ecff)" stroke="#5e5ce6" stroke-width="1.5"/></g>
+  <text x="620" y="222" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">自注意力层</text>
+  <text x="620" y="248" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">现在能区分</text>
+  <text x="620" y="270" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">「猫追狗」vs</text>
+  <text x="620" y="292" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">「狗追猫」</text>
+
+  <!-- 长上下文 -->
+  <g filter="url(#s52_soft)"><rect x="770" y="190" width="150" height="130" rx="12" fill="var(--sc-fill-orange,#fff3ea)" stroke="#f5873a" stroke-width="1.5"/></g>
+  <text x="845" y="222" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">长度外推</text>
+  <text x="845" y="248" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">训练短、推理长</text>
+  <text x="845" y="270" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">插值/NTK 扩窗</text>
+
+  <!-- 连线 -->
+  <path d="M190 155 C220 175 230 185 258 220" stroke="#2dd4bf" stroke-width="2" fill="none" marker-end="url(#s52_arv)"/>
+  <path d="M190 295 C220 275 230 265 258 250" stroke="#2dd4bf" stroke-width="2" fill="none" marker-end="url(#s52_arv)"/>
+  <path d="M460 255 L528 255" stroke="#2dd4bf" stroke-width="2.2" marker-end="url(#s52_arv)"/>
+  <path d="M710 255 L768 255" stroke="#f5873a" stroke-width="2.2" marker-end="url(#s52_arv)"/>
+
+  <!-- 三大机理 -->
+  <g filter="url(#s52_soft)"><rect x="40" y="400" width="880" height="160" rx="12" fill="var(--sc-panel,#ffffff)" stroke="var(--sc-line,#d2d2d7)" stroke-width="1.2"/></g>
+  <text x="60" y="428" font-size="12" font-weight="600" fill="#2dd4bf">三种机理如何演进</text>
+  <text x="60" y="456" font-size="10.5" fill="var(--sc-sub,#6e6e73)">· 绝对位置（P1）：正弦函数或可学习向量，直接给每个位置一个编码，加到 token 嵌入上</text>
+  <text x="60" y="482" font-size="10.5" fill="var(--sc-sub,#6e6e73)">· 旋转编码 RoPE（P2）：把位置写成旋转角，作用在 Q/K 上，让点积天然反映相对距离</text>
+  <text x="60" y="508" font-size="10.5" fill="var(--sc-sub,#6e6e73)">· 长度外推（P3）：位置插值、NTK-aware 缩放，让训练时的短窗口模型能处理更长上下文</text>
+  <text x="60" y="538" font-size="11" font-weight="600" fill="#2dd4bf">主线：绝对给「起点」，RoPE 给「相对关系」，外推给「更长的可用窗口」</text>
+</svg></div><div class="blurb"><p>自注意力本身对顺序无感，必须显式告诉模型「谁在前谁在后」：从正弦绝对位置，到可学习、再到旋转式相对位置。</p></div></section><section class="vt-sec" id="sec-p1" data-sec="sec-p1"><div class="secttl"><span class="badge">P1</span><span class="t">绝对位置 · 正弦编码与可学习编码</span></div><div class="fig" role="img" aria-label="绝对位置 · 正弦编码与可学习编码"><svg class="figsvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 560" font-family="-apple-system,'PingFang SC','Helvetica Neue',sans-serif">
+  <defs>
+    <filter id="s53_soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.07"/>
+    </filter>
+    <marker id="s53_arv" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#2dd4bf"/>
+    </marker>
+  </defs>
+  <rect width="960" height="560" fill="var(--sc-bg,#fbfbfd)"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="var(--sc-ink,#1d1d1f)">绝对位置编码 · 正弦编码与可学习编码</text>
+  <text x="30" y="54" font-size="12" fill="var(--sc-sub,#6e6e73)">给每个位置一个固定长度的向量，直接加到 token 嵌入上</text>
+
+  <!-- 左：正弦 -->
+  <g filter="url(#s53_soft)"><rect x="40" y="90" width="430" height="360" rx="12" fill="var(--sc-panel,#ffffff)" stroke="#2dd4bf" stroke-width="1.4"/></g>
+  <text x="60" y="118" font-size="12" font-weight="600" fill="#2dd4bf">正弦位置编码（Sinusoidal）</text>
+  <text x="60" y="142" font-size="10" fill="var(--sc-sub,#6e6e73)">PE(pos,2i)=sin(pos/10000^(2i/d))</text>
+  <text x="60" y="162" font-size="10" fill="var(--sc-sub,#6e6e73)">PE(pos,2i+1)=cos(pos/10000^(2i/d))</text>
+  <!-- 波形示意 -->
+  <path d="M60 260 Q100 210 140 260 T220 260 T300 260 T380 260 T440 260" stroke="#2dd4bf" stroke-width="1.8" fill="none"/>
+  <path d="M60 300 Q120 250 180 300 T300 300 T420 300" stroke="#5e5ce6" stroke-width="1.6" fill="none"/>
+  <path d="M60 340 Q140 290 220 340 T380 340" stroke="#f5873a" stroke-width="1.4" fill="none"/>
+  <text x="60" y="374" font-size="10" fill="var(--sc-sub,#6e6e73)">不同维度用不同频率的正余弦</text>
+  <text x="60" y="396" font-size="10" fill="var(--sc-sub,#6e6e73)">优点：无参、可外推到更长位置</text>
+  <text x="60" y="418" font-size="10" fill="var(--sc-sub,#6e6e73)">相邻位置编码平滑，含相对信息</text>
+
+  <!-- 右：可学习 -->
+  <g filter="url(#s53_soft)"><rect x="490" y="90" width="430" height="360" rx="12" fill="var(--sc-panel,#ffffff)" stroke="#5e5ce6" stroke-width="1.4"/></g>
+  <text x="510" y="118" font-size="12" font-weight="600" fill="#5e5ce6">可学习位置编码（Learned）</text>
+  <text x="510" y="142" font-size="10" fill="var(--sc-sub,#6e6e73)">位置 0..L-1 各一个可训练向量</text>
+  <!-- 表示为一列格子 -->
+  <g>
+    <rect x="530" y="170" width="120" height="30" rx="5" fill="var(--sc-fill-purple,#f3ecff)" stroke="#5e5ce6" stroke-width="1.1"/>
+    <text x="590" y="190" font-size="10" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">pos 0 向量</text>
+    <rect x="530" y="208" width="120" height="30" rx="5" fill="var(--sc-fill-purple,#f3ecff)" stroke="#5e5ce6" stroke-width="1.1"/>
+    <text x="590" y="228" font-size="10" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">pos 1 向量</text>
+    <rect x="530" y="246" width="120" height="30" rx="5" fill="var(--sc-fill-purple,#f3ecff)" stroke="#5e5ce6" stroke-width="1.1"/>
+    <text x="590" y="266" font-size="10" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">pos 2 向量</text>
+    <text x="590" y="298" font-size="12" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">⋮</text>
+  </g>
+  <text x="510" y="330" font-size="10" fill="var(--sc-sub,#6e6e73)">优点：数据驱动，可拟合任意模式</text>
+  <text x="510" y="352" font-size="10" fill="var(--sc-sub,#6e6e73)">缺点：超过训练长度 L 无编码可用</text>
+  <text x="510" y="374" font-size="10" fill="var(--sc-sub,#6e6e73)">难以外推，BERT/GPT-2 采用此法</text>
+
+  <!-- 底部结论 -->
+  <g filter="url(#s53_soft)"><rect x="40" y="470" width="880" height="72" rx="12" fill="var(--sc-fill-teal,#e9fbf6)" stroke="#2dd4bf" stroke-width="1.3"/></g>
+  <text x="60" y="498" font-size="11" font-weight="600" fill="#2dd4bf">共同点与局限</text>
+  <text x="60" y="522" font-size="10.2" fill="var(--sc-sub,#6e6e73)">两者都是「加法式绝对编码」，直接叠加到嵌入；可学习式更灵活但外推差，正弦式天然可外推——这正是 RoPE 等相对方案要改进的地方</text>
+</svg></div></section><section class="vt-sec" id="sec-p2" data-sec="sec-p2"><div class="secttl"><span class="badge">P2</span><span class="t">相对位置 · RoPE 旋转位置编码</span></div><div class="fig" role="img" aria-label="相对位置 · RoPE 旋转位置编码"><svg class="figsvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 560" font-family="-apple-system,'PingFang SC','Helvetica Neue',sans-serif">
+  <defs>
+    <filter id="s54_soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.07"/>
+    </filter>
+    <marker id="s54_arv" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#2dd4bf"/>
+    </marker>
+  </defs>
+ <rect width="960" height="560" fill="var(--sc-bg,#fbfbfd)"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="var(--sc-ink,#1d1d1f)">旋转位置编码 RoPE · 用旋转角表达相对距离</text>
+  <text x="30" y="54" font-size="12" fill="var(--sc-sub,#6e6e73)">按位置把 Q/K 向量成对旋转，点积后自动只依赖两者的相对位置差</text>
+
+  <!-- 左：旋转示意 -->
+  <g filter="url(#s54_soft)"><rect x="40" y="90" width="430" height="360" rx="12" fill="var(--sc-panel,#ffffff)" stroke="#2dd4bf" stroke-width="1.4"/></g>
+  <text x="60" y="118" font-size="12" font-weight="600" fill="#2dd4bf">位置 = 旋转角度</text>
+  <!-- 坐标轴 -->
+  <line x1="255" y1="160" x2="255" y2="340" stroke="var(--sc-line,#d2d2d7)" stroke-width="1"/>
+  <line x1="150" y1="250" x2="360" y2="250" stroke="var(--sc-line,#d2d2d7)" stroke-width="1"/>
+  <circle cx="255" cy="250" r="80" fill="none" stroke="var(--sc-line,#e5e5ea)" stroke-width="1"/>
+  <!-- 向量 pos0 -->
+  <line x1="255" y1="250" x2="335" y2="250" stroke="#5e5ce6" stroke-width="2.4" marker-end="url(#s54_arv)"/>
+  <text x="342" y="248" font-size="10" fill="#5e5ce6">pos m</text>
+  <!-- 向量 pos1 旋转 -->
+  <line x1="255" y1="250" x2="311" y2="194" stroke="#2dd4bf" stroke-width="2.4" marker-end="url(#s54_arv)"/>
+  <text x="316" y="188" font-size="10" fill="#2dd4bf">pos n</text>
+  <path d="M305 250 A50 50 0 0 0 290 215" stroke="#f5873a" stroke-width="1.6" fill="none"/>
+  <text x="330" y="230" font-size="10" fill="#f5873a">θ∝(n−m)</text>
+  <text x="60" y="380" font-size="10" fill="var(--sc-sub,#6e6e73)">向量按位置旋转固定角度</text>
+  <text x="60" y="402" font-size="10" fill="var(--sc-sub,#6e6e73)">不同维度对用不同旋转频率</text>
+  <text x="60" y="424" font-size="10" fill="var(--sc-sub,#6e6e73)">旋转不改变模长，只改相位</text>
+
+  <!-- 右：性质 -->
+  <g filter="url(#s54_soft)"><rect x="490" y="90" width="430" height="360" rx="12" fill="var(--sc-panel,#ffffff)" stroke="#5e5ce6" stroke-width="1.4"/></g>
+  <text x="510" y="118" font-size="12" font-weight="600" fill="#5e5ce6">为何点积只看相对位置</text>
+  <text x="510" y="146" font-size="10" fill="var(--sc-sub,#6e6e73)">旋转后 qₘ·kₙ 仅依赖角度差 (m−n)</text>
+  <text x="510" y="170" font-size="10" fill="var(--sc-sub,#6e6e73)">即注意力分数天然编码相对距离</text>
+  <text x="510" y="200" font-size="11" font-weight="600" fill="#5e5ce6">相比绝对编码的优势</text>
+  <text x="510" y="226" font-size="10" fill="var(--sc-sub,#6e6e73)">· 相对性：平移整段文本分数不变</text>
+  <text x="510" y="250" font-size="10" fill="var(--sc-sub,#6e6e73)">· 无额外参数，作用在 Q/K 而非嵌入</text>
+  <text x="510" y="274" font-size="10" fill="var(--sc-sub,#6e6e73)">· 远距离衰减，符合语言局部性直觉</text>
+  <text x="510" y="298" font-size="10" fill="var(--sc-sub,#6e6e73)">· 可通过缩放旋转频率做长度外推</text>
+  <text x="510" y="330" font-size="11" font-weight="600" fill="#5e5ce6">应用</text>
+  <text x="510" y="356" font-size="10" fill="var(--sc-sub,#6e6e73)">LLaMA、Qwen、GLM 等主流模型标配</text>
+  <text x="510" y="380" font-size="10" fill="var(--sc-sub,#6e6e73)">已成为开源大模型事实上的默认方案</text>
+
+  <!-- 底部 -->
+  <g filter="url(#s54_soft)"><rect x="40" y="470" width="880" height="72" rx="12" fill="var(--sc-fill-teal,#e9fbf6)" stroke="#2dd4bf" stroke-width="1.3"/></g>
+  <text x="60" y="498" font-size="11" font-weight="600" fill="#2dd4bf">一句话</text>
+  <text x="60" y="522" font-size="10.2" fill="var(--sc-sub,#6e6e73)">RoPE 把「绝对位置加到嵌入」升级为「相对位置旋转 QK」，既保留位置信息，又天然具备相对性与外推潜力</text>
+</svg></div></section><section class="vt-sec" id="sec-p3" data-sec="sec-p3"><div class="secttl"><span class="badge">P3</span><span class="t">长度外推 · 插值与 NTK 扩展窗口</span></div><div class="fig" role="img" aria-label="长度外推 · 插值与 NTK 扩展窗口"><svg class="figsvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 560" font-family="-apple-system,'PingFang SC','Helvetica Neue',sans-serif">
+  <defs>
+    <filter id="s55_soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.07"/>
+    </filter>
+  </defs>
+  <rect width="960" height="560" fill="var(--sc-bg,#fbfbfd)"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="var(--sc-ink,#1d1d1f)">长度外推 · 位置插值与 NTK 扩展窗口</text>
+  <text x="30" y="54" font-size="12" fill="var(--sc-sub,#6e6e73)">训练窗口有限，推理却要更长——通过缩放位置或频率，让模型无需重训就能扩窗</text>
+
+  <!-- 问题条 -->
+  <g filter="url(#s55_soft)"><rect x="40" y="86" width="880" height="60" rx="10" fill="var(--sc-fill-orange,#fff3ea)" stroke="#f5873a" stroke-width="1.3"/></g>
+  <text x="60" y="110" font-size="11" font-weight="600" fill="#f5873a">核心难题</text>
+  <text x="60" y="132" font-size="10.2" fill="var(--sc-sub,#6e6e73)">位置超出训练范围时，模型见到「没学过的位置/角度」，注意力分布崩坏、性能急剧下降</text>
+
+  <!-- 三种方案 -->
+  <g filter="url(#s55_soft)"><rect x="40" y="166" width="280" height="260" rx="12" fill="var(--sc-fill-teal,#e9fbf6)" stroke="#2dd4bf" stroke-width="1.4"/></g>
+  <text x="70" y="196" font-size="12" font-weight="700" fill="#2dd4bf">① 位置插值 PI</text>
+  <text x="60" y="226" font-size="10" fill="var(--sc-sub,#6e6e73)">把超长位置线性压缩</text>
+  <text x="60" y="248" font-size="10" fill="var(--sc-sub,#6e6e73)">回到训练区间内</text>
+  <text x="60" y="270" font-size="10" fill="var(--sc-sub,#6e6e73)">如 4k→扩到 16k</text>
+  <text x="60" y="292" font-size="10" fill="var(--sc-sub,#6e6e73)">位置除以缩放因子</text>
+  <text x="60" y="322" font-size="10" fill="#2dd4bf">优点：简单，少量微调即可</text>
+  <text x="60" y="344" font-size="10" fill="var(--sc-sub,#6e6e73)">代价：高频细节分辨率下降</text>
+
+  <g filter="url(#s55_soft)"><rect x="340" y="166" width="280" height="260" rx="12" fill="var(--sc-fill-purple,#f3ecff)" stroke="#5e5ce6" stroke-width="1.4"/></g>
+  <text x="370" y="196" font-size="12" font-weight="700" fill="#5e5ce6">② NTK-aware 缩放</text>
+  <text x="360" y="226" font-size="10" fill="var(--sc-sub,#6e6e73)">不等比缩放各频率</text>
+  <text x="360" y="248" font-size="10" fill="var(--sc-sub,#6e6e73)">低频多扩、高频少动</text>
+  <text x="360" y="270" font-size="10" fill="var(--sc-sub,#6e6e73)">保住局部分辨率</text>
+  <text x="360" y="292" font-size="10" fill="var(--sc-sub,#6e6e73)">YaRN 是其进阶版</text>
+  <text x="360" y="322" font-size="10" fill="#5e5ce6">优点：常可免微调直接扩窗</text>
+  <text x="360" y="344" font-size="10" fill="var(--sc-sub,#6e6e73)">代价：需调节缩放策略</text>
+
+  <g filter="url(#s55_soft)"><rect x="640" y="166" width="280" height="260" rx="12" fill="var(--sc-fill-orange,#fff3ea)" stroke="#f5873a" stroke-width="1.4"/></g>
+  <text x="670" y="196" font-size="12" font-weight="700" fill="#f5873a">③ 相对/局部方案</text>
+  <text x="660" y="226" font-size="10" fill="var(--sc-sub,#6e6e73)">ALiBi：给分数加</text>
+  <text x="660" y="248" font-size="10" fill="var(--sc-sub,#6e6e73)">距离线性偏置</text>
+  <text x="660" y="270" font-size="10" fill="var(--sc-sub,#6e6e73)">滑动窗口限制范围</text>
+  <text x="660" y="292" font-size="10" fill="var(--sc-sub,#6e6e73)">天生对长度不敏感</text>
+  <text x="660" y="322" font-size="10" fill="#f5873a">优点：外推性好、实现轻</text>
+  <text x="660" y="344" font-size="10" fill="var(--sc-sub,#6e6e73)">代价：长程建模能力受限</text>
+
+  <!-- 底部结论 -->
+  <g filter="url(#s55_soft)"><rect x="40" y="450" width="880" height="92" rx="12" fill="var(--sc-panel,#ffffff)" stroke="var(--sc-line,#d2d2d7)" stroke-width="1.2"/></g>
+  <text x="60" y="478" font-size="11" font-weight="600" fill="#2dd4bf">选型主线</text>
+  <text x="60" y="504" font-size="10.2" fill="var(--sc-sub,#6e6e73)">· 已用 RoPE 且要快速扩窗 → NTK/YaRN，多数免训练；· 可微调 → 位置插值更稳</text>
+  <text x="60" y="528" font-size="10.2" fill="var(--sc-sub,#6e6e73)">· 从头设计要天然外推 → ALiBi 或相对编码。核心是让「训练时没见过的长度」仍落在模型可泛化的区间</text>
+</svg></div></section><section class="vt-sec" id="sec-cmp" data-sec="sec-cmp"><div class="secttl"><span class="badge">⇄</span><span class="t">Positional Encoding · 核心机制差异对比</span></div><div class="fig" role="img" aria-label="Positional Encoding · 核心机制差异对比"><svg class="figsvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 520" font-family="-apple-system,'PingFang SC','Helvetica Neue',sans-serif">
+  <defs>
+    <filter id="s56_soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.07"/>
+    </filter>
+  </defs>
+  <rect width="960" height="520" fill="var(--sc-bg,#fbfbfd)"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="var(--sc-ink,#1d1d1f)">位置编码 · 三种机理对比</text>
+  <text x="30" y="54" font-size="12" fill="var(--sc-sub,#6e6e73)">绝对编码给「起点坐标」，RoPE 给「相对关系」，外推给「更长可用窗口」</text>
+
+  <g filter="url(#s56_soft)"><rect x="30" y="80" width="900" height="44" rx="8" fill="var(--sc-panel,#f5f5f7)" stroke="var(--sc-line,#d2d2d7)" stroke-width="1"/></g>
+  <text x="120" y="108" font-size="11.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">构件</text>
+  <text x="360" y="108" font-size="11.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">解决什么问题</text>
+  <text x="600" y="108" font-size="11.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">核心做法</text>
+  <text x="830" y="108" font-size="11.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">主要代价</text>
+
+  <g filter="url(#s56_soft)"><rect x="30" y="134" width="900" height="96" rx="8" fill="var(--sc-panel,#ffffff)" stroke="#2dd4bf" stroke-width="1.3"/></g>
+  <text x="120" y="188" font-size="12" font-weight="600" fill="#2dd4bf" text-anchor="middle">绝对位置</text>
+  <text x="360" y="176" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">注意力对顺序无感</text>
+  <text x="360" y="196" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">需注入位置信息</text>
+  <text x="600" y="176" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">正弦/可学习向量</text>
+  <text x="600" y="196" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">加到 token 嵌入</text>
+  <text x="830" y="188" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">可学习式难外推</text>
+
+  <g filter="url(#s56_soft)"><rect x="30" y="240" width="900" height="96" rx="8" fill="var(--sc-panel,#ffffff)" stroke="#2dd4bf" stroke-width="1.3"/></g>
+  <text x="120" y="294" font-size="12" font-weight="600" fill="#2dd4bf" text-anchor="middle">旋转编码 RoPE</text>
+  <text x="360" y="282" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">绝对编码缺乏相对性</text>
+  <text x="360" y="302" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">平移不变性差</text>
+  <text x="600" y="282" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">按位置旋转 Q/K</text>
+  <text x="600" y="302" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">点积只看相对距离</text>
+  <text x="830" y="294" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">超长仍需配合外推</text>
+
+  <g filter="url(#s56_soft)"><rect x="30" y="346" width="900" height="96" rx="8" fill="var(--sc-panel,#ffffff)" stroke="#f5873a" stroke-width="1.3"/></g>
+  <text x="120" y="400" font-size="12" font-weight="600" fill="#f5873a" text-anchor="middle">长度外推</text>
+  <text x="360" y="388" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">训练窗口短</text>
+  <text x="360" y="408" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">推理要处理更长文本</text>
+  <text x="600" y="388" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">位置插值/NTK 缩放</text>
+  <text x="600" y="408" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">或 ALiBi 距离偏置</text>
+  <text x="830" y="400" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">分辨率或长程受损</text>
+
+  <text x="480" y="486" font-size="12" font-weight="600" fill="#2dd4bf" text-anchor="middle">一句话：绝对定「坐标」，RoPE 定「相对」，外推定「能走多远」</text>
+</svg></div></section><section class="vt-sec" id="sec-eng" data-sec="sec-eng"><div class="secttl"><span class="badge">⚙</span><span class="t">Positional Encoding · 工程实现差异（真实框架落地取舍）</span></div><div class="fig" role="img" aria-label="Positional Encoding · 工程实现差异（真实框架落地取舍）"><svg class="figsvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 560" font-family="-apple-system,'PingFang SC','Helvetica Neue',sans-serif">
+  <defs>
+    <filter id="s57_soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.07"/>
+    </filter>
+  </defs>
+  <rect width="960" height="560" fill="var(--sc-bg,#fbfbfd)"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="var(--sc-ink,#1d1d1f)">位置编码 · 工程选型三支柱</text>
+  <text x="30" y="54" font-size="12" fill="var(--sc-sub,#6e6e73)">默认用 RoPE，扩窗优先 NTK/YaRN，超长文本再叠系统级工程</text>
+
+  <g filter="url(#s57_soft)"><rect x="30" y="86" width="288" height="360" rx="14" fill="var(--sc-fill-teal,#e9fbf6)" stroke="#2dd4bf" stroke-width="1.5"/></g>
+  <text x="56" y="122" font-size="13" font-weight="600" fill="#2dd4bf">① 编码选型</text>
+  <text x="56" y="150" font-size="11" fill="var(--sc-ink,#1d1d1f)">RoPE 已成事实标准</text>
+  <text x="56" y="178" font-size="10.5" fill="var(--sc-sub,#6e6e73)">· 相对性 + 无额外参数</text>
+  <text x="56" y="200" font-size="10.5" fill="var(--sc-sub,#6e6e73)">· LLaMA / Qwen / GLM 通用</text>
+  <text x="56" y="222" font-size="10.5" fill="var(--sc-sub,#6e6e73)">· 正弦编码仅少数场景</text>
+  <text x="56" y="244" font-size="10.5" fill="var(--sc-sub,#6e6e73)">· 可学习编码难外推</text>
+  <text x="56" y="278" font-size="10.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)">选型：新模型直接 RoPE</text>
+
+  <g filter="url(#s57_soft)"><rect x="336" y="86" width="288" height="360" rx="14" fill="var(--sc-fill-teal,#e9fbf6)" stroke="#2dd4bf" stroke-width="1.5"/></g>
+  <text x="362" y="122" font-size="13" font-weight="600" fill="#2dd4bf">② 扩窗策略</text>
+  <text x="362" y="150" font-size="11" fill="var(--sc-ink,#1d1d1f)">免训练/微调扩上下文</text>
+  <text x="362" y="178" font-size="10.5" fill="var(--sc-sub,#6e6e73)">· PI 线性插值最简单</text>
+  <text x="362" y="200" font-size="10.5" fill="var(--sc-sub,#6e6e73)">· NTK-aware 保高频分辨率</text>
+  <text x="362" y="222" font-size="10.5" fill="var(--sc-sub,#6e6e73)">· YaRN 分频段更稳</text>
+  <text x="362" y="244" font-size="10.5" fill="var(--sc-sub,#6e6e73)">· 少量长文本微调固化</text>
+  <text x="362" y="278" font-size="10.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)">选型：NTK/YaRN + 微调</text>
+
+  <g filter="url(#s57_soft)"><rect x="642" y="86" width="288" height="360" rx="14" fill="var(--sc-fill-orange,#fff3ea)" stroke="#f5873a" stroke-width="1.5"/></g>
+  <text x="668" y="122" font-size="13" font-weight="600" fill="#f5873a">③ 长文本工程</text>
+  <text x="668" y="150" font-size="11" fill="var(--sc-ink,#1d1d1f)">编码之外的系统手段</text>
+  <text x="668" y="178" font-size="10.5" fill="var(--sc-sub,#6e6e73)">· 滑窗/局部注意力降复杂度</text>
+  <text x="668" y="200" font-size="10.5" fill="var(--sc-sub,#6e6e73)">· KV 缓存分页管理显存</text>
+  <text x="668" y="222" font-size="10.5" fill="var(--sc-sub,#6e6e73)">· 检索/摘要压缩上下文</text>
+  <text x="668" y="244" font-size="10.5" fill="var(--sc-sub,#6e6e73)">· ALiBi 天然线性外推</text>
+  <text x="668" y="278" font-size="10.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)">选型：编码扩窗 + 系统压缩</text>
+
+  <g filter="url(#s57_soft)"><rect x="30" y="466" width="900" height="66" rx="12" fill="var(--sc-panel,#ffffff)" stroke="var(--sc-line,#d2d2d7)" stroke-width="1"/></g>
+  <text x="52" y="494" font-size="11.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)">权衡速查</text>
+  <text x="52" y="516" font-size="10.5" fill="var(--sc-sub,#6e6e73)">短上下文：RoPE 原生即可 · 中等扩窗：NTK/YaRN 免大改 · 超长文本：扩窗与系统级压缩双管齐下</text>
+  <text x="480" y="552" font-size="12" font-weight="600" fill="#2dd4bf" text-anchor="middle">主线：编码给相对位置，扩窗给更远视野，工程给可落地的显存与延迟</text>
+</svg></div></section></div></div>
+  
+  <div class="backrow"><a href="../../../index.html#agent">← 返回 LLM & Agent 导航</a></div>
+</div>
+<footer>自包含离线图谱 · 以图为主：概览 + 机制分组图 + 机制对比 · 权威参考集中于底部 · 垂直 TAB 切换</footer>
+<script>
+(function(){
+  var root=document.documentElement;
+  var saved=localStorage.getItem('atlas-nav-theme');
+  if(saved==='dark') root.setAttribute('data-theme','dark');
+  function toggleTheme(){
+    var cur=root.getAttribute('data-theme')==='dark'?'':'dark';
+    if(cur) root.setAttribute('data-theme',cur); else root.removeAttribute('data-theme');
+    localStorage.setItem('atlas-nav-theme',cur||'light');
+  }
+  var tb=document.getElementById('themeBtn');
+  if(tb){tb.onclick=toggleTheme;}
+  var wrap=document.querySelector('.vt-wrap');
+  if(wrap){
+    var tabs=wrap.querySelectorAll('.vt-tab');
+    var secs=wrap.querySelectorAll('.vt-sec');
+    tabs.forEach(function(t){
+      t.addEventListener('click',function(){
+        var tgt=t.getAttribute('data-target');
+        tabs.forEach(function(x){x.classList.toggle('active',x===t);});
+        secs.forEach(function(s){s.classList.toggle('active',s.id===tgt);});
+      });
+    });
+  }
+  var zsegs=document.querySelectorAll('.zseg');
+  var zones=document.querySelectorAll('.zone');
+  if(zsegs.length&&zones.length){
+    zsegs.forEach(function(s){
+      s.addEventListener('click',function(){
+        zsegs.forEach(function(x){x.classList.toggle('active',x===s);});
+      });
+    });
+    if('IntersectionObserver' in window){
+      var io=new IntersectionObserver(function(es){
+        es.forEach(function(e){
+          if(e.isIntersecting){
+            var id=e.target.id;
+            zsegs.forEach(function(x){x.classList.toggle('active',x.getAttribute('href')==='#'+id);});
+          }
+        });
+      },{rootMargin:'-40% 0px -55% 0px'});
+      zones.forEach(function(z){io.observe(z);});
+    }
+  }
+})();
+</script>
+</body>
+</html>

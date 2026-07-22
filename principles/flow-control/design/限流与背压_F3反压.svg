@@ -1,0 +1,109 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1150" height="650" viewBox="0 0 1150 650" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="aT" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2aa0a4"/></marker>
+    <marker id="aG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+    <marker id="aA" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#c99a3a"/></marker>
+  </defs>
+  <rect width="1150" height="650" fill="#fbfbfd"/>
+
+  <!-- 判型标题带 -->
+  <text x="30" y="32" font-size="15" font-weight="700" fill="#1d1d1f">F3 · Flink credit-based 反压 · 下游用剩余 buffer 数（credit）主动告知上游能收多少，上游按 credit 发送——无需拒绝、不丢数据</text>
+  <text x="30" y="53" font-size="10.5" fill="#6e6e73">`NetworkBufferPool`（全局）→ `LocalBufferPool`（per-task，exclusive + floating 两类 buffer）；`AddCredit` 消息沿 `CreditBasedPartitionRequestClientHandler` 反向传导</text>
+
+  <!-- 图例 -->
+  <line x1="30" y1="80" x2="54" y2="80" stroke="#2f9e6e" stroke-width="2" marker-end="url(#aG)"/>
+  <text x="60" y="84" font-size="10" fill="#3a3a3c">数据流向：上游 → 下游</text>
+  <line x1="230" y1="80" x2="254" y2="80" stroke="#2aa0a4" stroke-width="2" stroke-dasharray="5 3" marker-end="url(#aT)"/>
+  <text x="260" y="84" font-size="10" fill="#3a3a3c">credit 信号：下游 → 上游（反向）</text>
+  <line x1="512" y1="80" x2="536" y2="80" stroke="#c99a3a" stroke-width="2" stroke-dasharray="3 2" marker-end="url(#aA)"/>
+  <text x="542" y="84" font-size="10" fill="#3a3a3c">backlog 信号：上游侧未发送积压量</text>
+  <text x="1120" y="84" font-size="10" fill="#a1a1a6" text-anchor="end">源码级已核实</text>
+  <line x1="30" y1="98" x2="1120" y2="98" stroke="#e4e7ec" stroke-width="1"/>
+
+  <!-- 上游 Task -->
+  <rect x="30" y="118" width="330" height="230" rx="14" fill="#e4f4f4" stroke="#bfe1e1" filter="url(#soft)"/>
+  <text x="195" y="144" font-size="12.5" font-weight="700" fill="#1d6b6e" text-anchor="middle">上游 Task · 生产者算子</text>
+  <line x1="46" y1="154" x2="344" y2="154" stroke="#bfe1e1" stroke-width="1"/>
+
+  <rect x="46" y="168" width="298" height="66" rx="10" fill="#ffffff" stroke="#bfe1e1"/>
+  <text x="62" y="188" font-size="10" font-weight="700" fill="#1a6d70">ResultSubpartition</text>
+  <text x="62" y="206" font-size="9" fill="#3a5a48">产出的数据先进本地待发队列；</text>
+  <text x="62" y="222" font-size="9" fill="#3a5a48">未发出的 buffer 数即 `backlog`</text>
+
+  <rect x="46" y="244" width="298" height="90" rx="10" fill="#ffffff" stroke="#bfe1e1"/>
+  <text x="62" y="264" font-size="10" font-weight="700" fill="#1a6d70">按 credit 发送</text>
+  <text x="62" y="284" font-size="9" fill="#3a5a48">已知下游还剩多少 credit，就最多发送</text>
+  <text x="62" y="300" font-size="9" fill="#3a5a48">对应数量的 buffer；credit 耗尽即停发，</text>
+  <text x="62" y="316" font-size="9" fill="#3a5a48">等待下一次 `AddCredit` 到达</text>
+
+  <!-- 数据流箭头 -->
+  <line x1="360" y1="200" x2="440" y2="200" stroke="#2f9e6e" stroke-width="2.2" marker-end="url(#aG)"/>
+  <text x="366" y="192" font-size="8.5" fill="#2f6b4e">buffer（数据）</text>
+
+  <!-- 中间：网络传输/AddCredit 信道 -->
+  <rect x="450" y="118" width="250" height="230" rx="14" fill="#fbfbfd" stroke="#e4e7ec" stroke-dasharray="4 3"/>
+  <text x="575" y="144" font-size="11.5" font-weight="700" fill="#4a4a4f" text-anchor="middle">网络信道</text>
+  <text x="466" y="168" font-size="9" fill="#6e6e73">`CreditBasedPartitionRequestClientHandler`</text>
+  <text x="466" y="184" font-size="9" fill="#6e6e73">同一物理连接上复用数据帧与</text>
+  <text x="466" y="200" font-size="9" fill="#6e6e73">`AddCredit` 控制消息</text>
+
+  <line x1="575" y1="230" x2="575" y2="260" stroke="#2aa0a4" stroke-width="2" stroke-dasharray="5 3" marker-end="url(#aT)"/>
+  <text x="575" y="222" font-size="8.5" fill="#1a6d70" text-anchor="middle">AddCredit(n)</text>
+  <text x="466" y="284" font-size="8.5" fill="#8a97ab">backlog 也随数据帧一并告知下游</text>
+  <text x="466" y="300" font-size="8.5" fill="#8a97ab">（下游据此预估要不要预分配 floating buffer）</text>
+
+  <!-- 反向 credit 箭头（下游 -> 上游），大弧线 -->
+  <path d="M700 320 C 620 380 480 380 366 240" fill="none" stroke="#2aa0a4" stroke-width="1.8" stroke-dasharray="5 3" marker-end="url(#aT)"/>
+  <text x="470" y="392" font-size="9" fill="#1a6d70" text-anchor="middle">credit 沿反方向持续告知上游「我还能收多少」</text>
+
+  <!-- 下游 Task -->
+  <rect x="710" y="118" width="410" height="230" rx="14" fill="#eaf6f0" stroke="#bfe3d1" filter="url(#soft)"/>
+  <text x="915" y="144" font-size="12.5" font-weight="700" fill="#2f6b4e" text-anchor="middle">下游 Task · 消费者算子</text>
+  <line x1="726" y1="154" x2="1104" y2="154" stroke="#bfe3d1" stroke-width="1"/>
+
+  <rect x="726" y="168" width="188" height="166" rx="10" fill="#ffffff" stroke="#bfe3d1"/>
+  <text x="820" y="188" font-size="10" font-weight="700" fill="#2f6b4e" text-anchor="middle">RemoteInputChannel</text>
+  <text x="742" y="210" font-size="9" fill="#3f8a63">持有一份 `BufferManager`，</text>
+  <text x="742" y="226" font-size="9" fill="#3f8a63">管理 exclusive buffer</text>
+  <text x="742" y="242" font-size="9" fill="#3f8a63">（该 channel 独占）+</text>
+  <text x="742" y="258" font-size="9" fill="#3f8a63">floating buffer（可按需</text>
+  <text x="742" y="274" font-size="9" fill="#3f8a63">向 LocalBufferPool 申领）</text>
+  <text x="742" y="298" font-size="8.5" fill="#5a9078">剩余可用 buffer 数即 credit</text>
+  <text x="742" y="314" font-size="8.5" fill="#5a9078">数值来源，随消费腾出而增</text>
+
+  <rect x="928" y="168" width="186" height="76" rx="10" fill="#ffffff" stroke="#bfe3d1"/>
+  <text x="1021" y="188" font-size="10" font-weight="700" fill="#2f6b4e" text-anchor="middle">LocalBufferPool</text>
+  <text x="944" y="208" font-size="8.5" fill="#3f8a63">per-task 本地池；exclusive</text>
+  <text x="944" y="224" font-size="8.5" fill="#3f8a63">buffer 固定分配、floating</text>
+  <text x="944" y="238" font-size="8.5" fill="#3f8a63">buffer 池间可流动共享</text>
+
+  <line x1="1021" y1="244" x2="1021" y2="264" stroke="#2f9e6e" stroke-width="1.6"/>
+  <rect x="928" y="264" width="186" height="70" rx="10" fill="#ffffff" stroke="#bfe3d1"/>
+  <text x="1021" y="284" font-size="10" font-weight="700" fill="#2f6b4e" text-anchor="middle">NetworkBufferPool</text>
+  <text x="944" y="304" font-size="8.5" fill="#3f8a63">全局池，向所有 task 的</text>
+  <text x="944" y="320" font-size="8.5" fill="#3f8a63">LocalBufferPool 分发 buffer</text>
+
+  <!-- 全局池 -> 本地池箭头 -->
+  <line x1="928" y1="206" x2="914" y2="206" stroke="#2f9e6e" stroke-width="1.6" marker-end="url(#aG)"/>
+
+  <!-- 消费箭头，从 RemoteInputChannel 流出 -->
+  <text x="820" y="316" font-size="8.5" fill="#5a9078" text-anchor="middle">↓ 消费者算子读取处理</text>
+
+  <!-- 底部：为什么不丢数据 -->
+  <rect x="30" y="374" width="1090" height="118" rx="14" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="52" y="400" font-size="12" font-weight="700" fill="#1d1d1f">为什么「无拒绝、不丢数据」</text>
+  <line x1="52" y1="412" x2="1098" y2="412" stroke="#e4e7ec" stroke-width="1"/>
+  <text x="52" y="434" font-size="9.5" fill="#4a4a4f">上游发送的前提是「下游明确说了还有 credit」——credit=0 时上游会自己停下来等待，而不是硬发导致下游丢弃或阻塞崩溃。</text>
+  <text x="52" y="454" font-size="9.5" fill="#4a4a4f">`backlog`（上游未发送积压量）随数据帧告知下游，下游可以据此提前判断要不要多分配 floating buffer 来吸收即将到来的数据，减少等待延迟。</text>
+  <text x="52" y="474" font-size="9.5" fill="#4a4a4f">整条反压链路是逐 task、逐 channel 传导的：下游一慢，向它发送的上游 channel 先感知到；上游算子整体变慢后，它自己的上游又会感知到——压力沿数据流方向反向传导直到 source。</text>
+
+  <!-- 底部一句话 -->
+  <rect x="30" y="504" width="1090" height="126" rx="12" fill="#e4f4f4" stroke="#bfe1e1"/>
+  <text x="48" y="528" font-size="10.5" font-weight="700" fill="#1d6b6e">一句话</text>
+  <text x="128" y="528" font-size="10" fill="#1a6d70">这套机制的关键在于「谁来决定发送速率」——不是上游猜下游能收多少，而是下游用 credit 明确「授权」上游能发多少，授权耗尽自然停。</text>
+  <text x="128" y="548" font-size="10" fill="#1a6d70">与 nginx / client-go 的「边缘拒绝」不同，这里没有任何一条数据被丢弃或被判定为失败——所有数据最终都会被处理，只是处理节奏由最慢的下游决定。</text>
+  <text x="128" y="568" font-size="9" fill="#4a8a8c">对比 F1/F2：边缘限流面对的是「独立请求」，可以丢或延后重试；Flink 面对的是「一条必须保序处理完的流」，丢不起，只能全链路一起减速。</text>
+  <text x="128" y="588" font-size="9" fill="#4a8a8c">exclusive + floating 两类 buffer 的划分本身也是一种「保底 + 弹性」的资源分配思路——每个 channel 有保底不被饿死，同时又能向全局借用应对突发。</text>
+  <text x="128" y="606" font-size="8.5" fill="#8a97ab">见 CMP 对比图：三个项目在「触发姿态 / 信号方向 / 客户端可见后果」三个维度上的系统性差异</text>
+</svg>

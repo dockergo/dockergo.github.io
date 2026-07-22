@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="420" viewBox="0 0 1000 420" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs><filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ac" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#7c5fe6"/></marker></defs>
+  <rect width="1000" height="420" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Parquet 原理 · Statistics（min/max/null_count 让扫描可裁剪）</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">每个列块（及每页）内嵌摘要统计;读者据 min/max 判断“这块/这页可能命中吗”,不命中整块跳过,无需读数据</text>
+
+  <!-- Statistics 结构 -->
+  <rect x="30" y="76" width="420" height="220" rx="12" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+  <text x="46" y="100" font-size="11" font-weight="700" fill="#5a3410">struct Statistics（列块级 · 也可细到每页）</text>
+  <g font-size="9">
+    <rect x="46" y="112" width="388" height="30" rx="6" fill="#fff" stroke="#efdcb4"/><text x="60" y="132" fill="#5a3410">min_value / max_value（按列序比较）</text>
+    <rect x="46" y="148" width="388" height="30" rx="6" fill="#fff" stroke="#efdcb4"/><text x="60" y="168" fill="#5a3410">null_count（空值个数）</text>
+    <rect x="46" y="184" width="388" height="30" rx="6" fill="#fff" stroke="#efdcb4"/><text x="60" y="204" fill="#5a3410">distinct_count（去重数，可选）</text>
+    <rect x="46" y="220" width="388" height="30" rx="6" fill="#fbf6ef" stroke="#e6d8c4"/><text x="60" y="240" fill="#93762e">SizeStatistics（rep/def 级直方图，可选）</text>
+  </g>
+  <text x="46" y="272" font-size="8.6" fill="#93762e">写侧累计,收尾写入 ColumnMetaData.statistics;</text>
+  <text x="46" y="288" font-size="8.6" fill="#93762e">PageIndex 里也有逐页 min/max（见 PageIndex 篇）。</text>
+
+  <!-- 裁剪示例 -->
+  <rect x="470" y="76" width="500" height="220" rx="12" fill="#e9f2ff" stroke="#a9ccf5" filter="url(#soft)"/>
+  <text x="486" y="100" font-size="11" font-weight="700" fill="#0a3d78">谓词裁剪：WHERE age &gt; 60</text>
+  <g text-anchor="middle" font-size="8.8">
+    <rect x="486" y="114" width="220" height="40" rx="7" fill="#eef3fb" stroke="#bcd0ec"/><text x="596" y="130" fill="#7fa0c4">列块0 min=5 max=40</text><text x="596" y="146" fill="#7fa0c4">max&lt;60 → 整块跳过</text>
+    <rect x="722" y="114" width="220" height="40" rx="7" fill="#f3f9ff" stroke="#bcd8f5"/><text x="832" y="130" fill="#0a3d78">列块1 min=30 max=88</text><text x="832" y="146" fill="#2a5a92">区间相交 → 需读取</text>
+    <rect x="486" y="162" width="220" height="40" rx="7" fill="#eef3fb" stroke="#bcd0ec"/><text x="596" y="178" fill="#7fa0c4">列块2 min=10 max=55</text><text x="596" y="194" fill="#7fa0c4">max&lt;60 → 整块跳过</text>
+    <rect x="722" y="162" width="220" height="40" rx="7" fill="#f3f9ff" stroke="#bcd8f5"/><text x="832" y="178" fill="#0a3d78">列块3 min=61 max=99</text><text x="832" y="194" fill="#2a5a92">min&gt;60 → 全命中</text>
+  </g>
+  <text x="486" y="228" font-size="9" fill="#2a5a92">只读列块1、3 → I/O 与解码量大幅减少;这是列式格式最大扫描收益之一。</text>
+  <text x="486" y="248" font-size="8.6" fill="#5b7db1">同理可用 null_count 判断 IS NULL/IS NOT NULL;等值查询可再叠加布隆过滤器。</text>
+  <text x="486" y="272" font-size="8.4" fill="#7fa0c4">裁剪只“排除肯定不含”的块,命中的块仍需逐值验证谓词（min/max 是保守边界）。</text>
+
+  <rect x="30" y="316" width="940" height="86" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="48" y="340" font-size="11" font-weight="700" fill="#1b2a4a">粒度层次</text>
+  <text x="48" y="362" font-size="9.4" fill="#5b7db1">文件级（可聚合各行组）→ 行组/列块级（ColumnMetaData.statistics）→ 页级（PageIndex.ColumnIndex）。越细粒度裁剪越精,元数据越大。</text>
+  <text x="48" y="382" font-size="9.4" fill="#5b7db1">比较用哪种“序”由 ColumnOrder 决定（见下一图）;字符串/浮点/时间戳的排序语义不同,min/max 的含义随之而变。</text>
+  <text x="48" y="400" font-size="8.4" fill="#7fa0c4">min/max 是否可信取决于写者是否正确遵循 ColumnOrder;历史文件的旧 min/max 字段仅在 signed 比较下有效。</text>
+</svg>

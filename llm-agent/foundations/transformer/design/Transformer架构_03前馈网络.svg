@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 580" font-family="-apple-system,'PingFang SC','Helvetica Neue',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.07"/>
+    </filter>
+    <marker id="arh" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#2dd4bf"/>
+    </marker>
+  </defs>
+  <rect width="960" height="580" fill="#fbfbfd"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="#1d1d1f">Transformer · 前馈网络 FFN</text>
+  <text x="30" y="54" font-size="12" fill="#6e6e73">对每个位置独立地：升维 → 非线性激活 → 降维；提供非线性表达与知识存储</text>
+
+  <!-- 输入 -->
+  <g filter="url(#soft)"><rect x="50" y="230" width="130" height="80" rx="12" fill="#eef4ff" stroke="#0a84ff" stroke-width="1.4"/></g>
+  <text x="115" y="262" font-size="12" font-weight="600" fill="#1d1d1f" text-anchor="middle">输入 d 维</text>
+  <text x="115" y="284" font-size="10" fill="#6e6e73" text-anchor="middle">注意力子层输出</text>
+
+  <!-- 升维 -->
+  <g filter="url(#soft)"><rect x="240" y="200" width="150" height="140" rx="12" fill="#e9fbf6" stroke="#2dd4bf" stroke-width="1.5"/></g>
+  <text x="315" y="234" font-size="12" font-weight="600" fill="#1d1d1f" text-anchor="middle">线性升维 W1</text>
+  <text x="315" y="258" font-size="10" fill="#6e6e73" text-anchor="middle">d → 4d（通常 4 倍）</text>
+  <text x="315" y="284" font-size="10" fill="#6e6e73" text-anchor="middle">拓宽表达空间</text>
+  <text x="315" y="312" font-size="10" fill="#2dd4bf" text-anchor="middle">大部分参数在这里</text>
+
+  <!-- 激活 -->
+  <g filter="url(#soft)"><rect x="450" y="200" width="150" height="140" rx="12" fill="#fff3ea" stroke="#f5873a" stroke-width="1.5"/></g>
+  <text x="525" y="234" font-size="12" font-weight="600" fill="#1d1d1f" text-anchor="middle">非线性激活</text>
+  <text x="525" y="258" font-size="10" fill="#6e6e73" text-anchor="middle">ReLU / GELU / SwiGLU</text>
+  <text x="525" y="284" font-size="10" fill="#6e6e73" text-anchor="middle">引入非线性</text>
+  <text x="525" y="312" font-size="10" fill="#f5873a" text-anchor="middle">决定「激活哪些神经元」</text>
+
+  <!-- 降维 -->
+  <g filter="url(#soft)"><rect x="660" y="200" width="150" height="140" rx="12" fill="#e9fbf6" stroke="#2dd4bf" stroke-width="1.5"/></g>
+  <text x="735" y="234" font-size="12" font-weight="600" fill="#1d1d1f" text-anchor="middle">线性降维 W2</text>
+  <text x="735" y="258" font-size="10" fill="#6e6e73" text-anchor="middle">4d → d</text>
+  <text x="735" y="284" font-size="10" fill="#6e6e73" text-anchor="middle">压回原维度</text>
+  <text x="735" y="312" font-size="10" fill="#2dd4bf" text-anchor="middle">便于残差相加</text>
+
+  <!-- 输出 -->
+  <g filter="url(#soft)"><rect x="850" y="230" width="90" height="80" rx="12" fill="#eef4ff" stroke="#0a84ff" stroke-width="1.4"/></g>
+  <text x="895" y="274" font-size="12" font-weight="600" fill="#1d1d1f" text-anchor="middle">输出 d 维</text>
+
+  <!-- 主流 -->
+  <path d="M180 270 L238 270" stroke="#2dd4bf" stroke-width="2.4" marker-end="url(#arh)"/>
+  <path d="M390 270 L448 270" stroke="#2dd4bf" stroke-width="2.4" marker-end="url(#arh)"/>
+  <path d="M600 270 L658 270" stroke="#2dd4bf" stroke-width="2.4" marker-end="url(#arh)"/>
+  <path d="M810 270 L848 270" stroke="#2dd4bf" stroke-width="2.4" marker-end="url(#arh)"/>
+
+  <!-- 说明 -->
+  <g filter="url(#soft)"><rect x="50" y="390" width="430" height="160" rx="12" fill="#ffffff" stroke="#2dd4bf" stroke-width="1.2"/></g>
+  <text x="70" y="416" font-size="12" font-weight="600" fill="#2dd4bf">逐位置 Position-wise</text>
+  <text x="70" y="440" font-size="10.5" fill="#6e6e73">· 同一组权重作用于序列每个位置，位置间不交互</text>
+  <text x="70" y="462" font-size="10.5" fill="#6e6e73">· 交互靠注意力，变换靠 FFN，两者职责分离</text>
+  <text x="70" y="484" font-size="10.5" fill="#6e6e73">· 等价于 kernel=1 的卷积，可高度并行</text>
+  <text x="70" y="514" font-size="11" font-weight="600" fill="#2dd4bf">公式</text>
+  <text x="70" y="536" font-size="10.5" fill="#6e6e73">FFN(x) = W2 · act(W1·x + b1) + b2</text>
+
+  <g filter="url(#soft)"><rect x="510" y="390" width="430" height="160" rx="12" fill="#ffffff" stroke="#f5873a" stroke-width="1.2"/></g>
+  <text x="530" y="416" font-size="12" font-weight="600" fill="#f5873a">为何是「知识记忆库」</text>
+  <text x="530" y="440" font-size="10.5" fill="#6e6e73">· 参数约占整个模型的 2/3，是主要容量所在</text>
+  <text x="530" y="462" font-size="10.5" fill="#6e6e73">· 可视为键值记忆：W1 匹配模式，W2 取回内容</text>
+  <text x="530" y="484" font-size="10.5" fill="#6e6e73">· 大量事实性知识被认为存储在 FFN 层</text>
+  <text x="530" y="514" font-size="11" font-weight="600" fill="#f5873a">SwiGLU 门控</text>
+  <text x="530" y="536" font-size="10.5" fill="#6e6e73">现代 LLM 多用门控激活，同算力下效果更好</text>
+</svg>

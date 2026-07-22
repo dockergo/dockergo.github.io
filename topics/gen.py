@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""主题导航层生成器（topics/gen.py）—— 跨项目「主题图谱」门户。
+"""主题导航层生成器（topics/gen.py）—— 跨项目「主题图谱」详情页。
 
 与各 *-design 项目的「按项目」导航平行，这里按 **计算系统的核心主题**（概念层，
 不点名具体项目）组织：一个生态架构总图 + 恰好 3 个图解点（机理图 + 短注解）。
 
+无独立门户：入口是主站(../gen.py)一级导航「主题视角」标签页的
+build_topics_cards() 卡片网格，直接下钻到 topics/<slug>/index.html；
+详情页「返回主题视角」链接指回 ../../index.html#topic。
+
 产物（全部自包含、仅标准库、离线、SVG 全部 base64 内联、双主题 + 记忆切换）：
-  topics/index.html            —— 门户：6 张主题卡片（标题 + 核心一句 + 3 图解点预览）
   topics/<slug>/index.html     —— 主题页：判型标题带 → 生态架构总图 → 3 图解点（图 + 注解）
 
 设计文件命名（各主题 design/ 目录内）：
@@ -31,7 +34,7 @@ THEMES = [
         "slug": "consensus", "cn": "分布式共识",
         "en": "Consensus & Replication",
         "title": "Consensus & Replication · 分布式共识与状态复制",
-        "core": "把「一个值」变成「一条只增不改的日志」，多数派确认即提交；副本按同一日志顺序回放，得到同一状态机。",
+        "core": "把「一个值」变成「一条只增不改的日志」，多数派确认即提交；副本按同一日志顺序回放，得到同一状态机。共识是「就一份日志达成一致」的底层机制，向上支撑一致性频谱（线性→顺序→最终）；至于主从/多主/无主的复制拓扑选型，详见「系统视角 · 复制策略」。",
         "color": "#4a7fd0", "eco": "分布式共识_00生态架构.svg",
         "groups": [
             {"algo": "Raft", "mechs": [
@@ -47,6 +50,11 @@ THEMES = [
             {"algo": "ZAB", "mechs": [
                 {"n": "Z1", "title": "原子广播提交", "svg": "分布式共识_Z1广播.svg"},
                 {"n": "Z2", "title": "崩溃恢复同步", "svg": "分布式共识_Z2恢复.svg"},
+            ]},
+            {"algo": "一致性频谱 Consistency Spectrum", "mechs": [
+                {"n": "C1", "title": "线性一致：etcd ReadIndex 线性读", "svg": "一致性与CAP_C1线性一致.svg"},
+                {"n": "C2", "title": "顺序一致：ZooKeeper ZAB 全局顺序", "svg": "一致性与CAP_C2顺序一致.svg"},
+                {"n": "C3", "title": "最终一致：ClickHouse Keeper 多主异步", "svg": "一致性与CAP_C3最终一致.svg"},
             ]},
         ],
         "compare": {"svg": "分布式共识_CMP算法对比.svg"},
@@ -265,30 +273,6 @@ header .spacer{flex:1}
 html[data-theme="light"] .tt-moon{display:none}html[data-theme="light"] .tt-sun{display:inline}
 .wrap{max-width:1180px;margin:0 auto;padding:28px 24px 80px}
 
-/* ---- 门户 hero ---- */
-.hero{margin:6px 0 26px}
-.hero h1{font-size:26px;font-weight:800;letter-spacing:.2px}
-.hero .sub{margin-top:8px;font-size:13.5px;color:var(--c-ink2);max-width:820px}
-.hero .back{display:inline-flex;align-items:center;gap:6px;margin-bottom:14px;
-  font-size:12.5px;color:var(--c-ink2);border:1px solid var(--c-line);
-  border-radius:999px;padding:5px 13px;background:var(--c-panel)}
-.hero .back:hover{color:var(--c-ink);border-color:var(--c-edge)}
-
-/* ---- 门户卡片栅格 ---- */
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:18px}
-.card{position:relative;display:block;background:var(--c-card);border:1px solid var(--c-line);
-  border-radius:16px;padding:20px 20px 18px;overflow:hidden;transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease}
-.card:hover{transform:translateY(-3px);border-color:var(--acc);box-shadow:0 10px 30px var(--c-shadow)}
-.card .bar{position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--acc)}
-.card .k{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.6px;
-  color:var(--acc);text-transform:uppercase;margin-bottom:8px}
-.card h3{font-size:17px;font-weight:750;line-height:1.35;color:var(--c-ink)}
-.card .core{margin-top:9px;font-size:12.5px;color:var(--c-ink2);line-height:1.6}
-.card .tags{margin-top:14px;display:flex;flex-direction:column;gap:7px}
-.card .tag{display:flex;gap:8px;align-items:baseline;font-size:12px;color:var(--c-ink2)}
-.card .tag .n{font-weight:800;color:var(--acc);flex:none;font-variant-numeric:tabular-nums}
-.card .go{margin-top:16px;font-size:12px;font-weight:700;color:var(--acc);display:inline-flex;align-items:center;gap:5px}
-
 /* ---- 主题页 ---- */
 .judge{background:var(--c-card);border:1px solid var(--c-line);border-left:4px solid var(--acc);
   border-radius:14px;padding:18px 22px;margin-bottom:26px}
@@ -397,59 +381,7 @@ def _head(title):
 
 
 # ===================================================================== #
-# 四、门户 index.html
-# ===================================================================== #
-def build_portal():
-    cards = []
-    for th in THEMES:
-        tags = "".join(
-            '<div class="tag"><span class="n">%s</span><span>%s</span></div>'
-            % (esc(g["algo"]), esc("·".join(m["title"] for m in g["mechs"])[:22]))
-            for g in th.get("groups", []))
-        # 判型式主标题里「·」前段作为卡片标题，核心一句取 core
-        head = th["title"].split(" · ")[0]
-        kicker = th["slug"].upper()
-        cards.append(
-            '<a class="card" href="%s/index.html" style="--acc:%s">'
-            '<span class="bar"></span>'
-            '<span class="k">%s</span>'
-            '<h3>%s</h3>'
-            '<div class="core">%s</div>'
-            '<div class="tags">%s</div>'
-            '<div class="go">进入主题页 →</div>'
-            '</a>'
-            % (esc(th["slug"]), esc(th["color"]), esc(kicker),
-               esc(head), esc(th["core"]), tags))
-    body = """%s
-<header>
-  <a class="logo" href="../index.html" title="返回项目图谱"><span class="icobtn">%s</span></a>
-  <div class="brand-intro">
-    <div class="bt">主题图谱 · 计算系统核心机理</div>
-    <div class="bs">按主题（而非项目）组织的概念层导航：每个主题一张生态架构总图 + 3 个机理图解点</div>
-  </div>
-  <div class="spacer"></div>
-  %s
-</header>
-<div class="wrap">
-  <div class="hero">
-    <a class="back" href="../index.html">← 返回项目图谱</a>
-    <h1>主题图谱门户</h1>
-    <div class="sub">从「按项目」切到「按主题」的横向视角：抽掉具体实现，只看一类核心逻辑在整个计算系统中如何自洽地拼起来。共 %d 个主题，每个主题 = 1 张生态架构总图 + 3 个图解点机理图（以图为主，散文为辅注）。</div>
-  </div>
-  <div class="grid">
-    %s
-  </div>
-</div>
-<footer>自包含离线图谱 · 概念层机理（不点名具体项目）· 仅标准库生成 · SVG 全部 base64 内联</footer>
-<script>%s</script>
-</body>
-</html>""" % (_head("主题图谱门户 · 计算系统核心机理"), _HOME_SVG, _THEME_BTN,
-              len(THEMES), "\n    ".join(cards), APP_JS)
-    return body
-
-
-# ===================================================================== #
-# 五、主题页 <slug>/index.html
+# 四、主题页 <slug>/index.html
 # ===================================================================== #
 def build_theme_page(th):
     prose = parse_prose(th["slug"], th["cn"])
@@ -540,7 +472,7 @@ def build_theme_page(th):
 
     body = """%s
 <header>
-  <a class="logo" href="../index.html" title="返回主题门户"><span class="icobtn">%s</span></a>
+  <a class="logo" href="../../index.html#topic" title="返回主题视角"><span class="icobtn">%s</span></a>
   <div class="brand-intro">
     <div class="bt">%s</div>
     <div class="bs">主题图谱 · 概念层机理（不点名具体项目）</div>
@@ -556,7 +488,7 @@ def build_theme_page(th):
   </div>
   %s
   %s
-  <div class="backrow"><a href="../index.html">← 返回主题门户</a></div>
+  <div class="backrow"><a href="../../index.html#topic">← 返回主题视角</a></div>
 </div>
 <footer>自包含离线图谱 · 以图为主：概览 + 算法分组机制图 + 算法对比 · 权威参考集中于底部 · 垂直 TAB 切换</footer>
 <script>%s</script>
@@ -568,14 +500,14 @@ def build_theme_page(th):
 
 
 # ===================================================================== #
-# 六、主流程
+# 五、主流程
 # ===================================================================== #
 def main():
-    # 门户
+    # 删除历史遗留的门户文件(若存在)——现无门户,入口在主站一级导航「主题视角」
     portal_path = os.path.join(HERE, "index.html")
-    with open(portal_path, "w", encoding="utf-8") as f:
-        f.write(build_portal())
-    print("Wrote %s" % portal_path)
+    if os.path.exists(portal_path):
+        os.remove(portal_path)
+        print("Removed stale %s" % portal_path)
 
     # 各主题页
     for th in THEMES:
@@ -586,9 +518,9 @@ def main():
             f.write(build_theme_page(th))
         print("Wrote %s" % out)
 
-    print("主题 %d 个 · 门户 1 + 主题页 %d" % (len(THEMES), len(THEMES)))
+    print("主题 %d 个主题页" % len(THEMES))
     if _missing:
-        print("  ⚠ 缺失 SVG（%d）：" % len(_missing))
+        print("  ⚠ 缺失 SVG(%d):" % len(_missing))
         for m in _missing:
             print("      -", m)
     else:

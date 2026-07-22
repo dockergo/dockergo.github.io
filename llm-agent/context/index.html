@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Context Engineering · AI Agents 图谱</title>
+<style>
+:root{
+  --c-bg:#fbfbfd; --c-card:#ffffff; --c-card2:#f5f5f7; --c-ink:#1d1d1f;
+  --c-ink2:#6e6e73; --c-ink3:#a1a1a6; --c-line:#e6e6ea; --c-edge:#d2d2d7;
+  --c-panel:#ffffff; --c-shadow:rgba(0,0,0,.08);
+}
+html[data-theme="dark"]{
+  --c-bg:#0d0d0f; --c-card:#17171a; --c-card2:#1e1e22; --c-ink:#f2f2f5;
+  --c-ink2:#a1a1a6; --c-ink3:#6e6e73; --c-line:#2a2a30; --c-edge:#33333a;
+  --c-panel:#161619; --c-shadow:rgba(0,0,0,.5);
+  /* 架构图内联 SVG 结构中性色深色翻转(品牌强调色不变) */
+  --sc-bg:#17171a; --sc-panel:#1e1e22; --sc-ink:#e8e8ea; --sc-ink2:#c4c4c8;
+  --sc-sub:#9a9aa2; --sc-line:#33333a; --sc-line2:#3d3d45;
+  --sc-fill-blue:#16253d; --sc-fill-purple:#241d3a; --sc-fill-orange:#382214; --sc-fill-teal:#0f3330;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--c-bg);color:var(--c-ink);
+  font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif;
+  font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+header{position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:14px;
+  padding:12px 24px;background:color-mix(in srgb,var(--c-bg) 86%,transparent);
+  backdrop-filter:saturate(1.4) blur(14px);border-bottom:1px solid var(--c-line)}
+header .logo{display:inline-flex;align-items:center;flex:none}
+header .spacer{flex:1}
+.brand-intro{display:flex;flex-direction:column;align-items:flex-start;margin-left:6px;min-width:0}
+.brand-intro .bt{font-size:15px;font-weight:700;color:var(--c-ink);line-height:1.3}
+.brand-intro .bs{margin-top:3px;font-size:11.5px;color:var(--c-ink3);line-height:1.5}
+.icobtn{width:38px;height:38px;border-radius:50%;border:1px solid var(--c-line);
+  background:var(--c-panel);color:var(--c-ink2);cursor:pointer;display:inline-grid;
+  place-items:center;font-size:16px;flex:none;text-decoration:none}
+.tt-ico{font-size:16px;line-height:1}.tt-moon{display:none}
+html[data-theme="dark"] .tt-sun{display:none}html[data-theme="dark"] .tt-moon{display:inline}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 24px 80px}
+
+/* ---- 门户 hero ---- */
+.hero{margin:6px 0 26px}
+.hero h1{font-size:26px;font-weight:800;letter-spacing:.2px}
+.hero .sub{margin-top:8px;font-size:13.5px;color:var(--c-ink2);max-width:820px}
+.hero .back{display:inline-flex;align-items:center;gap:6px;margin-bottom:14px;
+  font-size:12.5px;color:var(--c-ink2);border:1px solid var(--c-line);
+  border-radius:999px;padding:5px 13px;background:var(--c-panel)}
+.hero .back:hover{color:var(--c-ink);border-color:var(--c-edge)}
+
+/* ---- 门户卡片栅格 ---- */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:18px}
+.card{position:relative;display:block;background:var(--c-card);border:1px solid var(--c-line);
+  border-radius:16px;padding:20px 20px 18px;overflow:hidden;transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease}
+.card:hover{transform:translateY(-3px);border-color:var(--acc);box-shadow:0 10px 30px var(--c-shadow)}
+.card .bar{position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--acc)}
+.card .k{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.6px;
+  color:var(--acc);text-transform:uppercase;margin-bottom:8px}
+.card h3{font-size:17px;font-weight:750;line-height:1.35;color:var(--c-ink)}
+.card .core{margin-top:9px;font-size:12.5px;color:var(--c-ink2);line-height:1.6}
+.card .tags{margin-top:14px;display:flex;flex-direction:column;gap:7px}
+.card .tag{display:flex;gap:8px;align-items:baseline;font-size:12px;color:var(--c-ink2)}
+.card .tag .n{font-weight:800;color:var(--acc);flex:none;font-variant-numeric:tabular-nums}
+.card .go{margin-top:16px;font-size:12px;font-weight:700;color:var(--acc);display:inline-flex;align-items:center;gap:5px}
+
+/* ---- 模块页 ---- */
+.judge{background:var(--c-card);border:1px solid var(--c-line);border-left:4px solid var(--acc);
+  border-radius:14px;padding:18px 22px;margin-bottom:26px}
+.judge .k{font-size:11px;font-weight:700;letter-spacing:.6px;color:var(--acc);text-transform:uppercase}
+.judge h1{font-size:22px;font-weight:800;line-height:1.34;margin-top:7px}
+.judge .core{margin-top:11px;font-size:13.5px;color:var(--c-ink2);line-height:1.7;max-width:900px}
+.secttl{display:flex;align-items:center;gap:11px;margin:34px 0 14px}
+.secttl .badge{flex:none;min-width:30px;height:30px;padding:0 9px;border-radius:9px;background:var(--acc);
+  color:#fff;font-weight:800;font-size:15px;display:inline-grid;place-items:center}
+.secttl .t{font-size:17px;font-weight:750}
+.secttl.eco .badge{background:var(--c-ink);color:var(--c-bg)}
+/* ── 垂直 TAB 布局 ── */
+.vt-wrap{display:flex;gap:22px;margin-top:26px;align-items:flex-start}
+.vt-nav{flex:none;width:236px;position:sticky;top:20px;display:flex;flex-direction:column;gap:8px}
+.vt-grp{font-size:11px;font-weight:800;letter-spacing:.04em;color:var(--c-ink3);
+  text-transform:none;margin:14px 4px 2px;padding-top:8px;border-top:1px solid var(--c-line)}
+.vt-grp:first-child{margin-top:0;padding-top:0;border-top:none}
+.vt-tab{display:flex;align-items:center;gap:10px;text-align:left;cursor:pointer;
+  background:var(--c-card);border:1px solid var(--c-line);border-radius:12px;
+  padding:12px 13px;color:var(--c-ink2);font:inherit;transition:.15s}
+.vt-tab:hover{border-color:var(--acc);color:var(--c-ink)}
+.vt-tab.active{background:var(--acc);border-color:var(--acc);color:#fff;box-shadow:0 4px 14px -6px var(--acc)}
+.vt-tab .vt-b{flex:none;min-width:26px;height:26px;padding:0 7px;border-radius:8px;
+  background:var(--c-card2);color:var(--acc);font-weight:800;font-size:13px;
+  display:inline-grid;place-items:center}
+.vt-tab.active .vt-b{background:rgba(255,255,255,.24);color:#fff}
+.vt-tab .vt-l{font-size:12.5px;font-weight:650;line-height:1.35}
+.vt-stage{flex:1;min-width:0}
+.vt-sec{display:none}
+.vt-sec.active{display:block;animation:vtfade .22s ease}
+.vt-sec .secttl{margin-top:0}
+@keyframes vtfade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media(max-width:820px){.vt-wrap{flex-direction:column}.vt-nav{position:static;width:100%;flex-direction:row;flex-wrap:wrap}.vt-tab{flex:1 1 44%}}
+.fig{background:var(--c-card);border:1px solid var(--c-line);border-radius:16px;
+  padding:16px;overflow:hidden}
+.fig img{display:block;width:100%;height:auto;border-radius:8px}
+.fig .figsvg{display:block;width:100%;height:auto;border-radius:8px}
+.blurb{margin-top:14px;background:var(--c-card);border:1px solid var(--c-line);
+  border-radius:14px;padding:15px 19px}
+.blurb p{font-size:13px;color:var(--c-ink2);line-height:1.75}
+.blurb p+p{margin-top:9px}
+.blurb b{color:var(--c-ink);font-weight:700}
+.blurb code{font-family:'SF Mono',ui-monospace,Menlo,monospace;font-size:.88em;
+  background:var(--c-card2);border:1px solid var(--c-line);border-radius:5px;padding:1px 5px;color:var(--acc)}
+.blurb a{color:var(--acc);text-decoration:none;
+  border-bottom:1px solid color-mix(in srgb,var(--acc) 40%,transparent);transition:border-color .15s}
+.blurb a:hover{border-bottom-color:var(--acc)}
+.refs{margin-top:30px;padding-top:18px;border-top:2px solid var(--c-line)}
+.reflist{margin-top:12px}
+.reflist p{margin:5px 0;font-size:12.5px;color:var(--c-ink2);line-height:1.7}
+.reflist a{color:var(--acc)}
+.miss{padding:40px;text-align:center;color:var(--c-ink3);font-size:13px;border:1px dashed var(--c-edge);border-radius:12px}
+.backrow{margin-top:44px;padding-top:22px;border-top:1px solid var(--c-line)}
+.backrow a{display:inline-flex;align-items:center;gap:7px;font-size:13px;color:var(--c-ink2);
+  border:1px solid var(--c-line);border-radius:999px;padding:8px 16px;background:var(--c-panel)}
+.backrow a:hover{color:var(--c-ink);border-color:var(--c-edge)}
+footer{max-width:1180px;margin:0 auto;padding:0 24px 40px;color:var(--c-ink3);font-size:11.5px}
+
+/* ---- 门户片区切换 tab + 片区标题条 ---- */
+.zbar{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap}
+.zseg{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:700;
+  color:var(--c-ink2);border:1px solid var(--c-line);border-radius:999px;
+  padding:8px 16px;background:var(--c-panel);transition:.15s}
+.zseg:hover{color:var(--c-ink);border-color:var(--c-edge)}
+.zseg.active{color:var(--c-ink);border-color:var(--c-ink);background:var(--c-card)}
+.zseg .zn{min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:var(--c-card2);
+  color:var(--c-ink2);font-size:11px;font-weight:800;display:inline-grid;place-items:center}
+.zone{margin-top:38px;scroll-margin-top:80px}
+.zone:first-of-type{margin-top:30px}
+.zhd{margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--c-line)}
+.zhd .zk{font-size:11px;font-weight:800;letter-spacing:.08em;color:var(--c-ink3);text-transform:uppercase}
+.zhd h2{font-size:20px;font-weight:800;margin-top:5px;color:var(--c-ink)}
+.zhd p{font-size:12.5px;color:var(--c-ink2);margin-top:6px;max-width:860px;line-height:1.65}
+</style>
+</head>
+<body>
+<header>
+  <a class="logo" href="../../index.html#agent" title="返回 LLM & Agent 导航"><span class="icobtn"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg></span></a>
+  <div class="brand-intro">
+    <div class="bt">Context Engineering</div>
+    <div class="bs">AI Agents 生态图谱 · 概念层机理（不点名具体框架）</div>
+  </div>
+  <div class="spacer"></div>
+  <button id="themeBtn" class="icobtn" title="切换深色 / 浅色主题" aria-label="切换主题"><span class="tt-ico tt-moon">☾</span><span class="tt-ico tt-sun">☀</span></button>
+</header>
+<div class="wrap" style="--acc:#c084fc">
+  <div class="judge">
+    <span class="k">CONTEXT · 定位</span>
+    <h1>Context Engineering · 上下文工程与窗口管理</h1>
+    <div class="core">上下文窗口是 Agent 唯一的「视野」:在有限 token 预算内,决定塞什么、怎么排、何时压缩,直接决定推理质量与成本。</div>
+  </div>
+  <div class="vt-wrap"><nav class="vt-nav" aria-label="模块内容切换"><div class="vt-grp">概览 Overview</div><button class="vt-tab active" data-target="sec-eco"><span class="vt-b">◎</span><span class="vt-l">生态架构总图</span></button><div class="vt-grp">机制 · 上下文装配</div><button class="vt-tab" data-target="sec-c1"><span class="vt-b">C1</span><span class="vt-l">系统提示/工具/记忆的分层拼装</span></button><div class="vt-grp">机制 · KV-Cache 复用</div><button class="vt-tab" data-target="sec-c2"><span class="vt-b">C2</span><span class="vt-l">前缀稳定换缓存命中</span></button><div class="vt-grp">机制 · 压缩与卸载</div><button class="vt-tab" data-target="sec-c3"><span class="vt-b">C3</span><span class="vt-l">摘要压缩 + 外部卸载</span></button><div class="vt-grp">对比 Compare</div><button class="vt-tab" data-target="sec-cmp"><span class="vt-b">⇄</span><span class="vt-l">机制差异对比</span></button><div class="vt-grp">工程 Engineering</div><button class="vt-tab" data-target="sec-eng"><span class="vt-b">⚙</span><span class="vt-l">框架实现差异</span></button></nav><div class="vt-stage"><section class="vt-sec active" id="sec-eco" data-sec="sec-eco"><div class="secttl eco"><span class="badge">◎</span><span class="t">生态架构总图 · 这一模块如何在 Agent 系统中自洽拼合</span></div><div class="fig" role="img" aria-label="Context Engineering 生态架构"><svg class="figsvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 600" font-family="-apple-system,'PingFang SC','Helvetica Neue',sans-serif">
+  <defs>
+    <filter id="s34_soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.07"/></filter>
+    <marker id="s34_arh" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#0a84ff"/></marker>
+    <marker id="s34_arv" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#c084fc"/></marker>
+    <marker id="s34_art" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#2dd4bf"/></marker>
+    <marker id="s34_arf" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#f5873a"/></marker>
+  </defs>
+  <rect width="960" height="600" fill="var(--sc-bg,#fbfbfd)"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="var(--sc-ink,#1d1d1f)">上下文工程 · 生态架构</text>
+  <text x="30" y="54" font-size="12" fill="var(--sc-sub,#6e6e73)">上下文窗口是 Agent 唯一的「视野」——在有限 token 预算内决定塞什么、怎么排、何时压</text>
+
+  <!-- 素材源 -->
+  <text x="150" y="92" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">上下文素材源</text>
+  <g filter="url(#s34_soft)"><rect x="40" y="108" width="220" height="40" rx="10" fill="var(--sc-fill-purple,#f3ecff)" stroke="#c084fc" stroke-width="1.4"/></g><text x="150" y="133" font-size="9.5" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">系统提示 / 角色设定</text>
+  <g filter="url(#s34_soft)"><rect x="40" y="158" width="220" height="40" rx="10" fill="var(--sc-fill-purple,#f3ecff)" stroke="#c084fc" stroke-width="1.4"/></g><text x="150" y="183" font-size="9.5" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">工具定义 / Few-shot</text>
+  <g filter="url(#s34_soft)"><rect x="40" y="208" width="220" height="40" rx="10" fill="var(--sc-fill-purple,#f3ecff)" stroke="#c084fc" stroke-width="1.4"/></g><text x="150" y="233" font-size="9.5" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">记忆 / RAG 检索片段</text>
+  <g filter="url(#s34_soft)"><rect x="40" y="258" width="220" height="40" rx="10" fill="var(--sc-fill-purple,#f3ecff)" stroke="#c084fc" stroke-width="1.4"/></g><text x="150" y="283" font-size="9.5" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">对话历史 / 工具结果</text>
+
+  <!-- C1 装配 -->
+  <g filter="url(#s34_soft)"><rect x="340" y="150" width="180" height="110" rx="13" fill="var(--sc-fill-purple,#f3ecff)" stroke="#c084fc" stroke-width="1.7"/></g>
+  <text x="430" y="182" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">C1 上下文装配</text>
+  <text x="430" y="208" font-size="9.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">分层拼装、排序</text>
+  <text x="430" y="228" font-size="9.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">按预算裁剪</text>
+  <path d="M262 128 L338 175" stroke="#c084fc" stroke-width="1.5" marker-end="url(#s34_arv)"/>
+  <path d="M262 178 L338 195" stroke="#c084fc" stroke-width="1.5" marker-end="url(#s34_arv)"/>
+  <path d="M262 228 L338 212" stroke="#c084fc" stroke-width="1.5" marker-end="url(#s34_arv)"/>
+  <path d="M262 278 L338 235" stroke="#c084fc" stroke-width="1.5" marker-end="url(#s34_arv)"/>
+
+  <!-- 窗口 + LLM -->
+  <g filter="url(#s34_soft)"><rect x="600" y="150" width="180" height="110" rx="13" fill="var(--sc-fill-blue,#eef4ff)" stroke="#0a84ff" stroke-width="1.7"/></g>
+  <text x="690" y="182" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">上下文窗口</text>
+  <text x="690" y="208" font-size="9.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">固定 token 预算</text>
+  <text x="690" y="228" font-size="9.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">→ 送入 LLM 推理</text>
+  <path d="M522 205 L598 205" stroke="#0a84ff" stroke-width="1.6" marker-end="url(#s34_arh)"/>
+
+  <!-- C2 缓存 -->
+  <g filter="url(#s34_soft)"><rect x="600" y="300" width="180" height="56" rx="12" fill="var(--sc-fill-teal,#e6fbf6)" stroke="#2dd4bf" stroke-width="1.5"/></g>
+  <text x="690" y="325" font-size="10.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">C2 前缀缓存</text>
+  <text x="690" y="344" font-size="9" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">前缀稳定 → KV-Cache 命中</text>
+  <path d="M690 300 L690 262" stroke="#2dd4bf" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#s34_art)"/>
+
+  <!-- C3 压缩卸载 -->
+  <g filter="url(#s34_soft)"><rect x="340" y="300" width="180" height="56" rx="12" fill="var(--sc-fill-orange,#fff3ea)" stroke="#f5873a" stroke-width="1.5"/></g>
+  <text x="430" y="325" font-size="10.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">C3 压缩与卸载</text>
+  <text x="430" y="344" font-size="9" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">摘要压缩 + 外部卸载</text>
+  <path d="M520 328 L598 250" stroke="#f5873a" stroke-width="1.5" stroke-dasharray="3 3" marker-end="url(#s34_arf)"/>
+  <path d="M430 300 L430 262" stroke="#f5873a" stroke-width="1.5" stroke-dasharray="3 3" marker-end="url(#s34_arf)"/>
+
+  <g filter="url(#s34_soft)"><rect x="40" y="400" width="880" height="150" rx="13" fill="var(--sc-panel,#ffffff)" stroke="var(--sc-line,#d2d2d7)" stroke-width="1.3"/></g>
+  <text x="60" y="428" font-size="11.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)">为什么需要上下文工程</text>
+  <text x="60" y="454" font-size="10.5" fill="var(--sc-sub,#6e6e73)">• 窗口是稀缺资源:token 有限、价格线性、超长还会"迷失在中间"(lost-in-the-middle)——不是塞越多越好</text>
+  <text x="60" y="478" font-size="10.5" fill="var(--sc-sub,#6e6e73)">• 装配决定质量:同样的素材,分层排序 + 精准裁剪能显著提升推理准确率并降低干扰噪声</text>
+  <text x="60" y="502" font-size="10.5" fill="var(--sc-sub,#6e6e73)">• 前缀缓存决定成本:把稳定内容放前面,命中 KV-Cache 可省下大量重复计算与延迟</text>
+  <text x="60" y="526" font-size="10" fill="#c084fc">• 压缩与卸载决定续航:长任务靠摘要压缩历史、把细节卸载到外部存储,让 Agent 跑得更久而不爆窗口</text>
+
+  <line x1="40" y1="576" x2="60" y2="576" stroke="#c084fc" stroke-width="2"/><text x="66" y="580" font-size="9" fill="var(--sc-sub,#6e6e73)">装配</text>
+  <line x1="140" y1="576" x2="160" y2="576" stroke="#0a84ff" stroke-width="2"/><text x="166" y="580" font-size="9" fill="var(--sc-sub,#6e6e73)">送入推理</text>
+  <line x1="250" y1="576" x2="270" y2="576" stroke="#2dd4bf" stroke-width="2" stroke-dasharray="4 3"/><text x="276" y="580" font-size="9" fill="var(--sc-sub,#6e6e73)">缓存复用</text>
+  <line x1="370" y1="576" x2="390" y2="576" stroke="#f5873a" stroke-width="2" stroke-dasharray="3 3"/><text x="396" y="580" font-size="9" fill="var(--sc-sub,#6e6e73)">压缩/卸载</text>
+</svg></div><div class="blurb"><p>上下文窗口是 Agent 唯一的「视野」——模型没有记忆，每次推理只能看到当下拼装出的这份上下文，没进窗口就等于不存在。<b>上下文工程</b>的核心命题：在有限 token 预算内决定塞什么、怎么排、何时压缩、什么卸载。拆成三机理——装配定质量下限、前缀缓存省钱省时、压缩卸载扩容量，缓存与卸载是两条旁路，三者协同榨干每个 token 价值。见生态图。</p></div></section><section class="vt-sec" id="sec-c1" data-sec="sec-c1"><div class="secttl"><span class="badge">C1</span><span class="t">上下文装配 · 系统提示/工具/记忆的分层拼装</span></div><div class="fig" role="img" aria-label="上下文装配 · 系统提示/工具/记忆的分层拼装"><svg class="figsvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 520" font-family="-apple-system,'PingFang SC','Helvetica Neue',sans-serif">
+  <defs>
+    <filter id="s35_soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.07"/></filter>
+    <marker id="s35_arv" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#c084fc"/></marker>
+  </defs>
+  <rect width="960" height="520" fill="var(--sc-bg,#fbfbfd)"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="var(--sc-ink,#1d1d1f)">C1 · 上下文装配：系统提示 / 工具 / 记忆的分层拼装</text>
+  <text x="30" y="54" font-size="12" fill="var(--sc-sub,#6e6e73)">上下文不是随手拼接,而是像搭积木——分层、排序、按预算裁剪,稳定的放前面,相关的放显眼处</text>
+
+  <!-- 窗口分层 -->
+  <text x="230" y="92" font-size="11.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">一次请求的上下文分层(自上而下)</text>
+  <g filter="url(#s35_soft)"><rect x="60" y="108" width="340" height="42" rx="10" fill="var(--sc-fill-purple,#f3ecff)" stroke="#c084fc" stroke-width="1.6"/></g>
+  <text x="80" y="134" font-size="10" fill="var(--sc-ink,#1d1d1f)">① 系统提示 / 角色 / 全局约束（最稳定）</text>
+  <g filter="url(#s35_soft)"><rect x="60" y="158" width="340" height="42" rx="10" fill="var(--sc-fill-purple,#f3ecff)" stroke="#c084fc" stroke-width="1.4"/></g>
+  <text x="80" y="184" font-size="10" fill="var(--sc-ink,#1d1d1f)">② 工具定义 / Few-shot 示例（较稳定）</text>
+  <g filter="url(#s35_soft)"><rect x="60" y="208" width="340" height="42" rx="10" fill="var(--sc-fill-blue,#eef4ff)" stroke="#0a84ff" stroke-width="1.4"/></g>
+  <text x="80" y="234" font-size="10" fill="var(--sc-ink,#1d1d1f)">③ 检索片段 / 长期记忆（按相关性）</text>
+  <g filter="url(#s35_soft)"><rect x="60" y="258" width="340" height="42" rx="10" fill="var(--sc-fill-blue,#eef4ff)" stroke="#0a84ff" stroke-width="1.4"/></g>
+  <text x="80" y="284" font-size="10" fill="var(--sc-ink,#1d1d1f)">④ 对话历史 / 工具结果（动态变化）</text>
+  <g filter="url(#s35_soft)"><rect x="60" y="308" width="340" height="42" rx="10" fill="var(--sc-fill-orange,#fff3ea)" stroke="#f5873a" stroke-width="1.4"/></g>
+  <text x="80" y="334" font-size="10" fill="var(--sc-ink,#1d1d1f)">⑤ 当前用户输入 / 任务指令（最新,放末尾）</text>
+  <path d="M420 129 L470 129" stroke="#c084fc" stroke-width="1.5" marker-end="url(#s35_arv)"/>
+  <text x="600" y="133" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">前缀稳定 → 利于 KV-Cache 命中</text>
+  <path d="M420 329 L470 329" stroke="#f5873a" stroke-width="1.5" marker-end="url(#s35_arv)"/>
+  <text x="600" y="333" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">近因效应 → 关键指令放最后</text>
+
+  <g filter="url(#s35_soft)"><rect x="40" y="380" width="880" height="120" rx="13" fill="var(--sc-panel,#ffffff)" stroke="var(--sc-line,#d2d2d7)" stroke-width="1.3"/></g>
+  <text x="60" y="408" font-size="11.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)">装配的三条原则</text>
+  <text x="60" y="434" font-size="10.5" fill="var(--sc-sub,#6e6e73)">• 稳定在前、动态在后:不变的系统提示/工具放最前,既符合缓存友好,又让模型先建立"人设"</text>
+  <text x="60" y="458" font-size="10.5" fill="var(--sc-sub,#6e6e73)">• 相关性排序 + 预算裁剪:检索片段按相关度排,超预算时优先丢低分内容,而非无脑截断尾部</text>
+  <text x="60" y="482" font-size="10" fill="#c084fc">• 对抗"迷失在中间":最关键的指令与证据放头尾,避免埋在长上下文中段被模型忽略</text>
+</svg></div><div class="blurb"><p><b>上下文装配</b>把散落原料拼成「刚刚好」的上下文，分层：系统提示→工具定义→检索知识→对话历史→用户输入。顺序有讲究——前置内容稳定利于缓存，模型对首尾更敏感、中段易忽略（<b>lost-in-the-middle</b>）。三原则：分层拼装、相关性排序（关键证据放易注意位）、按预算裁剪降级而非硬塞。它是整链质量下限，再强的缓存压缩都救不回糟糕装配。见图。</p></div></section><section class="vt-sec" id="sec-c2" data-sec="sec-c2"><div class="secttl"><span class="badge">C2</span><span class="t">KV-Cache 复用 · 前缀稳定换缓存命中</span></div><div class="fig" role="img" aria-label="KV-Cache 复用 · 前缀稳定换缓存命中"><svg class="figsvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 500" font-family="-apple-system,'PingFang SC','Helvetica Neue',sans-serif">
+  <defs>
+    <filter id="s36_soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.07"/></filter>
+    <marker id="s36_art" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#2dd4bf"/></marker>
+    <marker id="s36_arf" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#f5873a"/></marker>
+  </defs>
+  <rect width="960" height="500" fill="var(--sc-bg,#fbfbfd)"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="var(--sc-ink,#1d1d1f)">C2 · 前缀缓存：前缀稳定换 KV-Cache 命中</text>
+  <text x="30" y="54" font-size="12" fill="var(--sc-sub,#6e6e73)">LLM 逐 token 计算注意力,相同前缀的 KV 可复用——把不变内容放前面,就能少算、更快、更便宜</text>
+
+  <!-- 命中 -->
+  <text x="240" y="92" font-size="12" font-weight="600" fill="#2dd4bf" text-anchor="middle">✓ 前缀稳定 → 缓存命中</text>
+  <g filter="url(#s36_soft)"><rect x="60" y="110" width="180" height="40" rx="9" fill="var(--sc-fill-teal,#e6fbf6)" stroke="#2dd4bf" stroke-width="1.5"/></g><text x="150" y="135" font-size="9.5" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">系统提示(不变)</text>
+  <g filter="url(#s36_soft)"><rect x="250" y="110" width="120" height="40" rx="9" fill="var(--sc-fill-teal,#e6fbf6)" stroke="#2dd4bf" stroke-width="1.5"/></g><text x="310" y="135" font-size="9.5" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">工具定义(不变)</text>
+  <g filter="url(#s36_soft)"><rect x="380" y="110" width="110" height="40" rx="9" fill="var(--sc-fill-orange,#fff3ea)" stroke="#f5873a" stroke-width="1.4"/></g><text x="435" y="135" font-size="9.5" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">新输入(变)</text>
+  <path d="M150 158 L150 190" stroke="#2dd4bf" stroke-width="1.5" marker-end="url(#s36_art)"/>
+  <path d="M310 158 L310 190" stroke="#2dd4bf" stroke-width="1.5" marker-end="url(#s36_art)"/>
+  <g filter="url(#s36_soft)"><rect x="60" y="195" width="310" height="34" rx="8" fill="var(--sc-fill-teal,#e6fbf6)" stroke="#2dd4bf" stroke-width="1.3"/></g>
+  <text x="215" y="217" font-size="9.5" fill="#2dd4bf" text-anchor="middle">前缀 KV 直接复用,仅算新增部分</text>
+
+  <!-- 未命中 -->
+  <text x="720" y="92" font-size="12" font-weight="600" fill="#f5873a" text-anchor="middle">✗ 前缀变动 → 缓存失效</text>
+  <g filter="url(#s36_soft)"><rect x="540" y="110" width="150" height="40" rx="9" fill="var(--sc-fill-orange,#fff3ea)" stroke="#f5873a" stroke-width="1.4"/></g><text x="615" y="135" font-size="9" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">时间戳/随机ID(变)</text>
+  <g filter="url(#s36_soft)"><rect x="700" y="110" width="180" height="40" rx="9" fill="var(--sc-fill-blue,#eef4ff)" stroke="#0a84ff" stroke-width="1.3"/></g><text x="790" y="135" font-size="9" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">系统提示(被迫重算)</text>
+  <path d="M615 158 L615 190" stroke="#f5873a" stroke-width="1.5" marker-end="url(#s36_arf)"/>
+  <path d="M790 158 L790 190" stroke="#f5873a" stroke-width="1.5" marker-end="url(#s36_arf)"/>
+  <g filter="url(#s36_soft)"><rect x="540" y="195" width="340" height="34" rx="8" fill="var(--sc-fill-orange,#fff3ea)" stroke="#f5873a" stroke-width="1.3"/></g>
+  <text x="710" y="217" font-size="9.5" fill="#f5873a" text-anchor="middle">前缀一变,后面全部重新计算</text>
+
+  <g filter="url(#s36_soft)"><rect x="40" y="270" width="880" height="200" rx="13" fill="var(--sc-panel,#ffffff)" stroke="var(--sc-line,#d2d2d7)" stroke-width="1.3"/></g>
+  <text x="60" y="298" font-size="11.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)">用好前缀缓存的要点</text>
+  <text x="60" y="324" font-size="10.5" fill="var(--sc-sub,#6e6e73)">• 前缀确定性:系统提示、工具定义保持逐字节稳定,别在开头塞时间戳、随机 ID、会变的用户信息</text>
+  <text x="60" y="348" font-size="10.5" fill="var(--sc-sub,#6e6e73)">• 只增不改:对话推进时把新内容 append 到末尾,不要回头改动已有前缀,否则整段缓存作废</text>
+  <text x="60" y="372" font-size="10.5" fill="var(--sc-sub,#6e6e73)">• 序列化稳定:JSON 键顺序、空格格式固定,避免语义相同但字节不同导致的意外未命中</text>
+  <text x="60" y="396" font-size="10.5" fill="var(--sc-sub,#6e6e73)">• 收益:命中前缀缓存可大幅降低首 token 延迟(TTFT)与计算成本,长系统提示场景尤其明显</text>
+  <text x="60" y="426" font-size="10" fill="#2dd4bf">这也解释了 C1 为何"稳定在前":装配顺序不只关乎质量,更直接决定缓存命中率与成本</text>
+  <text x="60" y="452" font-size="10" fill="#f5873a">注意:缓存有 TTL 与容量上限,冷门前缀会被淘汰;高频复用的前缀才划算</text>
+</svg></div><div class="blurb"><p><b>前缀缓存</b>是最直接的成本杠杆：推理时为每个 token 计算并缓存 KV-Cache，若两次请求前缀逐字节相同即可复用，省算力/延迟（TTFT）/费用。关键在让前缀「稳定」——系统提示、工具定义放最前，上下文 <b>append-only</b>，时间戳/随机 ID 后置或剔除。<b>一个字节变动，缓存从变动点全线失效</b>。命中率是核心指标——衡量你多会省钱。见图。</p></div></section><section class="vt-sec" id="sec-c3" data-sec="sec-c3"><div class="secttl"><span class="badge">C3</span><span class="t">压缩与卸载 · 摘要压缩 + 外部卸载</span></div><div class="fig" role="img" aria-label="压缩与卸载 · 摘要压缩 + 外部卸载"><svg class="figsvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 520" font-family="-apple-system,'PingFang SC','Helvetica Neue',sans-serif">
+  <defs>
+    <filter id="s37_soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.07"/></filter>
+    <marker id="s37_arf" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#f5873a"/></marker>
+    <marker id="s37_art" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#2dd4bf"/></marker>
+  </defs>
+  <rect width="960" height="520" fill="var(--sc-bg,#fbfbfd)"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="var(--sc-ink,#1d1d1f)">C3 · 压缩与卸载：摘要压缩 + 外部卸载</text>
+  <text x="30" y="54" font-size="12" fill="var(--sc-sub,#6e6e73)">长任务的历史会撑爆窗口——把旧内容摘要成短文,或把细节卸载到外部存储,让 Agent 跑得更久</text>
+
+  <!-- 压缩路 -->
+  <text x="240" y="92" font-size="12" font-weight="600" fill="#f5873a" text-anchor="middle">压缩 (Compact)</text>
+  <g filter="url(#s37_soft)"><rect x="60" y="108" width="360" height="52" rx="11" fill="var(--sc-fill-orange,#fff3ea)" stroke="#f5873a" stroke-width="1.4"/></g>
+  <text x="240" y="130" font-size="9.5" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">冗长的历史轮次 / 大段工具输出</text>
+  <text x="240" y="148" font-size="9" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">占满窗口、包含大量无关细节</text>
+  <path d="M240 162 L240 194" stroke="#f5873a" stroke-width="1.6" marker-end="url(#s37_arf)"/>
+  <text x="330" y="182" font-size="9" fill="#f5873a">LLM 摘要</text>
+  <g filter="url(#s37_soft)"><rect x="120" y="198" width="240" height="46" rx="11" fill="var(--sc-fill-orange,#fff3ea)" stroke="#f5873a" stroke-width="1.6"/></g>
+  <text x="240" y="220" font-size="9.5" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">压缩后的要点摘要</text>
+  <text x="240" y="237" font-size="9" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">保留结论/决策,丢弃过程噪声</text>
+
+  <!-- 卸载路 -->
+  <text x="720" y="92" font-size="12" font-weight="600" fill="#2dd4bf" text-anchor="middle">卸载 (Offload)</text>
+  <g filter="url(#s37_soft)"><rect x="540" y="108" width="360" height="52" rx="11" fill="var(--sc-fill-teal,#e6fbf6)" stroke="#2dd4bf" stroke-width="1.4"/></g>
+  <text x="720" y="130" font-size="9.5" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">完整细节写入外部存储</text>
+  <text x="720" y="148" font-size="9" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">文件 / 向量库 / KV 存储</text>
+  <path d="M720 162 L720 194" stroke="#2dd4bf" stroke-width="1.6" marker-end="url(#s37_art)"/>
+  <text x="810" y="182" font-size="9" fill="#2dd4bf">留指针</text>
+  <g filter="url(#s37_soft)"><rect x="600" y="198" width="240" height="46" rx="11" fill="var(--sc-fill-teal,#e6fbf6)" stroke="#2dd4bf" stroke-width="1.6"/></g>
+  <text x="720" y="220" font-size="9.5" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">上下文里只留引用/句柄</text>
+  <text x="720" y="237" font-size="9" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">需要时按需取回(检索)</text>
+
+  <g filter="url(#s37_soft)"><rect x="40" y="270" width="880" height="230" rx="13" fill="var(--sc-panel,#ffffff)" stroke="var(--sc-line,#d2d2d7)" stroke-width="1.3"/></g>
+  <text x="60" y="298" font-size="11.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)">两条路何时用、怎么权衡</text>
+  <text x="60" y="324" font-size="10.5" fill="var(--sc-sub,#6e6e73)">• 压缩:适合"过程可丢、结论要留"的历史。触发条件如窗口占用超阈值、或每 N 轮滚动摘要一次</text>
+  <text x="60" y="348" font-size="10.5" fill="var(--sc-sub,#6e6e73)">  风险:摘要是有损的,可能丢掉后续才用得上的细节 → 关键事实要显式保留或同时卸载原文</text>
+  <text x="60" y="372" font-size="10.5" fill="var(--sc-sub,#6e6e73)">• 卸载:适合"细节要留、但当前用不上"的大块内容(长文档、代码库、日志)。上下文只放指针</text>
+  <text x="60" y="396" font-size="10.5" fill="var(--sc-sub,#6e6e73)">  代价:取回需一次额外检索/IO,增加延迟 → 与 RAG 天然衔接,把上下文窗口当"工作台"而非仓库</text>
+  <text x="60" y="424" font-size="10.5" fill="var(--sc-sub,#6e6e73)">• 组合拳:近期历史保原文、中期历史压成摘要、远期细节卸载到外部——形成分级的"上下文内存层级"</text>
+  <text x="60" y="454" font-size="10" fill="#c084fc">本质:上下文窗口是稀缺的一级缓存,压缩降精度换空间,卸载换 IO 保细节,二者共同延长 Agent 续航</text>
+  <text x="60" y="480" font-size="10" fill="#f5873a">底线:无论压缩还是卸载,都要保证"能力不失真"——关键状态与未决任务绝不能在压缩中悄悄丢失</text>
+</svg></div><div class="blurb"><p><b>压缩与卸载</b>让 Agent 在有限窗口跑长任务。<b>压缩</b>让 LLM 把冗长历史摘要成要点（保留决策/结论/约束、丢过程噪声），代价有损、压过头丢细节；<b>卸载</b>把细节写外部存储（向量库/文件/DB），窗口只留可回溯指针，代价增 IO 延迟。实践常「分级」：热数据留窗口、冷数据卸载，压缩前留原文备份可回滚。底线：<b>有损压缩必须可控、关键信息零丢失</b>。见图。</p></div></section><section class="vt-sec" id="sec-cmp" data-sec="sec-cmp"><div class="secttl"><span class="badge">⇄</span><span class="t">Context Engineering · 核心机制差异对比</span></div><div class="fig" role="img" aria-label="Context Engineering · 核心机制差异对比"><svg class="figsvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 520" font-family="-apple-system,'PingFang SC','Helvetica Neue',sans-serif">
+  <defs>
+    <filter id="s38_soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.07"/></filter>
+  </defs>
+  <rect width="960" height="520" fill="var(--sc-bg,#fbfbfd)"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="var(--sc-ink,#1d1d1f)">CMP · 三大机理对比：装配 / 前缀缓存 / 压缩卸载</text>
+  <text x="30" y="54" font-size="12" fill="var(--sc-sub,#6e6e73)">同一个上下文窗口,装配管"塞什么怎么排",缓存管"怎么省钱",压缩卸载管"怎么跑更久"</text>
+
+  <g filter="url(#s38_soft)"><rect x="30" y="80" width="900" height="40" rx="10" fill="var(--sc-fill-purple,#f3ecff)" stroke="#c084fc" stroke-width="1.4"/></g>
+  <text x="120" y="105" font-size="11" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">机理</text>
+  <text x="330" y="105" font-size="11" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">解决什么问题</text>
+  <text x="560" y="105" font-size="11" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">典型做法</text>
+  <text x="820" y="105" font-size="11" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">主要代价</text>
+
+  <!-- 行1 装配 -->
+  <g filter="url(#s38_soft)"><rect x="30" y="130" width="900" height="110" rx="10" fill="var(--sc-panel,#ffffff)" stroke="var(--sc-line,#d2d2d7)" stroke-width="1.2"/></g>
+  <text x="120" y="172" font-size="11" font-weight="600" fill="#c084fc" text-anchor="middle">C1 上下文装配</text>
+  <text x="120" y="192" font-size="9" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">塞什么、怎么排</text>
+  <text x="330" y="178" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">素材噪声、顺序不当</text>
+  <text x="330" y="196" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">导致推理质量下降</text>
+  <text x="560" y="178" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">分层拼装、相关性排序、</text>
+  <text x="560" y="196" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">按预算裁剪</text>
+  <text x="820" y="187" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">需精心设计与调优</text>
+
+  <!-- 行2 前缀缓存 -->
+  <g filter="url(#s38_soft)"><rect x="30" y="250" width="900" height="110" rx="10" fill="var(--sc-panel,#ffffff)" stroke="var(--sc-line,#d2d2d7)" stroke-width="1.2"/></g>
+  <text x="120" y="292" font-size="11" font-weight="600" fill="#2dd4bf" text-anchor="middle">C2 前缀缓存</text>
+  <text x="120" y="312" font-size="9" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">怎么省钱省时</text>
+  <text x="330" y="298" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">长前缀重复计算,</text>
+  <text x="330" y="316" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">成本与延迟高</text>
+  <text x="560" y="298" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">前缀逐字节稳定、</text>
+  <text x="560" y="316" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">只增不改、复用 KV</text>
+  <text x="820" y="298" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">前缀一变即失效,</text>
+  <text x="820" y="316" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">有 TTL/容量限制</text>
+
+  <!-- 行3 压缩卸载 -->
+  <g filter="url(#s38_soft)"><rect x="30" y="370" width="900" height="110" rx="10" fill="var(--sc-panel,#ffffff)" stroke="var(--sc-line,#d2d2d7)" stroke-width="1.2"/></g>
+  <text x="120" y="412" font-size="11" font-weight="600" fill="#f5873a" text-anchor="middle">C3 压缩卸载</text>
+  <text x="120" y="432" font-size="9" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">怎么跑更久</text>
+  <text x="330" y="418" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">长任务历史撑爆</text>
+  <text x="330" y="436" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">有限窗口</text>
+  <text x="560" y="418" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">摘要压缩历史 /</text>
+  <text x="560" y="436" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">细节卸载到外部</text>
+  <text x="820" y="418" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">压缩有损 /</text>
+  <text x="820" y="436" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">卸载增 IO 延迟</text>
+
+  <text x="480" y="505" font-size="10" fill="#c084fc" text-anchor="middle">主线:三者协同——装配决定质量下限,缓存决定成本效率,压缩卸载决定任务能跑多长,共同榨干每一个 token</text>
+</svg></div><div class="blurb ml"><p>三机理分工：装配解「素材噪声与顺序不当」（靠分层/排序/裁剪，代价需精心设计）、前缀缓存解「长前缀重复计算」（靠稳定/append-only/复用 KV，代价一变即失效+受 TTL 容量限）、压缩卸载解「长任务撑爆窗口」（靠摘要+外部卸载，代价压缩有损/卸载增 IO）。协同而非三选一：装配定质量、缓存定成本、压缩卸载定任务时长。四维对照见图。</p></div></section><section class="vt-sec" id="sec-eng" data-sec="sec-eng"><div class="secttl"><span class="badge">⚙</span><span class="t">Context Engineering · 工程实现差异（真实框架落地取舍）</span></div><div class="fig" role="img" aria-label="Context Engineering · 工程实现差异（真实框架落地取舍）"><svg class="figsvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 500" font-family="-apple-system,'PingFang SC','Helvetica Neue',sans-serif">
+  <defs>
+    <filter id="s39_soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.07"/></filter>
+  </defs>
+  <rect width="960" height="500" fill="var(--sc-bg,#fbfbfd)"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="var(--sc-ink,#1d1d1f)">ENG · 上下文工程的三条工程底线</text>
+  <text x="30" y="54" font-size="12" fill="var(--sc-sub,#6e6e73)">预算即纪律 · 缓存即成本杠杆 · 压缩不失真</text>
+
+  <!-- 支柱1 预算即纪律 -->
+  <g filter="url(#s39_soft)"><rect x="40" y="90" width="270" height="340" rx="13" fill="var(--sc-fill-purple,#f3ecff)" stroke="#c084fc" stroke-width="1.4"/></g>
+  <text x="175" y="130" font-size="14" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">预算即纪律</text>
+  <text x="175" y="152" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">token 是硬约束,不是无限空间</text>
+  <line x1="70" y1="170" x2="280" y2="170" stroke="var(--sc-fill-purple,#e5e0f0)" stroke-width="1"/>
+  <text x="70" y="198" font-size="11" fill="var(--sc-ink,#1d1d1f)">· 先定预算再装配,而非塞满</text>
+  <text x="70" y="228" font-size="11" fill="var(--sc-ink,#1d1d1f)">· 相关性排序,给关键信息留位</text>
+  <text x="70" y="258" font-size="11" fill="var(--sc-ink,#1d1d1f)">· 对抗 lost-in-the-middle:</text>
+  <text x="88" y="278" font-size="10" fill="var(--sc-sub,#6e6e73)">重要信息放首尾</text>
+  <text x="70" y="308" font-size="11" fill="var(--sc-ink,#1d1d1f)">· 每一层可裁剪、可降级</text>
+  <text x="70" y="352" font-size="10" fill="#c084fc">底线:窗口是稀缺资源,</text>
+  <text x="70" y="372" font-size="10" fill="#c084fc">花在刀刃上</text>
+
+  <!-- 支柱2 缓存即成本杠杆 -->
+  <g filter="url(#s39_soft)"><rect x="345" y="90" width="270" height="340" rx="13" fill="var(--sc-fill-teal,#e6fbf6)" stroke="#2dd4bf" stroke-width="1.4"/></g>
+  <text x="480" y="130" font-size="14" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">缓存即成本杠杆</text>
+  <text x="480" y="152" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">前缀稳定,省下的是真金白银</text>
+  <line x1="375" y1="170" x2="585" y2="170" stroke="var(--sc-fill-teal,#d5f2eb)" stroke-width="1"/>
+  <text x="375" y="198" font-size="11" fill="var(--sc-ink,#1d1d1f)">· 系统提示、工具定义前置</text>
+  <text x="375" y="228" font-size="11" fill="var(--sc-ink,#1d1d1f)">· 前缀只增不改、逐字节稳定</text>
+  <text x="375" y="258" font-size="11" fill="var(--sc-ink,#1d1d1f)">· 动态内容(时间戳)后置</text>
+  <text x="375" y="288" font-size="11" fill="var(--sc-ink,#1d1d1f)">· 命中率是成本/延迟核心指标</text>
+  <text x="375" y="352" font-size="10" fill="#2dd4bf">底线:一次前缀变动,</text>
+  <text x="375" y="372" font-size="10" fill="#2dd4bf">缓存全线失效</text>
+
+  <!-- 支柱3 压缩不失真 -->
+  <g filter="url(#s39_soft)"><rect x="650" y="90" width="270" height="340" rx="13" fill="var(--sc-fill-orange,#fff3ea)" stroke="#f5873a" stroke-width="1.4"/></g>
+  <text x="785" y="130" font-size="14" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">压缩不失真</text>
+  <text x="785" y="152" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">省空间不能省掉关键事实</text>
+  <line x1="680" y1="170" x2="890" y2="170" stroke="var(--sc-fill-orange,#f7e4d3)" stroke-width="1"/>
+  <text x="680" y="198" font-size="11" fill="var(--sc-ink,#1d1d1f)">· 摘要保留决策、结论、约束</text>
+  <text x="680" y="228" font-size="11" fill="var(--sc-ink,#1d1d1f)">· 细节卸载外部,留可回溯指针</text>
+  <text x="680" y="258" font-size="11" fill="var(--sc-ink,#1d1d1f)">· 分级:热数据留窗,冷数据外置</text>
+  <text x="680" y="288" font-size="11" fill="var(--sc-ink,#1d1d1f)">· 压缩前留原文备份可回滚</text>
+  <text x="680" y="352" font-size="10" fill="#f5873a">底线:有损压缩要可控,</text>
+  <text x="680" y="372" font-size="10" fill="#f5873a">关键信息零丢失</text>
+
+  <text x="480" y="470" font-size="11" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle" font-weight="600">工程主线:上下文窗口既是能力的边界,也是成本的账单——精打细算才能跑得又好又久又省</text>
+</svg></div><div class="blurb ml"><p>三条底线：<b>预算即纪律</b>——token 是硬约束，先定预算再装配，靠相关性排序与首尾摆放对抗 lost-in-the-middle，每层可裁剪降级；<b>缓存即成本杠杆</b>——系统提示/工具定义前置、前缀 append-only、动态内容后置，命中率是核心指标；<b>压缩不失真</b>——摘要保留决策/结论/约束，细节卸载留可回溯指针，分级存放热冷、压缩前留备份。核心：上下文窗口既是能力边界也是成本账单。详见图。</p><p><b>2025 前沿</b>：随着 Agent 多轮调工具、上下文越滚越长，两个新病症浮出水面——<b>上下文疲劳</b>（context fatigue，窗口被无关历史与冗余观察塞满后，模型注意力被稀释、指令遵循与推理质量随长度衰减，不是塞得下就等于用得好）与<b>工具输出爆炸</b>（tool-output bloat，一次检索/一个 API 返回动辄上万 token 的原始 JSON，几轮就撑爆窗口）。应对手段随之标准化：工具结果先摘要/字段裁剪再入上下文而非原样回灌、过期观察主动逐出、长任务周期性「压缩重启」（把历史压成状态快照重新开局）。这标志着「上下文工程」已取代「提示工程」成为 Agent 落地的核心工艺——决定成败的不再是提示词措辞，而是全程如何治理这份动态膨胀的上下文。</p></div></section></div></div>
+  <section class="refs"><div class="secttl"><span class="badge">§</span><span class="t">参考文献 · 权威来源（论文 / 官方文档）</span></div><div class="blurb reflist"><p>- Anthropic《Prompt caching》与 OpenAI/各厂商的 KV-Cache/前缀缓存文档 - Liu et al.《Lost in the Middle: How Language Models Use Long Contexts》 - 各 Agent 框架(LangChain / LlamaIndex)的上下文管理与对话历史压缩实践 - 长上下文摘要压缩(conversation summarization)与外部记忆卸载(external memory offloading)的工程经验</p></div></section>
+  <div class="backrow"><a href="../../index.html#agent">← 返回 LLM & Agent 导航</a></div>
+</div>
+<footer>自包含离线图谱 · 以图为主：概览 + 机制分组图 + 机制对比 · 权威参考集中于底部 · 垂直 TAB 切换</footer>
+<script>
+(function(){
+  var root=document.documentElement;
+  var saved=localStorage.getItem('atlas-nav-theme');
+  if(saved==='dark') root.setAttribute('data-theme','dark');
+  function toggleTheme(){
+    var cur=root.getAttribute('data-theme')==='dark'?'':'dark';
+    if(cur) root.setAttribute('data-theme',cur); else root.removeAttribute('data-theme');
+    localStorage.setItem('atlas-nav-theme',cur||'light');
+  }
+  var tb=document.getElementById('themeBtn');
+  if(tb){tb.onclick=toggleTheme;}
+  var wrap=document.querySelector('.vt-wrap');
+  if(wrap){
+    var tabs=wrap.querySelectorAll('.vt-tab');
+    var secs=wrap.querySelectorAll('.vt-sec');
+    tabs.forEach(function(t){
+      t.addEventListener('click',function(){
+        var tgt=t.getAttribute('data-target');
+        tabs.forEach(function(x){x.classList.toggle('active',x===t);});
+        secs.forEach(function(s){s.classList.toggle('active',s.id===tgt);});
+      });
+    });
+  }
+  var zsegs=document.querySelectorAll('.zseg');
+  var zones=document.querySelectorAll('.zone');
+  if(zsegs.length&&zones.length){
+    zsegs.forEach(function(s){
+      s.addEventListener('click',function(){
+        zsegs.forEach(function(x){x.classList.toggle('active',x===s);});
+      });
+    });
+    if('IntersectionObserver' in window){
+      var io=new IntersectionObserver(function(es){
+        es.forEach(function(e){
+          if(e.isIntersecting){
+            var id=e.target.id;
+            zsegs.forEach(function(x){x.classList.toggle('active',x.getAttribute('href')==='#'+id);});
+          }
+        });
+      },{rootMargin:'-40% 0px -55% 0px'});
+      zones.forEach(function(z){io.observe(z);});
+    }
+  }
+})();
+</script>
+</body>
+</html>

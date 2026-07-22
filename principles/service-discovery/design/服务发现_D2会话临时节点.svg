@@ -1,0 +1,115 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1150" height="680" viewBox="0 0 1150 680" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="aO" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#d9772f"/></marker>
+    <marker id="aG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+    <marker id="aR" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#d1544a"/></marker>
+    <marker id="aA" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#c99a3a"/></marker>
+  </defs>
+  <rect width="1150" height="680" fill="#fbfbfd"/>
+
+  <text x="30" y="32" font-size="15" font-weight="700" fill="#1d1d1f">ZooKeeper Session · 过期判定不是给每个会话配一个计时器，是把会话分桶到固定时间格、到点整桶批量检查</text>
+  <text x="30" y="53" font-size="10.5" fill="#6e6e73">SessionTrackerImpl 管会话、ExpiryQueue 用 roundToNextInterval 把过期时刻对齐到桶；会话过期时，其临时节点（ephemeral node）随之被移除</text>
+
+  <!-- 图例 -->
+  <line x1="30" y1="80" x2="54" y2="80" stroke="#d9772f" stroke-width="2" marker-end="url(#aO)"/>
+  <text x="60" y="84" font-size="10" fill="#3a3a3c">会话状态转换</text>
+  <line x1="200" y1="80" x2="224" y2="80" stroke="#2f9e6e" stroke-width="2" marker-end="url(#aG)"/>
+  <text x="230" y="84" font-size="10" fill="#3a3a3c">续期 · 移桶</text>
+  <line x1="356" y1="80" x2="380" y2="80" stroke="#c99a3a" stroke-width="2" stroke-dasharray="5 3" marker-end="url(#aA)"/>
+  <text x="386" y="84" font-size="10" fill="#3a3a3c">分桶批量检查（本图重点）</text>
+  <line x1="596" y1="80" x2="620" y2="80" stroke="#d1544a" stroke-width="2" marker-end="url(#aR)"/>
+  <text x="626" y="84" font-size="10" fill="#3a3a3c">过期 → 临时节点回收</text>
+  <line x1="30" y1="98" x2="1120" y2="98" stroke="#e4e7ec" stroke-width="1"/>
+
+  <!-- Panel A: ExpiryQueue 分桶算法 -->
+  <rect x="30" y="112" width="1090" height="256" rx="14" fill="#fbeee2" stroke="#ecc6a8" filter="url(#soft)"/>
+  <text x="52" y="138" font-size="13.5" font-weight="700" fill="#9a5f1c">① ExpiryQueue 分桶 · roundToNextInterval —— 不是逐会话计时器，是分桶批量</text>
+  <text x="52" y="157" font-size="9.5" fill="#8a5a1c">把每个会话的过期时刻向上对齐到固定间隔的整数倍：同一时间窗内到期的会话落进同一个桶，检查只需按桶进行</text>
+
+  <!-- 桶可视化 -->
+  <rect x="52" y="174" width="120" height="120" rx="10" fill="#ffffff" stroke="#ecc6a8"/>
+  <text x="112" y="194" font-size="10" font-weight="700" fill="#9a5f1c" text-anchor="middle">桶 T0</text>
+  <rect x="64" y="204" width="96" height="20" rx="5" fill="#fbeee2" stroke="#ecc6a8"/><text x="112" y="218" font-size="8" fill="#8a5a1c" text-anchor="middle">会话 A</text>
+  <rect x="64" y="228" width="96" height="20" rx="5" fill="#fbeee2" stroke="#ecc6a8"/><text x="112" y="242" font-size="8" fill="#8a5a1c" text-anchor="middle">会话 B</text>
+  <text x="112" y="272" font-size="8" fill="#b0854a" text-anchor="middle">到点整桶</text>
+  <text x="112" y="284" font-size="8" fill="#b0854a" text-anchor="middle">一起检查</text>
+
+  <rect x="192" y="174" width="120" height="120" rx="10" fill="#ffffff" stroke="#ecc6a8"/>
+  <text x="252" y="194" font-size="10" font-weight="700" fill="#9a5f1c" text-anchor="middle">桶 T1</text>
+  <rect x="204" y="204" width="96" height="20" rx="5" fill="#fbeee2" stroke="#ecc6a8"/><text x="252" y="218" font-size="8" fill="#8a5a1c" text-anchor="middle">会话 C</text>
+
+  <rect x="332" y="174" width="120" height="120" rx="10" fill="#ffffff" stroke="#ecc6a8"/>
+  <text x="392" y="194" font-size="10" font-weight="700" fill="#9a5f1c" text-anchor="middle">桶 T2</text>
+  <rect x="344" y="204" width="96" height="20" rx="5" fill="#fbeee2" stroke="#ecc6a8"/><text x="392" y="218" font-size="8" fill="#8a5a1c" text-anchor="middle">会话 D</text>
+  <rect x="344" y="228" width="96" height="20" rx="5" fill="#fbeee2" stroke="#ecc6a8"/><text x="392" y="242" font-size="8" fill="#8a5a1c" text-anchor="middle">会话 E</text>
+
+  <!-- 续期移桶 -->
+  <rect x="492" y="174" width="180" height="120" rx="10" fill="#eaf6f0" stroke="#bfe3d1"/>
+  <text x="582" y="196" font-size="10.5" font-weight="700" fill="#2f6b4e" text-anchor="middle">续期 = 移桶</text>
+  <text x="582" y="216" font-size="8.5" fill="#3f8a63" text-anchor="middle">心跳/请求到达</text>
+  <text x="582" y="232" font-size="8.5" fill="#3f8a63" text-anchor="middle">按新过期时刻</text>
+  <text x="582" y="248" font-size="8.5" fill="#3f8a63" text-anchor="middle">roundToNextInterval</text>
+  <text x="582" y="264" font-size="8.5" fill="#3f8a63" text-anchor="middle">重新算桶，移到后面</text>
+  <text x="582" y="280" font-size="8" fill="#5a7099" text-anchor="middle">会话 C 续期后移入桶 T3</text>
+
+  <line x1="452" y1="234" x2="488" y2="234" stroke="#2f9e6e" stroke-width="1.8" marker-end="url(#aG)"/>
+
+  <!-- 批量检查动作 -->
+  <rect x="702" y="174" width="150" height="120" rx="10" fill="#f4eefb" stroke="#dcc9ef"/>
+  <text x="777" y="196" font-size="10.5" font-weight="700" fill="#6f3ea8" text-anchor="middle">到点批量检查</text>
+  <text x="777" y="216" font-size="8.5" fill="#5a3a7a" text-anchor="middle">桶 T0 到点</text>
+  <text x="777" y="232" font-size="8.5" fill="#5a3a7a" text-anchor="middle">取出该桶全部</text>
+  <text x="777" y="248" font-size="8.5" fill="#5a3a7a" text-anchor="middle">未续期会话</text>
+  <text x="777" y="264" font-size="8.5" fill="#5a3a7a" text-anchor="middle">一次性批量处理</text>
+  <text x="777" y="280" font-size="8" fill="#8a5cae" text-anchor="middle">而非逐个判定</text>
+
+
+  <rect x="882" y="174" width="220" height="120" rx="10" fill="#ffffff" stroke="#ecc6a8"/>
+  <text x="992" y="196" font-size="10.5" font-weight="700" fill="#9a5f1c" text-anchor="middle">为什么这样更高效</text>
+  <text x="900" y="218" font-size="8.5" fill="#8a5a1c">逐会话计时器：每个会话独立</text>
+  <text x="900" y="234" font-size="8.5" fill="#8a5a1c">维护一次到期判定，会话数越多</text>
+  <text x="900" y="250" font-size="8.5" fill="#8a5a1c">判定开销越大。</text>
+  <text x="900" y="270" font-size="8.5" fill="#2f6b4e">分桶批量：判定按"桶"发生，</text>
+  <text x="900" y="286" font-size="8.5" fill="#2f6b4e">同一桶内海量会话一次性处理完。</text>
+
+  <rect x="52" y="308" width="1050" height="46" rx="10" fill="#ffffff" stroke="#ecc6a8"/>
+  <text x="70" y="335" font-size="9.5" fill="#4a4a4f">这与 etcd 的最小堆逐个找最近到期租约是不同的路径——ZooKeeper 用固定粒度的时间桶把"何时判定"这件事本身也做成批量操作，用时间对齐换检查效率。</text>
+
+  <!-- Panel B: 临时节点随会话消亡 -->
+  <rect x="30" y="384" width="1090" height="180" rx="14" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="52" y="410" font-size="13" font-weight="700" fill="#1d1d1f">② 会话过期 → 临时节点（ephemeral node）随之被移除</text>
+  <text x="52" y="428" font-size="9" fill="#8a97ab">临时节点的存在性绑定的是"创建它的那个会话还在不在"</text>
+
+  <rect x="52" y="444" width="200" height="76" rx="10" fill="#fbe6e3" stroke="#e8a79f"/>
+  <text x="152" y="468" font-size="10.5" font-weight="700" fill="#8a4038" text-anchor="middle">会话过期</text>
+  <text x="152" y="488" font-size="8.5" fill="#b06a60" text-anchor="middle">超过约定时间</text>
+  <text x="152" y="503" font-size="8.5" fill="#b06a60" text-anchor="middle">未再续期</text>
+
+  <line x1="252" y1="482" x2="298" y2="482" stroke="#d1544a" stroke-width="2" marker-end="url(#aR)"/>
+
+  <rect x="298" y="444" width="220" height="76" rx="10" fill="#fbf3e2" stroke="#ecd6a8"/>
+  <text x="408" y="468" font-size="10.5" font-weight="700" fill="#8a6417" text-anchor="middle">批量检查判定过期</text>
+  <text x="408" y="488" font-size="8.5" fill="#7a5a1a" text-anchor="middle">该会话所在桶到点</text>
+  <text x="408" y="503" font-size="8.5" fill="#7a5a1a" text-anchor="middle">被批量检出为已过期</text>
+
+  <line x1="518" y1="482" x2="564" y2="482" stroke="#d1544a" stroke-width="2" marker-end="url(#aR)"/>
+
+  <rect x="564" y="444" width="240" height="76" rx="10" fill="#fbe6e3" stroke="#e8a79f"/>
+  <text x="684" y="468" font-size="10.5" font-weight="700" fill="#8a4038" text-anchor="middle">该会话的临时节点被移除</text>
+  <text x="684" y="488" font-size="8.5" fill="#b06a60" text-anchor="middle">凡是绑定在这个会话上的</text>
+  <text x="684" y="503" font-size="8.5" fill="#b06a60" text-anchor="middle">ephemeral node 一并删除</text>
+
+  <line x1="804" y1="482" x2="850" y2="482" stroke="#d1544a" stroke-width="2" marker-end="url(#aR)"/>
+
+  <rect x="850" y="444" width="240" height="76" rx="10" fill="#eaf6f0" stroke="#bfe3d1"/>
+  <text x="970" y="468" font-size="10.5" font-weight="700" fill="#2f6b4e" text-anchor="middle">下游感知节点消失</text>
+  <text x="970" y="488" font-size="8.5" fill="#3f8a63" text-anchor="middle">服务注册表/锁/选主的</text>
+  <text x="970" y="503" font-size="8.5" fill="#3f8a63" text-anchor="middle">监听方看到节点被删</text>
+
+  <text x="52" y="542" font-size="9.5" fill="#4a4a4f">"会话在、节点在；会话亡、节点删"——临时节点从不需要谁显式删除，它的生死完全由创建它的会话是否过期决定。</text>
+
+  <line x1="30" y1="578" x2="1120" y2="578" stroke="#e4e7ec" stroke-width="1"/>
+  <text x="30" y="598" font-size="9.5" fill="#4a4a4f">分桶把"判定死亡"的成本从"会话数"降到"桶数"；临时节点绑定会话生命周期，让"清理"这一步天然发生、无需额外触发。</text>
+  <text x="30" y="616" font-size="9" fill="#8a97ab">对比 etcd：etcd 是显式 lease 对象 + 最小堆找最近到期；ZooKeeper 是隐式连接会话 + 固定时间桶批量检查——两条不同路径，同一个"超时即判死"的目标。</text>
+</svg>

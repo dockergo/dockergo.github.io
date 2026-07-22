@@ -1,0 +1,99 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1300" height="792" viewBox="0 0 1300 792" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="aA" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#c99a3a"/></marker>
+    <marker id="aB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#4a7fd0"/></marker>
+    <marker id="aT" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2aa0a4"/></marker>
+    <marker id="aR" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#d1544a"/></marker>
+  </defs>
+  <rect width="1300" height="792" fill="#fbfbfd"/>
+
+  <!-- 判型标题带 -->
+  <text x="30" y="32" font-size="15" font-weight="700" fill="#1d1d1f">限流与背压 · 系统扛不住流量有两种姿势：在门外拒绝（限流）或在内部把压力向上游传导（背压）——前者保护自己，后者保护全链路</text>
+  <text x="30" y="53" font-size="10.5" fill="#6e6e73">nginx / client-go 站在边缘「拒绝或延后」；Flink 站在内部「逐级减速、无拒绝无丢弃」——两种范式解的是同一个「上游快于下游」矛盾，取舍点不同</text>
+
+  <!-- 语义图例 -->
+  <line x1="30" y1="82" x2="54" y2="82" stroke="#c99a3a" stroke-width="2" marker-end="url(#aA)"/>
+  <text x="60" y="86" font-size="10" fill="#3a3a3c">nginx · 漏桶限流（拒绝/延迟）</text>
+  <line x1="266" y1="82" x2="290" y2="82" stroke="#4a7fd0" stroke-width="2" marker-end="url(#aB)"/>
+  <text x="296" y="86" font-size="10" fill="#3a3a3c">client-go · 令牌桶+指数退避（延后重试）</text>
+  <line x1="566" y1="82" x2="590" y2="82" stroke="#2aa0a4" stroke-width="2" marker-end="url(#aT)"/>
+  <text x="596" y="86" font-size="10" fill="#3a3a3c">Flink · credit-based 反压（逐级减速）</text>
+  <line x1="830" y1="82" x2="854" y2="82" stroke="#d1544a" stroke-width="2" stroke-dasharray="5 3" marker-end="url(#aR)"/>
+  <text x="860" y="86" font-size="10" fill="#3a3a3c">超限后果：拒绝 / 丢弃 vs 减速 / 不丢</text>
+  <text x="1270" y="86" font-size="10" fill="#a1a1a6" text-anchor="end">概念层机理</text>
+  <line x1="30" y1="98" x2="1270" y2="98" stroke="#e4e7ec" stroke-width="1"/>
+
+  <!-- 两大姿势总览：左右两块大容器 -->
+  <text x="30" y="128" font-size="12.5" font-weight="700" fill="#1d1d1f">两种根本姿势</text>
+
+  <!-- 左：拒绝在门外 -->
+  <rect x="30" y="146" width="600" height="230" rx="14" fill="#fbf3e2" stroke="#ecd6a8"/>
+  <text x="52" y="172" font-size="13" font-weight="700" fill="#8a6417">姿势 A · 拒绝在门外 —— 在边缘挡住，保护自己</text>
+  <text x="52" y="192" font-size="9.5" fill="#7a5a1a">系统对外暴露一个「硬边界」：超过预设速率的请求要么被拒绝（返回错误码），要么被延迟重试；系统内部状态不受影响。</text>
+
+  <rect x="52" y="208" width="270" height="150" rx="11" fill="#ffffff" stroke="#ecd6a8" filter="url(#soft)"/>
+  <text x="187" y="232" font-size="11.5" font-weight="700" fill="#8a6417" text-anchor="middle">nginx · limit_req</text>
+  <text x="68" y="254" font-size="9.5" fill="#4a4a4f">边缘网关层，按 key（如客户端 IP）</text>
+  <text x="68" y="272" font-size="9.5" fill="#4a4a4f">限速；漏桶家族，`excess` 变量</text>
+  <text x="68" y="290" font-size="9.5" fill="#4a4a4f">累积「超额」请求计数</text>
+  <text x="68" y="312" font-size="9" fill="#8a97ab">超限 → 拒绝（503）或排队延迟</text>
+  <text x="68" y="330" font-size="8.5" fill="#b0854a">精确公式/默认值本轮未源码级核实</text>
+  <text x="68" y="346" font-size="8.5" fill="#b0854a">→ 见 F1，仅描述概念层行为</text>
+
+  <rect x="338" y="208" width="270" height="150" rx="11" fill="#ffffff" stroke="#ecd6a8" filter="url(#soft)"/>
+  <text x="473" y="232" font-size="11.5" font-weight="700" fill="#8a6417" text-anchor="middle">k8s client-go · workqueue</text>
+  <text x="354" y="254" font-size="9.5" fill="#4a4a4f">controller 侧客户端限速；</text>
+  <text x="354" y="272" font-size="9.5" fill="#4a4a4f">`AddRateLimited` 延后重新入队，</text>
+  <text x="354" y="290" font-size="9.5" fill="#4a4a4f">而非直接拒绝</text>
+  <text x="354" y="312" font-size="9" fill="#8a97ab">超限 → 延后处理（不丢 item）</text>
+  <text x="354" y="330" font-size="8.5" fill="#b0854a">指数退避 + 令牌桶「双策略取更严格」</text>
+  <text x="354" y="346" font-size="8.5" fill="#b0854a">→ 见 F2，非纯令牌桶</text>
+
+  <!-- 右：内部逐级减速 -->
+  <rect x="660" y="146" width="610" height="230" rx="14" fill="#e4f4f4" stroke="#bfe1e1"/>
+  <text x="682" y="172" font-size="13" font-weight="700" fill="#1d6b6e">姿势 B · 内部逐级减速 —— 向上游传导压力，保护全链路</text>
+  <text x="682" y="192" font-size="9.5" fill="#1d6b6e">系统不对外暴露硬边界，而是让下游把「处理不过来」的信号沿数据流反向传给上游，上游主动降低发送速率；不拒绝、不丢数据，只是变慢。</text>
+
+  <rect x="682" y="208" width="566" height="150" rx="11" fill="#ffffff" stroke="#bfe1e1" filter="url(#soft)"/>
+  <text x="965" y="232" font-size="11.5" font-weight="700" fill="#1d6b6e" text-anchor="middle">Flink · credit-based 反压</text>
+  <text x="698" y="254" font-size="9.5" fill="#3a5a48">下游 `LocalBufferPool` 剩余 buffer 数 = credit，通过</text>
+  <text x="698" y="272" font-size="9.5" fill="#3a5a48">`CreditBasedPartitionRequestClientHandler` 的 `AddCredit`</text>
+  <text x="698" y="290" font-size="9.5" fill="#3a5a48">消息告知上游；上游按 credit 发送，同时用 `backlog`</text>
+  <text x="698" y="308" font-size="9.5" fill="#3a5a48">（未发送 buffer 积压量）辅助下游预分配</text>
+  <text x="698" y="332" font-size="9" fill="#4a8a8c">超限 → 上游降速等待，数据始终在算子间流动，不丢不拒</text>
+
+  <!-- 连线：姿势A内部 nginx <-> client-go 同类并置，无需箭头，用分隔线 -->
+  <line x1="322" y1="240" x2="338" y2="240" stroke="#c99a3a" stroke-width="1.4" stroke-dasharray="3 2"/>
+
+  <!-- 底部：对外可见后果对比条 -->
+  <rect x="30" y="400" width="1240" height="150" rx="14" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="52" y="426" font-size="12.5" font-weight="700" fill="#1d1d1f">对客户端 / 上游可见的后果差异</text>
+  <line x1="52" y1="438" x2="1258" y2="438" stroke="#e4e7ec" stroke-width="1"/>
+
+  <rect x="52" y="452" width="380" height="82" rx="10" fill="#fbf3e2" stroke="#ecd6a8"/>
+  <text x="70" y="474" font-size="10.5" font-weight="700" fill="#8a6417">nginx limit_req</text>
+  <text x="70" y="494" font-size="9.5" fill="#7a5a1a">客户端看到拒绝响应（如 503）或明显排队延迟；</text>
+  <text x="70" y="510" font-size="9.5" fill="#7a5a1a">请求可能直接失败，需要客户端自行重试。</text>
+
+  <rect x="452" y="452" width="380" height="82" rx="10" fill="#eaf1fb" stroke="#c6d9f2"/>
+  <text x="470" y="474" font-size="10.5" font-weight="700" fill="#20375e">client-go workqueue</text>
+  <text x="470" y="494" font-size="9.5" fill="#3a4a63">item 不丢，但重新入队时间被延后（指数退避可能</text>
+  <text x="470" y="510" font-size="9.5" fill="#3a4a63">拉得很长）；controller 对该 item 的处理出现延迟。</text>
+
+  <rect x="852" y="452" width="366" height="82" rx="10" fill="#e4f4f4" stroke="#bfe1e1"/>
+  <text x="870" y="474" font-size="10.5" font-weight="700" fill="#1d6b6e">Flink credit-based</text>
+  <text x="870" y="494" font-size="9.5" fill="#3a5a48">上游算子被动降速，作业整体吞吐下降但无异常、</text>
+  <text x="870" y="510" font-size="9.5" fill="#3a5a48">无数据丢失；对用户表现为处理延迟变大。</text>
+
+  <!-- 底部一句话总结 -->
+  <rect x="30" y="568" width="1240" height="90" rx="12" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="48" y="594" font-size="10.5" font-weight="700" fill="#1d1d1f">一句话</text>
+  <text x="110" y="594" font-size="10" fill="#4a4a4f"><tspan font-weight="700" fill="#8a6417">nginx</tspan> 与 <tspan font-weight="700" fill="#20375e">client-go</tspan> 都在「边缘」做取舍——超限就拒绝或延后，系统内部状态不被打扰；<tspan font-weight="700" fill="#1d6b6e">Flink</tspan> 把「慢」这件事本身变成一条反向传导的信号，让上游自己降速。</text>
+  <text x="110" y="614" font-size="10" fill="#4a4a4f">前者的成本由请求发起方承担（被拒/被延后）；后者的成本由整条流水线共同承担（大家一起变慢），但换来了不丢数据的保证。</text>
+  <text x="110" y="634" font-size="9" fill="#8a97ab">两种姿势没有绝对优劣：能否丢弃、能否拒绝，取决于流量的性质是「请求」还是「必须处理完的数据流」。</text>
+
+  <!-- 底部：适用场景标注 -->
+  <text x="52" y="378" font-size="8.5" fill="#8a97ab">典型场景：API 网关、SaaS 多租户限速</text>
+  <text x="682" y="378" font-size="8.5" fill="#4a8a8c">典型场景：流处理算子间的生产者-消费者速率匹配</text>
+</svg>

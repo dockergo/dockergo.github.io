@@ -5,17 +5,17 @@
   </defs>
   <rect width="1060" height="620" fill="#fbfbfd"/>
   <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Database 引擎：Atomic（默认）/ Replicated / Ordinary</text>
-  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">v25.8 默认 Atomic（硬编码 InterpreterCreateQuery.cpp:267）；default_database_engine 已废弃（Settings.cpp:6962）</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">v25.8 默认 Atomic（硬编码 InterpreterCreateQuery）；default_database_engine 已废弃</text>
 
   <!-- Atomic -->
   <rect x="30" y="72" width="330" height="410" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
   <text x="195" y="96" font-size="13" font-weight="700" fill="#1b2a4a" text-anchor="middle">Atomic（默认）</text>
   <text x="195" y="114" font-size="9" fill="#5b7db1" text-anchor="middle">UUID + 符号链接 · 原子 DDL</text>
   <g text-anchor="middle" font-size="8.5">
-    <rect x="50" y="128" width="290" height="72" rx="9" fill="#fff" stroke="#bcd0ec"/><text x="195" y="148" font-size="9.5" font-weight="600" fill="#1b2a4a">数据真身按 UUID 存放</text><text x="195" y="166" fill="#5b7db1">store/&lt;uuid前3位&gt;/&lt;uuid&gt;/</text><text x="195" y="182" fill="#5b7db1">DatabaseCatalog.cpp:1480</text><text x="195" y="195" fill="#8aa6cf">data/&lt;db&gt;/&lt;table&gt; 只是符号链接</text>
+    <rect x="50" y="128" width="290" height="72" rx="9" fill="#fff" stroke="#bcd0ec"/><text x="195" y="148" font-size="9.5" font-weight="600" fill="#1b2a4a">数据真身按 UUID 存放</text><text x="195" y="166" fill="#5b7db1">store/&lt;uuid前3位&gt;/&lt;uuid&gt;/</text><text x="195" y="182" fill="#5b7db1">DatabaseCatalog</text><text x="195" y="195" fill="#8aa6cf">data/&lt;db&gt;/&lt;table&gt; 只是符号链接</text>
     <rect x="50" y="210" width="290" height="60" rx="9" fill="#f2fbf6" stroke="#cdeadb"/><text x="195" y="230" font-size="9.5" font-weight="600" fill="#12402a">RENAME：只改链接</text><text x="195" y="248" fill="#2f6f4f">UUID 不变 → 不搬数据</text><text x="195" y="262" fill="#2f6f4f">瞬时完成</text>
     <rect x="50" y="280" width="290" height="60" rx="9" fill="#f2fbf6" stroke="#cdeadb"/><text x="195" y="300" font-size="9.5" font-weight="600" fill="#12402a">DROP：挪到 metadata_dropped/</text><text x="195" y="318" fill="#2f6f4f">延迟真正删除</text><text x="195" y="332" fill="#2f6f4f">避免长时间阻塞</text>
-    <rect x="50" y="350" width="290" height="56" rx="9" fill="#fff" stroke="#bcd0ec"/><text x="195" y="370" font-size="9.5" font-weight="600" fill="#1b2a4a">CREATE 提交点</text><text x="195" y="388" fill="#5b7db1">moveFile(.sql.tmp→.sql) 原子</text><text x="195" y="400" fill="#5b7db1">DatabaseAtomic.cpp:399</text>
+    <rect x="50" y="350" width="290" height="56" rx="9" fill="#fff" stroke="#bcd0ec"/><text x="195" y="370" font-size="9.5" font-weight="600" fill="#1b2a4a">CREATE 提交点</text><text x="195" y="388" fill="#5b7db1">moveFile(.sql.tmp→.sql) 原子</text><text x="195" y="400" fill="#5b7db1">DatabaseAtomic</text>
   </g>
 
   <!-- Replicated -->
@@ -24,8 +24,8 @@
   <text x="540" y="114" font-size="9" fill="#7a5da5" text-anchor="middle">DDL 经 Keeper 全集群自动同步</text>
   <g text-anchor="middle" font-size="8.5">
     <rect x="395" y="128" width="290" height="72" rx="9" fill="#fff" stroke="#d9c9ec"/><text x="540" y="148" font-size="9.5" font-weight="600" fill="#3d2a5a">继承 Atomic 的一切</text><text x="540" y="166" fill="#7a5da5">UUID + 符号链接 + 原子性</text><text x="540" y="182" fill="#7a5da5">额外：DDL 复制到所有副本</text><text x="540" y="195" fill="#9a7cc4">DatabaseReplicated</text>
-    <rect x="395" y="210" width="290" height="62" rx="9" fill="#faf7fd" stroke="#d9c9ec"/><text x="540" y="230" font-size="9.5" font-weight="600" fill="#3d2a5a">DDL → Keeper /log</text><text x="540" y="248" fill="#7a5da5">tryEnqueueReplicatedDDL:1124</text><text x="540" y="262" fill="#7a5da5">建 DDLLogEntry:1143</text>
-    <rect x="395" y="282" width="290" height="62" rx="9" fill="#faf7fd" stroke="#d9c9ec"/><text x="540" y="302" font-size="9.5" font-weight="600" fill="#3d2a5a">各副本追平日志</text><text x="540" y="320" fill="#7a5da5">log_ptr vs max_log_ptr:394-417</text><text x="540" y="334" fill="#7a5da5">/replicas 跟踪进度</text>
+    <rect x="395" y="210" width="290" height="62" rx="9" fill="#faf7fd" stroke="#d9c9ec"/><text x="540" y="230" font-size="9.5" font-weight="600" fill="#3d2a5a">DDL → Keeper /log</text><text x="540" y="248" fill="#7a5da5">tryEnqueueReplicatedDDL</text><text x="540" y="262" fill="#7a5da5">建 DDLLogEntry</text>
+    <rect x="395" y="282" width="290" height="62" rx="9" fill="#faf7fd" stroke="#d9c9ec"/><text x="540" y="302" font-size="9.5" font-weight="600" fill="#3d2a5a">各副本追平日志</text><text x="540" y="320" fill="#7a5da5">log_ptr vs max_log_ptr</text><text x="540" y="334" fill="#7a5da5">/replicas 跟踪进度</text>
     <rect x="395" y="354" width="290" height="52" rx="9" fill="#fff" stroke="#d9c9ec"/><text x="540" y="374" font-size="9.5" font-weight="600" fill="#3d2a5a">效果</text><text x="540" y="392" fill="#7a5da5">任一副本执行 DDL → 全库生效</text>
   </g>
 
@@ -43,7 +43,7 @@
   <!-- startup recovery -->
   <rect x="30" y="500" width="990" height="106" rx="12" fill="#fdf9f0" stroke="#efe3cd"/>
   <text x="50" y="524" font-size="11" font-weight="700" fill="#7a5a1e">启动恢复（元数据两层）</text>
-  <text x="50" y="546" font-size="10" fill="#93762e">· 本地权威：loadTablesMetadata 扫元数据目录（DatabaseOrdinary.cpp:253）→ parseQueryFromMetadata 逐个解析 .sql → createTableFromAST 重建 → attachTable 挂回内存</text>
+  <text x="50" y="546" font-size="10" fill="#93762e">本地权威：loadTablesMetadata 扫元数据目录→ parseQueryFromMetadata 逐个解析 .sql → createTableFromAST 重建 → attachTable 挂回内存</text>
   <text x="50" y="566" font-size="10" fill="#93762e">· 集群权威：Replicated 库/表的 DDL 与副本状态在 Keeper znode，启动时与本地对齐</text>
   <text x="50" y="588" font-size="10" fill="#4b4b50">选型建议：单机默认 Atomic（安全）；多节点要 DDL 自动同步用 Replicated；除非兼容极老数据，否则不用 Ordinary。</text>
 </svg>

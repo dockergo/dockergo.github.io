@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="720" viewBox="0 0 1120 720" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="aB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#4a7fd0"/></marker>
+    <marker id="aG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+    <marker id="aA" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#d99a2b"/></marker>
+  </defs>
+  <rect width="1120" height="720" fill="#fbfbfd"/>
+
+  <text x="30" y="34" font-size="17" font-weight="700" fill="#1d1d1f">排序 · 原理总览：把无序序列重排为有序，两大流派各有代价</text>
+  <text x="30" y="56" font-size="11" fill="#6e6e73">比较类靠「两两比较」决定次序，理论下界 O(n log n)；非比较类不比较、用键值直接寻址，在约束下线性突破</text>
+
+  <!-- 图例 -->
+  <rect x="30" y="72" width="12" height="12" rx="2" fill="#4a7fd0"/><text x="48" y="82" font-size="10.5" fill="#3a3a3c">控制 / 指针</text>
+  <rect x="150" y="72" width="12" height="12" rx="2" fill="#2f9e6e"/><text x="168" y="82" font-size="10.5" fill="#3a3a3c">已排定 / 有序区</text>
+  <rect x="300" y="72" width="12" height="12" rx="2" fill="#d1544a"/><text x="318" y="82" font-size="10.5" fill="#3a3a3c">待处理 / 交换</text>
+  <rect x="440" y="72" width="12" height="12" rx="2" fill="#8a6fd0"/><text x="458" y="82" font-size="10.5" fill="#3a3a3c">辅助空间</text>
+  <rect x="560" y="72" width="12" height="12" rx="2" fill="#d99a2b"/><text x="578" y="82" font-size="10.5" fill="#3a3a3c">数组元素 / 状态</text>
+
+  <!-- ① 目标 -->
+  <text x="30" y="118" font-size="12.5" font-weight="700" fill="#20375e">① 目标：无序 → 非降序列（贯穿示例数组）</text>
+  <g font-size="12" text-anchor="middle">
+    <rect x="60" y="130" width="40" height="30" rx="5" fill="#fdf3e0" stroke="#e7c07a"/><text x="80" y="150" fill="#8a5a12">5</text>
+    <rect x="104" y="130" width="40" height="30" rx="5" fill="#fdf3e0" stroke="#e7c07a"/><text x="124" y="150" fill="#8a5a12">2</text>
+    <rect x="148" y="130" width="40" height="30" rx="5" fill="#fdf3e0" stroke="#e7c07a"/><text x="168" y="150" fill="#8a5a12">9</text>
+    <rect x="192" y="130" width="40" height="30" rx="5" fill="#fdf3e0" stroke="#e7c07a"/><text x="212" y="150" fill="#8a5a12">1</text>
+    <rect x="236" y="130" width="40" height="30" rx="5" fill="#fdf3e0" stroke="#e7c07a"/><text x="256" y="150" fill="#8a5a12">5</text>
+    <rect x="280" y="130" width="40" height="30" rx="5" fill="#fdf3e0" stroke="#e7c07a"/><text x="300" y="150" fill="#8a5a12">6</text>
+  </g>
+  <line x1="330" y1="145" x2="382" y2="145" stroke="#2f9e6e" stroke-width="2" marker-end="url(#aG)"/>
+  <g font-size="12" text-anchor="middle">
+    <rect x="392" y="130" width="40" height="30" rx="5" fill="#e5f3ec" stroke="#a9d8c0"/><text x="412" y="150" fill="#2f6b4e">1</text>
+    <rect x="436" y="130" width="40" height="30" rx="5" fill="#e5f3ec" stroke="#a9d8c0"/><text x="456" y="150" fill="#2f6b4e">2</text>
+    <rect x="480" y="130" width="40" height="30" rx="5" fill="#e5f3ec" stroke="#a9d8c0"/><text x="500" y="150" fill="#2f6b4e">5ₐ</text>
+    <rect x="524" y="130" width="40" height="30" rx="5" fill="#e5f3ec" stroke="#a9d8c0"/><text x="544" y="150" fill="#2f6b4e">5_b</text>
+    <rect x="568" y="130" width="40" height="30" rx="5" fill="#e5f3ec" stroke="#a9d8c0"/><text x="588" y="150" fill="#2f6b4e">6</text>
+    <rect x="612" y="130" width="40" height="30" rx="5" fill="#e5f3ec" stroke="#a9d8c0"/><text x="632" y="150" fill="#2f6b4e">9</text>
+  </g>
+  <text x="690" y="141" font-size="10.5" fill="#6e6e73">稳定性：两个相等的 5ₐ / 5_b 排序后</text>
+  <text x="690" y="156" font-size="10.5" fill="#6e6e73">是否保持原相对次序（保持=稳定）</text>
+
+  <!-- ② 算法地图 -->
+  <text x="30" y="196" font-size="12.5" font-weight="700" fill="#20375e">② 算法地图：比较类 vs 非比较类</text>
+
+  <!-- 比较类面板 -->
+  <rect x="30" y="208" width="640" height="316" rx="12" fill="#ffffff" stroke="#4a7fd0" stroke-width="1.3" filter="url(#soft)"/>
+  <text x="50" y="232" font-size="13" font-weight="700" fill="#20375e">比较类排序 · 靠「两两比较」决定次序</text>
+  <text x="50" y="250" font-size="10.5" fill="#6e6e73">通用（任意可比较类型）；受下界 O(n log n) 约束</text>
+
+  <!-- 简单 O(n^2) -->
+  <rect x="48" y="262" width="290" height="248" rx="10" fill="#f6f9fe" stroke="#c6d9f2"/>
+  <text x="66" y="286" font-size="12" font-weight="700" fill="#20375e">简单 · O(n²)</text>
+  <g font-size="11.5">
+    <rect x="66" y="298" width="254" height="58" rx="7" fill="#eaf1fb" stroke="#c6d9f2"/><text x="80" y="320" font-weight="700" fill="#20375e">O1 冒泡</text><text x="80" y="340" font-size="10" fill="#5a7099">相邻两两交换，最大冒到末尾 · 稳定</text>
+    <rect x="66" y="364" width="254" height="58" rx="7" fill="#eaf1fb" stroke="#c6d9f2"/><text x="80" y="386" font-weight="700" fill="#20375e">O2 插入</text><text x="80" y="406" font-size="10" fill="#5a7099">向前缀有序区找位插入 · 稳定 · 近序快</text>
+    <rect x="66" y="430" width="254" height="58" rx="7" fill="#eaf1fb" stroke="#c6d9f2"/><text x="80" y="452" font-weight="700" fill="#20375e">O3 选择</text><text x="80" y="472" font-size="10" fill="#5a7099">每轮选未排区最小值交换 · 不稳定</text>
+  </g>
+
+  <!-- 高效 O(n log n) -->
+  <rect x="352" y="262" width="300" height="248" rx="10" fill="#f6f9fe" stroke="#c6d9f2"/>
+  <text x="370" y="286" font-size="12" font-weight="700" fill="#20375e">高效 · O(n log n)</text>
+  <g font-size="11.5">
+    <rect x="370" y="298" width="264" height="58" rx="7" fill="#eaf1fb" stroke="#c6d9f2"/><text x="384" y="320" font-weight="700" fill="#20375e">O4 快排</text><text x="384" y="340" font-size="10" fill="#5a7099">基准划分分治 · 原地 · 最坏 O(n²)</text>
+    <rect x="370" y="364" width="264" height="58" rx="7" fill="#eaf1fb" stroke="#c6d9f2"/><text x="384" y="386" font-weight="700" fill="#20375e">O5 归并</text><text x="384" y="406" font-size="10" fill="#5a7099">分半递归 + 合并 · 稳定 · 需 O(n) 辅助</text>
+    <rect x="370" y="430" width="264" height="58" rx="7" fill="#eaf1fb" stroke="#c6d9f2"/><text x="384" y="452" font-weight="700" fill="#20375e">O6 堆排</text><text x="384" y="472" font-size="10" fill="#5a7099">建大顶堆后反复取顶 · 原地 · 不稳定</text>
+  </g>
+
+  <!-- 非比较类面板 -->
+  <rect x="690" y="208" width="400" height="316" rx="12" fill="#ffffff" stroke="#d99a2b" stroke-width="1.3" filter="url(#soft)"/>
+  <text x="710" y="232" font-size="13" font-weight="700" fill="#8a5a12">非比较类排序 · 用键值直接寻址</text>
+  <text x="710" y="250" font-size="10.5" fill="#6e6e73">不做元素间比较，把信息注入下标/分桶</text>
+  <g font-size="11.5">
+    <rect x="708" y="262" width="364" height="66" rx="8" fill="#fdf3e0" stroke="#e7c07a"/><text x="724" y="286" font-weight="700" fill="#8a5a12">O7 计数</text><text x="724" y="306" font-size="10" fill="#7a5a20">按值域计数 + 前缀和定位回填 · O(n+m)</text><text x="724" y="322" font-size="10" fill="#a1794a">约束：整数键，值域 m 不宜过大</text>
+    <rect x="708" y="336" width="364" height="66" rx="8" fill="#fdf3e0" stroke="#e7c07a"/><text x="724" y="360" font-weight="700" fill="#8a5a12">O8 桶</text><text x="724" y="380" font-size="10" fill="#7a5a20">按范围分桶 → 桶内排序 → 顺序拼接 · O(n+k)</text><text x="724" y="396" font-size="10" fill="#a1794a">约束：数据近似均匀分布</text>
+    <rect x="708" y="410" width="364" height="66" rx="8" fill="#fdf3e0" stroke="#e7c07a"/><text x="724" y="434" font-weight="700" fill="#8a5a12">O9 基数</text><text x="724" y="454" font-size="10" fill="#7a5a20">按位 LSD 多轮稳定排序（每轮计数）· O(nk)</text><text x="724" y="470" font-size="10" fill="#a1794a">约束：定长键（k 位）</text>
+  </g>
+  <text x="710" y="500" font-size="10" fill="#6e6e73">共性：无「比较」操作，故不受 O(n log n) 下界束缚</text>
+
+  <!-- ③ 关键维度 -->
+  <text x="30" y="558" font-size="12.5" font-weight="700" fill="#20375e">③ 两个关键维度</text>
+  <rect x="30" y="570" width="520" height="128" rx="12" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="50" y="596" font-size="12" font-weight="700" fill="#20375e">比较排序的下界 = Ω(n log n)</text>
+  <text x="50" y="620" font-size="10.5" fill="#4a4a4f">任何只靠比较的排序等价一棵决策树：n 个元素有 n!</text>
+  <text x="50" y="638" font-size="10.5" fill="#4a4a4f">种排列，须对应 n! 个叶子，树高 ≥ log₂(n!) = Θ(n log n)。</text>
+  <text x="50" y="662" font-size="10.5" fill="#2f6b4e">故快排 / 归并 / 堆排已触及比较排序的理论最优。</text>
+  <text x="50" y="686" font-size="10" fill="#8a8a8f">简单三兄弟 O(n²) 未达最优，胜在实现简单、小数据/近序高效。</text>
+
+  <rect x="570" y="570" width="520" height="128" rx="12" fill="#fdf6ea" stroke="#e7c07a"/>
+  <text x="590" y="596" font-size="12" font-weight="700" fill="#8a5a12">稳定性 · 是否原地</text>
+  <text x="590" y="620" font-size="10.5" fill="#4a4a4f">稳定 = 相等元素排序后保持原相对次序（多关键字排序、基数排序的前提）。</text>
+  <text x="590" y="640" font-size="10.5" fill="#2f6b4e">稳定：冒泡 / 插入 / 归并 / 计数 / 基数</text>
+  <text x="590" y="658" font-size="10.5" fill="#8a4038">不稳定：选择 / 快排 / 堆排</text>
+  <text x="590" y="682" font-size="10" fill="#8a8a8f">原地 = 仅需 O(1) 额外空间；归并/计数/基数需额外数组，非原地。</text>
+</svg>

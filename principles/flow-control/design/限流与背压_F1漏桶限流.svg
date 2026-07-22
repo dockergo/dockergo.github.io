@@ -1,0 +1,102 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1150" height="650" viewBox="0 0 1150 650" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="aA" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#c99a3a"/></marker>
+    <marker id="aG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+    <marker id="aR" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#d1544a"/></marker>
+    <marker id="aBk" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#8a8a8f"/></marker>
+  </defs>
+  <rect width="1150" height="650" fill="#fbfbfd"/>
+
+  <!-- 判型标题带 -->
+  <text x="30" y="32" font-size="15" font-weight="700" fill="#1d1d1f">F1 · nginx limit_req 漏桶限流 · `ngx_http_limit_req_module` 用 `excess` 变量累积每个 key 的「超额」请求，按漏桶家族思路节流</text>
+  <text x="30" y="53" font-size="10.5" fill="#6e6e73">按 key（如客户端 IP）维护共享内存计数状态；官方 changelog 曾修复「速率可能超过配置值」的 bug，侧证内部确有速率累积计算逻辑</text>
+
+  <!-- 图例 -->
+  <line x1="30" y1="80" x2="54" y2="80" stroke="#c99a3a" stroke-width="2" marker-end="url(#aA)"/>
+  <text x="60" y="84" font-size="10" fill="#3a3a3c">请求到达 → 桶内累积（excess+）</text>
+  <line x1="270" y1="80" x2="294" y2="80" stroke="#8a8a8f" stroke-width="2" stroke-dasharray="4 3" marker-end="url(#aBk)"/>
+  <text x="300" y="84" font-size="10" fill="#3a3a3c">按配置速率持续「泄漏」（excess−）</text>
+  <line x1="560" y1="80" x2="584" y2="80" stroke="#2f9e6e" stroke-width="2" marker-end="url(#aG)"/>
+  <text x="590" y="84" font-size="10" fill="#3a3a3c">桶内未满 → 放行</text>
+  <line x1="740" y1="80" x2="764" y2="80" stroke="#d1544a" stroke-width="2" marker-end="url(#aR)"/>
+  <text x="770" y="84" font-size="10" fill="#3a3a3c">超出容量 → 延迟排队 / 拒绝</text>
+  <text x="1120" y="84" font-size="10" fill="#a1a1a6" text-anchor="end">概念层机理</text>
+  <line x1="30" y1="98" x2="1120" y2="98" stroke="#e4e7ec" stroke-width="1"/>
+
+  <!-- 左：客户端请求流 -->
+  <rect x="28" y="130" width="168" height="330" rx="13" fill="#ffffff" stroke="#d9dde4" filter="url(#soft)"/>
+  <text x="112" y="156" font-size="12" font-weight="700" fill="#1d1d1f" text-anchor="middle">客户端请求流</text>
+  <line x1="44" y1="166" x2="180" y2="166" stroke="#e4e7ec" stroke-width="1"/>
+  <g font-size="9" text-anchor="middle" fill="#4a4a4f">
+    <rect x="62" y="182" width="100" height="26" rx="6" fill="#fbf3e2" stroke="#ecd6a8"/><text x="112" y="199">请求 · key=IP-1</text>
+    <rect x="62" y="216" width="100" height="26" rx="6" fill="#fbf3e2" stroke="#ecd6a8"/><text x="112" y="233">请求 · key=IP-1</text>
+    <rect x="62" y="250" width="100" height="26" rx="6" fill="#fbf3e2" stroke="#ecd6a8"/><text x="112" y="267">请求 · key=IP-1</text>
+    <rect x="62" y="284" width="100" height="26" rx="6" fill="#fbf3e2" stroke="#ecd6a8"/><text x="112" y="301">请求 · key=IP-1</text>
+  </g>
+  <text x="112" y="330" font-size="9" fill="#8a97ab" text-anchor="middle">`limit_req_zone` 按 key</text>
+  <text x="112" y="346" font-size="9" fill="#8a97ab" text-anchor="middle">分别维护独立状态</text>
+  <text x="112" y="366" font-size="8.5" fill="#8a97ab" text-anchor="middle">（共享内存区，跨 worker 可见）</text>
+
+  <!-- 箭头：请求流 -> 桶 -->
+  <line x1="196" y1="280" x2="256" y2="280" stroke="#c99a3a" stroke-width="2" marker-end="url(#aA)"/>
+
+  <!-- 中：漏桶可视化 -->
+  <rect x="266" y="118" width="330" height="400" rx="14" fill="#fbf3e2" stroke="#ecd6a8"/>
+  <text x="431" y="144" font-size="12.5" font-weight="700" fill="#8a6417" text-anchor="middle">「桶」· 每 key 一份 excess 状态</text>
+
+  <!-- 桶容器 -->
+  <rect x="356" y="168" width="150" height="300" rx="10" fill="#ffffff" stroke="#d9b878"/>
+  <!-- 水位填充（示意，非精确比例） -->
+  <rect x="360" y="300" width="142" height="164" fill="#f0dcac"/>
+  <rect x="360" y="240" width="142" height="60" fill="#f7e8c8"/>
+  <!-- burst 容忍区刻度线 -->
+  <line x1="350" y1="240" x2="512" y2="240" stroke="#c99a3a" stroke-width="1.6" stroke-dasharray="4 2"/>
+  <text x="516" y="244" font-size="8.5" fill="#8a6417">burst 容忍上限（概念位置，非精确刻度）</text>
+  <text x="374" y="220" font-size="9" fill="#b0854a" text-anchor="middle">溢出区</text>
+  <text x="431" y="290" font-size="10.5" font-weight="700" fill="#8a6417" text-anchor="middle">excess</text>
+  <text x="431" y="308" font-size="8.5" fill="#8a6417" text-anchor="middle">累积的「超额」请求计数</text>
+  <text x="431" y="324" font-size="8.5" fill="#8a6417" text-anchor="middle">（随请求到达增、随时间流逝减）</text>
+
+  <!-- 泄漏箭头，桶底部 -->
+  <line x1="431" y1="468" x2="431" y2="500" stroke="#8a8a8f" stroke-width="2" stroke-dasharray="4 3" marker-end="url(#aBk)"/>
+  <text x="431" y="494" font-size="8.5" fill="#6e6e73" text-anchor="middle"> </text>
+  <text x="298" y="500" font-size="9" fill="#7a5a1a">按配置速率持续「泄漏」——</text>
+  <text x="298" y="514" font-size="9" fill="#7a5a1a">这正是「漏桶」得名之处</text>
+
+  <!-- 未核实标注，紧贴桶体 -->
+  <rect x="282" y="392" width="298" height="46" rx="8" fill="#ffffff" stroke="#d9b878" stroke-dasharray="3 2"/>
+  <text x="298" y="410" font-size="8.5" fill="#8a6417" font-weight="700">excess 精确计算公式 · rate/burst/nodelay 默认值</text>
+  <text x="298" y="425" font-size="8.5" fill="#8a6417">本轮未做源码级核实，图中只画概念层「累积/泄漏」形状</text>
+
+  <!-- 箭头：桶 -> 结果分支 -->
+  <line x1="596" y1="220" x2="656" y2="180" stroke="#2f9e6e" stroke-width="2" marker-end="url(#aG)"/>
+  <line x1="596" y1="320" x2="656" y2="320" stroke="#d1544a" stroke-width="2" marker-end="url(#aR)"/>
+  <line x1="596" y1="420" x2="656" y2="460" stroke="#d1544a" stroke-width="2" stroke-dasharray="5 3" marker-end="url(#aR)"/>
+
+  <!-- 右：三种结果 -->
+  <rect x="666" y="130" width="454" height="112" rx="12" fill="#eaf6f0" stroke="#bfe3d1" filter="url(#soft)"/>
+  <text x="686" y="156" font-size="11.5" font-weight="700" fill="#2f6b4e">① 桶内未满 → 放行</text>
+  <text x="686" y="178" font-size="9.5" fill="#3f8a63">excess 未超过配置容量，请求正常转发给上游；</text>
+  <text x="686" y="196" font-size="9.5" fill="#3f8a63">这是绝大多数正常流量走的路径。</text>
+  <text x="686" y="216" font-size="8.5" fill="#8a97ab">`$limit_req_status` 记录为 PASSED（官方文档已确认该变量存在）</text>
+
+  <rect x="666" y="256" width="454" height="112" rx="12" fill="#fbe6e3" stroke="#e8a79f" filter="url(#soft)"/>
+  <text x="686" y="282" font-size="11.5" font-weight="700" fill="#8a4038">② 超出但配置了容忍 → 延迟排队</text>
+  <text x="686" y="304" font-size="9.5" fill="#b06a60">请求被暂存、延后转发（`delay` 语义，非立即拒绝）；</text>
+  <text x="686" y="322" font-size="9.5" fill="#b06a60">具体延迟策略与容忍上限如何配置，本轮未核实到可引用的精确规则。</text>
+  <text x="686" y="342" font-size="8.5" fill="#c48478">概念层：给「短暂超速」留一点缓冲，而不是立刻拒绝</text>
+
+  <rect x="666" y="382" width="454" height="112" rx="12" fill="#fbe6e3" stroke="#e8a79f" filter="url(#soft)"/>
+  <text x="686" y="408" font-size="11.5" font-weight="700" fill="#8a4038">③ 超出容忍上限 → 直接拒绝</text>
+  <text x="686" y="430" font-size="9.5" fill="#b06a60">模块返回拒绝响应（`limit_req_status` 指令可配置状态码）；</text>
+  <text x="686" y="448" font-size="9.5" fill="#b06a60">客户端需自行退避重试，nginx 侧不为该请求保留任何状态。</text>
+  <text x="686" y="468" font-size="8.5" fill="#c48478">这是「拒绝在门外」姿势的典型体现——见 00 生态架构图</text>
+
+  <!-- 底部：已核实 vs 未核实边界，整行横幅 -->
+  <rect x="30" y="546" width="1090" height="86" rx="12" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="48" y="570" font-size="10.5" font-weight="700" fill="#1d1d1f">核实边界</text>
+  <text x="128" y="570" font-size="9.5" fill="#2f6b4e"><tspan font-weight="700">已确认：</tspan>`ngx_http_limit_req_module` 模块存在；`excess` 变量及其「累积超额请求」角色；官方 changelog 中一条与速率相关的 bug 修复记录，侧证内部有速率累积计算逻辑；属于漏桶家族限流。</text>
+  <text x="128" y="590" font-size="9.5" fill="#8a4038"><tspan font-weight="700">未源码级核实：</tspan>`excess` 的精确计算公式；`rate` / `burst` / `nodelay` 的具体默认值与确切数值行为。本图不给出任何具体数字，只画「请求累积如水、按配置速率匀速泄漏、burst 留一点缓冲」的概念形状。</text>
+  <text x="128" y="610" font-size="8.5" fill="#8a97ab">参见 nginx 官方文档 ngx_http_limit_req_module（模块与指令本身已确认存在，非本图杜撰的数值细节）</text>
+</svg>

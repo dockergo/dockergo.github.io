@@ -14,6 +14,12 @@
 
 图示一个 `Kernel`（kernel.h:510）是"如何跑 + 如何管空值 + 如何分配输出"的三元约定：执行体 `ArrayKernelExec`（kernel.h:556）签名 `Status(KernelContext*, const ExecSpan&, ExecResult*)`。**不变量**：两个枚举定死框架代劳多少——`ScalarKernel` 默认 `INTERSECTION`+`PREALLOCATE`（逐元素输出长度=输入，框架按位与算好 validity、预分配输出，内核只填值、连 bitmap 都不碰）；`VectorKernel` 默认 `COMPUTED_NO_PREALLOCATE`+`NO_PREALLOCATE`（输出长度事前未知，内核自分配）。隐式 cast 走 `cast.h`，本身也是注册的一族 kernel。
 
+## 三、空值与内存的默认约定
+
+![空值与内存约定](Arrow原理_计算_compute内核_03空值与内存约定.svg)
+
+图示 `ScalarKernel` 两条默认约定让框架代劳、内核最省心：**INTERSECTION**——框架按位与输入 validity 算好输出空值（任一输入 null 则输出 null）；**PREALLOCATE**——输出长度=输入，框架从 `KernelContext` 的 MemoryPool 一次预分配，内核只在 value buffer 上跑 SIMD 批循环、连 bitmap 都不碰。对比 `VectorKernel` 默认 `COMPUTED_NO_PREALLOCATE`+`NO_PREALLOCATE`（如 filter / unique，输出行数事前未知，内核自算空值、自分配）。两个枚举锚点见下表。
+
 ## 深化 · 空值与内存策略的默认约定
 
 | 约定 | 枚举（锚点） | ScalarKernel 默认 | VectorKernel 默认 |

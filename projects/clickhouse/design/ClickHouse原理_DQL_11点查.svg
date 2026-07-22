@@ -5,7 +5,7 @@
   </defs>
   <rect width="1060" height="560" fill="#fbfbfd"/>
   <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">点查旁路：ClickHouse 不擅长单行点查，专门引擎才快</text>
-  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">MergeTree 主键裁剪只到 granule（markRangesFromPKRange :1259）· 真点查靠 DirectKeyValueJoin (DirectJoin.cpp:119)</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">MergeTree 主键裁剪只到 granule（markRangesFromPKRange）· 真点查靠 DirectKeyValueJoin</text>
 
   <!-- why mergetree is bad at point query -->
   <rect x="40" y="72" width="480" height="230" rx="14" fill="#fbeef0" stroke="#f0cdd4"/>
@@ -17,7 +17,7 @@
   <rect x="60" y="176" width="440" height="60" rx="9" fill="#fff5f6" stroke="#f0cdd4"/>
   <text x="280" y="196" font-size="9.5" font-weight="600" fill="#7a2230" text-anchor="middle">但 granule 默认 8192 行</text>
   <text x="280" y="214" font-size="8.5" fill="#a44" text-anchor="middle">点查一行 = 读整个 granule（8192 行）再过滤</text>
-  <text x="280" y="230" font-size="8.5" fill="#a44" text-anchor="middle">getRowsCountInRange（:153）· 稀疏索引定位不到具体行</text>
+  <text x="280" y="230" font-size="8.5" fill="#a44" text-anchor="middle">getRowsCountInRange· 稀疏索引定位不到具体行</text>
   <text x="280" y="258" font-size="9" fill="#7a2230" text-anchor="middle">→ 相比 OLTP 索引点查（B+ 树到行），延迟高</text>
   <text x="280" y="278" font-size="8.5" fill="#a44" text-anchor="middle">ClickHouse 为"扫范围"而生，非"点一行"</text>
 
@@ -25,8 +25,8 @@
   <rect x="540" y="72" width="480" height="230" rx="14" fill="#eafaf1" stroke="#bfe0cd"/>
   <text x="780" y="96" font-size="12" font-weight="700" fill="#12402a" text-anchor="middle">真点查：DirectKeyValueJoin + KV 引擎</text>
   <g text-anchor="middle" font-size="8.5">
-    <rect x="560" y="112" width="200" height="50" rx="9" fill="#fff" stroke="#bfe0cd"/><text x="660" y="132" font-size="9.5" font-weight="600" fill="#12402a">DirectKeyValueJoin</text><text x="660" y="150" fill="#2f6f4f">DirectJoin.cpp:119</text>
-    <rect x="800" y="112" width="200" height="50" rx="9" fill="#fff" stroke="#bfe0cd"/><text x="900" y="132" font-size="9.5" font-weight="600" fill="#12402a">getByKeys 按键取值</text><text x="900" y="150" fill="#2f6f4f">:131 · 直达行</text>
+    <rect x="560" y="112" width="200" height="50" rx="9" fill="#fff" stroke="#bfe0cd"/><text x="660" y="132" font-size="9.5" font-weight="600" fill="#12402a">DirectKeyValueJoin</text><text x="660" y="150" fill="#2f6f4f">DirectJoin</text>
+    <rect x="800" y="112" width="200" height="50" rx="9" fill="#fff" stroke="#bfe0cd"/><text x="900" y="132" font-size="9.5" font-weight="600" fill="#12402a">getByKeys 按键取值</text><text x="900" y="150" fill="#2f6f4f">直达行</text>
   </g>
   <text x="780" y="184" font-size="9.5" font-weight="600" fill="#12402a" text-anchor="middle">支持的 KV 存储引擎</text>
   <g text-anchor="middle" font-size="8">

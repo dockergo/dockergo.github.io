@@ -1,0 +1,115 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="700" viewBox="0 0 1120 700" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="aB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#4a7fd0"/></marker>
+    <marker id="aR" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#d1544a"/></marker>
+    <marker id="aG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+    <marker id="aA" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#d99a2b"/></marker>
+  </defs>
+  <rect width="1120" height="700" fill="#fbfbfd"/>
+
+  <text x="30" y="34" font-size="17" font-weight="700" fill="#1d1d1f">哈希表 · 原理总览：键经哈希函数映射到桶下标，换取平均 O(1) 存取</text>
+  <text x="30" y="56" font-size="11" fill="#6e6e73">代价 = 冲突处理（多键同桶）＋ 负载因子超阈值时的 rehash 扩容；本图以 capacity=4 贯穿示例</text>
+
+  <!-- 图例 -->
+  <rect x="30" y="72" width="12" height="12" rx="2" fill="#4a7fd0"/><text x="48" y="82" font-size="10.5" fill="#3a3a3c">主结构 / 映射</text>
+  <rect x="170" y="72" width="12" height="12" rx="2" fill="#d99a2b"/><text x="188" y="82" font-size="10.5" fill="#3a3a3c">桶数组 / 存储</text>
+  <rect x="310" y="72" width="12" height="12" rx="2" fill="#2f9e6e"/><text x="328" y="82" font-size="10.5" fill="#3a3a3c">命中 / 成功路径</text>
+  <rect x="470" y="72" width="12" height="12" rx="2" fill="#d1544a"/><text x="488" y="82" font-size="10.5" fill="#3a3a3c">冲突（多键落同桶）</text>
+
+  <!-- ===== 映射区 ===== -->
+  <text x="30" y="118" font-size="12" font-weight="700" fill="#20375e">① 映射：key → hash(key) % capacity → 桶下标</text>
+
+  <!-- 键列 -->
+  <g font-size="12" text-anchor="middle">
+    <rect x="40" y="140" width="60" height="30" rx="6" fill="#eaf1fb" stroke="#c6d9f2"/><text x="70" y="160" fill="#20375e">key 12</text>
+    <rect x="40" y="186" width="60" height="30" rx="6" fill="#eaf1fb" stroke="#c6d9f2"/><text x="70" y="206" fill="#20375e">key 28</text>
+    <rect x="40" y="232" width="60" height="30" rx="6" fill="#eaf1fb" stroke="#c6d9f2"/><text x="70" y="252" fill="#20375e">key 5</text>
+    <rect x="40" y="278" width="60" height="30" rx="6" fill="#eaf1fb" stroke="#c6d9f2"/><text x="70" y="298" fill="#20375e">key 6</text>
+  </g>
+
+  <!-- 哈希函数带 -->
+  <rect x="150" y="140" width="150" height="168" rx="10" fill="#ffffff" stroke="#4a7fd0" stroke-width="1.4" filter="url(#soft)"/>
+  <text x="225" y="212" font-size="12" font-weight="700" fill="#20375e" text-anchor="middle">hash(key) % 4</text>
+  <text x="225" y="232" font-size="10" fill="#6e6e73" text-anchor="middle">压缩到 [0, capacity)</text>
+
+  <!-- 键→哈希函数 -->
+  <line x1="100" y1="155" x2="150" y2="155" stroke="#4a7fd0" stroke-width="1.8" marker-end="url(#aB)"/>
+  <line x1="100" y1="201" x2="150" y2="201" stroke="#4a7fd0" stroke-width="1.8" marker-end="url(#aB)"/>
+  <line x1="100" y1="247" x2="150" y2="247" stroke="#4a7fd0" stroke-width="1.8" marker-end="url(#aB)"/>
+  <line x1="100" y1="293" x2="150" y2="293" stroke="#4a7fd0" stroke-width="1.8" marker-end="url(#aB)"/>
+
+  <!-- 下标结果 -->
+  <g font-size="11" text-anchor="middle">
+    <rect x="330" y="140" width="70" height="30" rx="6" fill="#f2f7ff" stroke="#c6d9f2"/><text x="365" y="160" fill="#20375e">→ 0</text>
+    <rect x="330" y="186" width="70" height="30" rx="6" fill="#fbe6e3" stroke="#e8a79f"/><text x="365" y="206" fill="#8a4038">→ 0 ✗</text>
+    <rect x="330" y="232" width="70" height="30" rx="6" fill="#f2f7ff" stroke="#c6d9f2"/><text x="365" y="252" fill="#20375e">→ 1</text>
+    <rect x="330" y="278" width="70" height="30" rx="6" fill="#f2f7ff" stroke="#c6d9f2"/><text x="365" y="298" fill="#20375e">→ 2</text>
+  </g>
+
+  <!-- 桶数组 -->
+  <text x="470" y="118" font-size="12" font-weight="700" fill="#8a5a12">桶数组 buckets（capacity = 4）</text>
+  <g font-size="12">
+    <rect x="470" y="140" width="180" height="30" rx="6" fill="#fdf3e0" stroke="#e7c07a"/><text x="486" y="160" fill="#8a5a12" font-weight="700">[0]</text><text x="560" y="160" fill="#5a4a2a" text-anchor="middle">12 , 28 ↯</text>
+    <rect x="470" y="186" width="180" height="30" rx="6" fill="#fdf3e0" stroke="#e7c07a"/><text x="486" y="206" fill="#8a5a12" font-weight="700">[1]</text><text x="560" y="206" fill="#5a4a2a" text-anchor="middle">5</text>
+    <rect x="470" y="232" width="180" height="30" rx="6" fill="#fdf3e0" stroke="#e7c07a"/><text x="486" y="252" fill="#8a5a12" font-weight="700">[2]</text><text x="560" y="252" fill="#5a4a2a" text-anchor="middle">6</text>
+    <rect x="470" y="278" width="180" height="30" rx="6" fill="#f4f4f6" stroke="#d7d7dd" stroke-dasharray="3 2"/><text x="486" y="298" fill="#8a5a12" font-weight="700">[3]</text><text x="560" y="298" fill="#a1a1a6" text-anchor="middle">空</text>
+  </g>
+
+  <!-- 下标→桶 -->
+  <line x1="400" y1="155" x2="470" y2="155" stroke="#4a7fd0" stroke-width="1.8" marker-end="url(#aB)"/>
+  <line x1="400" y1="247" x2="470" y2="247" stroke="#4a7fd0" stroke-width="1.8" marker-end="url(#aB)"/>
+  <line x1="400" y1="293" x2="470" y2="293" stroke="#4a7fd0" stroke-width="1.8" marker-end="url(#aB)"/>
+  <!-- 冲突：28 也落 [0] -->
+  <path d="M400 201 L436 201 L436 165 L470 165" fill="none" stroke="#d1544a" stroke-width="2" stroke-dasharray="5 3" marker-end="url(#aR)"/>
+  <text x="675" y="160" font-size="10.5" fill="#8a4038">← 12 与 28 同桶 = 冲突</text>
+
+  <text x="470" y="336" font-size="10.5" fill="#6e6e73">冲突根因：键空间远大于桶数（鸽巢原理），% capacity 后必有不同键撞到同一下标。</text>
+
+  <!-- ===== 两大解决路线 ===== -->
+  <text x="30" y="378" font-size="12" font-weight="700" fill="#20375e">② 两大冲突解决路线</text>
+
+  <!-- 链式地址 -->
+  <rect x="30" y="392" width="520" height="150" rx="12" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="50" y="416" font-size="12.5" font-weight="700" fill="#1d1d1f">链式地址 Chaining</text>
+  <text x="50" y="435" font-size="10.5" fill="#6e6e73">每个桶挂一条链表，冲突项直接追加到链尾</text>
+  <g font-size="11" text-anchor="middle">
+    <rect x="50" y="452" width="46" height="30" rx="5" fill="#fdf3e0" stroke="#e7c07a"/><text x="73" y="472" fill="#8a5a12">[0]</text>
+    <rect x="140" y="452" width="70" height="30" rx="6" fill="#eaf1fb" stroke="#c6d9f2"/><text x="175" y="472" fill="#20375e">12</text>
+    <rect x="250" y="452" width="70" height="30" rx="6" fill="#fbe6e3" stroke="#e8a79f"/><text x="285" y="472" fill="#8a4038">28</text>
+  </g>
+  <line x1="96" y1="467" x2="140" y2="467" stroke="#2f9e6e" stroke-width="1.8" marker-end="url(#aG)"/>
+  <line x1="210" y1="467" x2="250" y2="467" stroke="#2f9e6e" stroke-width="1.8" marker-end="url(#aG)"/>
+  <text x="300" y="512" font-size="10.5" fill="#6e6e73">查找 = 定位桶 + 顺链比对；桶内退化为 O(链长)</text>
+
+  <!-- 开放寻址 -->
+  <rect x="570" y="392" width="520" height="150" rx="12" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="590" y="416" font-size="12.5" font-weight="700" fill="#1d1d1f">开放寻址 Open Addressing</text>
+  <text x="590" y="435" font-size="10.5" fill="#6e6e73">冲突则沿探测序列顺移，占用后续空桶</text>
+  <g font-size="11" text-anchor="middle">
+    <rect x="590" y="452" width="66" height="30" rx="6" fill="#eaf1fb" stroke="#c6d9f2"/><text x="623" y="466" fill="#20375e">[0]=12</text>
+    <rect x="666" y="452" width="66" height="30" rx="6" fill="#fdf3e0" stroke="#e7c07a"/><text x="699" y="466" fill="#8a5a12">[1]=5</text>
+    <rect x="742" y="452" width="66" height="30" rx="6" fill="#fdf3e0" stroke="#e7c07a"/><text x="775" y="466" fill="#8a5a12">[2]=6</text>
+    <rect x="818" y="452" width="66" height="30" rx="6" fill="#fbe6e3" stroke="#e8a79f"/><text x="851" y="466" fill="#8a4038">[3]=28</text>
+  </g>
+  <path d="M623 482 L623 496 L851 496 L851 482" fill="none" stroke="#d1544a" stroke-width="1.8" stroke-dasharray="5 3" marker-end="url(#aR)"/>
+  <text x="737" y="512" font-size="9.5" fill="#8a4038" text-anchor="middle">28 从 [0] 线性探测到首个空桶 [3]</text>
+  <text x="590" y="531" font-size="10.5" fill="#6e6e73">全部键值同住一个数组，缓存友好；删除需 TOMBSTONE 懒标记</text>
+
+  <!-- ===== 负载因子与 rehash ===== -->
+  <text x="30" y="580" font-size="12" font-weight="700" fill="#20375e">③ 负载因子超阈值 → rehash 扩容（capacity ×2 后全部重新映射）</text>
+  <rect x="30" y="596" width="1060" height="86" rx="12" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="52" y="624" font-size="13" font-weight="700" fill="#8a5a12">loadFactor = size / capacity</text>
+  <text x="52" y="646" font-size="10.5" fill="#4a4a4f">阈值 loadThres = 2/3；超过即触发 extend()：capacity ×= 2</text>
+  <text x="52" y="666" font-size="10.5" fill="#4a4a4f">扩容后按新 capacity 对每个键重算下标并搬运（rehash），摊薄冲突、拉回 O(1)</text>
+
+  <line x1="560" y1="616" x2="620" y2="616" stroke="#d99a2b" stroke-width="2" marker-end="url(#aA)"/>
+  <g font-size="11" text-anchor="middle">
+    <rect x="630" y="602" width="150" height="30" rx="6" fill="#fdf3e0" stroke="#e7c07a"/><text x="705" y="622" fill="#8a5a12">capacity 4，size 3</text>
+  </g>
+  <text x="800" y="622" font-size="11" fill="#8a4038">3/4 &gt; 2/3 → 扩容</text>
+  <line x1="700" y1="640" x2="700" y2="652" stroke="#d99a2b" stroke-width="1.6" marker-end="url(#aA)"/>
+  <g font-size="11" text-anchor="middle">
+    <rect x="630" y="652" width="150" height="24" rx="6" fill="#fff7e8" stroke="#e7c07a"/><text x="705" y="668" fill="#8a5a12">capacity 8，重算下标</text>
+  </g>
+</svg>

@@ -1,0 +1,384 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>在线广告与实时竞价 · 核心技术点</title><style>
+:root{--c-bg:#f5f6f8;--c-panel:#ffffff;--c-line:#e2e5ea;--c-ink:#1b1c20;--c-sub:#5c5f68;--c-soft:#eef0f4}
+:root[data-theme=dark]{--c-bg:#0f1013;--c-panel:#1a1c22;--c-line:#31343d;--c-ink:#e8e8ea;--c-sub:#9a9aa2;--c-soft:#20222a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--c-bg);color:var(--c-ink);font:14px/1.6 -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;transition:background .25s,color .25s}
+.wrap{max-width:1120px;margin:0 auto;padding:28px 24px 64px}
+header.top{position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:14px;
+  padding:12px 24px;background:color-mix(in srgb,var(--c-bg) 86%,transparent);
+  backdrop-filter:saturate(1.4) blur(14px);-webkit-backdrop-filter:saturate(1.4) blur(14px);
+  border-bottom:1px solid var(--c-line)}
+header.top .logo{display:inline-flex;align-items:center;flex:none}
+header.top .spacer{flex:1}
+.brand-intro{display:flex;flex-direction:column;align-items:flex-start;margin-left:6px;min-width:0}
+.brand-intro .bt{font-size:15px;font-weight:700;color:var(--c-ink);line-height:1.3}
+.brand-intro .bs{margin-top:3px;font-size:11.5px;color:var(--c-sub);line-height:1.5}
+.icobtn{width:38px;height:38px;border-radius:50%;border:1px solid var(--c-line);
+  background:var(--c-panel);color:var(--c-sub);cursor:pointer;display:inline-grid;
+  place-items:center;font-size:16px;flex:none;text-decoration:none;transition:.15s}
+.icobtn:hover{color:var(--c-ink);border-color:var(--accent)}
+.tt-ico{font-size:16px;line-height:1}.tt-sun{display:none}
+:root[data-theme=dark] .tt-moon{display:none}:root[data-theme=dark] .tt-sun{display:inline}
+.hero{padding:18px 22px;border-radius:16px;background:var(--c-panel);border:1px solid var(--c-line);border-left:4px solid var(--accent);margin-bottom:26px}
+.hero .lay{font-size:12px;color:var(--accent);font-weight:600;letter-spacing:.4px}
+.hero h1{margin:6px 0 8px;font-size:24px;letter-spacing:-.3px}
+.hero .en{color:var(--c-sub);font-size:13px}
+.hero .tag{margin-top:10px;color:var(--c-ink);font-size:14.5px;line-height:1.7}
+.arch-canvas{background:var(--c-panel);border:1px solid var(--c-line);border-radius:16px;padding:18px;margin-bottom:30px;overflow:auto}
+.arch-svg{width:100%;height:auto;display:block}
+.arch-svg .ag-bg{fill:var(--c-panel)}
+.arch-svg .ag-card{fill:var(--c-panel);stroke:var(--c-line);stroke-width:1.2}
+.arch-svg .ag-band{fill:var(--c-soft)}
+.arch-svg .ag-sub{fill:var(--c-sub)}
+.arch-svg .ag-title{fill:var(--c-ink)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px}
+.grp{background:var(--c-panel);border:1px solid var(--c-line);border-radius:14px;padding:16px 18px}
+.grp h3{margin:0 0 12px;font-size:15px;color:var(--accent);padding-bottom:8px;border-bottom:1px solid var(--c-line)}
+.grp ul{list-style:none;margin:0;padding:0}
+.grp li{padding:8px 0;border-bottom:1px dashed var(--c-line)}
+.grp li:last-child{border-bottom:none}
+.grp li b{display:block;font-size:13.5px;color:var(--c-ink);margin-bottom:2px}
+.grp li span{font-size:12.5px;color:var(--c-sub);line-height:1.6}
+.grp li .dp{display:block;margin-top:7px;padding:9px 11px;font-size:12px;line-height:1.7;
+  color:var(--c-ink);background:var(--c-soft);border-left:2px solid var(--accent);border-radius:6px}
+.dims{display:flex;flex-direction:column;gap:6px;margin-top:9px}
+.dm{display:flex;flex-direction:column;gap:2px;padding:7px 11px;border-radius:8px;
+  border-left:3px solid var(--c-line);background:var(--c-soft)}
+.dm-h{font-size:11px;font-weight:800;letter-spacing:.02em;opacity:.92}
+.dm-t{font-size:11.5px;line-height:1.65;color:var(--c-sub)}
+.dm-trade{border-left-color:var(--accent)}
+.dm-trade .dm-h{color:var(--accent)}
+.dm-scale{border-left-color:#2ea043}
+.dm-scale .dm-h{color:#2ea043}
+.dm-fail{border-left-color:#e0562d}
+.dm-fail .dm-h{color:#e0562d}
+.insight{background:var(--c-panel);border:1px solid var(--c-line);border-radius:16px;
+  padding:20px 24px;margin-top:26px;border-top:3px solid var(--accent)}
+.insight h2{margin:0 0 10px;font-size:16px;color:var(--c-ink)}
+.insight p{margin:0;font-size:13.5px;line-height:1.85;color:var(--c-sub)}
+.flow-desc{background:var(--c-panel);border:1px solid var(--c-line);border-radius:16px;padding:18px 22px;margin-bottom:26px}
+.flow-desc h2{margin:0 0 6px;font-size:16px;color:var(--c-ink)}
+.fl-hint{margin:0 0 14px;font-size:12.5px;color:var(--c-sub)}
+.flow-desc .fl-hint .fl-b{color:#c0392b;font-weight:600}
+.sc-sec{margin-top:30px}
+.sc-sec>h2{margin:0 0 14px;font-size:18px;color:var(--c-ink);padding-left:11px;border-left:4px solid var(--accent)}
+.sc-essence{background:var(--c-panel);border:1px solid var(--c-line);border-radius:16px;padding:20px 24px;border-top:3px solid var(--accent)}
+.sc-essence p{margin:0;font-size:14px;line-height:1.9;color:var(--c-sub)}
+.req-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+.req-col{background:var(--c-panel);border:1px solid var(--c-line);border-radius:14px;padding:16px 18px}
+.req-col.req-wide{grid-column:1/-1}
+.req-col h3{margin:0 0 12px;font-size:14px;color:var(--accent)}
+.req-col ul{list-style:none;margin:0;padding:0}
+.req-col ul li{padding:6px 0 6px 18px;position:relative;font-size:13px;line-height:1.7;color:var(--c-sub);border-bottom:1px dashed var(--c-line)}
+.req-col ul li:last-child{border-bottom:none}
+.req-col ul li:before{content:"";position:absolute;left:2px;top:13px;width:6px;height:6px;border-radius:50%;background:var(--accent)}
+.req-col ul.cons li:before{background:#e0562d}
+.qtab,.dtab{width:100%;border-collapse:collapse;font-size:12.5px}
+.qtab th,.dtab th{text-align:left;padding:9px 12px;color:var(--c-sub);font-weight:700;border-bottom:2px solid var(--c-line);font-size:12px}
+.qtab td,.dtab td{padding:9px 12px;border-bottom:1px solid var(--c-line);line-height:1.65;color:var(--c-sub);vertical-align:top}
+.qtab .qk{color:var(--c-ink);font-weight:700;white-space:nowrap}
+.qtab .qv{color:var(--accent);font-weight:600;white-space:nowrap}
+.dtab{background:var(--c-panel);border:1px solid var(--c-line);border-radius:14px;overflow:hidden}
+.dtab .de{color:var(--c-ink);font-weight:700;white-space:nowrap}
+.dtab .ds{color:var(--accent);font-weight:600;white-space:nowrap}
+.sc-tension{background:var(--c-panel);border:1px solid var(--c-line);border-radius:16px;padding:20px 24px}
+.tn-wrap{display:flex;align-items:stretch;gap:0;position:relative}
+.tn-side{flex:1;padding:14px 16px;border-radius:12px;background:var(--c-soft)}
+.tn-side.tn-l{border:1px solid var(--accent)}
+.tn-side.tn-r{border:1px solid #2ea043}
+.tn-lbl{font-size:13.5px;font-weight:800;margin-bottom:10px}
+.tn-l .tn-lbl{color:var(--accent)}.tn-r .tn-lbl{color:#2ea043}
+.tn-side ul{list-style:none;margin:0;padding:0}
+.tn-side li{padding:5px 0;font-size:12.5px;line-height:1.6;color:var(--c-sub);border-bottom:1px dashed var(--c-line)}
+.tn-side li:last-child{border-bottom:none}
+.tn-vs{align-self:center;margin:0 14px;font-size:12px;font-weight:800;color:var(--c-sub);background:var(--c-bg);border:1px solid var(--c-line);border-radius:50%;width:38px;height:38px;display:grid;place-items:center;flex:none}
+.tn-core{margin-top:16px;padding:12px 16px;font-size:13px;line-height:1.75;color:var(--c-ink);background:var(--c-soft);border-left:3px solid var(--accent);border-radius:8px}
+.sc-pitfall ul.pit{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:10px}
+.sc-pitfall ul.pit li{padding:11px 14px 11px 34px;position:relative;font-size:12.5px;line-height:1.65;color:var(--c-sub);background:var(--c-panel);border:1px solid var(--c-line);border-left:3px solid #e0562d;border-radius:10px}
+.sc-pitfall ul.pit li:before{content:"\2715";position:absolute;left:13px;top:11px;color:#e0562d;font-weight:800;font-size:12px}
+.rm-wrap{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+.rm-step{background:var(--c-panel);border:1px solid var(--c-line);border-radius:14px;padding:16px 18px;border-top:3px solid var(--accent)}
+.rm-stage{font-size:12px;font-weight:800;color:#fff;background:var(--accent);display:inline-block;padding:3px 12px;border-radius:20px;margin-bottom:10px}
+.rm-focus{font-size:14px;font-weight:700;color:var(--c-ink);margin-bottom:7px}
+.rm-detail{font-size:12.5px;line-height:1.7;color:var(--c-sub)}
+.sc-takeaway ul.tk{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:10px}
+.sc-takeaway ul.tk li{padding:11px 14px 11px 34px;position:relative;font-size:12.5px;line-height:1.65;color:var(--c-ink);background:var(--c-soft);border-radius:10px}
+.sc-takeaway ul.tk li:before{content:"\2713";position:absolute;left:13px;top:11px;color:#2ea043;font-weight:800;font-size:12px}
+footer{margin-top:40px;text-align:center;color:var(--c-sub);font-size:12px}
+</style></head><body style="--accent:#7c3aed"><header class="top"><a class="logo" href="../../index.html#scenario" title="返回业务场景导航"><span class="icobtn"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg></span></a><div class="brand-intro"><div class="bt">业务场景</div><div class="bs">分布式系统落地全景 · 核心技术点架构图</div></div><div class="spacer"></div><button id="tt" class="icobtn" title="切换深色 / 浅色主题" aria-label="切换主题"><span class="tt-ico tt-moon">&#9790;</span><span class="tt-ico tt-sun">&#9728;</span></button></header><div class="wrap"><div class="hero"><div class="lay">增长风控层</div><h1>在线广告与实时竞价</h1><div class="en">Online Advertising &amp; RTB</div><div class="tag">广告召回 / CTR-CVR 预估 / RTB 竞价 —— 用户体验、广告主 ROI、平台收入三方博弈,eCPM 统一度量。</div></div><div class="arch-canvas"><svg xmlns="http://www.w3.org/2000/svg" class="arch-svg" viewBox="0 0 1080 1594" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Text','PingFang SC',sans-serif">
+<defs><filter id="scSoft" x="-6%" y="-6%" width="112%" height="112%"><feDropShadow dx="0" dy="2" stdDeviation="6" flood-color="#0a0a0a" flood-opacity="0.08"/></filter><marker id="scArr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#7c3aed"/></marker><marker id="scArrB" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#c0392b"/></marker><marker id="scArr2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2d7d46"/></marker></defs>
+<rect x="0" y="0" width="1080" height="1594" class="ag-bg"/>
+<text x="26" y="42" font-size="20" font-weight="800" class="ag-title">在线广告与实时竞价 · 全景</text>
+<text x="26" y="70" font-size="12.5" class="ag-sub">增长风控层 · Online Advertising &amp; RTB · 数据流拓扑 + 技术矩阵 + 核心张力 + 洞察 + 踩坑 + 心法</text>
+<text x="26" y="112" font-size="15" font-weight="800" fill="#7c3aed">① 端到端数据流 · 沿箭头为请求/数据流转,红虚线为回流/补偿</text>
+<rect x="26.0" y="126" width="192.8" height="30" rx="9" fill="#7c3aed" opacity="0.12"/>
+<text x="38.0" y="146" font-size="12" font-weight="700" fill="#7c3aed" text-anchor="start">请求</text>
+<rect x="169.2" y="132.5" width="39.6" height="17" rx="8.5" fill="#7c3aed" opacity="0.9"/>
+<text x="189.0" y="144.4" font-size="9.5" font-weight="700" fill="#ffffff" text-anchor="middle">100%</text>
+<rect x="234.8" y="126" width="192.8" height="30" rx="9" fill="#7c3aed" opacity="0.12"/>
+<text x="246.8" y="146" font-size="12" font-weight="700" fill="#7c3aed" text-anchor="start">召回</text>
+<rect x="384.4" y="132.5" width="33.2" height="17" rx="8.5" fill="#7c3aed" opacity="0.9"/>
+<text x="401.0" y="144.4" font-size="9.5" font-weight="700" fill="#ffffff" text-anchor="middle">×数百</text>
+<rect x="443.6" y="126" width="192.8" height="30" rx="9" fill="#7c3aed" opacity="0.12"/>
+<text x="455.6" y="146" font-size="12" font-weight="700" fill="#7c3aed" text-anchor="start">预估</text>
+<rect x="593.2" y="132.5" width="33.2" height="17" rx="8.5" fill="#7c3aed" opacity="0.9"/>
+<text x="609.8" y="144.4" font-size="9.5" font-weight="700" fill="#ffffff" text-anchor="middle">候选级</text>
+<rect x="652.4" y="126" width="192.8" height="30" rx="9" fill="#7c3aed" opacity="0.12"/>
+<text x="664.4" y="146" font-size="12" font-weight="700" fill="#7c3aed" text-anchor="start">竞价</text>
+<rect x="789.2" y="132.5" width="46.0" height="17" rx="8.5" fill="#7c3aed" opacity="0.9"/>
+<text x="812.2" y="144.4" font-size="9.5" font-weight="700" fill="#ffffff" text-anchor="middle">取 Top</text>
+<rect x="861.2" y="126" width="192.8" height="30" rx="9" fill="#7c3aed" opacity="0.12"/>
+<text x="873.2" y="146" font-size="12" font-weight="700" fill="#7c3aed" text-anchor="start">结算</text>
+<rect x="1004.4" y="132.5" width="39.6" height="17" rx="8.5" fill="#7c3aed" opacity="0.9"/>
+<text x="1024.2" y="144.4" font-size="9.5" font-weight="700" fill="#ffffff" text-anchor="middle">反作弊后</text>
+<path d="M218.8,251.0 C226.8,251.0 226.8,251.0 234.8,251.0" fill="none" stroke="#7c3aed" stroke-width="1.6" marker-end="url(#scArr)" opacity="0.8"/>
+<rect x="200.8" y="234.0" width="46.0" height="15" rx="4" class="ag-bg" opacity="0.92"/>
+<text x="223.8" y="245.0" font-size="10" class="ag-sub" text-anchor="middle">召回候选</text>
+<path d="M427.6,251.0 C435.6,251.0 435.6,203.0 443.6,203.0" fill="none" stroke="#7c3aed" stroke-width="1.6" marker-end="url(#scArr)" opacity="0.8"/>
+<rect x="404.8" y="210.0" width="55.5" height="15" rx="4" class="ag-bg" opacity="0.92"/>
+<text x="432.6" y="221.0" font-size="10" class="ag-sub" text-anchor="middle">逐候选打分</text>
+<path d="M636.4,203.0 C540.0,203.0 540.0,299.0 443.6,299.0" fill="none" stroke="#7c3aed" stroke-width="1.6" marker-end="url(#scArr)" opacity="0.8"/>
+<rect x="553.6" y="234.0" width="46.0" height="15" rx="4" class="ag-bg" opacity="0.92"/>
+<text x="576.6" y="245.0" font-size="10" class="ag-sub" text-anchor="middle">转化预估</text>
+<path d="M636.4,299.0 C644.4,299.0 644.4,203.0 652.4,203.0" fill="none" stroke="#7c3aed" stroke-width="1.6" marker-end="url(#scArr)" opacity="0.8"/>
+<rect x="618.4" y="234.0" width="46.0" height="15" rx="4" class="ag-bg" opacity="0.92"/>
+<text x="641.4" y="245.0" font-size="10" class="ag-sub" text-anchor="middle">折算收益</text>
+<path d="M845.2,203.0 C748.8,203.0 748.8,299.0 652.4,299.0" fill="none" stroke="#7c3aed" stroke-width="1.6" marker-end="url(#scArr)" opacity="0.8"/>
+<rect x="767.2" y="234.0" width="36.5" height="15" rx="4" class="ag-bg" opacity="0.92"/>
+<text x="785.4" y="245.0" font-size="10" class="ag-sub" text-anchor="middle">取赢家</text>
+<path d="M845.2,299.0 C853.2,299.0 853.2,203.0 861.2,203.0" fill="none" stroke="#7c3aed" stroke-width="1.6" marker-end="url(#scArr)" opacity="0.8"/>
+<rect x="827.2" y="234.0" width="46.0" height="15" rx="4" class="ag-bg" opacity="0.92"/>
+<text x="850.2" y="245.0" font-size="10" class="ag-sub" text-anchor="middle">曝光校验</text>
+<path d="M1054.0,203.0 C957.6,203.0 957.6,299.0 861.2,299.0" fill="none" stroke="#7c3aed" stroke-width="1.6" marker-end="url(#scArr)" opacity="0.8"/>
+<rect x="971.2" y="234.0" width="46.0" height="15" rx="4" class="ag-bg" opacity="0.92"/>
+<text x="994.2" y="245.0" font-size="10" class="ag-sub" text-anchor="middle">有效计费</text>
+<rect x="26.0" y="218.0" width="192.8" height="66" rx="11" class="ag-card" stroke="#7c3aed" stroke-width="1.4" filter="url(#scSoft)"/>
+<text x="122.4" y="242.0" font-size="12.5" font-weight="700" class="ag-title" text-anchor="middle">广告请求</text>
+<text x="122.4" y="260.0" font-size="9.5" class="ag-sub" text-anchor="middle">一次曝光机会</text>
+<rect x="234.8" y="218.0" width="192.8" height="66" rx="11" class="ag-card" stroke="#7c3aed" stroke-width="1.4" filter="url(#scSoft)"/>
+<text x="331.2" y="242.0" font-size="12.5" font-weight="700" class="ag-title" text-anchor="middle">召回定向</text>
+<text x="331.2" y="260.0" font-size="9.5" class="ag-sub" text-anchor="middle">预算+定向筛选</text>
+<rect x="443.6" y="170.0" width="192.8" height="66" rx="11" class="ag-card" stroke="#7c3aed" stroke-width="1.4" filter="url(#scSoft)"/>
+<text x="540.0" y="194.0" font-size="12.5" font-weight="700" class="ag-title" text-anchor="middle">CTR 预估</text>
+<text x="540.0" y="212.0" font-size="9.5" class="ag-sub" text-anchor="middle">点击率</text>
+<rect x="443.6" y="266.0" width="192.8" height="66" rx="11" class="ag-card" stroke="#7c3aed" stroke-width="1.4" filter="url(#scSoft)"/>
+<text x="540.0" y="290.0" font-size="12.5" font-weight="700" class="ag-title" text-anchor="middle">CVR 预估</text>
+<text x="540.0" y="308.0" font-size="9.5" class="ag-sub" text-anchor="middle">转化率</text>
+<rect x="652.4" y="170.0" width="192.8" height="66" rx="11" class="ag-card" stroke="#7c3aed" stroke-width="1.4" filter="url(#scSoft)"/>
+<text x="748.8" y="194.0" font-size="12.5" font-weight="700" class="ag-title" text-anchor="middle">eCPM 排序</text>
+<text x="748.8" y="212.0" font-size="9.5" class="ag-sub" text-anchor="middle">统一折算</text>
+<rect x="652.4" y="266.0" width="192.8" height="66" rx="11" class="ag-card" stroke="#7c3aed" stroke-width="1.4" filter="url(#scSoft)"/>
+<text x="748.8" y="290.0" font-size="12.5" font-weight="700" class="ag-title" text-anchor="middle">GSP 定价</text>
+<text x="748.8" y="308.0" font-size="9.5" class="ag-sub" text-anchor="middle">次价拍卖</text>
+<rect x="861.2" y="170.0" width="192.8" height="66" rx="11" class="ag-card" stroke="#7c3aed" stroke-width="1.4" filter="url(#scSoft)"/>
+<text x="957.6" y="194.0" font-size="12.5" font-weight="700" class="ag-title" text-anchor="middle">反作弊</text>
+<text x="957.6" y="212.0" font-size="9.5" class="ag-sub" text-anchor="middle">过滤无效流量</text>
+<rect x="861.2" y="266.0" width="192.8" height="66" rx="11" class="ag-card" stroke="#7c3aed" stroke-width="1.4" filter="url(#scSoft)"/>
+<text x="957.6" y="290.0" font-size="12.5" font-weight="700" class="ag-title" text-anchor="middle">计费归因</text>
+<text x="957.6" y="308.0" font-size="9.5" class="ag-sub" text-anchor="middle">多触点分配</text>
+<text x="26" y="382" font-size="15" font-weight="800" fill="#7c3aed">② 关键技术 · 机制矩阵(广度:按技术域分组)</text>
+<rect x="26.0" y="398.0" width="78.0" height="28" rx="7" fill="#7c3aed" opacity="0.92"/>
+<text x="65.0" y="416.4" font-size="12.5" font-weight="800" fill="#ffffff" text-anchor="middle">竞价机制</text>
+<rect x="117.0" y="398.0" width="121.6" height="28" rx="14" fill="#7c3aed" opacity="0.1" stroke="#7c3aed" stroke-width="1"/>
+<text x="177.8" y="416.2" font-size="12" font-weight="600" fill="#7c3aed" text-anchor="middle">RTB 实时竞价</text>
+<rect x="247.6" y="398.0" width="109.4" height="28" rx="14" fill="#7c3aed" opacity="0.1" stroke="#7c3aed" stroke-width="1"/>
+<text x="302.3" y="416.2" font-size="12" font-weight="600" fill="#7c3aed" text-anchor="middle">eCPM 排序</text>
+<rect x="366.0" y="398.0" width="121.6" height="28" rx="14" fill="#7c3aed" opacity="0.1" stroke="#7c3aed" stroke-width="1"/>
+<text x="426.8" y="416.2" font-size="12" font-weight="600" fill="#7c3aed" text-anchor="middle">GSP 次价拍卖</text>
+<rect x="26.0" y="438.0" width="78.0" height="28" rx="7" fill="#7c3aed" opacity="0.92"/>
+<text x="65.0" y="456.4" font-size="12.5" font-weight="800" fill="#ffffff" text-anchor="middle">预估模型</text>
+<rect x="117.0" y="438.0" width="97.2" height="28" rx="14" fill="#7c3aed" opacity="0.1" stroke="#7c3aed" stroke-width="1"/>
+<text x="165.6" y="456.2" font-size="12" font-weight="600" fill="#7c3aed" text-anchor="middle">CTR 预估</text>
+<rect x="223.2" y="438.0" width="97.2" height="28" rx="14" fill="#7c3aed" opacity="0.1" stroke="#7c3aed" stroke-width="1"/>
+<text x="271.8" y="456.2" font-size="12" font-weight="600" fill="#7c3aed" text-anchor="middle">CVR 预估</text>
+<rect x="329.4" y="438.0" width="133.8" height="28" rx="14" fill="#7c3aed" opacity="0.1" stroke="#7c3aed" stroke-width="1"/>
+<text x="396.3" y="456.2" font-size="12" font-weight="600" fill="#7c3aed" text-anchor="middle">出价策略 oCPX</text>
+<rect x="26.0" y="478.0" width="91.0" height="28" rx="7" fill="#7c3aed" opacity="0.92"/>
+<text x="71.5" y="496.4" font-size="12.5" font-weight="800" fill="#ffffff" text-anchor="middle">反作弊结算</text>
+<rect x="130.0" y="478.0" width="85.0" height="28" rx="14" fill="#7c3aed" opacity="0.1" stroke="#7c3aed" stroke-width="1"/>
+<text x="172.5" y="496.2" font-size="12" font-weight="600" fill="#7c3aed" text-anchor="middle">流量反作弊</text>
+<rect x="224.0" y="478.0" width="85.0" height="28" rx="14" fill="#7c3aed" opacity="0.1" stroke="#7c3aed" stroke-width="1"/>
+<text x="266.5" y="496.2" font-size="12" font-weight="600" fill="#7c3aed" text-anchor="middle">计费与归因</text>
+<text x="26" y="550" font-size="15" font-weight="800" fill="#7c3aed">③ 核心张力 · 本质矛盾(深度:一对相互拉扯的力)</text>
+<rect x="26.0" y="564.0" width="469.0" height="168.0" rx="12" fill="#c0392b" opacity="0.07" stroke="#c0392b" stroke-width="1.3"/>
+<text x="260.5" y="585.0" font-size="13" font-weight="800" fill="#c0392b" text-anchor="middle">多方博弈诉求</text>
+<rect x="40.0" y="594.0" width="441.0" height="24" rx="7" fill="#c0392b" opacity="0.11"/>
+<text x="260.5" y="610.0" font-size="11.5" class="ag-title" text-anchor="middle">用户:体验不被打扰</text>
+<rect x="40.0" y="626.0" width="441.0" height="24" rx="7" fill="#c0392b" opacity="0.11"/>
+<text x="260.5" y="642.0" font-size="11.5" class="ag-title" text-anchor="middle">广告主:ROI/转化</text>
+<rect x="40.0" y="658.0" width="441.0" height="24" rx="7" fill="#c0392b" opacity="0.11"/>
+<text x="260.5" y="674.0" font-size="11.5" class="ag-title" text-anchor="middle">平台:收入最大化</text>
+<rect x="40.0" y="690.0" width="441.0" height="24" rx="7" fill="#c0392b" opacity="0.11"/>
+<text x="260.5" y="706.0" font-size="11.5" class="ag-title" text-anchor="middle">决策窗口:100ms 内</text>
+<rect x="585.0" y="564.0" width="469.0" height="168.0" rx="12" fill="#2d7d46" opacity="0.07" stroke="#2d7d46" stroke-width="1.3"/>
+<text x="819.5" y="585.0" font-size="13" font-weight="800" fill="#2d7d46" text-anchor="middle">统一度量与对抗</text>
+<rect x="599.0" y="594.0" width="441.0" height="24" rx="7" fill="#2d7d46" opacity="0.11"/>
+<text x="819.5" y="610.0" font-size="11.5" class="ag-title" text-anchor="middle">eCPM 统一比价</text>
+<rect x="599.0" y="626.0" width="441.0" height="24" rx="7" fill="#2d7d46" opacity="0.11"/>
+<text x="819.5" y="642.0" font-size="11.5" class="ag-title" text-anchor="middle">预估准确性定收益</text>
+<rect x="599.0" y="658.0" width="441.0" height="24" rx="7" fill="#2d7d46" opacity="0.11"/>
+<text x="819.5" y="674.0" font-size="11.5" class="ag-title" text-anchor="middle">GSP 激励真实出价</text>
+<rect x="599.0" y="690.0" width="441.0" height="24" rx="7" fill="#2d7d46" opacity="0.11"/>
+<text x="819.5" y="706.0" font-size="11.5" class="ag-title" text-anchor="middle">反作弊守住计费真实</text>
+<circle cx="540.0" cy="648.0" r="24" class="ag-bg" stroke="#7c3aed" stroke-width="1.6"/>
+<text x="540.0" y="656.0" font-size="22" text-anchor="middle">⚡</text>
+<path d="M514.0,648.0 L499.0,648.0" stroke="#c0392b" stroke-width="1.6" marker-end="url(#scArrB)"/>
+<path d="M566.0,648.0 L581.0,648.0" stroke="#2d7d46" stroke-width="1.6" marker-end="url(#scArr2)"/>
+<text x="26" y="750.0" font-size="11.5" class="ag-sub">◆ 三方冲突靠 eCPM 统一度量,收入天花板取决于预估准</text>
+<text x="26" y="767.0" font-size="11.5" class="ag-sub">◆ 确性,而非竞价机制本身;对抗环境下计费真实是底线。</text>
+<text x="26" y="816" font-size="15" font-weight="800" fill="#7c3aed">④ 本质洞察 · 一句话看穿这个场景</text>
+<rect x="26" y="828.0" width="1028" height="138" rx="12" class="ag-card" stroke="#7c3aed" stroke-width="1.4"/>
+<rect x="26" y="828.0" width="4" height="138" rx="2" fill="#7c3aed"/>
+<text x="50" y="858.0" font-size="13" class="ag-title">在线广告是典型的三方博弈系统:用户要体验、广告主要 ROI、平台要收入,三者天然冲突,而 eCPM 是把它们统一到同一把尺子上的关键——它让「出高价的劣质</text>
+<text x="50" y="878.0" font-size="13" class="ag-title">广告」与「出低价的优质广告」可以公平比较,因为 eCPM = 出价 × 预估CTR × 预估CVR 同时编码了广告主意愿与用户偏好。最反直觉的认知是:广告</text>
+<text x="50" y="898.0" font-size="13" class="ag-title">系统的收入天花板不在竞价机制本身,而在预估的准确性——CTR/CVR 预估准一个百分点,收入与体验同时上涨;预估失准则要么劣质广告挤占流量伤体验,要么优质</text>
+<text x="50" y="918.0" font-size="13" class="ag-title">广告卖不上价伤收入。因此这类系统的工程重心是三件事:极低延迟下完成一场竞价(100ms 硬约束)、预估模型的准确与校准(训练服务一致、延迟反馈修正)、以及</text>
+<text x="50" y="938.0" font-size="13" class="ag-title">反作弊守住计费真实性(黑产刷量直接偷钱)。真正的难点不是排序算法,而是在对抗环境下让每一次曝光的计费都真实可对账。</text>
+<text x="26" y="1012" font-size="15" font-weight="800" fill="#7c3aed">⑤ 失败模式 · 真实踩过的坑(反例:这样做会崩)</text>
+<rect x="26.0" y="1026.0" width="506.0" height="62" rx="10" class="ag-card" stroke="#e0562d" stroke-width="1" stroke-opacity="0.5"/>
+<circle cx="46.0" cy="1046.0" r="8" fill="#e0562d" opacity="0.14"/>
+<text x="46.0" y="1049.5" font-size="11" font-weight="800" fill="#e0562d" text-anchor="middle">✕</text>
+<text x="62.0" y="1046.0" font-size="11.5" class="ag-sub">排序只看预估 CTR 不乘出价——高点击低价值广告挤占优质广告,平台收入</text>
+<text x="62.0" y="1064.0" font-size="11.5" class="ag-sub">受损</text>
+<rect x="548.0" y="1026.0" width="506.0" height="44" rx="10" class="ag-card" stroke="#e0562d" stroke-width="1" stroke-opacity="0.5"/>
+<circle cx="568.0" cy="1046.0" r="8" fill="#e0562d" opacity="0.14"/>
+<text x="568.0" y="1049.5" font-size="11" font-weight="800" fill="#e0562d" text-anchor="middle">✕</text>
+<text x="584.0" y="1046.0" font-size="11.5" class="ag-sub">用首价拍卖计费——广告主反复试探压价,市场博弈不稳、出价不真实</text>
+<rect x="26.0" y="1100.0" width="506.0" height="62" rx="10" class="ag-card" stroke="#e0562d" stroke-width="1" stroke-opacity="0.5"/>
+<circle cx="46.0" cy="1120.0" r="8" fill="#e0562d" opacity="0.14"/>
+<text x="46.0" y="1123.5" font-size="11" font-weight="800" fill="#e0562d" text-anchor="middle">✕</text>
+<text x="62.0" y="1120.0" font-size="11.5" class="ag-sub">预估只追 AUC 不做校准——eCPM 系统性偏高/偏低,竞价与计费全盘</text>
+<text x="62.0" y="1138.0" font-size="11.5" class="ag-sub">失真</text>
+<rect x="548.0" y="1082.0" width="506.0" height="44" rx="10" class="ag-card" stroke="#e0562d" stroke-width="1" stroke-opacity="0.5"/>
+<circle cx="568.0" cy="1102.0" r="8" fill="#e0562d" opacity="0.14"/>
+<text x="568.0" y="1105.5" font-size="11" font-weight="800" fill="#e0562d" text-anchor="middle">✕</text>
+<text x="584.0" y="1102.0" font-size="11.5" class="ag-sub">训练与线上服务特征口径不一致——离线效果好上线拉胯,是预估翻车的头号原因</text>
+<rect x="26.0" y="1174.0" width="506.0" height="44" rx="10" class="ag-card" stroke="#e0562d" stroke-width="1" stroke-opacity="0.5"/>
+<circle cx="46.0" cy="1194.0" r="8" fill="#e0562d" opacity="0.14"/>
+<text x="46.0" y="1197.5" font-size="11" font-weight="800" fill="#e0562d" text-anchor="middle">✕</text>
+<text x="62.0" y="1194.0" font-size="11.5" class="ag-sub">CVR 直接把未回流样本当负例——转化延迟被误标,模型低估转化、出价保守</text>
+<rect x="548.0" y="1138.0" width="506.0" height="44" rx="10" class="ag-card" stroke="#e0562d" stroke-width="1" stroke-opacity="0.5"/>
+<circle cx="568.0" cy="1158.0" r="8" fill="#e0562d" opacity="0.14"/>
+<text x="568.0" y="1161.5" font-size="11" font-weight="800" fill="#e0562d" text-anchor="middle">✕</text>
+<text x="584.0" y="1158.0" font-size="11.5" class="ag-sub">不做流量反作弊——机器刷量点击直接计费,广告费被黑产偷走且填充虚高</text>
+<rect x="26.0" y="1230.0" width="506.0" height="44" rx="10" class="ag-card" stroke="#e0562d" stroke-width="1" stroke-opacity="0.5"/>
+<circle cx="46.0" cy="1250.0" r="8" fill="#e0562d" opacity="0.14"/>
+<text x="46.0" y="1253.5" font-size="11" font-weight="800" fill="#e0562d" text-anchor="middle">✕</text>
+<text x="62.0" y="1250.0" font-size="11.5" class="ag-sub">归因口径与广告主自有统计不对齐——结算时数据对不上,引发信任与合同纠纷</text>
+<text x="26" y="1322" font-size="15" font-weight="800" fill="#7c3aed">⑥ 设计心法 · 沉淀出的正解(正例:应该这样做)</text>
+<rect x="26.0" y="1336.0" width="506.0" height="62" rx="10" fill="#2ea043" fill-opacity="0.06" stroke="#2ea043" stroke-width="1" stroke-opacity="0.45"/>
+<circle cx="46.0" cy="1356.0" r="8" fill="#2ea043" opacity="0.16"/>
+<text x="46.0" y="1359.5" font-size="11" font-weight="800" fill="#2ea043" text-anchor="middle">✓</text>
+<text x="62.0" y="1356.0" font-size="11.5" class="ag-title">eCPM 是广告系统的统一语言:出价 × 预估CTR × 预估CVR 让</text>
+<text x="62.0" y="1374.0" font-size="11.5" class="ag-title">不同计费模式、不同质量的广告在同一把尺子下公平竞价</text>
+<rect x="548.0" y="1336.0" width="506.0" height="62" rx="10" fill="#2ea043" fill-opacity="0.06" stroke="#2ea043" stroke-width="1" stroke-opacity="0.45"/>
+<circle cx="568.0" cy="1356.0" r="8" fill="#2ea043" opacity="0.16"/>
+<text x="568.0" y="1359.5" font-size="11" font-weight="800" fill="#2ea043" text-anchor="middle">✓</text>
+<text x="584.0" y="1356.0" font-size="11.5" class="ag-title">收入天花板取决于预估准确性而非竞价机制——CTR/CVR 预估准一点,收</text>
+<text x="584.0" y="1374.0" font-size="11.5" class="ag-title">入与体验同时抬升,校准比 AUC 更影响真实收益</text>
+<rect x="26.0" y="1410.0" width="506.0" height="62" rx="10" fill="#2ea043" fill-opacity="0.06" stroke="#2ea043" stroke-width="1" stroke-opacity="0.45"/>
+<circle cx="46.0" cy="1430.0" r="8" fill="#2ea043" opacity="0.16"/>
+<text x="46.0" y="1433.5" font-size="11" font-weight="800" fill="#2ea043" text-anchor="middle">✓</text>
+<text x="62.0" y="1430.0" font-size="11.5" class="ag-title">GSP 次价拍卖用「付第二名价格」激励广告主按真实价值出价,牺牲严格最优</text>
+<text x="62.0" y="1448.0" font-size="11.5" class="ag-title">换工程可解释,是行业主流选择</text>
+<rect x="548.0" y="1410.0" width="506.0" height="62" rx="10" fill="#2ea043" fill-opacity="0.06" stroke="#2ea043" stroke-width="1" stroke-opacity="0.45"/>
+<circle cx="568.0" cy="1430.0" r="8" fill="#2ea043" opacity="0.16"/>
+<text x="568.0" y="1433.5" font-size="11" font-weight="800" fill="#2ea043" text-anchor="middle">✓</text>
+<text x="584.0" y="1430.0" font-size="11.5" class="ag-title">反作弊是广告的生死线:不是锦上添花而是守住计费真实性,黑产刷量等于直接偷</text>
+<text x="584.0" y="1448.0" font-size="11.5" class="ag-title">钱,须实时+离线持续对抗</text>
+<rect x="26.0" y="1484.0" width="506.0" height="62" rx="10" fill="#2ea043" fill-opacity="0.06" stroke="#2ea043" stroke-width="1" stroke-opacity="0.45"/>
+<circle cx="46.0" cy="1504.0" r="8" fill="#2ea043" opacity="0.16"/>
+<text x="46.0" y="1507.5" font-size="11" font-weight="800" fill="#2ea043" text-anchor="middle">✓</text>
+<text x="62.0" y="1504.0" font-size="11.5" class="ag-title">特征平台统一训练与服务口径,是预估工程的地基——线上线下特征漂移是模型翻</text>
+<text x="62.0" y="1522.0" font-size="11.5" class="ag-title">车最常见也最隐蔽的坑</text>
+</svg></div><div class="sc-sec"><h2>核心技术点</h2><div class="grid"><div class="grp"><h3>竞价机制</h3><ul><li><b>RTB 实时竞价</b><span>毫秒级实时竞价,ADX 发单、DSP 出价、赢家曝光</span><span class="dp">一次广告请求触发实时竞价:ADX(交易平台)把流量拆成竞价请求发给各 DSP,DSP 在预算和定向约束下出价,最高者赢得曝光——全程须在 100ms 内闭环,超时即丢弃该 DSP 出价。关键是超低延迟下的高并发撮合。失败模式:某 DSP 超时拖慢整场竞价,须设硬超时+异步并发询价,慢的直接放弃而非阻塞全局。</span></li><li><b>eCPM 排序</b><span>eCPM = 出价 × 预估CTR × 预估CVR × 1000,统一度量收益</span><span class="dp">不同计费模式(CPM/CPC/CPA)无法直接比价,统一折算成 eCPM(每千次展示期望收益)排序,让平台在同一把尺子下取收益最大者。核心是 eCPM 依赖预估的准确性——CTR/CVR 预估偏高会让低质广告挤掉优质广告。失败模式:预估系统性高估导致劣质广告长期占位,须校准(calibration)让预估值贴近真实点击率。</span></li><li><b>GSP 次价拍卖</b><span>广义次价拍卖,赢家按第二名出价计费,激励真实出价</span><span class="dp">若按自己出价计费(首价),广告主会反复试探压低出价,市场不稳。GSP 让赢家只需支付「刚好超过第二名」的价格,理论上激励广告主按真实价值出价、简化博弈。权衡:GSP 非严格激励相容但工程简单被广泛采用,VCG 更优却复杂难解释。失败模式:首价拍卖下的出价博弈使收入与稳定性双输。</span></li></ul></div><div class="grp"><h3>预估模型</h3><ul><li><b>CTR 预估</b><span>预估点击率,LR→GBDT→深度模型(Wide&amp;Deep/DIN)演进</span><span class="dp">eCPM 的核心因子,预估用户点击某广告的概率。特征含用户画像、广告创意、上下文、交叉特征,模型从 LR 到 Wide&amp;Deep、DIN 演进以捕捉高阶交叉与兴趣。关键是特征时效——实时特征(近几分钟行为)比静态画像信息量大得多。失败模式:训练/服务特征不一致(线上线下特征口径漂移)导致预估失准,须特征平台统一。</span></li><li><b>CVR 预估</b><span>预估转化率,解决延迟转化与样本稀疏难题</span><span class="dp">面向 CPA/oCPX 计费,预估点击后的转化概率。难点是转化延迟——用户可能点击数天后才下单,回流样本天然滞后,直接训练会把「还没转化」误标为负样本。须用延迟反馈建模(delayed feedback)或转化窗口修正。失败模式:样本稀疏(转化远少于点击)+延迟叠加使 CVR 模型方差大,须联合建模或迁移学习。</span></li><li><b>出价策略 oCPX</b><span>从人工 CPC 到智能出价,按转化目标自动调价</span><span class="dp">oCPX(优化成本)让广告主设定目标成本,系统按实时预估 CVR 自动换算并动态调整出价,把「为点击出价」升级为「为转化出价」。核心是预算平滑与成本控制的博弈——既要花完预算又不能超成本。失败模式:出价策略与预估耦合,预估抖动引发出价震荡,须 PID/强化学习平滑控制。</span></li></ul></div><div class="grp"><h3>反作弊结算</h3><ul><li><b>流量反作弊</b><span>识别机器刷量、无效点击,过滤虚假流量</span><span class="dp">广告按曝光/点击计费,黑产用机器人、点击农场刷量骗取广告费。须多维识别:设备指纹、行为序列异常、IP 聚集、点击时间分布异常等,实时+离线双层拦截。关键是对抗性——规则一公开即被绕过,须持续迭代+模型化。失败模式:反作弊过严误杀真实用户,广告主投诉填充率骤降,须精细化平衡召回与精度。</span></li><li><b>计费与归因</b><span>曝光/点击/转化计费,多触点归因分配转化功劳</span><span class="dp">计费须防重复计费(同一点击多次上报)与防刷,归因解决「这次转化该归功于哪次广告触达」——末次归因简单但低估前链路,多触点归因(线性/时间衰减/数据驱动)更公平但复杂。关键是计费流水的准确与可对账,涉及真金白银不能错。失败模式:归因口径与广告主统计不一致引发结算纠纷,须口径对齐+明细可查。</span></li></ul></div></div></div><div class="sc-sec"><div class="insight"><h2>本质洞察</h2><p>在线广告是典型的三方博弈系统:用户要体验、广告主要 ROI、平台要收入,三者天然冲突,而 eCPM 是把它们统一到同一把尺子上的关键——它让「出高价的劣质广告」与「出低价的优质广告」可以公平比较,因为 eCPM = 出价 × 预估CTR × 预估CVR 同时编码了广告主意愿与用户偏好。最反直觉的认知是:广告系统的收入天花板不在竞价机制本身,而在预估的准确性——CTR/CVR 预估准一个百分点,收入与体验同时上涨;预估失准则要么劣质广告挤占流量伤体验,要么优质广告卖不上价伤收入。因此这类系统的工程重心是三件事:极低延迟下完成一场竞价(100ms 硬约束)、预估模型的准确与校准(训练服务一致、延迟反馈修正)、以及反作弊守住计费真实性(黑产刷量直接偷钱)。真正的难点不是排序算法,而是在对抗环境下让每一次曝光的计费都真实可对账。</p></div></div><div class="sc-sec"><h2>设计张力</h2><div class="sc-tension"><div class="tn-wrap"><div class="tn-side tn-l"><div class="tn-lbl">多方博弈诉求</div><ul><li>用户:体验不被打扰</li><li>广告主:ROI/转化</li><li>平台:收入最大化</li><li>决策窗口:100ms 内</li></ul></div><div class="tn-vs">VS</div><div class="tn-side tn-r"><div class="tn-lbl">统一度量与对抗</div><ul><li>eCPM 统一比价</li><li>预估准确性定收益</li><li>GSP 激励真实出价</li><li>反作弊守住计费真实</li></ul></div></div><div class="tn-core">三方冲突靠 eCPM 统一度量,收入天花板取决于预估准确性,而非竞价机制本身;对抗环境下计费真实是底线。</div></div></div><div class="sc-sec"><h2>容量漏斗</h2><div class="arch-canvas"><svg xmlns="http://www.w3.org/2000/svg" class="arch-svg" viewBox="0 0 1080 572" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Text','PingFang SC',sans-serif">
+<defs><filter id="fnSoft" x="-6%" y="-6%" width="112%" height="112%"><feDropShadow dx="0" dy="2" stdDeviation="6" flood-color="#0a0a0a" flood-opacity="0.10"/></filter></defs>
+<defs><marker id="fnArr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#7c3aed" opacity="0.6"/></marker></defs>
+<rect x="0" y="0" width="1080" height="572" class="ag-bg"/>
+<text x="40" y="42" font-size="20" font-weight="800" class="ag-title">在线广告与实时竞价 · 容量漏斗</text>
+<text x="40" y="70" font-size="12.5" class="ag-sub">入口洪峰到有效结果的逐级过滤 · 每一层都在用最小代价挡掉注定失败的请求</text>
+<rect x="40.0" y="92" width="1000.0" height="74" rx="14" fill="#7c3aed" opacity="0.140" stroke="#7c3aed" stroke-width="1.2" filter="url(#fnSoft)"/>
+<text x="540.0" y="119" font-size="13.5" font-weight="700" class="ag-title" text-anchor="middle">广告请求</text>
+<text x="540.0" y="144" font-size="18" font-weight="800" fill="#7c3aed" text-anchor="middle">100%</text>
+<text x="1052.0" y="133.0" font-size="11" class="ag-sub" text-anchor="start">一次曝光机会触发一次广告请求,峰值百万级 QPS</text>
+<path d="M540.0 167 L540.0 180" stroke="#7c3aed" stroke-width="1.4" opacity="0.5" marker-end="url(#fnArr)"/>
+<rect x="127.5" y="182" width="825.0" height="74" rx="14" fill="#7c3aed" opacity="0.165" stroke="#7c3aed" stroke-width="1.2" filter="url(#fnSoft)"/>
+<text x="540.0" y="209" font-size="13.5" font-weight="700" class="ag-title" text-anchor="middle">召回定向</text>
+<text x="540.0" y="234" font-size="18" font-weight="800" fill="#7c3aed" text-anchor="middle">×数百</text>
+<text x="964.5" y="223.0" font-size="11" class="ag-sub" text-anchor="start">按定向条件+预算从广告库召回候选广告</text>
+<path d="M540.0 257 L540.0 270" stroke="#7c3aed" stroke-width="1.4" opacity="0.5" marker-end="url(#fnArr)"/>
+<rect x="215.0" y="272" width="650.0" height="74" rx="14" fill="#7c3aed" opacity="0.190" stroke="#7c3aed" stroke-width="1.2" filter="url(#fnSoft)"/>
+<text x="540.0" y="299" font-size="13.5" font-weight="700" class="ag-title" text-anchor="middle">CTR/CVR 预估</text>
+<text x="540.0" y="324" font-size="18" font-weight="800" fill="#7c3aed" text-anchor="middle">候选级</text>
+<text x="877.0" y="313.0" font-size="11" class="ag-sub" text-anchor="start">逐候选打分,须在毫秒内完成批量预估</text>
+<path d="M540.0 347 L540.0 360" stroke="#7c3aed" stroke-width="1.4" opacity="0.5" marker-end="url(#fnArr)"/>
+<rect x="302.5" y="362" width="475.0" height="74" rx="14" fill="#7c3aed" opacity="0.215" stroke="#7c3aed" stroke-width="1.2" filter="url(#fnSoft)"/>
+<text x="540.0" y="389" font-size="13.5" font-weight="700" class="ag-title" text-anchor="middle">eCPM 排序竞价</text>
+<text x="540.0" y="414" font-size="18" font-weight="800" fill="#7c3aed" text-anchor="middle">取 Top</text>
+<text x="789.5" y="403.0" font-size="11" class="ag-sub" text-anchor="start">统一折算 eCPM 排序,GSP 定价出赢家</text>
+<path d="M540.0 437 L540.0 450" stroke="#7c3aed" stroke-width="1.4" opacity="0.5" marker-end="url(#fnArr)"/>
+<rect x="390.0" y="452" width="300.0" height="74" rx="14" fill="#7c3aed" opacity="0.240" stroke="#7c3aed" stroke-width="1.2" filter="url(#fnSoft)"/>
+<text x="540.0" y="479" font-size="13.5" font-weight="700" class="ag-title" text-anchor="middle">曝光计费归因</text>
+<text x="540.0" y="504" font-size="18" font-weight="800" fill="#7c3aed" text-anchor="middle">反作弊后</text>
+<text x="702.0" y="493.0" font-size="11" class="ag-sub" text-anchor="start">过滤无效流量后计费,多触点归因转化</text>
+</svg></div></div><div class="sc-sec"><h2>核心数据流</h2><div class="arch-canvas"><svg xmlns="http://www.w3.org/2000/svg" class="arch-svg" viewBox="0 0 1080 342" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Text','PingFang SC',sans-serif">
+<defs><filter id="scSoft" x="-6%" y="-6%" width="112%" height="112%"><feDropShadow dx="0" dy="2" stdDeviation="6" flood-color="#0a0a0a" flood-opacity="0.08"/></filter><marker id="scArr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#7c3aed"/></marker><marker id="scArrB" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#c0392b"/></marker></defs>
+<rect x="0" y="0" width="1080" height="342" class="ag-bg"/>
+<text x="26" y="42" font-size="20" font-weight="800" class="ag-title">在线广告与实时竞价 · 端到端数据流</text>
+<text x="26" y="70" font-size="12.5" class="ag-sub">增长风控层 · Online Advertising &amp; RTB · 沿箭头方向为请求 / 数据流转,红色虚线为回流 / 补偿</text>
+<rect x="26.0" y="92" width="192.8" height="30" rx="9" fill="#7c3aed" opacity="0.12"/>
+<text x="122.4" y="112" font-size="12" font-weight="700" fill="#7c3aed" text-anchor="middle">请求</text>
+<rect x="234.8" y="92" width="192.8" height="30" rx="9" fill="#7c3aed" opacity="0.12"/>
+<text x="331.2" y="112" font-size="12" font-weight="700" fill="#7c3aed" text-anchor="middle">召回</text>
+<rect x="443.6" y="92" width="192.8" height="30" rx="9" fill="#7c3aed" opacity="0.12"/>
+<text x="540.0" y="112" font-size="12" font-weight="700" fill="#7c3aed" text-anchor="middle">预估</text>
+<rect x="652.4" y="92" width="192.8" height="30" rx="9" fill="#7c3aed" opacity="0.12"/>
+<text x="748.8" y="112" font-size="12" font-weight="700" fill="#7c3aed" text-anchor="middle">竞价</text>
+<rect x="861.2" y="92" width="192.8" height="30" rx="9" fill="#7c3aed" opacity="0.12"/>
+<text x="957.6" y="112" font-size="12" font-weight="700" fill="#7c3aed" text-anchor="middle">结算</text>
+<path d="M218.8,217.0 C226.8,217.0 226.8,217.0 234.8,217.0" fill="none" stroke="#7c3aed" stroke-width="1.6" marker-end="url(#scArr)" opacity="0.8"/>
+<rect x="200.8" y="200.0" width="46.0" height="15" rx="4" class="ag-bg" opacity="0.92"/>
+<text x="223.8" y="211.0" font-size="10" class="ag-sub" text-anchor="middle">召回候选</text>
+<path d="M427.6,217.0 C435.6,217.0 435.6,169.0 443.6,169.0" fill="none" stroke="#7c3aed" stroke-width="1.6" marker-end="url(#scArr)" opacity="0.8"/>
+<rect x="404.8" y="176.0" width="55.5" height="15" rx="4" class="ag-bg" opacity="0.92"/>
+<text x="432.6" y="187.0" font-size="10" class="ag-sub" text-anchor="middle">逐候选打分</text>
+<path d="M636.4,169.0 C540.0,169.0 540.0,265.0 443.6,265.0" fill="none" stroke="#7c3aed" stroke-width="1.6" marker-end="url(#scArr)" opacity="0.8"/>
+<rect x="553.6" y="200.0" width="46.0" height="15" rx="4" class="ag-bg" opacity="0.92"/>
+<text x="576.6" y="211.0" font-size="10" class="ag-sub" text-anchor="middle">转化预估</text>
+<path d="M636.4,265.0 C644.4,265.0 644.4,169.0 652.4,169.0" fill="none" stroke="#7c3aed" stroke-width="1.6" marker-end="url(#scArr)" opacity="0.8"/>
+<rect x="618.4" y="200.0" width="46.0" height="15" rx="4" class="ag-bg" opacity="0.92"/>
+<text x="641.4" y="211.0" font-size="10" class="ag-sub" text-anchor="middle">折算收益</text>
+<path d="M845.2,169.0 C748.8,169.0 748.8,265.0 652.4,265.0" fill="none" stroke="#7c3aed" stroke-width="1.6" marker-end="url(#scArr)" opacity="0.8"/>
+<rect x="767.2" y="200.0" width="36.5" height="15" rx="4" class="ag-bg" opacity="0.92"/>
+<text x="785.4" y="211.0" font-size="10" class="ag-sub" text-anchor="middle">取赢家</text>
+<path d="M845.2,265.0 C853.2,265.0 853.2,169.0 861.2,169.0" fill="none" stroke="#7c3aed" stroke-width="1.6" marker-end="url(#scArr)" opacity="0.8"/>
+<rect x="827.2" y="200.0" width="46.0" height="15" rx="4" class="ag-bg" opacity="0.92"/>
+<text x="850.2" y="211.0" font-size="10" class="ag-sub" text-anchor="middle">曝光校验</text>
+<path d="M1054.0,169.0 C957.6,169.0 957.6,265.0 861.2,265.0" fill="none" stroke="#7c3aed" stroke-width="1.6" marker-end="url(#scArr)" opacity="0.8"/>
+<rect x="971.2" y="200.0" width="46.0" height="15" rx="4" class="ag-bg" opacity="0.92"/>
+<text x="994.2" y="211.0" font-size="10" class="ag-sub" text-anchor="middle">有效计费</text>
+<rect x="26.0" y="184.0" width="192.8" height="66" rx="11" class="ag-card" stroke="#7c3aed" stroke-width="1.4" filter="url(#scSoft)"/>
+<text x="122.4" y="208.0" font-size="12.5" font-weight="700" class="ag-title" text-anchor="middle">广告请求</text>
+<text x="122.4" y="226.0" font-size="9.5" class="ag-sub" text-anchor="middle">一次曝光机会</text>
+<rect x="234.8" y="184.0" width="192.8" height="66" rx="11" class="ag-card" stroke="#7c3aed" stroke-width="1.4" filter="url(#scSoft)"/>
+<text x="331.2" y="208.0" font-size="12.5" font-weight="700" class="ag-title" text-anchor="middle">召回定向</text>
+<text x="331.2" y="226.0" font-size="9.5" class="ag-sub" text-anchor="middle">预算+定向筛选</text>
+<rect x="443.6" y="136.0" width="192.8" height="66" rx="11" class="ag-card" stroke="#7c3aed" stroke-width="1.4" filter="url(#scSoft)"/>
+<text x="540.0" y="160.0" font-size="12.5" font-weight="700" class="ag-title" text-anchor="middle">CTR 预估</text>
+<text x="540.0" y="178.0" font-size="9.5" class="ag-sub" text-anchor="middle">点击率</text>
+<rect x="443.6" y="232.0" width="192.8" height="66" rx="11" class="ag-card" stroke="#7c3aed" stroke-width="1.4" filter="url(#scSoft)"/>
+<text x="540.0" y="256.0" font-size="12.5" font-weight="700" class="ag-title" text-anchor="middle">CVR 预估</text>
+<text x="540.0" y="274.0" font-size="9.5" class="ag-sub" text-anchor="middle">转化率</text>
+<rect x="652.4" y="136.0" width="192.8" height="66" rx="11" class="ag-card" stroke="#7c3aed" stroke-width="1.4" filter="url(#scSoft)"/>
+<text x="748.8" y="160.0" font-size="12.5" font-weight="700" class="ag-title" text-anchor="middle">eCPM 排序</text>
+<text x="748.8" y="178.0" font-size="9.5" class="ag-sub" text-anchor="middle">统一折算</text>
+<rect x="652.4" y="232.0" width="192.8" height="66" rx="11" class="ag-card" stroke="#7c3aed" stroke-width="1.4" filter="url(#scSoft)"/>
+<text x="748.8" y="256.0" font-size="12.5" font-weight="700" class="ag-title" text-anchor="middle">GSP 定价</text>
+<text x="748.8" y="274.0" font-size="9.5" class="ag-sub" text-anchor="middle">次价拍卖</text>
+<rect x="861.2" y="136.0" width="192.8" height="66" rx="11" class="ag-card" stroke="#7c3aed" stroke-width="1.4" filter="url(#scSoft)"/>
+<text x="957.6" y="160.0" font-size="12.5" font-weight="700" class="ag-title" text-anchor="middle">反作弊</text>
+<text x="957.6" y="178.0" font-size="9.5" class="ag-sub" text-anchor="middle">过滤无效流量</text>
+<rect x="861.2" y="232.0" width="192.8" height="66" rx="11" class="ag-card" stroke="#7c3aed" stroke-width="1.4" filter="url(#scSoft)"/>
+<text x="957.6" y="256.0" font-size="12.5" font-weight="700" class="ag-title" text-anchor="middle">计费归因</text>
+<text x="957.6" y="274.0" font-size="9.5" class="ag-sub" text-anchor="middle">多触点分配</text>
+</svg></div></div><div class="sc-sec"><h2>需求根基</h2><div class="req-grid"><div class="req-col"><h3>功能需求</h3><ul><li>广告召回定向:按人群/兴趣/地域/时段等条件从广告库召回候选</li><li>预估打分:CTR/CVR 实时预估,毫秒内完成候选批量打分</li><li>竞价排序:eCPM 统一折算排序,GSP 次价拍卖定价</li><li>曝光计费:CPM/CPC/CPA 多计费模式,防重复防作弊计费</li><li>归因结算:多触点归因分配转化功劳,明细可对账</li></ul></div><div class="req-col req-wide"><h3>质量指标</h3><table class="qtab"><tr><th>维度</th><th>目标</th><th>说明</th></tr><tr><td class="qk">竞价延迟</td><td class="qv">P99 &lt; 100ms</td><td>一次竞价含召回+预估+排序,超时则丢弃该候选,延迟直接决定填充</td></tr><tr><td class="qk">预估准确性</td><td class="qv">AUC / 校准</td><td>CTR/CVR 预估既要区分度(AUC)又要校准(预估值贴近真实率)</td></tr><tr><td class="qk">填充率</td><td class="qv">尽量高</td><td>有广告请求却无广告返回是收入漏损,须平衡反作弊误杀与填充</td></tr><tr><td class="qk">反作弊准确</td><td class="qv">低漏低误</td><td>漏判被黑产偷钱,误判误杀真实流量,须精细平衡召回精度</td></tr><tr><td class="qk">计费准确</td><td class="qv">可对账</td><td>涉及真金白银,计费流水须与广告主统计口径一致、明细可查</td></tr></table></div><div class="req-col req-wide"><h3>关键约束</h3><ul class="cons"><li>极低延迟:整场竞价 100ms 内闭环,预估必须在毫秒内完成批量打分</li><li>对抗环境:黑产持续刷量骗费,反作弊规则一公开即被绕过,须持续对抗</li><li>延迟反馈:转化可能滞后数天回流,CVR 训练样本天然不完整,须延迟建模</li></ul></div></div></div><div class="sc-sec"><h2>存储选型</h2><table class="dtab"><tr><th>数据实体</th><th>存储方案</th><th>选型理由</th></tr><tr><td class="de">广告库</td><td class="ds">创意+定向+预算</td><td>召回候选、预算约束</td></tr><tr><td class="de">定向标签</td><td class="ds">人群/兴趣画像</td><td>定向匹配、召回过滤</td></tr><tr><td class="de">预估特征</td><td class="ds">特征平台统一</td><td>训练服务一致、实时特征</td></tr><tr><td class="de">竞价日志</td><td class="ds">流式落库</td><td>eCPM/出价/赢家留痕</td></tr><tr><td class="de">计费流水</td><td class="ds">防重+对账库</td><td>准确计费、可对账</td></tr><tr><td class="de">归因数据</td><td class="ds">多触点链路</td><td>转化功劳分配</td></tr></table></div><div class="sc-sec"><h2>演进路线</h2><div class="rm-wrap"><div class="rm-step"><span class="rm-stage">MVP</span><div class="rm-focus">CPC 合约</div><div class="rm-detail">固定定向、CPC 计费、简单排序</div></div><div class="rm-step"><span class="rm-stage">成长期</span><div class="rm-focus">RTB 竞价</div><div class="rm-detail">实时竞价、CTR 预估、eCPM 排序、GSP 定价</div></div><div class="rm-step"><span class="rm-stage">成熟期</span><div class="rm-focus">智能出价</div><div class="rm-detail">CVR 预估、oCPX 智能出价、反作弊、多触点归因</div></div></div></div><div class="sc-sec sc-pitfall"><h2>常见踩坑</h2><ul class="pit"><li>排序只看预估 CTR 不乘出价——高点击低价值广告挤占优质广告,平台收入受损</li><li>用首价拍卖计费——广告主反复试探压价,市场博弈不稳、出价不真实</li><li>预估只追 AUC 不做校准——eCPM 系统性偏高/偏低,竞价与计费全盘失真</li><li>训练与线上服务特征口径不一致——离线效果好上线拉胯,是预估翻车的头号原因</li><li>CVR 直接把未回流样本当负例——转化延迟被误标,模型低估转化、出价保守</li><li>不做流量反作弊——机器刷量点击直接计费,广告费被黑产偷走且填充虚高</li><li>归因口径与广告主自有统计不对齐——结算时数据对不上,引发信任与合同纠纷</li></ul></div><div class="sc-sec sc-takeaway"><h2>设计心法</h2><ul class="tk"><li>eCPM 是广告系统的统一语言:出价 × 预估CTR × 预估CVR 让不同计费模式、不同质量的广告在同一把尺子下公平竞价</li><li>收入天花板取决于预估准确性而非竞价机制——CTR/CVR 预估准一点,收入与体验同时抬升,校准比 AUC 更影响真实收益</li><li>GSP 次价拍卖用「付第二名价格」激励广告主按真实价值出价,牺牲严格最优换工程可解释,是行业主流选择</li><li>反作弊是广告的生死线:不是锦上添花而是守住计费真实性,黑产刷量等于直接偷钱,须实时+离线持续对抗</li><li>特征平台统一训练与服务口径,是预估工程的地基——线上线下特征漂移是模型翻车最常见也最隐蔽的坑</li></ul></div><footer>业务场景 · 分布式系统落地全景 · 核心技术点架构图</footer></div><script>(function(){var r=document.documentElement,KEY="atlas-nav-theme";function ap(t){if(t==="dark")r.setAttribute("data-theme","dark");else r.removeAttribute("data-theme");}var s="light";try{s=localStorage.getItem(KEY)||"light";}catch(e){}ap(s);var tt=document.getElementById("tt");if(tt)tt.onclick=function(){var n=r.getAttribute("data-theme")==="dark"?"light":"dark";ap(n);try{localStorage.setItem(KEY,n);}catch(e){}};})();</script></body></html>

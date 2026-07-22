@@ -1,0 +1,117 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="720" viewBox="0 0 1120 720" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="aB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#4a7fd0"/></marker>
+    <marker id="aG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+    <marker id="aR" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#d1544a"/></marker>
+  </defs>
+  <rect width="1120" height="720" fill="#fbfbfd"/>
+
+  <text x="30" y="34" font-size="16" font-weight="700" fill="#1d1d1f">数组（A1）· 连续内存的下标寻址：访问一步到位 O(1)，中间增删要搬移 O(n)</text>
+  <text x="30" y="55" font-size="10.5" fill="#6e6e73">数组把逻辑序号映射为物理地址；这套映射让读极快，却让"在中间腾/补位置"必须逐格搬移后续元素</text>
+
+  <!-- 图例 -->
+  <rect x="30" y="72" width="12" height="12" rx="2" fill="#4a7fd0"/><text x="48" y="82" font-size="10" fill="#3a3a3c">已有元素 / 连续格子</text>
+  <rect x="220" y="72" width="12" height="12" rx="2" fill="#2f9e6e"/><text x="238" y="82" font-size="10" fill="#3a3a3c">O(1) 直达 / 新写入值</text>
+  <rect x="420" y="72" width="12" height="12" rx="2" fill="#d1544a"/><text x="438" y="82" font-size="10" fill="#3a3a3c">搬移中的元素 O(n)</text>
+
+  <!-- Panel A 随机访问 -->
+  <rect x="30" y="100" width="1050" height="150" rx="14" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="52" y="128" font-size="13" font-weight="700" fill="#20375e">随机访问 · randomAccess(nums)：nums[i] 一步命中</text>
+
+  <g font-size="12" text-anchor="middle">
+    <rect x="60" y="150" width="68" height="44" rx="5" fill="#eaf1fb" stroke="#c6d9f2"/><text x="94" y="177" fill="#20375e">10</text>
+    <rect x="132" y="150" width="68" height="44" rx="5" fill="#eaf1fb" stroke="#c6d9f2"/><text x="166" y="177" fill="#20375e">20</text>
+    <rect x="204" y="150" width="68" height="44" rx="5" fill="#eaf1fb" stroke="#c6d9f2"/><text x="238" y="177" fill="#20375e">30</text>
+    <rect x="276" y="150" width="68" height="44" rx="5" fill="#dbe8fa" stroke="#2f9e6e" stroke-width="2"/><text x="310" y="177" fill="#20375e">40</text>
+    <rect x="348" y="150" width="68" height="44" rx="5" fill="#eaf1fb" stroke="#c6d9f2"/><text x="382" y="177" fill="#20375e">50</text>
+    <rect x="420" y="150" width="68" height="44" rx="5" fill="#eaf1fb" stroke="#c6d9f2"/><text x="454" y="177" fill="#20375e">60</text>
+  </g>
+  <g font-size="9" text-anchor="middle" fill="#8a97ab">
+    <text x="94" y="210">idx0 · base</text><text x="166" y="210">1 · +s</text><text x="238" y="210">2 · +2s</text><text x="310" y="210">3 · +3s</text><text x="382" y="210">4 · +4s</text><text x="454" y="210">5 · +5s</text>
+  </g>
+  <text x="94" y="230" font-size="9" text-anchor="middle" fill="#8a97ab">s = 元素宽度（等长）</text>
+
+  <line x1="560" y1="172" x2="492" y2="172" stroke="#2f9e6e" stroke-width="2" marker-end="url(#aG)"/>
+  <text x="568" y="158" font-size="15" font-weight="700" fill="#2f6b4e">addr(i) = base + i × s</text>
+  <text x="568" y="182" font-size="10.5" fill="#4a4a4f">读 nums[3]：一次乘加得地址，直接取值</text>
+  <text x="568" y="202" font-size="10.5" fill="#4a4a4f">与元素个数 n 无关 → 恒定 <tspan font-weight="700" fill="#2f6b4e">O(1)</tspan> 随机访问</text>
+  <text x="568" y="222" font-size="9.5" fill="#8a97ab">这正是数组区别于链表的根本优势：位置即地址</text>
+
+  <!-- Panel B 插入 -->
+  <rect x="30" y="262" width="1050" height="210" rx="14" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="52" y="290" font-size="13" font-weight="700" fill="#20375e">中间插入 · insert(nums, 99, index=2)：从尾向前逐格右移，空出第 2 位</text>
+
+  <text x="52" y="322" font-size="10.5" font-weight="700" fill="#6e6e73">插入前</text>
+  <g font-size="12" text-anchor="middle">
+    <rect x="120" y="308" width="68" height="40" rx="5" fill="#eaf1fb" stroke="#c6d9f2"/><text x="154" y="333" fill="#20375e">10</text>
+    <rect x="192" y="308" width="68" height="40" rx="5" fill="#eaf1fb" stroke="#c6d9f2"/><text x="226" y="333" fill="#20375e">20</text>
+    <rect x="264" y="308" width="68" height="40" rx="5" fill="#dbe8fa" stroke="#e8a79f" stroke-width="1.5"/><text x="298" y="333" fill="#20375e">30</text>
+    <rect x="336" y="308" width="68" height="40" rx="5" fill="#dbe8fa" stroke="#e8a79f" stroke-width="1.5"/><text x="370" y="333" fill="#20375e">40</text>
+    <rect x="408" y="308" width="68" height="40" rx="5" fill="#dbe8fa" stroke="#e8a79f" stroke-width="1.5"/><text x="442" y="333" fill="#20375e">50</text>
+    <rect x="480" y="308" width="68" height="40" rx="5" fill="#f4f4f6" stroke="#d7d7dd" stroke-dasharray="3 2"/><text x="514" y="333" font-size="9" fill="#a1a1a6">空</text>
+  </g>
+  <g font-size="8.5" text-anchor="middle" fill="#8a97ab"><text x="154" y="360">0</text><text x="226" y="360">1</text><text x="298" y="360">2</text><text x="370" y="360">3</text><text x="442" y="360">4</text><text x="514" y="360">5</text></g>
+
+  <!-- 右移搬移箭头 -->
+  <line x1="332" y1="382" x2="404" y2="382" stroke="#d1544a" stroke-width="1.8" stroke-dasharray="4 3" marker-end="url(#aR)"/>
+  <line x1="404" y1="382" x2="476" y2="382" stroke="#d1544a" stroke-width="1.8" stroke-dasharray="4 3" marker-end="url(#aR)"/>
+  <line x1="476" y1="382" x2="548" y2="382" stroke="#d1544a" stroke-width="1.8" stroke-dasharray="4 3" marker-end="url(#aR)"/>
+  <text x="298" y="386" font-size="9.5" text-anchor="middle" fill="#8a4038">30·40·50 依次右移一位 →</text>
+
+  <text x="52" y="414" font-size="10.5" font-weight="700" fill="#6e6e73">插入后</text>
+  <g font-size="12" text-anchor="middle">
+    <rect x="120" y="400" width="68" height="40" rx="5" fill="#eaf1fb" stroke="#c6d9f2"/><text x="154" y="425" fill="#20375e">10</text>
+    <rect x="192" y="400" width="68" height="40" rx="5" fill="#eaf1fb" stroke="#c6d9f2"/><text x="226" y="425" fill="#20375e">20</text>
+    <rect x="264" y="400" width="68" height="40" rx="5" fill="#e6f6ee" stroke="#2f9e6e" stroke-width="2"/><text x="298" y="425" fill="#20375e">99</text>
+    <rect x="336" y="400" width="68" height="40" rx="5" fill="#dbe8fa" stroke="#9dbdea"/><text x="370" y="425" fill="#20375e">30</text>
+    <rect x="408" y="400" width="68" height="40" rx="5" fill="#dbe8fa" stroke="#9dbdea"/><text x="442" y="425" fill="#20375e">40</text>
+    <rect x="480" y="400" width="68" height="40" rx="5" fill="#dbe8fa" stroke="#9dbdea"/><text x="514" y="425" fill="#20375e">50</text>
+  </g>
+  <g font-size="8.5" text-anchor="middle" fill="#8a97ab"><text x="154" y="452">0</text><text x="226" y="452">1</text><text x="298" y="452">2</text><text x="370" y="452">3</text><text x="442" y="452">4</text><text x="514" y="452">5</text></g>
+
+  <text x="600" y="322" font-size="10.5" fill="#4a4a4f">先从末尾 i = len-1 起，向前把每个元素抄到后一格：</text>
+  <text x="600" y="342" font-size="10.5" fill="#8a4038">nums[i] ← nums[i-1]，直到 i = index+1</text>
+  <text x="600" y="362" font-size="10.5" fill="#2f6b4e">腾出的第 2 格写入新值：nums[2] = 99</text>
+  <rect x="600" y="378" width="456" height="30" rx="6" fill="#fbecea" stroke="#eec5c0"/>
+  <text x="612" y="397" font-size="10.5" fill="#8a4038">越靠前插入，需搬移的元素越多 → 最坏 <tspan font-weight="700">O(n)</tspan></text>
+  <text x="600" y="432" font-size="9.5" fill="#8a97ab">从尾向前搬移可避免覆盖尚未挪走的值（方向不能反）</text>
+  <text x="600" y="452" font-size="9.5" fill="#8a97ab">前提：数组尾部尚有空位；否则先扩容（见 A3 动态数组）</text>
+
+  <!-- Panel C 删除 -->
+  <rect x="30" y="484" width="1050" height="210" rx="14" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="52" y="512" font-size="13" font-weight="700" fill="#20375e">中间删除 · remove(nums, index=2)：从第 2 位起逐格左移覆盖，长度减一</text>
+
+  <text x="52" y="544" font-size="10.5" font-weight="700" fill="#6e6e73">删除前</text>
+  <g font-size="12" text-anchor="middle">
+    <rect x="120" y="530" width="68" height="40" rx="5" fill="#eaf1fb" stroke="#c6d9f2"/><text x="154" y="555" fill="#20375e">10</text>
+    <rect x="192" y="530" width="68" height="40" rx="5" fill="#eaf1fb" stroke="#c6d9f2"/><text x="226" y="555" fill="#20375e">20</text>
+    <rect x="264" y="530" width="68" height="40" rx="5" fill="#fbecea" stroke="#d1544a" stroke-width="2"/><text x="298" y="555" fill="#8a4038">30</text>
+    <rect x="336" y="530" width="68" height="40" rx="5" fill="#dbe8fa" stroke="#e8a79f" stroke-width="1.5"/><text x="370" y="555" fill="#20375e">40</text>
+    <rect x="408" y="530" width="68" height="40" rx="5" fill="#dbe8fa" stroke="#e8a79f" stroke-width="1.5"/><text x="442" y="555" fill="#20375e">50</text>
+  </g>
+  <g font-size="8.5" text-anchor="middle" fill="#8a97ab"><text x="154" y="582">0</text><text x="226" y="582">1</text><text x="298" y="582">2 删</text><text x="370" y="582">3</text><text x="442" y="582">4</text></g>
+
+  <!-- 左移箭头 -->
+  <line x1="404" y1="604" x2="332" y2="604" stroke="#d1544a" stroke-width="1.8" stroke-dasharray="4 3" marker-end="url(#aR)"/>
+  <line x1="476" y1="604" x2="404" y2="604" stroke="#d1544a" stroke-width="1.8" stroke-dasharray="4 3" marker-end="url(#aR)"/>
+  <text x="404" y="608" font-size="9.5" text-anchor="middle" fill="#8a4038">← 40·50 依次左移覆盖</text>
+
+  <text x="52" y="636" font-size="10.5" font-weight="700" fill="#6e6e73">删除后</text>
+  <g font-size="12" text-anchor="middle">
+    <rect x="120" y="622" width="68" height="40" rx="5" fill="#eaf1fb" stroke="#c6d9f2"/><text x="154" y="647" fill="#20375e">10</text>
+    <rect x="192" y="622" width="68" height="40" rx="5" fill="#eaf1fb" stroke="#c6d9f2"/><text x="226" y="647" fill="#20375e">20</text>
+    <rect x="264" y="622" width="68" height="40" rx="5" fill="#dbe8fa" stroke="#9dbdea"/><text x="298" y="647" fill="#20375e">40</text>
+    <rect x="336" y="622" width="68" height="40" rx="5" fill="#dbe8fa" stroke="#9dbdea"/><text x="370" y="647" fill="#20375e">50</text>
+    <rect x="408" y="622" width="68" height="40" rx="5" fill="#f4f4f6" stroke="#d7d7dd" stroke-dasharray="3 2"/><text x="442" y="647" font-size="9" fill="#a1a1a6">残留</text>
+  </g>
+  <g font-size="8.5" text-anchor="middle" fill="#8a97ab"><text x="154" y="674">0</text><text x="226" y="674">1</text><text x="298" y="674">2</text><text x="370" y="674">3</text><text x="442" y="674">4 (size-1)</text></g>
+
+  <text x="600" y="544" font-size="10.5" fill="#4a4a4f">从 i = index 起，向后把每个元素抄到前一格：</text>
+  <text x="600" y="564" font-size="10.5" fill="#8a4038">nums[i] ← nums[i+1]，直到 i = len-2</text>
+  <text x="600" y="584" font-size="10.5" fill="#4a4a4f">尾部残留旧值失效，逻辑长度 size 减一</text>
+  <rect x="600" y="600" width="456" height="30" rx="6" fill="#fbecea" stroke="#eec5c0"/>
+  <text x="612" y="619" font-size="10.5" fill="#8a4038">删首元素要搬移几乎全部 → 最坏 <tspan font-weight="700">O(n)</tspan></text>
+  <text x="600" y="654" font-size="9.5" fill="#8a97ab">删除方向与插入相反：从前向后覆盖，才不会丢掉待挪的值</text>
+  <text x="600" y="674" font-size="9.5" fill="#8a97ab">要点：连续布局让"读"廉价，却把"结构变动"的代价压在搬移上</text>
+</svg>

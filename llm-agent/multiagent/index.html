@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Multi-Agent · AI Agents 图谱</title>
+<style>
+:root{
+  --c-bg:#fbfbfd; --c-card:#ffffff; --c-card2:#f5f5f7; --c-ink:#1d1d1f;
+  --c-ink2:#6e6e73; --c-ink3:#a1a1a6; --c-line:#e6e6ea; --c-edge:#d2d2d7;
+  --c-panel:#ffffff; --c-shadow:rgba(0,0,0,.08);
+}
+html[data-theme="dark"]{
+  --c-bg:#0d0d0f; --c-card:#17171a; --c-card2:#1e1e22; --c-ink:#f2f2f5;
+  --c-ink2:#a1a1a6; --c-ink3:#6e6e73; --c-line:#2a2a30; --c-edge:#33333a;
+  --c-panel:#161619; --c-shadow:rgba(0,0,0,.5);
+  /* 架构图内联 SVG 结构中性色深色翻转(品牌强调色不变) */
+  --sc-bg:#17171a; --sc-panel:#1e1e22; --sc-ink:#e8e8ea; --sc-ink2:#c4c4c8;
+  --sc-sub:#9a9aa2; --sc-line:#33333a; --sc-line2:#3d3d45;
+  --sc-fill-blue:#16253d; --sc-fill-purple:#241d3a; --sc-fill-orange:#382214; --sc-fill-teal:#0f3330;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--c-bg);color:var(--c-ink);
+  font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif;
+  font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+header{position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:14px;
+  padding:12px 24px;background:color-mix(in srgb,var(--c-bg) 86%,transparent);
+  backdrop-filter:saturate(1.4) blur(14px);border-bottom:1px solid var(--c-line)}
+header .logo{display:inline-flex;align-items:center;flex:none}
+header .spacer{flex:1}
+.brand-intro{display:flex;flex-direction:column;align-items:flex-start;margin-left:6px;min-width:0}
+.brand-intro .bt{font-size:15px;font-weight:700;color:var(--c-ink);line-height:1.3}
+.brand-intro .bs{margin-top:3px;font-size:11.5px;color:var(--c-ink3);line-height:1.5}
+.icobtn{width:38px;height:38px;border-radius:50%;border:1px solid var(--c-line);
+  background:var(--c-panel);color:var(--c-ink2);cursor:pointer;display:inline-grid;
+  place-items:center;font-size:16px;flex:none;text-decoration:none}
+.tt-ico{font-size:16px;line-height:1}.tt-moon{display:none}
+html[data-theme="dark"] .tt-sun{display:none}html[data-theme="dark"] .tt-moon{display:inline}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 24px 80px}
+
+/* ---- 门户 hero ---- */
+.hero{margin:6px 0 26px}
+.hero h1{font-size:26px;font-weight:800;letter-spacing:.2px}
+.hero .sub{margin-top:8px;font-size:13.5px;color:var(--c-ink2);max-width:820px}
+.hero .back{display:inline-flex;align-items:center;gap:6px;margin-bottom:14px;
+  font-size:12.5px;color:var(--c-ink2);border:1px solid var(--c-line);
+  border-radius:999px;padding:5px 13px;background:var(--c-panel)}
+.hero .back:hover{color:var(--c-ink);border-color:var(--c-edge)}
+
+/* ---- 门户卡片栅格 ---- */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:18px}
+.card{position:relative;display:block;background:var(--c-card);border:1px solid var(--c-line);
+  border-radius:16px;padding:20px 20px 18px;overflow:hidden;transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease}
+.card:hover{transform:translateY(-3px);border-color:var(--acc);box-shadow:0 10px 30px var(--c-shadow)}
+.card .bar{position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--acc)}
+.card .k{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.6px;
+  color:var(--acc);text-transform:uppercase;margin-bottom:8px}
+.card h3{font-size:17px;font-weight:750;line-height:1.35;color:var(--c-ink)}
+.card .core{margin-top:9px;font-size:12.5px;color:var(--c-ink2);line-height:1.6}
+.card .tags{margin-top:14px;display:flex;flex-direction:column;gap:7px}
+.card .tag{display:flex;gap:8px;align-items:baseline;font-size:12px;color:var(--c-ink2)}
+.card .tag .n{font-weight:800;color:var(--acc);flex:none;font-variant-numeric:tabular-nums}
+.card .go{margin-top:16px;font-size:12px;font-weight:700;color:var(--acc);display:inline-flex;align-items:center;gap:5px}
+
+/* ---- 模块页 ---- */
+.judge{background:var(--c-card);border:1px solid var(--c-line);border-left:4px solid var(--acc);
+  border-radius:14px;padding:18px 22px;margin-bottom:26px}
+.judge .k{font-size:11px;font-weight:700;letter-spacing:.6px;color:var(--acc);text-transform:uppercase}
+.judge h1{font-size:22px;font-weight:800;line-height:1.34;margin-top:7px}
+.judge .core{margin-top:11px;font-size:13.5px;color:var(--c-ink2);line-height:1.7;max-width:900px}
+.secttl{display:flex;align-items:center;gap:11px;margin:34px 0 14px}
+.secttl .badge{flex:none;min-width:30px;height:30px;padding:0 9px;border-radius:9px;background:var(--acc);
+  color:#fff;font-weight:800;font-size:15px;display:inline-grid;place-items:center}
+.secttl .t{font-size:17px;font-weight:750}
+.secttl.eco .badge{background:var(--c-ink);color:var(--c-bg)}
+/* ── 垂直 TAB 布局 ── */
+.vt-wrap{display:flex;gap:22px;margin-top:26px;align-items:flex-start}
+.vt-nav{flex:none;width:236px;position:sticky;top:20px;display:flex;flex-direction:column;gap:8px}
+.vt-grp{font-size:11px;font-weight:800;letter-spacing:.04em;color:var(--c-ink3);
+  text-transform:none;margin:14px 4px 2px;padding-top:8px;border-top:1px solid var(--c-line)}
+.vt-grp:first-child{margin-top:0;padding-top:0;border-top:none}
+.vt-tab{display:flex;align-items:center;gap:10px;text-align:left;cursor:pointer;
+  background:var(--c-card);border:1px solid var(--c-line);border-radius:12px;
+  padding:12px 13px;color:var(--c-ink2);font:inherit;transition:.15s}
+.vt-tab:hover{border-color:var(--acc);color:var(--c-ink)}
+.vt-tab.active{background:var(--acc);border-color:var(--acc);color:#fff;box-shadow:0 4px 14px -6px var(--acc)}
+.vt-tab .vt-b{flex:none;min-width:26px;height:26px;padding:0 7px;border-radius:8px;
+  background:var(--c-card2);color:var(--acc);font-weight:800;font-size:13px;
+  display:inline-grid;place-items:center}
+.vt-tab.active .vt-b{background:rgba(255,255,255,.24);color:#fff}
+.vt-tab .vt-l{font-size:12.5px;font-weight:650;line-height:1.35}
+.vt-stage{flex:1;min-width:0}
+.vt-sec{display:none}
+.vt-sec.active{display:block;animation:vtfade .22s ease}
+.vt-sec .secttl{margin-top:0}
+@keyframes vtfade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media(max-width:820px){.vt-wrap{flex-direction:column}.vt-nav{position:static;width:100%;flex-direction:row;flex-wrap:wrap}.vt-tab{flex:1 1 44%}}
+.fig{background:var(--c-card);border:1px solid var(--c-line);border-radius:16px;
+  padding:16px;overflow:hidden}
+.fig img{display:block;width:100%;height:auto;border-radius:8px}
+.fig .figsvg{display:block;width:100%;height:auto;border-radius:8px}
+.blurb{margin-top:14px;background:var(--c-card);border:1px solid var(--c-line);
+  border-radius:14px;padding:15px 19px}
+.blurb p{font-size:13px;color:var(--c-ink2);line-height:1.75}
+.blurb p+p{margin-top:9px}
+.blurb b{color:var(--c-ink);font-weight:700}
+.blurb code{font-family:'SF Mono',ui-monospace,Menlo,monospace;font-size:.88em;
+  background:var(--c-card2);border:1px solid var(--c-line);border-radius:5px;padding:1px 5px;color:var(--acc)}
+.blurb a{color:var(--acc);text-decoration:none;
+  border-bottom:1px solid color-mix(in srgb,var(--acc) 40%,transparent);transition:border-color .15s}
+.blurb a:hover{border-bottom-color:var(--acc)}
+.refs{margin-top:30px;padding-top:18px;border-top:2px solid var(--c-line)}
+.reflist{margin-top:12px}
+.reflist p{margin:5px 0;font-size:12.5px;color:var(--c-ink2);line-height:1.7}
+.reflist a{color:var(--acc)}
+.miss{padding:40px;text-align:center;color:var(--c-ink3);font-size:13px;border:1px dashed var(--c-edge);border-radius:12px}
+.backrow{margin-top:44px;padding-top:22px;border-top:1px solid var(--c-line)}
+.backrow a{display:inline-flex;align-items:center;gap:7px;font-size:13px;color:var(--c-ink2);
+  border:1px solid var(--c-line);border-radius:999px;padding:8px 16px;background:var(--c-panel)}
+.backrow a:hover{color:var(--c-ink);border-color:var(--c-edge)}
+footer{max-width:1180px;margin:0 auto;padding:0 24px 40px;color:var(--c-ink3);font-size:11.5px}
+
+/* ---- 门户片区切换 tab + 片区标题条 ---- */
+.zbar{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap}
+.zseg{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:700;
+  color:var(--c-ink2);border:1px solid var(--c-line);border-radius:999px;
+  padding:8px 16px;background:var(--c-panel);transition:.15s}
+.zseg:hover{color:var(--c-ink);border-color:var(--c-edge)}
+.zseg.active{color:var(--c-ink);border-color:var(--c-ink);background:var(--c-card)}
+.zseg .zn{min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:var(--c-card2);
+  color:var(--c-ink2);font-size:11px;font-weight:800;display:inline-grid;place-items:center}
+.zone{margin-top:38px;scroll-margin-top:80px}
+.zone:first-of-type{margin-top:30px}
+.zhd{margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--c-line)}
+.zhd .zk{font-size:11px;font-weight:800;letter-spacing:.08em;color:var(--c-ink3);text-transform:uppercase}
+.zhd h2{font-size:20px;font-weight:800;margin-top:5px;color:var(--c-ink)}
+.zhd p{font-size:12.5px;color:var(--c-ink2);margin-top:6px;max-width:860px;line-height:1.65}
+</style>
+</head>
+<body>
+<header>
+  <a class="logo" href="../../index.html#agent" title="返回 LLM & Agent 导航"><span class="icobtn"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg></span></a>
+  <div class="brand-intro">
+    <div class="bt">Multi-Agent</div>
+    <div class="bs">AI Agents 生态图谱 · 概念层机理（不点名具体框架）</div>
+  </div>
+  <div class="spacer"></div>
+  <button id="themeBtn" class="icobtn" title="切换深色 / 浅色主题" aria-label="切换主题"><span class="tt-ico tt-moon">☾</span><span class="tt-ico tt-sun">☀</span></button>
+</header>
+<div class="wrap" style="--acc:#f5873a">
+  <div class="judge">
+    <span class="k">MULTIAGENT · 定位</span>
+    <h1>Multi-Agent · 多智能体协作与编排</h1>
+    <div class="core">把一个大任务拆给多个专精 Agent:用编排拓扑决定谁先谁后、用通信协议传递中间态、用仲裁者消解冲突并汇聚结果。</div>
+  </div>
+  <div class="vt-wrap"><nav class="vt-nav" aria-label="模块内容切换"><div class="vt-grp">概览 Overview</div><button class="vt-tab active" data-target="sec-eco"><span class="vt-b">◎</span><span class="vt-l">生态架构总图</span></button><div class="vt-grp">机制 · 编排拓扑</div><button class="vt-tab" data-target="sec-a1"><span class="vt-b">A1</span><span class="vt-l">监督者 vs 去中心化网络</span></button><div class="vt-grp">机制 · 角色分工</div><button class="vt-tab" data-target="sec-a2"><span class="vt-b">A2</span><span class="vt-l">规划者/执行者/评审者</span></button><div class="vt-grp">机制 · 通信协作</div><button class="vt-tab" data-target="sec-a3"><span class="vt-b">A3</span><span class="vt-l">黑板 + 消息传递</span></button><div class="vt-grp">对比 Compare</div><button class="vt-tab" data-target="sec-cmp"><span class="vt-b">⇄</span><span class="vt-l">机制差异对比</span></button><div class="vt-grp">工程 Engineering</div><button class="vt-tab" data-target="sec-eng"><span class="vt-b">⚙</span><span class="vt-l">框架实现差异</span></button></nav><div class="vt-stage"><section class="vt-sec active" id="sec-eco" data-sec="sec-eco"><div class="secttl eco"><span class="badge">◎</span><span class="t">生态架构总图 · 这一模块如何在 Agent 系统中自洽拼合</span></div><div class="fig" role="img" aria-label="Multi-Agent 生态架构"><svg class="figsvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 600" font-family="-apple-system,'PingFang SC','Helvetica Neue',sans-serif">
+  <defs>
+    <filter id="s28_soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.07"/></filter>
+    <marker id="s28_arh" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#0a84ff"/></marker>
+    <marker id="s28_ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="var(--sc-line2,#b8b8bf)"/></marker>
+    <marker id="s28_arf" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#f5873a"/></marker>
+  </defs>
+  <rect width="960" height="600" fill="var(--sc-bg,#fbfbfd)"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="var(--sc-ink,#1d1d1f)">Multi-Agent · 多智能体协作 · 生态架构</text>
+  <text x="30" y="54" font-size="12" fill="var(--sc-sub,#6e6e73)">单个 Agent 上下文有限、能力单一——把复杂任务拆给多个各司其职的 Agent 分工协作，是规模化的必由之路</text>
+
+  <!-- 监督者 -->
+  <g filter="url(#s28_soft)"><rect x="370" y="90" width="220" height="76" rx="13" fill="var(--sc-fill-orange,#fff3ea)" stroke="#f5873a" stroke-width="1.6"/></g>
+  <text x="480" y="120" font-size="12.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">监督者 / 编排者</text>
+  <text x="480" y="144" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">任务拆解 · 分派 · 汇总</text>
+
+  <!-- 三个子 Agent -->
+  <g filter="url(#s28_soft)"><rect x="90" y="230" width="200" height="90" rx="13" fill="var(--sc-fill-blue,#eef4ff)" stroke="#0a84ff" stroke-width="1.5"/></g>
+  <text x="190" y="262" font-size="11.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">规划者 Agent</text>
+  <text x="190" y="286" font-size="9.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">拆解目标为子任务</text>
+  <text x="190" y="306" font-size="9.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">制定执行计划</text>
+
+  <g filter="url(#s28_soft)"><rect x="380" y="230" width="200" height="90" rx="13" fill="var(--sc-fill-blue,#eef4ff)" stroke="#0a84ff" stroke-width="1.5"/></g>
+  <text x="480" y="262" font-size="11.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">执行者 Agent</text>
+  <text x="480" y="286" font-size="9.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">调工具、写代码</text>
+  <text x="480" y="306" font-size="9.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">完成具体子任务</text>
+
+  <g filter="url(#s28_soft)"><rect x="670" y="230" width="200" height="90" rx="13" fill="var(--sc-fill-blue,#eef4ff)" stroke="#0a84ff" stroke-width="1.5"/></g>
+  <text x="770" y="262" font-size="11.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">评审者 Agent</text>
+  <text x="770" y="286" font-size="9.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">检查质量、挑错</text>
+  <text x="770" y="306" font-size="9.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">反馈返工建议</text>
+
+  <path d="M440 166 L230 226" stroke="#f5873a" stroke-width="1.8" marker-end="url(#s28_arf)"/>
+  <path d="M480 166 L480 226" stroke="#f5873a" stroke-width="1.8" marker-end="url(#s28_arf)"/>
+  <path d="M520 166 L730 226" stroke="#f5873a" stroke-width="1.8" marker-end="url(#s28_arf)"/>
+  <path d="M290 275 L376 275" stroke="#0a84ff" stroke-width="1.6" marker-end="url(#s28_arh)"/>
+  <path d="M580 275 L666 275" stroke="#0a84ff" stroke-width="1.6" marker-end="url(#s28_arh)"/>
+
+  <g filter="url(#s28_soft)"><rect x="60" y="370" width="840" height="150" rx="13" fill="var(--sc-panel,#ffffff)" stroke="var(--sc-line,#d2d2d7)" stroke-width="1.3"/></g>
+  <text x="80" y="398" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)">本模块的三条机理线</text>
+  <text x="80" y="424" font-size="10.5" fill="var(--sc-sub,#6e6e73)">A1 编排拓扑：监督者集中调度 vs 去中心化网络自组织——决定谁指挥谁、信息如何流动</text>
+  <text x="80" y="448" font-size="10.5" fill="var(--sc-sub,#6e6e73)">A2 角色分工：规划者/执行者/评审者各司其职，用角色专业化 + 相互制衡提升整体质量</text>
+  <text x="80" y="472" font-size="10.5" fill="var(--sc-sub,#6e6e73)">A3 通信协作：黑板共享 vs 消息传递——多个 Agent 如何交换中间结果、达成一致</text>
+  <text x="80" y="500" font-size="10" fill="#f5873a">核心张力：分工带来专业化收益，但通信与协调成本、错误传播风险随 Agent 数量非线性上升</text>
+
+  <line x1="628" y1="588" x2="650" y2="588" stroke="#f5873a" stroke-width="1.8"/><text x="656" y="591" font-size="9" fill="var(--sc-sub,#6e6e73)">编排/分派</text>
+  <line x1="738" y1="588" x2="760" y2="588" stroke="#0a84ff" stroke-width="1.8"/><text x="766" y="591" font-size="9" fill="var(--sc-sub,#6e6e73)">协作热路径</text>
+</svg></div><div class="blurb"><p>当单 Agent 上下文塞不下整个任务、一个模型既规划又执行还自评力不从心时，把「全能 Agent」拆成多个专长 Agent 协作——这就是多智能体系统。它回答三个正交问题：如何组织谁指挥谁（编排拓扑）、扮什么角色如何制衡（角色分工）、如何交换信息（通信协作）。前提：多 Agent 不是银弹，用成倍成本、更复杂拓扑、更难调试换更强能力——<b>单 Agent 解决不了时才引入</b>。见生态图。</p></div></section><section class="vt-sec" id="sec-a1" data-sec="sec-a1"><div class="secttl"><span class="badge">A1</span><span class="t">编排拓扑 · 监督者 vs 去中心化网络</span></div><div class="fig" role="img" aria-label="编排拓扑 · 监督者 vs 去中心化网络"><svg class="figsvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 500" font-family="-apple-system,'PingFang SC','Helvetica Neue',sans-serif">
+  <defs>
+    <filter id="s29_soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.07"/></filter>
+    <marker id="s29_arf" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#f5873a"/></marker>
+    <marker id="s29_arh" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#0a84ff"/></marker>
+  </defs>
+  <rect width="960" height="500" fill="var(--sc-bg,#fbfbfd)"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="var(--sc-ink,#1d1d1f)">A1 · 编排拓扑：监督者 vs 去中心化网络</text>
+  <text x="30" y="54" font-size="12" fill="var(--sc-sub,#6e6e73)">谁指挥谁、信息如何流动——拓扑结构决定了系统的可控性、扩展性与鲁棒性</text>
+
+  <!-- 监督者模式 -->
+  <text x="240" y="90" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">监督者模式 (Supervisor)</text>
+  <g filter="url(#s29_soft)"><rect x="180" y="105" width="120" height="52" rx="12" fill="var(--sc-fill-orange,#fff3ea)" stroke="#f5873a" stroke-width="1.6"/></g>
+  <text x="240" y="136" font-size="10.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">监督者</text>
+  <g filter="url(#s29_soft)"><rect x="70" y="220" width="100" height="46" rx="11" fill="var(--sc-fill-blue,#eef4ff)" stroke="#0a84ff" stroke-width="1.4"/></g>
+  <text x="120" y="248" font-size="9.5" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">Agent A</text>
+  <g filter="url(#s29_soft)"><rect x="190" y="220" width="100" height="46" rx="11" fill="var(--sc-fill-blue,#eef4ff)" stroke="#0a84ff" stroke-width="1.4"/></g>
+  <text x="240" y="248" font-size="9.5" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">Agent B</text>
+  <g filter="url(#s29_soft)"><rect x="310" y="220" width="100" height="46" rx="11" fill="var(--sc-fill-blue,#eef4ff)" stroke="#0a84ff" stroke-width="1.4"/></g>
+  <text x="360" y="248" font-size="9.5" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">Agent C</text>
+  <path d="M225 157 L130 216" stroke="#f5873a" stroke-width="1.6" marker-end="url(#s29_arf)"/>
+  <path d="M240 157 L240 216" stroke="#f5873a" stroke-width="1.6" marker-end="url(#s29_arf)"/>
+  <path d="M255 157 L350 216" stroke="#f5873a" stroke-width="1.6" marker-end="url(#s29_arf)"/>
+  <text x="240" y="300" font-size="9.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">中心调度：可控、易追责</text>
+  <text x="240" y="320" font-size="9.5" fill="#f5873a" text-anchor="middle">风险：监督者是瓶颈与单点</text>
+
+  <!-- 去中心化 -->
+  <text x="700" y="90" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">去中心化网络 (Network)</text>
+  <g filter="url(#s29_soft)"><rect x="600" y="120" width="90" height="44" rx="11" fill="var(--sc-fill-blue,#eef4ff)" stroke="#0a84ff" stroke-width="1.4"/></g><text x="645" y="147" font-size="9.5" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">Agent A</text>
+  <g filter="url(#s29_soft)"><rect x="760" y="120" width="90" height="44" rx="11" fill="var(--sc-fill-blue,#eef4ff)" stroke="#0a84ff" stroke-width="1.4"/></g><text x="805" y="147" font-size="9.5" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">Agent B</text>
+  <g filter="url(#s29_soft)"><rect x="680" y="230" width="90" height="44" rx="11" fill="var(--sc-fill-blue,#eef4ff)" stroke="#0a84ff" stroke-width="1.4"/></g><text x="725" y="257" font-size="9.5" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">Agent C</text>
+  <path d="M690 145 L758 145" stroke="#0a84ff" stroke-width="1.5" marker-end="url(#s29_arh)"/>
+  <path d="M660 164 L710 226" stroke="#0a84ff" stroke-width="1.5" marker-end="url(#s29_arh)"/>
+  <path d="M790 164 L745 226" stroke="#0a84ff" stroke-width="1.5" marker-end="url(#s29_arh)"/>
+  <text x="725" y="305" font-size="9.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">对等直连：灵活、抗单点</text>
+  <text x="725" y="325" font-size="9.5" fill="#f5873a" text-anchor="middle">风险：易失控、难收敛、难调试</text>
+
+  <g filter="url(#s29_soft)"><rect x="40" y="360" width="880" height="110" rx="13" fill="var(--sc-panel,#ffffff)" stroke="var(--sc-line,#d2d2d7)" stroke-width="1.3"/></g>
+  <text x="60" y="388" font-size="11.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)">如何选拓扑</text>
+  <text x="60" y="412" font-size="10.5" fill="var(--sc-sub,#6e6e73)">• 任务边界清晰、需强控制与可追溯 → 监督者模式：中心化编排，流程可预测、便于调试与止损</text>
+  <text x="60" y="436" font-size="10.5" fill="var(--sc-sub,#6e6e73)">• 任务开放探索、需并行涌现 → 去中心化：Agent 自主协商，但要设最大轮数/预算上限防死循环</text>
+  <text x="60" y="460" font-size="10" fill="#f5873a">实践首选监督者：多数生产系统更需要可控与可观测，去中心化的"涌现智能"往往伴随不可控代价</text>
+</svg></div><div class="blurb"><p><b>编排拓扑</b>回答「谁指挥谁、信息如何流动」。两极端：<b>监督者模式</b>中心化，一个监督者拆解派发再收集，流程可预测/易追责/便调试，代价是自身成瓶颈单点；<b>去中心化网络</b>对等直连自主协商，灵活抗单点却易失控/难收敛。生产系统多首选监督者（更需可控可观测）。无论哪种都要设最大轮数与预算防无限对话。见图。</p></div></section><section class="vt-sec" id="sec-a2" data-sec="sec-a2"><div class="secttl"><span class="badge">A2</span><span class="t">角色分工 · 规划者/执行者/评审者</span></div><div class="fig" role="img" aria-label="角色分工 · 规划者/执行者/评审者"><svg class="figsvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 500" font-family="-apple-system,'PingFang SC','Helvetica Neue',sans-serif">
+  <defs>
+    <filter id="s30_soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.07"/></filter>
+    <marker id="s30_arf" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#f5873a"/></marker>
+    <marker id="s30_arp" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#a78bfa"/></marker>
+  </defs>
+  <rect width="960" height="500" fill="var(--sc-bg,#fbfbfd)"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="var(--sc-ink,#1d1d1f)">A2 · 角色分工：规划者 / 执行者 / 评审者</text>
+  <text x="30" y="54" font-size="12" fill="var(--sc-sub,#6e6e73)">把一个"全能 Agent"拆成各司其职的专家——分工降低单体上下文负担，制衡提升产出可靠性</text>
+
+  <!-- 规划者 -->
+  <g filter="url(#s30_soft)"><rect x="60" y="120" width="200" height="110" rx="13" fill="var(--sc-fill-purple,#f3ecff)" stroke="#a78bfa" stroke-width="1.6"/></g>
+  <text x="160" y="150" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">规划者 Planner</text>
+  <text x="160" y="178" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">拆解目标为子任务</text>
+  <text x="160" y="198" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">排定顺序与依赖</text>
+  <text x="160" y="218" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">只想"做什么"</text>
+
+  <!-- 执行者 -->
+  <g filter="url(#s30_soft)"><rect x="380" y="120" width="200" height="110" rx="13" fill="var(--sc-fill-orange,#fff3ea)" stroke="#f5873a" stroke-width="1.6"/></g>
+  <text x="480" y="150" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">执行者 Executor</text>
+  <text x="480" y="178" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">调用工具/写代码</text>
+  <text x="480" y="198" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">落地单个子任务</text>
+  <text x="480" y="218" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">只管"怎么做"</text>
+
+  <!-- 评审者 -->
+  <g filter="url(#s30_soft)"><rect x="700" y="120" width="200" height="110" rx="13" fill="var(--sc-fill-blue,#eef4ff)" stroke="#0a84ff" stroke-width="1.6"/></g>
+  <text x="800" y="150" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">评审者 Critic</text>
+  <text x="800" y="178" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">校验结果/质量</text>
+  <text x="800" y="198" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">打回或放行</text>
+  <text x="800" y="218" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">只问"对不对"</text>
+
+  <path d="M262 175 L378 175" stroke="#a78bfa" stroke-width="1.6" stroke-dasharray="6 4" marker-end="url(#s30_arp)"/>
+  <text x="320" y="167" font-size="9" fill="#a78bfa" text-anchor="middle">派发子任务</text>
+  <path d="M582 175 L698 175" stroke="#f5873a" stroke-width="1.6" marker-end="url(#s30_arf)"/>
+  <text x="640" y="167" font-size="9" fill="#f5873a" text-anchor="middle">提交产出</text>
+  <path d="M760 232 L200 232" stroke="#f5873a" stroke-width="1.6" stroke-dasharray="3 3" marker-end="url(#s30_arf)"/>
+  <text x="480" y="252" font-size="9.5" fill="#f5873a" text-anchor="middle">评审不通过 → 回退重规划（闭环制衡）</text>
+
+  <g filter="url(#s30_soft)"><rect x="40" y="300" width="880" height="170" rx="13" fill="var(--sc-panel,#ffffff)" stroke="var(--sc-line,#d2d2d7)" stroke-width="1.3"/></g>
+  <text x="60" y="328" font-size="11.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)">为什么要分工</text>
+  <text x="60" y="354" font-size="10.5" fill="var(--sc-sub,#6e6e73)">• 认知减负：每个角色只需一个窄职责的系统提示词，上下文更聚焦，幻觉与跑偏更少</text>
+  <text x="60" y="378" font-size="10.5" fill="var(--sc-sub,#6e6e73)">• 制衡纠错：评审者独立于执行者，天然形成"生成—校验"对抗，比单体自查更可靠</text>
+  <text x="60" y="402" font-size="10.5" fill="var(--sc-sub,#6e6e73)">• 可替换性：任一角色可单独升级模型或换实现，不影响其他角色，工程演进更灵活</text>
+  <text x="60" y="426" font-size="10.5" fill="var(--sc-sub,#6e6e73)">• 可观测：每段职责边界清晰，日志/评估能定位是"规划错"还是"执行错"还是"漏检"</text>
+  <text x="60" y="452" font-size="10" fill="#f5873a">代价：角色越多，通信轮次与 token 成本越高——分工粒度要匹配任务复杂度，避免过度设计</text>
+</svg></div><div class="blurb"><p><b>角色分工</b>把单体按职责拆专家团队，经典是规划者/执行者/评审者三角：规划者只想「做什么」（拆带依赖子任务）、执行者只管「怎么做」（调工具写代码）、评审者只问「对不对」（校验放行）。四重收益：窄职责系统提示词降幻觉（认知减负）、评审独立形成「生成—校验」对抗闭环（制衡纠错）、单独升级替换（可替换）、日志定位到环节（可观测）。代价是角色越多 token 越高，粒度须匹配复杂度。见图。</p></div></section><section class="vt-sec" id="sec-a3" data-sec="sec-a3"><div class="secttl"><span class="badge">A3</span><span class="t">通信协作 · 黑板 + 消息传递</span></div><div class="fig" role="img" aria-label="通信协作 · 黑板 + 消息传递"><svg class="figsvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 500" font-family="-apple-system,'PingFang SC','Helvetica Neue',sans-serif">
+  <defs>
+    <filter id="s31_soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.07"/></filter>
+    <marker id="s31_art" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#2dd4bf"/></marker>
+    <marker id="s31_arh" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#0a84ff"/></marker>
+  </defs>
+  <rect width="960" height="500" fill="var(--sc-bg,#fbfbfd)"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="var(--sc-ink,#1d1d1f)">A3 · 通信协作：黑板共享 vs 消息传递</text>
+  <text x="30" y="54" font-size="12" fill="var(--sc-sub,#6e6e73)">Agent 之间如何交换信息——共享状态还是显式收发，决定了耦合度、可追溯性与并发安全</text>
+
+  <!-- 黑板 -->
+  <text x="240" y="90" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">黑板模式 (Blackboard)</text>
+  <g filter="url(#s31_soft)"><rect x="140" y="180" width="200" height="60" rx="12" fill="var(--sc-fill-teal,#e6fbf6)" stroke="#2dd4bf" stroke-width="1.7"/></g>
+  <text x="240" y="208" font-size="11" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">共享黑板 / 全局状态</text>
+  <text x="240" y="226" font-size="9" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">所有 Agent 读写同一份数据</text>
+  <g filter="url(#s31_soft)"><rect x="70" y="110" width="80" height="40" rx="10" fill="var(--sc-fill-orange,#fff3ea)" stroke="#f5873a" stroke-width="1.3"/></g><text x="110" y="135" font-size="9" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">Agent A</text>
+  <g filter="url(#s31_soft)"><rect x="330" y="110" width="80" height="40" rx="10" fill="var(--sc-fill-orange,#fff3ea)" stroke="#f5873a" stroke-width="1.3"/></g><text x="370" y="135" font-size="9" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">Agent B</text>
+  <g filter="url(#s31_soft)"><rect x="200" y="290" width="80" height="40" rx="10" fill="var(--sc-fill-orange,#fff3ea)" stroke="#f5873a" stroke-width="1.3"/></g><text x="240" y="315" font-size="9" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">Agent C</text>
+  <path d="M130 150 L200 178" stroke="#2dd4bf" stroke-width="1.5" marker-end="url(#s31_art)"/>
+  <path d="M350 150 L280 178" stroke="#2dd4bf" stroke-width="1.5" marker-end="url(#s31_art)"/>
+  <path d="M240 288 L240 242" stroke="#2dd4bf" stroke-width="1.5" marker-end="url(#s31_art)"/>
+  <text x="240" y="360" font-size="9.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">解耦、易加入新 Agent</text>
+  <text x="240" y="378" font-size="9.5" fill="#f5873a" text-anchor="middle">风险：并发写冲突、状态爆炸</text>
+
+  <!-- 消息传递 -->
+  <text x="700" y="90" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">消息传递 (Message Passing)</text>
+  <g filter="url(#s31_soft)"><rect x="560" y="140" width="90" height="44" rx="11" fill="var(--sc-fill-orange,#fff3ea)" stroke="#f5873a" stroke-width="1.3"/></g><text x="605" y="167" font-size="9" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">Agent A</text>
+  <g filter="url(#s31_soft)"><rect x="750" y="140" width="90" height="44" rx="11" fill="var(--sc-fill-orange,#fff3ea)" stroke="#f5873a" stroke-width="1.3"/></g><text x="795" y="167" font-size="9" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">Agent B</text>
+  <g filter="url(#s31_soft)"><rect x="655" y="250" width="90" height="44" rx="11" fill="var(--sc-fill-orange,#fff3ea)" stroke="#f5873a" stroke-width="1.3"/></g><text x="700" y="277" font-size="9" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">Agent C</text>
+  <path d="M650 162 L748 162" stroke="#0a84ff" stroke-width="1.5" marker-end="url(#s31_arh)"/>
+  <text x="700" y="153" font-size="8.5" fill="#0a84ff" text-anchor="middle">msg</text>
+  <path d="M615 184 L680 248" stroke="#0a84ff" stroke-width="1.5" marker-end="url(#s31_arh)"/>
+  <path d="M785 184 L720 248" stroke="#0a84ff" stroke-width="1.5" marker-end="url(#s31_arh)"/>
+  <text x="700" y="360" font-size="9.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">显式收发、天然可追溯</text>
+  <text x="700" y="378" font-size="9.5" fill="#f5873a" text-anchor="middle">风险：拓扑复杂、路由开销</text>
+
+  <g filter="url(#s31_soft)"><rect x="40" y="400" width="880" height="80" rx="13" fill="var(--sc-panel,#ffffff)" stroke="var(--sc-line,#d2d2d7)" stroke-width="1.3"/></g>
+  <text x="60" y="428" font-size="11.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)">如何选</text>
+  <text x="60" y="452" font-size="10.5" fill="var(--sc-sub,#6e6e73)">• 少量 Agent 协作同一产物（如共写文档/共享草稿）→ 黑板：省去传参，但需锁或版本控制防冲突</text>
+  <text x="60" y="472" font-size="10" fill="#f5873a">• 明确请求/响应、需审计与重放 → 消息传递：解耦清晰、日志完整，是生产多智能体的主流选择</text>
+</svg></div><div class="blurb"><p><b>通信协作</b>回答如何交换信息。<b>黑板模式</b>让所有 Agent 读写同一共享状态，解耦易加入新 Agent，适合共同打磨同一产物（如共写文档），但需锁/版本控制防并发写冲突、警惕状态膨胀；<b>消息传递</b>是显式请求/响应，天然可追溯/审计/重放，是生产主流，代价是拓扑复杂+路由开销。关键：需共享草稿用黑板，需审计重放用消息传递。见图。</p></div></section><section class="vt-sec" id="sec-cmp" data-sec="sec-cmp"><div class="secttl"><span class="badge">⇄</span><span class="t">Multi-Agent · 核心机制差异对比</span></div><div class="fig" role="img" aria-label="Multi-Agent · 核心机制差异对比"><svg class="figsvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 520" font-family="-apple-system,'PingFang SC','Helvetica Neue',sans-serif">
+  <defs>
+    <filter id="s32_soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.07"/></filter>
+  </defs>
+  <rect width="960" height="520" fill="var(--sc-bg,#fbfbfd)"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="var(--sc-ink,#1d1d1f)">CMP · 三大机理对比：编排拓扑 / 角色分工 / 通信协作</text>
+  <text x="30" y="54" font-size="12" fill="var(--sc-sub,#6e6e73)">三者正交组合，共同定义一套多智能体系统——同一维度上都在"能力 ↔ 可控"之间权衡</text>
+
+  <!-- 表头 -->
+  <g filter="url(#s32_soft)"><rect x="30" y="80" width="900" height="40" rx="10" fill="var(--sc-fill-orange,#fff3ea)" stroke="#f5873a" stroke-width="1.4"/></g>
+  <text x="120" y="105" font-size="11" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">机理</text>
+  <text x="330" y="105" font-size="11" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">解决什么问题</text>
+  <text x="560" y="105" font-size="11" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">典型做法</text>
+  <text x="820" y="105" font-size="11" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">主要代价</text>
+
+  <!-- 行1 编排拓扑 -->
+  <g filter="url(#s32_soft)"><rect x="30" y="130" width="900" height="110" rx="10" fill="var(--sc-panel,#ffffff)" stroke="var(--sc-line,#d2d2d7)" stroke-width="1.2"/></g>
+  <text x="120" y="172" font-size="11" font-weight="600" fill="#f5873a" text-anchor="middle">A1 编排拓扑</text>
+  <text x="120" y="192" font-size="9" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">谁指挥谁</text>
+  <text x="330" y="178" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">多 Agent 如何组织、</text>
+  <text x="330" y="196" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">信息如何流动</text>
+  <text x="560" y="178" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">监督者集中调度 /</text>
+  <text x="560" y="196" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">去中心化对等网络</text>
+  <text x="820" y="178" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">集中→单点瓶颈</text>
+  <text x="820" y="196" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">去中心→难收敛</text>
+
+  <!-- 行2 角色分工 -->
+  <g filter="url(#s32_soft)"><rect x="30" y="250" width="900" height="110" rx="10" fill="var(--sc-panel,#ffffff)" stroke="var(--sc-line,#d2d2d7)" stroke-width="1.2"/></g>
+  <text x="120" y="292" font-size="11" font-weight="600" fill="#a78bfa" text-anchor="middle">A2 角色分工</text>
+  <text x="120" y="312" font-size="9" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">各司其职</text>
+  <text x="330" y="298" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">单体上下文过载、</text>
+  <text x="330" y="316" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">缺乏自我纠错</text>
+  <text x="560" y="298" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">规划者/执行者/</text>
+  <text x="560" y="316" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">评审者闭环制衡</text>
+  <text x="820" y="307" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">通信轮次与 token 上升</text>
+
+  <!-- 行3 通信协作 -->
+  <g filter="url(#s32_soft)"><rect x="30" y="370" width="900" height="110" rx="10" fill="var(--sc-panel,#ffffff)" stroke="var(--sc-line,#d2d2d7)" stroke-width="1.2"/></g>
+  <text x="120" y="412" font-size="11" font-weight="600" fill="#2dd4bf" text-anchor="middle">A3 通信协作</text>
+  <text x="120" y="432" font-size="9" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">如何交换信息</text>
+  <text x="330" y="418" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">状态共享 vs 耦合度、</text>
+  <text x="330" y="436" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">可追溯性权衡</text>
+  <text x="560" y="418" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">黑板共享状态 /</text>
+  <text x="560" y="436" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">显式消息传递</text>
+  <text x="820" y="418" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">黑板→并发冲突</text>
+  <text x="820" y="436" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">消息→路由复杂</text>
+
+  <text x="480" y="505" font-size="10" fill="#f5873a" text-anchor="middle">主线：这三层选择叠加起来就是系统的"性格"——先定拓扑（可控边界），再定分工（能力拆解），最后定通信（信息契约）</text>
+</svg></div><div class="blurb ml"><p>三大机理并排看：编排拓扑在集中（单点瓶颈）与去中心（难收敛）间权衡、角色分工用规划/执行/评审闭环换质量（轮次 token 上升）、通信协作在黑板（并发冲突）与消息（路由复杂）间权衡。本质都在同一根轴取舍——<b>能力越强越灵活，可控性与成本压力越大</b>。落地顺序：先定拓扑划边界、再定分工拆能力、最后定通信约信息契约。四维对照见图。</p></div></section><section class="vt-sec" id="sec-eng" data-sec="sec-eng"><div class="secttl"><span class="badge">⚙</span><span class="t">Multi-Agent · 工程实现差异（真实框架落地取舍）</span></div><div class="fig" role="img" aria-label="Multi-Agent · 工程实现差异（真实框架落地取舍）"><svg class="figsvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 500" font-family="-apple-system,'PingFang SC','Helvetica Neue',sans-serif">
+  <defs>
+    <filter id="s33_soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.07"/></filter>
+  </defs>
+  <rect width="960" height="500" fill="var(--sc-bg,#fbfbfd)"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="var(--sc-ink,#1d1d1f)">ENG · 工程落地：多智能体系统的三条铁律</text>
+  <text x="30" y="54" font-size="12" fill="var(--sc-sub,#6e6e73)">多 Agent 不是银弹——先问"是否真需要多个"，再谈可控、成本与可观测</text>
+
+  <!-- 支柱1 -->
+  <g filter="url(#s33_soft)"><rect x="40" y="90" width="280" height="360" rx="13" fill="var(--sc-fill-orange,#fff3ea)" stroke="#f5873a" stroke-width="1.5"/></g>
+  <text x="180" y="122" font-size="12.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">可控即底线</text>
+  <text x="60" y="158" font-size="10.5" fill="var(--sc-sub,#6e6e73)">• 默认单 Agent，能用工具/</text>
+  <text x="60" y="178" font-size="10.5" fill="var(--sc-sub,#6e6e73)">  子任务解决就别上多 Agent</text>
+  <text x="60" y="204" font-size="10.5" fill="var(--sc-sub,#6e6e73)">• 每个 Agent 设最大轮数、</text>
+  <text x="60" y="224" font-size="10.5" fill="var(--sc-sub,#6e6e73)">  预算与超时，防死循环</text>
+  <text x="60" y="250" font-size="10.5" fill="var(--sc-sub,#6e6e73)">• 优先监督者拓扑，保留</text>
+  <text x="60" y="270" font-size="10.5" fill="var(--sc-sub,#6e6e73)">  人工介入/中止的入口</text>
+  <text x="60" y="296" font-size="10.5" fill="var(--sc-sub,#6e6e73)">• 关键决策要可回退，</text>
+  <text x="60" y="316" font-size="10.5" fill="var(--sc-sub,#6e6e73)">  副作用操作需二次确认</text>
+  <text x="60" y="360" font-size="10" fill="#f5873a">反例：放任 Agent 互相调用，</text>
+  <text x="60" y="380" font-size="10" fill="#f5873a">最终陷入无限对话烧光预算</text>
+
+  <!-- 支柱2 -->
+  <g filter="url(#s33_soft)"><rect x="340" y="90" width="280" height="360" rx="13" fill="var(--sc-fill-purple,#f3ecff)" stroke="#a78bfa" stroke-width="1.5"/></g>
+  <text x="480" y="122" font-size="12.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">成本即约束</text>
+  <text x="360" y="158" font-size="10.5" fill="var(--sc-sub,#6e6e73)">• 多 Agent = 多次 LLM 调用，</text>
+  <text x="360" y="178" font-size="10.5" fill="var(--sc-sub,#6e6e73)">  成本与延迟成倍增长</text>
+  <text x="360" y="204" font-size="10.5" fill="var(--sc-sub,#6e6e73)">• 用小模型跑执行/评审，</text>
+  <text x="360" y="224" font-size="10.5" fill="var(--sc-sub,#6e6e73)">  大模型只做规划</text>
+  <text x="360" y="250" font-size="10.5" fill="var(--sc-sub,#6e6e73)">• 能并行的子任务并行跑，</text>
+  <text x="360" y="270" font-size="10.5" fill="var(--sc-sub,#6e6e73)">  缩短端到端时延</text>
+  <text x="360" y="296" font-size="10.5" fill="var(--sc-sub,#6e6e73)">• 缓存中间结果，避免</text>
+  <text x="360" y="316" font-size="10.5" fill="var(--sc-sub,#6e6e73)">  重复子任务反复求解</text>
+  <text x="360" y="360" font-size="10" fill="#a78bfa">权衡：分工越细质量越稳，</text>
+  <text x="360" y="380" font-size="10" fill="#a78bfa">但轮次成本随之攀升</text>
+
+  <!-- 支柱3 -->
+  <g filter="url(#s33_soft)"><rect x="640" y="90" width="280" height="360" rx="13" fill="var(--sc-fill-blue,#eef4ff)" stroke="#0a84ff" stroke-width="1.5"/></g>
+  <text x="780" y="122" font-size="12.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">可观测即前提</text>
+  <text x="660" y="158" font-size="10.5" fill="var(--sc-sub,#6e6e73)">• 全链路 trace：记录每个</text>
+  <text x="660" y="178" font-size="10.5" fill="var(--sc-sub,#6e6e73)">  Agent 的输入/输出/工具</text>
+  <text x="660" y="204" font-size="10.5" fill="var(--sc-sub,#6e6e73)">• 消息传递优于隐式黑板，</text>
+  <text x="660" y="224" font-size="10.5" fill="var(--sc-sub,#6e6e73)">  天然可审计可重放</text>
+  <text x="660" y="250" font-size="10.5" fill="var(--sc-sub,#6e6e73)">• 定位失败要能区分是</text>
+  <text x="660" y="270" font-size="10.5" fill="var(--sc-sub,#6e6e73)">  规划/执行/评审哪一环</text>
+  <text x="660" y="296" font-size="10.5" fill="var(--sc-sub,#6e6e73)">• 端到端评测：以最终产物</text>
+  <text x="660" y="316" font-size="10.5" fill="var(--sc-sub,#6e6e73)">  质量为准，非单步准确率</text>
+  <text x="660" y="360" font-size="10" fill="#0a84ff">底线：无法观测的多 Agent</text>
+  <text x="660" y="380" font-size="10" fill="#0a84ff">系统等于黑盒，无法运维</text>
+</svg></div><div class="blurb ml"><p>三条铁律：<b>可控即底线</b>——默认单 Agent，每个设最大轮数/预算/超时，优先监督者拓扑并保留人工介入，副作用操作二次确认（反例：放任互调烧光预算）；<b>成本即约束</b>——多 Agent 成本延迟成倍，小模型跑执行/评审、大模型只规划，可并行则并行、缓存中间结果；<b>可观测即前提</b>——全链路 trace 记录各 Agent 输入/输出/工具调用，消息优于黑板便于审计重放，失败能区分规划/执行/评审哪环，评测以最终产物质量为准。详见图。</p><p><b>2025 前沿</b>：协作规模从「三五个角色」跃升到<b>成团编排</b>——一个主 Agent 动态派生数个到十几个子 Agent 并行攻坚（Agent Teams），乃至上百子智能体的<b>蜂群</b>（Swarm）分片处理超大任务，靠上下文隔离让每个子 Agent 专注一小块、避免共享窗口被撑爆。随之而来的核心挑战不再是「能不能拆」，而是<b>可控性与可观测性</b>：企业落地时对「能否追踪每个子 Agent 在做什么、能否在失控前叫停」的关切，已超过对成本与延迟的关切（见 LangChain《State of AI Agents》调研）。故成团协作必须配套：分层监督（主管子、子管孙）、全局预算熔断、逐 Agent trace 与统一裁决层，否则规模越大越不可控。</p></div></section></div></div>
+  <section class="refs"><div class="secttl"><span class="badge">§</span><span class="t">参考文献 · 权威来源（论文 / 官方文档）</span></div><div class="blurb reflist"><p>Anthropic《Building effective agents》(编排模式与何时用多 Agent) · LangGraph 多智能体拓扑文档(Supervisor / Network / Hierarchical) · AutoGen 多智能体对话框架(消息传递与角色) · MetaGPT / CAMEL(角色分工与 SOP 协作) · 黑板系统(Blackboard architecture)经典范式 · CrewAI(角色-任务-流程编排实践)</p></div></section>
+  <div class="backrow"><a href="../../index.html#agent">← 返回 LLM & Agent 导航</a></div>
+</div>
+<footer>自包含离线图谱 · 以图为主：概览 + 机制分组图 + 机制对比 · 权威参考集中于底部 · 垂直 TAB 切换</footer>
+<script>
+(function(){
+  var root=document.documentElement;
+  var saved=localStorage.getItem('atlas-nav-theme');
+  if(saved==='dark') root.setAttribute('data-theme','dark');
+  function toggleTheme(){
+    var cur=root.getAttribute('data-theme')==='dark'?'':'dark';
+    if(cur) root.setAttribute('data-theme',cur); else root.removeAttribute('data-theme');
+    localStorage.setItem('atlas-nav-theme',cur||'light');
+  }
+  var tb=document.getElementById('themeBtn');
+  if(tb){tb.onclick=toggleTheme;}
+  var wrap=document.querySelector('.vt-wrap');
+  if(wrap){
+    var tabs=wrap.querySelectorAll('.vt-tab');
+    var secs=wrap.querySelectorAll('.vt-sec');
+    tabs.forEach(function(t){
+      t.addEventListener('click',function(){
+        var tgt=t.getAttribute('data-target');
+        tabs.forEach(function(x){x.classList.toggle('active',x===t);});
+        secs.forEach(function(s){s.classList.toggle('active',s.id===tgt);});
+      });
+    });
+  }
+  var zsegs=document.querySelectorAll('.zseg');
+  var zones=document.querySelectorAll('.zone');
+  if(zsegs.length&&zones.length){
+    zsegs.forEach(function(s){
+      s.addEventListener('click',function(){
+        zsegs.forEach(function(x){x.classList.toggle('active',x===s);});
+      });
+    });
+    if('IntersectionObserver' in window){
+      var io=new IntersectionObserver(function(es){
+        es.forEach(function(e){
+          if(e.isIntersecting){
+            var id=e.target.id;
+            zsegs.forEach(function(x){x.classList.toggle('active',x.getAttribute('href')==='#'+id);});
+          }
+        });
+      },{rootMargin:'-40% 0px -55% 0px'});
+      zones.forEach(function(z){io.observe(z);});
+    }
+  }
+})();
+</script>
+</body>
+</html>

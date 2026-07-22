@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="410" viewBox="0 0 1000 410" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs><filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ac" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#7c5fe6"/></marker></defs>
+  <rect width="1000" height="410" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Parquet 原理 · 加密/明文 footer 双模式：兼容 vs 完全保密</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">加密 footer：整份元数据也加密,最保密但旧读者读不了;明文 footer：元数据保持明文可被旧读者识别,只加密敏感列数据</text>
+
+  <!-- 加密 footer 模式 -->
+  <rect x="30" y="76" width="455" height="200" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="46" y="100" font-size="11" font-weight="700" fill="#12402a">模式1 · 加密 footer（最高保密）</text>
+  <rect x="46" y="112" width="419" height="30" rx="6" fill="#fff" stroke="#b9dfd8"/>
+  <text x="60" y="132" font-size="8.8" fill="#0f6b5e">尾部魔数用 PARE（区别于明文 PAR1）</text>
+  <rect x="46" y="148" width="419" height="30" rx="6" fill="#fff" stroke="#b9dfd8"/>
+  <text x="60" y="168" font-size="8.8" fill="#0f6b5e">FileMetaData 整体用 footer 密钥加密</text>
+  <rect x="46" y="184" width="419" height="30" rx="6" fill="#fff" stroke="#b9dfd8"/>
+  <text x="60" y="204" font-size="8.8" fill="#0f6b5e">无密钥连 schema/统计/结构都看不到</text>
+  <text x="46" y="238" font-size="8.8" fill="#2f6f5f">代价：不支持加密的旧读者无法识别文件,</text>
+  <text x="46" y="256" font-size="8.8" fill="#2f6f5f">读文件前必须先拿到 footer 密钥。</text>
+
+  <!-- 明文 footer 模式 -->
+  <rect x="505" y="76" width="465" height="200" rx="12" fill="#e9f2ff" stroke="#a9ccf5" filter="url(#soft)"/>
+  <text x="523" y="100" font-size="11" font-weight="700" fill="#0a3d78">模式2 · 明文 footer（向后兼容）</text>
+  <rect x="523" y="112" width="429" height="30" rx="6" fill="#f3f9ff" stroke="#bcd8f5"/>
+  <text x="537" y="132" font-size="8.8" fill="#0a3d78">尾部魔数仍是 PAR1，旧读者能识别文件</text>
+  <rect x="523" y="148" width="429" height="30" rx="6" fill="#f3f9ff" stroke="#bcd8f5"/>
+  <text x="537" y="168" font-size="8.8" fill="#0a3d78">FileMetaData 明文，但敏感列数据加密</text>
+  <rect x="523" y="184" width="429" height="30" rx="6" fill="#f3f9ff" stroke="#bcd8f5"/>
+  <text x="537" y="204" font-size="8.8" fill="#0a3d78">footer 带签名 tag，防篡改仍成立</text>
+  <text x="523" y="238" font-size="8.8" fill="#2a5a92">旧读者：能读非加密列、看结构;遇加密列</text>
+  <text x="523" y="256" font-size="8.8" fill="#2a5a92">会失败或跳过 → 平滑过渡到加密。</text>
+
+  <rect x="30" y="288" width="940" height="112" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="48" y="312" font-size="11" font-weight="700" fill="#1b2a4a">怎么选</text>
+  <text x="48" y="334" font-size="9.4" fill="#5b7db1">· 追求最高保密（连 schema/统计都不泄露）→ 加密 footer;需外部密钥服务先解 footer 才能读任何东西。</text>
+  <text x="48" y="354" font-size="9.4" fill="#5b7db1">· 需与旧生态/旧读者共存,只想保护少数敏感列 → 明文 footer;非敏感列照常读,敏感列凭列密钥解。</text>
+  <text x="48" y="374" font-size="9.4" fill="#5b7db1">· 两模式都靠 AAD 抗搬移、靠 tag 防篡改;区别只在“元数据是否也加密”与“尾部魔数 PAR1/PARE”。</text>
+  <text x="48" y="394" font-size="8.4" fill="#7fa0c4">魔数不同让读者在读第一步就能判断该文件是否为加密 footer,从而选择正确的解析路径。</text>
+</svg>

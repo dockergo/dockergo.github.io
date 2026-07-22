@@ -1,0 +1,121 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="720" viewBox="0 0 1120 720" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="aB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#4a7fd0"/></marker>
+    <marker id="aG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+    <marker id="aA" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#d99a2b"/></marker>
+    <marker id="aR" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#d1544a"/></marker>
+  </defs>
+  <rect width="1120" height="720" fill="#fbfbfd"/>
+
+  <text x="30" y="34" font-size="17" font-weight="700" fill="#1d1d1f">回溯 · 原理总览：在「解空间树」上做 DFS —— 尝试 → 递归 → 撤销，用剪枝裁掉无望子树</text>
+  <text x="30" y="56" font-size="11" fill="#6e6e73">每层从「选择列表」挑一个选择加入「状态」，深入到底或触发解则记录；返回前必须撤销选择，恢复现场，再试下一个 —— 这是穷举，剪枝是它唯一的加速手段</text>
+
+  <!-- 图例 -->
+  <rect x="30" y="72" width="12" height="12" rx="2" fill="#d99a2b"/><text x="48" y="82" font-size="10.5" fill="#3a3a3c">状态 / 路径栈（主）</text>
+  <rect x="210" y="72" width="12" height="12" rx="2" fill="#4a7fd0"/><text x="228" y="82" font-size="10.5" fill="#3a3a3c">尝试 · 递归深入</text>
+  <rect x="370" y="72" width="12" height="12" rx="2" fill="#2f9e6e"/><text x="388" y="82" font-size="10.5" fill="#3a3a3c">可行解 · 记录</text>
+  <rect x="510" y="72" width="12" height="12" rx="2" fill="#d1544a"/><text x="528" y="82" font-size="10.5" fill="#3a3a3c">剪枝（约束 / 去重）</text>
+  <rect x="680" y="72" width="12" height="12" rx="2" fill="#8a6fd0"/><text x="698" y="82" font-size="10.5" fill="#3a3a3c">选择列表 / 边界</text>
+
+  <!-- ===== ① 三步循环 ===== -->
+  <text x="30" y="112" font-size="12" font-weight="700" fill="#8a5a12">① 核心三步（对每个选择循环执行）：做选择 → 递归深入 → 撤销选择，回到做选择前的现场</text>
+
+  <rect x="70" y="126" width="196" height="64" rx="12" fill="#fdf3e0" stroke="#e7c07a" stroke-width="1.3" filter="url(#soft)"/>
+  <text x="168" y="152" font-size="13" font-weight="700" fill="#8a5a12" text-anchor="middle">① 尝试 · 做选择</text>
+  <text x="168" y="174" font-size="10" fill="#5a4a2a" text-anchor="middle">state 入栈 choice，更新状态</text>
+
+  <rect x="462" y="126" width="196" height="64" rx="12" fill="#eaf1fb" stroke="#4a7fd0" stroke-width="1.3" filter="url(#soft)"/>
+  <text x="560" y="152" font-size="13" font-weight="700" fill="#20375e" text-anchor="middle">② 递归 · 深入下一层</text>
+  <text x="560" y="174" font-size="10" fill="#3a4a63" text-anchor="middle">backtrack(缩小的选择列表)</text>
+
+  <rect x="854" y="126" width="196" height="64" rx="12" fill="#fbe6e3" stroke="#e8a79f" stroke-width="1.3" filter="url(#soft)"/>
+  <text x="952" y="152" font-size="13" font-weight="700" fill="#8a4038" text-anchor="middle">③ 撤销 · 回退</text>
+  <text x="952" y="174" font-size="10" fill="#7a3a33" text-anchor="middle">state 出栈 choice，恢复现场</text>
+
+  <line x1="266" y1="158" x2="460" y2="158" stroke="#4a7fd0" stroke-width="2" marker-end="url(#aB)"/>
+  <line x1="658" y1="158" x2="852" y2="158" stroke="#d1544a" stroke-width="2" marker-end="url(#aR)"/>
+  <!-- 回环：撤销后回到做选择，试下一个 -->
+  <path d="M952 190 V210 H168 V190" fill="none" stroke="#8a6fd0" stroke-width="1.6" marker-end="url(#aB)" stroke-dasharray="5 3"/>
+  <text x="560" y="205" font-size="9.5" fill="#8a6fd0" text-anchor="middle">for 循环：撤销后回到「做选择」，尝试选择列表里的下一个</text>
+
+  <!-- ===== ② 解空间树 ===== -->
+  <text x="30" y="248" font-size="12" font-weight="700" fill="#20375e">② 解空间树上的 DFS：每个结点是一个状态，向下的边是一次「做选择」；剪枝把整棵无望子树一次裁掉</text>
+
+  <!-- root -->
+  <rect x="235" y="262" width="90" height="30" rx="6" fill="#fdf3e0" stroke="#d99a2b" stroke-width="1.5"/><text x="280" y="282" font-size="11" font-weight="700" fill="#8a5a12" text-anchor="middle">state=∅</text>
+  <!-- L1 -->
+  <rect x="110" y="332" width="90" height="28" rx="6" fill="#eaf1fb" stroke="#4a7fd0" stroke-width="1.3"/><text x="155" y="351" font-size="10.5" fill="#20375e" text-anchor="middle">选 c₁</text>
+  <rect x="360" y="332" width="90" height="28" rx="6" fill="#fbe6e3" stroke="#e8a79f" stroke-width="1.3"/><text x="405" y="351" font-size="10.5" fill="#8a4038" text-anchor="middle">选 c₂ ✗</text>
+  <path d="M280 292 V312 H155 V332" fill="none" stroke="#8a6fd0" stroke-width="1.4"/>
+  <path d="M280 292 V312 H405 V332" fill="none" stroke="#d1544a" stroke-width="1.4" stroke-dasharray="4 3"/>
+  <text x="418" y="326" font-size="9" fill="#8a4038">约束/去重 → 剪</text>
+  <!-- L2 under c1 -->
+  <rect x="55" y="404" width="88" height="28" rx="6" fill="#e6f4ec" stroke="#2f9e6e" stroke-width="1.4"/><text x="99" y="423" font-size="10.5" fill="#1f6b47" text-anchor="middle">可行解 ✓</text>
+  <rect x="170" y="404" width="88" height="28" rx="6" fill="#f4f4f6" stroke="#d7d7dd"/><text x="214" y="423" font-size="10.5" fill="#a1a1a6" text-anchor="middle">死路 · 回退</text>
+  <path d="M155 360 V382 H99 V404" fill="none" stroke="#8a6fd0" stroke-width="1.2"/>
+  <path d="M155 360 V382 H214 V404" fill="none" stroke="#8a6fd0" stroke-width="1.2"/>
+  <!-- 被剪子树 grayed -->
+  <path d="M405 362 L360 450 L450 450 Z" fill="#f7ecea" stroke="#e8a79f" stroke-dasharray="4 3"/>
+  <line x1="372" y1="400" x2="438" y2="440" stroke="#d1544a" stroke-width="2"/><line x1="438" y1="400" x2="372" y2="440" stroke="#d1544a" stroke-width="2"/>
+  <text x="405" y="466" font-size="9" fill="#8a4038" text-anchor="middle">整棵子树不再展开</text>
+
+  <text x="60" y="452" font-size="9.5" fill="#2f6b4e">↑ 触底且满足条件 → 记录一份解的拷贝</text>
+
+  <!-- ===== ③ 模板伪代码骨架 ===== -->
+  <rect x="560" y="256" width="530" height="212" rx="14" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="582" y="282" font-size="13" font-weight="700" fill="#1d1d1f">通用模板骨架（framework）</text>
+  <text x="582" y="304" font-size="10.5" fill="#6e6e73">isSolution / isValid / makeChoice / undoChoice 因题而异，控制流不变</text>
+  <g font-family="'SF Mono','Menlo',monospace" font-size="11">
+    <text x="582" y="330" fill="#8a5a12">backtrack(state, choices, res):</text>
+    <text x="600" y="350" fill="#1f6b47">  if isSolution(state):        <tspan fill="#a1a1a6"># 命中终点</tspan></text>
+    <text x="600" y="368" fill="#1f6b47">      record(state, res)        <tspan fill="#a1a1a6"># 存一份拷贝</tspan></text>
+    <text x="600" y="388" fill="#8a6fd0">  for choice in choices:       <tspan fill="#a1a1a6"># 遍历选择列表</tspan></text>
+    <text x="618" y="406" fill="#d1544a">      if isValid(state, choice):  <tspan fill="#a1a1a6"># 剪枝：不合法则跳过</tspan></text>
+    <text x="636" y="424" fill="#8a5a12">          makeChoice(state, choice)   <tspan fill="#a1a1a6"># ① 尝试</tspan></text>
+    <text x="636" y="442" fill="#20375e">          backtrack(state, next, res) <tspan fill="#a1a1a6"># ② 递归</tspan></text>
+    <text x="636" y="460" fill="#8a4038">          undoChoice(state, choice)   <tspan fill="#a1a1a6"># ③ 撤销</tspan></text>
+  </g>
+
+  <!-- ===== ④ 成员归位 ===== -->
+  <text x="30" y="494" font-size="12" font-weight="700" fill="#8a5a12">④ 成员归位：四例共用同一骨架，差异只在「状态怎么定义」与「靠什么剪枝」</text>
+
+  <!-- card BT1 -->
+  <rect x="40" y="508" width="252" height="150" rx="12" fill="#ffffff" stroke="#d99a2b" stroke-width="1.6" filter="url(#soft)"/>
+  <text x="56" y="532" font-size="12.5" font-weight="700" fill="#8a5a12">框架 · BT1</text>
+  <text x="56" y="556" font-size="10.5" fill="#4a4a4f">前序遍历找值为 7 的路径</text>
+  <text x="56" y="578" font-size="10.5" fill="#20375e">状态：根到当前的 path 栈</text>
+  <text x="56" y="600" font-size="10.5" fill="#8a4038">剪枝：约束剪枝（isValid）</text>
+  <text x="56" y="622" font-size="10.5" fill="#6e6e73">演示尝试-回退的入栈/出栈</text>
+  <text x="56" y="646" font-size="10.5" fill="#2f6b4e">命中 val=7 即记录该路径</text>
+
+  <!-- card BT2 -->
+  <rect x="304" y="508" width="252" height="150" rx="12" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="320" y="532" font-size="12.5" font-weight="700" fill="#20375e">全排列 · BT2</text>
+  <text x="320" y="556" font-size="10.5" fill="#4a4a4f">排出所有次序，含重复元素</text>
+  <text x="320" y="578" font-size="10.5" fill="#20375e">状态：selected[] + 已排前缀</text>
+  <text x="320" y="600" font-size="10.5" fill="#8a4038">剪枝：已选跳过 + 同层去重</text>
+  <text x="320" y="622" font-size="10.5" fill="#6e6e73">重复元素先排序再同层去重</text>
+  <text x="320" y="646" font-size="10.5" fill="#2f6b4e">长度满 n 即记录一个排列</text>
+
+  <!-- card BT3 -->
+  <rect x="568" y="508" width="252" height="150" rx="12" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="584" y="532" font-size="12.5" font-weight="700" fill="#20375e">子集和 · BT3</text>
+  <text x="584" y="556" font-size="10.5" fill="#4a4a4f">选若干数使和为 target</text>
+  <text x="584" y="578" font-size="10.5" fill="#20375e">状态：start 起点 + 子集</text>
+  <text x="584" y="600" font-size="10.5" fill="#8a4038">剪枝：start约束 + 越界break</text>
+  <text x="584" y="622" font-size="10.5" fill="#6e6e73">排序后同层跳过重复元素</text>
+  <text x="584" y="646" font-size="10.5" fill="#2f6b4e">剩余 target=0 即记录</text>
+
+  <!-- card BT4 -->
+  <rect x="832" y="508" width="252" height="150" rx="12" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="848" y="532" font-size="12.5" font-weight="700" fill="#20375e">N 皇后 · BT4</text>
+  <text x="848" y="556" font-size="10.5" fill="#4a4a4f">每行放一个皇后互不攻击</text>
+  <text x="848" y="578" font-size="10.5" fill="#20375e">状态：逐行 row + 棋盘</text>
+  <text x="848" y="600" font-size="10.5" fill="#8a4038">剪枝：列 / 主副对角线冲突</text>
+  <text x="848" y="622" font-size="10.5" fill="#6e6e73">cols / diags1 / diags2 标记</text>
+  <text x="848" y="646" font-size="10.5" fill="#2f6b4e">row=n 即记录一个布局</text>
+
+  <text x="30" y="688" font-size="10.5" fill="#6e6e73">要点：回溯本质是「带撤销的 DFS 穷举」，复杂度取决于解空间树大小；剪枝越早、越狠，被裁的子树越大，是唯一有效的提速手段。</text>
+  <text x="30" y="706" font-size="10.5" fill="#6e6e73">铁律：makeChoice 与 undoChoice 必须成对出现且对称，否则状态被污染，后续分支全错 —— 这是回溯最常见的 bug 来源。</text>
+</svg>

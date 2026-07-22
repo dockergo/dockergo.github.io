@@ -32,12 +32,14 @@ Heavyweight 表锁有 8 种模式（`storage/lockdefs.h`），两个请求能否
 
 ## 深化 · 失败路径与边界
 
-- **死锁的经典成因**：两事务以相反顺序更新同一批行（A 先改行1再改行2、B 先改行2再改行1）；避免法是**约定统一的加锁/更新顺序**、缩短事务、必要时显式 `SELECT ... FOR UPDATE` 提前一次性取全。
-- **锁等待雪崩**：一条取 `AccessExclusiveLock` 的 ALTER 若被长事务挡住，它排队时又挡住其后所有新查询（哪怕只是 SELECT）——瞬间连接耗尽。上线 DDL 务必设 `lock_timeout`。
-- **LWLock 争用瓶颈**：高并发写下 WALInsertLock/ProcArrayLock 等热点 LWLock 争用会限制扩展性，表现为 CPU 空转在自旋/等待——需从减少写热点、分区表、连接池等方向缓解，非应用能直接调。
-- **锁表内存耗尽**：`max_locks_per_transaction` × (max_connections + prepared xacts) 决定共享锁表容量；一个事务锁定海量对象（如 DROP 大量分区）可能 `out of shared memory`。
-- **咨询锁泄漏**：`pg_advisory_lock`（应用级咨询锁）若忘记 unlock 或误用 session 级会话锁，会长期占用需手动清理。
-- **等待可视化**：阻塞时 `pg_stat_activity.wait_event`/`wait_event_type` 会标出等的是哪类锁（Lock/LWLock/BufferPin），`pg_locks` 结合 `pg_blocking_pids()` 能还原"谁挡了谁"的阻塞链——排查卡顿的第一现场。
+| 场景 | 机理 | 后果 / 应对 |
+|---|---|---|
+| 死锁经典成因 | 两事务以相反顺序更新同一批行 | 约定统一加锁/更新顺序、缩短事务、必要时显式 `SELECT ... FOR UPDATE` 一次性取全 |
+| 锁等待雪崩 | 取 `AccessExclusiveLock` 的 ALTER 被长事务挡住、排队时又挡住其后所有新查询 | 瞬间连接耗尽；上线 DDL 务必设 `lock_timeout` |
+| LWLock 争用瓶颈 | 高并发写下 WALInsertLock/ProcArrayLock 等热点 LWLock 争用 | CPU 空转在自旋/等待；从减少写热点、分区表、连接池缓解，非应用能直接调 |
+| 锁表内存耗尽 | `max_locks_per_transaction` ×(max_connections+prepared) 定共享锁表容量 | 一事务锁定海量对象（DROP 大量分区）可能 `out of shared memory` |
+| 咨询锁泄漏 | `pg_advisory_lock` 忘记 unlock 或误用 session 级会话锁 | 长期占用需手动清理 |
+| 等待可视化 | `pg_stat_activity.wait_event` 标出等哪类锁（Lock/LWLock/BufferPin） | `pg_locks`+`pg_blocking_pids()` 还原"谁挡了谁"阻塞链——排查卡顿第一现场 |
 
 ---
 

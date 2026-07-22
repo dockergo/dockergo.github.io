@@ -1,0 +1,138 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="720" viewBox="0 0 1120 720" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="aB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#4a7fd0"/></marker>
+    <marker id="aG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+  </defs>
+  <rect width="1120" height="720" fill="#fbfbfd"/>
+
+  <text x="30" y="34" font-size="17" font-weight="700" fill="#1d1d1f">堆 · 上浮 siftUp 与下沉 siftDown：只沿一条树高路径修复堆序，O(log n)</text>
+  <text x="30" y="56" font-size="11" fill="#6e6e73">push = 尾部追加 + siftUp（与父比较，larger 者上浮）；pop = 顶尾交换 + 删尾 + siftDown（与「较大子」交换下沉）。列位置固定，方括号示一次交换</text>
+
+  <!-- 图例 -->
+  <rect x="30" y="72" width="12" height="12" rx="2" fill="#d99a2b"/><text x="48" y="82" font-size="10.5" fill="#3a3a3c">数组槽位</text>
+  <line x1="150" y1="78" x2="174" y2="78" stroke="#4a7fd0" stroke-width="2"/><text x="180" y="82" font-size="10.5" fill="#3a3a3c">交换（与父/较大子）</text>
+  <rect x="340" y="72" width="12" height="12" rx="2" fill="#dff0e7" stroke="#2f9e6e"/><text x="358" y="82" font-size="10.5" fill="#3a3a3c">已就位 / 停止</text>
+
+  <!-- ================= PUSH ================= -->
+  <text x="40" y="112" font-size="13" font-weight="700" fill="#20375e">push(8)　尾部追加后向上浮</text>
+
+  <!-- 索引尺 -->
+  <g font-size="8.5" text-anchor="middle" fill="#8a5a12">
+    <text x="118" y="126">[0]</text><text x="174" y="126">[1]</text><text x="230" y="126">[2]</text><text x="286" y="126">[3]</text><text x="342" y="126">[4]</text><text x="398" y="126">[5]</text><text x="454" y="126">[6]</text>
+  </g>
+
+  <!-- Push Row A: 追加 8 到 [6] -->
+  <text x="40" y="152" font-size="10" fill="#6e6e73">①追加</text>
+  <g font-size="14" text-anchor="middle" font-weight="700">
+    <rect x="90" y="132" width="56" height="34" rx="5" fill="#fdf3e0" stroke="#e7c07a"/><text x="118" y="154" fill="#5a4a2a">9</text>
+    <rect x="146" y="132" width="56" height="34" rx="5" fill="#fdf3e0" stroke="#e7c07a"/><text x="174" y="154" fill="#5a4a2a">7</text>
+    <rect x="202" y="132" width="56" height="34" rx="5" fill="#fdf3e0" stroke="#4a7fd0" stroke-width="1.6"/><text x="230" y="154" fill="#5a4a2a">6</text>
+    <rect x="258" y="132" width="56" height="34" rx="5" fill="#fdf3e0" stroke="#e7c07a"/><text x="286" y="154" fill="#5a4a2a">5</text>
+    <rect x="314" y="132" width="56" height="34" rx="5" fill="#fdf3e0" stroke="#e7c07a"/><text x="342" y="154" fill="#5a4a2a">2</text>
+    <rect x="370" y="132" width="56" height="34" rx="5" fill="#fdf3e0" stroke="#e7c07a"/><text x="398" y="154" fill="#5a4a2a">4</text>
+    <rect x="426" y="132" width="56" height="34" rx="5" fill="#dff0e7" stroke="#2f9e6e" stroke-width="1.6"/><text x="454" y="154" fill="#2f6b4e">8</text>
+  </g>
+  <!-- 交换括号 [6]-[2] -->
+  <path d="M454 166 L454 178 L230 178 L230 166" fill="none" stroke="#4a7fd0" stroke-width="1.6"/>
+  <text x="342" y="192" font-size="9.5" fill="#20375e" text-anchor="middle">[6] 的父 = (6−1)/2 = 2；8 &gt; 父 6 → 交换</text>
+
+  <!-- Push Row B: siftUp 后 -->
+  <text x="40" y="228" font-size="10" fill="#6e6e73">②上浮后</text>
+  <g font-size="14" text-anchor="middle" font-weight="700">
+    <rect x="90" y="208" width="56" height="34" rx="5" fill="#fdf3e0" stroke="#e7c07a"/><text x="118" y="230" fill="#5a4a2a">9</text>
+    <rect x="146" y="208" width="56" height="34" rx="5" fill="#fdf3e0" stroke="#e7c07a"/><text x="174" y="230" fill="#5a4a2a">7</text>
+    <rect x="202" y="208" width="56" height="34" rx="5" fill="#dff0e7" stroke="#2f9e6e" stroke-width="1.6"/><text x="230" y="230" fill="#2f6b4e">8</text>
+    <rect x="258" y="208" width="56" height="34" rx="5" fill="#fdf3e0" stroke="#e7c07a"/><text x="286" y="230" fill="#5a4a2a">5</text>
+    <rect x="314" y="208" width="56" height="34" rx="5" fill="#fdf3e0" stroke="#e7c07a"/><text x="342" y="230" fill="#5a4a2a">2</text>
+    <rect x="370" y="208" width="56" height="34" rx="5" fill="#fdf3e0" stroke="#e7c07a"/><text x="398" y="230" fill="#5a4a2a">4</text>
+    <rect x="426" y="208" width="56" height="34" rx="5" fill="#fdf3e0" stroke="#e7c07a"/><text x="454" y="230" fill="#5a4a2a">6</text>
+  </g>
+  <!-- 比较 [2]-[0] 停 -->
+  <path d="M230 242 L230 254 L118 254 L118 242" fill="none" stroke="#2f9e6e" stroke-width="1.6" stroke-dasharray="4 3"/>
+  <text x="174" y="268" font-size="9.5" fill="#2f6b4e" text-anchor="middle">8 ≤ 父 9 → 停 ✓（终态）</text>
+
+  <!-- Push 步骤盒 -->
+  <rect x="560" y="120" width="520" height="150" rx="12" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="582" y="146" font-size="12" font-weight="700" fill="#1d1d1f">siftUp(i) 逻辑</text>
+  <text x="582" y="170" font-size="10.5" fill="#4a4a4f">1. 新元素追加到 data 尾部，i = 末尾下标</text>
+  <text x="582" y="190" font-size="10.5" fill="#4a4a4f">2. 取父 p = (i−1)/2；若越根 (p&lt;0) 或 data[i] ≤ data[p] 则停</text>
+  <text x="582" y="210" font-size="10.5" fill="#4a4a4f">3. 否则与父交换，i = p，继续向上</text>
+  <text x="582" y="234" font-size="10" fill="#8a5a12">只与「父」比较，故每层一次比较；最多爬升树高 = ⌊log₂n⌋ 层</text>
+  <text x="582" y="256" font-size="10" fill="#8a97ab">大顶堆用 &gt;；小顶堆把 ≤ 改成 ≥ 即可，机制不变</text>
+
+  <line x1="40" y1="292" x2="1080" y2="292" stroke="#e4e7ec"/>
+
+  <!-- ================= POP ================= -->
+  <text x="40" y="318" font-size="13" font-weight="700" fill="#20375e">pop()　弹出堆顶极值 9，末尾补顶后向下沉</text>
+  <g font-size="8.5" text-anchor="middle" fill="#8a5a12">
+    <text x="118" y="336">[0]</text><text x="174" y="336">[1]</text><text x="230" y="336">[2]</text><text x="286" y="336">[3]</text><text x="342" y="336">[4]</text><text x="398" y="336">[5]</text>
+  </g>
+
+  <!-- Pop Row A: 顶尾交换 -->
+  <text x="40" y="362" font-size="10" fill="#6e6e73">①顶尾换</text>
+  <g font-size="14" text-anchor="middle" font-weight="700">
+    <rect x="90" y="342" width="56" height="34" rx="5" fill="#dff0e7" stroke="#2f9e6e" stroke-width="1.6"/><text x="118" y="364" fill="#2f6b4e">9</text>
+    <rect x="146" y="342" width="56" height="34" rx="5" fill="#fdf3e0" stroke="#e7c07a"/><text x="174" y="364" fill="#5a4a2a">7</text>
+    <rect x="202" y="342" width="56" height="34" rx="5" fill="#fdf3e0" stroke="#e7c07a"/><text x="230" y="364" fill="#5a4a2a">6</text>
+    <rect x="258" y="342" width="56" height="34" rx="5" fill="#fdf3e0" stroke="#e7c07a"/><text x="286" y="364" fill="#5a4a2a">5</text>
+    <rect x="314" y="342" width="56" height="34" rx="5" fill="#fdf3e0" stroke="#e7c07a"/><text x="342" y="364" fill="#5a4a2a">2</text>
+    <rect x="370" y="342" width="56" height="34" rx="5" fill="#dff0e7" stroke="#2f9e6e" stroke-width="1.6"/><text x="398" y="364" fill="#2f6b4e">4</text>
+  </g>
+  <path d="M118 376 L118 388 L398 388 L398 376" fill="none" stroke="#4a7fd0" stroke-width="1.6"/>
+  <text x="258" y="402" font-size="9.5" fill="#20375e" text-anchor="middle">堆顶 [0]=9 ⇄ 末尾 [5]=4，随后删末尾、返回 9</text>
+
+  <!-- Pop Row B: 删尾后 4 在顶, 下沉 -->
+  <text x="40" y="434" font-size="10" fill="#6e6e73">②补顶</text>
+  <g font-size="14" text-anchor="middle" font-weight="700">
+    <rect x="90" y="414" width="56" height="34" rx="5" fill="#fdf3e0" stroke="#4a7fd0" stroke-width="1.6"/><text x="118" y="436" fill="#5a4a2a">4</text>
+    <rect x="146" y="414" width="56" height="34" rx="5" fill="#fdf3e0" stroke="#e7c07a"/><text x="174" y="436" fill="#5a4a2a">7</text>
+    <rect x="202" y="414" width="56" height="34" rx="5" fill="#fdf3e0" stroke="#e7c07a"/><text x="230" y="436" fill="#5a4a2a">6</text>
+    <rect x="258" y="414" width="56" height="34" rx="5" fill="#fdf3e0" stroke="#e7c07a"/><text x="286" y="436" fill="#5a4a2a">5</text>
+    <rect x="314" y="414" width="56" height="34" rx="5" fill="#fdf3e0" stroke="#e7c07a"/><text x="342" y="436" fill="#5a4a2a">2</text>
+    <rect x="370" y="414" width="56" height="34" rx="5" fill="#f4f4f6" stroke="#d7d7dd" stroke-dasharray="3 2"/><text x="398" y="436" fill="#a1a1a6" font-weight="400">✗9</text>
+  </g>
+  <path d="M118 448 L118 460 L174 460 L174 448" fill="none" stroke="#4a7fd0" stroke-width="1.6"/>
+  <text x="146" y="474" font-size="9.5" fill="#20375e" text-anchor="middle">子 [1]=7、[2]=6，较大子=7；4 &lt; 7 → 换</text>
+
+  <!-- Pop Row C -->
+  <text x="40" y="506" font-size="10" fill="#6e6e73">③继续沉</text>
+  <g font-size="14" text-anchor="middle" font-weight="700">
+    <rect x="90" y="486" width="56" height="34" rx="5" fill="#fdf3e0" stroke="#e7c07a"/><text x="118" y="508" fill="#5a4a2a">7</text>
+    <rect x="146" y="486" width="56" height="34" rx="5" fill="#fdf3e0" stroke="#4a7fd0" stroke-width="1.6"/><text x="174" y="508" fill="#5a4a2a">4</text>
+    <rect x="202" y="486" width="56" height="34" rx="5" fill="#fdf3e0" stroke="#e7c07a"/><text x="230" y="508" fill="#5a4a2a">6</text>
+    <rect x="258" y="486" width="56" height="34" rx="5" fill="#fdf3e0" stroke="#e7c07a"/><text x="286" y="508" fill="#5a4a2a">5</text>
+    <rect x="314" y="486" width="56" height="34" rx="5" fill="#fdf3e0" stroke="#e7c07a"/><text x="342" y="508" fill="#5a4a2a">2</text>
+  </g>
+  <path d="M174 520 L174 532 L286 532 L286 520" fill="none" stroke="#4a7fd0" stroke-width="1.6"/>
+  <text x="230" y="546" font-size="9.5" fill="#20375e" text-anchor="middle">子 [3]=5、[4]=2，较大子=5；4 &lt; 5 → 换</text>
+
+  <!-- Pop Row D final -->
+  <text x="40" y="578" font-size="10" fill="#6e6e73">④停止</text>
+  <g font-size="14" text-anchor="middle" font-weight="700">
+    <rect x="90" y="558" width="56" height="34" rx="5" fill="#fdf3e0" stroke="#e7c07a"/><text x="118" y="580" fill="#5a4a2a">7</text>
+    <rect x="146" y="558" width="56" height="34" rx="5" fill="#fdf3e0" stroke="#e7c07a"/><text x="174" y="580" fill="#5a4a2a">5</text>
+    <rect x="202" y="558" width="56" height="34" rx="5" fill="#fdf3e0" stroke="#e7c07a"/><text x="230" y="580" fill="#5a4a2a">6</text>
+    <rect x="258" y="558" width="56" height="34" rx="5" fill="#dff0e7" stroke="#2f9e6e" stroke-width="1.6"/><text x="286" y="580" fill="#2f6b4e">4</text>
+    <rect x="314" y="558" width="56" height="34" rx="5" fill="#fdf3e0" stroke="#e7c07a"/><text x="342" y="580" fill="#5a4a2a">2</text>
+  </g>
+  <text x="286" y="608" font-size="9.5" fill="#2f6b4e" text-anchor="middle">[3]=4 无子 → 停 ✓　终态 [7,5,6,4,2]</text>
+
+  <!-- Pop 步骤盒 -->
+  <rect x="560" y="330" width="520" height="180" rx="12" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="582" y="356" font-size="12" font-weight="700" fill="#1d1d1f">pop() 逻辑</text>
+  <text x="582" y="380" font-size="10.5" fill="#4a4a4f">1. swap(0, size−1)：堆顶与最右叶交换</text>
+  <text x="582" y="400" font-size="10.5" fill="#4a4a4f">2. 删末尾（即原堆顶），记为返回值</text>
+  <text x="582" y="420" font-size="10.5" fill="#4a4a4f">3. siftDown(0)：在 i、左、右三者中挑最大 max</text>
+  <text x="582" y="440" font-size="10.5" fill="#4a4a4f">4. 若 max==i（或子越界）则停；否则与 max 交换、i=max</text>
+  <text x="582" y="464" font-size="10" fill="#8a5a12">关键：必须与「较大子」换，否则换上来的仍小于另一子，破坏偏序</text>
+  <text x="582" y="486" font-size="10" fill="#8a97ab">末尾补顶是为了「保持完全二叉树无空洞」，代价是新顶多半很小、需下沉</text>
+  <text x="582" y="504" font-size="10" fill="#2f6b4e">查顶 O(1)　·　push/pop O(log n)</text>
+
+  <!-- 底部性质 -->
+  <rect x="40" y="628" width="1040" height="76" rx="12" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="58" y="652" font-size="10.5" font-weight="700" fill="#2f6b4e">对称性</text>
+  <text x="118" y="652" font-size="10" fill="#4a4a4f">上浮向根、每步只比一次（与父）；下沉向叶、每步比两次（挑较大子）。二者都只走一条根—叶路径，故同为 O(树高)。</text>
+  <text x="58" y="676" font-size="10" fill="#4a4a4f">易错点：下沉时忘记比较「两个子里的较大者」而只跟左子换；越界判断 l/r &lt; size 必须先做，防止访问不存在的子。</text>
+  <text x="58" y="694" font-size="10" fill="#8a97ab">局部修复即可 —— 插入/删除只扰动一条路径，其余父子偏序天然保持，这正是堆比全序结构更快的根源。</text>
+</svg>

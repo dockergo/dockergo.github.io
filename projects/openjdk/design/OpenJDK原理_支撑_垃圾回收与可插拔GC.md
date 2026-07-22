@@ -34,6 +34,12 @@ G1 追求"可预测停顿"：按 `-XX:MaxGCPauseMillis` 挑回报最高的一批
 
 两者殊途同归：**用读屏障把"对象已移动"对业务透明化**，从而把复制搬出 STW。
 
+## 五、对象分配：TLAB 无锁快路径与慢路径退让
+
+![TLAB 碰撞指针快路径与慢路径退让](OpenJDK原理_支撑_垃圾回收与可插拔GC_04TLAB分配快路径.svg)
+
+回收之外，分配同样是热点。HotSpot 给每个线程一段私有的 Eden 缓冲 TLAB（`_start`/`_top`/`_end`，`gc/shared/threadLocalAllocBuffer.hpp:48`），绝大多数对象走**无锁碰撞指针**快路径：`allocate` 若 `end − top ≥ size` 就 `top += size` 返回（`threadLocalAllocBuffer.inline.hpp:38`），把"多线程抢 Eden"摊薄到"每重开一次 TLAB 才同步一次"。装不下时 `mem_allocate`（`gc/shared/memAllocator.cpp:326`）依次尝试快路径 `mem_allocate_inside_tlab_fast`（`:248`）→ 慢路径 `mem_allocate_inside_tlab_slow`（`:252`）→ 堆外直分配 `mem_allocate_outside_tlab`（`:234`）。慢路径本质是一道浪费权衡：剩余 `free > refill_waste_limit`（`:59`）就保留 TLAB、让本次对象去共享堆；否则 `retire_tlab` 退休当前块并 `allocate_new_tlab`（`:298`）重开。Eden 也满则触发 GC 后重试。
+
 ## 深化
 
 - **屏障是"GC 与执行引擎的合同"**。一段 Java 代码可能先解释执行、后被 C1/C2 编译，三条路径的机器码都必须含语义一致的屏障，否则并发 GC 会漏改指针、读到旧对象。`BarrierSetAssembler/C1/C2`（`barrierSet.hpp:36-38`）就是把同一份屏障语义翻译成三种代码形态的适配器，`make_barrier_set_*`（`:108/:113/:118`）在选定 GC 后一次性装配。这也是 ZGC/Shenandoah 依赖编译器协同的原因——读屏障出现在每次引用加载上，必须被 C2 高度优化否则吞吐塌陷。

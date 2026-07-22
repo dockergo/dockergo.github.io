@@ -1,0 +1,116 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1140" height="620" viewBox="0 0 1140 620" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="aT" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2aa0a4"/></marker>
+    <marker id="aR" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#d1544a"/></marker>
+    <marker id="aG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+    <marker id="aBk" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#8a8a8f"/></marker>
+  </defs>
+  <rect width="1140" height="620" fill="#fbfbfd"/>
+
+  <text x="30" y="32" font-size="15" font-weight="700" fill="#1d1d1f">nginx 被动健康检查（网络型熔断）· 不发探测包，靠正常请求的失败次数判定 upstream 不可用；fail_timeout 窗口过后自动再给一次机会</text>
+  <text x="30" y="53" font-size="10.5" fill="#6e6e73">ngx_http_upstream_next 在超时 / 5xx / 429 时记一次 fails；选择函数按 fails≥max_fails 且未过 fail_timeout 判定不可用——无独立 half-open 状态机，靠时间窗口实现等价效果</text>
+
+  <!-- 图例 -->
+  <line x1="30" y1="80" x2="54" y2="80" stroke="#d1544a" stroke-width="2" marker-end="url(#aR)"/>
+  <text x="60" y="84" font-size="10" fill="#3a3a3c">失败请求 → 记 fails</text>
+  <line x1="220" y1="80" x2="244" y2="80" stroke="#2f9e6e" stroke-width="2" marker-end="url(#aG)"/>
+  <text x="250" y="84" font-size="10" fill="#3a3a3c">健康请求 → 正常转发</text>
+  <line x1="440" y1="80" x2="464" y2="80" stroke="#2aa0a4" stroke-width="2" stroke-dasharray="5 3" marker-end="url(#aT)"/>
+  <text x="470" y="84" font-size="10" fill="#3a3a3c">fail_timeout 窗口过后 → 重新可选</text>
+  <text x="1110" y="84" font-size="10" fill="#a1a1a6" text-anchor="end">nginx · 源码级核实</text>
+  <line x1="30" y1="96" x2="1110" y2="96" stroke="#e4e7ec" stroke-width="1"/>
+
+  <!-- Panel A: 请求路径与失败记账 -->
+  <rect x="30" y="112" width="1080" height="238" rx="14" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="52" y="138" font-size="13" font-weight="700" fill="#1d1d1f">① 请求路径：ngx_http_upstream_next 记账失败，不额外发探测包</text>
+
+  <!-- client -->
+  <rect x="52" y="162" width="120" height="150" rx="12" fill="#ffffff" stroke="#d9dde4"/>
+  <text x="112" y="188" font-size="11" font-weight="600" fill="#1d1d1f" text-anchor="middle">客户端请求</text>
+  <text x="112" y="206" font-size="8.5" fill="#6e6e73" text-anchor="middle">正常业务流量</text>
+  <text x="112" y="224" font-size="8.5" fill="#6e6e73" text-anchor="middle">本身就是探测</text>
+  <text x="112" y="248" font-size="8" fill="#8a97ab" text-anchor="middle">无独立健康检查</text>
+  <text x="112" y="264" font-size="8" fill="#8a97ab" text-anchor="middle">探测请求（被动）</text>
+
+  <line x1="172" y1="230" x2="212" y2="230" stroke="#4a4a4f" stroke-width="1.8" marker-end="url(#aBk)"/>
+
+  <!-- nginx upstream selection -->
+  <rect x="212" y="162" width="220" height="150" rx="12" fill="#e4f4f4" stroke="#bfe1e1"/>
+  <text x="322" y="186" font-size="11" font-weight="700" fill="#1a6d70" text-anchor="middle">nginx upstream 选择</text>
+  <text x="228" y="208" font-size="8.5" fill="#1a6d70">ngx_http_upstream_get_least_time_peer</text>
+  <text x="228" y="224" font-size="8.5" fill="#1a6d70">（同类选择函数）遍历 peer 列表</text>
+  <rect x="228" y="234" width="188" height="60" rx="8" fill="#ffffff" stroke="#bfe1e1"/>
+  <text x="322" y="252" font-size="9" font-weight="700" fill="#1a6d70" text-anchor="middle">gate 条件（判不可用）</text>
+  <text x="322" y="268" font-size="8.5" fill="#1a6d70" text-anchor="middle">fails ≥ max_fails</text>
+  <text x="322" y="282" font-size="8.5" fill="#1a6d70" text-anchor="middle">且 now - checked &lt; fail_timeout</text>
+
+  <line x1="432" y1="230" x2="472" y2="230" stroke="#4a4a4f" stroke-width="1.8" marker-end="url(#aBk)"/>
+
+  <!-- peer pool -->
+  <rect x="472" y="150" width="290" height="174" rx="12" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="617" y="172" font-size="10.5" font-weight="700" fill="#1d1d1f" text-anchor="middle">upstream peer 池</text>
+
+  <rect x="488" y="182" width="258" height="40" rx="8" fill="#eaf6f0" stroke="#bfe3d1"/>
+  <text x="500" y="199" font-size="9" font-weight="700" fill="#2f6b4e">peer A · 健康</text>
+  <text x="500" y="214" font-size="8" fill="#3f8a63">fails=0 · 正常转发</text>
+
+  <rect x="488" y="228" width="258" height="40" rx="8" fill="#fbe6e3" stroke="#e8a79f"/>
+  <text x="500" y="245" font-size="9" font-weight="700" fill="#8a4038">peer B · 累计失败中</text>
+  <text x="500" y="260" font-size="8" fill="#b06a60">fails=2（&lt;max_fails=3）· 仍参与选择</text>
+
+  <rect x="488" y="274" width="258" height="40" rx="8" fill="#f4f4f6" stroke="#d7d7dd" stroke-dasharray="3 2"/>
+  <text x="500" y="291" font-size="9" font-weight="700" fill="#6e6e73">peer C · 窗口内不可用</text>
+  <text x="500" y="306" font-size="8" fill="#8a97ab">fails≥max_fails 且未过 fail_timeout</text>
+
+  <line x1="762" y1="192" x2="802" y2="202" stroke="#d1544a" stroke-width="1.8" stroke-dasharray="5 3" marker-end="url(#aR)"/>
+  <line x1="762" y1="248" x2="802" y2="238" stroke="#d1544a" stroke-width="1.8" stroke-dasharray="5 3" marker-end="url(#aR)"/>
+
+  <!-- ngx_http_upstream_next -->
+  <rect x="802" y="162" width="278" height="150" rx="12" fill="#fbe6e3" stroke="#e8a79f"/>
+  <text x="941" y="186" font-size="11" font-weight="700" fill="#8a4038" text-anchor="middle">ngx_http_upstream_next</text>
+  <text x="818" y="210" font-size="8.5" fill="#8a4038">触发条件：超时 / 5xx / 429</text>
+  <text x="818" y="228" font-size="8.5" fill="#8a4038">（由 proxy_next_upstream 等</text>
+  <text x="818" y="244" font-size="8.5" fill="#8a4038">配置定义何为"失败尝试"）</text>
+  <rect x="818" y="254" width="246" height="42" rx="8" fill="#ffffff" stroke="#e8a79f"/>
+  <text x="941" y="272" font-size="9" font-weight="700" fill="#8a4038" text-anchor="middle">置位 NGX_PEER_FAILED</text>
+  <text x="941" y="286" font-size="8" fill="#b06a60" text-anchor="middle">peer.fails++ · peer.checked = now</text>
+
+  <!-- Panel B: fail_timeout 时间轴 -->
+  <rect x="30" y="366" width="1080" height="234" rx="14" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="52" y="392" font-size="13" font-weight="700" fill="#1d1d1f">② fail_timeout 时间轴：无独立 half-open 状态机，靠窗口过期实现"再给一次机会"的等价效果</text>
+
+  <line x1="70" y1="470" x2="1060" y2="470" stroke="#d7d7dd" stroke-width="1.2" marker-end="url(#aBk)"/>
+  <text x="1058" y="486" font-size="9" fill="#a1a1a6" text-anchor="end">时间 →</text>
+
+  <!-- 段1：健康 -->
+  <rect x="80" y="428" width="180" height="34" rx="8" fill="#eaf6f0" stroke="#bfe3d1"/>
+  <text x="170" y="450" font-size="9.5" font-weight="700" fill="#2f6b4e" text-anchor="middle">健康 · fails=0</text>
+
+  <!-- 段2：连续失败达阈值 -->
+  <rect x="270" y="428" width="220" height="34" rx="8" fill="#fbe6e3" stroke="#e8a79f"/>
+  <text x="380" y="450" font-size="9.5" font-weight="700" fill="#8a4038" text-anchor="middle">连续失败 → fails 达 max_fails</text>
+  <circle cx="490" cy="445" r="5" fill="#d1544a"/>
+  <text x="490" y="422" font-size="8.5" fill="#8a4038" text-anchor="middle">checked=t0</text>
+
+  <!-- 段3：不可用窗口 -->
+  <rect x="500" y="428" width="260" height="34" rx="8" fill="#f4f4f6" stroke="#d7d7dd" stroke-dasharray="4 3"/>
+  <text x="630" y="450" font-size="9.5" font-weight="700" fill="#6e6e73" text-anchor="middle">不可用窗口 [t0, t0+fail_timeout)</text>
+
+  <!-- 段4：窗口过后可选 -->
+  <rect x="770" y="428" width="270" height="34" rx="8" fill="#e4f4f4" stroke="#bfe1e1" stroke-dasharray="5 3"/>
+  <text x="905" y="450" font-size="9.5" font-weight="700" fill="#1a6d70" text-anchor="middle">窗口过后 · 重新进入候选（探测性放行）</text>
+  <circle cx="770" cy="445" r="5" fill="#2aa0a4"/>
+
+  <text x="770" y="404" font-size="8.5" fill="#1a6d70" text-anchor="middle">t0+fail_timeout</text>
+
+  <line x1="490" y1="462" x2="490" y2="500" stroke="#d1544a" stroke-width="1.4" stroke-dasharray="3 2"/>
+  <line x1="770" y1="462" x2="770" y2="500" stroke="#2aa0a4" stroke-width="1.4" stroke-dasharray="3 2"/>
+
+  <rect x="80" y="510" width="960" height="72" rx="10" fill="#fbf3e2" stroke="#ecd6a8"/>
+  <text x="98" y="532" font-size="10" font-weight="700" fill="#8a6417">⚙ 半开效果，但无显式状态机</text>
+  <text x="98" y="551" font-size="9.5" fill="#7a5a1a">窗口内该 peer 持续被判"不可用"；窗口一过，选择函数的 gate 条件天然不再成立——下一次选择即可能再次选中该 peer，</text>
+  <text x="98" y="568" font-size="9.5" fill="#7a5a1a">用一次真实请求做"探测"。这与 gRPC outlier_detection（见 B2）显式维护 EndpointState 的做法不同：这里全部靠 fails/checked 两个字段 + 时间窗口隐式表达。</text>
+
+  <text x="52" y="596" font-size="9" fill="#8a97ab">触发条件是远端响应质量（超时 / 5xx / 429）——网络型熔断，与 StarRocks 资源型熔断（见 B3）触发条件完全不同。</text>
+</svg>

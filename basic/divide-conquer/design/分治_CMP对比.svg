@@ -1,0 +1,115 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="660" viewBox="0 0 1120 660" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="aB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#4a7fd0"/></marker>
+    <marker id="aG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+    <marker id="aA" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#d99a2b"/></marker>
+    <marker id="aP" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#8a6fd0"/></marker>
+  </defs>
+  <rect width="1120" height="660" fill="#fbfbfd"/>
+
+  <text x="30" y="34" font-size="17" font-weight="700" fill="#1d1d1f">分治 · 对比：三例的 (子问题数 · 合并代价 · 复杂度) 与 分治 / 动规 / 回溯 的边界</text>
+  <text x="30" y="56" font-size="11" fill="#6e6e73">同一分治骨架，(a, f(n)) 不同就得出天差地别的复杂度；子问题是否重叠、是否要枚举全部解，决定该用哪种递归策略</text>
+
+  <!-- 图例 -->
+  <rect x="30" y="72" width="12" height="12" rx="2" fill="#d99a2b"/><text x="48" y="82" font-size="10.5" fill="#3a3a3c">分治</text>
+  <rect x="120" y="72" width="12" height="12" rx="2" fill="#2f9e6e"/><text x="138" y="82" font-size="10.5" fill="#3a3a3c">动态规划</text>
+  <rect x="230" y="72" width="12" height="12" rx="2" fill="#8a6fd0"/><text x="248" y="82" font-size="10.5" fill="#3a3a3c">回溯</text>
+  <rect x="310" y="72" width="12" height="12" rx="2" fill="#4a7fd0"/><text x="328" y="82" font-size="10.5" fill="#3a3a3c">判定分支</text>
+
+  <!-- ===== ① 对比矩阵 ===== -->
+  <text x="30" y="108" font-size="12" font-weight="700" fill="#8a5a12">① 四个分治实例：拆法不同，(a, f) 不同 → 复杂度从 O(log n) 一路到 O(2ⁿ)</text>
+
+  <!-- header -->
+  <g font-size="10.5" font-weight="700" fill="#3a3a3c">
+    <rect x="40" y="116" width="150" height="34" fill="#eef1f5" stroke="#e4e7ec"/><text x="115" y="138" text-anchor="middle">算法</text>
+    <rect x="190" y="116" width="250" height="34" fill="#eef1f5" stroke="#e4e7ec"/><text x="315" y="138" text-anchor="middle">分解方式</text>
+    <rect x="440" y="116" width="110" height="34" fill="#eef1f5" stroke="#e4e7ec"/><text x="495" y="138" text-anchor="middle">子问题数 a</text>
+    <rect x="550" y="116" width="150" height="34" fill="#eef1f5" stroke="#e4e7ec"/><text x="625" y="138" text-anchor="middle">合并代价 f(n)</text>
+    <rect x="700" y="116" width="150" height="34" fill="#eef1f5" stroke="#e4e7ec"/><text x="775" y="138" text-anchor="middle">时间复杂度</text>
+    <rect x="850" y="116" width="230" height="34" fill="#eef1f5" stroke="#e4e7ec"/><text x="965" y="138" text-anchor="middle">类型</text>
+  </g>
+
+  <!-- row1 二分 -->
+  <g font-size="10.5">
+    <rect x="40" y="150" width="150" height="42" fill="#ffffff" stroke="#e4e7ec"/><text x="52" y="176" font-weight="700" fill="#8a5a12">二分查找 · DC1</text>
+    <rect x="190" y="150" width="250" height="42" fill="#ffffff" stroke="#e4e7ec"/><text x="202" y="176" fill="#4a4a4f">对半分，丢弃无目标的一半</text>
+    <rect x="440" y="150" width="110" height="42" fill="#ffffff" stroke="#e4e7ec"/><text x="495" y="176" text-anchor="middle" fill="#4a4a4f">1</text>
+    <rect x="550" y="150" width="150" height="42" fill="#ffffff" stroke="#e4e7ec"/><text x="625" y="176" text-anchor="middle" fill="#4a4a4f">O(1)</text>
+    <rect x="700" y="150" width="150" height="42" fill="#ffffff" stroke="#e4e7ec"/><text x="775" y="176" text-anchor="middle" font-weight="700" fill="#2f9e6e">O(log n)</text>
+    <rect x="850" y="150" width="230" height="42" fill="#ffffff" stroke="#e4e7ec"/><text x="965" y="176" text-anchor="middle" fill="#4a4a4f">减治（只留一侧）</text>
+  </g>
+  <!-- row2 归并 -->
+  <g font-size="10.5">
+    <rect x="40" y="192" width="150" height="42" fill="#fafbfc" stroke="#e4e7ec"/><text x="52" y="218" font-weight="700" fill="#1f6b47">归并排序</text>
+    <rect x="190" y="192" width="250" height="42" fill="#fafbfc" stroke="#e4e7ec"/><text x="202" y="218" fill="#4a4a4f">从中点对半分，两侧各排序</text>
+    <rect x="440" y="192" width="110" height="42" fill="#fafbfc" stroke="#e4e7ec"/><text x="495" y="218" text-anchor="middle" fill="#4a4a4f">2</text>
+    <rect x="550" y="192" width="150" height="42" fill="#fafbfc" stroke="#e4e7ec"/><text x="625" y="218" text-anchor="middle" fill="#4a4a4f">O(n) 合并</text>
+    <rect x="700" y="192" width="150" height="42" fill="#fafbfc" stroke="#e4e7ec"/><text x="775" y="218" text-anchor="middle" font-weight="700" fill="#2f9e6e">O(n log n)</text>
+    <rect x="850" y="192" width="230" height="42" fill="#fafbfc" stroke="#e4e7ec"/><text x="965" y="218" text-anchor="middle" fill="#4a4a4f">折半型（均衡②）</text>
+  </g>
+  <!-- row3 建树 -->
+  <g font-size="10.5">
+    <rect x="40" y="234" width="150" height="42" fill="#ffffff" stroke="#e4e7ec"/><text x="52" y="260" font-weight="700" fill="#8a5a12">构建二叉树 · DC2</text>
+    <rect x="190" y="234" width="250" height="42" fill="#ffffff" stroke="#e4e7ec"/><text x="202" y="260" fill="#4a4a4f">前序定根，中序切左右子树</text>
+    <rect x="440" y="234" width="110" height="42" fill="#ffffff" stroke="#e4e7ec"/><text x="495" y="260" text-anchor="middle" fill="#4a4a4f">2</text>
+    <rect x="550" y="234" width="150" height="42" fill="#ffffff" stroke="#e4e7ec"/><text x="625" y="260" text-anchor="middle" fill="#4a4a4f">O(1) 哈希定位</text>
+    <rect x="700" y="234" width="150" height="42" fill="#ffffff" stroke="#e4e7ec"/><text x="775" y="260" text-anchor="middle" font-weight="700" fill="#2f9e6e">O(n)</text>
+    <rect x="850" y="234" width="230" height="42" fill="#ffffff" stroke="#e4e7ec"/><text x="965" y="260" text-anchor="middle" fill="#4a4a4f">折半型分治</text>
+  </g>
+  <!-- row4 汉诺塔 -->
+  <g font-size="10.5">
+    <rect x="40" y="276" width="150" height="42" fill="#fafbfc" stroke="#e4e7ec"/><text x="52" y="302" font-weight="700" fill="#8a5a12">汉诺塔 · DC3</text>
+    <rect x="190" y="276" width="250" height="42" fill="#fafbfc" stroke="#e4e7ec"/><text x="202" y="302" fill="#4a4a4f">规模减一，三柱借助轮换</text>
+    <rect x="440" y="276" width="110" height="42" fill="#fafbfc" stroke="#e4e7ec"/><text x="495" y="302" text-anchor="middle" fill="#4a4a4f">2</text>
+    <rect x="550" y="276" width="150" height="42" fill="#fafbfc" stroke="#e4e7ec"/><text x="625" y="302" text-anchor="middle" fill="#4a4a4f">O(1)</text>
+    <rect x="700" y="276" width="150" height="42" fill="#fafbfc" stroke="#e4e7ec"/><text x="775" y="302" text-anchor="middle" font-weight="700" fill="#d1544a">O(2ⁿ)</text>
+    <rect x="850" y="276" width="230" height="42" fill="#fafbfc" stroke="#e4e7ec"/><text x="965" y="302" text-anchor="middle" fill="#4a4a4f">减一型（子问题不收敛）</text>
+  </g>
+
+  <text x="40" y="340" font-size="10.5" fill="#6e6e73">读法：a 决定「分裂速度」，f(n) 决定「每层合并成本」；a=1 时区间指数收缩得 O(log n)，减一型 a=2 则叶子指数暴涨得 O(2ⁿ)。</text>
+
+  <!-- ===== ② 分治 / 动规 / 回溯 边界 ===== -->
+  <text x="30" y="374" font-size="12" font-weight="700" fill="#20375e">② 何时选谁：先问「子问题是否重叠 / 是否要枚举全部解」</text>
+
+  <rect x="400" y="388" width="320" height="46" rx="10" fill="#eaf1fb" stroke="#4a7fd0" stroke-width="1.3" filter="url(#soft)"/>
+  <text x="560" y="408" font-size="11.5" font-weight="700" fill="#20375e" text-anchor="middle">递归分解一个问题</text>
+  <text x="560" y="425" font-size="10" fill="#3a4a63" text-anchor="middle">子问题重叠吗？要枚举所有候选吗？</text>
+
+  <!-- three branches -->
+  <path d="M560 434 V456 H205 V478" fill="none" stroke="#d99a2b" stroke-width="1.6" marker-end="url(#aA)"/>
+  <path d="M560 434 V456 H560 V478" fill="none" stroke="#2f9e6e" stroke-width="1.6" marker-end="url(#aG)"/>
+  <path d="M560 434 V456 H915 V478" fill="none" stroke="#8a6fd0" stroke-width="1.6" marker-end="url(#aP)"/>
+  <text x="360" y="450" font-size="9.5" fill="#8a5a12" text-anchor="middle">独立不重叠</text>
+  <text x="620" y="450" font-size="9.5" fill="#1f6b47" text-anchor="middle">子问题重叠</text>
+  <text x="770" y="450" font-size="9.5" fill="#5b45a0" text-anchor="middle">要枚举 / 试探所有解</text>
+
+  <!-- card 分治 -->
+  <rect x="40" y="480" width="330" height="150" rx="12" fill="#ffffff" stroke="#d99a2b" stroke-width="1.4" filter="url(#soft)"/>
+  <text x="60" y="506" font-size="13" font-weight="700" fill="#8a5a12">分治 Divide &amp; Conquer</text>
+  <text x="60" y="530" font-size="10.5" fill="#4a4a4f">条件：子问题相互独立、无重叠</text>
+  <text x="60" y="550" font-size="10.5" fill="#4a4a4f">手法：拆 → 递归解 → 合并子解</text>
+  <text x="60" y="574" font-size="10.5" fill="#8a5a12" font-weight="700">例：归并 / 快排 / 二分 / 建树 / 汉诺塔</text>
+  <text x="60" y="598" font-size="9.5" fill="#6e6e73">各子问题只算一次，天然可并行。</text>
+  <text x="60" y="618" font-size="9.5" fill="#6e6e73">若子问题会重复出现 → 别用分治。</text>
+
+  <!-- card 动规 -->
+  <rect x="390" y="480" width="330" height="150" rx="12" fill="#ffffff" stroke="#2f9e6e" stroke-width="1.4" filter="url(#soft)"/>
+  <text x="410" y="506" font-size="13" font-weight="700" fill="#1f6b47">动态规划 DP</text>
+  <text x="410" y="530" font-size="10.5" fill="#4a4a4f">条件：子问题重叠 + 最优子结构</text>
+  <text x="410" y="550" font-size="10.5" fill="#4a4a4f">手法：记忆化 / 填表，复用已算解</text>
+  <text x="410" y="574" font-size="10.5" fill="#1f6b47" font-weight="700">例：斐波那契 / 背包 / 编辑距离</text>
+  <text x="410" y="598" font-size="9.5" fill="#6e6e73">把分治的重复计算「缓存」下来，</text>
+  <text x="410" y="618" font-size="9.5" fill="#6e6e73">指数级递归降到多项式。</text>
+
+  <!-- card 回溯 -->
+  <rect x="740" y="480" width="340" height="150" rx="12" fill="#ffffff" stroke="#8a6fd0" stroke-width="1.4" filter="url(#soft)"/>
+  <text x="760" y="506" font-size="13" font-weight="700" fill="#5b45a0">回溯 Backtracking</text>
+  <text x="760" y="530" font-size="10.5" fill="#4a4a4f">条件：需系统枚举 / 搜索解空间</text>
+  <text x="760" y="550" font-size="10.5" fill="#4a4a4f">手法：选择 → 递归 → 撤销(回退)</text>
+  <text x="760" y="574" font-size="10.5" fill="#5b45a0" font-weight="700">例：全排列 / N 皇后 / 子集和</text>
+  <text x="760" y="598" font-size="9.5" fill="#6e6e73">走不通就回退换下一候选，</text>
+  <text x="760" y="618" font-size="9.5" fill="#6e6e73">剪枝可大幅压缩搜索树。</text>
+
+  <text x="30" y="650" font-size="10.5" fill="#6e6e73">一句话：分治「拆开各自算再合」，动规「拆开但缓存重复子问题」，回溯「拆成一步步选择并可撤销」—— 三者都以递归分解为底座。</text>
+</svg>

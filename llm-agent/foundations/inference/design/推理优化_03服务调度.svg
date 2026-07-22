@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 480" font-family="-apple-system,'PingFang SC','Helvetica Neue',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.07"/>
+    </filter>
+    <marker id="arp" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#c084fc"/>
+    </marker>
+  </defs>
+  <rect width="960" height="480" fill="#fbfbfd"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="#1d1d1f">推理优化 · 服务调度</text>
+  <text x="30" y="54" font-size="12" fill="#6e6e73">把 GPU 吃满：动态拼批 + 分页显存，让吞吐与并发最大化</text>
+
+  <g filter="url(#soft)"><rect x="30" y="86" width="435" height="300" rx="14" fill="#f3e8ff" stroke="#c084fc" stroke-width="1.5"/></g>
+  <text x="56" y="118" font-size="13" font-weight="600" fill="#c084fc">连续批处理</text>
+  <text x="56" y="146" font-size="10.5" fill="#6e6e73">静态批：等最慢的请求，GPU 空转</text>
+  <g filter="url(#soft)"><rect x="56" y="162" width="80" height="34" rx="6" fill="#ffffff" stroke="#c084fc" stroke-width="1.1"/></g>
+  <text x="96" y="184" font-size="10" fill="#1d1d1f" text-anchor="middle">req A</text>
+  <g filter="url(#soft)"><rect x="144" y="162" width="80" height="34" rx="6" fill="#ffffff" stroke="#c084fc" stroke-width="1.1"/></g>
+  <text x="184" y="184" font-size="10" fill="#1d1d1f" text-anchor="middle">req B</text>
+  <g filter="url(#soft)"><rect x="232" y="162" width="80" height="34" rx="6" fill="#ffffff" stroke="#c084fc" stroke-width="1.1"/></g>
+  <text x="272" y="184" font-size="10" fill="#1d1d1f" text-anchor="middle">req C</text>
+  <text x="56" y="228" font-size="10.5" fill="#6e6e73">连续批：某请求结束立刻插入新请求</text>
+  <text x="56" y="252" font-size="10.5" fill="#6e6e73">每一步都动态重组当前批次</text>
+  <text x="56" y="276" font-size="10.5" fill="#6e6e73">GPU 几乎不空转，吞吐大幅提升</text>
+  <text x="56" y="314" font-size="11" font-weight="600" fill="#1d1d1f">又称 in-flight batching</text>
+  <text x="56" y="340" font-size="10.5" fill="#9aa0a6">iteration 级调度，vLLM/TGI 标配</text>
+
+  <g filter="url(#soft)"><rect x="495" y="86" width="435" height="300" rx="14" fill="#ffffff" stroke="#c084fc" stroke-width="1.5"/></g>
+  <text x="521" y="118" font-size="13" font-weight="600" fill="#c084fc">PagedAttention · 显存分页</text>
+  <text x="521" y="146" font-size="10.5" fill="#6e6e73">仿操作系统虚拟内存，把 KV 缓存</text>
+  <text x="521" y="166" font-size="10.5" fill="#6e6e73">切成固定大小的「块」按需分配</text>
+  <g filter="url(#soft)"><rect x="521" y="182" width="52" height="34" rx="5" fill="#f3e8ff" stroke="#c084fc" stroke-width="1"/></g>
+  <g filter="url(#soft)"><rect x="579" y="182" width="52" height="34" rx="5" fill="#f3e8ff" stroke="#c084fc" stroke-width="1"/></g>
+  <g filter="url(#soft)"><rect x="637" y="182" width="52" height="34" rx="5" fill="#ffffff" stroke="#c084fc" stroke-width="1"/></g>
+  <g filter="url(#soft)"><rect x="695" y="182" width="52" height="34" rx="5" fill="#f3e8ff" stroke="#c084fc" stroke-width="1"/></g>
+  <text x="521" y="248" font-size="10.5" fill="#6e6e73">· 消除显存碎片，利用率接近 100%</text>
+  <text x="521" y="272" font-size="10.5" fill="#6e6e73">· 相同前缀的块可共享，省显存</text>
+  <text x="521" y="296" font-size="10.5" fill="#6e6e73">· 支撑更大批次、更长上下文</text>
+  <text x="521" y="332" font-size="11" font-weight="600" fill="#1d1d1f">显存管理是高并发的关键</text>
+  <text x="521" y="358" font-size="10.5" fill="#9aa0a6">代价：调度器与内存管理更复杂</text>
+
+  <text x="480" y="440" font-size="12" font-weight="600" fill="#c084fc" text-anchor="middle">连续批处理提利用率 · PagedAttention 管好显存——共同把服务吞吐推到极致</text>
+</svg>

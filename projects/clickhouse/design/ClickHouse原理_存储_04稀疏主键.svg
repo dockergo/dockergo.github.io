@@ -5,7 +5,7 @@
   </defs>
   <rect width="1060" height="800" fill="#fbfbfd"/>
   <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">稀疏主键索引 + Marks：每 granule 存一条，不是每行</text>
-  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">MergeTreeDataPartWriterOnDisk.cpp:351「每 index_granularity 行存一条主键值」· 只写 granule.start_row(:355) — 这是"稀疏"的铁证</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">MergeTreeDataPartWriterOnDisk「每 index_granularity 行存一条主键值」· 只写 granule.start_row — 这是"稀疏"的铁证</text>
 
   <!-- data rows column -->
   <text x="150" y="82" font-size="11" font-weight="600" fill="#5a3410" text-anchor="middle">列数据（按 ORDER BY 排序）</text>
@@ -34,7 +34,7 @@
     <text x="150" y="504" fill="#93762e">(999, ...)</text>
   </g>
   <text x="150" y="560" font-size="9" fill="#93762e" text-anchor="middle">1 granule = index_granularity 行</text>
-  <text x="150" y="576" font-size="9" fill="#93762e" text-anchor="middle">默认 8192（MergeTreeSettings.cpp:64）</text>
+  <text x="150" y="576" font-size="9" fill="#93762e" text-anchor="middle">默认 8192</text>
   <rect x="56" y="596" width="188" height="82" rx="8" fill="#fbeef0" stroke="#f0cdd4"/>
   <text x="150" y="616" font-size="9.5" font-weight="600" fill="#7a2230" text-anchor="middle">主键不去重！</text>
   <text x="150" y="634" font-size="8.5" fill="#a44" text-anchor="middle">同键 (1,...) 多行共存</text>
@@ -57,7 +57,7 @@
   <text x="470" y="380" font-size="10" font-weight="600" fill="#12402a" text-anchor="middle">为何稀疏？</text>
   <text x="470" y="400" font-size="8.8" fill="#2f6f4f" text-anchor="middle">10 亿行 / 8192 ≈ 12 万条索引</text>
   <text x="470" y="416" font-size="8.8" fill="#2f6f4f" text-anchor="middle">→ 索引极小，可全量常驻内存</text>
-  <text x="470" y="436" font-size="8.8" fill="#2f6f4f" text-anchor="middle">loadIndex (IMergeTreeDataPart.cpp:1073)</text>
+  <text x="470" y="436" font-size="8.8" fill="#2f6f4f" text-anchor="middle">loadIndex</text>
   <text x="470" y="456" font-size="8.8" fill="#2f6f4f" text-anchor="middle">代价：只能定位到 granule</text>
   <text x="470" y="472" font-size="8.8" fill="#2f6f4f" text-anchor="middle">不能定位到具体行</text>
   <text x="470" y="496" font-size="8.8" fill="#4c8567" text-anchor="middle">→ 命中的 granule 要整段读+过滤</text>
@@ -66,16 +66,16 @@
   <text x="835" y="82" font-size="11" font-weight="600" fill="#12402a" text-anchor="middle">查询裁剪：主键值 → MarkRange → 物理位置</text>
 
   <rect x="640" y="94" width="390" height="150" rx="12" fill="#f3f7fc" stroke="#cfe0f2" filter="url(#soft)"/>
-  <text x="835" y="116" font-size="11" font-weight="700" fill="#274a78" text-anchor="middle">① KeyCondition（KeyCondition.h:51）</text>
+  <text x="835" y="116" font-size="11" font-weight="700" fill="#274a78" text-anchor="middle">① KeyCondition</text>
   <text x="835" y="136" font-size="9" fill="#5b7db1" text-anchor="middle">把 WHERE 编译成对主键区间的判定</text>
   <rect x="664" y="150" width="342" height="30" rx="6" fill="#fff" stroke="#cfe0f2"/><text x="835" y="169" font-size="9" fill="#274a78" text-anchor="middle">例：WHERE id = 50　→ 区间 [50,50]</text>
-  <text x="835" y="200" font-size="9" fill="#5b7db1" text-anchor="middle">markRangesFromPKRange (SelectExecutor.cpp:1259)</text>
-  <text x="835" y="216" font-size="9" fill="#5b7db1" text-anchor="middle">在 idx 上二分：50 落在 idx[1]=45..idx[2]=90</text>
+  <text x="835" y="200" font-size="9" fill="#5b7db1" text-anchor="middle">markRangesFromPKRange</text>
+  <text x="835" y="216" font-size="9" fill="#5b7db1" text-anchor="middle">在 idx 上二分 落在 idx[1]=45..idx[2]=90</text>
   <text x="835" y="232" font-size="9" fill="#5b7db1" text-anchor="middle">→ 只需读 granule 1（跳过其余全部）</text>
 
   <rect x="640" y="258" width="390" height="150" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
   <text x="835" y="280" font-size="11" font-weight="700" fill="#12402a" text-anchor="middle">② Mark：granule → .bin 物理位置</text>
-  <text x="835" y="300" font-size="9" fill="#2f6f4f" text-anchor="middle">MarkInCompressedFile.h:16</text>
+  <text x="835" y="300" font-size="9" fill="#2f6f4f" text-anchor="middle">MarkInCompressedFile</text>
   <rect x="664" y="312" width="342" height="40" rx="7" fill="#fff" stroke="#cdeadb"/>
   <text x="835" y="329" font-size="9" fill="#12402a" text-anchor="middle">mark = { offset_in_compressed_file,</text>
   <text x="835" y="344" font-size="9" fill="#12402a" text-anchor="middle">offset_in_decompressed_block }</text>

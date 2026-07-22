@@ -10,14 +10,16 @@
 
 ![Trino Stage 调度 · 按 PartitioningHandle 选调度器](Trino原理_调度_01Stage调度.svg)
 
-`PipelinedQueryScheduler`（`core/trino-main/.../execution/scheduler/PipelinedQueryScheduler.java:163`）的 `DistributedStagesScheduler`（内部类 `:845`）循环驱动每个 stage 的 `StageScheduler.schedule`（接口 `core/trino-main/.../execution/scheduler/StageScheduler.java`；驱动点 `PipelinedQueryScheduler.java:1290`/`:1304`）。**调度器按 fragment 的 `PartitioningHandle` 选择**（`createStageScheduler`，`PipelinedQueryScheduler.java:1056`）：
+`PipelinedQueryScheduler` 的 `DistributedStagesScheduler` 循环驱动每 stage 的 `StageScheduler.schedule`，**调度器按 fragment 的 `PartitioningHandle` 选择**（`createStageScheduler`）：
 
-- `SOURCE_DISTRIBUTION` + 单源 → `SourcePartitionedScheduler`（分支 `PipelinedQueryScheduler.java:1094`；类 `core/trino-main/.../execution/scheduler/SourcePartitionedScheduler.java:55`）：拉 split 批、分配、task 数随 split/节点动态增长。
-- 全 remote source → `FixedCountScheduler`（`core/trino-main/.../execution/scheduler/FixedCountScheduler.java`）：task 数 = `NodePartitionMap` 大小（固定）。
-- `SCALED_WRITER_*` → `ScaledWriterScheduler`（`core/trino-main/.../execution/scheduler/ScaledWriterScheduler.java`）：随输出数据量动态加 writer task。
-- 混合 → `FixedSourcePartitionedScheduler`（`core/trino-main/.../execution/scheduler/FixedSourcePartitionedScheduler.java`）。
+| PartitioningHandle | 调度器 | task 数 |
+|---|---|---|
+| `SOURCE_DISTRIBUTION` + 单源 | `SourcePartitionedScheduler` | 随 split/节点动态增长 |
+| 全 remote source | `FixedCountScheduler` | = `NodePartitionMap` 大小（固定） |
+| `SCALED_WRITER_*` | `ScaledWriterScheduler` | 随输出数据量动态加 writer |
+| 混合 | `FixedSourcePartitionedScheduler` | 固定 + 源分区 |
 
-`ScheduleResult` 携带 `finished`/`newTasks`/`blocked` future + `BlockedReason`（`WRITER_SCALING`/`SPLIT_QUEUES_FULL`/`WAITING_FOR_SOURCE`，`core/trino-main/.../execution/scheduler/ScheduleResult.java:31-33`）——调度器不阻塞，靠 future 驱动。
+`ScheduleResult` 携带 `finished`/`newTasks`/`blocked` future + `BlockedReason`（`WRITER_SCALING`/`SPLIT_QUEUES_FULL`/`WAITING_FOR_SOURCE`）——调度器不阻塞，靠 future 驱动。
 
 ---
 
@@ -25,12 +27,7 @@
 
 ![Trino 节点选择 · NodeScheduler + NodeSelector 放置策略](Trino原理_调度_02节点选择.svg)
 
-`NodeScheduler.createNodeSelector`（`core/trino-main/.../execution/scheduler/NodeScheduler.java:61`）产出选择器，按 `node-scheduler.policy` 分两种：
-
-- **`UniformNodeSelector`（默认）**（`core/trino-main/.../execution/scheduler/UniformNodeSelector.java`）：按 `SplitsBalancingPolicy`（STAGE=按本 stage 排队权重 / NODE=按节点总权重）选最闲节点；`optimizedLocalScheduling` 时优先 split 偏好地址（数据本地性）；`QueueSizeAdjuster` 自适应扩每 task pending 队列。
-- **`TopologyAwareNodeSelector`**（`core/trino-main/.../execution/scheduler/TopologyAwareNodeSelector.java`）：按 `NetworkLocation` 逐层（机架→…）分配，减跨机架传输；拓扑来自 `Flat`/`FileBased`/`Subnet` 三种 `NetworkTopology`。
-
-关键限额（`NodeSchedulerConfig`，`core/trino-main/.../execution/scheduler/NodeSchedulerConfig.java`）：`max-splits-per-node`=256（`:139`）、`min-pending-splits-per-task`=16（`:108`）、`include-coordinator`、`min-candidates`=10（`:89`）。`DynamicSplitPlacementPolicy`（`core/trino-main/.../execution/scheduler/DynamicSplitPlacementPolicy.java`）是唯一放置策略（旧 `TopologyAwareSplitPlacementPolicy` 已移除，拓扑感知内化进选择器）。
+`NodeScheduler.createNodeSelector` 按 `node-scheduler.policy` 产两种选择器：**`UniformNodeSelector`（默认）** 按 `SplitsBalancingPolicy` 选最闲节点，可选数据本地性偏好、自适应扩队列；**`TopologyAwareNodeSelector`** 按 `NetworkLocation` 逐层（机架→…）分配减跨机架传输。放置只剩唯一的 `DynamicSplitPlacementPolicy`（拓扑感知已内化进选择器）。关键限额（`NodeSchedulerConfig`）：`max-splits-per-node`=256、`min-pending-splits-per-task`=16、`min-candidates`=10。
 
 ---
 
@@ -38,13 +35,7 @@
 
 ![Trino 资源组 · 准入判定与调度策略](Trino原理_调度_03资源组.svg)
 
-查询准入路径：`DispatchManager.createQueryInternal`（`core/trino-main/.../dispatcher/DispatchManager.java:208`）构建 `SelectionCriteria`（user/source/tags…）→ `resourceGroupManager.selectGroup`（`:230`）匹配到 `ResourceGroupId` → `InternalResourceGroup.run(query)`（`core/trino-main/.../execution/resourcegroups/InternalResourceGroup.java:672`）做**准入判定**：
-
-- 自底向上（本组→根）检查每个祖先的 `canQueueMore`（`InternalResourceGroup.java:1064`）与 `canRunMore`（`:1072`）。
-- `!canQueue && !canRun` → **拒绝**（`QueryQueueFullException`，`:691`）；`canRun` → **立即跑**；否则 → **排队**。
-- 后台 100ms 刷新 `internalStartNext`（`:967`）：`canRunMore` 时从队列取下一个查询启动。
-
-限额（`InternalResourceGroup`）：`hardConcurrencyLimit`（并发上限）、`maxQueuedQueries`（队列上限）、`softMemoryLimit`（超过则停新启动）、`hard/softCpuLimit`（软硬 CPU 限，之间线性收缩并发）。
+查询准入路径：`DispatchManager.createQueryInternal` 构建 `SelectionCriteria`（user/source/tags）→`resourceGroupManager.selectGroup` 匹配 `ResourceGroupId`→`InternalResourceGroup.run` 做**准入判定**——自底向上（本组→根）检查每祖先的 `canQueueMore`/`canRunMore`：`!canQueue && !canRun`→**拒绝**（`QueryQueueFullException`），`canRun`→**立即跑**，否则→**排队**；后台 100ms `internalStartNext` 从队列取下一个。限额：`hardConcurrencyLimit`、`maxQueuedQueries`、`softMemoryLimit`、`hard/softCpuLimit`（软硬之间线性收缩并发）。
 
 ---
 
@@ -52,7 +43,7 @@
 
 ![Trino 调度策略 · SchedulingPolicy 四型 × 队列实现](Trino原理_调度_04调度策略.svg)
 
-资源组的 `SchedulingPolicy`（`core/trino-spi/.../spi/resourcegroups/SchedulingPolicy.java:18-21`）决定组内"下一个跑谁"（子组队列 + 查询队列），由 `InternalResourceGroup.setSchedulingPolicy`（`core/trino-main/.../execution/resourcegroups/InternalResourceGroup.java:572`）按枚举换队列实现（`FifoQueue`/`StochasticPriorityQueue`/`WeightedFairQueue`/`IndexedPriorityQueue`，均在 `core/trino-main/.../execution/resourcegroups/`）：
+资源组的 `SchedulingPolicy` 决定组内"下一个跑谁"，由 `InternalResourceGroup.setSchedulingPolicy` 按枚举换队列实现（切换时迁移旧队列条目）：
 
 | 策略 | 子组队列 | 查询队列 | 语义 |
 |---|---|---|---|
@@ -61,7 +52,14 @@
 | `WEIGHTED_FAIR` | WeightedFairQueue | IndexedPriorityQueue | 按 share/utilization 比公平 |
 | `QUERY_PRIORITY` | IndexedPriorityQueue | 同 | 按查询优先级 |
 
-切换策略时会把旧队列的条目迁移进新队列类型。
+## 深化 · 源码锚点（Trino 483，`*.java`）
+
+| 环节 | 关键类型 · 源码锚点 |
+|---|---|
+| Stage 调度 | `PipelinedQueryScheduler:163`（`createStageScheduler:1056`/Source 分支 `:1094`/驱动 `:1290`）· `SourcePartitionedScheduler:55` · `ScheduleResult:31-33` |
+| 节点选择 | `NodeScheduler.createNodeSelector:61` · `NodeSchedulerConfig`（`max-splits-per-node:139`/`min-pending:108`/`min-candidates:89`）|
+| 资源组准入 | `DispatchManager.createQueryInternal:208`（`selectGroup:230`）· `InternalResourceGroup.run:672`（`canQueueMore:1064`/`canRunMore:1072`/拒绝 `:691`/`internalStartNext:967`）|
+| 调度策略 | `SchedulingPolicy:18-21` · `InternalResourceGroup.setSchedulingPolicy:572` |
 
 ## 调优要点（关键开关）
 

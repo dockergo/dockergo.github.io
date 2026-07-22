@@ -10,7 +10,7 @@
 
 ![StarRocks Tablet 健康检查](StarRocks原理_集群_01健康检查.svg)
 
-**TabletChecker**(`fe/fe-core/src/main/java/com/starrocks/clone/TabletChecker.java:92`,`extends LeaderDaemon`)周期扫描所有 Tablet,用 `getTabletHealthStatusWithPriority(...)` 算出 `(TabletHealthStatus, Priority)`。健康状态覆盖:`HEALTHY`、`REPLICA_MISSING`(副本缺)、`VERSION_INCOMPLETE`(版本不全)、`LOCATION_MISMATCH`(位置不符)、`FORCE_REDUNDANT`(强制冗余)、`NEED_FURTHER_REPAIR`(需进一步修复)。不健康的 Tablet 被包成 `TabletSchedCtx` 交给调度器(`TabletChecker.java:853`)。管理员 `ADMIN REPAIR` 可把优先级提到 VERY_HIGH(`:179`)。
+**TabletChecker**(`extends LeaderDaemon`)周期扫描所有 Tablet,用 `getTabletHealthStatusWithPriority` 算出 `(TabletHealthStatus, Priority)`。健康状态覆盖:`HEALTHY`、`REPLICA_MISSING`(副本缺)、`VERSION_INCOMPLETE`(版本不全)、`LOCATION_MISMATCH`(位置不符)、`FORCE_REDUNDANT`(强制冗余)、`NEED_FURTHER_REPAIR`(需进一步修复)。不健康的 Tablet 被包成 `TabletSchedCtx` 交给调度器;管理员 `ADMIN REPAIR` 可把优先级提到 VERY_HIGH。
 
 **为什么先检查再调度**:健康度是"可观测量",优先级是"动作排序依据"——这正是"反馈即控制"在自愈上的体现:sense(检查)→ compare(算健康度)→ act(排队修复)。
 
@@ -20,9 +20,9 @@
 
 ![StarRocks Tablet 调度与克隆](StarRocks原理_集群_02调度克隆.svg)
 
-**TabletScheduler**(`fe/.../clone/TabletScheduler.java:130`,`extends LeaderDaemon`,`SCHEDULE_INTERVAL_MS=1000`)维护不变式 `allTabletIds = pendingTablets + runningTablets`(`:160`):`pendingTablets` 是按优先级排序的 `PriorityQueue<TabletSchedCtx>`,`runningTablets` 是 Map。主循环 `updateClusterLoadStatisticsAndPriority`(`:462`)后 `handleRunningTablets`(`:468`),分发 **CloneTask** 到目标 BE 拉取健康副本。
+**TabletScheduler**(`extends LeaderDaemon`,`SCHEDULE_INTERVAL_MS=1000`)维护不变式 `allTabletIds = pendingTablets + runningTablets`:`pendingTablets` 是按优先级排序的 `PriorityQueue<TabletSchedCtx>`,`runningTablets` 是 Map。主循环 `updateClusterLoadStatisticsAndPriority` 后 `handleRunningTablets`,分发 **CloneTask** 到目标 BE 拉取健康副本。
 
-背压:`Config.tablet_sched_max_scheduling_tablets` 限并发(`:313`);每盘并发槽 `MIN_SLOT_PER_PATH=2 .. MAX_SLOT_PER_PATH=64`(`:139`),防单盘 IO 被克隆打满。克隆完成后新副本经 publish 追上版本,Tablet 转 HEALTHY。
+背压:`Config.tablet_sched_max_scheduling_tablets` 限并发;每盘并发槽 `MIN_SLOT_PER_PATH=2 .. MAX_SLOT_PER_PATH=64`,防单盘 IO 被克隆打满。克隆完成后新副本经 publish 追上版本,Tablet 转 HEALTHY。
 
 ---
 
@@ -30,7 +30,7 @@
 
 ![StarRocks 负载均衡](StarRocks原理_集群_03负载均衡.svg)
 
-健康之外还要**均匀**。`updateClusterLoadStatistic`(`TabletScheduler.java:526`)构建 `ClusterLoadStatistic`(各 BE 的盘用量/Tablet 数),再由再平衡器搬迁 Tablet:
+健康之外还要**均匀**。`updateClusterLoadStatistic` 构建 `ClusterLoadStatistic`(各 BE 的盘用量/Tablet 数),再由再平衡器搬迁 Tablet:
 
 - **DiskAndTabletLoadReBalancer**:按磁盘用量 + Tablet 数把热点 BE 的副本迁到空闲 BE。
 - **ColocateTableBalancer**:维持 colocate 组内 Tablet 的对齐(同组同分桶落同 BE,Join 免 shuffle)。
@@ -42,12 +42,12 @@
 
 ![StarRocks 心跳与 Tablet 上报](StarRocks原理_集群_04心跳上报.svg)
 
-**HeartbeatMgr**(`fe/.../system/HeartbeatMgr.java:87`,`extends LeaderDaemon`,周期 `heartbeat_timeout_second`)向每个节点发 `TMasterInfo` 心跳,`handleHbResponse` 更新存活状态(`HbStatus`)。节点连续心跳失败被标记 dead,其上副本进入 REPLICA_MISSING 触发修复。
+**HeartbeatMgr**(`extends LeaderDaemon`,周期 `heartbeat_timeout_second`)向每个节点发 `TMasterInfo` 心跳,`handleHbResponse` 更新存活状态(`HbStatus`)。节点连续心跳失败被标记 dead,其上副本进入 REPLICA_MISSING 触发修复。
 
-**Tablet 上报**由 BE 定期发起、FE 的 **ReportHandler**(`fe/.../leader/ReportHandler.java:152`,`extends LeaderDaemon`)处理:`handleReport → tabletReport(beId, tablets, reportVersion)`(`:474`)。对账动作:
-- `deleteFromMeta`(`:538`):BE 已没有的副本从元数据删除(持表写锁,分批让出)。
-- `handleMigration`(`:544`):存储介质迁移(HDD↔SSD)。
-- `addReplica`(`:1567`):FE 元数据有但需补的副本,加前再校验状态(`:2421`)。
+**Tablet 上报**由 BE 定期发起、FE 的 **ReportHandler**(`extends LeaderDaemon`)处理:`handleReport → tabletReport(beId, tablets, reportVersion)`。对账动作:
+- `deleteFromMeta`:BE 已没有的副本从元数据删除(持表写锁,分批让出)。
+- `handleMigration`:存储介质迁移(HDD↔SSD)。
+- `addReplica`:FE 元数据有但需补的副本,加前再校验状态。
 
 `reportVersion` 用来排序/丢弃过期上报,防止旧报覆盖新状态。
 

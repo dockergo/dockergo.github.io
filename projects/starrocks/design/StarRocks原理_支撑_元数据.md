@@ -2,7 +2,7 @@
 
 > **定位**：属"底座能力域"。管全局状态的持久化与全集群一致——本地表元数据走 FE 的 BDB-JE + EditLog + 镜像;云原生表的 Tablet 放置元数据额外交给内嵌的 StarManager。是 DDL/DCL/事务状态/副本位置的最终落点。被所有主线依赖,故障恢复从它回放。源码基准 **StarRocks 3.x**(`fe/.../journal/`、`fe/.../server/GlobalStateMgr.java`、`fe/.../staros/`)。
 
-StarRocks 的元数据中枢是 **GlobalStateMgr**(`fe/fe-core/src/main/java/com/starrocks/server/GlobalStateMgr.java`):它持有 EditLog、Journal、事务管理器、Tablet 调度器、心跳管理器、StarOSAgent、LocalMetastore……几乎所有全局状态的根。持久化沿用 Doris 的路子——**BDB-JE 存日志(EditLog)+ 定期镜像(image/checkpoint)**,follower/observer 靠回放日志追平 leader。存算分离额外引入 StarManager 管 Tablet↔Shard 映射。
+StarRocks 的元数据中枢是 **GlobalStateMgr**:它持有 EditLog、Journal、事务管理器、Tablet 调度器、心跳管理器、StarOSAgent、LocalMetastore……几乎所有全局状态的根。持久化沿用 Doris 的路子——**BDB-JE 存日志(EditLog)+ 定期镜像(image/checkpoint)**,follower/observer 靠回放日志追平 leader。存算分离额外引入 StarManager 管 Tablet↔Shard 映射。
 
 ---
 
@@ -10,7 +10,7 @@ StarRocks 的元数据中枢是 **GlobalStateMgr**(`fe/fe-core/src/main/java/com
 
 ![StarRocks 元数据日志与 BDB-JE](StarRocks原理_元数据_01EditLog.svg)
 
-每个元数据变更(建库/建表/加分区/事务状态…)先写成一条带 op-code 的 **EditLog**(`fe/.../persist/EditLog.java:150` 的巨型 switch:`OP_CREATE_DB_V2`、`OP_CREATE_TABLE_V2`、`OP_ADD_PARTITION_V2`…)。写入是异步批量:**JournalWriter**(`fe/.../journal/JournalWriter.java:82`)从 `BlockingQueue<JournalTask>` 取任务,`batchWriteBegin/Append/Commit` 批量写进 BDB,提交成功后才推进 `nextVisibleJournalId`。底层 **BDBJEJournal**(`fe/.../journal/bdbje/BDBJEJournal.java:176`)把每个日志段存成一个 BDB Database(`rollJournal` 换段),提供 `getMaxJournalId`、`deleteJournals` 等。
+每个元数据变更(建库/建表/加分区/事务状态…)先写成一条带 op-code 的 **EditLog**(巨型 switch:`OP_CREATE_DB_V2`、`OP_CREATE_TABLE_V2`、`OP_ADD_PARTITION_V2`…)。写入是异步批量:**JournalWriter** 从 `BlockingQueue<JournalTask>` 取任务,`batchWriteBegin/Append/Commit` 批量写进 BDB,提交成功后才推进 `nextVisibleJournalId`。底层 **BDBJEJournal** 把每个日志段存成一个 BDB Database(`rollJournal` 换段),提供 `getMaxJournalId`、`deleteJournals` 等。
 
 **为什么日志即真相**:任何时刻的元数据全集 = 初始镜像 + 从镜像点到现在的所有 EditLog 回放。这让 FE 重启、切主、扩缩容都能收敛到同一状态。
 
@@ -20,7 +20,7 @@ StarRocks 的元数据中枢是 **GlobalStateMgr**(`fe/fe-core/src/main/java/com
 
 ![StarRocks 镜像与检查点](StarRocks原理_元数据_02镜像检查点.svg)
 
-日志不能无限涨。**GlobalStateCheckpointWorker.doCheckpoint(epoch, journalId, ...)**(`fe/.../journal/GlobalStateCheckpointWorker.java:30`)调 `globalStateMgr.saveImage` 把当前内存态整体 dump 成镜像文件,并记录 `replayedJournalId`——之后镜像点前的日志即可删除。由 **CheckpointController**(`fe/.../leader/CheckpointController.java`)驱动。恢复时:先加载最新镜像,再从 `replayedJournalId+1` 回放剩余日志。
+日志不能无限涨。**GlobalStateCheckpointWorker.doCheckpoint** 调 `globalStateMgr.saveImage` 把当前内存态整体 dump 成镜像文件,并记录 `replayedJournalId`——之后镜像点前的日志即可删除,由 **CheckpointController** 驱动。恢复时:先加载最新镜像,再从 `replayedJournalId+1` 回放剩余日志。
 
 存算分离下 StarManager 的元数据**单独做检查点**(`StarMgrCheckpointWorker`,`fe/.../journal/StarMgrCheckpointWorker.java`),与 FE 主镜像分离但同源同一套 BDBJE。
 
@@ -30,9 +30,9 @@ StarRocks 的元数据中枢是 **GlobalStateMgr**(`fe/fe-core/src/main/java/com
 
 ![StarRocks FE 高可用](StarRocks原理_元数据_03高可用.svg)
 
-FE 角色枚举 `FrontendNodeType`(`fe/.../ha/FrontendNodeType.java`)。只有 **leader** 能写 EditLog:`GlobalStateMgr.feType` 转为 LEADER 前先做一次追平 `replayJournal(maxJournalId)`(`GlobalStateMgr.java:1384`)。底层用 BDB 的 `ReplicatedEnvironment`(`fe/.../journal/bdbje/BDBEnvironment.java`):observer 用 SECONDARY 节点类型(`:216`),持久性由 `master_sync_policy`/`replica_sync_policy` + `ReplicaAckPolicy` 决定(`:236`),`epochDB` 做 fencing(`:103`)。
+FE 角色枚举 `FrontendNodeType`。只有 **leader** 能写 EditLog:`GlobalStateMgr.feType` 转为 LEADER 前先做一次追平 `replayJournal(maxJournalId)`。底层用 BDB 的 `ReplicatedEnvironment`:observer 用 SECONDARY 节点类型,持久性由 `master_sync_policy` / `replica_sync_policy` + `ReplicaAckPolicy` 决定,`epochDB` 做 fencing。
 
-选主与 fencing 由 **BDBHA**(`fe/.../ha/BDBHA.java`)实现:`fencing` 递增 epoch(`:87`)防脑裂,`getElectableNodes`/`getObserverNodes` 列节点。follower/observer 的**回放循环**:从 `replayedJournalId+1` 读日志、`replayJournalInner` 应用、推进 `replayedJournalId`(`GlobalStateMgr.java:2208`)。
+选主与 fencing 由 **BDBHA** 实现:`fencing` 递增 epoch 防脑裂,`getElectableNodes` / `getObserverNodes` 列节点。follower/observer 的**回放循环**:从 `replayedJournalId+1` 读日志、`replayJournalInner` 应用、推进 `replayedJournalId`。
 
 - **leader**:可读写,唯一写日志者。
 - **follower**:参与选举,回放日志,leader 挂了可被选为新 leader。
@@ -44,9 +44,9 @@ FE 角色枚举 `FrontendNodeType`(`fe/.../ha/FrontendNodeType.java`)。只有 *
 
 ![StarRocks StarManager 元数据](StarRocks原理_元数据_04StarManager.svg)
 
-云原生表的 Tablet↔节点放置不再由 FE 直管,而交给 **StarManager**(StarOS 的元数据服务)。**StarMgrServer**(`fe/.../staros/StarMgrServer.java:49`)内嵌运行 `StarManagerServer`,跑在与 FE 同一套 BDBJE 之上的 `StarOSBDBJEJournalSystem`,随 FE 一起选主(`becomeLeader:102`)。FE 通过 **StarOSAgent**(`fe/.../lake/StarOSAgent.java:82`)与之交互:`addFileStore`(注册对象存储)、shard/worker 管理、解析某 Shard 当前由哪个 CN 服务。
+云原生表的 Tablet↔节点放置不再由 FE 直管,而交给 **StarManager**(StarOS 的元数据服务)。**StarMgrServer** 内嵌运行 `StarManagerServer`,跑在与 FE 同一套 BDBJE 之上的 `StarOSBDBJEJournalSystem`,随 FE 一起选主。FE 通过 **StarOSAgent** 与之交互:`addFileStore`(注册对象存储)、shard/worker 管理、解析某 Shard 当前由哪个 CN 服务。
 
-一致性靠**元数据同步守护** **StarMgrMetaSyncer**(`fe/.../lake/StarMgrMetaSyncer.java:65`):周期性 `deleteUnusedShardAndShardGroup`(`:349`)、`deleteUnusedWorker`(`:480`)、`dropTabletAndDeleteShard` 回收孤儿——把 FE 的 shard-group 与 StarMgr 对账,防止元数据泄漏。
+一致性靠**元数据同步守护** **StarMgrMetaSyncer**:周期性 `deleteUnusedShardAndShardGroup`、`deleteUnusedWorker`、`dropTabletAndDeleteShard` 回收孤儿——把 FE 的 shard-group 与 StarMgr 对账,防止元数据泄漏。
 
 ---
 
@@ -62,6 +62,9 @@ FE 角色枚举 `FrontendNodeType`(`fe/.../ha/FrontendNodeType.java`)。只有 *
 | BDBHA | `ha/BDBHA.java:87` | 选主 + fencing |
 | StarMgrServer | `staros/StarMgrServer.java:49` | 内嵌 StarManager 元数据服务 |
 | StarMgrMetaSyncer | `lake/StarMgrMetaSyncer.java:65` | Shard 元数据对账 GC |
+| GlobalStateMgr | `server/GlobalStateMgr.java:1384` | 转 LEADER 前追平 / 2208 回放循环 |
+| BDBEnvironment | `journal/bdbje/BDBEnvironment.java:216` | ReplicatedEnvironment / observer SECONDARY |
+| StarOSAgent | `lake/StarOSAgent.java:82` | FE↔StarManager 交互代理 |
 
 ## 调优要点（关键开关）
 

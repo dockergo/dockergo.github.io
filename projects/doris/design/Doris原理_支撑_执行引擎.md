@@ -12,7 +12,15 @@
 
 ![分布式规划：Fragment 切分与 BE/instance 分配](Doris原理_执行_10分布式规划.svg)
 
-四级展开里"Plan → Fragment"这步并非纯逻辑切分：CBO 产出的物理算子树以 **Exchange（重分布）为切点**切成若干 **PlanFragment**，每个 Fragment 再由规划器**选定执行的 BE、并确定 instance 并行度**——叶子 Scan 按数据分布（bucket 表按 bucket、按 tablet/scan-range）分给持有副本的 BE，受并行度上限封顶；Shuffle 后的中间 Fragment 按并行度起多实例；Colocate / Bucket Shuffle 则让 instance 按 bucket 对齐、同 bucket 落同 BE 以免网络重分布。产物是"每个 Fragment 对应一组 (BE, instance)"的分布式计划，下发各 BE 执行——这是 FE 规划与 BE 执行之间的桥。
+"Plan → Fragment"并非纯逻辑切分:物理算子树以 **Exchange(重分布)为切点**切成若干 **PlanFragment**,每个 Fragment 由规划器**选定执行 BE 与 instance 并行度**。产物是"每个 Fragment 对应一组 (BE, instance)"的分布式计划,下发各 BE——这是 FE 规划与 BE 执行之间的桥。
+
+## 深化 · Fragment 的 BE/instance 分配策略
+
+| 场景 | 分配方式 | 目的 |
+|---|---|---|
+| 叶子 Scan | 按数据分布(bucket/tablet scan-range)分给持有副本的 BE,受并行度上限封顶 | 就近读、避免搬数据 |
+| Shuffle 后中间 Fragment | 按并行度起多 instance | 提高并行度 |
+| Colocate / Bucket Shuffle | instance 按 bucket 对齐、同 bucket 落同 BE | 免网络重分布 |
 
 ---
 
@@ -58,7 +66,14 @@
 
 ![调度队列：每核 MLFQ + work-stealing](Doris原理_执行_09调度队列.svg)
 
-"依赖驱动"只解决了"谁可运行"，"就绪的 Task 怎么排、哪个线程跑"由调度队列决定：**每个核一条队列**，各自是一个**多级反馈队列（MLFQ）**——新任务进高优先级子队列，跑得久就逐级降级，避免长任务饿死短任务；同级内按 **vruntime（跑得越少越靠前）** 择序，保证公平。线程**优先跑本核队列**（局部性好），本核空了才去**窃取（work-stealing）邻核**任务，兼顾负载均衡。任务运行一个时间片后：依赖未就绪就让出转等待、唤醒后重入；没跑完就累加 vruntime、降级重回队尾。
+"依赖驱动"只决定"谁可运行";"就绪 Task 怎么排、哪个线程跑"由**每核一条调度队列**决定。核心是三条纪律:MLFQ 分级防饿死、vruntime 保公平、work-stealing 均衡负载。
+
+| 机制 | 规则 | 目的 |
+|---|---|---|
+| MLFQ 多级反馈 | 新任务进高优子队列,跑久逐级降级 | 长任务不饿死短任务 |
+| vruntime | 同级内跑得越少越靠前 | 公平择序 |
+| work-stealing | 优先跑本核队列,空了窃取邻核 | 局部性 + 负载均衡 |
+| 时间片让出 | 依赖未就绪则让出等唤醒;未跑完累加 vruntime 降级回队尾 | 不阻塞线程 |
 
 ---
 

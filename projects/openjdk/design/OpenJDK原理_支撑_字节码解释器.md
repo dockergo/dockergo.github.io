@@ -20,6 +20,12 @@
 
 解释器执行到**尚未解析**的 `invoke*`/字段/`new` 时（entry 解析标志为空），从机器码模板陷入 `InterpreterRuntime` 惰性解析：字段与普通调用走 `resolve_from_cache`（`interpreterRuntime.cpp:977`）→ `resolve_invoke`（`:778`）；`invokedynamic` 走 `resolve_invokedynamic`（`:947`）并把 CallSite 写回 `ResolvedIndyEntry`；`new` 走 `_new`（`:215`）触发目标类解析/初始化并分配。实际的"符号引用→直接引用"由 `LinkResolver` 完成：`resolve_method`（`linkResolver.cpp:753`）、`invokevirtual`→vtable 索引（`:1368`）、`invokeinterface`→itable 索引（`:1512`）、`resolve_field`→字段偏移（`:994`），结果统一回填 cpCache。这体现**懒解析**：绝大多数引用直到首次执行到才解析并缓存，摊平类装入成本、也避免永不执行分支的无谓解析。
 
+## 四、解释器栈帧布局：三个游标的工作台
+
+![解释器栈帧布局与 bcp/locals/sp 三游标](OpenJDK原理_支撑_字节码解释器_03解释器栈帧布局.svg)
+
+解释器不靠寄存器算，而靠栈帧内的指针读写内存，这正是它"启动即跑但慢"的物理根源。一帧由变量区（locals，`frame.hpp:315 interpreter_frame_locals`）、调用链接（返回地址/保存 fp/sender_sp）、帧元数据、monitor 块（`:387 interpreter_frame_monitor_begin`）与操作数栈（`:357 interpreter_frame_expression_stack`）组成；各槽偏移由平台帧约定固定（x86 见 `frame_x86.hpp:70` 起的 `interpreter_frame_method_offset`/`mirror`/`mdp`/`cache`/`locals`/`bcp`）。解释循环每步都在动三个游标：`bcp`（字节码指针，`:331`）取码、`locals` 定位变量、`sp` 进出操作数栈；`mirror` 握住类镜像防卸载、`mdp` 边跑边记 profile 供 JIT 投机。方法切换即整套换新帧。
+
 ## 深化
 
 - **派发表为何要"运行期生成机器码"**：字节码语义在不同 CPU 上要落成不同指令序列，模板生成器（`templateInterpreterGenerator.cpp`）在启动时按当前架构一次性 emit，之后解释循环只跳转不再判架构；这也是解释器"零 JIT 依赖即可跑"的根基。

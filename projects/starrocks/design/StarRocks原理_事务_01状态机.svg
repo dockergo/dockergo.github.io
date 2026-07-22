@@ -5,10 +5,10 @@
   </defs>
   <rect width="1080" height="520" fill="#fbfbfd"/>
   <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">StarRocks 导入事务 2PC 状态机 · TransactionStatus 6 态</text>
-  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">一次导入=一个原子单元;GlobalTransactionMgr 统管、按库分派 DatabaseTransactionMgr;状态枚举 TransactionStatus.java:26</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">一次导入=一个原子单元;GlobalTransactionMgr 统管、按库分派 DatabaseTransactionMgr;状态枚举</text>
 
   <!-- commitTransaction bracket over PREPARE..COMMITTED -->
-  <text x="540" y="72" font-size="8.6" text-anchor="middle" fill="#93762e">commitTransaction = prepareTransaction + commitPreparedTransaction · DatabaseTransactionMgr.java:586</text>
+  <text x="540" y="72" font-size="8.6" text-anchor="middle" fill="#93762e">commitTransaction = prepareTransaction + commitPreparedTransaction</text>
   <path d="M330,84 L330,80 L750,80 L750,84" fill="none" stroke="#e8cf9a" stroke-width="1.2"/>
 
   <!-- state cards (happy path) -->
@@ -20,7 +20,7 @@
 
     <rect x="255" y="92" width="150" height="80" rx="12" fill="#eef3fb" stroke="#bcd0ec"/>
     <text x="330" y="120" font-size="12" font-weight="700" fill="#1b2a4a">PREPARE</text>
-    <text x="330" y="140" font-size="8.3" fill="#5b7db1">begin 创建 · :213</text>
+    <text x="330" y="140" font-size="8.3" fill="#5b7db1">begin 创建</text>
     <text x="330" y="156" font-size="8.3" fill="#5b7db1">label 去重 · 限流</text>
 
     <rect x="465" y="92" width="150" height="80" rx="12" fill="#f3f7fc" stroke="#cfe0f2"/>
@@ -63,28 +63,28 @@
 
   <!-- bottom explainer band -->
   <rect x="30" y="336" width="1020" height="170" rx="13" fill="#f7f7f9" stroke="#ececf1"/>
-  <text x="46" y="360" font-size="10.5" font-weight="700" fill="#1d1d1f">每次状态变更都在事务级锁内落 EditLog（persistTxnStateInTxnLevelLock · DatabaseTransactionMgr.java:241）→ 故障重启回放到一致点</text>
+  <text x="46" y="360" font-size="10.5" font-weight="700" fill="#1d1d1f">每次状态变更都在事务级锁内落 EditLog（persistTxnStateInTxnLevelLock ·）→ 故障重启回放到一致点</text>
 
   <g>
     <rect x="46" y="372" width="318" height="118" rx="10" fill="#eef3fb" stroke="#bcd0ec"/>
-    <text x="62" y="394" font-size="10" font-weight="700" fill="#1b2a4a">总入口 · GlobalTransactionMgr :188</text>
+    <text x="62" y="394" font-size="10" font-weight="700" fill="#1b2a4a">总入口 · GlobalTransactionMgr</text>
     <text x="62" y="415" font-size="8.6" fill="#5b7db1">· 按 label 去重:一 label 至多一非 ABORTED 事务</text>
     <text x="62" y="433" font-size="8.6" fill="#5b7db1">· 同 requestId 重试 → DuplicatedRequestException</text>
     <text x="62" y="451" font-size="8.6" fill="#5b7db1">· checkRunningTxnExceedLimit 每库限流</text>
     <text x="62" y="469" font-size="8.6" fill="#5b7db1">· 按库分派 DatabaseTransactionMgr</text>
 
     <rect x="380" y="372" width="318" height="118" rx="10" fill="#fff7e6" stroke="#e8cf9a"/>
-    <text x="396" y="394" font-size="10" font-weight="700" fill="#5a3410">PREPARED → COMMITTED · :1481</text>
+    <text x="396" y="394" font-size="10" font-weight="700" fill="#5a3410">PREPARED → COMMITTED</text>
     <text x="396" y="415" font-size="8.6" fill="#93762e">unprotectedCommitPreparedTransaction</text>
     <text x="396" y="433" font-size="8.6" fill="#93762e">· 校验状态合法</text>
     <text x="396" y="451" font-size="8.6" fill="#93762e">· reserveCommitTs 取严格单调 commitTs</text>
-    <text x="396" y="469" font-size="8.6" fill="#93762e">· 分配全局事务号 GTID nextGtid :1493</text>
+    <text x="396" y="469" font-size="8.6" fill="#93762e">分配全局事务号 GTID nextGtid</text>
 
     <rect x="714" y="372" width="318" height="118" rx="10" fill="#fbeaea" stroke="#e3b7b7"/>
     <text x="730" y="394" font-size="10" font-weight="700" fill="#7a2016">提交法定副本校验（本地表）</text>
     <text x="730" y="415" font-size="8.6" fill="#a5453a">OlapTableTxnStateListener.preCommit</text>
     <text x="730" y="433" font-size="8.6" fill="#a5453a">· 算 quorumReplicaNum(writeQuorum)</text>
     <text x="730" y="451" font-size="8.6" fill="#a5453a">· 成功副本不足 → TabletQuorumFailed</text>
-    <text x="730" y="469" font-size="8.6" fill="#a5453a">Exception · :236</text>
+    <text x="730" y="469" font-size="8.6" fill="#a5453a">Exception</text>
   </g>
 </svg>

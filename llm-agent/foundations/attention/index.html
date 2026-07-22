@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Attention · AI Agents 图谱</title>
+<style>
+:root{
+  --c-bg:#fbfbfd; --c-card:#ffffff; --c-card2:#f5f5f7; --c-ink:#1d1d1f;
+  --c-ink2:#6e6e73; --c-ink3:#a1a1a6; --c-line:#e6e6ea; --c-edge:#d2d2d7;
+  --c-panel:#ffffff; --c-shadow:rgba(0,0,0,.08);
+}
+html[data-theme="dark"]{
+  --c-bg:#0d0d0f; --c-card:#17171a; --c-card2:#1e1e22; --c-ink:#f2f2f5;
+  --c-ink2:#a1a1a6; --c-ink3:#6e6e73; --c-line:#2a2a30; --c-edge:#33333a;
+  --c-panel:#161619; --c-shadow:rgba(0,0,0,.5);
+  /* 架构图内联 SVG 结构中性色深色翻转(品牌强调色不变) */
+  --sc-bg:#17171a; --sc-panel:#1e1e22; --sc-ink:#e8e8ea; --sc-ink2:#c4c4c8;
+  --sc-sub:#9a9aa2; --sc-line:#33333a; --sc-line2:#3d3d45;
+  --sc-fill-blue:#16253d; --sc-fill-purple:#241d3a; --sc-fill-orange:#382214; --sc-fill-teal:#0f3330;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--c-bg);color:var(--c-ink);
+  font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif;
+  font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+header{position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:14px;
+  padding:12px 24px;background:color-mix(in srgb,var(--c-bg) 86%,transparent);
+  backdrop-filter:saturate(1.4) blur(14px);border-bottom:1px solid var(--c-line)}
+header .logo{display:inline-flex;align-items:center;flex:none}
+header .spacer{flex:1}
+.brand-intro{display:flex;flex-direction:column;align-items:flex-start;margin-left:6px;min-width:0}
+.brand-intro .bt{font-size:15px;font-weight:700;color:var(--c-ink);line-height:1.3}
+.brand-intro .bs{margin-top:3px;font-size:11.5px;color:var(--c-ink3);line-height:1.5}
+.icobtn{width:38px;height:38px;border-radius:50%;border:1px solid var(--c-line);
+  background:var(--c-panel);color:var(--c-ink2);cursor:pointer;display:inline-grid;
+  place-items:center;font-size:16px;flex:none;text-decoration:none}
+.tt-ico{font-size:16px;line-height:1}.tt-moon{display:none}
+html[data-theme="dark"] .tt-sun{display:none}html[data-theme="dark"] .tt-moon{display:inline}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 24px 80px}
+
+/* ---- 门户 hero ---- */
+.hero{margin:6px 0 26px}
+.hero h1{font-size:26px;font-weight:800;letter-spacing:.2px}
+.hero .sub{margin-top:8px;font-size:13.5px;color:var(--c-ink2);max-width:820px}
+.hero .back{display:inline-flex;align-items:center;gap:6px;margin-bottom:14px;
+  font-size:12.5px;color:var(--c-ink2);border:1px solid var(--c-line);
+  border-radius:999px;padding:5px 13px;background:var(--c-panel)}
+.hero .back:hover{color:var(--c-ink);border-color:var(--c-edge)}
+
+/* ---- 门户卡片栅格 ---- */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:18px}
+.card{position:relative;display:block;background:var(--c-card);border:1px solid var(--c-line);
+  border-radius:16px;padding:20px 20px 18px;overflow:hidden;transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease}
+.card:hover{transform:translateY(-3px);border-color:var(--acc);box-shadow:0 10px 30px var(--c-shadow)}
+.card .bar{position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--acc)}
+.card .k{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.6px;
+  color:var(--acc);text-transform:uppercase;margin-bottom:8px}
+.card h3{font-size:17px;font-weight:750;line-height:1.35;color:var(--c-ink)}
+.card .core{margin-top:9px;font-size:12.5px;color:var(--c-ink2);line-height:1.6}
+.card .tags{margin-top:14px;display:flex;flex-direction:column;gap:7px}
+.card .tag{display:flex;gap:8px;align-items:baseline;font-size:12px;color:var(--c-ink2)}
+.card .tag .n{font-weight:800;color:var(--acc);flex:none;font-variant-numeric:tabular-nums}
+.card .go{margin-top:16px;font-size:12px;font-weight:700;color:var(--acc);display:inline-flex;align-items:center;gap:5px}
+
+/* ---- 模块页 ---- */
+.judge{background:var(--c-card);border:1px solid var(--c-line);border-left:4px solid var(--acc);
+  border-radius:14px;padding:18px 22px;margin-bottom:26px}
+.judge .k{font-size:11px;font-weight:700;letter-spacing:.6px;color:var(--acc);text-transform:uppercase}
+.judge h1{font-size:22px;font-weight:800;line-height:1.34;margin-top:7px}
+.judge .core{margin-top:11px;font-size:13.5px;color:var(--c-ink2);line-height:1.7;max-width:900px}
+.secttl{display:flex;align-items:center;gap:11px;margin:34px 0 14px}
+.secttl .badge{flex:none;min-width:30px;height:30px;padding:0 9px;border-radius:9px;background:var(--acc);
+  color:#fff;font-weight:800;font-size:15px;display:inline-grid;place-items:center}
+.secttl .t{font-size:17px;font-weight:750}
+.secttl.eco .badge{background:var(--c-ink);color:var(--c-bg)}
+/* ── 垂直 TAB 布局 ── */
+.vt-wrap{display:flex;gap:22px;margin-top:26px;align-items:flex-start}
+.vt-nav{flex:none;width:236px;position:sticky;top:20px;display:flex;flex-direction:column;gap:8px}
+.vt-grp{font-size:11px;font-weight:800;letter-spacing:.04em;color:var(--c-ink3);
+  text-transform:none;margin:14px 4px 2px;padding-top:8px;border-top:1px solid var(--c-line)}
+.vt-grp:first-child{margin-top:0;padding-top:0;border-top:none}
+.vt-tab{display:flex;align-items:center;gap:10px;text-align:left;cursor:pointer;
+  background:var(--c-card);border:1px solid var(--c-line);border-radius:12px;
+  padding:12px 13px;color:var(--c-ink2);font:inherit;transition:.15s}
+.vt-tab:hover{border-color:var(--acc);color:var(--c-ink)}
+.vt-tab.active{background:var(--acc);border-color:var(--acc);color:#fff;box-shadow:0 4px 14px -6px var(--acc)}
+.vt-tab .vt-b{flex:none;min-width:26px;height:26px;padding:0 7px;border-radius:8px;
+  background:var(--c-card2);color:var(--acc);font-weight:800;font-size:13px;
+  display:inline-grid;place-items:center}
+.vt-tab.active .vt-b{background:rgba(255,255,255,.24);color:#fff}
+.vt-tab .vt-l{font-size:12.5px;font-weight:650;line-height:1.35}
+.vt-stage{flex:1;min-width:0}
+.vt-sec{display:none}
+.vt-sec.active{display:block;animation:vtfade .22s ease}
+.vt-sec .secttl{margin-top:0}
+@keyframes vtfade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media(max-width:820px){.vt-wrap{flex-direction:column}.vt-nav{position:static;width:100%;flex-direction:row;flex-wrap:wrap}.vt-tab{flex:1 1 44%}}
+.fig{background:var(--c-card);border:1px solid var(--c-line);border-radius:16px;
+  padding:16px;overflow:hidden}
+.fig img{display:block;width:100%;height:auto;border-radius:8px}
+.fig .figsvg{display:block;width:100%;height:auto;border-radius:8px}
+.blurb{margin-top:14px;background:var(--c-card);border:1px solid var(--c-line);
+  border-radius:14px;padding:15px 19px}
+.blurb p{font-size:13px;color:var(--c-ink2);line-height:1.75}
+.blurb p+p{margin-top:9px}
+.blurb b{color:var(--c-ink);font-weight:700}
+.blurb code{font-family:'SF Mono',ui-monospace,Menlo,monospace;font-size:.88em;
+  background:var(--c-card2);border:1px solid var(--c-line);border-radius:5px;padding:1px 5px;color:var(--acc)}
+.blurb a{color:var(--acc);text-decoration:none;
+  border-bottom:1px solid color-mix(in srgb,var(--acc) 40%,transparent);transition:border-color .15s}
+.blurb a:hover{border-bottom-color:var(--acc)}
+.refs{margin-top:30px;padding-top:18px;border-top:2px solid var(--c-line)}
+.reflist{margin-top:12px}
+.reflist p{margin:5px 0;font-size:12.5px;color:var(--c-ink2);line-height:1.7}
+.reflist a{color:var(--acc)}
+.miss{padding:40px;text-align:center;color:var(--c-ink3);font-size:13px;border:1px dashed var(--c-edge);border-radius:12px}
+.backrow{margin-top:44px;padding-top:22px;border-top:1px solid var(--c-line)}
+.backrow a{display:inline-flex;align-items:center;gap:7px;font-size:13px;color:var(--c-ink2);
+  border:1px solid var(--c-line);border-radius:999px;padding:8px 16px;background:var(--c-panel)}
+.backrow a:hover{color:var(--c-ink);border-color:var(--c-edge)}
+footer{max-width:1180px;margin:0 auto;padding:0 24px 40px;color:var(--c-ink3);font-size:11.5px}
+
+/* ---- 门户片区切换 tab + 片区标题条 ---- */
+.zbar{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap}
+.zseg{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:700;
+  color:var(--c-ink2);border:1px solid var(--c-line);border-radius:999px;
+  padding:8px 16px;background:var(--c-panel);transition:.15s}
+.zseg:hover{color:var(--c-ink);border-color:var(--c-edge)}
+.zseg.active{color:var(--c-ink);border-color:var(--c-ink);background:var(--c-card)}
+.zseg .zn{min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:var(--c-card2);
+  color:var(--c-ink2);font-size:11px;font-weight:800;display:inline-grid;place-items:center}
+.zone{margin-top:38px;scroll-margin-top:80px}
+.zone:first-of-type{margin-top:30px}
+.zhd{margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--c-line)}
+.zhd .zk{font-size:11px;font-weight:800;letter-spacing:.08em;color:var(--c-ink3);text-transform:uppercase}
+.zhd h2{font-size:20px;font-weight:800;margin-top:5px;color:var(--c-ink)}
+.zhd p{font-size:12.5px;color:var(--c-ink2);margin-top:6px;max-width:860px;line-height:1.65}
+</style>
+</head>
+<body>
+<header>
+  <a class="logo" href="../../../index.html#agent" title="返回 LLM & Agent 导航"><span class="icobtn"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg></span></a>
+  <div class="brand-intro">
+    <div class="bt">Attention</div>
+    <div class="bs">AI Agents 生态图谱 · 概念层机理（不点名具体框架）</div>
+  </div>
+  <div class="spacer"></div>
+  <button id="themeBtn" class="icobtn" title="切换深色 / 浅色主题" aria-label="切换主题"><span class="tt-ico tt-moon">☾</span><span class="tt-ico tt-sun">☀</span></button>
+</header>
+<div class="wrap" style="--acc:#5e5ce6">
+  <div class="judge">
+    <span class="k">ATTENTION · 定位</span>
+    <h1>Attention · 让 token 彼此对话</h1>
+    <div class="core">用 Query·Key 的点积算出「谁该关注谁」，再对 Value 加权求和：多头让模型在不同子空间并行捕捉多种关系。</div>
+  </div>
+  <div class="vt-wrap"><nav class="vt-nav" aria-label="模块内容切换"><div class="vt-grp">概览 Overview</div><button class="vt-tab active" data-target="sec-eco"><span class="vt-b">◎</span><span class="vt-l">生态架构总图</span></button><div class="vt-grp">机制 · 缩放点积</div><button class="vt-tab" data-target="sec-n1"><span class="vt-b">N1</span><span class="vt-l">QKV 与 softmax 加权</span></button><div class="vt-grp">机制 · 多头注意力</div><button class="vt-tab" data-target="sec-n2"><span class="vt-b">N2</span><span class="vt-l">多子空间并行 + 拼接投影</span></button><div class="vt-grp">机制 · 高效注意力</div><button class="vt-tab" data-target="sec-n3"><span class="vt-b">N3</span><span class="vt-l">因果掩码与 FlashAttention</span></button><div class="vt-grp">对比 Compare</div><button class="vt-tab" data-target="sec-cmp"><span class="vt-b">⇄</span><span class="vt-l">机制差异对比</span></button><div class="vt-grp">工程 Engineering</div><button class="vt-tab" data-target="sec-eng"><span class="vt-b">⚙</span><span class="vt-l">框架实现差异</span></button></nav><div class="vt-stage"><section class="vt-sec active" id="sec-eco" data-sec="sec-eco"><div class="secttl eco"><span class="badge">◎</span><span class="t">生态架构总图 · 这一模块如何在 Agent 系统中自洽拼合</span></div><div class="fig" role="img" aria-label="Attention 生态架构"><svg class="figsvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 600" font-family="-apple-system,'PingFang SC','Helvetica Neue',sans-serif">
+  <defs>
+    <filter id="s46_soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.07"/>
+    </filter>
+    <marker id="s46_arp" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#5e5ce6"/>
+    </marker>
+    <marker id="s46_arg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="var(--sc-line2,#b8b8bf)"/>
+    </marker>
+  </defs>
+  <rect width="960" height="600" fill="var(--sc-bg,#fbfbfd)"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="var(--sc-ink,#1d1d1f)">注意力机制 · 生态架构</text>
+  <text x="30" y="54" font-size="12" fill="var(--sc-sub,#6e6e73)">Query·Key 打分 → softmax 归一 → 对 Value 加权求和；多头并行、掩码约束、高效实现</text>
+
+  <!-- 输入 -->
+  <g filter="url(#s46_soft)"><rect x="40" y="270" width="140" height="80" rx="12" fill="var(--sc-fill-blue,#eef4ff)" stroke="#0a84ff" stroke-width="1.4"/></g>
+  <text x="110" y="302" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">输入表征</text>
+  <text x="110" y="324" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">每个 token 一个向量</text>
+
+  <!-- QKV 投影 -->
+  <g filter="url(#s46_soft)"><rect x="220" y="256" width="150" height="108" rx="12" fill="var(--sc-fill-purple,#f3ecff)" stroke="#5e5ce6" stroke-width="1.5"/></g>
+  <text x="295" y="286" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">QKV 投影</text>
+  <text x="295" y="308" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">线性映射出</text>
+  <text x="295" y="326" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">Query / Key / Value</text>
+  <text x="295" y="350" font-size="10" fill="#5e5ce6" text-anchor="middle">三种角色</text>
+
+  <!-- 打分 -->
+  <g filter="url(#s46_soft)"><rect x="410" y="256" width="150" height="108" rx="12" fill="var(--sc-fill-purple,#f3ecff)" stroke="#5e5ce6" stroke-width="1.5"/></g>
+  <text x="485" y="286" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">相关性打分</text>
+  <text x="485" y="308" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">Q·K 点积 / √d</text>
+  <text x="485" y="326" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">softmax 归一化</text>
+  <text x="485" y="350" font-size="10" fill="#5e5ce6" text-anchor="middle">谁该关注谁</text>
+
+  <!-- 加权聚合 -->
+  <g filter="url(#s46_soft)"><rect x="600" y="256" width="150" height="108" rx="12" fill="var(--sc-fill-teal,#e9fbf6)" stroke="#2dd4bf" stroke-width="1.5"/></g>
+  <text x="675" y="286" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">加权求和</text>
+  <text x="675" y="308" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">按权重聚合 Value</text>
+  <text x="675" y="326" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">得上下文表征</text>
+  <text x="675" y="350" font-size="10" fill="#2dd4bf" text-anchor="middle">融合全序列信息</text>
+
+  <!-- 输出 -->
+  <g filter="url(#s46_soft)"><rect x="790" y="270" width="130" height="80" rx="12" fill="var(--sc-fill-blue,#eef4ff)" stroke="#0a84ff" stroke-width="1.4"/></g>
+  <text x="855" y="302" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">上下文输出</text>
+  <text x="855" y="324" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">送入 FFN</text>
+
+  <!-- 主流 -->
+  <path d="M180 310 L218 310" stroke="#5e5ce6" stroke-width="2.4" marker-end="url(#s46_arp)"/>
+  <path d="M370 310 L408 310" stroke="#5e5ce6" stroke-width="2.4" marker-end="url(#s46_arp)"/>
+  <path d="M560 310 L598 310" stroke="#5e5ce6" stroke-width="2.4" marker-end="url(#s46_arp)"/>
+  <path d="M750 310 L788 310" stroke="#2dd4bf" stroke-width="2.4" marker-end="url(#s46_arp)"/>
+
+  <!-- 三大机理标注 -->
+  <g filter="url(#s46_soft)"><rect x="40" y="400" width="880" height="160" rx="12" fill="var(--sc-panel,#ffffff)" stroke="var(--sc-line,#d2d2d7)" stroke-width="1.2"/></g>
+  <text x="60" y="428" font-size="12" font-weight="600" fill="#5e5ce6">三层机理如何拼合</text>
+  <text x="60" y="456" font-size="10.5" fill="var(--sc-sub,#6e6e73)">· 缩放点积（N1）：注意力的最小计算单元 —— QK 点积除以 √d 再 softmax，避免大维度下梯度饱和</text>
+  <text x="60" y="482" font-size="10.5" fill="var(--sc-sub,#6e6e73)">· 多头注意力（N2）：把表征切成多份，各头在不同子空间并行学习不同关系，再拼接投影融合</text>
+  <text x="60" y="508" font-size="10.5" fill="var(--sc-sub,#6e6e73)">· 高效注意力（N3）：因果掩码保证自回归只看左侧；FlashAttention 等在不改语义下省显存、提速度</text>
+  <text x="60" y="538" font-size="11" font-weight="600" fill="#5e5ce6">主线：点积定「打分」，多头定「视角」，高效实现定「能否规模化」</text>
+</svg></div><div class="blurb"><p>用 Query·Key 的点积算出「谁该关注谁」，再对 Value 加权求和：多头让模型在不同子空间并行捕捉多种关系。</p></div></section><section class="vt-sec" id="sec-n1" data-sec="sec-n1"><div class="secttl"><span class="badge">N1</span><span class="t">缩放点积 · QKV 与 softmax 加权</span></div><div class="fig" role="img" aria-label="缩放点积 · QKV 与 softmax 加权"><svg class="figsvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 600" font-family="-apple-system,'PingFang SC','Helvetica Neue',sans-serif">
+  <defs>
+    <filter id="s47_soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.07"/>
+    </filter>
+    <marker id="s47_arp" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#5e5ce6"/>
+    </marker>
+  </defs>
+  <rect width="960" height="600" fill="var(--sc-bg,#fbfbfd)"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="var(--sc-ink,#1d1d1f)">缩放点积注意力 · QKV 与 softmax 加权</text>
+  <text x="30" y="54" font-size="12" fill="var(--sc-sub,#6e6e73)">Attention(Q,K,V) = softmax(Q·Kᵀ / √dₖ) · V —— 用点积相似度决定每个 Value 的权重</text>
+
+  <!-- Q K V -->
+  <g filter="url(#s47_soft)"><rect x="50" y="120" width="120" height="60" rx="10" fill="var(--sc-fill-purple,#f3ecff)" stroke="#5e5ce6" stroke-width="1.5"/></g>
+  <text x="110" y="150" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">Query Q</text>
+  <text x="110" y="168" font-size="9.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">我想找什么</text>
+  <g filter="url(#s47_soft)"><rect x="50" y="270" width="120" height="60" rx="10" fill="var(--sc-fill-purple,#f3ecff)" stroke="#5e5ce6" stroke-width="1.5"/></g>
+  <text x="110" y="300" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">Key K</text>
+  <text x="110" y="318" font-size="9.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">我是什么</text>
+  <g filter="url(#s47_soft)"><rect x="50" y="420" width="120" height="60" rx="10" fill="var(--sc-fill-teal,#e9fbf6)" stroke="#2dd4bf" stroke-width="1.5"/></g>
+  <text x="110" y="450" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">Value V</text>
+  <text x="110" y="468" font-size="9.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">我携带什么信息</text>
+
+  <!-- 点积打分 -->
+  <g filter="url(#s47_soft)"><rect x="250" y="180" width="160" height="90" rx="12" fill="var(--sc-panel,#ffffff)" stroke="#5e5ce6" stroke-width="1.5"/></g>
+  <text x="330" y="212" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">Q·Kᵀ 点积</text>
+  <text x="330" y="234" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">相似度分数矩阵</text>
+  <text x="330" y="254" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">n×n 打分</text>
+
+  <!-- 缩放 -->
+  <g filter="url(#s47_soft)"><rect x="460" y="180" width="150" height="90" rx="12" fill="var(--sc-panel,#ffffff)" stroke="#5e5ce6" stroke-width="1.5"/></g>
+  <text x="535" y="212" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">÷ √dₖ 缩放</text>
+  <text x="535" y="234" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">抑制大维度下</text>
+  <text x="535" y="254" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">点积过大</text>
+
+  <!-- softmax -->
+  <g filter="url(#s47_soft)"><rect x="660" y="180" width="150" height="90" rx="12" fill="var(--sc-fill-orange,#fff3ea)" stroke="#f5873a" stroke-width="1.5"/></g>
+  <text x="735" y="212" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">softmax</text>
+  <text x="735" y="234" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">归一成概率权重</text>
+  <text x="735" y="254" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">行和为 1</text>
+
+  <!-- 加权聚合 -->
+  <g filter="url(#s47_soft)"><rect x="560" y="410" width="250" height="80" rx="12" fill="var(--sc-fill-teal,#e9fbf6)" stroke="#2dd4bf" stroke-width="1.6"/></g>
+  <text x="685" y="442" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">权重 · V 加权求和</text>
+  <text x="685" y="464" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">得到每个位置的上下文向量</text>
+
+  <!-- 连线 -->
+  <path d="M170 150 L248 210" stroke="#5e5ce6" stroke-width="2" marker-end="url(#s47_arp)"/>
+  <path d="M170 300 L248 240" stroke="#5e5ce6" stroke-width="2" marker-end="url(#s47_arp)"/>
+  <path d="M410 225 L458 225" stroke="#5e5ce6" stroke-width="2.2" marker-end="url(#s47_arp)"/>
+  <path d="M610 225 L658 225" stroke="#5e5ce6" stroke-width="2.2" marker-end="url(#s47_arp)"/>
+  <path d="M735 270 C735 360 685 360 685 408" stroke="#f5873a" stroke-width="2.2" fill="none" marker-end="url(#s47_arp)"/>
+  <path d="M170 450 C400 450 430 450 558 450" stroke="#2dd4bf" stroke-width="2.2" fill="none" marker-end="url(#s47_arp)"/>
+
+  <!-- 说明卡 -->
+  <g filter="url(#s47_soft)"><rect x="40" y="520" width="430" height="60" rx="10" fill="var(--sc-panel,#ffffff)" stroke="var(--sc-line,#d2d2d7)" stroke-width="1.1"/></g>
+  <text x="58" y="544" font-size="11" font-weight="600" fill="#5e5ce6">为何要缩放</text>
+  <text x="58" y="565" font-size="9.8" fill="var(--sc-sub,#6e6e73)">dₖ 增大时点积方差随之增大，softmax 会趋于饱和、梯度消失，除 √dₖ 稳住分布</text>
+  <g filter="url(#s47_soft)"><rect x="490" y="520" width="430" height="60" rx="10" fill="var(--sc-panel,#ffffff)" stroke="var(--sc-line,#d2d2d7)" stroke-width="1.1"/></g>
+  <text x="508" y="544" font-size="11" font-weight="600" fill="#2dd4bf">QKV 的分工</text>
+  <text x="508" y="565" font-size="9.8" fill="var(--sc-sub,#6e6e73)">Q 提问、K 应答匹配、V 承载信息；同一输入经三套权重投影得来</text>
+</svg></div></section><section class="vt-sec" id="sec-n2" data-sec="sec-n2"><div class="secttl"><span class="badge">N2</span><span class="t">多头注意力 · 多子空间并行 + 拼接投影</span></div><div class="fig" role="img" aria-label="多头注意力 · 多子空间并行 + 拼接投影"><svg class="figsvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 580" font-family="-apple-system,'PingFang SC','Helvetica Neue',sans-serif">
+  <defs>
+    <filter id="s48_soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.07"/>
+    </filter>
+    <marker id="s48_arp" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#5e5ce6"/>
+    </marker>
+  </defs>
+  <rect width="960" height="580" fill="var(--sc-bg,#fbfbfd)"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="var(--sc-ink,#1d1d1f)">多头注意力 · 多子空间并行与拼接投影</text>
+  <text x="30" y="54" font-size="12" fill="var(--sc-sub,#6e6e73)">把 d 维切成 h 个头，各头在独立子空间学不同关系，再 concat 后线性投影融合</text>
+
+  <!-- 输入 -->
+  <g filter="url(#s48_soft)"><rect x="380" y="90" width="200" height="56" rx="10" fill="var(--sc-fill-blue,#eef4ff)" stroke="#0a84ff" stroke-width="1.4"/></g>
+  <text x="480" y="122" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">输入表征 (d 维)</text>
+
+  <!-- 三个头 -->
+  <g filter="url(#s48_soft)"><rect x="70" y="220" width="240" height="120" rx="12" fill="var(--sc-fill-purple,#f3ecff)" stroke="#5e5ce6" stroke-width="1.5"/></g>
+  <text x="190" y="250" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">头 1</text>
+  <text x="190" y="274" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">独立 Wq/Wk/Wv</text>
+  <text x="190" y="296" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">缩放点积注意力</text>
+  <text x="190" y="322" font-size="10" fill="#5e5ce6" text-anchor="middle">关注语法邻接</text>
+
+  <g filter="url(#s48_soft)"><rect x="360" y="220" width="240" height="120" rx="12" fill="var(--sc-fill-purple,#f3ecff)" stroke="#5e5ce6" stroke-width="1.5"/></g>
+  <text x="480" y="250" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">头 2</text>
+  <text x="480" y="274" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">独立 Wq/Wk/Wv</text>
+  <text x="480" y="296" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">缩放点积注意力</text>
+  <text x="480" y="322" font-size="10" fill="#5e5ce6" text-anchor="middle">关注指代共现</text>
+
+  <g filter="url(#s48_soft)"><rect x="650" y="220" width="240" height="120" rx="12" fill="var(--sc-fill-purple,#f3ecff)" stroke="#5e5ce6" stroke-width="1.5"/></g>
+  <text x="770" y="250" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">头 h …</text>
+  <text x="770" y="274" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">独立 Wq/Wk/Wv</text>
+  <text x="770" y="296" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">缩放点积注意力</text>
+  <text x="770" y="322" font-size="10" fill="#5e5ce6" text-anchor="middle">关注长程语义</text>
+
+  <!-- 拼接投影 -->
+  <g filter="url(#s48_soft)"><rect x="330" y="410" width="300" height="72" rx="12" fill="var(--sc-fill-teal,#e9fbf6)" stroke="#2dd4bf" stroke-width="1.6"/></g>
+  <text x="480" y="440" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">Concat + 输出投影 Wo</text>
+  <text x="480" y="462" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">拼回 d 维并混合各头信息</text>
+
+  <!-- 连线 -->
+  <path d="M420 146 C300 170 200 190 190 218" stroke="#5e5ce6" stroke-width="2" fill="none" marker-end="url(#s48_arp)"/>
+  <path d="M480 146 L480 218" stroke="#5e5ce6" stroke-width="2" marker-end="url(#s48_arp)"/>
+  <path d="M540 146 C660 170 760 190 770 218" stroke="#5e5ce6" stroke-width="2" fill="none" marker-end="url(#s48_arp)"/>
+  <path d="M190 340 C200 380 320 400 380 410" stroke="#2dd4bf" stroke-width="2" fill="none" marker-end="url(#s48_arp)"/>
+  <path d="M480 340 L480 408" stroke="#2dd4bf" stroke-width="2" marker-end="url(#s48_arp)"/>
+  <path d="M770 340 C760 380 640 400 580 410" stroke="#2dd4bf" stroke-width="2" fill="none" marker-end="url(#s48_arp)"/>
+
+  <!-- 说明卡 -->
+  <g filter="url(#s48_soft)"><rect x="40" y="510" width="430" height="58" rx="10" fill="var(--sc-panel,#ffffff)" stroke="var(--sc-line,#d2d2d7)" stroke-width="1.1"/></g>
+  <text x="58" y="534" font-size="11" font-weight="600" fill="#5e5ce6">为何要多头</text>
+  <text x="58" y="555" font-size="9.8" fill="var(--sc-sub,#6e6e73)">单头只能表达一种关系；多头让模型在不同子空间并行捕捉多类依赖</text>
+  <g filter="url(#s48_soft)"><rect x="490" y="510" width="430" height="58" rx="10" fill="var(--sc-panel,#ffffff)" stroke="var(--sc-line,#d2d2d7)" stroke-width="1.1"/></g>
+  <text x="508" y="534" font-size="11" font-weight="600" fill="#2dd4bf">总维度不变</text>
+  <text x="508" y="555" font-size="9.8" fill="var(--sc-sub,#6e6e73)">每头维度 d/h，h 头拼接仍为 d，算力与单头相当却更具表达力</text>
+</svg></div></section><section class="vt-sec" id="sec-n3" data-sec="sec-n3"><div class="secttl"><span class="badge">N3</span><span class="t">高效注意力 · 因果掩码与 FlashAttention</span></div><div class="fig" role="img" aria-label="高效注意力 · 因果掩码与 FlashAttention"><svg class="figsvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 580" font-family="-apple-system,'PingFang SC','Helvetica Neue',sans-serif">
+  <defs>
+    <filter id="s49_soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.07"/>
+    </filter>
+  </defs>
+  <rect width="960" height="580" fill="var(--sc-bg,#fbfbfd)"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="var(--sc-ink,#1d1d1f)">高效注意力 · 因果掩码与 FlashAttention</text>
+  <text x="30" y="54" font-size="12" fill="var(--sc-sub,#6e6e73)">掩码约束「能看谁」；分块 IO 感知实现约束「算得多快、占多少显存」</text>
+
+  <!-- 左：因果掩码 -->
+  <g filter="url(#s49_soft)"><rect x="40" y="90" width="430" height="230" rx="12" fill="var(--sc-panel,#ffffff)" stroke="#5e5ce6" stroke-width="1.4"/></g>
+  <text x="60" y="118" font-size="12" font-weight="600" fill="#5e5ce6">因果掩码（下三角）</text>
+  <text x="60" y="140" font-size="10" fill="var(--sc-sub,#6e6e73)">自回归生成时，位置 i 只能看 ≤ i 的 token</text>
+  <!-- 5x5 网格 -->
+  <g>
+    <rect x="120" y="160" width="220" height="140" fill="none" stroke="var(--sc-line,#d2d2d7)" stroke-width="1"/>
+    <line x1="120" y1="188" x2="340" y2="188" stroke="var(--sc-line,#e5e5ea)"/>
+    <line x1="120" y1="216" x2="340" y2="216" stroke="var(--sc-line,#e5e5ea)"/>
+    <line x1="120" y1="244" x2="340" y2="244" stroke="var(--sc-line,#e5e5ea)"/>
+    <line x1="120" y1="272" x2="340" y2="272" stroke="var(--sc-line,#e5e5ea)"/>
+    <line x1="164" y1="160" x2="164" y2="300" stroke="var(--sc-line,#e5e5ea)"/>
+    <line x1="208" y1="160" x2="208" y2="300" stroke="var(--sc-line,#e5e5ea)"/>
+    <line x1="252" y1="160" x2="252" y2="300" stroke="var(--sc-line,#e5e5ea)"/>
+    <line x1="296" y1="160" x2="296" y2="300" stroke="var(--sc-line,#e5e5ea)"/>
+    <rect x="120" y="160" width="44" height="28" fill="var(--sc-fill-purple,#e9e6ff)"/>
+    <rect x="120" y="188" width="88" height="28" fill="var(--sc-fill-purple,#e9e6ff)"/>
+    <rect x="120" y="216" width="132" height="28" fill="var(--sc-fill-purple,#e9e6ff)"/>
+    <rect x="120" y="244" width="176" height="28" fill="var(--sc-fill-purple,#e9e6ff)"/>
+    <rect x="120" y="272" width="220" height="28" fill="var(--sc-fill-purple,#e9e6ff)"/>
+  </g>
+  <text x="230" y="318" font-size="9.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">紫格=可见，右上=屏蔽为 −∞</text>
+
+  <!-- 右：FlashAttention -->
+  <g filter="url(#s49_soft)"><rect x="490" y="90" width="430" height="230" rx="12" fill="var(--sc-panel,#ffffff)" stroke="#2dd4bf" stroke-width="1.4"/></g>
+  <text x="510" y="118" font-size="12" font-weight="600" fill="#2dd4bf">FlashAttention（分块 · IO 感知）</text>
+  <text x="510" y="146" font-size="10" fill="var(--sc-sub,#6e6e73)">· 分块加载 Q/K/V 到片上 SRAM，避免写回完整 n×n 分数矩阵</text>
+  <text x="510" y="170" font-size="10" fill="var(--sc-sub,#6e6e73)">· online-softmax 增量累计，显存从 O(n²) 降到 O(n)</text>
+  <text x="510" y="194" font-size="10" fill="var(--sc-sub,#6e6e73)">· 结果与标准注意力数值等价，仅优化访存与算子融合</text>
+  <g filter="url(#s49_soft)"><rect x="510" y="216" width="180" height="44" rx="8" fill="var(--sc-fill-teal,#e9fbf6)" stroke="#2dd4bf" stroke-width="1.2"/></g>
+  <text x="600" y="243" font-size="10.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">分块 Tile 逐块计算</text>
+  <g filter="url(#s49_soft)"><rect x="710" y="216" width="180" height="44" rx="8" fill="var(--sc-fill-teal,#e9fbf6)" stroke="#2dd4bf" stroke-width="1.2"/></g>
+  <text x="800" y="243" font-size="10.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">HBM 访存大幅下降</text>
+  <text x="510" y="296" font-size="9.5" fill="var(--sc-sub,#6e6e73)">瓶颈从计算转向访存，长序列训练/推理都显著提速</text>
+
+  <!-- 底部：稀疏/线性化补充 -->
+  <g filter="url(#s49_soft)"><rect x="40" y="350" width="880" height="200" rx="12" fill="var(--sc-panel,#ffffff)" stroke="var(--sc-line,#d2d2d7)" stroke-width="1.2"/></g>
+  <text x="60" y="378" font-size="12" font-weight="600" fill="#5e5ce6">突破 O(n²) 的其他路线</text>
+  <text x="60" y="406" font-size="10.5" fill="var(--sc-sub,#6e6e73)">· 稀疏注意力：滑窗 / 全局 token / 块稀疏，只算部分位置对，适合超长文档</text>
+  <text x="60" y="432" font-size="10.5" fill="var(--sc-sub,#6e6e73)">· 线性注意力：用核函数近似 softmax，复杂度降到 O(n)，牺牲部分精度</text>
+  <text x="60" y="458" font-size="10.5" fill="var(--sc-sub,#6e6e73)">· GQA / MQA：多个 Query 头共享一组 KV，缩小 KV 缓存、加速推理解码</text>
+  <text x="60" y="484" font-size="10.5" fill="var(--sc-sub,#6e6e73)">· 滑动窗口 + 汇聚位：兼顾局部细节与全局锚点，长上下文常见组合</text>
+  <text x="60" y="522" font-size="11" font-weight="600" fill="#5e5ce6">主线：掩码决定语义正确性，高效实现决定能否把注意力用到长序列与大模型上</text>
+</svg></div></section><section class="vt-sec" id="sec-cmp" data-sec="sec-cmp"><div class="secttl"><span class="badge">⇄</span><span class="t">Attention · 核心机制差异对比</span></div><div class="fig" role="img" aria-label="Attention · 核心机制差异对比"><svg class="figsvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 520" font-family="-apple-system,'PingFang SC','Helvetica Neue',sans-serif">
+  <defs>
+    <filter id="s50_soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.07"/>
+    </filter>
+  </defs>
+  <rect width="960" height="520" fill="var(--sc-bg,#fbfbfd)"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="var(--sc-ink,#1d1d1f)">注意力机制 · 三层机理对比</text>
+  <text x="30" y="54" font-size="12" fill="var(--sc-sub,#6e6e73)">缩放点积搭「计算内核」，多头拓「表达广度」，高效实现破「规模瓶颈」</text>
+
+  <!-- 表头 -->
+  <g filter="url(#s50_soft)"><rect x="30" y="80" width="900" height="44" rx="8" fill="var(--sc-panel,#f5f5f7)" stroke="var(--sc-line,#d2d2d7)" stroke-width="1"/></g>
+  <text x="120" y="108" font-size="11.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">构件</text>
+  <text x="360" y="108" font-size="11.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">解决什么问题</text>
+  <text x="600" y="108" font-size="11.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">核心做法</text>
+  <text x="830" y="108" font-size="11.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">主要代价</text>
+
+  <!-- 行1 缩放点积 -->
+  <g filter="url(#s50_soft)"><rect x="30" y="134" width="900" height="96" rx="8" fill="var(--sc-panel,#ffffff)" stroke="#5e5ce6" stroke-width="1.3"/></g>
+  <text x="120" y="188" font-size="12" font-weight="600" fill="#5e5ce6" text-anchor="middle">缩放点积</text>
+  <text x="360" y="176" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">如何量化「谁该关注谁」</text>
+  <text x="360" y="196" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">并稳定训练梯度</text>
+  <text x="600" y="176" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">Q·Kᵀ/√dₖ 打分</text>
+  <text x="600" y="196" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">softmax 后加权 V</text>
+  <text x="830" y="188" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">n² 复杂度</text>
+
+  <!-- 行2 多头 -->
+  <g filter="url(#s50_soft)"><rect x="30" y="240" width="900" height="96" rx="8" fill="var(--sc-panel,#ffffff)" stroke="#5e5ce6" stroke-width="1.3"/></g>
+  <text x="120" y="294" font-size="12" font-weight="600" fill="#5e5ce6" text-anchor="middle">多头注意力</text>
+  <text x="360" y="282" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">单一打分难以同时</text>
+  <text x="360" y="302" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">表达多类关系</text>
+  <text x="600" y="282" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">切 h 个子空间并行</text>
+  <text x="600" y="302" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">concat 后投影融合</text>
+  <text x="830" y="294" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">头间可能冗余</text>
+
+  <!-- 行3 高效 -->
+  <g filter="url(#s50_soft)"><rect x="30" y="346" width="900" height="96" rx="8" fill="var(--sc-panel,#ffffff)" stroke="#2dd4bf" stroke-width="1.3"/></g>
+  <text x="120" y="400" font-size="12" font-weight="600" fill="#2dd4bf" text-anchor="middle">高效注意力</text>
+  <text x="360" y="388" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">长序列下 n² 显存</text>
+  <text x="360" y="408" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">与算力吃不消</text>
+  <text x="600" y="388" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">掩码约束可见性</text>
+  <text x="600" y="408" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">分块/稀疏/GQA 提效</text>
+  <text x="830" y="400" font-size="10" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">实现复杂或损精度</text>
+
+  <text x="480" y="486" font-size="12" font-weight="600" fill="#5e5ce6" text-anchor="middle">一句话：点积管「怎么算」，多头管「看几种」，高效实现管「能否放大」</text>
+</svg></div></section><section class="vt-sec" id="sec-eng" data-sec="sec-eng"><div class="secttl"><span class="badge">⚙</span><span class="t">Attention · 工程实现差异（真实框架落地取舍）</span></div><div class="fig" role="img" aria-label="Attention · 工程实现差异（真实框架落地取舍）"><svg class="figsvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 560" font-family="-apple-system,'PingFang SC','Helvetica Neue',sans-serif">
+  <defs>
+    <filter id="s51_soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.07"/>
+    </filter>
+  </defs>
+  <rect width="960" height="560" fill="var(--sc-bg,#fbfbfd)"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="var(--sc-ink,#1d1d1f)">注意力机制 · 工程落地三支柱</text>
+  <text x="30" y="54" font-size="12" fill="var(--sc-sub,#6e6e73)">算子实现、KV 结构、长上下文策略——三处决定注意力能否高效跑在真实系统上</text>
+
+  <!-- 支柱1 算子实现 -->
+  <g filter="url(#s51_soft)"><rect x="40" y="90" width="280" height="300" rx="14" fill="var(--sc-fill-purple,#f3ecff)" stroke="#5e5ce6" stroke-width="1.5"/></g>
+  <text x="70" y="124" font-size="13" font-weight="700" fill="#5e5ce6">① 算子实现</text>
+  <text x="70" y="156" font-size="10.5" fill="var(--sc-sub,#6e6e73)">优先 FlashAttention 融合核</text>
+  <text x="70" y="180" font-size="10.5" fill="var(--sc-sub,#6e6e73)">避免物化 n×n 分数矩阵</text>
+  <text x="70" y="204" font-size="10.5" fill="var(--sc-sub,#6e6e73)">online-softmax 增量归一</text>
+  <text x="70" y="228" font-size="10.5" fill="var(--sc-sub,#6e6e73)">显存 O(n)、访存大幅降低</text>
+  <text x="70" y="258" font-size="10.5" fill="var(--sc-sub,#6e6e73)">前向反向都可分块</text>
+  <text x="70" y="282" font-size="10.5" fill="var(--sc-sub,#6e6e73)">对齐硬件 SRAM 尺寸调块</text>
+  <text x="70" y="330" font-size="10" fill="#5e5ce6">选型：训练/长序列首选 Flash</text>
+  <text x="70" y="352" font-size="10" fill="var(--sc-sub,#6e6e73)">短序列朴素实现也够快</text>
+
+  <!-- 支柱2 KV 结构 -->
+  <g filter="url(#s51_soft)"><rect x="340" y="90" width="280" height="300" rx="14" fill="var(--sc-fill-orange,#fff3ea)" stroke="#f5873a" stroke-width="1.5"/></g>
+  <text x="370" y="124" font-size="13" font-weight="700" fill="#f5873a">② KV 结构</text>
+  <text x="370" y="156" font-size="10.5" fill="var(--sc-sub,#6e6e73)">MHA：每头独立 KV，表达强</text>
+  <text x="370" y="180" font-size="10.5" fill="var(--sc-sub,#6e6e73)">MQA：所有头共享一组 KV</text>
+  <text x="370" y="204" font-size="10.5" fill="var(--sc-sub,#6e6e73)">GQA：分组共享，折中方案</text>
+  <text x="370" y="228" font-size="10.5" fill="var(--sc-sub,#6e6e73)">KV 缓存越小，解码越快</text>
+  <text x="370" y="258" font-size="10.5" fill="var(--sc-sub,#6e6e73)">显存与吞吐的关键旋钮</text>
+  <text x="370" y="282" font-size="10.5" fill="var(--sc-sub,#6e6e73)">大模型推理普遍用 GQA</text>
+  <text x="370" y="330" font-size="10" fill="#f5873a">选型：推理吞吐敏感选 GQA/MQA</text>
+  <text x="370" y="352" font-size="10" fill="var(--sc-sub,#6e6e73)">质量优先保留 MHA</text>
+
+  <!-- 支柱3 长上下文 -->
+  <g filter="url(#s51_soft)"><rect x="640" y="90" width="280" height="300" rx="14" fill="var(--sc-fill-teal,#e9fbf6)" stroke="#2dd4bf" stroke-width="1.5"/></g>
+  <text x="670" y="124" font-size="13" font-weight="700" fill="#2dd4bf">③ 长上下文</text>
+  <text x="670" y="156" font-size="10.5" fill="var(--sc-sub,#6e6e73)">滑动窗口限制局部范围</text>
+  <text x="670" y="180" font-size="10.5" fill="var(--sc-sub,#6e6e73)">全局/汇聚位保留锚点</text>
+  <text x="670" y="204" font-size="10.5" fill="var(--sc-sub,#6e6e73)">块稀疏只算重要位置对</text>
+  <text x="670" y="228" font-size="10.5" fill="var(--sc-sub,#6e6e73)">线性注意力换 O(n) 复杂度</text>
+  <text x="670" y="258" font-size="10.5" fill="var(--sc-sub,#6e6e73)">配合位置外推扩窗口</text>
+  <text x="670" y="282" font-size="10.5" fill="var(--sc-sub,#6e6e73)">按任务权衡精度与长度</text>
+  <text x="670" y="330" font-size="10" fill="#2dd4bf">选型：超长文档才启用稀疏</text>
+  <text x="670" y="352" font-size="10" fill="var(--sc-sub,#6e6e73)">常规长度 Flash 已足够</text>
+
+  <!-- 决策带 -->
+  <g filter="url(#s51_soft)"><rect x="40" y="420" width="880" height="110" rx="12" fill="var(--sc-panel,#ffffff)" stroke="var(--sc-line,#d2d2d7)" stroke-width="1.2"/></g>
+  <text x="60" y="450" font-size="12" font-weight="600" fill="#5e5ce6">权衡速查</text>
+  <text x="60" y="478" font-size="10.5" fill="var(--sc-sub,#6e6e73)">· 训练/长序列 → FlashAttention；· 推理省显存 → GQA/MQA + KV 缓存；· 超长文本 → 稀疏/线性 + 外推</text>
+  <text x="60" y="502" font-size="10.5" fill="var(--sc-sub,#6e6e73)">· 质量优先 → MHA 全头 KV；· 数值一定要与朴素注意力对齐验证，防止近似方案悄悄掉点</text>
+  <text x="60" y="524" font-size="11" font-weight="600" fill="#5e5ce6">主线：先用 Flash 拿到无损加速，再按显存/长度压力逐步引入 GQA 与稀疏</text>
+</svg></div></section></div></div>
+  
+  <div class="backrow"><a href="../../../index.html#agent">← 返回 LLM & Agent 导航</a></div>
+</div>
+<footer>自包含离线图谱 · 以图为主：概览 + 机制分组图 + 机制对比 · 权威参考集中于底部 · 垂直 TAB 切换</footer>
+<script>
+(function(){
+  var root=document.documentElement;
+  var saved=localStorage.getItem('atlas-nav-theme');
+  if(saved==='dark') root.setAttribute('data-theme','dark');
+  function toggleTheme(){
+    var cur=root.getAttribute('data-theme')==='dark'?'':'dark';
+    if(cur) root.setAttribute('data-theme',cur); else root.removeAttribute('data-theme');
+    localStorage.setItem('atlas-nav-theme',cur||'light');
+  }
+  var tb=document.getElementById('themeBtn');
+  if(tb){tb.onclick=toggleTheme;}
+  var wrap=document.querySelector('.vt-wrap');
+  if(wrap){
+    var tabs=wrap.querySelectorAll('.vt-tab');
+    var secs=wrap.querySelectorAll('.vt-sec');
+    tabs.forEach(function(t){
+      t.addEventListener('click',function(){
+        var tgt=t.getAttribute('data-target');
+        tabs.forEach(function(x){x.classList.toggle('active',x===t);});
+        secs.forEach(function(s){s.classList.toggle('active',s.id===tgt);});
+      });
+    });
+  }
+  var zsegs=document.querySelectorAll('.zseg');
+  var zones=document.querySelectorAll('.zone');
+  if(zsegs.length&&zones.length){
+    zsegs.forEach(function(s){
+      s.addEventListener('click',function(){
+        zsegs.forEach(function(x){x.classList.toggle('active',x===s);});
+      });
+    });
+    if('IntersectionObserver' in window){
+      var io=new IntersectionObserver(function(es){
+        es.forEach(function(e){
+          if(e.isIntersecting){
+            var id=e.target.id;
+            zsegs.forEach(function(x){x.classList.toggle('active',x.getAttribute('href')==='#'+id);});
+          }
+        });
+      },{rootMargin:'-40% 0px -55% 0px'});
+      zones.forEach(function(z){io.observe(z);});
+    }
+  }
+})();
+</script>
+</body>
+</html>

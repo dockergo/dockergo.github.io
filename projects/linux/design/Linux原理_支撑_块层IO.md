@@ -23,14 +23,7 @@
 
 ![IO 提交到完成全路径](Linux原理_块层_01IO全路径.svg)
 
-贯穿示例：一次写回的 bio 从提交到回调：
-
-1. **提交**：`submit_bio`(`block/blk-core.c:916`) → `submit_bio_noacct`(`blk-core.c:780`) → `blk_mq_submit_bio`(`block/blk-mq.c:3124`)。
-2. **切分与合并**：`__bio_split_to_limits`(`blk-mq.c:3178`)按设备上限切分；`blk_mq_attempt_bio_merge`(`blk-mq.c:3187`)尝试把 bio 并入已有相邻 request（省一次 IO）。
-3. **建请求**：未合并则 `blk_mq_get_new_requests`(`blk-mq.c:3202`)分配 request，`blk_mq_bio_to_request` 填充。
-4. **入队**：若当前有 plug → `blk_add_rq_to_plug`(`blk-mq.c:3231`)**攒批**；否则入软/硬队列并 `blk_mq_run_hw_queue`(`blk-mq.c:3239`)，或直发 `blk_mq_try_issue_directly`(`blk-mq.c:3241`)。
-5. **派发**：`blk_mq_dispatch_rq_list`(`blk-mq.c:2116`)从硬队列取请求，调驱动 `->queue_rq` 下发到设备。
-6. **完成**：设备完成 → 硬中断只做最少工作 → `blk_mq_complete_request`(`blk-mq.c:1353`)在请求发起 CPU 上 `raise_softirq(BLOCK_SOFTIRQ)`(`blk-mq.c:1315`) → `blk_done_softirq`(`blk-mq.c:1256`，`open_softirq` 注册于 `:5321`)软中断里跑 `bio->bi_end_io` 回调，唤醒等待者。**完成处理放软中断，缩短硬中断关中断时间**（衔接中断主线）。
+图示一次写回 bio 从提交到回调的全程：`submit_bio` 进入 blk-mq 后先按设备上限切分、尝试并入相邻 request（省一次 IO）；未合并则新建 request，视有无 plug 决定**攒批**或直接入软/硬队列，`blk_mq_dispatch_rq_list` 从硬队列取请求、调驱动 `->queue_rq` 下发设备。**要害：设备完成时硬中断只做最少确认，把 `bio->bi_end_io` 回调甩进 `BLOCK_SOFTIRQ` 软中断执行，以缩短关中断时间**（衔接中断主线）。各阶段函数与行号见图内标注。
 
 ## 深化 · IO 合并与 plug（攒批下发）
 

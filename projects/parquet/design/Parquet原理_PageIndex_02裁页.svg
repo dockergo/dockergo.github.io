@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="430" viewBox="0 0 1000 430" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs><filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ac" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#7c5fe6"/></marker></defs>
+  <rect width="1000" height="430" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Parquet 原理 · 两级裁页：ColumnIndex 选页 → OffsetIndex 定位</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">读者拿到 PageIndex 后分两步:先靠 ColumnIndex 的逐页 min/max 选出候选页号,再靠 OffsetIndex 把页号翻成字节偏移直接 seek</text>
+
+  <!-- 步骤1 ColumnIndex 选页 -->
+  <rect x="30" y="76" width="460" height="188" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="46" y="100" font-size="11" font-weight="700" fill="#12402a">步骤1 · ColumnIndex 选页（WHERE x = 120）</text>
+  <g text-anchor="middle" font-size="8.6">
+    <rect x="46" y="112" width="205" height="34" rx="6" fill="#eef3fb" stroke="#bcd0ec"/><text x="148" y="133" fill="#7fa0c4">页0 [1,50] 不含 → 弃</text>
+    <rect x="269" y="112" width="205" height="34" rx="6" fill="#eef3fb" stroke="#bcd0ec"/><text x="371" y="133" fill="#7fa0c4">页1 [51,99] 不含 → 弃</text>
+    <rect x="46" y="152" width="205" height="34" rx="6" fill="#eafaf1" stroke="#8fce9f"/><text x="148" y="173" fill="#12402a">页2 [100,180] 含 → 选中</text>
+    <rect x="269" y="152" width="205" height="34" rx="6" fill="#eef3fb" stroke="#bcd0ec"/><text x="371" y="173" fill="#7fa0c4">页3 [181,260] 不含 → 弃</text>
+  </g>
+  <text x="46" y="208" font-size="8.8" fill="#2f6f5f">BoundaryOrder=ASCENDING 时可二分,不必逐页比。</text>
+  <text x="46" y="228" font-size="8.8" fill="#2f6f5f">输出：候选页号集合 = { 2 }</text>
+  <text x="46" y="252" font-size="8.4" fill="#4c8567">null_pages / null_counts 还能加速 IS (NOT) NULL 判定。</text>
+
+  <path d="M496,170 L536,170" stroke="#7c5fe6" stroke-width="1.8" fill="none" marker-end="url(#ac)"/>
+  <text x="500" y="162" font-size="8" fill="#7c5fe6">页号</text>
+
+  <!-- 步骤2 OffsetIndex 定位 -->
+  <rect x="546" y="76" width="424" height="188" rx="12" fill="#e9f2ff" stroke="#a9ccf5" filter="url(#soft)"/>
+  <text x="562" y="100" font-size="11" font-weight="700" fill="#0a3d78">步骤2 · OffsetIndex 定位页 2</text>
+  <g font-size="8.8">
+    <rect x="562" y="112" width="392" height="30" rx="6" fill="#f3f9ff" stroke="#bcd8f5"/><text x="574" y="132" fill="#0a3d78">PageLocation[2].offset = 40960（字节偏移）</text>
+    <rect x="562" y="148" width="392" height="30" rx="6" fill="#f3f9ff" stroke="#bcd8f5"/><text x="574" y="168" fill="#0a3d78">compressed_page_size = 8192（读多少字节）</text>
+    <rect x="562" y="184" width="392" height="30" rx="6" fill="#f3f9ff" stroke="#bcd8f5"/><text x="574" y="204" fill="#0a3d78">first_row_index = 20000（本页首行号）</text>
+  </g>
+  <text x="562" y="236" font-size="8.8" fill="#2a5a92">→ seek 到 40960 读 8192 字节,只解压页2这一段。</text>
+  <text x="562" y="254" font-size="8.4" fill="#5b7db1">first_row_index 让多列按行号对齐,拼回完整行。</text>
+
+  <!-- 收益条 -->
+  <rect x="30" y="284" width="940" height="60" rx="12" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+  <text x="48" y="308" font-size="10.5" font-weight="700" fill="#5a3410">效果：4 页里只读 1 页 → I/O 与解码量约降到 1/4;页越多、谓词越挑,收益越大。</text>
+  <text x="48" y="330" font-size="8.8" fill="#93762e">这是“行组级裁块（Statistics）”之下更细的“页级裁页”,两级裁剪叠加,逐层缩小要真正读取的字节范围。</text>
+
+  <rect x="30" y="356" width="940" height="60" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="48" y="380" font-size="9.4" fill="#1b2a4a">分工要点：ColumnIndex 回答“哪些页可能有”（按值）,OffsetIndex 回答“那页在哪、多大、从第几行起”（按位置）。</text>
+  <text x="48" y="400" font-size="8.6" fill="#7fa0c4">二者都在文件尾部,一次范围读取即可载入;裁剪是保守的——选中的页仍需逐值校验谓词。</text>
+</svg>

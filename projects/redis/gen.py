@@ -246,7 +246,8 @@ def render_prose(name):
         if re.match(r"^\s*[-*]\s+", ln):
             items = []
             while i < n and re.match(r"^\s*[-*]\s+", lines[i]):
-                items.append(f"<li>{_md_inline(re.sub(r'^\s*[-*]\s+', '', lines[i]))}</li>")
+                _txt = re.sub(r"^\s*[-*]\s+", "", lines[i])
+                items.append(f"<li>{_md_inline(_txt)}</li>")
                 i += 1
             out.append(f"<ul>{''.join(items)}</ul>")
             continue
@@ -254,7 +255,8 @@ def render_prose(name):
         if re.match(r"^\s*\d+\.\s+", ln):
             items = []
             while i < n and re.match(r"^\s*\d+\.\s+", lines[i]):
-                items.append(f"<li>{_md_inline(re.sub(r'^\s*\d+\.\s+', '', lines[i]))}</li>")
+                _txt = re.sub(r"^\s*\d+\.\s+", "", lines[i])
+                items.append(f"<li>{_md_inline(_txt)}</li>")
                 i += 1
             out.append(f"<ol>{''.join(items)}</ol>")
             continue

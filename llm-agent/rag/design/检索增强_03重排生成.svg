@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 500" font-family="-apple-system,'PingFang SC','Helvetica Neue',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.07"/></filter>
+    <marker id="arh" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#0a84ff"/></marker>
+    <marker id="art" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#2dd4bf"/></marker>
+  </defs>
+  <rect width="960" height="500" fill="#fbfbfd"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="#1d1d1f">G3 · 重排精排 + 上下文压缩 + 生成</text>
+  <text x="30" y="54" font-size="12" fill="#6e6e73">检索召回是"粗筛"，Rerank 是"精挑"——把最相关证据顶上来、去掉冗余，再交给 LLM 生成带引用的答案</text>
+
+  <g filter="url(#soft)"><rect x="30" y="120" width="150" height="80" rx="12" fill="#e6fbf6" stroke="#2dd4bf" stroke-width="1.5"/></g>
+  <text x="105" y="152" font-size="11" font-weight="600" fill="#1d1d1f" text-anchor="middle">粗召回 Top-k</text>
+  <text x="105" y="174" font-size="9" fill="#6e6e73" text-anchor="middle">混合检索候选(如50条)</text>
+
+  <g filter="url(#soft)"><rect x="220" y="120" width="160" height="80" rx="12" fill="#eef4ff" stroke="#0a84ff" stroke-width="1.6"/></g>
+  <text x="300" y="148" font-size="11" font-weight="600" fill="#1d1d1f" text-anchor="middle">Rerank 精排</text>
+  <text x="300" y="170" font-size="9" fill="#6e6e73" text-anchor="middle">Cross-Encoder 逐对打分</text>
+  <text x="300" y="188" font-size="9" fill="#6e6e73" text-anchor="middle">取真正最相关 Top-n</text>
+
+  <g filter="url(#soft)"><rect x="420" y="120" width="160" height="80" rx="12" fill="#eef4ff" stroke="#0a84ff" stroke-width="1.5"/></g>
+  <text x="500" y="148" font-size="11" font-weight="600" fill="#1d1d1f" text-anchor="middle">上下文压缩</text>
+  <text x="500" y="170" font-size="9" fill="#6e6e73" text-anchor="middle">去冗余、抽关键句</text>
+  <text x="500" y="188" font-size="9" fill="#6e6e73" text-anchor="middle">省 token、防"迷失中间"</text>
+
+  <g filter="url(#soft)"><rect x="620" y="120" width="160" height="80" rx="12" fill="#eef4ff" stroke="#0a84ff" stroke-width="1.6"/></g>
+  <text x="700" y="148" font-size="11" font-weight="600" fill="#1d1d1f" text-anchor="middle">LLM 生成</text>
+  <text x="700" y="170" font-size="9" fill="#6e6e73" text-anchor="middle">证据+query→带引用答案</text>
+  <text x="700" y="188" font-size="9" fill="#6e6e73" text-anchor="middle">标注 [来源] 可溯源</text>
+
+  <path d="M180 160 L216 160" stroke="#0a84ff" stroke-width="2" marker-end="url(#arh)"/>
+  <path d="M380 160 L416 160" stroke="#0a84ff" stroke-width="2" marker-end="url(#arh)"/>
+  <path d="M580 160 L616 160" stroke="#0a84ff" stroke-width="2" marker-end="url(#arh)"/>
+
+  <g filter="url(#soft)"><rect x="30" y="250" width="750" height="200" rx="13" fill="#ffffff" stroke="#d2d2d7" stroke-width="1.3"/></g>
+  <text x="52" y="278" font-size="12" font-weight="600" fill="#1d1d1f">为什么召回之后还要 Rerank</text>
+  <text x="52" y="304" font-size="10.5" fill="#6e6e73">• 向量检索为了速度用"双塔"独立编码，query 与文档没交互，排序粗糙</text>
+  <text x="52" y="328" font-size="10.5" fill="#6e6e73">• Rerank 用 Cross-Encoder 把 query 与每个候选拼在一起深度打分，精准但慢</text>
+  <text x="52" y="352" font-size="10.5" fill="#6e6e73">• 两段式分工：先用快模型粗筛缩小范围，再用慢模型精排——速度与精度兼得</text>
+  <text x="52" y="380" font-size="10.5" fill="#0a84ff">• "迷失在中间"效应：长上下文里模型只关注首尾，压缩把最相关证据放到显眼处</text>
+  <text x="52" y="408" font-size="10.5" fill="#0a84ff">• 生成阶段务必要求"仅依据给定证据、并标注引用"，无据则答"不知道"以抗幻觉</text>
+  <text x="52" y="436" font-size="10" fill="#f5873a">失败模式：证据充分却生成幻觉 → 需 prompt 约束 + 引用校验；此为 RAG 可信度的最后一道闸</text>
+
+  <line x1="798" y1="440" x2="820" y2="440" stroke="#0a84ff" stroke-width="2"/><text x="826" y="443" font-size="9" fill="#6e6e73">在线热路径</text>
+</svg>

@@ -1,0 +1,378 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>电商交易与订单 · 核心技术点</title><style>
+:root{--c-bg:#f5f6f8;--c-panel:#ffffff;--c-line:#e2e5ea;--c-ink:#1b1c20;--c-sub:#5c5f68;--c-soft:#eef0f4}
+:root[data-theme=dark]{--c-bg:#0f1013;--c-panel:#1a1c22;--c-line:#31343d;--c-ink:#e8e8ea;--c-sub:#9a9aa2;--c-soft:#20222a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--c-bg);color:var(--c-ink);font:14px/1.6 -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;transition:background .25s,color .25s}
+.wrap{max-width:1120px;margin:0 auto;padding:28px 24px 64px}
+header.top{position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:14px;
+  padding:12px 24px;background:color-mix(in srgb,var(--c-bg) 86%,transparent);
+  backdrop-filter:saturate(1.4) blur(14px);-webkit-backdrop-filter:saturate(1.4) blur(14px);
+  border-bottom:1px solid var(--c-line)}
+header.top .logo{display:inline-flex;align-items:center;flex:none}
+header.top .spacer{flex:1}
+.brand-intro{display:flex;flex-direction:column;align-items:flex-start;margin-left:6px;min-width:0}
+.brand-intro .bt{font-size:15px;font-weight:700;color:var(--c-ink);line-height:1.3}
+.brand-intro .bs{margin-top:3px;font-size:11.5px;color:var(--c-sub);line-height:1.5}
+.icobtn{width:38px;height:38px;border-radius:50%;border:1px solid var(--c-line);
+  background:var(--c-panel);color:var(--c-sub);cursor:pointer;display:inline-grid;
+  place-items:center;font-size:16px;flex:none;text-decoration:none;transition:.15s}
+.icobtn:hover{color:var(--c-ink);border-color:var(--accent)}
+.tt-ico{font-size:16px;line-height:1}.tt-sun{display:none}
+:root[data-theme=dark] .tt-moon{display:none}:root[data-theme=dark] .tt-sun{display:inline}
+.hero{padding:18px 22px;border-radius:16px;background:var(--c-panel);border:1px solid var(--c-line);border-left:4px solid var(--accent);margin-bottom:26px}
+.hero .lay{font-size:12px;color:var(--accent);font-weight:600;letter-spacing:.4px}
+.hero h1{margin:6px 0 8px;font-size:24px;letter-spacing:-.3px}
+.hero .en{color:var(--c-sub);font-size:13px}
+.hero .tag{margin-top:10px;color:var(--c-ink);font-size:14.5px;line-height:1.7}
+.arch-canvas{background:var(--c-panel);border:1px solid var(--c-line);border-radius:16px;padding:18px;margin-bottom:30px;overflow:auto}
+.arch-svg{width:100%;height:auto;display:block}
+.arch-svg .ag-bg{fill:var(--c-panel)}
+.arch-svg .ag-card{fill:var(--c-panel);stroke:var(--c-line);stroke-width:1.2}
+.arch-svg .ag-band{fill:var(--c-soft)}
+.arch-svg .ag-sub{fill:var(--c-sub)}
+.arch-svg .ag-title{fill:var(--c-ink)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px}
+.grp{background:var(--c-panel);border:1px solid var(--c-line);border-radius:14px;padding:16px 18px}
+.grp h3{margin:0 0 12px;font-size:15px;color:var(--accent);padding-bottom:8px;border-bottom:1px solid var(--c-line)}
+.grp ul{list-style:none;margin:0;padding:0}
+.grp li{padding:8px 0;border-bottom:1px dashed var(--c-line)}
+.grp li:last-child{border-bottom:none}
+.grp li b{display:block;font-size:13.5px;color:var(--c-ink);margin-bottom:2px}
+.grp li span{font-size:12.5px;color:var(--c-sub);line-height:1.6}
+.grp li .dp{display:block;margin-top:7px;padding:9px 11px;font-size:12px;line-height:1.7;
+  color:var(--c-ink);background:var(--c-soft);border-left:2px solid var(--accent);border-radius:6px}
+.dims{display:flex;flex-direction:column;gap:6px;margin-top:9px}
+.dm{display:flex;flex-direction:column;gap:2px;padding:7px 11px;border-radius:8px;
+  border-left:3px solid var(--c-line);background:var(--c-soft)}
+.dm-h{font-size:11px;font-weight:800;letter-spacing:.02em;opacity:.92}
+.dm-t{font-size:11.5px;line-height:1.65;color:var(--c-sub)}
+.dm-trade{border-left-color:var(--accent)}
+.dm-trade .dm-h{color:var(--accent)}
+.dm-scale{border-left-color:#2ea043}
+.dm-scale .dm-h{color:#2ea043}
+.dm-fail{border-left-color:#e0562d}
+.dm-fail .dm-h{color:#e0562d}
+.insight{background:var(--c-panel);border:1px solid var(--c-line);border-radius:16px;
+  padding:20px 24px;margin-top:26px;border-top:3px solid var(--accent)}
+.insight h2{margin:0 0 10px;font-size:16px;color:var(--c-ink)}
+.insight p{margin:0;font-size:13.5px;line-height:1.85;color:var(--c-sub)}
+.flow-desc{background:var(--c-panel);border:1px solid var(--c-line);border-radius:16px;padding:18px 22px;margin-bottom:26px}
+.flow-desc h2{margin:0 0 6px;font-size:16px;color:var(--c-ink)}
+.fl-hint{margin:0 0 14px;font-size:12.5px;color:var(--c-sub)}
+.flow-desc .fl-hint .fl-b{color:#c0392b;font-weight:600}
+.sc-sec{margin-top:30px}
+.sc-sec>h2{margin:0 0 14px;font-size:18px;color:var(--c-ink);padding-left:11px;border-left:4px solid var(--accent)}
+.sc-essence{background:var(--c-panel);border:1px solid var(--c-line);border-radius:16px;padding:20px 24px;border-top:3px solid var(--accent)}
+.sc-essence p{margin:0;font-size:14px;line-height:1.9;color:var(--c-sub)}
+.req-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+.req-col{background:var(--c-panel);border:1px solid var(--c-line);border-radius:14px;padding:16px 18px}
+.req-col.req-wide{grid-column:1/-1}
+.req-col h3{margin:0 0 12px;font-size:14px;color:var(--accent)}
+.req-col ul{list-style:none;margin:0;padding:0}
+.req-col ul li{padding:6px 0 6px 18px;position:relative;font-size:13px;line-height:1.7;color:var(--c-sub);border-bottom:1px dashed var(--c-line)}
+.req-col ul li:last-child{border-bottom:none}
+.req-col ul li:before{content:"";position:absolute;left:2px;top:13px;width:6px;height:6px;border-radius:50%;background:var(--accent)}
+.req-col ul.cons li:before{background:#e0562d}
+.qtab,.dtab{width:100%;border-collapse:collapse;font-size:12.5px}
+.qtab th,.dtab th{text-align:left;padding:9px 12px;color:var(--c-sub);font-weight:700;border-bottom:2px solid var(--c-line);font-size:12px}
+.qtab td,.dtab td{padding:9px 12px;border-bottom:1px solid var(--c-line);line-height:1.65;color:var(--c-sub);vertical-align:top}
+.qtab .qk{color:var(--c-ink);font-weight:700;white-space:nowrap}
+.qtab .qv{color:var(--accent);font-weight:600;white-space:nowrap}
+.dtab{background:var(--c-panel);border:1px solid var(--c-line);border-radius:14px;overflow:hidden}
+.dtab .de{color:var(--c-ink);font-weight:700;white-space:nowrap}
+.dtab .ds{color:var(--accent);font-weight:600;white-space:nowrap}
+.sc-tension{background:var(--c-panel);border:1px solid var(--c-line);border-radius:16px;padding:20px 24px}
+.tn-wrap{display:flex;align-items:stretch;gap:0;position:relative}
+.tn-side{flex:1;padding:14px 16px;border-radius:12px;background:var(--c-soft)}
+.tn-side.tn-l{border:1px solid var(--accent)}
+.tn-side.tn-r{border:1px solid #2ea043}
+.tn-lbl{font-size:13.5px;font-weight:800;margin-bottom:10px}
+.tn-l .tn-lbl{color:var(--accent)}.tn-r .tn-lbl{color:#2ea043}
+.tn-side ul{list-style:none;margin:0;padding:0}
+.tn-side li{padding:5px 0;font-size:12.5px;line-height:1.6;color:var(--c-sub);border-bottom:1px dashed var(--c-line)}
+.tn-side li:last-child{border-bottom:none}
+.tn-vs{align-self:center;margin:0 14px;font-size:12px;font-weight:800;color:var(--c-sub);background:var(--c-bg);border:1px solid var(--c-line);border-radius:50%;width:38px;height:38px;display:grid;place-items:center;flex:none}
+.tn-core{margin-top:16px;padding:12px 16px;font-size:13px;line-height:1.75;color:var(--c-ink);background:var(--c-soft);border-left:3px solid var(--accent);border-radius:8px}
+.sc-pitfall ul.pit{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:10px}
+.sc-pitfall ul.pit li{padding:11px 14px 11px 34px;position:relative;font-size:12.5px;line-height:1.65;color:var(--c-sub);background:var(--c-panel);border:1px solid var(--c-line);border-left:3px solid #e0562d;border-radius:10px}
+.sc-pitfall ul.pit li:before{content:"\2715";position:absolute;left:13px;top:11px;color:#e0562d;font-weight:800;font-size:12px}
+.rm-wrap{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+.rm-step{background:var(--c-panel);border:1px solid var(--c-line);border-radius:14px;padding:16px 18px;border-top:3px solid var(--accent)}
+.rm-stage{font-size:12px;font-weight:800;color:#fff;background:var(--accent);display:inline-block;padding:3px 12px;border-radius:20px;margin-bottom:10px}
+.rm-focus{font-size:14px;font-weight:700;color:var(--c-ink);margin-bottom:7px}
+.rm-detail{font-size:12.5px;line-height:1.7;color:var(--c-sub)}
+.sc-takeaway ul.tk{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:10px}
+.sc-takeaway ul.tk li{padding:11px 14px 11px 34px;position:relative;font-size:12.5px;line-height:1.65;color:var(--c-ink);background:var(--c-soft);border-radius:10px}
+.sc-takeaway ul.tk li:before{content:"\2713";position:absolute;left:13px;top:11px;color:#2ea043;font-weight:800;font-size:12px}
+footer{margin-top:40px;text-align:center;color:var(--c-sub);font-size:12px}
+</style></head><body style="--accent:#1a7f52"><header class="top"><a class="logo" href="../../index.html#scenario" title="返回业务场景导航"><span class="icobtn"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg></span></a><div class="brand-intro"><div class="bt">业务场景</div><div class="bs">分布式系统落地全景 · 核心技术点架构图</div></div><div class="spacer"></div><button id="tt" class="icobtn" title="切换深色 / 浅色主题" aria-label="切换主题"><span class="tt-ico tt-moon">&#9790;</span><span class="tt-ico tt-sun">&#9728;</span></button></header><div class="wrap"><div class="hero"><div class="lay">交易支付层</div><h1>电商交易与订单</h1><div class="en">E-Commerce Transaction</div><div class="tag">下单 / 支付 / 履约 —— 从加购到成交的交易主链路,核心是「库存不超卖、订单不丢失、状态强一致」。</div></div><div class="arch-canvas"><svg xmlns="http://www.w3.org/2000/svg" class="arch-svg" viewBox="0 0 1080 1520" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Text','PingFang SC',sans-serif">
+<defs><filter id="scSoft" x="-6%" y="-6%" width="112%" height="112%"><feDropShadow dx="0" dy="2" stdDeviation="6" flood-color="#0a0a0a" flood-opacity="0.08"/></filter><marker id="scArr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#1a7f52"/></marker><marker id="scArrB" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#c0392b"/></marker><marker id="scArr2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2d7d46"/></marker></defs>
+<rect x="0" y="0" width="1080" height="1520" class="ag-bg"/>
+<text x="26" y="42" font-size="20" font-weight="800" class="ag-title">电商交易与订单 · 全景</text>
+<text x="26" y="70" font-size="12.5" class="ag-sub">交易支付层 · E-Commerce Transaction · 数据流拓扑 + 技术矩阵 + 核心张力 + 洞察 + 踩坑 + 心法</text>
+<text x="26" y="112" font-size="15" font-weight="800" fill="#1a7f52">① 端到端数据流 · 沿箭头为请求/数据流转,红虚线为回流/补偿</text>
+<rect x="26.0" y="126" width="192.8" height="30" rx="9" fill="#1a7f52" opacity="0.12"/>
+<text x="38.0" y="146" font-size="12" font-weight="700" fill="#1a7f52" text-anchor="start">商品 / 加购</text>
+<rect x="150.0" y="132.5" width="58.8" height="17" rx="8.5" fill="#1a7f52" opacity="0.9"/>
+<text x="179.4" y="144.4" font-size="9.5" font-weight="700" fill="#ffffff" text-anchor="middle">500,000</text>
+<rect x="234.8" y="126" width="192.8" height="30" rx="9" fill="#1a7f52" opacity="0.12"/>
+<text x="246.8" y="146" font-size="12" font-weight="700" fill="#1a7f52" text-anchor="start">下单</text>
+<rect x="365.2" y="132.5" width="52.4" height="17" rx="8.5" fill="#1a7f52" opacity="0.9"/>
+<text x="391.4" y="144.4" font-size="9.5" font-weight="700" fill="#ffffff" text-anchor="middle">50,000</text>
+<rect x="443.6" y="126" width="192.8" height="30" rx="9" fill="#1a7f52" opacity="0.12"/>
+<text x="455.6" y="146" font-size="12" font-weight="700" fill="#1a7f52" text-anchor="start">库存</text>
+<rect x="574.0" y="132.5" width="52.4" height="17" rx="8.5" fill="#1a7f52" opacity="0.9"/>
+<text x="600.2" y="144.4" font-size="9.5" font-weight="700" fill="#ffffff" text-anchor="middle">20,000</text>
+<rect x="652.4" y="126" width="192.8" height="30" rx="9" fill="#1a7f52" opacity="0.12"/>
+<text x="664.4" y="146" font-size="12" font-weight="700" fill="#1a7f52" text-anchor="start">交易一致</text>
+<rect x="782.8" y="132.5" width="52.4" height="17" rx="8.5" fill="#1a7f52" opacity="0.9"/>
+<text x="809.0" y="144.4" font-size="9.5" font-weight="700" fill="#ffffff" text-anchor="middle">20,000</text>
+<rect x="861.2" y="126" width="192.8" height="30" rx="9" fill="#1a7f52" opacity="0.12"/>
+<text x="873.2" y="146" font-size="12" font-weight="700" fill="#1a7f52" text-anchor="start">落库</text>
+<rect x="991.6" y="132.5" width="52.4" height="17" rx="8.5" fill="#1a7f52" opacity="0.9"/>
+<text x="1017.8" y="144.4" font-size="9.5" font-weight="700" fill="#ffffff" text-anchor="middle">10,000</text>
+<path d="M218.8,203.0 C122.4,203.0 122.4,299.0 26.0,299.0" fill="none" stroke="#1a7f52" stroke-width="1.6" marker-end="url(#scArr)" opacity="0.8"/>
+<rect x="136.0" y="234.0" width="46.0" height="15" rx="4" class="ag-bg" opacity="0.92"/>
+<text x="159.0" y="245.0" font-size="10" class="ag-sub" text-anchor="middle">结算试算</text>
+<path d="M218.8,299.0 C226.8,299.0 226.8,251.0 234.8,251.0" fill="none" stroke="#1a7f52" stroke-width="1.6" marker-end="url(#scArr)" opacity="0.8"/>
+<rect x="200.8" y="258.0" width="46.0" height="15" rx="4" class="ag-bg" opacity="0.92"/>
+<text x="223.8" y="269.0" font-size="10" class="ag-sub" text-anchor="middle">锁价下单</text>
+<path d="M427.6,251.0 C435.6,251.0 435.6,251.0 443.6,251.0" fill="none" stroke="#1a7f52" stroke-width="1.6" marker-end="url(#scArr)" opacity="0.8"/>
+<rect x="409.6" y="234.0" width="46.0" height="15" rx="4" class="ag-bg" opacity="0.92"/>
+<text x="432.6" y="245.0" font-size="10" class="ag-sub" text-anchor="middle">预占库存</text>
+<path d="M443.6,265.0 C435.6,265.0 435.6,265.0 427.6,265.0" fill="none" stroke="#c0392b" stroke-width="1.4" stroke-dasharray="5 4" marker-end="url(#scArrB)" opacity="0.85"/>
+<rect x="412.6" y="266.0" width="46.0" height="15" rx="4" class="ag-bg" opacity="0.92"/>
+<text x="435.6" y="277.0" font-size="10" fill="#c0392b" text-anchor="middle">扣减成功</text>
+<path d="M427.6,251.0 C540.0,251.0 540.0,203.0 652.4,203.0" fill="none" stroke="#1a7f52" stroke-width="1.6" marker-end="url(#scArr)" opacity="0.8"/>
+<rect x="469.5" y="210.0" width="55.5" height="15" rx="4" class="ag-bg" opacity="0.92"/>
+<text x="497.3" y="221.0" font-size="10" class="ag-sub" text-anchor="middle">分布式事务</text>
+<path d="M845.2,203.0 C748.8,203.0 748.8,299.0 652.4,299.0" fill="none" stroke="#1a7f52" stroke-width="1.6" marker-end="url(#scArr)" opacity="0.8"/>
+<rect x="757.7" y="234.0" width="55.5" height="15" rx="4" class="ag-bg" opacity="0.92"/>
+<text x="785.4" y="245.0" font-size="10" class="ag-sub" text-anchor="middle">发下单消息</text>
+<path d="M427.6,251.0 C644.4,251.0 644.4,251.0 861.2,251.0" fill="none" stroke="#1a7f52" stroke-width="1.6" marker-end="url(#scArr)" opacity="0.8"/>
+<rect x="539.0" y="234.0" width="46.0" height="15" rx="4" class="ag-bg" opacity="0.92"/>
+<text x="562.0" y="245.0" font-size="10" class="ag-sub" text-anchor="middle">幂等落库</text>
+<path d="M652.4,217.0 C644.4,217.0 644.4,265.0 636.4,265.0" fill="none" stroke="#c0392b" stroke-width="1.4" stroke-dasharray="5 4" marker-end="url(#scArrB)" opacity="0.85"/>
+<rect x="611.9" y="242.0" width="65.0" height="15" rx="4" class="ag-bg" opacity="0.92"/>
+<text x="644.4" y="253.0" font-size="10" fill="#c0392b" text-anchor="middle">失败补偿回滚</text>
+<rect x="26.0" y="170.0" width="192.8" height="66" rx="11" class="ag-card" stroke="#1a7f52" stroke-width="1.4" filter="url(#scSoft)"/>
+<text x="122.4" y="194.0" font-size="12.5" font-weight="700" class="ag-title" text-anchor="middle">购物车服务</text>
+<text x="122.4" y="212.0" font-size="9.5" class="ag-sub" text-anchor="middle">选品，KV 存储</text>
+<rect x="26.0" y="266.0" width="192.8" height="66" rx="11" class="ag-card" stroke="#1a7f52" stroke-width="1.4" filter="url(#scSoft)"/>
+<text x="122.4" y="290.0" font-size="12.5" font-weight="700" class="ag-title" text-anchor="middle">价格 / 优惠</text>
+<text x="122.4" y="308.0" font-size="9.5" class="ag-sub" text-anchor="middle">结算重算，下单锁价</text>
+<rect x="234.8" y="218.0" width="192.8" height="66" rx="11" class="ag-card" stroke="#1a7f52" stroke-width="1.4" filter="url(#scSoft)"/>
+<text x="331.2" y="242.0" font-size="12.5" font-weight="700" class="ag-title" text-anchor="middle">订单服务</text>
+<text x="331.2" y="260.0" font-size="9.5" class="ag-sub" text-anchor="middle">幂等校验+建单+状态机</text>
+<rect x="443.6" y="218.0" width="192.8" height="66" rx="11" class="ag-card" stroke="#1a7f52" stroke-width="1.4" filter="url(#scSoft)"/>
+<text x="540.0" y="242.0" font-size="12.5" font-weight="700" class="ag-title" text-anchor="middle">库存服务</text>
+<text x="540.0" y="260.0" font-size="9.5" class="ag-sub" text-anchor="middle">预占/扣减/释放，防超卖</text>
+<rect x="652.4" y="170.0" width="192.8" height="66" rx="11" class="ag-card" stroke="#1a7f52" stroke-width="1.4" filter="url(#scSoft)"/>
+<text x="748.8" y="194.0" font-size="12.5" font-weight="700" class="ag-title" text-anchor="middle">分布式事务</text>
+<text x="748.8" y="212.0" font-size="9.5" class="ag-sub" text-anchor="middle">TCC/Saga 补偿</text>
+<rect x="652.4" y="266.0" width="192.8" height="66" rx="11" class="ag-card" stroke="#1a7f52" stroke-width="1.4" filter="url(#scSoft)"/>
+<text x="748.8" y="290.0" font-size="12.5" font-weight="700" class="ag-title" text-anchor="middle">本地消息表 / MQ</text>
+<text x="748.8" y="308.0" font-size="9.5" class="ag-sub" text-anchor="middle">可靠投递，不丢不重</text>
+<rect x="861.2" y="218.0" width="192.8" height="66" rx="11" class="ag-card" stroke="#1a7f52" stroke-width="1.4" filter="url(#scSoft)"/>
+<text x="957.6" y="242.0" font-size="12.5" font-weight="700" class="ag-title" text-anchor="middle">订单库 (分库分表)</text>
+<text x="957.6" y="260.0" font-size="9.5" class="ag-sub" text-anchor="middle">雪花 ID，按 userId 分片</text>
+<text x="26" y="382" font-size="15" font-weight="800" fill="#1a7f52">② 关键技术 · 机制矩阵(广度:按技术域分组)</text>
+<rect x="26.0" y="398.0" width="117.0" height="28" rx="7" fill="#1a7f52" opacity="0.92"/>
+<text x="84.5" y="416.4" font-size="12.5" font-weight="800" fill="#ffffff" text-anchor="middle">商品 · 建模</text>
+<rect x="156.0" y="398.0" width="170.4" height="28" rx="14" fill="#1a7f52" opacity="0.1" stroke="#1a7f52" stroke-width="1"/>
+<text x="241.2" y="416.2" font-size="12" font-weight="600" fill="#1a7f52" text-anchor="middle">SPU / SKU 建模</text>
+<rect x="335.4" y="398.0" width="170.4" height="28" rx="14" fill="#1a7f52" opacity="0.1" stroke="#1a7f52" stroke-width="1"/>
+<text x="420.6" y="416.2" font-size="12" font-weight="600" fill="#1a7f52" text-anchor="middle">雪花 ID / 分库分表</text>
+<rect x="26.0" y="438.0" width="130.0" height="28" rx="7" fill="#1a7f52" opacity="0.92"/>
+<text x="91.0" y="456.4" font-size="12.5" font-weight="800" fill="#ffffff" text-anchor="middle">下单 · 防超卖</text>
+<rect x="169.0" y="438.0" width="109.4" height="28" rx="14" fill="#1a7f52" opacity="0.1" stroke="#1a7f52" stroke-width="1"/>
+<text x="223.7" y="456.2" font-size="12" font-weight="600" fill="#1a7f52" text-anchor="middle">库存扣减防超卖</text>
+<rect x="287.4" y="438.0" width="72.8" height="28" rx="14" fill="#1a7f52" opacity="0.1" stroke="#1a7f52" stroke-width="1"/>
+<text x="323.8" y="456.2" font-size="12" font-weight="600" fill="#1a7f52" text-anchor="middle">幂等下单</text>
+<rect x="369.2" y="438.0" width="121.6" height="28" rx="14" fill="#1a7f52" opacity="0.1" stroke="#1a7f52" stroke-width="1"/>
+<text x="430.0" y="456.2" font-size="12" font-weight="600" fill="#1a7f52" text-anchor="middle">购物车 / 优惠</text>
+<rect x="26.0" y="478.0" width="130.0" height="28" rx="7" fill="#1a7f52" opacity="0.92"/>
+<text x="91.0" y="496.4" font-size="12.5" font-weight="800" fill="#ffffff" text-anchor="middle">交易 · 一致性</text>
+<rect x="169.0" y="478.0" width="219.2" height="28" rx="14" fill="#1a7f52" opacity="0.1" stroke="#1a7f52" stroke-width="1"/>
+<text x="278.6" y="496.2" font-size="12" font-weight="600" fill="#1a7f52" text-anchor="middle">分布式事务 TCC / Saga</text>
+<rect x="397.2" y="478.0" width="85.0" height="28" rx="14" fill="#1a7f52" opacity="0.1" stroke="#1a7f52" stroke-width="1"/>
+<text x="439.7" y="496.2" font-size="12" font-weight="600" fill="#1a7f52" text-anchor="middle">本地消息表</text>
+<rect x="491.2" y="478.0" width="85.0" height="28" rx="14" fill="#1a7f52" opacity="0.1" stroke="#1a7f52" stroke-width="1"/>
+<text x="533.7" y="496.2" font-size="12" font-weight="600" fill="#1a7f52" text-anchor="middle">订单状态机</text>
+<text x="26" y="550" font-size="15" font-weight="800" fill="#1a7f52">③ 核心张力 · 本质矛盾(深度:一对相互拉扯的力)</text>
+<rect x="26.0" y="564.0" width="469.0" height="168.0" rx="12" fill="#c0392b" opacity="0.07" stroke="#c0392b" stroke-width="1.3"/>
+<text x="260.5" y="585.0" font-size="13" font-weight="800" fill="#c0392b" text-anchor="middle">追求性能 / 吞吐</text>
+<rect x="40.0" y="594.0" width="441.0" height="24" rx="7" fill="#c0392b" opacity="0.11"/>
+<text x="260.5" y="610.0" font-size="11.5" class="ag-title" text-anchor="middle">商品 / 详情缓存 + 静态化</text>
+<rect x="40.0" y="626.0" width="441.0" height="24" rx="7" fill="#c0392b" opacity="0.11"/>
+<text x="260.5" y="642.0" font-size="11.5" class="ag-title" text-anchor="middle">库存切 Redis 原子扣</text>
+<rect x="40.0" y="658.0" width="441.0" height="24" rx="7" fill="#c0392b" opacity="0.11"/>
+<text x="260.5" y="674.0" font-size="11.5" class="ag-title" text-anchor="middle">下单异步化削峰</text>
+<rect x="40.0" y="690.0" width="441.0" height="24" rx="7" fill="#c0392b" opacity="0.11"/>
+<text x="260.5" y="706.0" font-size="11.5" class="ag-title" text-anchor="middle">读路径极致优化</text>
+<rect x="585.0" y="564.0" width="469.0" height="168.0" rx="12" fill="#2d7d46" opacity="0.07" stroke="#2d7d46" stroke-width="1.3"/>
+<text x="819.5" y="585.0" font-size="13" font-weight="800" fill="#2d7d46" text-anchor="middle">保住一致 / 不资损</text>
+<rect x="599.0" y="594.0" width="441.0" height="24" rx="7" fill="#2d7d46" opacity="0.11"/>
+<text x="819.5" y="610.0" font-size="11.5" class="ag-title" text-anchor="middle">库存严格不超卖</text>
+<rect x="599.0" y="626.0" width="441.0" height="24" rx="7" fill="#2d7d46" opacity="0.11"/>
+<text x="819.5" y="642.0" font-size="11.5" class="ag-title" text-anchor="middle">分布式事务 TCC / Saga</text>
+<rect x="599.0" y="658.0" width="441.0" height="24" rx="7" fill="#2d7d46" opacity="0.11"/>
+<text x="819.5" y="674.0" font-size="11.5" class="ag-title" text-anchor="middle">幂等 + 唯一索引兜底</text>
+<rect x="599.0" y="690.0" width="441.0" height="24" rx="7" fill="#2d7d46" opacity="0.11"/>
+<text x="819.5" y="706.0" font-size="11.5" class="ag-title" text-anchor="middle">状态机 + 对账追平</text>
+<circle cx="540.0" cy="648.0" r="24" class="ag-bg" stroke="#1a7f52" stroke-width="1.6"/>
+<text x="540.0" y="656.0" font-size="22" text-anchor="middle">⚡</text>
+<path d="M514.0,648.0 L499.0,648.0" stroke="#c0392b" stroke-width="1.6" marker-end="url(#scArrB)"/>
+<path d="M566.0,648.0 L581.0,648.0" stroke="#2d7d46" stroke-width="1.6" marker-end="url(#scArr2)"/>
+<text x="26" y="750.0" font-size="11.5" class="ag-sub">◆ 核心是性能与一致性的拉锯;把强一致收敛到库存+资</text>
+<text x="26" y="767.0" font-size="11.5" class="ag-sub">◆ 金最小范围,其余走最终一致+对账。</text>
+<text x="26" y="816" font-size="15" font-weight="800" fill="#1a7f52">④ 本质洞察 · 一句话看穿这个场景</text>
+<rect x="26" y="828.0" width="1028" height="118" rx="12" class="ag-card" stroke="#1a7f52" stroke-width="1.4"/>
+<rect x="26" y="828.0" width="4" height="118" rx="2" fill="#1a7f52"/>
+<text x="50" y="858.0" font-size="13" class="ag-title">电商交易系统的核心矛盾是「性能」与「一致性」的拉锯——下单主链路要扛住大促洪峰(高性能),又不能超卖、不能丢单、不能乱扣钱(强一致)。工程答案是分层妥协:</text>
+<text x="50" y="878.0" font-size="13" class="ag-title">读多的商品 / 详情用缓存 + 静态化换性能,写关键的库存 / 订单 / 资金用分布式事务 + 幂等 + 状态机守一致。最大的坑不是并发而是一致性链路:库</text>
+<text x="50" y="898.0" font-size="13" class="ag-title">存扣减、分布式事务、消息投递三处只要有一处不幂等或不闭环,就会超卖、少卖或资损。真正的高手把「强一致」收敛到最小范围(库存 + 资金),其余全走最终一致 </text>
+<text x="50" y="918.0" font-size="13" class="ag-title">+ 对账兜底。</text>
+<text x="26" y="992" font-size="15" font-weight="800" fill="#1a7f52">⑤ 失败模式 · 真实踩过的坑(反例:这样做会崩)</text>
+<rect x="26.0" y="1006.0" width="506.0" height="44" rx="10" class="ag-card" stroke="#e0562d" stroke-width="1" stroke-opacity="0.5"/>
+<circle cx="46.0" cy="1026.0" r="8" fill="#e0562d" opacity="0.14"/>
+<text x="46.0" y="1029.5" font-size="11" font-weight="800" fill="#e0562d" text-anchor="middle">✕</text>
+<text x="62.0" y="1026.0" font-size="11.5" class="ag-sub">库存挂错粒度:挂在 SPU 而非 SKU,规格间串货导致超卖</text>
+<rect x="548.0" y="1006.0" width="506.0" height="44" rx="10" class="ag-card" stroke="#e0562d" stroke-width="1" stroke-opacity="0.5"/>
+<circle cx="568.0" cy="1026.0" r="8" fill="#e0562d" opacity="0.14"/>
+<text x="568.0" y="1029.5" font-size="11" font-weight="800" fill="#e0562d" text-anchor="middle">✕</text>
+<text x="584.0" y="1026.0" font-size="11.5" class="ag-sub">下单不幂等:网络重试 / 用户狂点造成一人多单、库存虚减</text>
+<rect x="26.0" y="1062.0" width="506.0" height="44" rx="10" class="ag-card" stroke="#e0562d" stroke-width="1" stroke-opacity="0.5"/>
+<circle cx="46.0" cy="1082.0" r="8" fill="#e0562d" opacity="0.14"/>
+<text x="46.0" y="1085.5" font-size="11" font-weight="800" fill="#e0562d" text-anchor="middle">✕</text>
+<text x="62.0" y="1082.0" font-size="11.5" class="ag-sub">DB 行锁扛下单:大促高并发下行锁排队,连接池打满拖垮库</text>
+<rect x="548.0" y="1062.0" width="506.0" height="44" rx="10" class="ag-card" stroke="#e0562d" stroke-width="1" stroke-opacity="0.5"/>
+<circle cx="568.0" cy="1082.0" r="8" fill="#e0562d" opacity="0.14"/>
+<text x="568.0" y="1085.5" font-size="11" font-weight="800" fill="#e0562d" text-anchor="middle">✕</text>
+<text x="584.0" y="1082.0" font-size="11.5" class="ag-sub">预占库存不释放:超时订单占着库存,有货却下不了单、转化崩</text>
+<rect x="26.0" y="1118.0" width="506.0" height="44" rx="10" class="ag-card" stroke="#e0562d" stroke-width="1" stroke-opacity="0.5"/>
+<circle cx="46.0" cy="1138.0" r="8" fill="#e0562d" opacity="0.14"/>
+<text x="46.0" y="1141.5" font-size="11" font-weight="800" fill="#e0562d" text-anchor="middle">✕</text>
+<text x="62.0" y="1138.0" font-size="11.5" class="ag-sub">分布式事务追求强一致:全链路 2PC 锁资源,性能塌陷且易死锁</text>
+<rect x="548.0" y="1118.0" width="506.0" height="44" rx="10" class="ag-card" stroke="#e0562d" stroke-width="1" stroke-opacity="0.5"/>
+<circle cx="568.0" cy="1138.0" r="8" fill="#e0562d" opacity="0.14"/>
+<text x="568.0" y="1141.5" font-size="11" font-weight="800" fill="#e0562d" text-anchor="middle">✕</text>
+<text x="584.0" y="1138.0" font-size="11.5" class="ag-sub">先操作后发消息:业务成功但消息丢失,下游状态不一致无人追平</text>
+<rect x="26.0" y="1174.0" width="506.0" height="44" rx="10" class="ag-card" stroke="#e0562d" stroke-width="1" stroke-opacity="0.5"/>
+<circle cx="46.0" cy="1194.0" r="8" fill="#e0562d" opacity="0.14"/>
+<text x="46.0" y="1197.5" font-size="11" font-weight="800" fill="#e0562d" text-anchor="middle">✕</text>
+<text x="62.0" y="1194.0" font-size="11.5" class="ag-sub">价格信前端:结算不重算价,被篡改价格下单造成资损</text>
+<text x="26" y="1266" font-size="15" font-weight="800" fill="#1a7f52">⑥ 设计心法 · 沉淀出的正解(正例:应该这样做)</text>
+<rect x="26.0" y="1280.0" width="506.0" height="62" rx="10" fill="#2ea043" fill-opacity="0.06" stroke="#2ea043" stroke-width="1" stroke-opacity="0.45"/>
+<circle cx="46.0" cy="1300.0" r="8" fill="#2ea043" opacity="0.16"/>
+<text x="46.0" y="1303.5" font-size="11" font-weight="800" fill="#2ea043" text-anchor="middle">✓</text>
+<text x="62.0" y="1300.0" font-size="11.5" class="ag-title">强一致收敛到最小范围:只有库存 + 资金要强保障,其余走最终一致 + 对</text>
+<text x="62.0" y="1318.0" font-size="11.5" class="ag-title">账</text>
+<rect x="548.0" y="1280.0" width="506.0" height="44" rx="10" fill="#2ea043" fill-opacity="0.06" stroke="#2ea043" stroke-width="1" stroke-opacity="0.45"/>
+<circle cx="568.0" cy="1300.0" r="8" fill="#2ea043" opacity="0.16"/>
+<text x="568.0" y="1303.5" font-size="11" font-weight="800" fill="#2ea043" text-anchor="middle">✓</text>
+<text x="584.0" y="1300.0" font-size="11.5" class="ag-title">扣减要原子:库存判断 + 扣减一个原子操作,杜绝检查-执行竞态</text>
+<rect x="26.0" y="1354.0" width="506.0" height="62" rx="10" fill="#2ea043" fill-opacity="0.06" stroke="#2ea043" stroke-width="1" stroke-opacity="0.45"/>
+<circle cx="46.0" cy="1374.0" r="8" fill="#2ea043" opacity="0.16"/>
+<text x="46.0" y="1377.5" font-size="11" font-weight="800" fill="#2ea043" text-anchor="middle">✓</text>
+<text x="62.0" y="1374.0" font-size="11.5" class="ag-title">幂等 + 唯一索引兜底:下单 token 防重放,DB 唯一索引是最后底</text>
+<text x="62.0" y="1392.0" font-size="11.5" class="ag-title">线</text>
+<rect x="548.0" y="1336.0" width="506.0" height="44" rx="10" fill="#2ea043" fill-opacity="0.06" stroke="#2ea043" stroke-width="1" stroke-opacity="0.45"/>
+<circle cx="568.0" cy="1356.0" r="8" fill="#2ea043" opacity="0.16"/>
+<text x="568.0" y="1359.5" font-size="11" font-weight="800" fill="#2ea043" text-anchor="middle">✓</text>
+<text x="584.0" y="1356.0" font-size="11.5" class="ag-title">写路径异步化:同步只做最轻的核心操作,重活扔给 MQ 削峰</text>
+<rect x="26.0" y="1428.0" width="506.0" height="44" rx="10" fill="#2ea043" fill-opacity="0.06" stroke="#2ea043" stroke-width="1" stroke-opacity="0.45"/>
+<circle cx="46.0" cy="1448.0" r="8" fill="#2ea043" opacity="0.16"/>
+<text x="46.0" y="1451.5" font-size="11" font-weight="800" fill="#2ea043" text-anchor="middle">✓</text>
+<text x="62.0" y="1448.0" font-size="11.5" class="ag-title">对账兜底一切:凡涉钱涉库存,都要有 T+1 对账追平不一致</text>
+</svg></div><div class="sc-sec"><h2>核心技术点</h2><div class="grid"><div class="grp"><h3>商品 · 建模</h3><ul><li><b>SPU / SKU 建模</b><span>SPU 聚合标品、SKU 落到可售单元(颜色 / 尺码),库存挂在 SKU</span><span class="dp">SPU=一件商品,SKU=具体规格的最小库存单位。价格 / 库存 / 图片挂 SKU,搜索 / 详情聚合到 SPU。失败模式:库存挂错粒度(挂 SPU)会导致规格间串货超卖。</span></li><li><b>雪花 ID / 分库分表</b><span>订单 / 商品全局唯一 ID,按 userId 或 orderId 分片</span><span class="dp">雪花算法生成趋势递增有序 ID,避免自增主键单点。订单按买家 userId 分片(便于查我的订单),商家维度用异构索引。难点:分片键选错后期迁移代价极大。</span></li></ul></div><div class="grp"><h3>下单 · 防超卖</h3><ul><li><b>库存扣减防超卖</b><span>预占 / 扣减 / 释放三态,乐观锁或 Redis 原子扣,严格不超卖</span><span class="dp">下单预占、支付扣减、超时释放。DB 用 update...where stock&gt;=n 乐观锁,高并发切 Redis 原子扣 + 异步对账。失败模式:预占不释放导致库存虚减(有货却下不了单)。</span></li><li><b>幂等下单</b><span>下单 token + 唯一索引,重复提交 / 网络重试只产生一单</span><span class="dp">前端置灰 + 下单 token(防重放)+ DB 唯一索引(userId+商品+幂等号兜底)。任一层可能被绕过,唯一索引是最后底线。失败模式:不幂等则一人多单、库存虚减。</span></li><li><b>购物车 / 优惠</b><span>加购、券 / 满减 / 拆单价格试算,下单前锁价</span><span class="dp">结算时重算价格与库存(不能信前端传的价)。优惠叠加顺序、拆单分摊是复杂点。锁价:下单瞬间快照价格,避免结算与支付间价格漂移引发客诉。</span></li></ul></div><div class="grp"><h3>交易 · 一致性</h3><ul><li><b>分布式事务 TCC / Saga</b><span>跨库存 / 订单 / 账户,Try-Confirm-Cancel 或状态机补偿</span><span class="dp">扣库存、建订单、扣余额跨多服务无法用本地事务。TCC 预留资源后确认/取消,Saga 长事务用补偿回滚。核心是最终一致 + 幂等补偿,别追求强一致拖垮性能。</span></li><li><b>本地消息表</b><span>扣库存与发下单消息在同一本地事务,保证不丢不重</span><span class="dp">业务操作与消息写入同库本地事务,再异步投递,保证「操作成功消息必达」。失败模式:先操作后发消息,中间宕机则消息丢失、下游状态错乱。</span></li><li><b>订单状态机</b><span>待支付 / 已支付 / 已发货 / 已完成 / 已取消,迁移受控</span><span class="dp">状态迁移只允许合法路径(待支付→已支付,不可逆回),配乐观锁防并发跳变。难点:超时取消与用户刚好支付的竞态,须状态机 + 版本号守住。</span></li></ul></div></div></div><div class="sc-sec"><div class="insight"><h2>本质洞察</h2><p>电商交易系统的核心矛盾是「性能」与「一致性」的拉锯——下单主链路要扛住大促洪峰(高性能),又不能超卖、不能丢单、不能乱扣钱(强一致)。工程答案是分层妥协:读多的商品 / 详情用缓存 + 静态化换性能,写关键的库存 / 订单 / 资金用分布式事务 + 幂等 + 状态机守一致。最大的坑不是并发而是一致性链路:库存扣减、分布式事务、消息投递三处只要有一处不幂等或不闭环,就会超卖、少卖或资损。真正的高手把「强一致」收敛到最小范围(库存 + 资金),其余全走最终一致 + 对账兜底。</p></div></div><div class="sc-sec"><h2>设计张力</h2><div class="sc-tension"><div class="tn-wrap"><div class="tn-side tn-l"><div class="tn-lbl">追求性能 / 吞吐</div><ul><li>商品 / 详情缓存 + 静态化</li><li>库存切 Redis 原子扣</li><li>下单异步化削峰</li><li>读路径极致优化</li></ul></div><div class="tn-vs">VS</div><div class="tn-side tn-r"><div class="tn-lbl">保住一致 / 不资损</div><ul><li>库存严格不超卖</li><li>分布式事务 TCC / Saga</li><li>幂等 + 唯一索引兜底</li><li>状态机 + 对账追平</li></ul></div></div><div class="tn-core">核心是性能与一致性的拉锯;把强一致收敛到库存+资金最小范围,其余走最终一致+对账。</div></div></div><div class="sc-sec"><h2>容量漏斗</h2><div class="arch-canvas"><svg xmlns="http://www.w3.org/2000/svg" class="arch-svg" viewBox="0 0 1080 572" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Text','PingFang SC',sans-serif">
+<defs><filter id="fnSoft" x="-6%" y="-6%" width="112%" height="112%"><feDropShadow dx="0" dy="2" stdDeviation="6" flood-color="#0a0a0a" flood-opacity="0.10"/></filter></defs>
+<defs><marker id="fnArr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#1a7f52" opacity="0.6"/></marker></defs>
+<rect x="0" y="0" width="1080" height="572" class="ag-bg"/>
+<text x="40" y="42" font-size="20" font-weight="800" class="ag-title">电商交易与订单 · 容量漏斗</text>
+<text x="40" y="70" font-size="12.5" class="ag-sub">入口洪峰到有效结果的逐级过滤 · 每一层都在用最小代价挡掉注定失败的请求</text>
+<rect x="40.0" y="92" width="1000.0" height="74" rx="14" fill="#1a7f52" opacity="0.140" stroke="#1a7f52" stroke-width="1.2" filter="url(#fnSoft)"/>
+<text x="540.0" y="119" font-size="13.5" font-weight="700" class="ag-title" text-anchor="middle">浏览 / 加购</text>
+<text x="540.0" y="144" font-size="18" font-weight="800" fill="#1a7f52" text-anchor="middle">500,000</text>
+<text x="1052.0" y="133.0" font-size="11" class="ag-sub" text-anchor="start">商品详情读,缓存+静态化扛住</text>
+<path d="M540.0 167 L540.0 180" stroke="#1a7f52" stroke-width="1.4" opacity="0.5" marker-end="url(#fnArr)"/>
+<rect x="127.5" y="182" width="825.0" height="74" rx="14" fill="#1a7f52" opacity="0.165" stroke="#1a7f52" stroke-width="1.2" filter="url(#fnSoft)"/>
+<text x="540.0" y="209" font-size="13.5" font-weight="700" class="ag-title" text-anchor="middle">下单请求</text>
+<text x="540.0" y="234" font-size="18" font-weight="800" fill="#1a7f52" text-anchor="middle">50,000</text>
+<text x="964.5" y="223.0" font-size="11" class="ag-sub" text-anchor="start">校验资格+锁价+幂等</text>
+<path d="M540.0 257 L540.0 270" stroke="#1a7f52" stroke-width="1.4" opacity="0.5" marker-end="url(#fnArr)"/>
+<rect x="215.0" y="272" width="650.0" height="74" rx="14" fill="#1a7f52" opacity="0.190" stroke="#1a7f52" stroke-width="1.2" filter="url(#fnSoft)"/>
+<text x="540.0" y="299" font-size="13.5" font-weight="700" class="ag-title" text-anchor="middle">库存扣减</text>
+<text x="540.0" y="324" font-size="18" font-weight="800" fill="#1a7f52" text-anchor="middle">20,000</text>
+<text x="877.0" y="313.0" font-size="11" class="ag-sub" text-anchor="start">原子扣减,防超卖</text>
+<path d="M540.0 347 L540.0 360" stroke="#1a7f52" stroke-width="1.4" opacity="0.5" marker-end="url(#fnArr)"/>
+<rect x="302.5" y="362" width="475.0" height="74" rx="14" fill="#1a7f52" opacity="0.215" stroke="#1a7f52" stroke-width="1.2" filter="url(#fnSoft)"/>
+<text x="540.0" y="389" font-size="13.5" font-weight="700" class="ag-title" text-anchor="middle">创建订单</text>
+<text x="540.0" y="414" font-size="18" font-weight="800" fill="#1a7f52" text-anchor="middle">20,000</text>
+<text x="789.5" y="403.0" font-size="11" class="ag-sub" text-anchor="start">分布式事务+状态机</text>
+<path d="M540.0 437 L540.0 450" stroke="#1a7f52" stroke-width="1.4" opacity="0.5" marker-end="url(#fnArr)"/>
+<rect x="390.0" y="452" width="300.0" height="74" rx="14" fill="#1a7f52" opacity="0.240" stroke="#1a7f52" stroke-width="1.2" filter="url(#fnSoft)"/>
+<text x="540.0" y="479" font-size="13.5" font-weight="700" class="ag-title" text-anchor="middle">支付成交</text>
+<text x="540.0" y="504" font-size="18" font-weight="800" fill="#1a7f52" text-anchor="middle">10,000</text>
+<text x="702.0" y="493.0" font-size="11" class="ag-sub" text-anchor="start">跳转支付,超时释放库存</text>
+</svg></div></div><div class="sc-sec"><h2>核心数据流</h2><div class="arch-canvas"><svg xmlns="http://www.w3.org/2000/svg" class="arch-svg" viewBox="0 0 1080 342" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Text','PingFang SC',sans-serif">
+<defs><filter id="scSoft" x="-6%" y="-6%" width="112%" height="112%"><feDropShadow dx="0" dy="2" stdDeviation="6" flood-color="#0a0a0a" flood-opacity="0.08"/></filter><marker id="scArr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#1a7f52"/></marker><marker id="scArrB" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#c0392b"/></marker></defs>
+<rect x="0" y="0" width="1080" height="342" class="ag-bg"/>
+<text x="26" y="42" font-size="20" font-weight="800" class="ag-title">电商交易与订单 · 端到端数据流</text>
+<text x="26" y="70" font-size="12.5" class="ag-sub">交易支付层 · E-Commerce Transaction · 沿箭头方向为请求 / 数据流转,红色虚线为回流 / 补偿</text>
+<rect x="26.0" y="92" width="192.8" height="30" rx="9" fill="#1a7f52" opacity="0.12"/>
+<text x="122.4" y="112" font-size="12" font-weight="700" fill="#1a7f52" text-anchor="middle">商品 / 加购</text>
+<rect x="234.8" y="92" width="192.8" height="30" rx="9" fill="#1a7f52" opacity="0.12"/>
+<text x="331.2" y="112" font-size="12" font-weight="700" fill="#1a7f52" text-anchor="middle">下单</text>
+<rect x="443.6" y="92" width="192.8" height="30" rx="9" fill="#1a7f52" opacity="0.12"/>
+<text x="540.0" y="112" font-size="12" font-weight="700" fill="#1a7f52" text-anchor="middle">库存</text>
+<rect x="652.4" y="92" width="192.8" height="30" rx="9" fill="#1a7f52" opacity="0.12"/>
+<text x="748.8" y="112" font-size="12" font-weight="700" fill="#1a7f52" text-anchor="middle">交易一致</text>
+<rect x="861.2" y="92" width="192.8" height="30" rx="9" fill="#1a7f52" opacity="0.12"/>
+<text x="957.6" y="112" font-size="12" font-weight="700" fill="#1a7f52" text-anchor="middle">落库</text>
+<path d="M218.8,169.0 C122.4,169.0 122.4,265.0 26.0,265.0" fill="none" stroke="#1a7f52" stroke-width="1.6" marker-end="url(#scArr)" opacity="0.8"/>
+<rect x="136.0" y="200.0" width="46.0" height="15" rx="4" class="ag-bg" opacity="0.92"/>
+<text x="159.0" y="211.0" font-size="10" class="ag-sub" text-anchor="middle">结算试算</text>
+<path d="M218.8,265.0 C226.8,265.0 226.8,217.0 234.8,217.0" fill="none" stroke="#1a7f52" stroke-width="1.6" marker-end="url(#scArr)" opacity="0.8"/>
+<rect x="200.8" y="224.0" width="46.0" height="15" rx="4" class="ag-bg" opacity="0.92"/>
+<text x="223.8" y="235.0" font-size="10" class="ag-sub" text-anchor="middle">锁价下单</text>
+<path d="M427.6,217.0 C435.6,217.0 435.6,217.0 443.6,217.0" fill="none" stroke="#1a7f52" stroke-width="1.6" marker-end="url(#scArr)" opacity="0.8"/>
+<rect x="409.6" y="200.0" width="46.0" height="15" rx="4" class="ag-bg" opacity="0.92"/>
+<text x="432.6" y="211.0" font-size="10" class="ag-sub" text-anchor="middle">预占库存</text>
+<path d="M443.6,231.0 C435.6,231.0 435.6,231.0 427.6,231.0" fill="none" stroke="#c0392b" stroke-width="1.4" stroke-dasharray="5 4" marker-end="url(#scArrB)" opacity="0.85"/>
+<rect x="412.6" y="232.0" width="46.0" height="15" rx="4" class="ag-bg" opacity="0.92"/>
+<text x="435.6" y="243.0" font-size="10" fill="#c0392b" text-anchor="middle">扣减成功</text>
+<path d="M427.6,217.0 C540.0,217.0 540.0,169.0 652.4,169.0" fill="none" stroke="#1a7f52" stroke-width="1.6" marker-end="url(#scArr)" opacity="0.8"/>
+<rect x="469.5" y="176.0" width="55.5" height="15" rx="4" class="ag-bg" opacity="0.92"/>
+<text x="497.3" y="187.0" font-size="10" class="ag-sub" text-anchor="middle">分布式事务</text>
+<path d="M845.2,169.0 C748.8,169.0 748.8,265.0 652.4,265.0" fill="none" stroke="#1a7f52" stroke-width="1.6" marker-end="url(#scArr)" opacity="0.8"/>
+<rect x="757.7" y="200.0" width="55.5" height="15" rx="4" class="ag-bg" opacity="0.92"/>
+<text x="785.4" y="211.0" font-size="10" class="ag-sub" text-anchor="middle">发下单消息</text>
+<path d="M427.6,217.0 C644.4,217.0 644.4,217.0 861.2,217.0" fill="none" stroke="#1a7f52" stroke-width="1.6" marker-end="url(#scArr)" opacity="0.8"/>
+<rect x="539.0" y="200.0" width="46.0" height="15" rx="4" class="ag-bg" opacity="0.92"/>
+<text x="562.0" y="211.0" font-size="10" class="ag-sub" text-anchor="middle">幂等落库</text>
+<path d="M652.4,183.0 C644.4,183.0 644.4,231.0 636.4,231.0" fill="none" stroke="#c0392b" stroke-width="1.4" stroke-dasharray="5 4" marker-end="url(#scArrB)" opacity="0.85"/>
+<rect x="611.9" y="208.0" width="65.0" height="15" rx="4" class="ag-bg" opacity="0.92"/>
+<text x="644.4" y="219.0" font-size="10" fill="#c0392b" text-anchor="middle">失败补偿回滚</text>
+<rect x="26.0" y="136.0" width="192.8" height="66" rx="11" class="ag-card" stroke="#1a7f52" stroke-width="1.4" filter="url(#scSoft)"/>
+<text x="122.4" y="160.0" font-size="12.5" font-weight="700" class="ag-title" text-anchor="middle">购物车服务</text>
+<text x="122.4" y="178.0" font-size="9.5" class="ag-sub" text-anchor="middle">选品，KV 存储</text>
+<rect x="26.0" y="232.0" width="192.8" height="66" rx="11" class="ag-card" stroke="#1a7f52" stroke-width="1.4" filter="url(#scSoft)"/>
+<text x="122.4" y="256.0" font-size="12.5" font-weight="700" class="ag-title" text-anchor="middle">价格 / 优惠</text>
+<text x="122.4" y="274.0" font-size="9.5" class="ag-sub" text-anchor="middle">结算重算，下单锁价</text>
+<rect x="234.8" y="184.0" width="192.8" height="66" rx="11" class="ag-card" stroke="#1a7f52" stroke-width="1.4" filter="url(#scSoft)"/>
+<text x="331.2" y="208.0" font-size="12.5" font-weight="700" class="ag-title" text-anchor="middle">订单服务</text>
+<text x="331.2" y="226.0" font-size="9.5" class="ag-sub" text-anchor="middle">幂等校验+建单+状态机</text>
+<rect x="443.6" y="184.0" width="192.8" height="66" rx="11" class="ag-card" stroke="#1a7f52" stroke-width="1.4" filter="url(#scSoft)"/>
+<text x="540.0" y="208.0" font-size="12.5" font-weight="700" class="ag-title" text-anchor="middle">库存服务</text>
+<text x="540.0" y="226.0" font-size="9.5" class="ag-sub" text-anchor="middle">预占/扣减/释放，防超卖</text>
+<rect x="652.4" y="136.0" width="192.8" height="66" rx="11" class="ag-card" stroke="#1a7f52" stroke-width="1.4" filter="url(#scSoft)"/>
+<text x="748.8" y="160.0" font-size="12.5" font-weight="700" class="ag-title" text-anchor="middle">分布式事务</text>
+<text x="748.8" y="178.0" font-size="9.5" class="ag-sub" text-anchor="middle">TCC/Saga 补偿</text>
+<rect x="652.4" y="232.0" width="192.8" height="66" rx="11" class="ag-card" stroke="#1a7f52" stroke-width="1.4" filter="url(#scSoft)"/>
+<text x="748.8" y="256.0" font-size="12.5" font-weight="700" class="ag-title" text-anchor="middle">本地消息表 / MQ</text>
+<text x="748.8" y="274.0" font-size="9.5" class="ag-sub" text-anchor="middle">可靠投递，不丢不重</text>
+<rect x="861.2" y="184.0" width="192.8" height="66" rx="11" class="ag-card" stroke="#1a7f52" stroke-width="1.4" filter="url(#scSoft)"/>
+<text x="957.6" y="208.0" font-size="12.5" font-weight="700" class="ag-title" text-anchor="middle">订单库 (分库分表)</text>
+<text x="957.6" y="226.0" font-size="9.5" class="ag-sub" text-anchor="middle">雪花 ID，按 userId 分片</text>
+</svg></div></div><div class="sc-sec"><h2>需求根基</h2><div class="req-grid"><div class="req-col"><h3>功能需求</h3><ul><li>商品 SPU / SKU 建模、上下架与库存管理</li><li>购物车加购、优惠 / 券试算与下单锁价</li><li>下单主链路:校验→扣库存→建订单,全链路防超卖防重</li><li>跨库存 / 订单 / 资金的分布式事务与补偿</li><li>订单状态机流转、超时未支付自动释放库存</li></ul></div><div class="req-col req-wide"><h3>质量指标</h3><table class="qtab"><tr><th>维度</th><th>目标</th><th>说明</th></tr><tr><td class="qk">下单延迟</td><td class="qv">P99 &lt; 200ms</td><td>成交转化对延迟敏感,慢一步就流失</td></tr><tr><td class="qk">峰值承压</td><td class="qv">大促下单 5 万+ QPS</td><td>洪峰远高于均值,须为峰值设计</td></tr><tr><td class="qk">超卖</td><td class="qv">零容忍,严格 = 库存</td><td>超卖=资损+客诉,绝对红线</td></tr><tr><td class="qk">资金一致</td><td class="qv">不多扣 / 不少扣 + 对账</td><td>涉钱强一致,须可对账追平</td></tr><tr><td class="qk">可用性</td><td class="qv">99.95%,核心链路优先</td><td>下单支付是命脉,可降级非核心</td></tr></table></div><div class="req-col req-wide"><h3>关键约束</h3><ul class="cons"><li>读写比悬殊:浏览远多于下单,读靠缓存写靠一致性保障</li><li>资金 / 库存零容忍:超卖少扣钱都是硬故障,不可妥协</li><li>长事务跨多服务:库存 / 订单 / 资金 / 履约分布在不同域,天然分布式</li></ul></div></div></div><div class="sc-sec"><h2>存储选型</h2><table class="dtab"><tr><th>数据实体</th><th>存储方案</th><th>选型理由</th></tr><tr><td class="de">商品 (SPU/SKU)</td><td class="ds">关系型 DB + 缓存</td><td>详情读多,缓存扛读</td></tr><tr><td class="de">库存</td><td class="ds">Redis 原子扣 + DB</td><td>高并发写、严格防超卖</td></tr><tr><td class="de">订单</td><td class="ds">分库分表 DB</td><td>海量写、按 userId 分片</td></tr><tr><td class="de">购物车</td><td class="ds">Redis KV</td><td>高频读写、临时态</td></tr><tr><td class="de">去重 / 幂等</td><td class="ds">Redis + DB 唯一索引</td><td>防重放、兜底防重</td></tr><tr><td class="de">交易消息</td><td class="ds">本地消息表 + MQ</td><td>可靠投递、不丢不重</td></tr></table></div><div class="sc-sec"><h2>演进路线</h2><div class="rm-wrap"><div class="rm-step"><span class="rm-stage">MVP</span><div class="rm-focus">单库单表</div><div class="rm-detail">本地事务下单、DB 行锁扣库存、量小够用</div></div><div class="rm-step"><span class="rm-stage">成长期</span><div class="rm-focus">缓存 + 异步</div><div class="rm-detail">商品缓存、Redis 扣库存、MQ 异步落库</div></div><div class="rm-step"><span class="rm-stage">成熟期</span><div class="rm-focus">分布式事务 + 分库分表</div><div class="rm-detail">TCC/Saga、幂等闭环、对账兜底</div></div></div></div><div class="sc-sec sc-pitfall"><h2>常见踩坑</h2><ul class="pit"><li>库存挂错粒度:挂在 SPU 而非 SKU,规格间串货导致超卖</li><li>下单不幂等:网络重试 / 用户狂点造成一人多单、库存虚减</li><li>DB 行锁扛下单:大促高并发下行锁排队,连接池打满拖垮库</li><li>预占库存不释放:超时订单占着库存,有货却下不了单、转化崩</li><li>分布式事务追求强一致:全链路 2PC 锁资源,性能塌陷且易死锁</li><li>先操作后发消息:业务成功但消息丢失,下游状态不一致无人追平</li><li>价格信前端:结算不重算价,被篡改价格下单造成资损</li></ul></div><div class="sc-sec sc-takeaway"><h2>设计心法</h2><ul class="tk"><li>强一致收敛到最小范围:只有库存 + 资金要强保障,其余走最终一致 + 对账</li><li>扣减要原子:库存判断 + 扣减一个原子操作,杜绝检查-执行竞态</li><li>幂等 + 唯一索引兜底:下单 token 防重放,DB 唯一索引是最后底线</li><li>写路径异步化:同步只做最轻的核心操作,重活扔给 MQ 削峰</li><li>对账兜底一切:凡涉钱涉库存,都要有 T+1 对账追平不一致</li></ul></div><footer>业务场景 · 分布式系统落地全景 · 核心技术点架构图</footer></div><script>(function(){var r=document.documentElement,KEY="atlas-nav-theme";function ap(t){if(t==="dark")r.setAttribute("data-theme","dark");else r.removeAttribute("data-theme");}var s="light";try{s=localStorage.getItem(KEY)||"light";}catch(e){}ap(s);var tt=document.getElementById("tt");if(tt)tt.onclick=function(){var n=r.getAttribute("data-theme")==="dark"?"light":"dark";ap(n);try{localStorage.setItem(KEY,n);}catch(e){}};})();</script></body></html>

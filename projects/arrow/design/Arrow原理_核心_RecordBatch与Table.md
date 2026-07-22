@@ -14,6 +14,12 @@
 
 图示 `ChunkedArray`（chunked_array.h:74）把一列表示为若干 Array 分块、逻辑首尾相接：`[1,2,3]+[4,5]+[6,7,8]` 逻辑视图是 `[1..8]`（`length()`=8），物理是三个各自 buffers 的独立 Array。**不变量**：追加新数据 = 加一个 chunk、**不重排旧内存**；拼接两数据集 = 拼 chunk 列表、O(1) 不复制。代价是跨 chunk 随机定位需 `ChunkResolver`（chunk_resolver.h:65）在起始偏移数组上二分，`Resolve(index)` 返回 `{chunk_index, index_in_chunk}`——吞吐/追加友好 ⟷ 单值访问多一跳。
 
+## 三、组表层变换：零拷贝或浅拷贝
+
+![零拷贝变换](Arrow原理_核心_RecordBatch与Table_03零拷贝变换.svg)
+
+图示组表层变换**皆零拷贝或浅拷贝**：`SelectColumns` / `Slice` / `AddColumn` / `RemoveColumn` 只重组元数据、共享同一批列 Buffer（每次 refcount++）；唯 `CombineChunks` / `CombineChunksToBatch` 是**显式物化**——把碎片化多 chunk 合并成连续单块、一次真实拷贝，通常在需连续内存的下游 kernel 前才做。逐项源码锚点见下表。
+
 ## 深化 · 组表层 API：变换皆零拷贝或浅拷贝
 
 | 操作 | 源码锚点 | 是否复制 buffer |
@@ -27,7 +33,7 @@
 | `Table::CombineChunks` | table.h:247 | **是**，多 chunk 合并成单 chunk（显式物化） |
 | `ChunkedArray::View` | chunked_array.h:161 | 否，逐 chunk 重解释类型 |
 
-只有 `CombineChunks`（table.h:247）/ `CombineChunksToBatch`（table.h:256）是显式"物化"——把碎片化多 chunk 合并成连续单块，代价一次真实拷贝，通常在需要连续内存的下游 kernel 前才做。一致性校验走 `ValidateFull()`（record_batch.h:286 / table.h:211 / chunked_array.h:205）。
+只有 `CombineChunks`（table.h:247）/ `CombineChunksToBatch`（table.h:256）显式物化；一致性校验统一走 `ValidateFull()`（record_batch.h:286 / table.h:211 / chunked_array.h:205）。
 
 ## 深化 · RecordBatch vs Table：何时用哪个
 

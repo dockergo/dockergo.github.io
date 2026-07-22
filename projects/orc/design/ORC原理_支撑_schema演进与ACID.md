@@ -56,6 +56,8 @@ ORC 本身不管事务,但 **Hive ACID** 在 ORC 之上约定一层**事件 sche
 | 按名匹配 | `SchemaEvolution.java:153` | 遍历 file 字段名对齐 |
 | hasColumnNames | `SchemaEvolution.java:148` | _colN 无名则退位置 |
 | FORCE_POSITIONAL_EVOLUTION | `OrcConf.java:177` | 强制按位置(默认 false) |
+| 位置映射层级 level | `OrcConf.java:182` | 默认 1;ACID 文件强制 2 |
+| populatePpdSafeConversion | `SchemaEvolution.java:131` | 逐列缓存 PPD 是否安全 |
 | isPPDSafeConversion | `SchemaEvolution.java:303` | 转换是否可安全下推 |
 | PPD 安全检查点 | `RecordReaderImpl.java:1217` | 仅安全列下推谓词 |
 | createEventSchema | `SchemaEvolution.java:596` | ACID 事件 6 字段封装 |

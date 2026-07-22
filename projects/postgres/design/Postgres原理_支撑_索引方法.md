@@ -32,11 +32,13 @@
 
 ## 深化 · 失败路径与边界
 
-- **索引不被使用**：选择率过高（返回大部分行）、统计陈旧、数据类型/排序规则不匹配（如 `LIKE 'abc%'` 需 `text_pattern_ops`）、函数未用表达式索引，都会让优化器弃用索引走 Seq Scan。`EXPLAIN` 是排查第一手段。
-- **写放大与膨胀**：每个索引在非 HOT 更新时都要加新项，索引越多 UPDATE 越慢；B-tree 频繁更新会页分裂、膨胀，需 `REINDEX`（或 `REINDEX CONCURRENTLY`）重建。
-- **CREATE INDEX 阻塞写**：普通 `CREATE INDEX` 取 ShareLock 阻塞该表写，生产用 `CREATE INDEX CONCURRENTLY`（不阻塞写、非事务、中途失败留 INVALID 索引需 DROP 重建）。
-- **唯一约束冲突**：唯一索引在插入重复键时于 `index_insert`/`_bt_doinsert` 报错、整语句回滚——这是执行期错误。
-- **GIN 更新慢**：GIN 一行可能拆成很多 key，写入重；用 `fastupdate` + `gin_pending_list_limit` 攒批延迟合并缓解。
+| 场景 | 机理 | 后果 / 应对 |
+|---|---|---|
+| 索引不被使用 | 选择率过高/统计陈旧/类型排序规则不匹配（`LIKE 'abc%'` 需 `text_pattern_ops`）/函数未用表达式索引 | 优化器弃用索引走 Seq Scan；`EXPLAIN` 是排查第一手段 |
+| 写放大与膨胀 | 每个索引在非 HOT 更新时都要加新项 | 索引越多 UPDATE 越慢；B-tree 页分裂膨胀需 `REINDEX CONCURRENTLY` 重建 |
+| CREATE INDEX 阻塞写 | 普通 `CREATE INDEX` 取 ShareLock 阻塞该表写 | 生产用 `CREATE INDEX CONCURRENTLY`（不阻塞写、非事务、中途失败留 INVALID 索引需 DROP） |
+| 唯一约束冲突 | 唯一索引插入重复键时于 `_bt_doinsert` 报错 | 整语句回滚，执行期错误 |
+| GIN 更新慢 | GIN 一行拆成很多 key、写入重 | 用 `fastupdate`+`gin_pending_list_limit` 攒批延迟合并缓解 |
 
 ---
 

@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="420" viewBox="0 0 1000 420" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs><filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ac" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#7c5fe6"/></marker></defs>
+  <rect width="1000" height="420" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Parquet 原理 · PageIndex 两结构：ColumnIndex + OffsetIndex（尾部集中）</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">把“逐页的 min/max”和“逐页的物理位置”从数据页头里抽出、集中放在文件尾部;读者一次小 IO 拿到,不必扫每个页头</text>
+
+  <!-- 问题：老式散落 -->
+  <rect x="30" y="76" width="300" height="150" rx="12" fill="#f7f7f9" stroke="#e3e3e8" filter="url(#soft)"/>
+  <text x="46" y="100" font-size="10.5" font-weight="700" fill="#8a8a90">老式：统计散在每个页头</text>
+  <text x="46" y="122" font-size="8.6" fill="#a1a1a6">要判断“哪些页命中”</text>
+  <text x="46" y="140" font-size="8.6" fill="#a1a1a6">得逐页读 PageHeader</text>
+  <text x="46" y="158" font-size="8.6" fill="#a1a1a6">→ 随机小 IO 多、还得解压</text>
+  <text x="46" y="182" font-size="8.6" fill="#a1a1a6">页很多时代价高</text>
+  <text x="46" y="204" font-size="8.4" fill="#b8b8bf">PageIndex 就是为解决它</text>
+
+  <path d="M336,150 L376,150" stroke="#7c5fe6" stroke-width="1.8" fill="none" marker-end="url(#ac)"/>
+  <text x="340" y="142" font-size="8" fill="#7c5fe6">改进</text>
+
+  <!-- ColumnIndex -->
+  <rect x="386" y="76" width="290" height="150" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="402" y="100" font-size="10.5" font-weight="700" fill="#12402a">ColumnIndex（按值导航）</text>
+  <g font-size="8.6">
+    <text x="402" y="122" fill="#2f6f5f">null_pages[]（每页是否全 null）</text>
+    <text x="402" y="140" fill="#2f6f5f">min_values[] / max_values[]（逐页）</text>
+    <text x="402" y="158" fill="#2f6f5f">boundary_order（页间是否有序）</text>
+    <text x="402" y="176" fill="#2f6f5f">null_counts[]（逐页空值数）</text>
+  </g>
+  <text x="402" y="200" font-size="8.4" fill="#4c8567">用途：靠 min/max 选出“可能命中”的页号</text>
+
+  <!-- OffsetIndex -->
+  <rect x="686" y="76" width="284" height="150" rx="12" fill="#e9f2ff" stroke="#a9ccf5" filter="url(#soft)"/>
+  <text x="702" y="100" font-size="10.5" font-weight="700" fill="#0a3d78">OffsetIndex（按行/位置导航）</text>
+  <g font-size="8.6">
+    <text x="702" y="122" fill="#2a5a92">PageLocation[]：逐页</text>
+    <text x="702" y="140" fill="#2a5a92">· offset（页字节偏移）</text>
+    <text x="702" y="158" fill="#2a5a92">· compressed_page_size</text>
+    <text x="702" y="176" fill="#2a5a92">· first_row_index（页首行号）</text>
+  </g>
+  <text x="702" y="200" font-size="8.4" fill="#5b7db1">用途：把“页号”翻译成“字节偏移 + 行号”</text>
+
+  <!-- 尾部布局 -->
+  <rect x="30" y="248" width="940" height="76" rx="12" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+  <text x="48" y="272" font-size="11" font-weight="700" fill="#5a3410">存放位置：文件尾部、FileMetaData 之前，集中排放</text>
+  <g text-anchor="middle" font-size="8.6">
+    <rect x="48" y="284" width="300" height="30" rx="6" fill="#fff7e6" stroke="#efdcb4"/><text x="198" y="304" fill="#5a3410">数据主体（列块/页）</text>
+    <rect x="356" y="284" width="240" height="30" rx="6" fill="#e6f4f1" stroke="#b9dfd8"/><text x="476" y="304" fill="#0f6b5e">全部 ColumnIndex + OffsetIndex</text>
+    <rect x="604" y="284" width="240" height="30" rx="6" fill="#fdf6ea" stroke="#efdcb4"/><text x="724" y="304" fill="#5a3410">FileMetaData</text>
+    <rect x="852" y="284" width="100" height="30" rx="6" fill="#fdf1e0" stroke="#e8c99a"/><text x="902" y="304" fill="#5a3410">长度+PAR1</text>
+  </g>
+
+  <rect x="30" y="336" width="940" height="66" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="48" y="360" font-size="9.6" fill="#1b2a4a">两结构的偏移记在 ColumnChunk（column_index_offset/length、offset_index_offset/length）→ 读者从 FileMetaData 直达它们。</text>
+  <text x="48" y="380" font-size="9.6" fill="#5b7db1">分离设计：ColumnIndex 只关心“值”,OffsetIndex 只关心“位置/行”;裁页时先用前者选页,再用后者定位（见下一图）。</text>
+  <text x="48" y="398" font-size="8.2" fill="#7fa0c4">同一行组内各列的 OffsetIndex 常连续存放,方便按行号对齐多列。</text>
+</svg>

@@ -5,14 +5,14 @@
   </defs>
   <rect width="1060" height="760" fill="#fbfbfd"/>
   <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Mutation 与轻量 DELETE：三种"改数据"的代价梯度</text>
-  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">MutateTask (MutateTask.h:23) 整 Part 重写 · InterpreterDeleteQuery 轻量删除 → _row_exists 掩码 · PatchParts 读期叠加</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">MutateTask 整 Part 重写 · InterpreterDeleteQuery 轻量删除 → _row_exists 掩码 · PatchParts 读期叠加</text>
 
   <!-- three columns by cost -->
   <!-- Mutation heavy -->
   <rect x="30" y="72" width="320" height="480" rx="14" fill="#fbeef0" stroke="#f0cdd4" filter="url(#soft)"/>
   <text x="190" y="98" font-size="13" font-weight="700" fill="#7a2230" text-anchor="middle">① Mutation（重）</text>
   <text x="190" y="116" font-size="9" fill="#a44" text-anchor="middle">ALTER TABLE … UPDATE / DELETE</text>
-  <text x="190" y="132" font-size="8.5" fill="#a44" text-anchor="middle">MutationsInterpreter.h:43</text>
+  <text x="190" y="132" font-size="8.5" fill="#a44" text-anchor="middle">MutationsInterpreter</text>
 
   <g text-anchor="middle">
     <rect x="52" y="146" width="276" height="40" rx="8" fill="#fff" stroke="#f0cdd4"/><text x="190" y="164" font-size="9.5" fill="#7a2230">读整个旧 Part（所有列所有行）</text><text x="190" y="178" font-size="8" fill="#a44">即使只改一列一行</text>
@@ -39,7 +39,7 @@
   <text x="530" y="132" font-size="8.5" fill="#93762e" text-anchor="middle">InterpreterDeleteQuery.cpp</text>
 
   <g text-anchor="middle">
-    <rect x="392" y="146" width="276" height="52" rx="8" fill="#fff" stroke="#e8cf9a"/><text x="530" y="166" font-size="9.5" fill="#5a3410">改写为置隐藏掩码列</text><text x="530" y="182" font-size="9" fill="#93762e">_row_exists = 0（:147/:172）</text><text x="530" y="194" font-size="7.5" fill="#b08843">MergeTreeVirtualColumns.cpp:22</text>
+    <rect x="392" y="146" width="276" height="52" rx="8" fill="#fff" stroke="#e8cf9a"/><text x="530" y="166" font-size="9.5" fill="#5a3410">改写为置隐藏掩码列</text><text x="530" y="182" font-size="9" fill="#93762e">_row_exists = 0</text><text x="530" y="194" font-size="7.5" fill="#b08843">MergeTreeVirtualColumns</text>
     <rect x="392" y="208" width="276" height="52" rx="8" fill="#fff" stroke="#e8cf9a"/><text x="530" y="228" font-size="9.5" fill="#5a3410">不立刻重写数据</text><text x="530" y="244" font-size="8.5" fill="#93762e">只标记"这些行不存在了"</text><text x="530" y="256" font-size="8" fill="#b08843">比 Mutation 轻得多</text>
     <rect x="392" y="270" width="276" height="52" rx="8" fill="#fff" stroke="#e8cf9a"/><text x="530" y="290" font-size="9.5" fill="#5a3410">读时跳过 _row_exists=0 的行</text><text x="530" y="306" font-size="8.5" fill="#93762e">对用户"已删除"</text><text x="530" y="318" font-size="8" fill="#b08843">但物理数据还在</text>
     <rect x="392" y="332" width="276" height="52" rx="8" fill="#fff" stroke="#e8cf9a"/><text x="530" y="352" font-size="9.5" fill="#5a3410">物理清除延后到后续 merge</text><text x="530" y="368" font-size="8.5" fill="#93762e">merge 时真正剔除被删行</text><text x="530" y="380" font-size="8" fill="#b08843">空间在 merge 后才回收</text>
@@ -47,7 +47,7 @@
   <rect x="392" y="396" width="276" height="60" rx="9" fill="#fffdf5" stroke="#e8cf9a"/>
   <text x="530" y="416" font-size="9.5" font-weight="600" fill="#5a3410" text-anchor="middle">代价</text>
   <text x="530" y="434" font-size="8.5" fill="#93762e" text-anchor="middle">写入极轻（只写掩码），读时略增</text>
-  <text x="530" y="450" font-size="8.5" fill="#93762e" text-anchor="middle">lightweight_deletes_sync 默认 2（Settings.cpp:4002）</text>
+  <text x="530" y="450" font-size="8.5" fill="#93762e" text-anchor="middle">lightweight_deletes_sync 默认 2</text>
   <rect x="392" y="468" width="276" height="70" rx="9" fill="#f7f7f9" stroke="#e6e6ea"/>
   <text x="530" y="488" font-size="9.5" font-weight="600" fill="#4b4b50" text-anchor="middle">适用</text>
   <text x="530" y="506" font-size="8.5" fill="#6b6b70" text-anchor="middle">按条件删一批行的常规场景</text>
@@ -67,7 +67,7 @@
   <rect x="732" y="332" width="276" height="70" rx="9" fill="#faf7fd" stroke="#d9c9ec"/>
   <text x="870" y="352" font-size="9.5" font-weight="600" fill="#3d2a5a" text-anchor="middle">开关</text>
   <text x="870" y="370" font-size="8.5" fill="#7a5da5" text-anchor="middle">apply_mutations_on_fly 默认 false</text>
-  <text x="870" y="386" font-size="8" fill="#9a7cc4" text-anchor="middle">Settings.cpp:4784</text>
+  <text x="870" y="386" font-size="8" fill="#9a7cc4" text-anchor="middle">Settings</text>
   <rect x="732" y="412" width="276" height="126" rx="9" fill="#f7f7f9" stroke="#e6e6ea"/>
   <text x="870" y="432" font-size="9.5" font-weight="600" fill="#4b4b50" text-anchor="middle">定位</text>
   <text x="870" y="452" font-size="8.5" fill="#6b6b70" text-anchor="middle">在"整 Part 重写"与"读时叠加"</text>

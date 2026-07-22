@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 500" font-family="-apple-system,'PingFang SC','Helvetica Neue',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.07"/></filter>
+    <marker id="art" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#2dd4bf"/></marker>
+    <marker id="arh" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#0a84ff"/></marker>
+  </defs>
+  <rect width="960" height="500" fill="#fbfbfd"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="#1d1d1f">A3 · 通信协作：黑板共享 vs 消息传递</text>
+  <text x="30" y="54" font-size="12" fill="#6e6e73">Agent 之间如何交换信息——共享状态还是显式收发，决定了耦合度、可追溯性与并发安全</text>
+
+  <!-- 黑板 -->
+  <text x="240" y="90" font-size="12" font-weight="600" fill="#1d1d1f" text-anchor="middle">黑板模式 (Blackboard)</text>
+  <g filter="url(#soft)"><rect x="140" y="180" width="200" height="60" rx="12" fill="#e6fbf6" stroke="#2dd4bf" stroke-width="1.7"/></g>
+  <text x="240" y="208" font-size="11" font-weight="600" fill="#1d1d1f" text-anchor="middle">共享黑板 / 全局状态</text>
+  <text x="240" y="226" font-size="9" fill="#6e6e73" text-anchor="middle">所有 Agent 读写同一份数据</text>
+  <g filter="url(#soft)"><rect x="70" y="110" width="80" height="40" rx="10" fill="#fff3ea" stroke="#f5873a" stroke-width="1.3"/></g><text x="110" y="135" font-size="9" fill="#1d1d1f" text-anchor="middle">Agent A</text>
+  <g filter="url(#soft)"><rect x="330" y="110" width="80" height="40" rx="10" fill="#fff3ea" stroke="#f5873a" stroke-width="1.3"/></g><text x="370" y="135" font-size="9" fill="#1d1d1f" text-anchor="middle">Agent B</text>
+  <g filter="url(#soft)"><rect x="200" y="290" width="80" height="40" rx="10" fill="#fff3ea" stroke="#f5873a" stroke-width="1.3"/></g><text x="240" y="315" font-size="9" fill="#1d1d1f" text-anchor="middle">Agent C</text>
+  <path d="M130 150 L200 178" stroke="#2dd4bf" stroke-width="1.5" marker-end="url(#art)"/>
+  <path d="M350 150 L280 178" stroke="#2dd4bf" stroke-width="1.5" marker-end="url(#art)"/>
+  <path d="M240 288 L240 242" stroke="#2dd4bf" stroke-width="1.5" marker-end="url(#art)"/>
+  <text x="240" y="360" font-size="9.5" fill="#6e6e73" text-anchor="middle">解耦、易加入新 Agent</text>
+  <text x="240" y="378" font-size="9.5" fill="#f5873a" text-anchor="middle">风险：并发写冲突、状态爆炸</text>
+
+  <!-- 消息传递 -->
+  <text x="700" y="90" font-size="12" font-weight="600" fill="#1d1d1f" text-anchor="middle">消息传递 (Message Passing)</text>
+  <g filter="url(#soft)"><rect x="560" y="140" width="90" height="44" rx="11" fill="#fff3ea" stroke="#f5873a" stroke-width="1.3"/></g><text x="605" y="167" font-size="9" fill="#1d1d1f" text-anchor="middle">Agent A</text>
+  <g filter="url(#soft)"><rect x="750" y="140" width="90" height="44" rx="11" fill="#fff3ea" stroke="#f5873a" stroke-width="1.3"/></g><text x="795" y="167" font-size="9" fill="#1d1d1f" text-anchor="middle">Agent B</text>
+  <g filter="url(#soft)"><rect x="655" y="250" width="90" height="44" rx="11" fill="#fff3ea" stroke="#f5873a" stroke-width="1.3"/></g><text x="700" y="277" font-size="9" fill="#1d1d1f" text-anchor="middle">Agent C</text>
+  <path d="M650 162 L748 162" stroke="#0a84ff" stroke-width="1.5" marker-end="url(#arh)"/>
+  <text x="700" y="153" font-size="8.5" fill="#0a84ff" text-anchor="middle">msg</text>
+  <path d="M615 184 L680 248" stroke="#0a84ff" stroke-width="1.5" marker-end="url(#arh)"/>
+  <path d="M785 184 L720 248" stroke="#0a84ff" stroke-width="1.5" marker-end="url(#arh)"/>
+  <text x="700" y="360" font-size="9.5" fill="#6e6e73" text-anchor="middle">显式收发、天然可追溯</text>
+  <text x="700" y="378" font-size="9.5" fill="#f5873a" text-anchor="middle">风险：拓扑复杂、路由开销</text>
+
+  <g filter="url(#soft)"><rect x="40" y="400" width="880" height="80" rx="13" fill="#ffffff" stroke="#d2d2d7" stroke-width="1.3"/></g>
+  <text x="60" y="428" font-size="11.5" font-weight="600" fill="#1d1d1f">如何选</text>
+  <text x="60" y="452" font-size="10.5" fill="#6e6e73">• 少量 Agent 协作同一产物（如共写文档/共享草稿）→ 黑板：省去传参，但需锁或版本控制防冲突</text>
+  <text x="60" y="472" font-size="10" fill="#f5873a">• 明确请求/响应、需审计与重放 → 消息传递：解耦清晰、日志完整，是生产多智能体的主流选择</text>
+</svg>

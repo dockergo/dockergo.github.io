@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 600" font-family="-apple-system,'PingFang SC','Helvetica Neue',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.07"/>
+    </filter>
+    <marker id="arh" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#0a84ff"/>
+    </marker>
+    <marker id="arv" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#2dd4bf"/>
+    </marker>
+  </defs>
+  <rect width="960" height="600" fill="#fbfbfd"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="#1d1d1f">Transformer · 残差与归一化</text>
+  <text x="30" y="54" font-size="12" fill="#6e6e73">残差直连保梯度、稳信息；LayerNorm 稳分布；两者让深层堆叠可训练</text>
+
+  <!-- 输入 -->
+  <g filter="url(#soft)"><rect x="60" y="270" width="130" height="66" rx="12" fill="#f3ecff" stroke="#5e5ce6" stroke-width="1.4"/></g>
+  <text x="125" y="300" font-size="12" font-weight="600" fill="#1d1d1f" text-anchor="middle">输入 x</text>
+  <text x="125" y="320" font-size="10" fill="#6e6e73" text-anchor="middle">上一层表征</text>
+
+  <!-- 子层 -->
+  <g filter="url(#soft)"><rect x="270" y="256" width="180" height="94" rx="12" fill="#eef4ff" stroke="#0a84ff" stroke-width="1.5"/></g>
+  <text x="360" y="288" font-size="12" font-weight="600" fill="#1d1d1f" text-anchor="middle">子层 F(x)</text>
+  <text x="360" y="310" font-size="10" fill="#6e6e73" text-anchor="middle">注意力 或 FFN</text>
+  <text x="360" y="330" font-size="10" fill="#6e6e73" text-anchor="middle">学习「增量」</text>
+
+  <!-- 加法节点 -->
+  <g filter="url(#soft)"><circle cx="560" cy="303" r="30" fill="#e9fbf6" stroke="#2dd4bf" stroke-width="1.6"/></g>
+  <text x="560" y="309" font-size="20" font-weight="600" fill="#2dd4bf" text-anchor="middle">+</text>
+  <text x="560" y="352" font-size="10" fill="#6e6e73" text-anchor="middle">残差相加</text>
+
+  <!-- LayerNorm -->
+  <g filter="url(#soft)"><rect x="650" y="256" width="150" height="94" rx="12" fill="#fff3ea" stroke="#f5873a" stroke-width="1.5"/></g>
+  <text x="725" y="288" font-size="12" font-weight="600" fill="#1d1d1f" text-anchor="middle">LayerNorm</text>
+  <text x="725" y="310" font-size="10" fill="#6e6e73" text-anchor="middle">按特征维归一化</text>
+  <text x="725" y="330" font-size="10" fill="#6e6e73" text-anchor="middle">再缩放平移</text>
+
+  <!-- 输出 -->
+  <g filter="url(#soft)"><rect x="840" y="270" width="90" height="66" rx="12" fill="#eef4ff" stroke="#0a84ff" stroke-width="1.4"/></g>
+  <text x="885" y="308" font-size="12" font-weight="600" fill="#1d1d1f" text-anchor="middle">输出</text>
+
+  <!-- 主流 -->
+  <path d="M190 303 L268 303" stroke="#0a84ff" stroke-width="2.4" marker-end="url(#arh)"/>
+  <path d="M450 303 L528 303" stroke="#0a84ff" stroke-width="2.4" marker-end="url(#arh)"/>
+  <path d="M590 303 L648 303" stroke="#2dd4bf" stroke-width="2.4" marker-end="url(#arv)"/>
+  <path d="M800 303 L838 303" stroke="#f5873a" stroke-width="2.4" marker-end="url(#arh)"/>
+
+  <!-- 残差跳线 -->
+  <path d="M125 270 C125 170 560 170 560 271" fill="none" stroke="#2dd4bf" stroke-width="2.2" stroke-dasharray="6 4" marker-end="url(#arv)"/>
+  <text x="342" y="160" font-size="10.5" fill="#2dd4bf" text-anchor="middle">残差直连 skip connection：把原始 x 直接加回 → 恒等通路，梯度不衰减</text>
+
+  <!-- 说明卡片 -->
+  <g filter="url(#soft)"><rect x="60" y="400" width="400" height="160" rx="12" fill="#ffffff" stroke="#0a84ff" stroke-width="1.2"/></g>
+  <text x="80" y="426" font-size="12" font-weight="600" fill="#0a84ff">为何需要残差</text>
+  <text x="80" y="450" font-size="10.5" fill="#6e6e73">· 深层网络梯度易消失，恒等通路让梯度直达底层</text>
+  <text x="80" y="472" font-size="10.5" fill="#6e6e73">· 子层只需学「相对上一层的增量」，优化更容易</text>
+  <text x="80" y="494" font-size="10.5" fill="#6e6e73">· 输出 = x + F(x)，最坏退化为恒等映射不伤性能</text>
+  <text x="80" y="524" font-size="11" font-weight="600" fill="#0a84ff">公式</text>
+  <text x="80" y="546" font-size="10.5" fill="#6e6e73">Post-LN: LN(x + F(x))　Pre-LN: x + F(LN(x))</text>
+
+  <g filter="url(#soft)"><rect x="500" y="400" width="400" height="160" rx="12" fill="#ffffff" stroke="#f5873a" stroke-width="1.2"/></g>
+  <text x="520" y="426" font-size="12" font-weight="600" fill="#f5873a">为何需要归一化</text>
+  <text x="520" y="450" font-size="10.5" fill="#6e6e73">· 逐样本按特征维算均值方差，稳定激活分布</text>
+  <text x="520" y="472" font-size="10.5" fill="#6e6e73">· 不依赖 batch 大小，适合变长序列与小 batch</text>
+  <text x="520" y="494" font-size="10.5" fill="#6e6e73">· 缓解内部协变量偏移，让学习率可开大、收敛更快</text>
+  <text x="520" y="524" font-size="11" font-weight="600" fill="#f5873a">Pre-LN 更稳</text>
+  <text x="520" y="546" font-size="10.5" fill="#6e6e73">归一化放子层前，深层大模型训练更不易发散</text>
+</svg>

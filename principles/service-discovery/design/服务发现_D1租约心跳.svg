@@ -1,0 +1,122 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1150" height="680" viewBox="0 0 1150 680" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="aB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#4a7fd0"/></marker>
+    <marker id="aG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+    <marker id="aR" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#d1544a"/></marker>
+    <marker id="aA" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#c99a3a"/></marker>
+  </defs>
+  <rect width="1150" height="680" fill="#fbfbfd"/>
+
+  <text x="30" y="32" font-size="15" font-weight="700" fill="#1d1d1f">etcd Lease · 租约不是内存里的一次性倒计时，是一个经 Raft 一致复制、且剩余 TTL 会被持久化的对象</text>
+  <text x="30" y="53" font-size="10.5" fill="#6e6e73">Lessor 接口 Grant / Renew / Revoke 管租约生命周期；周期性过期检查把到期租约投进撤销 channel；Checkpointer 让剩余 TTL 扛得住 leader 换届与重启</text>
+
+  <!-- 图例 -->
+  <line x1="30" y1="80" x2="54" y2="80" stroke="#4a7fd0" stroke-width="2" marker-end="url(#aB)"/>
+  <text x="60" y="84" font-size="10" fill="#3a3a3c">租约生命周期状态转换</text>
+  <line x1="222" y1="80" x2="246" y2="80" stroke="#2f9e6e" stroke-width="2" marker-end="url(#aG)"/>
+  <text x="252" y="84" font-size="10" fill="#3a3a3c">Renew 续租（活着）</text>
+  <line x1="400" y1="80" x2="424" y2="80" stroke="#d1544a" stroke-width="2" marker-end="url(#aR)"/>
+  <text x="430" y="84" font-size="10" fill="#3a3a3c">到期 → 撤销（死亡）</text>
+  <line x1="596" y1="80" x2="620" y2="80" stroke="#c99a3a" stroke-width="2" stroke-dasharray="5 3" marker-end="url(#aA)"/>
+  <text x="626" y="84" font-size="10" fill="#3a3a3c">Checkpointer 持久化（本图重点）</text>
+  <line x1="30" y1="98" x2="1120" y2="98" stroke="#e4e7ec" stroke-width="1"/>
+
+  <!-- Panel A: Lessor 接口 生命周期 -->
+  <rect x="30" y="112" width="530" height="222" rx="14" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="52" y="138" font-size="13" font-weight="700" fill="#1d1d1f">① Lessor 接口 · 租约生命周期</text>
+  <text x="52" y="156" font-size="9" fill="#8a97ab">Grant / Renew / Revoke 三个方法管住一个租约从生到死</text>
+
+  <rect x="52" y="176" width="130" height="54" rx="12" fill="#eaf1fb" stroke="#c6d9f2"/>
+  <text x="117" y="198" font-size="11.5" font-weight="700" fill="#20375e" text-anchor="middle">Grant(ttl)</text>
+  <text x="117" y="215" font-size="8.5" fill="#5a7099" text-anchor="middle">建租约，拿 leaseID</text>
+
+  <rect x="222" y="176" width="150" height="54" rx="12" fill="#eaf6f0" stroke="#bfe3d1"/>
+  <text x="297" y="198" font-size="11.5" font-weight="700" fill="#2f6b4e" text-anchor="middle">Renew(id)</text>
+  <text x="297" y="215" font-size="8.5" fill="#3f8a63" text-anchor="middle">客户端续租，重置到期时间</text>
+
+  <rect x="412" y="176" width="130" height="54" rx="12" fill="#fbe6e3" stroke="#e8a79f"/>
+  <text x="477" y="198" font-size="11.5" font-weight="700" fill="#8a4038" text-anchor="middle">Revoke(id)</text>
+  <text x="477" y="215" font-size="8.5" fill="#b06a60" text-anchor="middle">撤销，级联删 key</text>
+
+  <line x1="182" y1="203" x2="218" y2="203" stroke="#4a7fd0" stroke-width="2" marker-end="url(#aB)"/>
+  <path d="M330 176 C 330 150 260 150 260 176" fill="none" stroke="#2f9e6e" stroke-width="1.8" marker-end="url(#aG)"/>
+  <text x="297" y="148" font-size="8" fill="#2f6b4e" text-anchor="middle">持续 keepalive · 重复调用</text>
+  <line x1="372" y1="203" x2="408" y2="203" stroke="#d1544a" stroke-width="2" stroke-dasharray="5 3" marker-end="url(#aR)"/>
+  <text x="390" y="196" font-size="8" fill="#8a4038" text-anchor="middle">停止续租</text>
+
+  <rect x="52" y="246" width="490" height="70" rx="10" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="66" y="266" font-size="9.5" fill="#4a4a4f"><tspan font-weight="700" fill="#1d1d1f">一个 lease 可绑多个 key</tspan> ——服务注册时，节点把自己的注册信息（key）绑到租约上；</text>
+  <text x="66" y="284" font-size="9.5" fill="#4a4a4f">只要客户端持续 Renew，key 就一直存在；一旦停止续租、租约过期，Revoke 会把这些 key 全部级联删除。</text>
+  <text x="66" y="302" font-size="8.5" fill="#8a97ab">这就是"服务下线信息自动消失"的机制来源，无需任何人手动清理。</text>
+
+  <!-- Panel B: 周期性过期检查 -->
+  <rect x="580" y="112" width="540" height="222" rx="14" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="602" y="138" font-size="13" font-weight="700" fill="#1d1d1f">② 周期性过期检查 → 撤销 channel</text>
+  <text x="602" y="156" font-size="9" fill="#8a97ab">后台循环找到期租约，交给撤销 channel 异步处理</text>
+
+  <rect x="602" y="176" width="150" height="60" rx="10" fill="#fbf3e2" stroke="#ecd6a8"/>
+  <text x="677" y="198" font-size="10.5" font-weight="700" fill="#8a6417" text-anchor="middle">周期性过期检查</text>
+  <text x="677" y="216" font-size="8.5" fill="#7a5a1a" text-anchor="middle">循环扫描，找到期未续租约</text>
+
+  <line x1="752" y1="206" x2="800" y2="206" stroke="#c99a3a" stroke-width="2" marker-end="url(#aA)"/>
+
+  <rect x="800" y="176" width="140" height="60" rx="10" fill="#f4eefb" stroke="#dcc9ef"/>
+  <text x="870" y="198" font-size="10.5" font-weight="700" fill="#6f3ea8" text-anchor="middle">撤销 channel</text>
+  <text x="870" y="216" font-size="8.5" fill="#8a5cae" text-anchor="middle">到期租约排队等处理</text>
+
+  <line x1="940" y1="206" x2="988" y2="206" stroke="#d1544a" stroke-width="2" marker-end="url(#aR)"/>
+
+  <rect x="988" y="176" width="112" height="60" rx="10" fill="#fbe6e3" stroke="#e8a79f"/>
+  <text x="1044" y="198" font-size="10.5" font-weight="700" fill="#8a4038" text-anchor="middle">Revoke</text>
+  <text x="1044" y="216" font-size="8.5" fill="#b06a60" text-anchor="middle">触发撤销</text>
+
+  <rect x="602" y="252" width="498" height="64" rx="10" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="616" y="272" font-size="9.5" fill="#4a4a4f">检查与撤销解耦成两步：检查循环只管"发现"，撤销 channel 承接"处理"——</text>
+  <text x="616" y="290" font-size="9.5" fill="#4a4a4f">避免检查逻辑被撤销的耗时操作（级联删 key、走一致性协议）阻塞。</text>
+  <text x="616" y="306" font-size="8.5" fill="#8a97ab">这是"判定死亡"与"执行清理"的职责分离。</text>
+
+  <!-- Panel C: Checkpointer（核心加强） -->
+  <rect x="30" y="350" width="1090" height="238" rx="14" fill="#fbf3e2" stroke="#ecd6a8" filter="url(#soft)"/>
+  <text x="52" y="378" font-size="13.5" font-weight="700" fill="#8a6417">③ Checkpointer · 剩余 TTL 持久化进共识日志（不是纯内存计时器）</text>
+  <text x="52" y="397" font-size="9.5" fill="#7a5a1a">如果只在内存里倒计时，leader 换届或进程重启后，新的内存状态无法知道"这个租约其实只剩很少时间了"</text>
+
+  <!-- 问题 -->
+  <rect x="52" y="414" width="330" height="150" rx="12" fill="#ffffff" stroke="#ecd6a8"/>
+  <text x="70" y="436" font-size="10.5" font-weight="700" fill="#8a4038">没有 Checkpointer 会怎样</text>
+  <text x="70" y="458" font-size="9" fill="#4a4a4f">租约已续到只剩很少的 TTL</text>
+  <text x="70" y="476" font-size="9" fill="#4a4a4f">→ leader 换届 / 进程重启</text>
+  <text x="70" y="494" font-size="9" fill="#4a4a4f">→ 新状态里没有"剩余 TTL"这份记忆</text>
+  <text x="70" y="512" font-size="9" fill="#4a4a4f">→ 只能当作从头计时（重新给满 TTL）</text>
+  <text x="70" y="534" font-size="8.5" fill="#8a4038">后果：本该很快过期的租约被意外"续命"，清理被推迟</text>
+  <text x="70" y="552" font-size="8.5" fill="#8a4038">→ 早已死掉的服务注册信息迟迟不消失</text>
+
+  <!-- 箭头 -->
+  <line x1="382" y1="489" x2="428" y2="489" stroke="#c99a3a" stroke-width="2" marker-end="url(#aA)"/>
+  <text x="405" y="480" font-size="8" fill="#8a6417" text-anchor="middle">解法</text>
+
+  <!-- 解法 -->
+  <rect x="428" y="414" width="330" height="150" rx="12" fill="#ffffff" stroke="#ecd6a8"/>
+  <text x="446" y="436" font-size="10.5" font-weight="700" fill="#2f6b4e">Checkpointer 怎么做</text>
+  <text x="446" y="458" font-size="9" fill="#4a4a4f">周期性地把每个租约的剩余 TTL</text>
+  <text x="446" y="476" font-size="9" fill="#4a4a4f">写进共识日志（经一致性协议复制）</text>
+  <text x="446" y="494" font-size="9" fill="#4a4a4f">→ 剩余 TTL 成为集群共同持有的状态</text>
+  <text x="446" y="512" font-size="9" fill="#4a4a4f">→ 新 leader / 重启后的进程直接读取</text>
+  <text x="446" y="534" font-size="8.5" fill="#2f6b4e">效果：换届或重启后仍能恢复准确的剩余 TTL</text>
+  <text x="446" y="552" font-size="8.5" fill="#2f6b4e">→ 该过期的租约仍按原计划过期，不被意外续命</text>
+
+  <!-- 时间轴对比 -->
+  <rect x="790" y="414" width="310" height="150" rx="12" fill="#ffffff" stroke="#ecd6a8"/>
+  <text x="808" y="436" font-size="10.5" font-weight="700" fill="#1d1d1f">前后对比 · 换届/重启这一刻</text>
+  <rect x="808" y="450" width="274" height="42" rx="8" fill="#fbe6e3" stroke="#e8a79f"/>
+  <text x="820" y="466" font-size="8.5" font-weight="700" fill="#8a4038">无 Checkpointer</text>
+  <text x="820" y="481" font-size="8" fill="#8a4038">剩余 TTL 记忆丢失 → 从头计时</text>
+  <rect x="808" y="500" width="274" height="42" rx="8" fill="#eaf6f0" stroke="#bfe3d1"/>
+  <text x="820" y="516" font-size="8.5" font-weight="700" fill="#2f6b4e">有 Checkpointer</text>
+  <text x="820" y="531" font-size="8" fill="#2f6b4e">读日志里的剩余 TTL → 继续倒数</text>
+  <text x="808" y="556" font-size="8.5" fill="#8a97ab">差异只在这一刻：日常运行时两者行为一致</text>
+
+  <line x1="30" y1="606" x2="1120" y2="606" stroke="#e4e7ec" stroke-width="1"/>
+  <text x="30" y="626" font-size="9.5" fill="#4a4a4f">这一机制把"租约还剩多少时间"从一个易失的本地事实，变成一个可在故障后被准确恢复的持久化事实——</text>
+  <text x="30" y="644" font-size="9.5" fill="#4a4a4f">这是 etcd Lease 比"一个简单的内存倒计时"更进一步的地方，也是它能在服务发现场景里被信赖的原因之一。</text>
+</svg>

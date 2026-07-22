@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 480" font-family="-apple-system,'PingFang SC','Helvetica Neue',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.07"/>
+    </filter>
+    <marker id="arp" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#c084fc"/>
+    </marker>
+  </defs>
+  <rect width="960" height="480" fill="#fbfbfd"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="#1d1d1f">推理优化 · KV 缓存</text>
+  <text x="30" y="54" font-size="12" fill="#6e6e73">自回归解码时缓存历史 token 的键值，避免每步重复计算整个序列</text>
+
+  <g filter="url(#soft)"><rect x="30" y="86" width="435" height="300" rx="14" fill="#f3e8ff" stroke="#c084fc" stroke-width="1.5"/></g>
+  <text x="56" y="118" font-size="13" font-weight="600" fill="#c084fc">无缓存：每步重算全序列</text>
+  <text x="56" y="150" font-size="10.5" fill="#6e6e73">生成第 t 个 token 时</text>
+  <g filter="url(#soft)"><rect x="56" y="166" width="60" height="40" rx="6" fill="#ffffff" stroke="#c084fc" stroke-width="1.1"/></g>
+  <text x="86" y="191" font-size="11" fill="#1d1d1f" text-anchor="middle">t1</text>
+  <g filter="url(#soft)"><rect x="122" y="166" width="60" height="40" rx="6" fill="#ffffff" stroke="#c084fc" stroke-width="1.1"/></g>
+  <text x="152" y="191" font-size="11" fill="#1d1d1f" text-anchor="middle">t2</text>
+  <g filter="url(#soft)"><rect x="188" y="166" width="60" height="40" rx="6" fill="#ffffff" stroke="#c084fc" stroke-width="1.1"/></g>
+  <text x="218" y="191" font-size="11" fill="#1d1d1f" text-anchor="middle">t3</text>
+  <g filter="url(#soft)"><rect x="254" y="166" width="60" height="40" rx="6" fill="#ffffff" stroke="#c084fc" stroke-width="1.1"/></g>
+  <text x="284" y="191" font-size="11" fill="#c084fc" text-anchor="middle">t4?</text>
+  <text x="56" y="238" font-size="10.5" fill="#6e6e73">t1、t2、t3 的键值被反复重新计算</text>
+  <text x="56" y="262" font-size="10.5" fill="#6e6e73">序列越长，重复计算量越大</text>
+  <text x="56" y="300" font-size="12" font-weight="600" fill="#1d1d1f">复杂度 ≈ O(n²)</text>
+  <text x="56" y="326" font-size="10.5" fill="#9aa0a6">大量算力浪费在已算过的历史上</text>
+
+  <g filter="url(#soft)"><rect x="495" y="86" width="435" height="300" rx="14" fill="#ffffff" stroke="#c084fc" stroke-width="1.5"/></g>
+  <text x="521" y="118" font-size="13" font-weight="600" fill="#c084fc">有缓存：只算新 token</text>
+  <text x="521" y="150" font-size="10.5" fill="#6e6e73">历史 K/V 存入缓存，直接复用</text>
+  <g filter="url(#soft)"><rect x="521" y="166" width="180" height="40" rx="6" fill="#f3e8ff" stroke="#c084fc" stroke-width="1.1"/></g>
+  <text x="611" y="191" font-size="10.5" fill="#c084fc" text-anchor="middle">KV Cache: t1 t2 t3</text>
+  <path d="M711 186 L735 186" stroke="#c084fc" stroke-width="2" fill="none" marker-end="url(#arp)"/>
+  <g filter="url(#soft)"><rect x="737" y="166" width="60" height="40" rx="6" fill="#ffffff" stroke="#c084fc" stroke-width="1.1"/></g>
+  <text x="767" y="191" font-size="11" fill="#1d1d1f" text-anchor="middle">t4</text>
+  <text x="521" y="238" font-size="10.5" fill="#6e6e73">只对新 token 计算 Q，与缓存 K/V 做注意力</text>
+  <text x="521" y="262" font-size="10.5" fill="#6e6e73">每步只新增一行键值，追加进缓存</text>
+  <text x="521" y="300" font-size="12" font-weight="600" fill="#1d1d1f">单步复杂度 ≈ O(n)</text>
+  <text x="521" y="326" font-size="10.5" fill="#9aa0a6">代价：缓存显存随上下文长度线性增长</text>
+  <text x="521" y="350" font-size="10.5" fill="#9aa0a6">催生 MQA/GQA、量化缓存、分页管理</text>
+
+  <text x="480" y="440" font-size="12" font-weight="600" fill="#c084fc" text-anchor="middle">空间换时间：用显存缓存历史键值，把逐 token 解码从重算变增量计算</text>
+</svg>

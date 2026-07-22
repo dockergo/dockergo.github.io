@@ -6,7 +6,7 @@
 
 ![写入生命周期总览](ClickHouse原理_DML_01总览.svg)
 
-`InterpreterInsertQuery::execute` 建 Chain 推入管线（`InterpreterInsertQuery.cpp:485,503`），Sink 是 `MergeTreeSink`（`MergeTreeSink.h:36`）。其 `consume`（`MergeTreeSink.cpp:74`）把 Block 切块 → `writeTempPart` 建临时 Part（`:220`）→ `commitPart`（`:223`）在锁内 `renameTempPartAndAdd`（`:258`）把 Part **原子加入活跃集**、`transaction.commit`（`:259`）。**可见性 = Part 原子 rename 到位的那一刻**——没有 2PC、没有事务提交点。
+图注：`InterpreterInsertQuery::execute` 建 Chain 推入管线，Sink 是 `MergeTreeSink`。其 `consume` 把 Block 切块 → `writeTempPart` 建临时 Part → `commitPart` 在锁内 `renameTempPartAndAdd` 把 Part **原子加入活跃集**。**可见性 = Part 原子 rename 到位的那一刻**——没有 2PC、没有事务提交点。
 
 ---
 
@@ -14,7 +14,7 @@
 
 ![INSERT 建 Part 路径](ClickHouse原理_DML_02建Part.svg)
 
-（详细的"分区切分 → 主键排序 → 流式写列 → 原子 rename"见「存储引擎」写入建 Part 篇。）DML 视角的要点是：**一次 INSERT 至少产生一个 Part**。这是 ClickHouse 写入模型的双刃剑——写入极简极快（直接落盘不可变文件），但高频小批量 INSERT 会制造海量小 Part，同时拖慢查询（归并路数多）与后台（merge 压力大）。
+图注："分区切分 → 主键排序 → 流式写列 → 原子 rename"详见「存储引擎」写入建 Part 篇。DML 视角的要点是：**一次 INSERT 至少产生一个 Part**——写入极简极快（直落不可变文件），但高频小批量 INSERT 会制造海量小 Part，同时拖慢查询（归并路数多）与后台（merge 压力大）。
 
 ---
 
@@ -29,9 +29,9 @@ ClickHouse 用**块级 hash 去重**替代事务保证"重试不重复写"：
 | 非复制表 | 插入块内容 hash | 本地 `MergeTreeDeduplicationLog` | `non_replicated_deduplication_window=0`（关闭，`MergeTreeSettings.cpp:423`） |
 | 复制表 | 块 `block_id` | Keeper `<zk>/blocks/<block_id>`（`ReplicatedMergeTreeSink.cpp:645`） | `insert_deduplicate=true`（`Settings.cpp:1759`） |
 
-复制表插入时，若 `block_id` 的 znode 已存在（`ZNODEEXISTS`，`:1037`），说明这批数据已写过 → 直接跳过。**这就是"重试安全"的来源：网络抖动重发同一批数据不会重复入库，而这不需要事务。**
+复制表插入时，若 `block_id` 的 znode 已存在（`ZNODEEXISTS`），说明这批数据已写过 → 直接跳过。**这就是"重试安全"的来源：网络抖动重发同一批数据不会重复入库，而这不需要事务。**
 
-**quorum 写入**（可选）：`insert_quorum=N`（默认 0 关闭，`Settings.cpp:1775`）要求至少 N 个副本确认才算成功，状态记在 Keeper `<zk>/quorum/status`（`:192`）。
+**quorum 写入**（可选）：`insert_quorum=N`（默认 0 关闭）要求至少 N 个副本确认才算成功，状态记在 Keeper `<zk>/quorum/status`。
 
 ---
 
@@ -39,7 +39,7 @@ ClickHouse 用**块级 hash 去重**替代事务保证"重试不重复写"：
 
 ![async insert 攒批](ClickHouse原理_DML_04异步插入.svg)
 
-高频小 INSERT 的官方解法是 **async insert**（`async_insert=1`，默认 0，`Settings.cpp:5609`）：`AsynchronousInsertQueue`（`AsynchronousInsertQueue.cpp`）把多个小 INSERT 先攒在服务端缓冲，攒够大小（`async_insert_max_data_size=10MB`，`:5618`）、条数（`async_insert_max_query_number=450`）或超时（`async_insert_busy_timeout_max_ms=200ms`，`:5635`）后，`processData` 用**一个** `InterpreterInsertQuery` 把累积的多批数据合并写成**一个 Part**（`:146-149`）。`wait_for_async_insert=1`（默认，`:5612`）时客户端会等 Part 落定再返回。**把"客户端攒批"下放到服务端**，既保留小 INSERT 的编程简单性，又避免小 Part 爆炸。
+图注：高频小 INSERT 的官方解法是 **async insert**（`async_insert=1`，默认 0）：`AsynchronousInsertQueue` 把多个小 INSERT 先攒在服务端缓冲，攒够大小（10MB）、条数（450）或超时（200ms）后，用**一个** INSERT 把累积数据合并写成**一个 Part**。`wait_for_async_insert=1`（默认）时客户端等 Part 落定再返回。**把"客户端攒批"下放到服务端**，既保留小 INSERT 的编程简单性，又避免小 Part 爆炸。
 
 ---
 
@@ -47,7 +47,7 @@ ClickHouse 用**块级 hash 去重**替代事务保证"重试不重复写"：
 
 ![Mutation 整 Part 重写](ClickHouse原理_DML_05Mutation.svg)
 
-`ALTER TABLE ... UPDATE/DELETE` 是 **Mutation**：`MutationsInterpreter`（`MutationsInterpreter.h:43`）把变更编译成类 SELECT 的读取管线，`MutateTask` 读旧 Part、应用变更、写全新 Part——**异步、整 Part 重写，非原地行级更新**。`mutations_sync=0`（默认异步不等待，`Settings.cpp:3979`）。任务队列：单机在 `system.mutations`（`StorageMergeTree::startMutation:574`），复制表在 Keeper `<zk>/mutations`（`StorageReplicatedMergeTree.cpp:886`）。因为重写整 Part，Mutation 是**重操作**，不适合高频更新。
+图注：`ALTER TABLE ... UPDATE/DELETE` 是 **Mutation**——`MutationsInterpreter` 把变更编译成类 SELECT 的读取管线，`MutateTask` 读旧 Part、应用变更、写全新 Part：**异步、整 Part 重写，非原地行级更新**（`mutations_sync=0` 默认异步不等待）。任务队列：单机在 `system.mutations`，复制表在 Keeper `<zk>/mutations`。因重写整 Part，Mutation 是**重操作**，不适合高频更新。
 
 ---
 
@@ -55,8 +55,8 @@ ClickHouse 用**块级 hash 去重**替代事务保证"重试不重复写"：
 
 ![轻量 DELETE 与 PatchParts](ClickHouse原理_DML_06轻量删除.svg)
 
-- **轻量 DELETE**（`DELETE FROM`）：`InterpreterDeleteQuery`（`InterpreterDeleteQuery.cpp`）改写为给隐藏掩码列 `_row_exists=0`；`lightweight_delete_mode` 默认 `ALTER_UPDATE`（`Settings.cpp:3994`），走 `ALTER ... UPDATE _row_exists=0`（`:172`），`mutations_sync = lightweight_deletes_sync`（默认 2，`:192`/`Settings.cpp:4002`）。读时跳过 `_row_exists=0` 的行，物理清除延后到 merge。
-- **轻量 UPDATE**（实验特性，近版本演进中）：`InterpreterUpdateQuery`（`InterpreterUpdateQuery.cpp`）在 `supportsLightweightUpdate` 且 `allow_experimental_lightweight_update=true`（默认 false）时，走 **PatchParts**（`apply_patch_parts=true`）：把更新写成轻量补丁 Part，查询时 `applyPatches` 现场叠加，避免整 Part 重写——把更新代价从写侧转到读侧。
+- **轻量 DELETE**（`DELETE FROM`）：改写为给隐藏掩码列 `_row_exists=0`；`lightweight_delete_mode` 默认 `ALTER_UPDATE`，走 `ALTER ... UPDATE _row_exists=0`，`mutations_sync = lightweight_deletes_sync`（默认 2）。读时跳过 `_row_exists=0` 的行，物理清除延后到 merge。
+- **轻量 UPDATE**（实验特性）：`supportsLightweightUpdate` 且 `allow_experimental_lightweight_update=true`（默认 false）时走 **PatchParts**——把更新写成轻量补丁 Part，查询时 `applyPatches` 现场叠加，避免整 Part 重写，把更新代价从写侧转到读侧。
 
 ---
 

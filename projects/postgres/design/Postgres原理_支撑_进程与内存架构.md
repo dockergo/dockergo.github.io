@@ -26,10 +26,12 @@
 
 ## 深化 · 失败路径与边界
 
-- **backend 崩溃的连带停摆**：一个 backend 段错误 → postmaster 判定共享内存可能已被污染，会**重启所有 backend、重置共享内存**（短暂全库中断）；这是进程隔离的边界——异常退出不像正常退出那样只影响单连接。
-- **连接数与内存膨胀**：每连接一进程，`max_connections` 设太高会耗尽内存与信号量（且 ProcArray/锁表按 max_connections 预分配共享内存），高并发正解是连接池而非调高该值。
-- **shared_buffers 双缓存**：PostgreSQL 依赖 OS page cache 做二级缓存，shared_buffers 常设物理内存的 25% 左右——设太大反而挤占 OS cache 导致双份缓存浪费。
-- **僵尸与孤儿进程**：postmaster 崩溃时子 backend 会继续运行（孤儿），共享内存靠 `postmaster.pid` 与 shmem header 防止两个实例误挂同一段。
+| 场景 | 机理 | 后果 / 应对 |
+|---|---|---|
+| backend 崩溃连带停摆 | 一个 backend 段错误 → postmaster 判定共享内存可能污染 | 重启所有 backend、重置共享内存（短暂全库中断）；进程隔离的边界 |
+| 连接数与内存膨胀 | 每连接一进程，ProcArray/锁表按 `max_connections` 预分配 | 设太高耗尽内存与信号量；高并发正解是连接池而非调高该值 |
+| shared_buffers 双缓存 | 依赖 OS page cache 做二级缓存 | 常设物理内存 25% 左右；太大挤占 OS cache 导致双份缓存浪费 |
+| 僵尸与孤儿进程 | postmaster 崩溃时子 backend 继续运行 | 靠 `postmaster.pid` 与 shmem header 防止两个实例误挂同一段 |
 
 ---
 

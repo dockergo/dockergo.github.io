@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="556" viewBox="0 0 1040 556" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="fr_s" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="fr_a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#5b7db1"/></marker>
+  </defs>
+  <rect width="1040" height="556" fill="#fbfbfd"/>
+  <text x="24" y="30" font-size="14" font-weight="700" fill="#1d1d1f">解释器栈帧布局 · 三个游标驱动"取码 → 执行 → 进栈"的工作台</text>
+  <text x="24" y="49" font-size="10" fill="#6e6e73">每次方法调用在 Java 栈上按固定格式压一帧；解释器不靠寄存器算，而靠帧内 bcp / locals / sp 三个游标读写这块内存。地址从上（高）向下（低）增长</text>
+
+  <!-- legend -->
+  <g font-size="9.5">
+    <rect x="24" y="60" width="12" height="12" rx="3" fill="#faf3ea" stroke="#ecdcbf"/><text x="41" y="70" fill="#3a3a3c">变量·锁存储</text>
+    <rect x="150" y="60" width="12" height="12" rx="3" fill="#f6f8fc" stroke="#cfe0f2"/><text x="167" y="70" fill="#3a3a3c">调用链接</text>
+    <rect x="256" y="60" width="12" height="12" rx="3" fill="#f4eefb" stroke="#d9c9ef"/><text x="273" y="70" fill="#3a3a3c">帧元数据·游标</text>
+    <rect x="392" y="60" width="12" height="12" rx="3" fill="#f5faf6" stroke="#cfe6d2"/><text x="409" y="70" fill="#3a3a3c">操作数栈·执行</text>
+    <text x="520" y="70" fill="#9a9aa0">（偏移取自 x86 帧约定）</text>
+  </g>
+
+  <text x="24" y="94" font-size="9.5" fill="#8a5a1a">↑ 高地址</text>
+
+  <!-- 栈帧列 -->
+  <g text-anchor="middle" font-size="9.5">
+    <rect x="24" y="100" width="300" height="24" rx="4" fill="#f2f2f4" stroke="#d9d9de"/><text x="174" y="116" fill="#6e6e73">调用者栈帧（caller）</text>
+    <rect x="24" y="126" width="300" height="30" rx="4" fill="#faf3ea" stroke="#ecdcbf"/><text x="174" y="145" fill="#8a5a1a">入参 + 局部变量（locals 区）</text>
+    <rect x="24" y="158" width="300" height="24" rx="4" fill="#f6f8fc" stroke="#cfe0f2"/><text x="174" y="174" fill="#1b2a4a">返回地址</text>
+    <rect x="24" y="184" width="300" height="24" rx="4" fill="#eef3fa" stroke="#cfe0f2"/><text x="174" y="200" fill="#1b2a4a">保存的 fp（rbp）← 帧基准</text>
+    <rect x="24" y="210" width="300" height="24" rx="4" fill="#f6f8fc" stroke="#cfe0f2"/><text x="174" y="226" fill="#1b2a4a">sender_sp / last_sp</text>
+    <rect x="24" y="236" width="300" height="24" rx="4" fill="#f4eefb" stroke="#d9c9ef"/><text x="174" y="252" fill="#6f3ea8">Method*（当前方法）</text>
+    <rect x="24" y="262" width="300" height="24" rx="4" fill="#f4eefb" stroke="#d9c9ef"/><text x="174" y="278" fill="#6f3ea8">mirror（持类镜像·防卸载）</text>
+    <rect x="24" y="288" width="300" height="24" rx="4" fill="#f4eefb" stroke="#d9c9ef"/><text x="174" y="304" fill="#6f3ea8">mdp（MethodData·profile）</text>
+    <rect x="24" y="314" width="300" height="24" rx="4" fill="#f4eefb" stroke="#d9c9ef"/><text x="174" y="330" fill="#6f3ea8">ConstantPoolCache*（cpCache）</text>
+    <rect x="24" y="340" width="300" height="24" rx="4" fill="#eee6f7" stroke="#d9c9ef"/><text x="174" y="356" fill="#6f3ea8">locals 指针 · bcp（字节码指针）</text>
+    <rect x="24" y="366" width="300" height="24" rx="4" fill="#faf3ea" stroke="#ecdcbf"/><text x="174" y="382" fill="#8a5a1a">monitor 块（锁记录）</text>
+    <rect x="24" y="392" width="300" height="46" rx="4" fill="#f5faf6" stroke="#cfe6d2"/><text x="174" y="411" fill="#1d8f3f">操作数栈（表达式栈）</text><text x="174" y="427" fill="#1c6b45" font-size="8.5">向低地址增长，栈顶 = sp</text>
+  </g>
+  <text x="24" y="449" font-size="9" fill="#1d8f3f">↓ 低地址（栈顶 sp）</text>
+
+  <!-- 右侧注解 -->
+  <g>
+    <rect x="360" y="126" width="656" height="30" rx="8" fill="#faf3ea" stroke="#ecdcbf"/>
+    <text x="374" y="145" font-size="9.5" fill="#3a3a3c"><tspan font-weight="700" fill="#8a5a1a">locals 区</tspan>：入参与局部变量连续排布；<tspan font-weight="600">locals 指针</tspan>指向第 0 号槽，iload/istore 按索引寻址（无需运行期查找）。</text>
+
+    <rect x="360" y="158" width="656" height="76" rx="8" fill="#f6f8fc" stroke="#cfe0f2"/>
+    <text x="374" y="177" font-size="10" font-weight="700" fill="#5b7db1">调用链接：让"返回 / 栈遍历"成为常数操作</text>
+    <text x="374" y="196" font-size="9" fill="#1b2a4a">返回地址 + 保存的 fp 构成经典链式栈帧，方法返回即弹回调用者。</text>
+    <text x="374" y="213" font-size="9" fill="#1b2a4a">sender_sp / last_sp 记住调用者栈顶与本帧入参边界，供异常展开、</text>
+    <text x="374" y="230" font-size="9" fill="#1b2a4a">GC 栈扫描、deopt 逐帧回放时精确定位每一帧。</text>
+
+    <rect x="360" y="236" width="656" height="128" rx="8" fill="#f4eefb" stroke="#d9c9ef"/>
+    <text x="374" y="255" font-size="10" font-weight="700" fill="#6f3ea8">帧元数据：解释器"不用寄存器算"的代价与本钱</text>
+    <text x="374" y="274" font-size="9" fill="#3a3a3c">Method* → 当前执行的方法；cpCache → 常量池的已解析结果（见符号解析图）。</text>
+    <text x="374" y="291" font-size="9" fill="#3a3a3c">mdp → 边执行边记分支/类型频率，是 C1/C2 敢做投机优化的数据来源。</text>
+    <text x="374" y="308" font-size="9" fill="#3a3a3c">mirror → 帧里握住类的 Class 对象，方法执行期间该类不会被卸载。</text>
+    <text x="374" y="325" font-size="9" fill="#3a3a3c"><tspan font-weight="700" fill="#6f3ea8">bcp（字节码指针）</tspan>与<tspan font-weight="700" fill="#6f3ea8">locals 指针</tspan>是解释循环每步都在动的两个游标：</text>
+    <text x="374" y="342" font-size="9" fill="#3a3a3c">bcp 决定"取哪条码"，locals 定位"变量在哪"——它们随帧走，切换方法即换一套。</text>
+    <text x="374" y="358" font-size="8.5" fill="#9a9aa0">代价：这些指针都摆在栈内存里，逐条访存，这正是解释器慢于编译码的根源之一。</text>
+
+    <rect x="360" y="366" width="656" height="24" rx="8" fill="#faf3ea" stroke="#ecdcbf"/>
+    <text x="374" y="382" font-size="9" fill="#3a3a3c"><tspan font-weight="700" fill="#8a5a1a">monitor 块</tspan>：进入 synchronized 时压入一条锁记录（BasicObjectLock），退出时弹出。</text>
+
+    <rect x="360" y="392" width="656" height="46" rx="8" fill="#f5faf6" stroke="#cfe6d2"/>
+    <text x="374" y="411" font-size="10" font-weight="700" fill="#1d8f3f">操作数栈：字节码的临时工作台</text>
+    <text x="374" y="428" font-size="9" fill="#1c6b45">iadd 就是"弹两个、相加、压回"；第三个游标 sp 指向栈顶，push/pop 即改 sp。</text>
+  </g>
+
+  <!-- 底部要点 -->
+  <rect x="24" y="452" width="992" height="86" rx="12" fill="#f6f8fc" stroke="#cfe0f2"/>
+  <text x="40" y="473" font-size="10.5" font-weight="600" fill="#5b7db1">一帧读法</text>
+  <text x="40" y="494" font-size="9" fill="#3a3a3c">① 一帧 = 变量区（locals）+ 链接区（返回/fp）+ 元数据区（Method*/cpCache/mdp/bcp…）+ monitor 块 + 操作数栈。</text>
+  <text x="40" y="512" font-size="9" fill="#3a3a3c">② 解释循环只靠 <tspan font-weight="700" fill="#5b7db1">bcp / locals / sp</tspan> 三个游标运转：bcp 取码、locals 读写变量、sp 进出操作数栈——方法切换即整套换新帧。</text>
+  <text x="40" y="530" font-size="9" fill="#3a3a3c">③ 与编译帧的区别：编译码把变量/中间值尽量放寄存器，解释帧一切都落栈内存，这是"启动即跑但慢"的直接体现。</text>
+</svg>

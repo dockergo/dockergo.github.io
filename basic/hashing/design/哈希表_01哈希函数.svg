@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="650" viewBox="0 0 1120 650" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="aB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#4a7fd0"/></marker>
+    <marker id="aR" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#d1544a"/></marker>
+    <marker id="aA" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#d99a2b"/></marker>
+  </defs>
+  <rect width="1120" height="650" fill="#fbfbfd"/>
+
+  <text x="30" y="34" font-size="17" font-weight="700" fill="#1d1d1f">H1 · 哈希函数：把任意键折叠成整数，再压缩到桶下标</text>
+  <text x="30" y="56" font-size="11" fill="#6e6e73">index = hash(key) % capacity；不同键算出相同下标即「冲突」，是哈希表绕不开的代价</text>
+
+  <!-- 图例 -->
+  <rect x="30" y="72" width="12" height="12" rx="2" fill="#4a7fd0"/><text x="48" y="82" font-size="10.5" fill="#3a3a3c">哈希计算流</text>
+  <rect x="150" y="72" width="12" height="12" rx="2" fill="#d99a2b"/><text x="168" y="82" font-size="10.5" fill="#3a3a3c">桶下标 / 存储</text>
+  <rect x="290" y="72" width="12" height="12" rx="2" fill="#d1544a"/><text x="308" y="82" font-size="10.5" fill="#3a3a3c">冲突</text>
+
+  <!-- ① 折叠计算 -->
+  <text x="30" y="116" font-size="12" font-weight="700" fill="#20375e">① 逐字节折叠 —— 把键的每个字节混入累加器 hash（源自 simple_hash.go）</text>
+
+  <g font-size="11" text-anchor="middle">
+    <rect x="40" y="132" width="90" height="30" rx="6" fill="#eaf1fb" stroke="#c6d9f2"/><text x="85" y="152" fill="#20375e">key "abc"</text>
+    <rect x="170" y="132" width="70" height="30" rx="6" fill="#f2f7ff" stroke="#c6d9f2"/><text x="205" y="152" fill="#20375e">'a' 97</text>
+    <rect x="250" y="132" width="70" height="30" rx="6" fill="#f2f7ff" stroke="#c6d9f2"/><text x="285" y="152" fill="#20375e">'b' 98</text>
+    <rect x="330" y="132" width="70" height="30" rx="6" fill="#f2f7ff" stroke="#c6d9f2"/><text x="365" y="152" fill="#20375e">'c' 99</text>
+  </g>
+  <line x1="130" y1="147" x2="170" y2="147" stroke="#4a7fd0" stroke-width="1.8" marker-end="url(#aB)"/>
+  <text x="440" y="151" font-size="10.5" fill="#6e6e73">→ 依次喂入累加器 hash，取模 M=1e9+7 防溢出</text>
+
+  <!-- 四种折叠方式 -->
+  <g font-size="10.5">
+    <rect x="40" y="180" width="255" height="58" rx="8" fill="#ffffff" stroke="#e4e7ec"/><text x="56" y="202" font-weight="700" fill="#20375e">加法 addHash</text><text x="56" y="224" fill="#4a4a4f">hash = (hash + b) % M</text>
+    <rect x="315" y="180" width="255" height="58" rx="8" fill="#ffffff" stroke="#e4e7ec"/><text x="331" y="202" font-weight="700" fill="#20375e">乘法 mulHash</text><text x="331" y="224" fill="#4a4a4f">hash = (31·hash + b) % M</text>
+    <rect x="590" y="180" width="255" height="58" rx="8" fill="#ffffff" stroke="#e4e7ec"/><text x="606" y="202" font-weight="700" fill="#20375e">异或 xorHash</text><text x="606" y="224" fill="#4a4a4f">hash ^= b; hash = (31·hash+b)%M</text>
+    <rect x="865" y="180" width="215" height="58" rx="8" fill="#ffffff" stroke="#e4e7ec"/><text x="881" y="202" font-weight="700" fill="#20375e">旋转 rotHash</text><text x="881" y="224" fill="#4a4a4f">hash = (hash&lt;&lt;4 ^ hash&gt;&gt;28 ^ b)%M</text>
+  </g>
+  <text x="40" y="260" font-size="10.5" fill="#6e6e73">好哈希的目标：输出均匀铺满值域、雪崩性强（改一位输入 → 输出大变），让键尽量散开、少撞桶。</text>
+
+  <!-- ② 压缩到下标 -->
+  <text x="30" y="300" font-size="12" font-weight="700" fill="#20375e">② 压缩：大整数 % capacity → 落入 [0, capacity) 的桶下标</text>
+
+  <g font-size="12" text-anchor="middle">
+    <rect x="40" y="316" width="150" height="34" rx="7" fill="#eaf1fb" stroke="#c6d9f2"/><text x="115" y="338" fill="#20375e">hash("abc")</text>
+    <rect x="230" y="316" width="170" height="34" rx="7" fill="#ffffff" stroke="#4a7fd0" stroke-width="1.4"/><text x="315" y="338" fill="#20375e">…937 % 8</text>
+    <rect x="440" y="316" width="90" height="34" rx="7" fill="#fdf3e0" stroke="#e7c07a"/><text x="485" y="338" fill="#8a5a12">下标 3</text>
+  </g>
+  <line x1="190" y1="333" x2="230" y2="333" stroke="#4a7fd0" stroke-width="1.8" marker-end="url(#aB)"/>
+  <line x1="400" y1="333" x2="440" y2="333" stroke="#d99a2b" stroke-width="1.8" marker-end="url(#aA)"/>
+  <text x="560" y="338" font-size="10.5" fill="#6e6e73">取模把无界的哈希值收窄到桶数组的合法区间</text>
+
+  <!-- ③ 冲突 -->
+  <text x="30" y="392" font-size="12" font-weight="700" fill="#20375e">③ 冲突：两个不同键，压缩后得到同一下标</text>
+
+  <!-- 桶数组 -->
+  <text x="720" y="430" font-size="11" font-weight="700" fill="#8a5a12">桶数组（capacity = 8）</text>
+  <g font-size="11" text-anchor="middle">
+    <rect x="720" y="442" width="46" height="30" fill="#f4f4f6" stroke="#d7d7dd"/><text x="743" y="462" fill="#a1a1a6">0</text>
+    <rect x="766" y="442" width="46" height="30" fill="#f4f4f6" stroke="#d7d7dd"/><text x="789" y="462" fill="#a1a1a6">1</text>
+    <rect x="812" y="442" width="46" height="30" fill="#f4f4f6" stroke="#d7d7dd"/><text x="835" y="462" fill="#a1a1a6">2</text>
+    <rect x="858" y="442" width="46" height="30" fill="#fbe6e3" stroke="#d1544a" stroke-width="1.6"/><text x="881" y="462" fill="#8a4038" font-weight="700">3</text>
+    <rect x="904" y="442" width="46" height="30" fill="#f4f4f6" stroke="#d7d7dd"/><text x="927" y="462" fill="#a1a1a6">4</text>
+    <rect x="950" y="442" width="46" height="30" fill="#f4f4f6" stroke="#d7d7dd"/><text x="973" y="462" fill="#a1a1a6">5</text>
+    <rect x="996" y="442" width="42" height="30" fill="#f4f4f6" stroke="#d7d7dd"/><text x="1017" y="462" fill="#a1a1a6">6</text>
+    <rect x="1038" y="442" width="42" height="30" fill="#f4f4f6" stroke="#d7d7dd"/><text x="1059" y="462" fill="#a1a1a6">7</text>
+  </g>
+
+  <g font-size="11" text-anchor="middle">
+    <rect x="40" y="426" width="120" height="30" rx="6" fill="#eaf1fb" stroke="#c6d9f2"/><text x="100" y="446" fill="#20375e">key "abc" → 3</text>
+    <rect x="40" y="472" width="120" height="30" rx="6" fill="#fbe6e3" stroke="#e8a79f"/><text x="100" y="492" fill="#8a4038">key "xyz" → 3</text>
+  </g>
+  <!-- 两键指向同一桶3 -->
+  <path d="M160 441 L820 441 L820 452 L855 452" fill="none" stroke="#4a7fd0" stroke-width="1.6" marker-end="url(#aB)"/>
+  <path d="M160 487 L560 487 L560 470 L855 470" fill="none" stroke="#d1544a" stroke-width="2" stroke-dasharray="5 3" marker-end="url(#aR)"/>
+  <text x="360" y="524" font-size="10.5" fill="#8a4038">两条不同的键映射到同一下标 3 —— 这就是冲突，需由链式地址或开放寻址接手</text>
+
+  <!-- 底部性质 -->
+  <rect x="30" y="556" width="1050" height="72" rx="12" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="52" y="582" font-size="10.5" font-weight="700" fill="#20375e">不变量</text>
+  <text x="112" y="582" font-size="10" fill="#4a4a4f">同一个键每次必得同一下标（确定性）；下标恒在 [0, capacity)。</text>
+  <text x="52" y="604" font-size="10.5" font-weight="700" fill="#8a4038">必然性</text>
+  <text x="112" y="604" font-size="10" fill="#4a4a4f">键空间 ≫ 桶数（鸽巢原理），无论哈希多好，冲突不可消除、只能被均摊与化解。</text>
+  <text x="52" y="622" font-size="10" fill="#6e6e73">工程实现（array_hash_map.go / hash_map_chaining.go）用整数键的 key % capacity 作为最简哈希函数。</text>
+</svg>

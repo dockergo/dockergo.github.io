@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1150" height="650" viewBox="0 0 1150 650" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="aA" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#c99a3a"/></marker>
+    <marker id="aG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+    <marker id="aO" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#d9772f"/></marker>
+  </defs>
+  <rect width="1150" height="650" fill="#fbfbfd"/>
+
+  <text x="30" y="32" font-size="15" font-weight="700" fill="#1d1d1f">ZooKeeper ZAB 全局顺序 · Proposal → Ack → Commit 两阶段广播，zxid=⟨epoch,counter⟩ 给所有写定全局序——这是顺序一致，不是逐读线性一致</text>
+  <text x="30" y="53" font-size="10.5" fill="#6e6e73">所有写必须经 leader 广播，各 follower 按 zxid 顺序应用；保证的是「所有客户端看到同一操作顺序」，与 etcd 逐次读确认的线性一致是不同强度的保证</text>
+
+  <!-- 图例 -->
+  <line x1="30" y1="80" x2="54" y2="80" stroke="#c99a3a" stroke-width="2" marker-end="url(#aA)"/>
+  <text x="60" y="84" font-size="10" fill="#3a3a3c">Proposal(zxid, txn)</text>
+  <line x1="230" y1="80" x2="254" y2="80" stroke="#d9772f" stroke-width="2" marker-end="url(#aO)"/>
+  <text x="260" y="84" font-size="10" fill="#3a3a3c">Ack（follower 已落盘）</text>
+  <line x1="440" y1="80" x2="464" y2="80" stroke="#2f9e6e" stroke-width="2" marker-end="url(#aG)"/>
+  <text x="470" y="84" font-size="10" fill="#3a3a3c">Commit（按 zxid 顺序应用）</text>
+  <line x1="30" y1="98" x2="1120" y2="98" stroke="#e4e7ec" stroke-width="1"/>
+
+  <!-- 角色轨道 -->
+  <text x="150" y="122" font-size="12" font-weight="700" fill="#8a6417" text-anchor="middle">Leader</text>
+  <text x="700" y="122" font-size="12" font-weight="700" fill="#20375e" text-anchor="middle">Followers</text>
+  <line x1="150" y1="132" x2="150" y2="500" stroke="#ecd6a8" stroke-width="2"/>
+  <line x1="560" y1="132" x2="560" y2="500" stroke="#c6d9f2" stroke-width="1.6"/>
+  <line x1="760" y1="132" x2="760" y2="500" stroke="#c6d9f2" stroke-width="1.6"/>
+  <line x1="960" y1="132" x2="960" y2="500" stroke="#c6d9f2" stroke-width="1.6"/>
+  <text x="560" y="148" font-size="9.5" fill="#5a7099" text-anchor="middle">F1</text>
+  <text x="760" y="148" font-size="9.5" fill="#5a7099" text-anchor="middle">F2</text>
+  <text x="960" y="148" font-size="9.5" fill="#5a7099" text-anchor="middle">F3</text>
+
+  <!-- 客户端写入 -->
+  <rect x="40" y="162" width="220" height="34" rx="8" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="52" y="184" font-size="9.5" fill="#4a4a4f">客户端写 → 转发给 Leader</text>
+  <line x1="150" y1="196" x2="150" y2="214" stroke="#c99a3a" stroke-width="1.6" marker-end="url(#aA)"/>
+
+  <!-- Phase 1: Proposal -->
+  <rect x="30" y="218" width="1060" height="86" rx="12" fill="#fbf3e2" stroke="#ecd6a8"/>
+  <text x="48" y="240" font-size="11.5" font-weight="700" fill="#8a6417">① Proposal：Leader 分配下一个 zxid=⟨epoch,counter⟩，按序广播提案，follower 落盘后回 Ack</text>
+  <line x1="150" y1="262" x2="552" y2="262" stroke="#c99a3a" stroke-width="1.8" marker-end="url(#aA)"/>
+  <line x1="150" y1="264" x2="752" y2="272" stroke="#c99a3a" stroke-width="1.8" marker-end="url(#aA)"/>
+  <line x1="150" y1="266" x2="952" y2="280" stroke="#c99a3a" stroke-width="1.8" marker-end="url(#aA)"/>
+  <text x="330" y="256" font-size="9.5" fill="#8a6417">Proposal(zxid=⟨e,c⟩, txn)</text>
+  <line x1="560" y1="288" x2="158" y2="298" stroke="#d9772f" stroke-width="1.4" stroke-dasharray="4 3" marker-end="url(#aO)"/>
+  <line x1="760" y1="292" x2="158" y2="300" stroke="#d9772f" stroke-width="1.4" stroke-dasharray="4 3" marker-end="url(#aO)"/>
+  <text x="360" y="300" font-size="9.5" fill="#9a5f1c">Ack（写入本地事务日志成功）</text>
+
+  <!-- quorum -->
+  <rect x="300" y="316" width="520" height="30" rx="8" fill="#eaf6f0" stroke="#bfe3d1"/>
+  <text x="314" y="335" font-size="9.5" fill="#2f6b4e">Leader 收到含自身在内的<tspan font-weight="700"> 过半 Ack</tspan> → 该 zxid 达成 quorum，可提交</text>
+
+  <!-- Phase 2: Commit -->
+  <rect x="30" y="356" width="1060" height="86" rx="12" fill="#eaf6f0" stroke="#bfe3d1"/>
+  <text x="48" y="378" font-size="11.5" font-weight="700" fill="#2f6b4e">② Commit：Leader 广播提交，各 follower 按 zxid 升序应用到数据树（状态机）</text>
+  <line x1="150" y1="400" x2="552" y2="400" stroke="#2f9e6e" stroke-width="1.8" marker-end="url(#aG)"/>
+  <line x1="150" y1="402" x2="752" y2="410" stroke="#2f9e6e" stroke-width="1.8" marker-end="url(#aG)"/>
+  <line x1="150" y1="404" x2="952" y2="418" stroke="#2f9e6e" stroke-width="1.8" marker-end="url(#aG)"/>
+  <text x="330" y="394" font-size="9.5" fill="#2f6b4e">Commit(zxid)</text>
+  <text x="330" y="432" font-size="9.5" fill="#3f8a63">全序保证：所有 follower 按完全相同的 zxid 顺序应用 → 状态收敛一致</text>
+
+  <!-- 底部：顺序一致 vs 线性一致 -->
+  <rect x="30" y="454" width="1060" height="164" rx="12" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="52" y="478" font-size="11" font-weight="700" fill="#1d1d1f">这保证的是「顺序一致」，不是「逐读线性一致」——区别在哪</text>
+  <line x1="52" y1="488" x2="1068" y2="488" stroke="#eef0f3" stroke-width="1"/>
+  <text x="52" y="512" font-size="10.5" font-weight="700" fill="#8a6417">全局写序</text>
+  <text x="180" y="512" font-size="10" fill="#4a4a4f">zxid = ⟨epoch, counter⟩：epoch 标识 leader 届次，counter 在届内单调递增——所有写按此顺序在所有 follower 上应用，顺序对所有客户端一致。</text>
+  <text x="52" y="540" font-size="10.5" font-weight="700" fill="#c4562f">读不强制追平</text>
+  <text x="180" y="540" font-size="10" fill="#4a4a4f">顺序一致只保证「操作顺序」被所有人看到一致，不逐次向 leader 确认「我读到的是不是最新一次提交」——这正是它与 etcd ReadIndex 逐读确认的差异所在。</text>
+  <text x="52" y="568" font-size="10.5" font-weight="700" fill="#2f6b4e">写路径仍单点</text>
+  <text x="180" y="568" font-size="10" fill="#4a4a4f">所有写必须经过 leader 广播——这一点与 etcd 相同（都是 CP、都靠单一序列化点定序），分歧只在读路径的保证强度。</text>
+  <text x="52" y="598" font-size="9" fill="#8a97ab">与共识层 Raft/AppendEntries 对照：ZAB 的 Proposal/Ack/Commit ≈ AppendEntries + commitIndex 推进；zxid.epoch ≈ term，counter ≈ log index。</text>
+</svg>

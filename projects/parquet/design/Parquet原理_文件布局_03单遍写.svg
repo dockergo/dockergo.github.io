@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="420" viewBox="0 0 1000 420" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs><filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#0a84ff"/></marker>
+    <marker id="ag" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#e8730f"/></marker></defs>
+  <rect width="1000" height="420" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Parquet 原理 · 元数据尾置为何能单遍写</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">写者不必回头改文件头——数据边算边落盘,所有偏移/统计在写完那一刻才确定,于是把 FileMetaData 放最后一次写下</text>
+
+  <!-- legend -->
+  <g font-size="9" fill="#5b6470">
+    <line x1="720" y1="76" x2="746" y2="76" stroke="#0a84ff" stroke-width="2.2"/><text x="752" y="79">数据顺序写入</text>
+    <line x1="860" y1="76" x2="886" y2="76" stroke="#e8730f" stroke-width="2.2"/><text x="892" y="79">元数据尾置</text>
+  </g>
+
+  <!-- 写入时间轴 -->
+  <text x="30" y="100" font-size="10" font-weight="600" fill="#8a8a90">写入时间轴 →（append-only，不回退）</text>
+
+  <rect x="30" y="112" width="70" height="60" rx="10" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+  <text x="65" y="146" font-size="9" font-weight="700" text-anchor="middle" fill="#5a3410">PAR1</text>
+
+  <rect x="108" y="112" width="150" height="60" rx="10" fill="#e9f2ff" stroke="#a9ccf5" filter="url(#soft)"/>
+  <text x="183" y="138" font-size="9" font-weight="700" text-anchor="middle" fill="#0a3d78">行组 0 列块</text>
+  <text x="183" y="156" font-size="7.8" text-anchor="middle" fill="#2a5a92">页逐个编码压缩落盘</text>
+
+  <rect x="266" y="112" width="150" height="60" rx="10" fill="#e9f2ff" stroke="#a9ccf5" filter="url(#soft)"/>
+  <text x="341" y="138" font-size="9" font-weight="700" text-anchor="middle" fill="#0a3d78">行组 1 列块</text>
+  <text x="341" y="156" font-size="7.8" text-anchor="middle" fill="#2a5a92">记录每块起始偏移</text>
+
+  <rect x="424" y="112" width="150" height="60" rx="10" fill="#e9f2ff" stroke="#a9ccf5" filter="url(#soft)"/>
+  <text x="499" y="138" font-size="9" font-weight="700" text-anchor="middle" fill="#0a3d78">行组 … 列块</text>
+  <text x="499" y="156" font-size="7.8" text-anchor="middle" fill="#2a5a92">累计统计 min/max</text>
+
+  <rect x="582" y="112" width="230" height="60" rx="10" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+  <text x="697" y="138" font-size="9" font-weight="700" text-anchor="middle" fill="#5a3410">FileMetaData（最后写）</text>
+  <text x="697" y="156" font-size="7.8" text-anchor="middle" fill="#93762e">此刻已知全部偏移/统计</text>
+
+  <rect x="820" y="112" width="150" height="60" rx="10" fill="#fdf1e0" stroke="#e8c99a" filter="url(#soft)"/>
+  <text x="895" y="138" font-size="9" font-weight="700" text-anchor="middle" fill="#5a3410">4B 长度 + PAR1</text>
+  <text x="895" y="156" font-size="7.8" text-anchor="middle" fill="#93762e">收尾</text>
+
+  <path d="M100,142 L106,142" stroke="#0a84ff" stroke-width="2.2" fill="none" marker-end="url(#ah)"/>
+  <path d="M258,142 L264,142" stroke="#0a84ff" stroke-width="2.2" fill="none" marker-end="url(#ah)"/>
+  <path d="M416,142 L422,142" stroke="#0a84ff" stroke-width="2.2" fill="none" marker-end="url(#ah)"/>
+  <path d="M574,142 L580,142" stroke="#e8730f" stroke-width="2.2" fill="none" marker-end="url(#ag)"/>
+  <path d="M812,142 L818,142" stroke="#e8730f" stroke-width="2.2" fill="none" marker-end="url(#ag)"/>
+
+  <!-- 对比双栏 -->
+  <rect x="30" y="204" width="455" height="190" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="48" y="228" font-size="11" font-weight="700" fill="#12402a">尾置元数据的好处</text>
+  <text x="48" y="250" font-size="9.2" fill="#2f6f5f">· 单遍流式写：数据只写一次,不回头改文件头</text>
+  <text x="48" y="270" font-size="9.2" fill="#2f6f5f">· 可写到只能顺序追加的介质（管道/对象存储）</text>
+  <text x="48" y="290" font-size="9.2" fill="#2f6f5f">· 偏移/统计在写完才定,自然放最后</text>
+  <text x="48" y="310" font-size="9.2" fill="#2f6f5f">· 内存占用可控：一个行组写完即可刷出</text>
+  <text x="48" y="330" font-size="9.2" fill="#2f6f5f">· 读者末 8 字节即得长度 → 反跳读元数据</text>
+  <text x="48" y="356" font-size="8.6" fill="#4c8567">与 ORC 的 postscript/footer 尾部索引思路同源。</text>
+  <text x="48" y="378" font-size="8.6" fill="#4c8567">代价：读文件必须先能 seek 到尾部(非纯流式读)。</text>
+
+  <rect x="505" y="204" width="465" height="190" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="523" y="228" font-size="11" font-weight="700" fill="#1b2a4a">写者关键动作</text>
+  <text x="523" y="250" font-size="9.2" fill="#5b7db1">1. 缓冲行数据到内存,达阈值形成一个行组</text>
+  <text x="523" y="270" font-size="9.2" fill="#5b7db1">2. 每列编码 → 压缩 → 写页,记 data_page_offset</text>
+  <text x="523" y="290" font-size="9.2" fill="#5b7db1">3. 累计每列 Statistics（min/max/null_count）</text>
+  <text x="523" y="310" font-size="9.2" fill="#5b7db1">4. 全部行组写完 → 组装 FileMetaData 一次写下</text>
+  <text x="523" y="330" font-size="9.2" fill="#5b7db1">5. 写 4B 长度（小端）+ PAR1 收尾</text>
+  <text x="523" y="356" font-size="8.6" fill="#7fa0c4">PageIndex/布隆等辅助结构也在收尾阶段追加,</text>
+  <text x="523" y="378" font-size="8.6" fill="#7fa0c4">其偏移一并记入元数据。</text>
+</svg>

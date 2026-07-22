@@ -16,6 +16,12 @@
 
 代价 = 估算的 I/O + CPU，两者都换算成统一的抽象"代价单位"由 `Cost_model_server` 集中定义：CPU 侧的基元是 `row_evaluate_cost`（每对一行求值 `WHERE` 的代价）与 `key_compare_cost`（比较一次索引键，用于估排序与索引查找），I/O 侧由 `page_read_cost` 按读取页数计并区分数据是否已在 Buffer Pool 命中。对**单表访问**，范围优化器 `test_quick_select` 枚举可用索引的各种 range/ref 扫描方式再与全表扫描比代价——选择性高的索引才划算，否则回表随机 I/O 的开销盖过收益。对**多表连接**，连接顺序决定中间结果集大小：把过滤性强、结果小的表放前面能显著压小后续每层输入。全程据统计信息估算，因此**统计过期会选错计划**——这是慢查询常见根因，需 `ANALYZE TABLE` 刷新索引基数或用索引提示纠偏；最终计划可用 `EXPLAIN` / `EXPLAIN FORMAT=JSON` 观察每张表的 `type`、`rows`、`key`。各代价基元函数落点见深化表。
 
+## 三、变换流水线：逻辑重写 + 代价枚举
+
+![变换流水线](MySQL原理_支撑_查询优化器_03变换流水线.svg)
+
+优化分两步接力：先做**等价逻辑变换**缩小计划空间（子查询上拉/半连接转换 `flatten_subqueries` `sql/sql_resolver.cc:2612`、`convert_subquery_to_semijoin` `:1863`、派生表合并、冗余子句消除 `remove_redundant_subquery_clauses` `:266`、常量传播、外连接转内连接），把 IN/EXISTS 子查询摊平成 join 以免逐行重算；再在剩余空间里做**代价枚举**（`JOIN::optimize` `sql/sql_optimizer.cc:138`、`make_join_plan` `:375`），按"估算行数 × (I/O+CPU) 权重"挑访问路径与连接顺序。行数估算来自索引统计/直方图，估不准就可能选错计划——这是"变换缩小空间、枚举择优"两步合力的关键前提。
+
 ## 深化 · 优化器主要变换
 
 | 变换 | 作用 | 落点 |

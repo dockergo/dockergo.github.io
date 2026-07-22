@@ -16,9 +16,10 @@
 
 ## 深化 · 事件驱动与运行时的解耦
 
-- **Publish/Subscribe 解耦生产者与消费者**：task 退出时运行时 Publish 一个 exit 事件，谁关心谁订阅（CRI 用它更新 Pod 状态、监控用它计数）——生产者不需知道有哪些消费者。
-- **事件是通知不是真源**：事件用于"感知变化后去查真实状态"，丢事件不致命（真源在元数据库/shim）；这与 k8s 的 level-triggered 精神相通。
-- **CRI 的容器退出感知**：CRI plugin 订阅 task exit 事件，据此更新它维护的 Pod/容器状态，再回报给 kubelet。
+![事件扇出](Containerd原理_支撑_task与事件总线_03事件扇出.svg)
+
+图释 Publish/Subscribe 扇出：运行时把状态变化 Publish 成事件，exchange 按 topic/namespace 扇给所有订阅者，生产者不认识消费者；事件是"变化通知"而非真源（丢事件不致命、去查真源即可，与 k8s level-triggered 精神相通），CRI 即订阅 exit 事件更新 Pod 状态回报 kubelet。
+
 - **exec 独立记账**：exec 进程有自己的 process id，`DeleteProcess`（`plugins/services/tasks/local.go:346`）单独清理，不影响容器主 task；而删除整个 task 走 `Delete`（`plugins/services/tasks/local.go:318`）并最终调 `PlatformRuntime.Delete`（`core/runtime/runtime.go:82`）回收 shim 侧资源与退出码。
 
 ## 深化 · exchange 与 PlatformRuntime API

@@ -1,0 +1,387 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>实时风控与反欺诈决策 · 核心技术点</title><style>
+:root{--c-bg:#f5f6f8;--c-panel:#ffffff;--c-line:#e2e5ea;--c-ink:#1b1c20;--c-sub:#5c5f68;--c-soft:#eef0f4}
+:root[data-theme=dark]{--c-bg:#0f1013;--c-panel:#1a1c22;--c-line:#31343d;--c-ink:#e8e8ea;--c-sub:#9a9aa2;--c-soft:#20222a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--c-bg);color:var(--c-ink);font:14px/1.6 -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;transition:background .25s,color .25s}
+.wrap{max-width:1120px;margin:0 auto;padding:28px 24px 64px}
+header.top{position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:14px;
+  padding:12px 24px;background:color-mix(in srgb,var(--c-bg) 86%,transparent);
+  backdrop-filter:saturate(1.4) blur(14px);-webkit-backdrop-filter:saturate(1.4) blur(14px);
+  border-bottom:1px solid var(--c-line)}
+header.top .logo{display:inline-flex;align-items:center;flex:none}
+header.top .spacer{flex:1}
+.brand-intro{display:flex;flex-direction:column;align-items:flex-start;margin-left:6px;min-width:0}
+.brand-intro .bt{font-size:15px;font-weight:700;color:var(--c-ink);line-height:1.3}
+.brand-intro .bs{margin-top:3px;font-size:11.5px;color:var(--c-sub);line-height:1.5}
+.icobtn{width:38px;height:38px;border-radius:50%;border:1px solid var(--c-line);
+  background:var(--c-panel);color:var(--c-sub);cursor:pointer;display:inline-grid;
+  place-items:center;font-size:16px;flex:none;text-decoration:none;transition:.15s}
+.icobtn:hover{color:var(--c-ink);border-color:var(--accent)}
+.tt-ico{font-size:16px;line-height:1}.tt-sun{display:none}
+:root[data-theme=dark] .tt-moon{display:none}:root[data-theme=dark] .tt-sun{display:inline}
+.hero{padding:18px 22px;border-radius:16px;background:var(--c-panel);border:1px solid var(--c-line);border-left:4px solid var(--accent);margin-bottom:26px}
+.hero .lay{font-size:12px;color:var(--accent);font-weight:600;letter-spacing:.4px}
+.hero h1{margin:6px 0 8px;font-size:24px;letter-spacing:-.3px}
+.hero .en{color:var(--c-sub);font-size:13px}
+.hero .tag{margin-top:10px;color:var(--c-ink);font-size:14.5px;line-height:1.7}
+.arch-canvas{background:var(--c-panel);border:1px solid var(--c-line);border-radius:16px;padding:18px;margin-bottom:30px;overflow:auto}
+.arch-svg{width:100%;height:auto;display:block}
+.arch-svg .ag-bg{fill:var(--c-panel)}
+.arch-svg .ag-card{fill:var(--c-panel);stroke:var(--c-line);stroke-width:1.2}
+.arch-svg .ag-band{fill:var(--c-soft)}
+.arch-svg .ag-sub{fill:var(--c-sub)}
+.arch-svg .ag-title{fill:var(--c-ink)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px}
+.grp{background:var(--c-panel);border:1px solid var(--c-line);border-radius:14px;padding:16px 18px}
+.grp h3{margin:0 0 12px;font-size:15px;color:var(--accent);padding-bottom:8px;border-bottom:1px solid var(--c-line)}
+.grp ul{list-style:none;margin:0;padding:0}
+.grp li{padding:8px 0;border-bottom:1px dashed var(--c-line)}
+.grp li:last-child{border-bottom:none}
+.grp li b{display:block;font-size:13.5px;color:var(--c-ink);margin-bottom:2px}
+.grp li span{font-size:12.5px;color:var(--c-sub);line-height:1.6}
+.grp li .dp{display:block;margin-top:7px;padding:9px 11px;font-size:12px;line-height:1.7;
+  color:var(--c-ink);background:var(--c-soft);border-left:2px solid var(--accent);border-radius:6px}
+.dims{display:flex;flex-direction:column;gap:6px;margin-top:9px}
+.dm{display:flex;flex-direction:column;gap:2px;padding:7px 11px;border-radius:8px;
+  border-left:3px solid var(--c-line);background:var(--c-soft)}
+.dm-h{font-size:11px;font-weight:800;letter-spacing:.02em;opacity:.92}
+.dm-t{font-size:11.5px;line-height:1.65;color:var(--c-sub)}
+.dm-trade{border-left-color:var(--accent)}
+.dm-trade .dm-h{color:var(--accent)}
+.dm-scale{border-left-color:#2ea043}
+.dm-scale .dm-h{color:#2ea043}
+.dm-fail{border-left-color:#e0562d}
+.dm-fail .dm-h{color:#e0562d}
+.insight{background:var(--c-panel);border:1px solid var(--c-line);border-radius:16px;
+  padding:20px 24px;margin-top:26px;border-top:3px solid var(--accent)}
+.insight h2{margin:0 0 10px;font-size:16px;color:var(--c-ink)}
+.insight p{margin:0;font-size:13.5px;line-height:1.85;color:var(--c-sub)}
+.flow-desc{background:var(--c-panel);border:1px solid var(--c-line);border-radius:16px;padding:18px 22px;margin-bottom:26px}
+.flow-desc h2{margin:0 0 6px;font-size:16px;color:var(--c-ink)}
+.fl-hint{margin:0 0 14px;font-size:12.5px;color:var(--c-sub)}
+.flow-desc .fl-hint .fl-b{color:#c0392b;font-weight:600}
+.sc-sec{margin-top:30px}
+.sc-sec>h2{margin:0 0 14px;font-size:18px;color:var(--c-ink);padding-left:11px;border-left:4px solid var(--accent)}
+.sc-essence{background:var(--c-panel);border:1px solid var(--c-line);border-radius:16px;padding:20px 24px;border-top:3px solid var(--accent)}
+.sc-essence p{margin:0;font-size:14px;line-height:1.9;color:var(--c-sub)}
+.req-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+.req-col{background:var(--c-panel);border:1px solid var(--c-line);border-radius:14px;padding:16px 18px}
+.req-col.req-wide{grid-column:1/-1}
+.req-col h3{margin:0 0 12px;font-size:14px;color:var(--accent)}
+.req-col ul{list-style:none;margin:0;padding:0}
+.req-col ul li{padding:6px 0 6px 18px;position:relative;font-size:13px;line-height:1.7;color:var(--c-sub);border-bottom:1px dashed var(--c-line)}
+.req-col ul li:last-child{border-bottom:none}
+.req-col ul li:before{content:"";position:absolute;left:2px;top:13px;width:6px;height:6px;border-radius:50%;background:var(--accent)}
+.req-col ul.cons li:before{background:#e0562d}
+.qtab,.dtab{width:100%;border-collapse:collapse;font-size:12.5px}
+.qtab th,.dtab th{text-align:left;padding:9px 12px;color:var(--c-sub);font-weight:700;border-bottom:2px solid var(--c-line);font-size:12px}
+.qtab td,.dtab td{padding:9px 12px;border-bottom:1px solid var(--c-line);line-height:1.65;color:var(--c-sub);vertical-align:top}
+.qtab .qk{color:var(--c-ink);font-weight:700;white-space:nowrap}
+.qtab .qv{color:var(--accent);font-weight:600;white-space:nowrap}
+.dtab{background:var(--c-panel);border:1px solid var(--c-line);border-radius:14px;overflow:hidden}
+.dtab .de{color:var(--c-ink);font-weight:700;white-space:nowrap}
+.dtab .ds{color:var(--accent);font-weight:600;white-space:nowrap}
+.sc-tension{background:var(--c-panel);border:1px solid var(--c-line);border-radius:16px;padding:20px 24px}
+.tn-wrap{display:flex;align-items:stretch;gap:0;position:relative}
+.tn-side{flex:1;padding:14px 16px;border-radius:12px;background:var(--c-soft)}
+.tn-side.tn-l{border:1px solid var(--accent)}
+.tn-side.tn-r{border:1px solid #2ea043}
+.tn-lbl{font-size:13.5px;font-weight:800;margin-bottom:10px}
+.tn-l .tn-lbl{color:var(--accent)}.tn-r .tn-lbl{color:#2ea043}
+.tn-side ul{list-style:none;margin:0;padding:0}
+.tn-side li{padding:5px 0;font-size:12.5px;line-height:1.6;color:var(--c-sub);border-bottom:1px dashed var(--c-line)}
+.tn-side li:last-child{border-bottom:none}
+.tn-vs{align-self:center;margin:0 14px;font-size:12px;font-weight:800;color:var(--c-sub);background:var(--c-bg);border:1px solid var(--c-line);border-radius:50%;width:38px;height:38px;display:grid;place-items:center;flex:none}
+.tn-core{margin-top:16px;padding:12px 16px;font-size:13px;line-height:1.75;color:var(--c-ink);background:var(--c-soft);border-left:3px solid var(--accent);border-radius:8px}
+.sc-pitfall ul.pit{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:10px}
+.sc-pitfall ul.pit li{padding:11px 14px 11px 34px;position:relative;font-size:12.5px;line-height:1.65;color:var(--c-sub);background:var(--c-panel);border:1px solid var(--c-line);border-left:3px solid #e0562d;border-radius:10px}
+.sc-pitfall ul.pit li:before{content:"\2715";position:absolute;left:13px;top:11px;color:#e0562d;font-weight:800;font-size:12px}
+.rm-wrap{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+.rm-step{background:var(--c-panel);border:1px solid var(--c-line);border-radius:14px;padding:16px 18px;border-top:3px solid var(--accent)}
+.rm-stage{font-size:12px;font-weight:800;color:#fff;background:var(--accent);display:inline-block;padding:3px 12px;border-radius:20px;margin-bottom:10px}
+.rm-focus{font-size:14px;font-weight:700;color:var(--c-ink);margin-bottom:7px}
+.rm-detail{font-size:12.5px;line-height:1.7;color:var(--c-sub)}
+.sc-takeaway ul.tk{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:10px}
+.sc-takeaway ul.tk li{padding:11px 14px 11px 34px;position:relative;font-size:12.5px;line-height:1.65;color:var(--c-ink);background:var(--c-soft);border-radius:10px}
+.sc-takeaway ul.tk li:before{content:"\2713";position:absolute;left:13px;top:11px;color:#2ea043;font-weight:800;font-size:12px}
+footer{margin-top:40px;text-align:center;color:var(--c-sub);font-size:12px}
+</style></head><body style="--accent:#7c3aed"><header class="top"><a class="logo" href="../../index.html#scenario" title="返回业务场景导航"><span class="icobtn"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg></span></a><div class="brand-intro"><div class="bt">业务场景</div><div class="bs">分布式系统落地全景 · 核心技术点架构图</div></div><div class="spacer"></div><button id="tt" class="icobtn" title="切换深色 / 浅色主题" aria-label="切换主题"><span class="tt-ico tt-moon">&#9790;</span><span class="tt-ico tt-sun">&#9728;</span></button></header><div class="wrap"><div class="hero"><div class="lay">增长风控层</div><h1>实时风控与反欺诈决策</h1><div class="en">Real-Time Risk Control</div><div class="tag">信贷审批 / 营销防刷 —— 毫秒级识别欺诈与风险,核心是实时特征 + 规则引擎 + 图计算。</div></div><div class="arch-canvas"><svg xmlns="http://www.w3.org/2000/svg" class="arch-svg" viewBox="0 0 1080 1484" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Text','PingFang SC',sans-serif">
+<defs><filter id="scSoft" x="-6%" y="-6%" width="112%" height="112%"><feDropShadow dx="0" dy="2" stdDeviation="6" flood-color="#0a0a0a" flood-opacity="0.08"/></filter><marker id="scArr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#7c3aed"/></marker><marker id="scArrB" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#c0392b"/></marker><marker id="scArr2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2d7d46"/></marker></defs>
+<rect x="0" y="0" width="1080" height="1484" class="ag-bg"/>
+<text x="26" y="42" font-size="20" font-weight="800" class="ag-title">实时风控与反欺诈决策 · 全景</text>
+<text x="26" y="70" font-size="12.5" class="ag-sub">增长风控层 · Real-Time Risk Control · 数据流拓扑 + 技术矩阵 + 核心张力 + 洞察 + 踩坑 + 心法</text>
+<text x="26" y="112" font-size="15" font-weight="800" fill="#7c3aed">① 端到端数据流 · 沿箭头为请求/数据流转,红虚线为回流/补偿</text>
+<rect x="26.0" y="126" width="192.8" height="30" rx="9" fill="#7c3aed" opacity="0.12"/>
+<text x="38.0" y="146" font-size="12" font-weight="700" fill="#7c3aed" text-anchor="start">事件接入</text>
+<rect x="156.4" y="132.5" width="52.4" height="17" rx="8.5" fill="#7c3aed" opacity="0.9"/>
+<text x="182.6" y="144.4" font-size="9.5" font-weight="700" fill="#ffffff" text-anchor="middle">50,000</text>
+<rect x="234.8" y="126" width="192.8" height="30" rx="9" fill="#7c3aed" opacity="0.12"/>
+<text x="246.8" y="146" font-size="12" font-weight="700" fill="#7c3aed" text-anchor="start">实时特征</text>
+<rect x="365.2" y="132.5" width="52.4" height="17" rx="8.5" fill="#7c3aed" opacity="0.9"/>
+<text x="391.4" y="144.4" font-size="9.5" font-weight="700" fill="#ffffff" text-anchor="middle">48,000</text>
+<rect x="443.6" y="126" width="192.8" height="30" rx="9" fill="#7c3aed" opacity="0.12"/>
+<text x="455.6" y="146" font-size="12" font-weight="700" fill="#7c3aed" text-anchor="start">关系挖掘</text>
+<rect x="580.4" y="132.5" width="46.0" height="17" rx="8.5" fill="#7c3aed" opacity="0.9"/>
+<text x="603.4" y="144.4" font-size="9.5" font-weight="700" fill="#ffffff" text-anchor="middle">5,000</text>
+<rect x="652.4" y="126" width="192.8" height="30" rx="9" fill="#7c3aed" opacity="0.12"/>
+<text x="664.4" y="146" font-size="12" font-weight="700" fill="#7c3aed" text-anchor="start">决策</text>
+<rect x="789.2" y="132.5" width="46.0" height="17" rx="8.5" fill="#7c3aed" opacity="0.9"/>
+<text x="812.2" y="144.4" font-size="9.5" font-weight="700" fill="#ffffff" text-anchor="middle">1,500</text>
+<rect x="861.2" y="126" width="192.8" height="30" rx="9" fill="#7c3aed" opacity="0.12"/>
+<text x="873.2" y="146" font-size="12" font-weight="700" fill="#7c3aed" text-anchor="start">处置</text>
+<rect x="1010.8" y="132.5" width="33.2" height="17" rx="8.5" fill="#7c3aed" opacity="0.9"/>
+<text x="1027.4" y="144.4" font-size="9.5" font-weight="700" fill="#ffffff" text-anchor="middle">300</text>
+<path d="M218.8,251.0 C226.8,251.0 226.8,203.0 234.8,203.0" fill="none" stroke="#7c3aed" stroke-width="1.6" marker-end="url(#scArr)" opacity="0.8"/>
+<rect x="205.5" y="210.0" width="36.5" height="15" rx="4" class="ag-bg" opacity="0.92"/>
+<text x="223.8" y="221.0" font-size="10" class="ag-sub" text-anchor="middle">事件流</text>
+<path d="M427.6,203.0 C331.2,203.0 331.2,299.0 234.8,299.0" fill="none" stroke="#7c3aed" stroke-width="1.6" marker-end="url(#scArr)" opacity="0.8"/>
+<rect x="344.8" y="234.0" width="46.0" height="15" rx="4" class="ag-bg" opacity="0.92"/>
+<text x="367.8" y="245.0" font-size="10" class="ag-sub" text-anchor="middle">特征写入</text>
+<path d="M427.6,299.0 C540.0,299.0 540.0,203.0 652.4,203.0" fill="none" stroke="#7c3aed" stroke-width="1.6" marker-end="url(#scArr)" opacity="0.8"/>
+<rect x="479.0" y="234.0" width="36.5" height="15" rx="4" class="ag-bg" opacity="0.92"/>
+<text x="497.3" y="245.0" font-size="10" class="ag-sub" text-anchor="middle">读特征</text>
+<path d="M427.6,299.0 C540.0,299.0 540.0,299.0 652.4,299.0" fill="none" stroke="#7c3aed" stroke-width="1.6" marker-end="url(#scArr)" opacity="0.8"/>
+<rect x="479.0" y="282.0" width="36.5" height="15" rx="4" class="ag-bg" opacity="0.92"/>
+<text x="497.3" y="293.0" font-size="10" class="ag-sub" text-anchor="middle">读特征</text>
+<path d="M636.4,203.0 C644.4,203.0 644.4,203.0 652.4,203.0" fill="none" stroke="#7c3aed" stroke-width="1.6" marker-end="url(#scArr)" opacity="0.8"/>
+<rect x="618.4" y="186.0" width="46.0" height="15" rx="4" class="ag-bg" opacity="0.92"/>
+<text x="641.4" y="197.0" font-size="10" class="ag-sub" text-anchor="middle">团伙标签</text>
+<path d="M636.4,299.0 C644.4,299.0 644.4,203.0 652.4,203.0" fill="none" stroke="#7c3aed" stroke-width="1.6" marker-end="url(#scArr)" opacity="0.8"/>
+<rect x="618.4" y="234.0" width="46.0" height="15" rx="4" class="ag-bg" opacity="0.92"/>
+<text x="641.4" y="245.0" font-size="10" class="ag-sub" text-anchor="middle">名单命中</text>
+<path d="M845.2,203.0 C853.2,203.0 853.2,251.0 861.2,251.0" fill="none" stroke="#7c3aed" stroke-width="1.6" marker-end="url(#scArr)" opacity="0.8"/>
+<rect x="827.2" y="210.0" width="46.0" height="15" rx="4" class="ag-bg" opacity="0.92"/>
+<text x="850.2" y="221.0" font-size="10" class="ag-sub" text-anchor="middle">规则结果</text>
+<path d="M845.2,299.0 C853.2,299.0 853.2,251.0 861.2,251.0" fill="none" stroke="#7c3aed" stroke-width="1.6" marker-end="url(#scArr)" opacity="0.8"/>
+<rect x="827.2" y="258.0" width="46.0" height="15" rx="4" class="ag-bg" opacity="0.92"/>
+<text x="850.2" y="269.0" font-size="10" class="ag-sub" text-anchor="middle">评分结果</text>
+<path d="M861.2,265.0 C748.8,265.0 748.8,313.0 636.4,313.0" fill="none" stroke="#c0392b" stroke-width="1.4" stroke-dasharray="5 4" marker-end="url(#scArrB)" opacity="0.85"/>
+<rect x="725.8" y="290.0" width="46.0" height="15" rx="4" class="ag-bg" opacity="0.92"/>
+<text x="748.8" y="301.0" font-size="10" fill="#c0392b" text-anchor="middle">反哺名单</text>
+<rect x="26.0" y="218.0" width="192.8" height="66" rx="11" class="ag-card" stroke="#7c3aed" stroke-width="1.4" filter="url(#scSoft)"/>
+<text x="122.4" y="242.0" font-size="12.5" font-weight="700" class="ag-title" text-anchor="middle">业务事件</text>
+<text x="122.4" y="260.0" font-size="9.5" class="ag-sub" text-anchor="middle">交易/登录/申贷请求</text>
+<rect x="234.8" y="170.0" width="192.8" height="66" rx="11" class="ag-card" stroke="#7c3aed" stroke-width="1.4" filter="url(#scSoft)"/>
+<text x="331.2" y="194.0" font-size="12.5" font-weight="700" class="ag-title" text-anchor="middle">Flink 流式计算</text>
+<text x="331.2" y="212.0" font-size="9.5" class="ag-sub" text-anchor="middle">滑动窗口频次/金额</text>
+<rect x="234.8" y="266.0" width="192.8" height="66" rx="11" class="ag-card" stroke="#7c3aed" stroke-width="1.4" filter="url(#scSoft)"/>
+<text x="331.2" y="290.0" font-size="12.5" font-weight="700" class="ag-title" text-anchor="middle">在线特征库</text>
+<text x="331.2" y="308.0" font-size="9.5" class="ag-sub" text-anchor="middle">Redis/HBase 低延迟读</text>
+<rect x="443.6" y="170.0" width="192.8" height="66" rx="11" class="ag-card" stroke="#7c3aed" stroke-width="1.4" filter="url(#scSoft)"/>
+<text x="540.0" y="194.0" font-size="12.5" font-weight="700" class="ag-title" text-anchor="middle">图计算团伙识别</text>
+<text x="540.0" y="212.0" font-size="9.5" class="ag-sub" text-anchor="middle">设备/账号构图，社区发现</text>
+<rect x="443.6" y="266.0" width="192.8" height="66" rx="11" class="ag-card" stroke="#7c3aed" stroke-width="1.4" filter="url(#scSoft)"/>
+<text x="540.0" y="290.0" font-size="12.5" font-weight="700" class="ag-title" text-anchor="middle">名单体系</text>
+<text x="540.0" y="308.0" font-size="9.5" class="ag-sub" text-anchor="middle">黑白灰名单实时命中</text>
+<rect x="652.4" y="170.0" width="192.8" height="66" rx="11" class="ag-card" stroke="#7c3aed" stroke-width="1.4" filter="url(#scSoft)"/>
+<text x="748.8" y="194.0" font-size="12.5" font-weight="700" class="ag-title" text-anchor="middle">规则引擎</text>
+<text x="748.8" y="212.0" font-size="9.5" class="ag-sub" text-anchor="middle">DSL 规则集，命中拦截</text>
+<rect x="652.4" y="266.0" width="192.8" height="66" rx="11" class="ag-card" stroke="#7c3aed" stroke-width="1.4" filter="url(#scSoft)"/>
+<text x="748.8" y="290.0" font-size="12.5" font-weight="700" class="ag-title" text-anchor="middle">模型评分</text>
+<text x="748.8" y="308.0" font-size="9.5" class="ag-sub" text-anchor="middle">GBDT/深度模型风险分</text>
+<rect x="861.2" y="218.0" width="192.8" height="66" rx="11" class="ag-card" stroke="#7c3aed" stroke-width="1.4" filter="url(#scSoft)"/>
+<text x="957.6" y="242.0" font-size="12.5" font-weight="700" class="ag-title" text-anchor="middle">决策流编排</text>
+<text x="957.6" y="260.0" font-size="9.5" class="ag-sub" text-anchor="middle">放行/加验/拒绝，AB 实验</text>
+<text x="26" y="382" font-size="15" font-weight="800" fill="#7c3aed">② 关键技术 · 机制矩阵(广度:按技术域分组)</text>
+<rect x="26.0" y="398.0" width="78.0" height="28" rx="7" fill="#7c3aed" opacity="0.92"/>
+<text x="65.0" y="416.4" font-size="12.5" font-weight="800" fill="#ffffff" text-anchor="middle">决策引擎</text>
+<rect x="117.0" y="398.0" width="72.8" height="28" rx="14" fill="#7c3aed" opacity="0.1" stroke="#7c3aed" stroke-width="1"/>
+<text x="153.4" y="416.2" font-size="12" font-weight="600" fill="#7c3aed" text-anchor="middle">规则引擎</text>
+<rect x="198.8" y="398.0" width="72.8" height="28" rx="14" fill="#7c3aed" opacity="0.1" stroke="#7c3aed" stroke-width="1"/>
+<text x="235.2" y="416.2" font-size="12" font-weight="600" fill="#7c3aed" text-anchor="middle">模型评分</text>
+<rect x="280.6" y="398.0" width="85.0" height="28" rx="14" fill="#7c3aed" opacity="0.1" stroke="#7c3aed" stroke-width="1"/>
+<text x="323.1" y="416.2" font-size="12" font-weight="600" fill="#7c3aed" text-anchor="middle">决策流编排</text>
+<rect x="26.0" y="438.0" width="78.0" height="28" rx="7" fill="#7c3aed" opacity="0.92"/>
+<text x="65.0" y="456.4" font-size="12.5" font-weight="800" fill="#ffffff" text-anchor="middle">实时特征</text>
+<rect x="117.0" y="438.0" width="97.2" height="28" rx="14" fill="#7c3aed" opacity="0.1" stroke="#7c3aed" stroke-width="1"/>
+<text x="165.6" y="456.2" font-size="12" font-weight="600" fill="#7c3aed" text-anchor="middle">实时特征计算</text>
+<rect x="223.2" y="438.0" width="72.8" height="28" rx="14" fill="#7c3aed" opacity="0.1" stroke="#7c3aed" stroke-width="1"/>
+<text x="259.6" y="456.2" font-size="12" font-weight="600" fill="#7c3aed" text-anchor="middle">特征存储</text>
+<rect x="26.0" y="478.0" width="78.0" height="28" rx="7" fill="#7c3aed" opacity="0.92"/>
+<text x="65.0" y="496.4" font-size="12.5" font-weight="800" fill="#ffffff" text-anchor="middle">关系挖掘</text>
+<rect x="117.0" y="478.0" width="109.4" height="28" rx="14" fill="#7c3aed" opacity="0.1" stroke="#7c3aed" stroke-width="1"/>
+<text x="171.7" y="496.2" font-size="12" font-weight="600" fill="#7c3aed" text-anchor="middle">图计算团伙识别</text>
+<rect x="235.4" y="478.0" width="72.8" height="28" rx="14" fill="#7c3aed" opacity="0.1" stroke="#7c3aed" stroke-width="1"/>
+<text x="271.8" y="496.2" font-size="12" font-weight="600" fill="#7c3aed" text-anchor="middle">名单体系</text>
+<text x="26" y="550" font-size="15" font-weight="800" fill="#7c3aed">③ 核心张力 · 本质矛盾(深度:一对相互拉扯的力)</text>
+<rect x="26.0" y="564.0" width="469.0" height="168.0" rx="12" fill="#c0392b" opacity="0.07" stroke="#c0392b" stroke-width="1.3"/>
+<text x="260.5" y="585.0" font-size="13" font-weight="800" fill="#c0392b" text-anchor="middle">漏放欺诈(漏杀)</text>
+<rect x="40.0" y="594.0" width="441.0" height="24" rx="7" fill="#c0392b" opacity="0.11"/>
+<text x="260.5" y="610.0" font-size="11.5" class="ag-title" text-anchor="middle">直接资损真金白银</text>
+<rect x="40.0" y="626.0" width="441.0" height="24" rx="7" fill="#c0392b" opacity="0.11"/>
+<text x="260.5" y="642.0" font-size="11.5" class="ag-title" text-anchor="middle">阈值调松则漏杀增</text>
+<rect x="40.0" y="658.0" width="441.0" height="24" rx="7" fill="#c0392b" opacity="0.11"/>
+<text x="260.5" y="674.0" font-size="11.5" class="ag-title" text-anchor="middle">规则可解释抗监管</text>
+<rect x="40.0" y="690.0" width="441.0" height="24" rx="7" fill="#c0392b" opacity="0.11"/>
+<text x="260.5" y="706.0" font-size="11.5" class="ag-title" text-anchor="middle">图关系抓团伙</text>
+<rect x="585.0" y="564.0" width="469.0" height="168.0" rx="12" fill="#2d7d46" opacity="0.07" stroke="#2d7d46" stroke-width="1.3"/>
+<text x="819.5" y="585.0" font-size="13" font-weight="800" fill="#2d7d46" text-anchor="middle">误伤好人(误杀)</text>
+<rect x="599.0" y="594.0" width="441.0" height="24" rx="7" fill="#2d7d46" opacity="0.11"/>
+<text x="819.5" y="610.0" font-size="11.5" class="ag-title" text-anchor="middle">损失体验与 GMV</text>
+<rect x="599.0" y="626.0" width="441.0" height="24" rx="7" fill="#2d7d46" opacity="0.11"/>
+<text x="819.5" y="642.0" font-size="11.5" class="ag-title" text-anchor="middle">阈值调紧则误杀增</text>
+<rect x="599.0" y="658.0" width="441.0" height="24" rx="7" fill="#2d7d46" opacity="0.11"/>
+<text x="819.5" y="674.0" font-size="11.5" class="ag-title" text-anchor="middle">模型抓未知模式</text>
+<rect x="599.0" y="690.0" width="441.0" height="24" rx="7" fill="#2d7d46" opacity="0.11"/>
+<text x="819.5" y="706.0" font-size="11.5" class="ag-title" text-anchor="middle">毫秒内用不完整信息判</text>
+<circle cx="540.0" cy="648.0" r="24" class="ag-bg" stroke="#7c3aed" stroke-width="1.6"/>
+<text x="540.0" y="656.0" font-size="22" text-anchor="middle">⚡</text>
+<path d="M514.0,648.0 L499.0,648.0" stroke="#c0392b" stroke-width="1.6" marker-end="url(#scArrB)"/>
+<path d="M566.0,648.0 L581.0,648.0" stroke="#2d7d46" stroke-width="1.6" marker-end="url(#scArr2)"/>
+<text x="26" y="750.0" font-size="11.5" class="ag-sub">◆ 核心矛盾不是技术而是两类错误的权衡,两者此消彼长;</text>
+<text x="26" y="767.0" font-size="11.5" class="ag-sub">◆ 不追求零欺诈,而是把损失控制在可接受成本内。</text>
+<text x="26" y="816" font-size="15" font-weight="800" fill="#7c3aed">④ 本质洞察 · 一句话看穿这个场景</text>
+<rect x="26" y="828.0" width="1028" height="118" rx="12" class="ag-card" stroke="#7c3aed" stroke-width="1.4"/>
+<rect x="26" y="828.0" width="4" height="118" rx="2" fill="#7c3aed"/>
+<text x="50" y="858.0" font-size="13" class="ag-title">实时风控的本质是「在毫秒内、用不完整信息、做一个会直接损失真金白银的二元决策」——它的核心矛盾不是技术而是两类错误的权衡:漏放欺诈(漏杀)直接资损,误伤好</text>
+<text x="50" y="878.0" font-size="13" class="ag-title">人(误杀)损失体验与 GMV,而两者此消彼长,阈值调松调紧都是在两种亏损间选择。因此风控不是追求「零欺诈」,而是把损失控制在可接受成本内。技术上规则(可解</text>
+<text x="50" y="898.0" font-size="13" class="ag-title">释、抗监管)与模型(抓未知模式)、单点特征与图关系(抓团伙)必须互补,单靠任何一路都会被黑产针对性绕过。最隐蔽的坑是训练-服务特征偏斜:离线效果很好、上线</text>
+<text x="50" y="918.0" font-size="13" class="ag-title">全线失效。</text>
+<text x="26" y="992" font-size="15" font-weight="800" fill="#7c3aed">⑤ 失败模式 · 真实踩过的坑(反例:这样做会崩)</text>
+<rect x="26.0" y="1006.0" width="506.0" height="44" rx="10" class="ag-card" stroke="#e0562d" stroke-width="1" stroke-opacity="0.5"/>
+<circle cx="46.0" cy="1026.0" r="8" fill="#e0562d" opacity="0.14"/>
+<text x="46.0" y="1029.5" font-size="11" font-weight="800" fill="#e0562d" text-anchor="middle">✕</text>
+<text x="62.0" y="1026.0" font-size="11.5" class="ag-sub">纯模型不留规则:全黑盒决策无法解释,监管过不了、申诉说不清</text>
+<rect x="548.0" y="1006.0" width="506.0" height="44" rx="10" class="ag-card" stroke="#e0562d" stroke-width="1" stroke-opacity="0.5"/>
+<circle cx="568.0" cy="1026.0" r="8" fill="#e0562d" opacity="0.14"/>
+<text x="568.0" y="1029.5" font-size="11" font-weight="800" fill="#e0562d" text-anchor="middle">✕</text>
+<text x="584.0" y="1026.0" font-size="11.5" class="ag-sub">特征离线在线不一致:训练用离线特征、线上用另一套,模型效果直接失真</text>
+<rect x="26.0" y="1062.0" width="506.0" height="44" rx="10" class="ag-card" stroke="#e0562d" stroke-width="1" stroke-opacity="0.5"/>
+<circle cx="46.0" cy="1082.0" r="8" fill="#e0562d" opacity="0.14"/>
+<text x="46.0" y="1085.5" font-size="11" font-weight="800" fill="#e0562d" text-anchor="middle">✕</text>
+<text x="62.0" y="1082.0" font-size="11.5" class="ag-sub">规则改动不灰度:风控直连交易通过率,激进上线可能瞬间误杀大批正常用户</text>
+<rect x="548.0" y="1062.0" width="506.0" height="44" rx="10" class="ag-card" stroke="#e0562d" stroke-width="1" stroke-opacity="0.5"/>
+<circle cx="568.0" cy="1082.0" r="8" fill="#e0562d" opacity="0.14"/>
+<text x="568.0" y="1085.5" font-size="11" font-weight="800" fill="#e0562d" text-anchor="middle">✕</text>
+<text x="584.0" y="1082.0" font-size="11.5" class="ag-sub">只看单点特征:不做滑窗 / 图关联,识别不出批量注册、团伙套现等群体欺诈</text>
+<rect x="26.0" y="1118.0" width="506.0" height="44" rx="10" class="ag-card" stroke="#e0562d" stroke-width="1" stroke-opacity="0.5"/>
+<circle cx="46.0" cy="1138.0" r="8" fill="#e0562d" opacity="0.14"/>
+<text x="46.0" y="1141.5" font-size="11" font-weight="800" fill="#e0562d" text-anchor="middle">✕</text>
+<text x="62.0" y="1138.0" font-size="11.5" class="ag-sub">标签滞后当无标签:忽略欺诈数月后才确认,训练样本用错标签越训越偏</text>
+<rect x="548.0" y="1118.0" width="506.0" height="44" rx="10" class="ag-card" stroke="#e0562d" stroke-width="1" stroke-opacity="0.5"/>
+<circle cx="568.0" cy="1138.0" r="8" fill="#e0562d" opacity="0.14"/>
+<text x="568.0" y="1141.5" font-size="11" font-weight="800" fill="#e0562d" text-anchor="middle">✕</text>
+<text x="584.0" y="1138.0" font-size="11.5" class="ag-sub">名单不闭环:识别出的坏账号不回写名单,同一黑产换个入口又能进来</text>
+<rect x="26.0" y="1174.0" width="506.0" height="44" rx="10" class="ag-card" stroke="#e0562d" stroke-width="1" stroke-opacity="0.5"/>
+<circle cx="46.0" cy="1194.0" r="8" fill="#e0562d" opacity="0.14"/>
+<text x="46.0" y="1197.5" font-size="11" font-weight="800" fill="#e0562d" text-anchor="middle">✕</text>
+<text x="62.0" y="1194.0" font-size="11.5" class="ag-sub">同步串联所有策略:决策链路全串行,规则一多延迟叠加拖垮交易主链路</text>
+<text x="26" y="1266" font-size="15" font-weight="800" fill="#7c3aed">⑥ 设计心法 · 沉淀出的正解(正例:应该这样做)</text>
+<rect x="26.0" y="1280.0" width="506.0" height="44" rx="10" fill="#2ea043" fill-opacity="0.06" stroke="#2ea043" stroke-width="1" stroke-opacity="0.45"/>
+<circle cx="46.0" cy="1300.0" r="8" fill="#2ea043" opacity="0.16"/>
+<text x="46.0" y="1303.5" font-size="11" font-weight="800" fill="#2ea043" text-anchor="middle">✓</text>
+<text x="62.0" y="1300.0" font-size="11.5" class="ag-title">规则守底线、模型抓未知:规则保可解释与快速对抗,模型补未知模式,两者互补</text>
+<rect x="548.0" y="1280.0" width="506.0" height="44" rx="10" fill="#2ea043" fill-opacity="0.06" stroke="#2ea043" stroke-width="1" stroke-opacity="0.45"/>
+<circle cx="568.0" cy="1300.0" r="8" fill="#2ea043" opacity="0.16"/>
+<text x="568.0" y="1303.5" font-size="11" font-weight="800" fill="#2ea043" text-anchor="middle">✓</text>
+<text x="584.0" y="1300.0" font-size="11.5" class="ag-title">在线离线特征同源:用同一套特征定义 / 计算逻辑,杜绝训练-服务偏差</text>
+<rect x="26.0" y="1336.0" width="506.0" height="44" rx="10" fill="#2ea043" fill-opacity="0.06" stroke="#2ea043" stroke-width="1" stroke-opacity="0.45"/>
+<circle cx="46.0" cy="1356.0" r="8" fill="#2ea043" opacity="0.16"/>
+<text x="46.0" y="1359.5" font-size="11" font-weight="800" fill="#2ea043" text-anchor="middle">✓</text>
+<text x="62.0" y="1356.0" font-size="11.5" class="ag-title">任何策略先灰度:风控改动都可能造成资损,AB / 灰度是上线的强制前置</text>
+<rect x="548.0" y="1336.0" width="506.0" height="62" rx="10" fill="#2ea043" fill-opacity="0.06" stroke="#2ea043" stroke-width="1" stroke-opacity="0.45"/>
+<circle cx="568.0" cy="1356.0" r="8" fill="#2ea043" opacity="0.16"/>
+<text x="568.0" y="1359.5" font-size="11" font-weight="800" fill="#2ea043" text-anchor="middle">✓</text>
+<text x="584.0" y="1356.0" font-size="11.5" class="ag-title">从点到图看关系:欺诈往往成团,图计算 + 社区发现能抓单点特征看不到的团</text>
+<text x="584.0" y="1374.0" font-size="11.5" class="ag-title">伙</text>
+<rect x="26.0" y="1392.0" width="506.0" height="44" rx="10" fill="#2ea043" fill-opacity="0.06" stroke="#2ea043" stroke-width="1" stroke-opacity="0.45"/>
+<circle cx="46.0" cy="1412.0" r="8" fill="#2ea043" opacity="0.16"/>
+<text x="46.0" y="1415.5" font-size="11" font-weight="800" fill="#2ea043" text-anchor="middle">✓</text>
+<text x="62.0" y="1412.0" font-size="11.5" class="ag-title">决策要闭环反哺:识别结果回写名单 / 样本,让系统在对抗中持续进化</text>
+</svg></div><div class="sc-sec"><h2>核心技术点</h2><div class="grid"><div class="grp"><h3>决策引擎</h3><ul><li><b>规则引擎</b><span>可配置规则集(Drools / 自研 DSL),命中即拦截或加验</span><span class="dp">规则可业务热更新(改阈值不发版)。优势:可解释(监管要求)、响应快(毫秒)。缺陷:规则爆炸后维护难、易被黑产试探绕过。故与模型互补:规则守可解释底线,模型抓未知模式。</span></li><li><b>模型评分</b><span>GBDT / 深度模型输出风险分,与规则组合决策</span><span class="dp">GBDT 处理表格特征稳健、可解释性尚可,是风控主力;深度模型抓复杂交互但黑盒。与规则组合(如分&gt;0.8 拒、0.5~0.8 加验)。核心难点:样本极不均衡(欺诈占比 &lt;1%)、标签滞后(欺诈数月后才确认),需特殊采样与延迟反馈训练。</span></li><li><b>决策流编排</b><span>多策略串并联编排,灰度 / AB 实验对比效果</span><span class="dp">串联(逐层过滤)省算力、并联(同时评估)降延迟。新策略必须灰度/AB 上线——风控改动直接影响交易通过率,激进上线可能误杀大量正常用户或放过欺诈,损失都是真金白银。</span></li></ul></div><div class="grp"><h3>实时特征</h3><ul><li><b>实时特征计算</b><span>Flink 流式计算滑动窗口特征(近 N 次频次 / 金额)</span><span class="dp">风控最强特征是行为序列:近 1 分钟登录几次、近 1 小时交易金额、设备近 24h 关联账号数,Flink 滑动窗口毫秒级可查。难点:窗口状态大(千万用户×多窗口)、要求 exactly-once(算错频次=误判)、乱序事件需 watermark 处理。</span></li><li><b>特征存储</b><span>在线特征库(Redis / HBase)低延迟读取,离线在线一致</span><span class="dp">Redis(热)/HBase(全量)在线特征库支撑毫秒读。最大的坑是「训练-服务偏斜」:离线训练用的特征口径与在线计算不一致,模型线上失效。需特征平台统一定义,离线在线共用一套计算逻辑。</span></li></ul></div><div class="grp"><h3>关系挖掘</h3><ul><li><b>图计算团伙识别</b><span>设备 / 账号 / IP 构图,社区发现挖掘欺诈团伙</span><span class="dp">单点看正常的账号,放到设备/IP/WiFi/资金关系图里,团伙特征暴露无遗(百账号共用一设备)。用社区发现/标签传播/GNN 挖掘团伙。价值:抓「协同作案」这类单点规则抓不到的模式。难点:图规模亿级、实时更新与实时查询的性能。</span></li><li><b>名单体系</b><span>黑白灰名单实时命中,联合建模跨域风险</span><span class="dp">命中是毫秒级 KV 查。关键:名单要有时效(误伤需申诉解禁)、要联合(设备黑则关联账号灰)、要反哺(决策结果动态回写),形成闭环。</span></li></ul></div></div></div><div class="sc-sec"><div class="insight"><h2>本质洞察</h2><p>实时风控的本质是「在毫秒内、用不完整信息、做一个会直接损失真金白银的二元决策」——它的核心矛盾不是技术而是两类错误的权衡:漏放欺诈(漏杀)直接资损,误伤好人(误杀)损失体验与 GMV,而两者此消彼长,阈值调松调紧都是在两种亏损间选择。因此风控不是追求「零欺诈」,而是把损失控制在可接受成本内。技术上规则(可解释、抗监管)与模型(抓未知模式)、单点特征与图关系(抓团伙)必须互补,单靠任何一路都会被黑产针对性绕过。最隐蔽的坑是训练-服务特征偏斜:离线效果很好、上线全线失效。</p></div></div><div class="sc-sec"><h2>设计张力</h2><div class="sc-tension"><div class="tn-wrap"><div class="tn-side tn-l"><div class="tn-lbl">漏放欺诈(漏杀)</div><ul><li>直接资损真金白银</li><li>阈值调松则漏杀增</li><li>规则可解释抗监管</li><li>图关系抓团伙</li></ul></div><div class="tn-vs">VS</div><div class="tn-side tn-r"><div class="tn-lbl">误伤好人(误杀)</div><ul><li>损失体验与 GMV</li><li>阈值调紧则误杀增</li><li>模型抓未知模式</li><li>毫秒内用不完整信息判</li></ul></div></div><div class="tn-core">核心矛盾不是技术而是两类错误的权衡,两者此消彼长;不追求零欺诈,而是把损失控制在可接受成本内。</div></div></div><div class="sc-sec"><h2>容量漏斗</h2><div class="arch-canvas"><svg xmlns="http://www.w3.org/2000/svg" class="arch-svg" viewBox="0 0 1080 572" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Text','PingFang SC',sans-serif">
+<defs><filter id="fnSoft" x="-6%" y="-6%" width="112%" height="112%"><feDropShadow dx="0" dy="2" stdDeviation="6" flood-color="#0a0a0a" flood-opacity="0.10"/></filter></defs>
+<defs><marker id="fnArr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#7c3aed" opacity="0.6"/></marker></defs>
+<rect x="0" y="0" width="1080" height="572" class="ag-bg"/>
+<text x="40" y="42" font-size="20" font-weight="800" class="ag-title">实时风控与反欺诈决策 · 容量漏斗</text>
+<text x="40" y="70" font-size="12.5" class="ag-sub">入口洪峰到有效结果的逐级过滤 · 每一层都在用最小代价挡掉注定失败的请求</text>
+<rect x="40.0" y="92" width="1000.0" height="74" rx="14" fill="#7c3aed" opacity="0.140" stroke="#7c3aed" stroke-width="1.2" filter="url(#fnSoft)"/>
+<text x="540.0" y="119" font-size="13.5" font-weight="700" class="ag-title" text-anchor="middle">全量请求</text>
+<text x="540.0" y="144" font-size="18" font-weight="800" fill="#7c3aed" text-anchor="middle">50,000</text>
+<text x="1052.0" y="133.0" font-size="11" class="ag-sub" text-anchor="start">交易/登录/申贷事件</text>
+<path d="M540.0 167 L540.0 180" stroke="#7c3aed" stroke-width="1.4" opacity="0.5" marker-end="url(#fnArr)"/>
+<rect x="127.5" y="182" width="825.0" height="74" rx="14" fill="#7c3aed" opacity="0.165" stroke="#7c3aed" stroke-width="1.2" filter="url(#fnSoft)"/>
+<text x="540.0" y="209" font-size="13.5" font-weight="700" class="ag-title" text-anchor="middle">名单命中</text>
+<text x="540.0" y="234" font-size="18" font-weight="800" fill="#7c3aed" text-anchor="middle">48,000</text>
+<text x="964.5" y="223.0" font-size="11" class="ag-sub" text-anchor="start">黑名单直拒~4%</text>
+<path d="M540.0 257 L540.0 270" stroke="#7c3aed" stroke-width="1.4" opacity="0.5" marker-end="url(#fnArr)"/>
+<rect x="215.0" y="272" width="650.0" height="74" rx="14" fill="#7c3aed" opacity="0.190" stroke="#7c3aed" stroke-width="1.2" filter="url(#fnSoft)"/>
+<text x="540.0" y="299" font-size="13.5" font-weight="700" class="ag-title" text-anchor="middle">规则过滤</text>
+<text x="540.0" y="324" font-size="18" font-weight="800" fill="#7c3aed" text-anchor="middle">5,000</text>
+<text x="877.0" y="313.0" font-size="11" class="ag-sub" text-anchor="start">命中规则进入加验/评估</text>
+<path d="M540.0 347 L540.0 360" stroke="#7c3aed" stroke-width="1.4" opacity="0.5" marker-end="url(#fnArr)"/>
+<rect x="302.5" y="362" width="475.0" height="74" rx="14" fill="#7c3aed" opacity="0.215" stroke="#7c3aed" stroke-width="1.2" filter="url(#fnSoft)"/>
+<text x="540.0" y="389" font-size="13.5" font-weight="700" class="ag-title" text-anchor="middle">模型评分</text>
+<text x="540.0" y="414" font-size="18" font-weight="800" fill="#7c3aed" text-anchor="middle">1,500</text>
+<text x="789.5" y="403.0" font-size="11" class="ag-sub" text-anchor="start">高风险分需进一步决策</text>
+<path d="M540.0 437 L540.0 450" stroke="#7c3aed" stroke-width="1.4" opacity="0.5" marker-end="url(#fnArr)"/>
+<rect x="390.0" y="452" width="300.0" height="74" rx="14" fill="#7c3aed" opacity="0.240" stroke="#7c3aed" stroke-width="1.2" filter="url(#fnSoft)"/>
+<text x="540.0" y="479" font-size="13.5" font-weight="700" class="ag-title" text-anchor="middle">人工/加验拦截</text>
+<text x="540.0" y="504" font-size="18" font-weight="800" fill="#7c3aed" text-anchor="middle">300</text>
+<text x="702.0" y="493.0" font-size="11" class="ag-sub" text-anchor="start">最终拦截,其余放行</text>
+</svg></div></div><div class="sc-sec"><h2>核心数据流</h2><div class="arch-canvas"><svg xmlns="http://www.w3.org/2000/svg" class="arch-svg" viewBox="0 0 1080 342" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Text','PingFang SC',sans-serif">
+<defs><filter id="scSoft" x="-6%" y="-6%" width="112%" height="112%"><feDropShadow dx="0" dy="2" stdDeviation="6" flood-color="#0a0a0a" flood-opacity="0.08"/></filter><marker id="scArr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#7c3aed"/></marker><marker id="scArrB" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#c0392b"/></marker></defs>
+<rect x="0" y="0" width="1080" height="342" class="ag-bg"/>
+<text x="26" y="42" font-size="20" font-weight="800" class="ag-title">实时风控与反欺诈决策 · 端到端数据流</text>
+<text x="26" y="70" font-size="12.5" class="ag-sub">增长风控层 · Real-Time Risk Control · 沿箭头方向为请求 / 数据流转,红色虚线为回流 / 补偿</text>
+<rect x="26.0" y="92" width="192.8" height="30" rx="9" fill="#7c3aed" opacity="0.12"/>
+<text x="122.4" y="112" font-size="12" font-weight="700" fill="#7c3aed" text-anchor="middle">事件接入</text>
+<rect x="234.8" y="92" width="192.8" height="30" rx="9" fill="#7c3aed" opacity="0.12"/>
+<text x="331.2" y="112" font-size="12" font-weight="700" fill="#7c3aed" text-anchor="middle">实时特征</text>
+<rect x="443.6" y="92" width="192.8" height="30" rx="9" fill="#7c3aed" opacity="0.12"/>
+<text x="540.0" y="112" font-size="12" font-weight="700" fill="#7c3aed" text-anchor="middle">关系挖掘</text>
+<rect x="652.4" y="92" width="192.8" height="30" rx="9" fill="#7c3aed" opacity="0.12"/>
+<text x="748.8" y="112" font-size="12" font-weight="700" fill="#7c3aed" text-anchor="middle">决策</text>
+<rect x="861.2" y="92" width="192.8" height="30" rx="9" fill="#7c3aed" opacity="0.12"/>
+<text x="957.6" y="112" font-size="12" font-weight="700" fill="#7c3aed" text-anchor="middle">处置</text>
+<path d="M218.8,217.0 C226.8,217.0 226.8,169.0 234.8,169.0" fill="none" stroke="#7c3aed" stroke-width="1.6" marker-end="url(#scArr)" opacity="0.8"/>
+<rect x="205.5" y="176.0" width="36.5" height="15" rx="4" class="ag-bg" opacity="0.92"/>
+<text x="223.8" y="187.0" font-size="10" class="ag-sub" text-anchor="middle">事件流</text>
+<path d="M427.6,169.0 C331.2,169.0 331.2,265.0 234.8,265.0" fill="none" stroke="#7c3aed" stroke-width="1.6" marker-end="url(#scArr)" opacity="0.8"/>
+<rect x="344.8" y="200.0" width="46.0" height="15" rx="4" class="ag-bg" opacity="0.92"/>
+<text x="367.8" y="211.0" font-size="10" class="ag-sub" text-anchor="middle">特征写入</text>
+<path d="M427.6,265.0 C540.0,265.0 540.0,169.0 652.4,169.0" fill="none" stroke="#7c3aed" stroke-width="1.6" marker-end="url(#scArr)" opacity="0.8"/>
+<rect x="479.0" y="200.0" width="36.5" height="15" rx="4" class="ag-bg" opacity="0.92"/>
+<text x="497.3" y="211.0" font-size="10" class="ag-sub" text-anchor="middle">读特征</text>
+<path d="M427.6,265.0 C540.0,265.0 540.0,265.0 652.4,265.0" fill="none" stroke="#7c3aed" stroke-width="1.6" marker-end="url(#scArr)" opacity="0.8"/>
+<rect x="479.0" y="248.0" width="36.5" height="15" rx="4" class="ag-bg" opacity="0.92"/>
+<text x="497.3" y="259.0" font-size="10" class="ag-sub" text-anchor="middle">读特征</text>
+<path d="M636.4,169.0 C644.4,169.0 644.4,169.0 652.4,169.0" fill="none" stroke="#7c3aed" stroke-width="1.6" marker-end="url(#scArr)" opacity="0.8"/>
+<rect x="618.4" y="152.0" width="46.0" height="15" rx="4" class="ag-bg" opacity="0.92"/>
+<text x="641.4" y="163.0" font-size="10" class="ag-sub" text-anchor="middle">团伙标签</text>
+<path d="M636.4,265.0 C644.4,265.0 644.4,169.0 652.4,169.0" fill="none" stroke="#7c3aed" stroke-width="1.6" marker-end="url(#scArr)" opacity="0.8"/>
+<rect x="618.4" y="200.0" width="46.0" height="15" rx="4" class="ag-bg" opacity="0.92"/>
+<text x="641.4" y="211.0" font-size="10" class="ag-sub" text-anchor="middle">名单命中</text>
+<path d="M845.2,169.0 C853.2,169.0 853.2,217.0 861.2,217.0" fill="none" stroke="#7c3aed" stroke-width="1.6" marker-end="url(#scArr)" opacity="0.8"/>
+<rect x="827.2" y="176.0" width="46.0" height="15" rx="4" class="ag-bg" opacity="0.92"/>
+<text x="850.2" y="187.0" font-size="10" class="ag-sub" text-anchor="middle">规则结果</text>
+<path d="M845.2,265.0 C853.2,265.0 853.2,217.0 861.2,217.0" fill="none" stroke="#7c3aed" stroke-width="1.6" marker-end="url(#scArr)" opacity="0.8"/>
+<rect x="827.2" y="224.0" width="46.0" height="15" rx="4" class="ag-bg" opacity="0.92"/>
+<text x="850.2" y="235.0" font-size="10" class="ag-sub" text-anchor="middle">评分结果</text>
+<path d="M861.2,231.0 C748.8,231.0 748.8,279.0 636.4,279.0" fill="none" stroke="#c0392b" stroke-width="1.4" stroke-dasharray="5 4" marker-end="url(#scArrB)" opacity="0.85"/>
+<rect x="725.8" y="256.0" width="46.0" height="15" rx="4" class="ag-bg" opacity="0.92"/>
+<text x="748.8" y="267.0" font-size="10" fill="#c0392b" text-anchor="middle">反哺名单</text>
+<rect x="26.0" y="184.0" width="192.8" height="66" rx="11" class="ag-card" stroke="#7c3aed" stroke-width="1.4" filter="url(#scSoft)"/>
+<text x="122.4" y="208.0" font-size="12.5" font-weight="700" class="ag-title" text-anchor="middle">业务事件</text>
+<text x="122.4" y="226.0" font-size="9.5" class="ag-sub" text-anchor="middle">交易/登录/申贷请求</text>
+<rect x="234.8" y="136.0" width="192.8" height="66" rx="11" class="ag-card" stroke="#7c3aed" stroke-width="1.4" filter="url(#scSoft)"/>
+<text x="331.2" y="160.0" font-size="12.5" font-weight="700" class="ag-title" text-anchor="middle">Flink 流式计算</text>
+<text x="331.2" y="178.0" font-size="9.5" class="ag-sub" text-anchor="middle">滑动窗口频次/金额</text>
+<rect x="234.8" y="232.0" width="192.8" height="66" rx="11" class="ag-card" stroke="#7c3aed" stroke-width="1.4" filter="url(#scSoft)"/>
+<text x="331.2" y="256.0" font-size="12.5" font-weight="700" class="ag-title" text-anchor="middle">在线特征库</text>
+<text x="331.2" y="274.0" font-size="9.5" class="ag-sub" text-anchor="middle">Redis/HBase 低延迟读</text>
+<rect x="443.6" y="136.0" width="192.8" height="66" rx="11" class="ag-card" stroke="#7c3aed" stroke-width="1.4" filter="url(#scSoft)"/>
+<text x="540.0" y="160.0" font-size="12.5" font-weight="700" class="ag-title" text-anchor="middle">图计算团伙识别</text>
+<text x="540.0" y="178.0" font-size="9.5" class="ag-sub" text-anchor="middle">设备/账号构图，社区发现</text>
+<rect x="443.6" y="232.0" width="192.8" height="66" rx="11" class="ag-card" stroke="#7c3aed" stroke-width="1.4" filter="url(#scSoft)"/>
+<text x="540.0" y="256.0" font-size="12.5" font-weight="700" class="ag-title" text-anchor="middle">名单体系</text>
+<text x="540.0" y="274.0" font-size="9.5" class="ag-sub" text-anchor="middle">黑白灰名单实时命中</text>
+<rect x="652.4" y="136.0" width="192.8" height="66" rx="11" class="ag-card" stroke="#7c3aed" stroke-width="1.4" filter="url(#scSoft)"/>
+<text x="748.8" y="160.0" font-size="12.5" font-weight="700" class="ag-title" text-anchor="middle">规则引擎</text>
+<text x="748.8" y="178.0" font-size="9.5" class="ag-sub" text-anchor="middle">DSL 规则集，命中拦截</text>
+<rect x="652.4" y="232.0" width="192.8" height="66" rx="11" class="ag-card" stroke="#7c3aed" stroke-width="1.4" filter="url(#scSoft)"/>
+<text x="748.8" y="256.0" font-size="12.5" font-weight="700" class="ag-title" text-anchor="middle">模型评分</text>
+<text x="748.8" y="274.0" font-size="9.5" class="ag-sub" text-anchor="middle">GBDT/深度模型风险分</text>
+<rect x="861.2" y="184.0" width="192.8" height="66" rx="11" class="ag-card" stroke="#7c3aed" stroke-width="1.4" filter="url(#scSoft)"/>
+<text x="957.6" y="208.0" font-size="12.5" font-weight="700" class="ag-title" text-anchor="middle">决策流编排</text>
+<text x="957.6" y="226.0" font-size="9.5" class="ag-sub" text-anchor="middle">放行/加验/拒绝，AB 实验</text>
+</svg></div></div><div class="sc-sec"><h2>需求根基</h2><div class="req-grid"><div class="req-col"><h3>功能需求</h3><ul><li>交易 / 登录 / 营销事件的毫秒级实时风险决策(放行 / 加验 / 拒绝)</li><li>规则引擎:可热更新的 DSL 规则集,命中即拦截或加验</li><li>实时特征计算:Flink 滑窗统计近 N 次频次 / 金额等行为特征</li><li>模型评分:GBDT / 深度模型输出风险分,与规则组合决策</li><li>关系图谱团伙识别 + 黑白名单动态回写闭环</li></ul></div><div class="req-col req-wide"><h3>质量指标</h3><table class="qtab"><tr><th>维度</th><th>目标</th><th>说明</th></tr><tr><td class="qk">决策延迟</td><td class="qv">P99 &lt; 100ms</td><td>卡在交易主链路,慢一点就拖累支付成功率</td></tr><tr><td class="qk">可解释性</td><td class="qv">每次拒绝可回溯命中规则</td><td>监管要求 + 客诉申诉,黑盒模型不能单独拍板</td></tr><tr><td class="qk">召回 / 误杀</td><td class="qv">欺诈召回高、误杀率 &lt; 0.1%</td><td>误杀正常用户直接流失,漏过欺诈直接资损,双约束</td></tr><tr><td class="qk">特征时效</td><td class="qv">行为到特征 &lt; 1s</td><td>欺诈是瞬时爆发,特征滞后就等于没拦</td></tr><tr><td class="qk">规则时效</td><td class="qv">改阈值秒级生效不发版</td><td>黑产变招极快,规则须能热更新快速对抗</td></tr></table></div><div class="req-col req-wide"><h3>关键约束</h3><ul class="cons"><li>样本极不均衡:欺诈占比常 &lt; 1%,且标签滞后数月才确认,训练难</li><li>对抗性:黑产会主动试探绕过,策略必须持续演进而非一劳永逸</li><li>误杀与漏过双向代价:两类错误都是真金白银,阈值是艰难的经营权衡</li></ul></div></div></div><div class="sc-sec"><h2>存储选型</h2><table class="dtab"><tr><th>数据实体</th><th>存储方案</th><th>选型理由</th></tr><tr><td class="de">实时特征</td><td class="ds">Redis/HBase 特征库</td><td>毫秒读、离线在线一致</td></tr><tr><td class="de">滑窗状态</td><td class="ds">Flink 状态后端</td><td>exactly-once、防误判</td></tr><tr><td class="de">关系图谱</td><td class="ds">图数据库</td><td>亿级点边、社区发现</td></tr><tr><td class="de">名单库</td><td class="ds">Redis KV</td><td>毫秒命中、动态回写</td></tr><tr><td class="de">决策流水</td><td class="ds">分库分表</td><td>可追溯、抗监管</td></tr><tr><td class="de">模型样本</td><td class="ds">数仓+对象存储</td><td>延迟标签、离线训练</td></tr></table></div><div class="sc-sec"><h2>演进路线</h2><div class="rm-wrap"><div class="rm-step"><span class="rm-stage">MVP</span><div class="rm-focus">规则引擎</div><div class="rm-detail">DSL 规则、名单命中、可解释拦截</div></div><div class="rm-step"><span class="rm-stage">成长期</span><div class="rm-focus">实时特征+模型</div><div class="rm-detail">Flink 滑窗、GBDT 评分、规则模型组合</div></div><div class="rm-step"><span class="rm-stage">成熟期</span><div class="rm-focus">图计算+闭环</div><div class="rm-detail">团伙识别、决策灰度、反哺名单闭环</div></div></div></div><div class="sc-sec sc-pitfall"><h2>常见踩坑</h2><ul class="pit"><li>纯模型不留规则:全黑盒决策无法解释,监管过不了、申诉说不清</li><li>特征离线在线不一致:训练用离线特征、线上用另一套,模型效果直接失真</li><li>规则改动不灰度:风控直连交易通过率,激进上线可能瞬间误杀大批正常用户</li><li>只看单点特征:不做滑窗 / 图关联,识别不出批量注册、团伙套现等群体欺诈</li><li>标签滞后当无标签:忽略欺诈数月后才确认,训练样本用错标签越训越偏</li><li>名单不闭环:识别出的坏账号不回写名单,同一黑产换个入口又能进来</li><li>同步串联所有策略:决策链路全串行,规则一多延迟叠加拖垮交易主链路</li></ul></div><div class="sc-sec sc-takeaway"><h2>设计心法</h2><ul class="tk"><li>规则守底线、模型抓未知:规则保可解释与快速对抗,模型补未知模式,两者互补</li><li>在线离线特征同源:用同一套特征定义 / 计算逻辑,杜绝训练-服务偏差</li><li>任何策略先灰度:风控改动都可能造成资损,AB / 灰度是上线的强制前置</li><li>从点到图看关系:欺诈往往成团,图计算 + 社区发现能抓单点特征看不到的团伙</li><li>决策要闭环反哺:识别结果回写名单 / 样本,让系统在对抗中持续进化</li></ul></div><footer>业务场景 · 分布式系统落地全景 · 核心技术点架构图</footer></div><script>(function(){var r=document.documentElement,KEY="atlas-nav-theme";function ap(t){if(t==="dark")r.setAttribute("data-theme","dark");else r.removeAttribute("data-theme");}var s="light";try{s=localStorage.getItem(KEY)||"light";}catch(e){}ap(s);var tt=document.getElementById("tt");if(tt)tt.onclick=function(){var n=r.getAttribute("data-theme")==="dark"?"light":"dark";ap(n);try{localStorage.setItem(KEY,n);}catch(e){}};})();</script></body></html>

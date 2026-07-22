@@ -1,0 +1,106 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="620" viewBox="0 0 1120 620" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="aB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#4a7fd0"/></marker>
+    <marker id="aG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+    <marker id="aA" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#d99a2b"/></marker>
+  </defs>
+  <rect width="1120" height="620" fill="#fbfbfd"/>
+
+  <text x="30" y="34" font-size="17" font-weight="700" fill="#1d1d1f">DC1 · 二分查找的分治视角：每次对半分区间，只递归含目标的一侧</text>
+  <text x="30" y="56" font-size="11" fill="#6e6e73">子问题 f(i,j)：取中点 m=i+((j−i)>>1)，比较 nums[m] 与 target 决定去哪半 —— 示例 nums=[1,3,5,7,9,11,13,15]，target=13</text>
+
+  <!-- 图例 -->
+  <rect x="30" y="72" width="12" height="12" rx="2" fill="#4a7fd0"/><text x="48" y="82" font-size="10.5" fill="#3a3a3c">当前窗口 [i,j]</text>
+  <rect x="170" y="72" width="12" height="12" rx="2" fill="#d99a2b"/><text x="188" y="82" font-size="10.5" fill="#3a3a3c">探测点 m</text>
+  <rect x="290" y="72" width="12" height="12" rx="2" fill="#2f9e6e"/><text x="308" y="82" font-size="10.5" fill="#3a3a3c">命中 / 保留一侧</text>
+  <rect x="430" y="72" width="12" height="12" rx="2" fill="#f4f4f6" stroke="#d7d7dd"/><text x="448" y="82" font-size="10.5" fill="#3a3a3c">已丢弃的半区</text>
+
+  <!-- index header -->
+  <g font-size="9" fill="#a1a1a6" text-anchor="middle">
+    <text x="87" y="118">0</text><text x="145" y="118">1</text><text x="203" y="118">2</text><text x="261" y="118">3</text><text x="319" y="118">4</text><text x="377" y="118">5</text><text x="435" y="118">6</text><text x="493" y="118">7</text>
+  </g>
+
+  <!-- ===== Snapshot 1 : window [0,7] ===== -->
+  <text x="60" y="140" font-size="11" font-weight="700" fill="#20375e">① f(0,7)　窗口 = 8</text>
+  <g font-size="12" text-anchor="middle">
+    <rect x="60" y="150" width="54" height="40" rx="6" fill="#eaf1fb" stroke="#c6d9f2"/><text x="87" y="175" fill="#20375e">1</text>
+    <rect x="118" y="150" width="54" height="40" rx="6" fill="#eaf1fb" stroke="#c6d9f2"/><text x="145" y="175" fill="#20375e">3</text>
+    <rect x="176" y="150" width="54" height="40" rx="6" fill="#eaf1fb" stroke="#c6d9f2"/><text x="203" y="175" fill="#20375e">5</text>
+    <rect x="234" y="150" width="54" height="40" rx="6" fill="#fdf3e0" stroke="#e7c07a" stroke-width="1.6"/><text x="261" y="171" fill="#8a5a12" font-weight="700">7</text><text x="261" y="184" font-size="8" fill="#8a5a12">m=3</text>
+    <rect x="292" y="150" width="54" height="40" rx="6" fill="#eaf1fb" stroke="#c6d9f2"/><text x="319" y="175" fill="#20375e">9</text>
+    <rect x="350" y="150" width="54" height="40" rx="6" fill="#eaf1fb" stroke="#c6d9f2"/><text x="377" y="175" fill="#20375e">11</text>
+    <rect x="408" y="150" width="54" height="40" rx="6" fill="#eaf1fb" stroke="#c6d9f2"/><text x="435" y="175" fill="#20375e">13</text>
+    <rect x="466" y="150" width="54" height="40" rx="6" fill="#eaf1fb" stroke="#c6d9f2"/><text x="493" y="175" fill="#20375e">15</text>
+  </g>
+  <text x="536" y="175" font-size="10.5" fill="#8a5a12">7 &lt; 13 去右</text>
+
+  <!-- ===== Snapshot 2 : window [4,7] ===== -->
+  <text x="60" y="222" font-size="11" font-weight="700" fill="#20375e">② f(4,7)　窗口 = 4　（左半含 m 已丢）</text>
+  <g font-size="12" text-anchor="middle">
+    <rect x="60" y="232" width="54" height="40" rx="6" fill="#f4f4f6" stroke="#d7d7dd" stroke-dasharray="3 2"/><text x="87" y="257" fill="#c2c2c7">1</text>
+    <rect x="118" y="232" width="54" height="40" rx="6" fill="#f4f4f6" stroke="#d7d7dd" stroke-dasharray="3 2"/><text x="145" y="257" fill="#c2c2c7">3</text>
+    <rect x="176" y="232" width="54" height="40" rx="6" fill="#f4f4f6" stroke="#d7d7dd" stroke-dasharray="3 2"/><text x="203" y="257" fill="#c2c2c7">5</text>
+    <rect x="234" y="232" width="54" height="40" rx="6" fill="#f4f4f6" stroke="#d7d7dd" stroke-dasharray="3 2"/><text x="261" y="257" fill="#c2c2c7">7</text>
+    <rect x="292" y="232" width="54" height="40" rx="6" fill="#eaf1fb" stroke="#c6d9f2"/><text x="319" y="257" fill="#20375e">9</text>
+    <rect x="350" y="232" width="54" height="40" rx="6" fill="#fdf3e0" stroke="#e7c07a" stroke-width="1.6"/><text x="377" y="253" fill="#8a5a12" font-weight="700">11</text><text x="377" y="266" font-size="8" fill="#8a5a12">m=5</text>
+    <rect x="408" y="232" width="54" height="40" rx="6" fill="#eaf1fb" stroke="#c6d9f2"/><text x="435" y="257" fill="#20375e">13</text>
+    <rect x="466" y="232" width="54" height="40" rx="6" fill="#eaf1fb" stroke="#c6d9f2"/><text x="493" y="257" fill="#20375e">15</text>
+  </g>
+  <text x="536" y="257" font-size="10.5" fill="#8a5a12">11 &lt; 13 去右</text>
+
+  <!-- ===== Snapshot 3 : window [6,7] ===== -->
+  <text x="60" y="304" font-size="11" font-weight="700" fill="#20375e">③ f(6,7)　窗口 = 2　m=6</text>
+  <g font-size="12" text-anchor="middle">
+    <rect x="60" y="314" width="54" height="40" rx="6" fill="#f4f4f6" stroke="#d7d7dd" stroke-dasharray="3 2"/><text x="87" y="339" fill="#c2c2c7">1</text>
+    <rect x="118" y="314" width="54" height="40" rx="6" fill="#f4f4f6" stroke="#d7d7dd" stroke-dasharray="3 2"/><text x="145" y="339" fill="#c2c2c7">3</text>
+    <rect x="176" y="314" width="54" height="40" rx="6" fill="#f4f4f6" stroke="#d7d7dd" stroke-dasharray="3 2"/><text x="203" y="339" fill="#c2c2c7">5</text>
+    <rect x="234" y="314" width="54" height="40" rx="6" fill="#f4f4f6" stroke="#d7d7dd" stroke-dasharray="3 2"/><text x="261" y="339" fill="#c2c2c7">7</text>
+    <rect x="292" y="314" width="54" height="40" rx="6" fill="#f4f4f6" stroke="#d7d7dd" stroke-dasharray="3 2"/><text x="319" y="339" fill="#c2c2c7">9</text>
+    <rect x="350" y="314" width="54" height="40" rx="6" fill="#f4f4f6" stroke="#d7d7dd" stroke-dasharray="3 2"/><text x="377" y="339" fill="#c2c2c7">11</text>
+    <rect x="408" y="314" width="54" height="40" rx="6" fill="#e6f4ec" stroke="#2f9e6e" stroke-width="1.8"/><text x="435" y="335" fill="#1f6b47" font-weight="700">13</text><text x="435" y="348" font-size="8" fill="#1f6b47">m=6 ✓</text>
+    <rect x="466" y="314" width="54" height="40" rx="6" fill="#eaf1fb" stroke="#c6d9f2"/><text x="493" y="339" fill="#20375e">15</text>
+  </g>
+  <text x="536" y="339" font-size="10.5" fill="#1f6b47" font-weight="700">13 命中 ✓</text>
+
+  <text x="60" y="384" font-size="10.5" fill="#6e6e73">每步窗口大小 8 → 4 → 2 → 1：每次砍掉约一半，被丢弃的半区再也不看（这正是 a=1 的分治）。</text>
+
+  <!-- ===== 递归调用链 ===== -->
+  <text x="620" y="140" font-size="12" font-weight="700" fill="#1d1d1f">递归调用链（只有一条，无分叉）</text>
+
+  <rect x="620" y="150" width="470" height="46" rx="10" fill="#eaf1fb" stroke="#4a7fd0" stroke-width="1.3"/>
+  <text x="636" y="170" font-size="11" font-weight="700" fill="#20375e">① dfs(0, 7)　m=3</text>
+  <text x="636" y="187" font-size="10" fill="#3a4a63">nums[3]=7 &lt; target → 递归右半 dfs(4, 7)</text>
+
+  <rect x="620" y="230" width="470" height="46" rx="10" fill="#eaf1fb" stroke="#4a7fd0" stroke-width="1.3"/>
+  <text x="636" y="250" font-size="11" font-weight="700" fill="#20375e">② dfs(4, 7)　m=5</text>
+  <text x="636" y="267" font-size="10" fill="#3a4a63">nums[5]=11 &lt; target → 递归右半 dfs(6, 7)</text>
+
+  <rect x="620" y="310" width="470" height="46" rx="10" fill="#e6f4ec" stroke="#2f9e6e" stroke-width="1.4"/>
+  <text x="636" y="330" font-size="11" font-weight="700" fill="#1f6b47">③ dfs(6, 7)　m=6</text>
+  <text x="636" y="347" font-size="10" fill="#2a5a43">nums[6]=13 = target → 返回索引 6（base 命中）</text>
+
+  <line x1="855" y1="196" x2="855" y2="230" stroke="#4a7fd0" stroke-width="1.8" marker-end="url(#aB)"/>
+  <text x="865" y="217" font-size="9.5" fill="#6e6e73">规模减半</text>
+  <line x1="855" y1="276" x2="855" y2="310" stroke="#4a7fd0" stroke-width="1.8" marker-end="url(#aB)"/>
+  <text x="865" y="297" font-size="9.5" fill="#6e6e73">规模减半</text>
+
+  <text x="620" y="384" font-size="10.5" fill="#6e6e73">若 i&gt;j（窗口为空）则触底返回 −1，代表未找到。</text>
+
+  <!-- ===== 底部：复杂度 + 要点 ===== -->
+  <rect x="40" y="410" width="510" height="180" rx="14" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="62" y="436" font-size="13" font-weight="700" fill="#1d1d1f">递推展开：T(n) = T(n/2) + O(1)</text>
+  <text x="62" y="462" font-size="11" fill="#4a4a4f">T(n) = T(n/2) + c</text>
+  <text x="62" y="482" font-size="11" fill="#4a4a4f">　　 = T(n/4) + 2c</text>
+  <text x="62" y="502" font-size="11" fill="#4a4a4f">　　 = … = T(1) + (log₂n)·c</text>
+  <text x="62" y="528" font-size="11" fill="#4a4a4f">每层只做 O(1) 比较，共 log₂n 层</text>
+  <text x="290" y="566" font-size="26" font-weight="700" fill="#2f9e6e" text-anchor="middle">O(log n)</text>
+
+  <rect x="570" y="410" width="510" height="180" rx="14" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="592" y="436" font-size="13" font-weight="700" fill="#8a5a12">关键取舍</text>
+  <text x="592" y="460" font-size="10.5" fill="#4a4a4f">• 与归并 / 快排不同：二分 a=1，只递归一侧，另一半整段丢弃。</text>
+  <text x="592" y="482" font-size="10.5" fill="#4a4a4f">• 前提是数组有序，才能靠 nums[m] 与 target 比较判方向。</text>
+  <text x="592" y="504" font-size="10.5" fill="#4a4a4f">• 中点写 m=i+((j−i)&gt;&gt;1)，避免 (i+j) 相加溢出。</text>
+  <text x="592" y="526" font-size="10.5" fill="#4a4a4f">• 递归深度 = log₂n；尾递归可改成 while 循环省去栈。</text>
+  <text x="592" y="556" font-size="10.5" fill="#8a4038">• 无序数组不能二分 —— 排序本身要 O(n log n)，得不偿失时用哈希。</text>
+</svg>

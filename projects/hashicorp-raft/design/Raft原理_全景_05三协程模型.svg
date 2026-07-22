@@ -28,7 +28,7 @@
 
   <!-- run 主线协程 -->
   <rect x="30" y="116" width="486" height="504" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
-  <text x="48" y="140" font-size="12.5" font-weight="700" fill="#1b2a4a">run 主线协程 · raft.go:136 · 按状态分派</text>
+  <text x="48" y="140" font-size="12.5" font-weight="700" fill="#1b2a4a">run 主线协程 · raft.go · 按状态分派</text>
   <text x="48" y="156" font-size="10" fill="#5b7db1">整个库唯一修改核心状态的线程 → 天然串行、免锁</text>
 
   <g font-size="10.5" text-anchor="middle">
@@ -39,7 +39,7 @@
 
   <!-- leaderLoop select -->
   <rect x="48" y="214" width="450" height="358" rx="11" fill="#ffffff" stroke="#cfe0f2"/>
-  <text x="66" y="236" font-size="11.5" font-weight="700" fill="#1b2a4a">leaderLoop 热循环 · :668 · for { select … }</text>
+  <text x="66" y="236" font-size="11.5" font-weight="700" fill="#1b2a4a">leaderLoop 热循环 · for { select … }</text>
   <g font-size="10.5" fill="#2b3a5a">
     <rect x="66" y="248" width="414" height="28" rx="7" fill="#eef3fb" stroke="#cfe0f2"/><text x="78" y="266"><tspan font-weight="600">applyCh</tspan> :906 — 收命令 → dispatchLogs 写本地日志</text>
     <rect x="66" y="282" width="414" height="28" rx="7" fill="#eef3fb" stroke="#cfe0f2"/><text x="78" y="300"><tspan font-weight="600">commitCh</tspan> :786 — 多数派达标 → 推进 commitIndex</text>
@@ -56,7 +56,7 @@
 
   <!-- runFSM 协程 -->
   <rect x="540" y="116" width="480" height="256" rx="13" fill="#f5faf6" stroke="#c9e6cf" filter="url(#soft)"/>
-  <text x="558" y="140" font-size="12.5" font-weight="700" fill="#1f5130">runFSM 协程 · fsm.go:86</text>
+  <text x="558" y="140" font-size="12.5" font-weight="700" fill="#1f5130">runFSM 协程 · fsm.go</text>
   <text x="558" y="156" font-size="10" fill="#4f8b63">与 run 解耦:慢 apply 不阻塞共识主循环</text>
   <g font-size="10.5" fill="#1f5130">
     <rect x="558" y="168" width="444" height="80" rx="9" fill="#fff" stroke="#c9e6cf"/>
@@ -73,11 +73,11 @@
 
   <!-- runSnapshots 协程 -->
   <rect x="540" y="388" width="480" height="232" rx="13" fill="#fbf7ef" stroke="#ead9b3" filter="url(#soft)"/>
-  <text x="558" y="412" font-size="12.5" font-weight="700" fill="#8a5a12">runSnapshots 协程 · snapshot.go:73</text>
+  <text x="558" y="412" font-size="12.5" font-weight="700" fill="#8a5a12">runSnapshots 协程 · snapshot.go</text>
   <g font-size="10.5" fill="#8a5a12">
     <rect x="558" y="424" width="444" height="30" rx="8" fill="#fff" stroke="#ead9b3"/><text x="572" y="443">① randomTimeout(SnapshotInterval,默认 120s) 到点</text>
-    <rect x="558" y="460" width="444" height="30" rx="8" fill="#fff" stroke="#ead9b3"/><text x="572" y="479">② shouldSnapshot :107 — delta ≥ SnapshotThreshold(8192)?</text>
-    <rect x="558" y="496" width="444" height="30" rx="8" fill="#fff" stroke="#ead9b3"/><text x="572" y="515">③ takeSnapshot :126 — 经 fsmSnapshotCh 请 runFSM 出快照</text>
+    <rect x="558" y="460" width="444" height="30" rx="8" fill="#fff" stroke="#ead9b3"/><text x="572" y="479">② shouldSnapshot — delta ≥ SnapshotThreshold(8192)?</text>
+    <rect x="558" y="496" width="444" height="30" rx="8" fill="#fff" stroke="#ead9b3"/><text x="572" y="515">③ takeSnapshot — 经 fsmSnapshotCh 请 runFSM 出快照</text>
     <rect x="558" y="532" width="444" height="30" rx="8" fill="#fff" stroke="#ead9b3"/><text x="572" y="551">④ Persist 落 SnapshotStore → compactLogs 截断旧日志</text>
   </g>
   <text x="558" y="586" font-size="10" fill="#a07a1e">保留尾部 TrailingLogs(默认 10240),供落后 follower 增量追</text>

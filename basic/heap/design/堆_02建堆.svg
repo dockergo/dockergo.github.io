@@ -1,0 +1,126 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="700" viewBox="0 0 1120 700" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="aB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#4a7fd0"/></marker>
+  </defs>
+  <rect width="1120" height="700" fill="#fbfbfd"/>
+
+  <text x="30" y="34" font-size="17" font-weight="700" fill="#1d1d1f">堆 · 建堆：自底向上，从最后一个非叶结点起逐个 siftDown，O(n) 建成</text>
+  <text x="30" y="56" font-size="11" fill="#6e6e73">从 i = n/2 − 1 递减到 0，对每个非叶结点下沉一次。叶子（后半段）本身即合法堆无需处理。本图把乱序 [2,5,4,9,7,6] 建成大顶堆</text>
+
+  <rect x="30" y="72" width="12" height="12" rx="2" fill="#d99a2b"/><text x="48" y="82" font-size="10.5" fill="#3a3a3c">数组槽位</text>
+  <rect x="150" y="72" width="12" height="12" rx="2" fill="#eaf1fb" stroke="#4a7fd0"/><text x="168" y="82" font-size="10.5" fill="#3a3a3c">当前下沉起点 i</text>
+  <line x1="300" y1="78" x2="324" y2="78" stroke="#4a7fd0" stroke-width="2"/><text x="330" y="82" font-size="10.5" fill="#3a3a3c">交换（与较大子）</text>
+
+  <!-- ===== 左：输入树 + 非叶边界 ===== -->
+  <text x="40" y="112" font-size="12" font-weight="700" fill="#20375e">① 输入的树形（乱序，尚未满足偏序）</text>
+  <g stroke="#c6d9f2" stroke-width="1.5">
+    <line x1="235" y1="168" x2="150" y2="220"/>
+    <line x1="235" y1="168" x2="330" y2="220"/>
+    <line x1="150" y1="238" x2="100" y2="300"/>
+    <line x1="150" y1="238" x2="200" y2="300"/>
+    <line x1="330" y1="238" x2="290" y2="300"/>
+  </g>
+  <g text-anchor="middle">
+    <circle cx="235" cy="150" r="22" fill="#eaf1fb" stroke="#4a7fd0" stroke-width="1.6"/><text x="235" y="150" font-size="14" font-weight="700" fill="#20375e">2</text><text x="235" y="163" font-size="8" fill="#5a7099">i=0</text>
+    <circle cx="150" cy="238" r="22" fill="#eaf1fb" stroke="#4a7fd0" stroke-width="1.6"/><text x="150" y="238" font-size="14" font-weight="700" fill="#20375e">5</text><text x="150" y="251" font-size="8" fill="#5a7099">i=1</text>
+    <circle cx="330" cy="238" r="22" fill="#eaf1fb" stroke="#4a7fd0" stroke-width="1.6"/><text x="330" y="238" font-size="14" font-weight="700" fill="#20375e">4</text><text x="330" y="251" font-size="8" fill="#5a7099">i=2</text>
+    <circle cx="100" cy="318" r="20" fill="#f4f4f6" stroke="#d7d7dd"/><text x="100" y="318" font-size="13" font-weight="700" fill="#6e6e73">9</text><text x="100" y="330" font-size="8" fill="#a1a1a6">i=3</text>
+    <circle cx="200" cy="318" r="20" fill="#f4f4f6" stroke="#d7d7dd"/><text x="200" y="318" font-size="13" font-weight="700" fill="#6e6e73">7</text><text x="200" y="330" font-size="8" fill="#a1a1a6">i=4</text>
+    <circle cx="290" cy="318" r="20" fill="#f4f4f6" stroke="#d7d7dd"/><text x="290" y="318" font-size="13" font-weight="700" fill="#6e6e73">6</text><text x="290" y="330" font-size="8" fill="#a1a1a6">i=5</text>
+  </g>
+  <line x1="40" y1="360" x2="430" y2="360" stroke="#e0d3b4" stroke-dasharray="5 3"/>
+  <text x="40" y="356" font-size="9.5" fill="#8a5a12">蓝框 i=0,1,2 为非叶（需处理）；灰 i=3,4,5 为叶子（n/2 个，天然合法，跳过）</text>
+  <text x="40" y="382" font-size="10" fill="#2f6b4e">起点 = 最后一个非叶 = n/2 − 1 = 6/2 − 1 = 2，然后 i 递减到 0</text>
+
+  <!-- ===== 右：逐步 siftDown 快照 ===== -->
+  <text x="560" y="112" font-size="12" font-weight="700" fill="#20375e">② 从 i=2 递减，每个非叶下沉一次</text>
+  <g font-size="8.5" text-anchor="middle" fill="#8a5a12">
+    <text x="586" y="130">[0]</text><text x="638" y="130">[1]</text><text x="690" y="130">[2]</text><text x="742" y="130">[3]</text><text x="794" y="130">[4]</text><text x="846" y="130">[5]</text>
+  </g>
+
+  <!-- S0 -->
+  <g font-size="13" text-anchor="middle" font-weight="700">
+    <rect x="560" y="138" width="52" height="28" rx="5" fill="#fdf3e0" stroke="#e7c07a"/><text x="586" y="157" fill="#5a4a2a">2</text>
+    <rect x="612" y="138" width="52" height="28" rx="5" fill="#fdf3e0" stroke="#e7c07a"/><text x="638" y="157" fill="#5a4a2a">5</text>
+    <rect x="664" y="138" width="52" height="28" rx="5" fill="#eaf1fb" stroke="#4a7fd0" stroke-width="1.6"/><text x="690" y="157" fill="#20375e">4</text>
+    <rect x="716" y="138" width="52" height="28" rx="5" fill="#fdf3e0" stroke="#e7c07a"/><text x="742" y="157" fill="#5a4a2a">9</text>
+    <rect x="768" y="138" width="52" height="28" rx="5" fill="#fdf3e0" stroke="#e7c07a"/><text x="794" y="157" fill="#5a4a2a">7</text>
+    <rect x="820" y="138" width="52" height="28" rx="5" fill="#fdf3e0" stroke="#e7c07a"/><text x="846" y="157" fill="#5a4a2a">6</text>
+  </g>
+  <path d="M690 166 L690 174 L846 174 L846 166" fill="none" stroke="#4a7fd0" stroke-width="1.5"/>
+  <text x="890" y="156" font-size="9.5" fill="#20375e">i=2 值4：子[5]=6，4&lt;6 → 换</text>
+
+  <!-- S1 -->
+  <g font-size="13" text-anchor="middle" font-weight="700">
+    <rect x="560" y="196" width="52" height="28" rx="5" fill="#fdf3e0" stroke="#e7c07a"/><text x="586" y="215" fill="#5a4a2a">2</text>
+    <rect x="612" y="196" width="52" height="28" rx="5" fill="#eaf1fb" stroke="#4a7fd0" stroke-width="1.6"/><text x="638" y="215" fill="#20375e">5</text>
+    <rect x="664" y="196" width="52" height="28" rx="5" fill="#fdf3e0" stroke="#e7c07a"/><text x="690" y="215" fill="#5a4a2a">6</text>
+    <rect x="716" y="196" width="52" height="28" rx="5" fill="#fdf3e0" stroke="#e7c07a"/><text x="742" y="215" fill="#5a4a2a">9</text>
+    <rect x="768" y="196" width="52" height="28" rx="5" fill="#fdf3e0" stroke="#e7c07a"/><text x="794" y="215" fill="#5a4a2a">7</text>
+    <rect x="820" y="196" width="52" height="28" rx="5" fill="#fdf3e0" stroke="#e7c07a"/><text x="846" y="215" fill="#5a4a2a">4</text>
+  </g>
+  <path d="M638 224 L638 232 L742 232 L742 224" fill="none" stroke="#4a7fd0" stroke-width="1.5"/>
+  <text x="890" y="214" font-size="9.5" fill="#20375e">i=1 值5：较大子[3]=9 → 换</text>
+
+  <!-- S2 -->
+  <g font-size="13" text-anchor="middle" font-weight="700">
+    <rect x="560" y="254" width="52" height="28" rx="5" fill="#eaf1fb" stroke="#4a7fd0" stroke-width="1.6"/><text x="586" y="273" fill="#20375e">2</text>
+    <rect x="612" y="254" width="52" height="28" rx="5" fill="#fdf3e0" stroke="#e7c07a"/><text x="638" y="273" fill="#5a4a2a">9</text>
+    <rect x="664" y="254" width="52" height="28" rx="5" fill="#fdf3e0" stroke="#e7c07a"/><text x="690" y="273" fill="#5a4a2a">6</text>
+    <rect x="716" y="254" width="52" height="28" rx="5" fill="#fdf3e0" stroke="#e7c07a"/><text x="742" y="273" fill="#5a4a2a">5</text>
+    <rect x="768" y="254" width="52" height="28" rx="5" fill="#fdf3e0" stroke="#e7c07a"/><text x="794" y="273" fill="#5a4a2a">7</text>
+    <rect x="820" y="254" width="52" height="28" rx="5" fill="#fdf3e0" stroke="#e7c07a"/><text x="846" y="273" fill="#5a4a2a">4</text>
+  </g>
+  <path d="M586 282 L586 290 L638 290 L638 282" fill="none" stroke="#4a7fd0" stroke-width="1.5"/>
+  <text x="890" y="272" font-size="9.5" fill="#20375e">i=0 值2：较大子[1]=9 → 换</text>
+
+  <!-- S3 -->
+  <g font-size="13" text-anchor="middle" font-weight="700">
+    <rect x="560" y="312" width="52" height="28" rx="5" fill="#fdf3e0" stroke="#e7c07a"/><text x="586" y="331" fill="#5a4a2a">9</text>
+    <rect x="612" y="312" width="52" height="28" rx="5" fill="#eaf1fb" stroke="#4a7fd0" stroke-width="1.6"/><text x="638" y="331" fill="#20375e">2</text>
+    <rect x="664" y="312" width="52" height="28" rx="5" fill="#fdf3e0" stroke="#e7c07a"/><text x="690" y="331" fill="#5a4a2a">6</text>
+    <rect x="716" y="312" width="52" height="28" rx="5" fill="#fdf3e0" stroke="#e7c07a"/><text x="742" y="331" fill="#5a4a2a">5</text>
+    <rect x="768" y="312" width="52" height="28" rx="5" fill="#fdf3e0" stroke="#e7c07a"/><text x="794" y="331" fill="#5a4a2a">7</text>
+    <rect x="820" y="312" width="52" height="28" rx="5" fill="#fdf3e0" stroke="#e7c07a"/><text x="846" y="331" fill="#5a4a2a">4</text>
+  </g>
+  <path d="M638 340 L638 348 L794 348 L794 340" fill="none" stroke="#4a7fd0" stroke-width="1.5"/>
+  <text x="890" y="330" font-size="9.5" fill="#20375e">2 继续沉：较大子[4]=7 → 换</text>
+
+  <!-- S4 final -->
+  <g font-size="13" text-anchor="middle" font-weight="700">
+    <rect x="560" y="370" width="52" height="28" rx="5" fill="#dff0e7" stroke="#2f9e6e" stroke-width="1.4"/><text x="586" y="389" fill="#2f6b4e">9</text>
+    <rect x="612" y="370" width="52" height="28" rx="5" fill="#dff0e7" stroke="#2f9e6e" stroke-width="1.4"/><text x="638" y="389" fill="#2f6b4e">7</text>
+    <rect x="664" y="370" width="52" height="28" rx="5" fill="#dff0e7" stroke="#2f9e6e" stroke-width="1.4"/><text x="690" y="389" fill="#2f6b4e">6</text>
+    <rect x="716" y="370" width="52" height="28" rx="5" fill="#dff0e7" stroke="#2f9e6e" stroke-width="1.4"/><text x="742" y="389" fill="#2f6b4e">5</text>
+    <rect x="768" y="370" width="52" height="28" rx="5" fill="#dff0e7" stroke="#2f9e6e" stroke-width="1.4"/><text x="794" y="389" fill="#2f6b4e">2</text>
+    <rect x="820" y="370" width="52" height="28" rx="5" fill="#dff0e7" stroke="#2f9e6e" stroke-width="1.4"/><text x="846" y="389" fill="#2f6b4e">4</text>
+  </g>
+  <text x="890" y="388" font-size="9.5" fill="#2f6b4e">✓ 大顶堆完成 [9,7,6,5,2,4]</text>
+
+  <!-- ===== 复杂度对比 ===== -->
+  <rect x="40" y="420" width="515" height="176" rx="12" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="62" y="446" font-size="12" font-weight="700" fill="#8a4038">路线A：逐个 push 建堆　O(n log n)</text>
+  <text x="62" y="470" font-size="10.5" fill="#4a4a4f">空堆起步，n 次 push，每次 siftUp 至多爬 log n 层</text>
+  <text x="62" y="490" font-size="10.5" fill="#4a4a4f">总代价 = Σ O(log k) ≈ n·log n</text>
+  <text x="62" y="514" font-size="10.5" fill="#6e6e73">越晚插入，树越高、上浮越贵 —— 代价集中在「高处」</text>
+  <text x="62" y="542" font-size="10.5" fill="#4a4a4f">n·log n：叶子层（数量最多）反而爬得最高</text>
+  <rect x="62" y="556" width="470" height="26" rx="6" fill="#fbe6e3" stroke="#e8a79f"/>
+  <text x="76" y="573" font-size="10" fill="#8a4038">直觉错配：多数结点在底层，却被要求向上走长路</text>
+
+  <rect x="565" y="420" width="515" height="176" rx="12" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="587" y="446" font-size="12" font-weight="700" fill="#2f6b4e">路线B：自底向上 siftDown　O(n)</text>
+  <text x="587" y="470" font-size="10.5" fill="#4a4a4f">叶子（n/2 个）下沉高度 0，直接跳过</text>
+  <text x="587" y="490" font-size="10.5" fill="#4a4a4f">越靠底层的结点越多，但要下沉的高度越小</text>
+  <text x="587" y="514" font-size="10.5" fill="#4a4a4f">总代价 = Σ (n/2^(h+1))·h　收敛到　≈ 2n = O(n)</text>
+  <text x="587" y="542" font-size="10.5" fill="#6e6e73">代价集中在「底部」，而底部单点便宜、只是数量多</text>
+  <rect x="587" y="556" width="470" height="26" rx="6" fill="#dff0e7" stroke="#8fd0b0"/>
+  <text x="601" y="573" font-size="10" fill="#2f6b4e">直觉契合：多数结点在底层，恰好只需走短路</text>
+
+  <!-- 底部 -->
+  <rect x="40" y="612" width="1040" height="72" rx="12" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="58" y="636" font-size="10.5" font-weight="700" fill="#2f6b4e">一句话</text>
+  <text x="118" y="636" font-size="10" fill="#4a4a4f">建堆用「下沉」而非「上浮」，是因为下沉的代价与结点高度成正比，而堆里绝大多数结点都在低矮的底层 —— 于是总和收敛为线性。</text>
+  <text x="58" y="662" font-size="10" fill="#4a4a4f">同一份数据、同样的 siftDown 原语，只因遍历顺序（自底向上 vs 自顶逐个插入）不同，复杂度就从 O(n) 变成 O(n log n)。</text>
+  <text x="58" y="680" font-size="10" fill="#8a97ab">对应 my_heap.go 的 newMaxHeap：for i := parent(len−1); i≥0; i-- { siftDown(i) } —— parent(len−1) 即 n/2−1。</text>
+</svg>

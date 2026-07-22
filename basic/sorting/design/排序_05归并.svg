@@ -1,0 +1,104 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="720" viewBox="0 0 1120 720" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="aB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#4a7fd0"/></marker>
+    <marker id="aG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+    <marker id="aP" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#8a6fd0"/></marker>
+  </defs>
+  <rect width="1120" height="720" fill="#fbfbfd"/>
+
+  <text x="30" y="34" font-size="17" font-weight="700" fill="#1d1d1f">O5 归并排序 · 递归分半到单元素，再两两合并有序子数组</text>
+  <text x="30" y="56" font-size="11" fill="#6e6e73">分：mid=left+(right-left)/2 一分为二，直到长度为 1（天然有序）；治：借助临时数组把两个有序子数组线性合并</text>
+
+  <!-- 图例 -->
+  <rect x="30" y="72" width="12" height="12" rx="2" fill="#4a7fd0"/><text x="48" y="82" font-size="10.5" fill="#3a3a3c">分（自顶向下递归）</text>
+  <rect x="200" y="72" width="12" height="12" rx="2" fill="#2f9e6e"/><text x="218" y="82" font-size="10.5" fill="#3a3a3c">治（自底向上合并=有序）</text>
+  <rect x="400" y="72" width="12" height="12" rx="2" fill="#8a6fd0"/><text x="418" y="82" font-size="10.5" fill="#3a3a3c">临时数组 tmp（辅助空间）</text>
+
+  <!-- ① 分治树 -->
+  <text x="30" y="112" font-size="12.5" font-weight="700" fill="#20375e">① 分治树：向下不断折半，触底（单元素）后向上逐层合并</text>
+
+  <g text-anchor="middle" font-size="12">
+    <rect x="475" y="122" width="170" height="30" rx="6" fill="#f2f7ff" stroke="#c6d9f2"/><text x="560" y="142" fill="#20375e">[5, 2, 4, 1, 6, 3]</text>
+    <rect x="250" y="172" width="120" height="28" rx="6" fill="#f2f7ff" stroke="#c6d9f2"/><text x="310" y="191" fill="#20375e">[5, 2, 4]</text>
+    <rect x="690" y="172" width="120" height="28" rx="6" fill="#f2f7ff" stroke="#c6d9f2"/><text x="750" y="191" fill="#20375e">[1, 6, 3]</text>
+    <rect x="170" y="222" width="80" height="28" rx="6" fill="#f2f7ff" stroke="#c6d9f2"/><text x="210" y="241" fill="#20375e">[5, 2]</text>
+    <rect x="300" y="222" width="50" height="28" rx="6" fill="#f2f7ff" stroke="#c6d9f2"/><text x="325" y="241" fill="#20375e">[4]</text>
+    <rect x="650" y="222" width="80" height="28" rx="6" fill="#f2f7ff" stroke="#c6d9f2"/><text x="690" y="241" fill="#20375e">[1, 6]</text>
+    <rect x="790" y="222" width="50" height="28" rx="6" fill="#f2f7ff" stroke="#c6d9f2"/><text x="815" y="241" fill="#20375e">[3]</text>
+    <rect x="160" y="272" width="42" height="28" rx="6" fill="#eef4fb" stroke="#c6d9f2"/><text x="181" y="291" fill="#20375e">[5]</text>
+    <rect x="212" y="272" width="42" height="28" rx="6" fill="#eef4fb" stroke="#c6d9f2"/><text x="233" y="291" fill="#20375e">[2]</text>
+    <rect x="642" y="272" width="42" height="28" rx="6" fill="#eef4fb" stroke="#c6d9f2"/><text x="663" y="291" fill="#20375e">[1]</text>
+    <rect x="694" y="272" width="42" height="28" rx="6" fill="#eef4fb" stroke="#c6d9f2"/><text x="715" y="291" fill="#20375e">[6]</text>
+  </g>
+  <!-- 分裂边（蓝，向下） -->
+  <path d="M560 152 L560 162 L310 162 L310 172" fill="none" stroke="#4a7fd0" stroke-width="1.3" marker-end="url(#aB)"/>
+  <path d="M560 162 L750 162 L750 172" fill="none" stroke="#4a7fd0" stroke-width="1.3" marker-end="url(#aB)"/>
+  <path d="M310 200 L310 210 L210 210 L210 222" fill="none" stroke="#4a7fd0" stroke-width="1.3" marker-end="url(#aB)"/>
+  <path d="M310 210 L325 210 L325 222" fill="none" stroke="#4a7fd0" stroke-width="1.3" marker-end="url(#aB)"/>
+  <path d="M750 200 L750 210 L690 210 L690 222" fill="none" stroke="#4a7fd0" stroke-width="1.3" marker-end="url(#aB)"/>
+  <path d="M750 210 L815 210 L815 222" fill="none" stroke="#4a7fd0" stroke-width="1.3" marker-end="url(#aB)"/>
+  <path d="M210 250 L210 260 L181 260 L181 272" fill="none" stroke="#4a7fd0" stroke-width="1.3" marker-end="url(#aB)"/>
+  <path d="M210 260 L233 260 L233 272" fill="none" stroke="#4a7fd0" stroke-width="1.3" marker-end="url(#aB)"/>
+  <path d="M690 250 L690 260 L663 260 L663 272" fill="none" stroke="#4a7fd0" stroke-width="1.3" marker-end="url(#aB)"/>
+  <path d="M690 260 L715 260 L715 272" fill="none" stroke="#4a7fd0" stroke-width="1.3" marker-end="url(#aB)"/>
+
+  <!-- 合并回溯（绿） -->
+  <line x1="900" y1="300" x2="900" y2="140" stroke="#2f9e6e" stroke-width="1.6" marker-end="url(#aG)"/>
+  <text x="912" y="170" font-size="10" fill="#2f6b4e">合并方向</text>
+  <text x="912" y="186" font-size="10" fill="#2f6b4e">（自底向上）</text>
+  <rect x="60" y="316" width="800" height="30" rx="7" fill="#eef7f2" stroke="#a9d8c0"/>
+  <text x="76" y="336" font-size="10.5" fill="#2f6b4e">合并回溯：[5]+[2]→[2,5]，+[4]→[2,4,5]；[1]+[6]→[1,6]，+[3]→[1,3,6]；末层 [2,4,5]+[1,3,6]→[1,2,3,4,5,6]</text>
+
+  <!-- ② merge 详解 -->
+  <text x="30" y="384" font-size="12.5" font-weight="700" fill="#20375e">② 一次合并详解（末层）：i、j 分别指两个有序子数组，取较小者写入 tmp[k]，走完再拷回原数组</text>
+
+  <text x="40" y="424" font-size="10.5" fill="#2f6b4e">左有序 (i)</text>
+  <g font-size="13" text-anchor="middle">
+    <rect x="130" y="408" width="52" height="32" rx="6" fill="#e5f3ec" stroke="#a9d8c0"/><text x="156" y="430" fill="#2f6b4e">2</text>
+    <rect x="188" y="408" width="52" height="32" rx="6" fill="#e5f3ec" stroke="#a9d8c0"/><text x="214" y="430" fill="#2f6b4e">4</text>
+    <rect x="246" y="408" width="52" height="32" rx="6" fill="#e5f3ec" stroke="#a9d8c0"/><text x="272" y="430" fill="#2f6b4e">5</text>
+  </g>
+  <text x="40" y="474" font-size="10.5" fill="#2f6b4e">右有序 (j)</text>
+  <g font-size="13" text-anchor="middle">
+    <rect x="130" y="458" width="52" height="32" rx="6" fill="#e5f3ec" stroke="#a9d8c0"/><text x="156" y="480" fill="#2f6b4e">1</text>
+    <rect x="188" y="458" width="52" height="32" rx="6" fill="#e5f3ec" stroke="#a9d8c0"/><text x="214" y="480" fill="#2f6b4e">3</text>
+    <rect x="246" y="458" width="52" height="32" rx="6" fill="#e5f3ec" stroke="#a9d8c0"/><text x="272" y="480" fill="#2f6b4e">6</text>
+  </g>
+  <line x1="330" y1="450" x2="380" y2="450" stroke="#8a6fd0" stroke-width="1.8" marker-end="url(#aP)"/>
+  <text x="355" y="440" font-size="10" fill="#4b3a80" text-anchor="middle">较小者</text>
+
+  <!-- tmp -->
+  <text x="410" y="404" font-size="10.5" fill="#4b3a80">临时数组 tmp（k 递增填入）</text>
+  <g font-size="13" text-anchor="middle">
+    <rect x="410" y="416" width="52" height="32" rx="6" fill="#efeafb" stroke="#ccbef0"/><text x="436" y="438" fill="#4b3a80">1</text>
+    <rect x="468" y="416" width="52" height="32" rx="6" fill="#efeafb" stroke="#ccbef0"/><text x="494" y="438" fill="#4b3a80">2</text>
+    <rect x="526" y="416" width="52" height="32" rx="6" fill="#efeafb" stroke="#ccbef0"/><text x="552" y="438" fill="#4b3a80">3</text>
+    <rect x="584" y="416" width="52" height="32" rx="6" fill="#efeafb" stroke="#ccbef0"/><text x="610" y="438" fill="#4b3a80">4</text>
+    <rect x="642" y="416" width="52" height="32" rx="6" fill="#efeafb" stroke="#ccbef0"/><text x="668" y="438" fill="#4b3a80">5</text>
+    <rect x="700" y="416" width="52" height="32" rx="6" fill="#efeafb" stroke="#ccbef0"/><text x="726" y="438" fill="#4b3a80">6</text>
+  </g>
+  <line x1="581" y1="470" x2="581" y2="456" stroke="#8a6fd0" stroke-width="1.5" marker-end="url(#aP)"/>
+  <text x="581" y="484" font-size="10" fill="#4b3a80" text-anchor="middle">合并完成后 copy 回 nums[left..right]</text>
+
+  <!-- 步骤表 -->
+  <rect x="410" y="500" width="680" height="120" rx="12" fill="#f6f4fb" stroke="#ccbef0"/>
+  <text x="430" y="524" font-size="11" font-weight="700" fill="#4b3a80">逐步比较（相等取左 → 稳定）</text>
+  <text x="430" y="548" font-size="10.5" fill="#4a4a4f">2 vs 1 → 取 1 (j++)　│　2 vs 3 → 取 2 (i++)　│　4 vs 3 → 取 3 (j++)</text>
+  <text x="430" y="570" font-size="10.5" fill="#4a4a4f">4 vs 6 → 取 4 (i++)　│　5 vs 6 → 取 5 (i++)　│　左子数组耗尽</text>
+  <text x="430" y="592" font-size="10.5" fill="#2f6b4e">→ 把右子数组剩余的 6 直接拷入 tmp，合并结束</text>
+  <text x="430" y="612" font-size="9.5" fill="#8a8a8f">关键：两侧各自已有序，故只需一次线性扫描 O(子长) 即可合并，无回溯。</text>
+
+  <!-- 说明左下 -->
+  <rect x="40" y="500" width="350" height="120" rx="12" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="60" y="524" font-size="12" font-weight="700" fill="#20375e">与快排的对偶</text>
+  <text x="60" y="548" font-size="10.5" fill="#4a4a4f">快排把「重活」放在分（划分），合并免费；</text>
+  <text x="60" y="568" font-size="10.5" fill="#4a4a4f">归并分只是对半切（免费），重活在合并。</text>
+  <text x="60" y="592" font-size="10.5" fill="#2f6b4e">代价换来稳定 + 最坏也 O(n log n)。</text>
+  <text x="60" y="612" font-size="9.5" fill="#8a8a8f">链表归并可 O(1) 额外空间；外部排序的基石。</text>
+
+  <!-- ③ 复杂度 -->
+  <rect x="40" y="636" width="1050" height="66" rx="12" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="60" y="662" font-size="11" font-weight="700" fill="#20375e">复杂度与性质</text>
+  <text x="60" y="684" font-size="10.5" fill="#4a4a4f">时间 <tspan font-weight="700" fill="#2f6b4e">O(n log n)</tspan>（最好=最坏=平均，与输入无关）· 空间 <tspan font-weight="700" fill="#8a6fd0">O(n)</tspan> 临时数组 · <tspan font-weight="700" fill="#2f6b4e">稳定</tspan>（合并相等取左）· 天生适合链表与外部/多路归并排序。</text>
+</svg>

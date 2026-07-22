@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="620" viewBox="0 0 1120 620" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="aP" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#8a5cae"/></marker>
+    <marker id="aB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#4a7fd0"/></marker>
+  </defs>
+  <rect width="1120" height="620" fill="#fbfbfd"/>
+
+  <text x="30" y="32" font-size="15" font-weight="700" fill="#1d1d1f">Kafka 发布订阅 · Topic 只是一份 Partition 集合的有序日志；任意数量的 Consumer Group 都能各自完整重读一遍，互不消耗对方进度</text>
+  <text x="30" y="53" font-size="10.5" fill="#6e6e73">广播的关键不在"复制消息"，而在每个 Group 维护自己独立的 offset 位移——同一份 Partition 日志被读几次、读到哪，Group 之间彼此不可见</text>
+
+  <!-- 图例 -->
+  <line x1="30" y1="80" x2="54" y2="80" stroke="#8a5cae" stroke-width="2" marker-end="url(#aP)"/>
+  <text x="60" y="84" font-size="10" fill="#3a3a3c">Producer 写入（按 key 路由）</text>
+  <line x1="280" y1="80" x2="304" y2="80" stroke="#4a7fd0" stroke-width="2" marker-end="url(#aB)"/>
+  <text x="310" y="84" font-size="10" fill="#3a3a3c">Group 各自独立拉取全量分区</text>
+  <text x="1090" y="86" font-size="10" fill="#a1a1a6" text-anchor="end">Kafka Producer/Consumer API</text>
+  <line x1="30" y1="98" x2="1090" y2="98" stroke="#e4e7ec" stroke-width="1"/>
+
+  <!-- Producers -->
+  <rect x="28" y="120" width="150" height="100" rx="12" fill="#ffffff" stroke="#d9dde4" filter="url(#soft)"/>
+  <text x="103" y="148" font-size="12" font-weight="600" fill="#1d1d1f" text-anchor="middle">Producers</text>
+  <text x="103" y="168" font-size="9" fill="#6e6e73" text-anchor="middle">按消息 key 的 hash</text>
+  <text x="103" y="184" font-size="9" fill="#6e6e73" text-anchor="middle">选定目标 partition</text>
+  <text x="103" y="200" font-size="9" fill="#6e6e73" text-anchor="middle">（无 key 则轮询/黏性）</text>
+
+  <line x1="178" y1="170" x2="216" y2="170" stroke="#8a5cae" stroke-width="2" marker-end="url(#aP)"/>
+
+  <!-- Topic 容器 -->
+  <rect x="220" y="120" width="380" height="220" rx="14" fill="#f4eefb" stroke="#dcc9ef" filter="url(#soft)"/>
+  <text x="410" y="146" font-size="12.5" font-weight="700" fill="#6f3ea8" text-anchor="middle">Topic order-events</text>
+  <text x="410" y="164" font-size="9" fill="#8a5cae" text-anchor="middle">每个 partition 内部严格有序、只增不改</text>
+
+  <g font-size="9.5" text-anchor="middle">
+    <rect x="240" y="178" width="340" height="34" rx="6" fill="#ffffff" stroke="#dcc9ef"/>
+    <text x="270" y="199" fill="#6f3ea8" font-weight="700">P0</text>
+    <text x="420" y="199" fill="#5a3a7a">msg0 → msg1 → msg2 → msg3 …</text>
+
+    <rect x="240" y="220" width="340" height="34" rx="6" fill="#ffffff" stroke="#dcc9ef"/>
+    <text x="270" y="241" fill="#6f3ea8" font-weight="700">P1</text>
+    <text x="420" y="241" fill="#5a3a7a">msg0 → msg1 → msg2 …</text>
+
+    <rect x="240" y="262" width="340" height="34" rx="6" fill="#ffffff" stroke="#dcc9ef"/>
+    <text x="270" y="283" fill="#6f3ea8" font-weight="700">P2</text>
+    <text x="420" y="283" fill="#5a3a7a">msg0 → msg1 → msg2 → msg3 → msg4 …</text>
+  </g>
+  <text x="240" y="326" font-size="8.5" fill="#8a5cae">Partition = 广播的最小复制/并行单元；跨 partition 不保证全局顺序，仅 partition 内保证</text>
+
+  <!-- Consumer Groups：各自独立 -->
+  <rect x="650" y="112" width="440" height="130" rx="13" fill="#eaf1fb" stroke="#c6d9f2" filter="url(#soft)"/>
+  <text x="670" y="136" font-size="11.5" font-weight="700" fill="#20375e">Consumer Group A（比如：实时风控）</text>
+  <text x="670" y="154" font-size="9" fill="#3a4a63">独立维护自己的 offset：P0@120 / P1@88 / P2@203</text>
+  <line x1="602" y1="180" x2="648" y2="180" stroke="#4a7fd0" stroke-width="1.8" marker-end="url(#aB)"/>
+  <rect x="670" y="168" width="120" height="56" rx="8" fill="#ffffff" stroke="#c6d9f2"/>
+  <text x="730" y="190" font-size="9" fill="#20375e" text-anchor="middle">member a1</text>
+  <text x="730" y="206" font-size="8.5" fill="#5a7099" text-anchor="middle">读 P0</text>
+  <rect x="800" y="168" width="120" height="56" rx="8" fill="#ffffff" stroke="#c6d9f2"/>
+  <text x="860" y="190" font-size="9" fill="#20375e" text-anchor="middle">member a2</text>
+  <text x="860" y="206" font-size="8.5" fill="#5a7099" text-anchor="middle">读 P1,P2</text>
+
+  <rect x="650" y="260" width="440" height="130" rx="13" fill="#eaf6f0" stroke="#bfe3d1" filter="url(#soft)"/>
+  <text x="670" y="284" font-size="11.5" font-weight="700" fill="#2f6b4e">Consumer Group B（比如：离线数仓归档）</text>
+  <text x="670" y="302" font-size="9" fill="#3f8a63">独立维护自己的 offset：P0@45 / P1@45 / P2@60（明显落后于 A，互不影响）</text>
+  <line x1="602" y1="328" x2="648" y2="328" stroke="#4a7fd0" stroke-width="1.8" marker-end="url(#aB)"/>
+  <rect x="670" y="316" width="380" height="56" rx="8" fill="#ffffff" stroke="#bfe3d1"/>
+  <text x="860" y="338" font-size="9" fill="#2f6b4e" text-anchor="middle">member b1（单成员即可覆盖全部 3 个 partition）</text>
+  <text x="860" y="356" font-size="8.5" fill="#5a9078" text-anchor="middle">读 P0, P1, P2 全量</text>
+
+  <!-- 都从 Topic 拉取，独立的两条虚线各自连三个 partition -->
+  <line x1="580" y1="195" x2="648" y2="185" stroke="#4a7fd0" stroke-width="1.4" stroke-dasharray="4 3"/>
+  <line x1="580" y1="237" x2="648" y2="190" stroke="#4a7fd0" stroke-width="1.4" stroke-dasharray="4 3"/>
+  <line x1="580" y1="279" x2="648" y2="195" stroke="#4a7fd0" stroke-width="1.4" stroke-dasharray="4 3"/>
+  <line x1="580" y1="195" x2="648" y2="335" stroke="#2f9e6e" stroke-width="1.4" stroke-dasharray="4 3"/>
+  <line x1="580" y1="237" x2="648" y2="340" stroke="#2f9e6e" stroke-width="1.4" stroke-dasharray="4 3"/>
+  <line x1="580" y1="279" x2="648" y2="345" stroke="#2f9e6e" stroke-width="1.4" stroke-dasharray="4 3"/>
+
+  <!-- 底部性质 -->
+  <rect x="30" y="410" width="1060" height="184" rx="13" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="48" y="436" font-size="12" font-weight="700" fill="#1d1d1f">为什么这是「广播」而不是「转发一次就没了」</text>
+  <line x1="48" y1="446" x2="1068" y2="446" stroke="#eef0f3" stroke-width="1"/>
+  <text x="48" y="470" font-size="10.5" font-weight="700" fill="#6f3ea8">消息不因被读而删除</text>
+  <text x="220" y="470" font-size="10" fill="#4a4a4f">Partition 日志按 retention（时间/大小）保留，与是否被消费无关；消费只是移动某个 Group 自己的 offset 指针。</text>
+  <text x="48" y="496" font-size="10.5" font-weight="700" fill="#20375e">Group 是广播的最小订阅单元</text>
+  <text x="220" y="496" font-size="10" fill="#4a4a4f">新加一个 Group（哪怕从头读整个历史 retention 窗口）不影响已有 Group 的进度——这就是"任意数量订阅方各自完整收一遍"。</text>
+  <text x="48" y="522" font-size="10.5" font-weight="700" fill="#2f6b4e">组内才是竞争消费，组间永远是广播</text>
+  <text x="220" y="522" font-size="10" fill="#4a4a4f">同一 Group 内部各 member 分摊 partition（见 M2）；不同 Group 之间没有分摊关系，是相互独立的全量订阅——这两层不要混淆。</text>
+  <text x="48" y="554" font-size="9" fill="#8a97ab">概念对照：等价于经典 pub-sub 里"一条消息可以被多个订阅者各收一份"，Kafka 用「Group=逻辑订阅者、offset=每订阅者独立进度」实现，而不是为每个订阅者复制消息本身。</text>
+  <text x="48" y="576" font-size="9" fill="#8a97ab">已核实来源：Kafka Producer / Consumer API 的基本读写模型（Topic/Partition 广播 + 独立 offset）——见 principles/_VERIFIED_FACTS.md · messaging 节。</text>
+</svg>

@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>RAG · AI Agents 图谱</title>
+<style>
+:root{
+  --c-bg:#fbfbfd; --c-card:#ffffff; --c-card2:#f5f5f7; --c-ink:#1d1d1f;
+  --c-ink2:#6e6e73; --c-ink3:#a1a1a6; --c-line:#e6e6ea; --c-edge:#d2d2d7;
+  --c-panel:#ffffff; --c-shadow:rgba(0,0,0,.08);
+}
+html[data-theme="dark"]{
+  --c-bg:#0d0d0f; --c-card:#17171a; --c-card2:#1e1e22; --c-ink:#f2f2f5;
+  --c-ink2:#a1a1a6; --c-ink3:#6e6e73; --c-line:#2a2a30; --c-edge:#33333a;
+  --c-panel:#161619; --c-shadow:rgba(0,0,0,.5);
+  /* 架构图内联 SVG 结构中性色深色翻转(品牌强调色不变) */
+  --sc-bg:#17171a; --sc-panel:#1e1e22; --sc-ink:#e8e8ea; --sc-ink2:#c4c4c8;
+  --sc-sub:#9a9aa2; --sc-line:#33333a; --sc-line2:#3d3d45;
+  --sc-fill-blue:#16253d; --sc-fill-purple:#241d3a; --sc-fill-orange:#382214; --sc-fill-teal:#0f3330;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--c-bg);color:var(--c-ink);
+  font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif;
+  font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+header{position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:14px;
+  padding:12px 24px;background:color-mix(in srgb,var(--c-bg) 86%,transparent);
+  backdrop-filter:saturate(1.4) blur(14px);border-bottom:1px solid var(--c-line)}
+header .logo{display:inline-flex;align-items:center;flex:none}
+header .spacer{flex:1}
+.brand-intro{display:flex;flex-direction:column;align-items:flex-start;margin-left:6px;min-width:0}
+.brand-intro .bt{font-size:15px;font-weight:700;color:var(--c-ink);line-height:1.3}
+.brand-intro .bs{margin-top:3px;font-size:11.5px;color:var(--c-ink3);line-height:1.5}
+.icobtn{width:38px;height:38px;border-radius:50%;border:1px solid var(--c-line);
+  background:var(--c-panel);color:var(--c-ink2);cursor:pointer;display:inline-grid;
+  place-items:center;font-size:16px;flex:none;text-decoration:none}
+.tt-ico{font-size:16px;line-height:1}.tt-moon{display:none}
+html[data-theme="dark"] .tt-sun{display:none}html[data-theme="dark"] .tt-moon{display:inline}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 24px 80px}
+
+/* ---- 门户 hero ---- */
+.hero{margin:6px 0 26px}
+.hero h1{font-size:26px;font-weight:800;letter-spacing:.2px}
+.hero .sub{margin-top:8px;font-size:13.5px;color:var(--c-ink2);max-width:820px}
+.hero .back{display:inline-flex;align-items:center;gap:6px;margin-bottom:14px;
+  font-size:12.5px;color:var(--c-ink2);border:1px solid var(--c-line);
+  border-radius:999px;padding:5px 13px;background:var(--c-panel)}
+.hero .back:hover{color:var(--c-ink);border-color:var(--c-edge)}
+
+/* ---- 门户卡片栅格 ---- */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:18px}
+.card{position:relative;display:block;background:var(--c-card);border:1px solid var(--c-line);
+  border-radius:16px;padding:20px 20px 18px;overflow:hidden;transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease}
+.card:hover{transform:translateY(-3px);border-color:var(--acc);box-shadow:0 10px 30px var(--c-shadow)}
+.card .bar{position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--acc)}
+.card .k{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.6px;
+  color:var(--acc);text-transform:uppercase;margin-bottom:8px}
+.card h3{font-size:17px;font-weight:750;line-height:1.35;color:var(--c-ink)}
+.card .core{margin-top:9px;font-size:12.5px;color:var(--c-ink2);line-height:1.6}
+.card .tags{margin-top:14px;display:flex;flex-direction:column;gap:7px}
+.card .tag{display:flex;gap:8px;align-items:baseline;font-size:12px;color:var(--c-ink2)}
+.card .tag .n{font-weight:800;color:var(--acc);flex:none;font-variant-numeric:tabular-nums}
+.card .go{margin-top:16px;font-size:12px;font-weight:700;color:var(--acc);display:inline-flex;align-items:center;gap:5px}
+
+/* ---- 模块页 ---- */
+.judge{background:var(--c-card);border:1px solid var(--c-line);border-left:4px solid var(--acc);
+  border-radius:14px;padding:18px 22px;margin-bottom:26px}
+.judge .k{font-size:11px;font-weight:700;letter-spacing:.6px;color:var(--acc);text-transform:uppercase}
+.judge h1{font-size:22px;font-weight:800;line-height:1.34;margin-top:7px}
+.judge .core{margin-top:11px;font-size:13.5px;color:var(--c-ink2);line-height:1.7;max-width:900px}
+.secttl{display:flex;align-items:center;gap:11px;margin:34px 0 14px}
+.secttl .badge{flex:none;min-width:30px;height:30px;padding:0 9px;border-radius:9px;background:var(--acc);
+  color:#fff;font-weight:800;font-size:15px;display:inline-grid;place-items:center}
+.secttl .t{font-size:17px;font-weight:750}
+.secttl.eco .badge{background:var(--c-ink);color:var(--c-bg)}
+/* ── 垂直 TAB 布局 ── */
+.vt-wrap{display:flex;gap:22px;margin-top:26px;align-items:flex-start}
+.vt-nav{flex:none;width:236px;position:sticky;top:20px;display:flex;flex-direction:column;gap:8px}
+.vt-grp{font-size:11px;font-weight:800;letter-spacing:.04em;color:var(--c-ink3);
+  text-transform:none;margin:14px 4px 2px;padding-top:8px;border-top:1px solid var(--c-line)}
+.vt-grp:first-child{margin-top:0;padding-top:0;border-top:none}
+.vt-tab{display:flex;align-items:center;gap:10px;text-align:left;cursor:pointer;
+  background:var(--c-card);border:1px solid var(--c-line);border-radius:12px;
+  padding:12px 13px;color:var(--c-ink2);font:inherit;transition:.15s}
+.vt-tab:hover{border-color:var(--acc);color:var(--c-ink)}
+.vt-tab.active{background:var(--acc);border-color:var(--acc);color:#fff;box-shadow:0 4px 14px -6px var(--acc)}
+.vt-tab .vt-b{flex:none;min-width:26px;height:26px;padding:0 7px;border-radius:8px;
+  background:var(--c-card2);color:var(--acc);font-weight:800;font-size:13px;
+  display:inline-grid;place-items:center}
+.vt-tab.active .vt-b{background:rgba(255,255,255,.24);color:#fff}
+.vt-tab .vt-l{font-size:12.5px;font-weight:650;line-height:1.35}
+.vt-stage{flex:1;min-width:0}
+.vt-sec{display:none}
+.vt-sec.active{display:block;animation:vtfade .22s ease}
+.vt-sec .secttl{margin-top:0}
+@keyframes vtfade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media(max-width:820px){.vt-wrap{flex-direction:column}.vt-nav{position:static;width:100%;flex-direction:row;flex-wrap:wrap}.vt-tab{flex:1 1 44%}}
+.fig{background:var(--c-card);border:1px solid var(--c-line);border-radius:16px;
+  padding:16px;overflow:hidden}
+.fig img{display:block;width:100%;height:auto;border-radius:8px}
+.fig .figsvg{display:block;width:100%;height:auto;border-radius:8px}
+.blurb{margin-top:14px;background:var(--c-card);border:1px solid var(--c-line);
+  border-radius:14px;padding:15px 19px}
+.blurb p{font-size:13px;color:var(--c-ink2);line-height:1.75}
+.blurb p+p{margin-top:9px}
+.blurb b{color:var(--c-ink);font-weight:700}
+.blurb code{font-family:'SF Mono',ui-monospace,Menlo,monospace;font-size:.88em;
+  background:var(--c-card2);border:1px solid var(--c-line);border-radius:5px;padding:1px 5px;color:var(--acc)}
+.blurb a{color:var(--acc);text-decoration:none;
+  border-bottom:1px solid color-mix(in srgb,var(--acc) 40%,transparent);transition:border-color .15s}
+.blurb a:hover{border-bottom-color:var(--acc)}
+.refs{margin-top:30px;padding-top:18px;border-top:2px solid var(--c-line)}
+.reflist{margin-top:12px}
+.reflist p{margin:5px 0;font-size:12.5px;color:var(--c-ink2);line-height:1.7}
+.reflist a{color:var(--acc)}
+.miss{padding:40px;text-align:center;color:var(--c-ink3);font-size:13px;border:1px dashed var(--c-edge);border-radius:12px}
+.backrow{margin-top:44px;padding-top:22px;border-top:1px solid var(--c-line)}
+.backrow a{display:inline-flex;align-items:center;gap:7px;font-size:13px;color:var(--c-ink2);
+  border:1px solid var(--c-line);border-radius:999px;padding:8px 16px;background:var(--c-panel)}
+.backrow a:hover{color:var(--c-ink);border-color:var(--c-edge)}
+footer{max-width:1180px;margin:0 auto;padding:0 24px 40px;color:var(--c-ink3);font-size:11.5px}
+
+/* ---- 门户片区切换 tab + 片区标题条 ---- */
+.zbar{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap}
+.zseg{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:700;
+  color:var(--c-ink2);border:1px solid var(--c-line);border-radius:999px;
+  padding:8px 16px;background:var(--c-panel);transition:.15s}
+.zseg:hover{color:var(--c-ink);border-color:var(--c-edge)}
+.zseg.active{color:var(--c-ink);border-color:var(--c-ink);background:var(--c-card)}
+.zseg .zn{min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:var(--c-card2);
+  color:var(--c-ink2);font-size:11px;font-weight:800;display:inline-grid;place-items:center}
+.zone{margin-top:38px;scroll-margin-top:80px}
+.zone:first-of-type{margin-top:30px}
+.zhd{margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--c-line)}
+.zhd .zk{font-size:11px;font-weight:800;letter-spacing:.08em;color:var(--c-ink3);text-transform:uppercase}
+.zhd h2{font-size:20px;font-weight:800;margin-top:5px;color:var(--c-ink)}
+.zhd p{font-size:12.5px;color:var(--c-ink2);margin-top:6px;max-width:860px;line-height:1.65}
+</style>
+</head>
+<body>
+<header>
+  <a class="logo" href="../../index.html#agent" title="返回 LLM & Agent 导航"><span class="icobtn"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg></span></a>
+  <div class="brand-intro">
+    <div class="bt">RAG</div>
+    <div class="bs">AI Agents 生态图谱 · 概念层机理（不点名具体框架）</div>
+  </div>
+  <div class="spacer"></div>
+  <button id="themeBtn" class="icobtn" title="切换深色 / 浅色主题" aria-label="切换主题"><span class="tt-ico tt-moon">☾</span><span class="tt-ico tt-sun">☀</span></button>
+</header>
+<div class="wrap" style="--acc:#4a9eff">
+  <div class="judge">
+    <span class="k">RAG · 定位</span>
+    <h1>RAG · 检索增强生成</h1>
+    <div class="core">把外部知识变成可检索的向量索引,在生成前召回相关片段注入上下文:用检索的确定性补足参数记忆的模糊与过时。</div>
+  </div>
+  <div class="vt-wrap"><nav class="vt-nav" aria-label="模块内容切换"><div class="vt-grp">概览 Overview</div><button class="vt-tab active" data-target="sec-eco"><span class="vt-b">◎</span><span class="vt-l">生态架构总图</span></button><div class="vt-grp">机制 · 索引构建</div><button class="vt-tab" data-target="sec-g1"><span class="vt-b">G1</span><span class="vt-l">分块 + 嵌入 + 建索引</span></button><div class="vt-grp">机制 · 检索召回</div><button class="vt-tab" data-target="sec-g2"><span class="vt-b">G2</span><span class="vt-l">向量 + 关键词混合检索</span></button><div class="vt-grp">机制 · 重排与生成</div><button class="vt-tab" data-target="sec-g3"><span class="vt-b">G3</span><span class="vt-l">Rerank 精排 + 上下文压缩</span></button><div class="vt-grp">机制 · GraphRAG</div><button class="vt-tab" data-target="sec-g4"><span class="vt-b">G4</span><span class="vt-l">实体图谱 + 社区摘要</span></button><div class="vt-grp">对比 Compare</div><button class="vt-tab" data-target="sec-cmp"><span class="vt-b">⇄</span><span class="vt-l">机制差异对比</span></button><div class="vt-grp">工程 Engineering</div><button class="vt-tab" data-target="sec-eng"><span class="vt-b">⚙</span><span class="vt-l">框架实现差异</span></button></nav><div class="vt-stage"><section class="vt-sec active" id="sec-eco" data-sec="sec-eco"><div class="secttl eco"><span class="badge">◎</span><span class="t">生态架构总图 · 这一模块如何在 Agent 系统中自洽拼合</span></div><div class="fig" role="img" aria-label="RAG 生态架构"><svg class="figsvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 600" font-family="-apple-system,'PingFang SC','Helvetica Neue',sans-serif">
+  <defs>
+    <filter id="s21_soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.07"/></filter>
+    <marker id="s21_arh" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#0a84ff"/></marker>
+    <marker id="s21_ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="var(--sc-line2,#b8b8bf)"/></marker>
+    <marker id="s21_art" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#2dd4bf"/></marker>
+  </defs>
+  <rect width="960" height="600" fill="var(--sc-bg,#fbfbfd)"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="var(--sc-ink,#1d1d1f)">RAG · 检索增强生成 · 生态架构</text>
+  <text x="30" y="54" font-size="12" fill="var(--sc-sub,#6e6e73)">模型的知识封存在权重里、会过期也会幻觉——RAG 让模型在生成前先检索外部知识，把答案锚定在可溯源的证据上</text>
+
+  <!-- 离线索引侧 -->
+  <g filter="url(#s21_soft)"><rect x="60" y="90" width="380" height="150" rx="13" fill="var(--sc-fill-teal,#e6fbf6)" stroke="#2dd4bf" stroke-width="1.5"/></g>
+  <text x="250" y="118" font-size="12.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">离线 · 索引构建 (Indexing)</text>
+  <text x="82" y="146" font-size="10" fill="var(--sc-sub,#6e6e73)">• 原始文档 → 清洗 → 分块 (Chunking)</text>
+  <text x="82" y="170" font-size="10" fill="var(--sc-sub,#6e6e73)">• 每块经 Embedding 编码为向量</text>
+  <text x="82" y="194" font-size="10" fill="var(--sc-sub,#6e6e73)">• 存入向量库 + 关键词倒排索引</text>
+  <text x="82" y="220" font-size="9.5" fill="#2dd4bf">一次建库，多次复用</text>
+
+  <!-- 在线检索生成侧 -->
+  <g filter="url(#s21_soft)"><rect x="520" y="90" width="380" height="150" rx="13" fill="var(--sc-fill-blue,#eef4ff)" stroke="#0a84ff" stroke-width="1.5"/></g>
+  <text x="710" y="118" font-size="12.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">在线 · 检索生成 (Retrieval+Gen)</text>
+  <text x="542" y="146" font-size="10" fill="var(--sc-sub,#6e6e73)">• 用户 query → 检索 Top-k 候选</text>
+  <text x="542" y="170" font-size="10" fill="var(--sc-sub,#6e6e73)">• Rerank 精排 → 上下文压缩</text>
+  <text x="542" y="194" font-size="10" fill="var(--sc-sub,#6e6e73)">• 证据拼入 Prompt → LLM 生成带引用答案</text>
+  <text x="542" y="220" font-size="9.5" fill="#0a84ff">每次 query 实时执行</text>
+
+  <path d="M440 165 L516 165" stroke="#2dd4bf" stroke-width="2" marker-end="url(#s21_art)"/>
+  <text x="478" y="158" font-size="9" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">共享索引</text>
+
+  <!-- 四机制铺垫 -->
+  <g filter="url(#s21_soft)"><rect x="60" y="290" width="840" height="180" rx="13" fill="var(--sc-panel,#ffffff)" stroke="var(--sc-line,#d2d2d7)" stroke-width="1.3"/></g>
+  <text x="80" y="318" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)">本模块的四条机理线</text>
+  <text x="80" y="344" font-size="10.5" fill="var(--sc-sub,#6e6e73)">G1 索引构建：分块 + Embedding + 建索引——检索质量的上限由建库阶段决定，切得好坏定成败</text>
+  <text x="80" y="370" font-size="10.5" fill="var(--sc-sub,#6e6e73)">G2 混合检索：向量语义召回 + 关键词精确召回，二者融合互补，兼顾"意思对"与"字面对"</text>
+  <text x="80" y="396" font-size="10.5" fill="var(--sc-sub,#6e6e73)">G3 重排生成：Rerank 精排把最相关的证据顶上来，上下文压缩去冗，再交给 LLM 生成带引用的答案</text>
+  <text x="80" y="422" font-size="10.5" fill="var(--sc-sub,#6e6e73)">G4 图谱检索：构建实体关系图 + 社区摘要，回答需要跨文档串联、全局归纳的复杂问题 (GraphRAG)</text>
+  <text x="80" y="450" font-size="10" fill="#f5873a">核心张力：召回不足则答不全，召回过多则噪声淹没答案——精度与召回的平衡是 RAG 的永恒命题</text>
+
+  <!-- 底部闭环 -->
+  <g filter="url(#s21_soft)"><rect x="60" y="500" width="840" height="70" rx="13" fill="var(--sc-fill-orange,#fff3ea)" stroke="#f5873a" stroke-width="1.3"/></g>
+  <text x="80" y="528" font-size="11.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)">为什么需要 RAG</text>
+  <text x="80" y="552" font-size="10" fill="var(--sc-sub,#6e6e73)">知识时效性 (权重会过期) + 领域私有数据 (模型没见过) + 可溯源抗幻觉 (答案有出处) —— 检索是"外挂知识库"</text>
+
+  <line x1="678" y1="588" x2="700" y2="588" stroke="#0a84ff" stroke-width="2"/><text x="706" y="591" font-size="9" fill="var(--sc-sub,#6e6e73)">在线热路径</text>
+  <line x1="778" y1="588" x2="800" y2="588" stroke="#2dd4bf" stroke-width="2"/><text x="806" y="591" font-size="9" fill="var(--sc-sub,#6e6e73)">离线数据流</text>
+</svg></div><div class="blurb"><p>模型知识封存在权重里，天生三短板：会过期、不懂私有数据、爱幻觉。<b>RAG（检索增强生成）</b> 让模型生成前先检索外部证据，把答案锚定在可溯源材料上。系统分两侧：离线侧分块/向量化/建索引（一次建库多次复用），在线侧对每个 query 检索/精排/压缩再拼进 Prompt 生成带引用答案。核心张力——<b>召回不足则答不全、召回过多则噪声淹没</b>，精度与召回的平衡是永恒命题。见生态图。</p></div></section><section class="vt-sec" id="sec-g1" data-sec="sec-g1"><div class="secttl"><span class="badge">G1</span><span class="t">索引构建 · 分块 + 嵌入 + 建索引</span></div><div class="fig" role="img" aria-label="索引构建 · 分块 + 嵌入 + 建索引"><svg class="figsvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 500" font-family="-apple-system,'PingFang SC','Helvetica Neue',sans-serif">
+  <defs>
+    <filter id="s22_soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.07"/></filter>
+    <marker id="s22_art" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#2dd4bf"/></marker>
+    <marker id="s22_ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="var(--sc-line2,#b8b8bf)"/></marker>
+  </defs>
+  <rect width="960" height="500" fill="var(--sc-bg,#fbfbfd)"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="var(--sc-ink,#1d1d1f)">G1 · 索引构建：分块 + 嵌入 + 建索引</text>
+  <text x="30" y="54" font-size="12" fill="var(--sc-sub,#6e6e73)">离线阶段一次性完成——检索质量的天花板在这里就被决定，"切得好坏定成败"</text>
+
+  <g filter="url(#s22_soft)"><rect x="40" y="110" width="150" height="90" rx="12" fill="var(--sc-panel,#f5f5f7)" stroke="var(--sc-sub,#86868b)" stroke-width="1.4"/></g>
+  <text x="115" y="150" font-size="11.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">原始文档</text>
+  <text x="115" y="172" font-size="9.5" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">PDF/网页/DB</text>
+
+  <g filter="url(#s22_soft)"><rect x="230" y="110" width="150" height="90" rx="12" fill="var(--sc-fill-teal,#e6fbf6)" stroke="#2dd4bf" stroke-width="1.5"/></g>
+  <text x="305" y="145" font-size="11.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">清洗 + 分块</text>
+  <text x="305" y="167" font-size="9" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">按语义/长度切 Chunk</text>
+  <text x="305" y="184" font-size="9" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">保留重叠防断裂</text>
+
+  <g filter="url(#s22_soft)"><rect x="420" y="110" width="150" height="90" rx="12" fill="var(--sc-fill-teal,#e6fbf6)" stroke="#2dd4bf" stroke-width="1.5"/></g>
+  <text x="495" y="145" font-size="11.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">Embedding 编码</text>
+  <text x="495" y="167" font-size="9" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">每块 → 高维向量</text>
+  <text x="495" y="184" font-size="9" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">语义相近则距离近</text>
+
+  <g filter="url(#s22_soft)"><rect x="610" y="110" width="150" height="90" rx="12" fill="var(--sc-fill-teal,#e6fbf6)" stroke="#2dd4bf" stroke-width="1.5"/></g>
+  <text x="685" y="145" font-size="11.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">建索引入库</text>
+  <text x="685" y="167" font-size="9" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">向量库 (ANN 索引)</text>
+  <text x="685" y="184" font-size="9" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">+ 倒排关键词索引</text>
+
+  <path d="M190 155 L226 155" stroke="#2dd4bf" stroke-width="2" marker-end="url(#s22_art)"/>
+  <path d="M380 155 L416 155" stroke="#2dd4bf" stroke-width="2" marker-end="url(#s22_art)"/>
+  <path d="M570 155 L606 155" stroke="#2dd4bf" stroke-width="2" marker-end="url(#s22_art)"/>
+
+  <g filter="url(#s22_soft)"><rect x="40" y="250" width="720" height="200" rx="13" fill="var(--sc-panel,#ffffff)" stroke="var(--sc-line,#d2d2d7)" stroke-width="1.3"/></g>
+  <text x="60" y="278" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)">分块 (Chunking) 是最关键也最被低估的一步</text>
+  <text x="60" y="304" font-size="10.5" fill="var(--sc-sub,#6e6e73)">• 块太大：一块塞进多个主题，向量被"平均"稀释，检索时语义不聚焦</text>
+  <text x="60" y="328" font-size="10.5" fill="var(--sc-sub,#6e6e73)">• 块太小：语义被切碎，单块信息不完整，答案要跨多块拼凑</text>
+  <text x="60" y="352" font-size="10.5" fill="var(--sc-sub,#6e6e73)">• 相邻块保留重叠 (overlap)：避免关键句正好被切在边界上而丢失</text>
+  <text x="60" y="376" font-size="10.5" fill="var(--sc-sub,#6e6e73)">• 附带元数据：标题、来源、时间戳——供检索过滤与答案溯源</text>
+  <text x="60" y="404" font-size="10.5" fill="#0a84ff">• Embedding 模型的选择决定语义空间质量：领域数据宜选贴合领域的模型</text>
+  <text x="60" y="432" font-size="10" fill="#f5873a">铁律：垃圾进，垃圾出——建库阶段的疏忽，后续任何检索技巧都补不回来</text>
+
+  <line x1="778" y1="440" x2="800" y2="440" stroke="#2dd4bf" stroke-width="2"/><text x="806" y="443" font-size="9" fill="var(--sc-sub,#6e6e73)">离线数据流</text>
+</svg></div><div class="blurb"><p><b>索引构建</b>是离线一次性建库，检索质量天花板在此锁死。文档清洗→切块（Chunk）→Embedding 编码→连同元数据存向量库+建关键词倒排。关键在分块：块太大语义被平均稀释、块太小信息不完整。须按语义/长度合理切分、相邻块保留重叠防边界切断、附标题来源时间戳供过滤溯源。<b>垃圾进垃圾出</b>——建库疏忽后续技巧补不回。见图。</p></div></section><section class="vt-sec" id="sec-g2" data-sec="sec-g2"><div class="secttl"><span class="badge">G2</span><span class="t">检索召回 · 向量 + 关键词混合检索</span></div><div class="fig" role="img" aria-label="检索召回 · 向量 + 关键词混合检索"><svg class="figsvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 500" font-family="-apple-system,'PingFang SC','Helvetica Neue',sans-serif">
+  <defs>
+    <filter id="s23_soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.07"/></filter>
+    <marker id="s23_arh" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#0a84ff"/></marker>
+    <marker id="s23_art" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#2dd4bf"/></marker>
+  </defs>
+  <rect width="960" height="500" fill="var(--sc-bg,#fbfbfd)"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="var(--sc-ink,#1d1d1f)">G2 · 混合检索：向量 + 关键词双路召回</text>
+  <text x="30" y="54" font-size="12" fill="var(--sc-sub,#6e6e73)">向量懂"意思对"，关键词管"字面对"——两路互补，融合排序，覆盖单一检索的盲区</text>
+
+  <g filter="url(#s23_soft)"><rect x="40" y="200" width="150" height="80" rx="12" fill="var(--sc-fill-blue,#eef4ff)" stroke="#0a84ff" stroke-width="1.5"/></g>
+  <text x="115" y="235" font-size="11.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">用户 Query</text>
+  <text x="115" y="257" font-size="9" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">自然语言问题</text>
+
+  <!-- 向量路 -->
+  <g filter="url(#s23_soft)"><rect x="260" y="110" width="230" height="90" rx="12" fill="var(--sc-fill-teal,#e6fbf6)" stroke="#2dd4bf" stroke-width="1.5"/></g>
+  <text x="375" y="140" font-size="11.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">向量检索 (语义)</text>
+  <text x="280" y="164" font-size="9.5" fill="var(--sc-sub,#6e6e73)">query → Embedding → ANN 近邻</text>
+  <text x="280" y="184" font-size="9.5" fill="var(--sc-sub,#6e6e73)">优势：懂同义、改写、意图</text>
+
+  <!-- 关键词路 -->
+  <g filter="url(#s23_soft)"><rect x="260" y="290" width="230" height="90" rx="12" fill="var(--sc-fill-orange,#fff3ea)" stroke="#f5873a" stroke-width="1.5"/></g>
+  <text x="375" y="320" font-size="11.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">关键词检索 (BM25)</text>
+  <text x="280" y="344" font-size="9.5" fill="var(--sc-sub,#6e6e73)">倒排索引 → 精确词命中</text>
+  <text x="280" y="364" font-size="9.5" fill="var(--sc-sub,#6e6e73)">优势：专有名词、编号、代码</text>
+
+  <g filter="url(#s23_soft)"><rect x="560" y="200" width="180" height="90" rx="12" fill="var(--sc-fill-blue,#eef4ff)" stroke="#0a84ff" stroke-width="1.6"/></g>
+  <text x="650" y="230" font-size="11.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">融合排序</text>
+  <text x="650" y="253" font-size="9" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">RRF / 加权分数合并</text>
+  <text x="650" y="272" font-size="9" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">→ 统一 Top-k 候选集</text>
+
+  <path d="M190 232 L256 165" stroke="#2dd4bf" stroke-width="1.8" marker-end="url(#s23_art)"/>
+  <path d="M190 250 L256 328" stroke="#f5873a" stroke-width="1.8" marker-end="url(#s23_art)"/>
+  <path d="M490 155 L556 225" stroke="#2dd4bf" stroke-width="1.8" marker-end="url(#s23_art)"/>
+  <path d="M490 335 L556 268" stroke="#f5873a" stroke-width="1.8" marker-end="url(#s23_art)"/>
+
+  <g filter="url(#s23_soft)"><rect x="40" y="410" width="880" height="60" rx="13" fill="var(--sc-panel,#ffffff)" stroke="var(--sc-line,#d2d2d7)" stroke-width="1.3"/></g>
+  <text x="60" y="435" font-size="11" fill="var(--sc-sub,#6e6e73)">为什么单路不够：纯向量会漏掉"零件号 A-7734"这类无语义的精确串；纯关键词答不了"怎么让它更快"这类语义改写。</text>
+  <text x="60" y="457" font-size="10.5" fill="#0a84ff">融合关键在归一化不同评分体系 (RRF 用排名而非原始分)，让两路结果公平竞争，再交给下游 Rerank 精排。</text>
+</svg></div><div class="blurb"><p><b>混合检索</b>解决单一检索盲区：向量检索懂「意思对」（ANN 找语义相近，擅长同义改写，漏无语义精确串如「A-7734」）；<b>BM25</b> 关键词检索管「字面对」（倒排精确命中专有名词/编号/代码，答不了语义改写）。两路并行召回，用融合排序（如 <b>RRF</b> 按排名而非原始分归一化）合并成统一 Top-k。难点在不同评分体系的归一化与权重调参。见图。</p></div></section><section class="vt-sec" id="sec-g3" data-sec="sec-g3"><div class="secttl"><span class="badge">G3</span><span class="t">重排与生成 · Rerank 精排 + 上下文压缩</span></div><div class="fig" role="img" aria-label="重排与生成 · Rerank 精排 + 上下文压缩"><svg class="figsvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 500" font-family="-apple-system,'PingFang SC','Helvetica Neue',sans-serif">
+  <defs>
+    <filter id="s24_soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.07"/></filter>
+    <marker id="s24_arh" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#0a84ff"/></marker>
+    <marker id="s24_art" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#2dd4bf"/></marker>
+  </defs>
+  <rect width="960" height="500" fill="var(--sc-bg,#fbfbfd)"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="var(--sc-ink,#1d1d1f)">G3 · 重排精排 + 上下文压缩 + 生成</text>
+  <text x="30" y="54" font-size="12" fill="var(--sc-sub,#6e6e73)">检索召回是"粗筛"，Rerank 是"精挑"——把最相关证据顶上来、去掉冗余，再交给 LLM 生成带引用的答案</text>
+
+  <g filter="url(#s24_soft)"><rect x="30" y="120" width="150" height="80" rx="12" fill="var(--sc-fill-teal,#e6fbf6)" stroke="#2dd4bf" stroke-width="1.5"/></g>
+  <text x="105" y="152" font-size="11" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">粗召回 Top-k</text>
+  <text x="105" y="174" font-size="9" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">混合检索候选(如50条)</text>
+
+  <g filter="url(#s24_soft)"><rect x="220" y="120" width="160" height="80" rx="12" fill="var(--sc-fill-blue,#eef4ff)" stroke="#0a84ff" stroke-width="1.6"/></g>
+  <text x="300" y="148" font-size="11" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">Rerank 精排</text>
+  <text x="300" y="170" font-size="9" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">Cross-Encoder 逐对打分</text>
+  <text x="300" y="188" font-size="9" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">取真正最相关 Top-n</text>
+
+  <g filter="url(#s24_soft)"><rect x="420" y="120" width="160" height="80" rx="12" fill="var(--sc-fill-blue,#eef4ff)" stroke="#0a84ff" stroke-width="1.5"/></g>
+  <text x="500" y="148" font-size="11" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">上下文压缩</text>
+  <text x="500" y="170" font-size="9" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">去冗余、抽关键句</text>
+  <text x="500" y="188" font-size="9" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">省 token、防"迷失中间"</text>
+
+  <g filter="url(#s24_soft)"><rect x="620" y="120" width="160" height="80" rx="12" fill="var(--sc-fill-blue,#eef4ff)" stroke="#0a84ff" stroke-width="1.6"/></g>
+  <text x="700" y="148" font-size="11" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">LLM 生成</text>
+  <text x="700" y="170" font-size="9" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">证据+query→带引用答案</text>
+  <text x="700" y="188" font-size="9" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">标注 [来源] 可溯源</text>
+
+  <path d="M180 160 L216 160" stroke="#0a84ff" stroke-width="2" marker-end="url(#s24_arh)"/>
+  <path d="M380 160 L416 160" stroke="#0a84ff" stroke-width="2" marker-end="url(#s24_arh)"/>
+  <path d="M580 160 L616 160" stroke="#0a84ff" stroke-width="2" marker-end="url(#s24_arh)"/>
+
+  <g filter="url(#s24_soft)"><rect x="30" y="250" width="750" height="200" rx="13" fill="var(--sc-panel,#ffffff)" stroke="var(--sc-line,#d2d2d7)" stroke-width="1.3"/></g>
+  <text x="52" y="278" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)">为什么召回之后还要 Rerank</text>
+  <text x="52" y="304" font-size="10.5" fill="var(--sc-sub,#6e6e73)">• 向量检索为了速度用"双塔"独立编码，query 与文档没交互，排序粗糙</text>
+  <text x="52" y="328" font-size="10.5" fill="var(--sc-sub,#6e6e73)">• Rerank 用 Cross-Encoder 把 query 与每个候选拼在一起深度打分，精准但慢</text>
+  <text x="52" y="352" font-size="10.5" fill="var(--sc-sub,#6e6e73)">• 两段式分工：先用快模型粗筛缩小范围，再用慢模型精排——速度与精度兼得</text>
+  <text x="52" y="380" font-size="10.5" fill="#0a84ff">• "迷失在中间"效应：长上下文里模型只关注首尾，压缩把最相关证据放到显眼处</text>
+  <text x="52" y="408" font-size="10.5" fill="#0a84ff">• 生成阶段务必要求"仅依据给定证据、并标注引用"，无据则答"不知道"以抗幻觉</text>
+  <text x="52" y="436" font-size="10" fill="#f5873a">失败模式：证据充分却生成幻觉 → 需 prompt 约束 + 引用校验；此为 RAG 可信度的最后一道闸</text>
+
+  <line x1="798" y1="440" x2="820" y2="440" stroke="#0a84ff" stroke-width="2"/><text x="826" y="443" font-size="9" fill="var(--sc-sub,#6e6e73)">在线热路径</text>
+</svg></div><div class="blurb"><p><b>重排生成</b>是在线「精挑+作答」。召回后需 Rerank：向量检索双塔独立编码、排序偏粗；<b>Cross-Encoder</b> 把 query 与候选拼接深度打分、精准但慢。故两段式——快模型粗筛（召回 50）+慢模型精排取 Top-n。再做上下文压缩去冗，缓解「迷失在中间」（长上下文只关注首尾）。生成须约束「<b>仅依据证据、标注引用、无据则答不知道</b>」，是抗幻觉最后一闸。见图。</p></div></section><section class="vt-sec" id="sec-g4" data-sec="sec-g4"><div class="secttl"><span class="badge">G4</span><span class="t">GraphRAG · 实体图谱 + 社区摘要</span></div><div class="fig" role="img" aria-label="GraphRAG · 实体图谱 + 社区摘要"><svg class="figsvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 520" font-family="-apple-system,'PingFang SC','Helvetica Neue',sans-serif">
+  <defs>
+    <filter id="s25_soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.07"/></filter>
+    <marker id="s25_arh" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#0a84ff"/></marker>
+    <marker id="s25_art" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#2dd4bf"/></marker>
+  </defs>
+  <rect width="960" height="520" fill="var(--sc-bg,#fbfbfd)"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="var(--sc-ink,#1d1d1f)">G4 · 图谱检索：实体关系 + 社区摘要 (GraphRAG)</text>
+  <text x="30" y="54" font-size="12" fill="var(--sc-sub,#6e6e73)">向量检索按"块"召回、答不了需要跨文档串联与全局归纳的问题——图谱把知识组织成实体与关系</text>
+
+  <!-- 离线建图 -->
+  <g filter="url(#s25_soft)"><rect x="40" y="90" width="400" height="150" rx="13" fill="var(--sc-fill-teal,#e6fbf6)" stroke="#2dd4bf" stroke-width="1.5"/></g>
+  <text x="240" y="118" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">离线 · 构建知识图谱</text>
+  <text x="62" y="146" font-size="10" fill="var(--sc-sub,#6e6e73)">• LLM 从文档抽取实体 (人/组织/概念)</text>
+  <text x="62" y="170" font-size="10" fill="var(--sc-sub,#6e6e73)">• 抽取实体间关系 → 构成图 (节点+边)</text>
+  <text x="62" y="194" font-size="10" fill="var(--sc-sub,#6e6e73)">• 图聚类为社区 → 逐社区生成摘要</text>
+  <text x="62" y="220" font-size="9.5" fill="#2dd4bf">得到多层次结构化知识，而非离散文本块</text>
+
+  <!-- 在线查询 -->
+  <g filter="url(#s25_soft)"><rect x="520" y="90" width="400" height="150" rx="13" fill="var(--sc-fill-blue,#eef4ff)" stroke="#0a84ff" stroke-width="1.5"/></g>
+  <text x="720" y="118" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">在线 · 图谱增强检索</text>
+  <text x="542" y="146" font-size="10" fill="var(--sc-sub,#6e6e73)">• 局部问题：定位实体 → 沿关系边多跳游走</text>
+  <text x="542" y="170" font-size="10" fill="var(--sc-sub,#6e6e73)">• 全局问题：聚合相关社区摘要 → 归纳作答</text>
+  <text x="542" y="194" font-size="10" fill="var(--sc-sub,#6e6e73)">• 图结构 + 向量检索互补组合使用</text>
+  <text x="542" y="220" font-size="9.5" fill="#0a84ff">能回答"整个文档集讲了什么"这类总览题</text>
+
+  <path d="M440 165 L516 165" stroke="#2dd4bf" stroke-width="2" marker-end="url(#s25_art)"/>
+
+  <g filter="url(#s25_soft)"><rect x="40" y="270" width="880" height="230" rx="13" fill="var(--sc-panel,#ffffff)" stroke="var(--sc-line,#d2d2d7)" stroke-width="1.3"/></g>
+  <text x="62" y="298" font-size="12" font-weight="600" fill="var(--sc-ink,#1d1d1f)">普通 RAG 答不好、图谱 RAG 才能答的两类问题</text>
+  <text x="62" y="324" font-size="10.5" fill="var(--sc-sub,#6e6e73)">• 多跳推理："A 的导师的另一个学生是谁" —— 需沿实体关系链游走，单块文本没有完整路径</text>
+  <text x="62" y="348" font-size="10.5" fill="var(--sc-sub,#6e6e73)">• 全局归纳："这批报告反映的主要趋势是什么" —— 答案分散在成百上千块里，向量检索只能取回零星几块</text>
+  <text x="62" y="376" font-size="10.5" fill="#0a84ff">图谱 RAG 的代价：建图依赖 LLM 抽取，成本高、耗时长；实体消歧与关系准确度直接影响质量</text>
+  <text x="62" y="400" font-size="10.5" fill="#0a84ff">社区摘要是"分层归纳"：先摘要子社区，再摘要父社区，全局问题可逐层聚合而不必读全文</text>
+  <text x="62" y="428" font-size="10.5" fill="var(--sc-sub,#6e6e73)">实践：图谱 RAG 与向量 RAG 并非替代关系——事实性精确问答用向量，关系/全局性问题用图谱，二者互补</text>
+  <text x="62" y="456" font-size="10" fill="#f5873a">取舍：图谱构建与维护成本高，仅当业务确有多跳/全局需求时才值得引入，否则向量 RAG 更简单高效</text>
+  <text x="62" y="484" font-size="10" fill="var(--sc-sub,#6e6e73)">代表方案：微软 GraphRAG——实体抽取 + Leiden 社区检测 + 分层社区摘要 + 局部/全局双查询模式</text>
+</svg></div><div class="blurb"><p><b>图谱检索（GraphRAG）</b> 应对普通 RAG 的两类短板：多跳推理（沿实体关系链游走）与全局归纳（答案分散在成百上千块）。离线用 LLM 抽取实体关系构图、聚类为社区并分层生成社区摘要；在线局部问题定位实体多跳游走、全局问题聚合社区摘要归纳。代价是建图依赖 LLM 抽取、成本高、实体消歧影响质量。与向量 RAG <b>互补而非替代</b>——精确事实用向量，关系全局用图谱。见图。</p></div></section><section class="vt-sec" id="sec-cmp" data-sec="sec-cmp"><div class="secttl"><span class="badge">⇄</span><span class="t">RAG · 核心机制差异对比</span></div><div class="fig" role="img" aria-label="RAG · 核心机制差异对比"><svg class="figsvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 520" font-family="-apple-system,'PingFang SC','Helvetica Neue',sans-serif">
+  <defs>
+    <filter id="s26_soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.07"/></filter>
+  </defs>
+  <rect width="960" height="520" fill="var(--sc-bg,#fbfbfd)"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="var(--sc-ink,#1d1d1f)">CMP · 四条机理线横向对比</text>
+  <text x="30" y="54" font-size="12" fill="var(--sc-sub,#6e6e73)">索引构建 / 混合检索 / 重排生成 / 图谱检索——各自解决 RAG 流水线上不同环节的核心问题</text>
+
+  <!-- 表头 -->
+  <g filter="url(#s26_soft)"><rect x="30" y="80" width="900" height="42" rx="10" fill="var(--sc-ink,#1d1d1f)"/></g>
+  <text x="120" y="106" font-size="11" font-weight="600" fill="var(--sc-panel,#ffffff)" text-anchor="middle">机理线</text>
+  <text x="320" y="106" font-size="11" font-weight="600" fill="var(--sc-panel,#ffffff)" text-anchor="middle">解决什么问题</text>
+  <text x="560" y="106" font-size="11" font-weight="600" fill="var(--sc-panel,#ffffff)" text-anchor="middle">核心做法</text>
+  <text x="820" y="106" font-size="11" font-weight="600" fill="var(--sc-panel,#ffffff)" text-anchor="middle">主要代价 / 风险</text>
+
+  <!-- G1 -->
+  <g filter="url(#s26_soft)"><rect x="30" y="132" width="900" height="82" rx="10" fill="var(--sc-fill-teal,#e6fbf6)" stroke="#2dd4bf" stroke-width="1.3"/></g>
+  <text x="120" y="166" font-size="11" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">G1 索引构建</text>
+  <text x="120" y="188" font-size="9" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">离线 · 建库</text>
+  <text x="320" y="168" font-size="9.5" fill="var(--sc-ink2,#424245)" text-anchor="middle">让知识可被检索，决定质量上限</text>
+  <text x="560" y="168" font-size="9.5" fill="var(--sc-ink2,#424245)" text-anchor="middle">分块 + Embedding + 建索引</text>
+  <text x="820" y="168" font-size="9.5" fill="var(--sc-ink2,#424245)" text-anchor="middle">切块不当则全盘皆输</text>
+
+  <!-- G2 -->
+  <g filter="url(#s26_soft)"><rect x="30" y="224" width="900" height="82" rx="10" fill="var(--sc-fill-blue,#eef4ff)" stroke="#0a84ff" stroke-width="1.3"/></g>
+  <text x="120" y="258" font-size="11" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">G2 混合检索</text>
+  <text x="120" y="280" font-size="9" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">在线 · 召回</text>
+  <text x="320" y="260" font-size="9.5" fill="var(--sc-ink2,#424245)" text-anchor="middle">兼顾语义相关与字面精确</text>
+  <text x="560" y="260" font-size="9.5" fill="var(--sc-ink2,#424245)" text-anchor="middle">向量 + 关键词双路，融合排序</text>
+  <text x="820" y="260" font-size="9.5" fill="var(--sc-ink2,#424245)" text-anchor="middle">评分归一化与权重调参</text>
+
+  <!-- G3 -->
+  <g filter="url(#s26_soft)"><rect x="30" y="316" width="900" height="82" rx="10" fill="var(--sc-fill-blue,#eef4ff)" stroke="#0a84ff" stroke-width="1.3"/></g>
+  <text x="120" y="350" font-size="11" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">G3 重排生成</text>
+  <text x="120" y="372" font-size="9" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">在线 · 精排+生成</text>
+  <text x="320" y="352" font-size="9.5" fill="var(--sc-ink2,#424245)" text-anchor="middle">从粗召回里精挑并生成可信答案</text>
+  <text x="560" y="352" font-size="9.5" fill="var(--sc-ink2,#424245)" text-anchor="middle">Rerank + 压缩 + 带引用生成</text>
+  <text x="820" y="352" font-size="9.5" fill="var(--sc-ink2,#424245)" text-anchor="middle">精排慢；生成仍可能幻觉</text>
+
+  <!-- G4 -->
+  <g filter="url(#s26_soft)"><rect x="30" y="408" width="900" height="82" rx="10" fill="var(--sc-fill-orange,#fff3ea)" stroke="#f5873a" stroke-width="1.3"/></g>
+  <text x="120" y="442" font-size="11" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">G4 图谱检索</text>
+  <text x="120" y="464" font-size="9" fill="var(--sc-sub,#6e6e73)" text-anchor="middle">进阶 · 关系/全局</text>
+  <text x="320" y="444" font-size="9.5" fill="var(--sc-ink2,#424245)" text-anchor="middle">多跳推理与全局归纳</text>
+  <text x="560" y="444" font-size="9.5" fill="var(--sc-ink2,#424245)" text-anchor="middle">实体关系图 + 社区摘要</text>
+  <text x="820" y="444" font-size="9.5" fill="var(--sc-ink2,#424245)" text-anchor="middle">建图成本高、消歧难</text>
+
+  <text x="30" y="510" font-size="10" fill="var(--sc-sub,#6e6e73)">选型主线：先把 G1 建库做扎实 → G2/G3 是标准在线流水线 → 仅当有多跳/全局需求时才升级到 G4。</text>
+</svg></div><div class="blurb ml"><p>四线在流水线上分工：G1 索引建库定质量上限（切块不当全盘皆输）、G2 混合检索兼顾语义与字面（评分归一化调参）、G3 重排生成精挑并产可信答案（精排慢+仍可能幻觉）、G4 图谱专攻多跳与全局（建图成本高）。选型主线：G1 做扎实，G2+G3 为标准在线流水线，确有多跳/全局需求才升 G4。四维对照见图。</p></div></section><section class="vt-sec" id="sec-eng" data-sec="sec-eng"><div class="secttl"><span class="badge">⚙</span><span class="t">RAG · 工程实现差异（真实框架落地取舍）</span></div><div class="fig" role="img" aria-label="RAG · 工程实现差异（真实框架落地取舍）"><svg class="figsvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 500" font-family="-apple-system,'PingFang SC','Helvetica Neue',sans-serif">
+  <defs>
+    <filter id="s27_soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.07"/></filter>
+  </defs>
+  <rect width="960" height="500" fill="var(--sc-bg,#fbfbfd)"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="var(--sc-ink,#1d1d1f)">ENG · 工程落地三支柱</text>
+  <text x="30" y="54" font-size="12" fill="var(--sc-sub,#6e6e73)">RAG 的工程难点不在"能不能检索"，而在"检得准、答得实、评得清"——三支柱撑起可信问答系统</text>
+
+  <g filter="url(#s27_soft)"><rect x="30" y="90" width="290" height="300" rx="13" fill="var(--sc-fill-teal,#e6fbf6)" stroke="#2dd4bf" stroke-width="1.5"/></g>
+  <text x="175" y="120" font-size="12.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">① 数据即根基</text>
+  <text x="50" y="150" font-size="10" fill="var(--sc-sub,#6e6e73)">• 分块策略贴合文档结构</text>
+  <text x="50" y="174" font-size="10" fill="var(--sc-sub,#6e6e73)">• Embedding 模型匹配领域</text>
+  <text x="50" y="198" font-size="10" fill="var(--sc-sub,#6e6e73)">• 元数据支撑过滤与溯源</text>
+  <text x="50" y="222" font-size="10" fill="var(--sc-sub,#6e6e73)">• 增量更新，索引不陈旧</text>
+  <text x="50" y="252" font-size="9.5" fill="#2dd4bf">检索质量的上限在建库阶段</text>
+  <text x="50" y="276" font-size="9.5" fill="#2dd4bf">就已锁死，垃圾进垃圾出</text>
+  <text x="50" y="320" font-size="9" fill="var(--sc-sub,#86868b)">失败信号：召回全是无关块</text>
+  <text x="50" y="342" font-size="9" fill="var(--sc-sub,#86868b)">→ 回查分块与 Embedding</text>
+
+  <g filter="url(#s27_soft)"><rect x="335" y="90" width="290" height="300" rx="13" fill="var(--sc-fill-blue,#eef4ff)" stroke="#0a84ff" stroke-width="1.5"/></g>
+  <text x="480" y="120" font-size="12.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">② 抗幻觉即底线</text>
+  <text x="355" y="150" font-size="10" fill="var(--sc-sub,#6e6e73)">• 生成仅依据召回证据</text>
+  <text x="355" y="174" font-size="10" fill="var(--sc-sub,#6e6e73)">• 强制标注引用来源</text>
+  <text x="355" y="198" font-size="10" fill="var(--sc-sub,#6e6e73)">• 无据可依则答"不知道"</text>
+  <text x="355" y="222" font-size="10" fill="var(--sc-sub,#6e6e73)">• Rerank + 压缩降低噪声</text>
+  <text x="355" y="252" font-size="9.5" fill="#0a84ff">证据充分却编造，是 RAG</text>
+  <text x="355" y="276" font-size="9.5" fill="#0a84ff">最危险的失败——比不答更糟</text>
+  <text x="355" y="320" font-size="9" fill="var(--sc-sub,#86868b)">失败信号：答案与引用不符</text>
+  <text x="355" y="342" font-size="9" fill="var(--sc-sub,#86868b)">→ 加引用校验与拒答策略</text>
+
+  <g filter="url(#s27_soft)"><rect x="640" y="90" width="290" height="300" rx="13" fill="var(--sc-fill-orange,#fff3ea)" stroke="#f5873a" stroke-width="1.5"/></g>
+  <text x="785" y="120" font-size="12.5" font-weight="600" fill="var(--sc-ink,#1d1d1f)" text-anchor="middle">③ 评测即闭环</text>
+  <text x="660" y="150" font-size="10" fill="var(--sc-sub,#6e6e73)">• 检索侧：命中率 / 召回率</text>
+  <text x="660" y="174" font-size="10" fill="var(--sc-sub,#6e6e73)">• 生成侧：忠实度 / 相关性</text>
+  <text x="660" y="198" font-size="10" fill="var(--sc-sub,#6e6e73)">• 端到端：answer 是否可用</text>
+  <text x="660" y="222" font-size="10" fill="var(--sc-sub,#6e6e73)">• 建评测集，回归防退化</text>
+  <text x="660" y="252" font-size="9.5" fill="#f5873a">"检索错"还是"生成错"要能</text>
+  <text x="660" y="276" font-size="9.5" fill="#f5873a">分层归因，否则无从优化</text>
+  <text x="660" y="320" font-size="9" fill="var(--sc-sub,#86868b)">工具：RAGAS 等评测框架</text>
+  <text x="660" y="342" font-size="9" fill="var(--sc-sub,#86868b)">分离检索与生成指标</text>
+
+  <g filter="url(#s27_soft)"><rect x="30" y="415" width="900" height="60" rx="13" fill="var(--sc-panel,#ffffff)" stroke="var(--sc-line,#d2d2d7)" stroke-width="1.3"/></g>
+  <text x="50" y="440" font-size="11" font-weight="600" fill="var(--sc-ink,#1d1d1f)">一句话总纲</text>
+  <text x="50" y="462" font-size="10.5" fill="var(--sc-sub,#6e6e73)">RAG 不是"接个向量库"就完事——它是数据工程 + 检索工程 + 生成约束 + 评测体系的系统工程，任一环短板都会决定天花板。</text>
+</svg></div><div class="blurb ml"><p>三支柱：<b>数据即根基</b>——分块贴合结构、Embedding 匹配领域、元数据支撑过滤溯源、索引增量更新（质量上限在建库锁死）；<b>抗幻觉即底线</b>——只依据证据、强制引用、无据拒答，配 Rerank+压缩降噪（证据充分却编造比不答更糟）；<b>评测即闭环</b>——检索看命中/召回率、生成看忠实度/相关性、端到端看可用性，并能分层归因「检索错还是生成错」。总纲：RAG 是数据+检索+生成约束+评测的系统工程。详见图。</p><p><b>2025 前沿</b>：RAG 正从「一次检索、一次生成」的静态管线，走向<b>Agentic RAG</b>——把检索本身交给 Agent 主动编排：先判断该不该查、拆解复杂问题为多个子查询、按第一轮结果决定是否追加检索或换数据源，多轮迭代直到证据充分才作答（检索成为可反思的循环而非固定前置步）。同时受 MCP 生态推动，知识源从「单一向量库」解耦为<b>可插拔的多数据源</b>（向量库、SQL、API、图谱经 MCP Server 统一接入），Agent 按问题动态选源。这让 RAG 与推理循环、工具调用深度融合：检索不再是独立模块，而是 Agent 决策链上的一环——也因此评测须从「单轮检索命中」扩展到「多轮检索策略是否高效、是否过度检索烧预算」。</p></div></section></div></div>
+  <section class="refs"><div class="secttl"><span class="badge">§</span><span class="t">参考文献 · 权威来源（论文 / 官方文档）</span></div><div class="blurb reflist"><p>延伸阅读：RAG 原始论文 (Lewis et al., 2020)；向量数据库与 ANN 检索 (FAISS、Milvus、pgvector)；BM25 与混合检索、RRF 融合排序；Cross-Encoder Rerank (如 Cohere Rerank、bge-reranker)；&quot;Lost in the Middle&quot; 长上下文注意力研究；微软 GraphRAG (实体抽取 + 社区检测 + 分层摘要)；RAGAS 等 RAG 评测框架；以及 LangChain / LlamaIndex 的检索与生成编排组件。</p></div></section>
+  <div class="backrow"><a href="../../index.html#agent">← 返回 LLM & Agent 导航</a></div>
+</div>
+<footer>自包含离线图谱 · 以图为主：概览 + 机制分组图 + 机制对比 · 权威参考集中于底部 · 垂直 TAB 切换</footer>
+<script>
+(function(){
+  var root=document.documentElement;
+  var saved=localStorage.getItem('atlas-nav-theme');
+  if(saved==='dark') root.setAttribute('data-theme','dark');
+  function toggleTheme(){
+    var cur=root.getAttribute('data-theme')==='dark'?'':'dark';
+    if(cur) root.setAttribute('data-theme',cur); else root.removeAttribute('data-theme');
+    localStorage.setItem('atlas-nav-theme',cur||'light');
+  }
+  var tb=document.getElementById('themeBtn');
+  if(tb){tb.onclick=toggleTheme;}
+  var wrap=document.querySelector('.vt-wrap');
+  if(wrap){
+    var tabs=wrap.querySelectorAll('.vt-tab');
+    var secs=wrap.querySelectorAll('.vt-sec');
+    tabs.forEach(function(t){
+      t.addEventListener('click',function(){
+        var tgt=t.getAttribute('data-target');
+        tabs.forEach(function(x){x.classList.toggle('active',x===t);});
+        secs.forEach(function(s){s.classList.toggle('active',s.id===tgt);});
+      });
+    });
+  }
+  var zsegs=document.querySelectorAll('.zseg');
+  var zones=document.querySelectorAll('.zone');
+  if(zsegs.length&&zones.length){
+    zsegs.forEach(function(s){
+      s.addEventListener('click',function(){
+        zsegs.forEach(function(x){x.classList.toggle('active',x===s);});
+      });
+    });
+    if('IntersectionObserver' in window){
+      var io=new IntersectionObserver(function(es){
+        es.forEach(function(e){
+          if(e.isIntersecting){
+            var id=e.target.id;
+            zsegs.forEach(function(x){x.classList.toggle('active',x.getAttribute('href')==='#'+id);});
+          }
+        });
+      },{rootMargin:'-40% 0px -55% 0px'});
+      zones.forEach(function(z){io.observe(z);});
+    }
+  }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1140" height="640" viewBox="0 0 1140 640" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="aO" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#d9772f"/></marker>
+    <marker id="aR" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#d1544a"/></marker>
+    <marker id="aBk" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#8a8a8f"/></marker>
+  </defs>
+  <rect width="1140" height="640" fill="#fbfbfd"/>
+
+  <text x="30" y="32" font-size="15" font-weight="700" fill="#1d1d1f">StarRocks 大查询资源熔断 · Resource Group 资源上限 + Query Queue 准入控制——官方文档用"熔断"一词描述 big_query_mem_limit 场景</text>
+  <text x="30" y="53" font-size="10.5" fill="#6e6e73">按 CPU 秒数 / 内存 / 扫描行数三条资源上限判定，越界即终止查询；这是资源型熔断，触发条件与 nginx/gRPC 的网络型熔断完全不同（见下方对比条）</text>
+
+  <!-- 图例 -->
+  <line x1="30" y1="80" x2="54" y2="80" stroke="#d9772f" stroke-width="2" marker-end="url(#aO)"/>
+  <text x="60" y="84" font-size="10" fill="#3a3a3c">查询执行中 · 资源用量累积</text>
+  <line x1="250" y1="80" x2="274" y2="80" stroke="#d1544a" stroke-width="2" marker-end="url(#aR)"/>
+  <text x="280" y="84" font-size="10" fill="#3a3a3c">越界 → 终止查询（熔断）</text>
+  <text x="1110" y="84" font-size="10" fill="#a1a1a6" text-anchor="end">StarRocks · 官方文档核实</text>
+  <line x1="30" y1="96" x2="1110" y2="96" stroke="#e4e7ec" stroke-width="1"/>
+
+  <!-- 顶部醒目对比条：资源型 vs 网络型 -->
+  <rect x="30" y="108" width="1080" height="72" rx="12" fill="#fbeee2" stroke="#ecc6a8" filter="url(#soft)"/>
+  <text x="52" y="130" font-size="12" font-weight="800" fill="#9a5f1c">⚠ 触发条件：资源超限，非网络故障</text>
+  <text x="52" y="150" font-size="9.5" fill="#7a5a1a">B1(nginx)/B2(gRPC) 的熔断判据是"远端调用失败率"（网络型）；这里的判据是"本次查询消耗的 CPU 秒数 / 内存 / 扫描行数"（资源型）——</text>
+  <text x="52" y="167" font-size="9.5" fill="#7a5a1a">目标节点自身可能网络健康、毫无故障，查询仍会被熔断——保护的是集群资源不被单个大查询拖垮，不是绕开一个坏节点。完整对比见 CMP。</text>
+
+  <!-- Panel A: Resource Group 三条上限 -->
+  <rect x="30" y="196" width="530" height="248" rx="14" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="52" y="222" font-size="13" font-weight="700" fill="#1d1d1f">① Resource Group · 三条大查询资源上限（per BE 节点）</text>
+
+  <rect x="52" y="240" width="486" height="58" rx="9" fill="#fbeee2" stroke="#ecc6a8"/>
+  <text x="66" y="260" font-size="10" font-weight="700" fill="#9a5f1c">big_query_cpu_second_limit</text>
+  <text x="66" y="278" font-size="9" fill="#7a5a1a">单查询在该 BE 节点上允许消耗的 CPU 时间（秒）上限</text>
+  <text x="66" y="292" font-size="8.5" fill="#b0854a">越界 → 查询被终止，FE 审计日志记录 ErrorCode</text>
+
+  <rect x="52" y="304" width="486" height="58" rx="9" fill="#fbeee2" stroke="#ecc6a8"/>
+  <text x="66" y="324" font-size="10" font-weight="700" fill="#9a5f1c">big_query_mem_limit</text>
+  <text x="66" y="342" font-size="9" fill="#7a5a1a">单查询在该 BE 节点上允许使用的内存（字节）上限</text>
+  <text x="66" y="356" font-size="8.5" fill="#b0854a">官方文档明确用"熔断"一词描述这一场景</text>
+
+  <rect x="52" y="368" width="486" height="58" rx="9" fill="#fbeee2" stroke="#ecc6a8"/>
+  <text x="66" y="388" font-size="10" font-weight="700" fill="#9a5f1c">big_query_scan_rows_limit</text>
+  <text x="66" y="406" font-size="9" fill="#7a5a1a">单查询在该 BE 节点上允许扫描的行数上限</text>
+  <text x="66" y="420" font-size="8.5" fill="#b0854a">越界同样终止查询，防全表扫描式大查询拖垮节点</text>
+
+  <!-- Panel B: Query Queue 准入 -->
+  <rect x="580" y="196" width="530" height="120" rx="14" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="602" y="222" font-size="13" font-weight="700" fill="#1d1d1f">② Query Queue · 准入控制（事前）</text>
+  <text x="602" y="246" font-size="9.5" fill="#4a4a4f">与 Resource Group 的资源上限（执行中/事后终止）互补：</text>
+  <text x="602" y="264" font-size="9.5" fill="#4a4a4f">查询排队等待资源余量，而非一放行就跑，</text>
+  <text x="602" y="282" font-size="9.5" fill="#4a4a4f">降低"大量查询同时越界"的概率。</text>
+  <text x="602" y="302" font-size="8.5" fill="#8a97ab">准入控制 + 资源上限，两层防线共同构成资源侧保护</text>
+
+  <!-- Panel C: 执行时间轴 -->
+  <rect x="580" y="328" width="530" height="116" rx="14" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="602" y="354" font-size="13" font-weight="700" fill="#1d1d1f">③ 执行期资源用量时间轴</text>
+  <line x1="602" y1="416" x2="1086" y2="416" stroke="#d7d7dd" stroke-width="1.2"/>
+  <rect x="610" y="392" width="200" height="20" rx="6" fill="#eaf6f0" stroke="#bfe3d1"/>
+  <text x="710" y="406" font-size="8.5" fill="#2f6b4e" text-anchor="middle">正常执行 · 用量在限内</text>
+  <rect x="820" y="392" width="160" height="20" rx="6" fill="#fbe6e3" stroke="#e8a79f"/>
+  <text x="900" y="406" font-size="8.5" fill="#8a4038" text-anchor="middle">逼近上限</text>
+  <circle cx="1000" cy="402" r="6" fill="#d1544a"/>
+  <text x="1000" y="382" font-size="8" fill="#8a4038" text-anchor="middle">越界点</text>
+  <text x="1015" y="406" font-size="8.5" fill="#8a4038">终止</text>
+
+  <!-- Panel D: 与 fail_timeout/multiplier 状态机对照 -->
+  <rect x="30" y="460" width="1080" height="120" rx="14" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="52" y="486" font-size="12" font-weight="700" fill="#1d1d1f">④ 没有"半开"探测阶段——资源型熔断是一次性终止判定，不是网络型的"失败累积 → 冷却 → 探测恢复"状态机</text>
+  <text x="52" y="508" font-size="9.5" fill="#4a4a4f">B1(nginx)/B2(gRPC) 都有一个隐含或显式的时间维度：先累积失败次数/失败率，达阈值熔断，冷却窗口后再探测性放行——这是应对"远端节点可能恢复"的设计。</text>
+  <text x="52" y="526" font-size="9.5" fill="#4a4a4f">而资源超限是当次查询的即时判定：查询越界即终止，不存在"等一段时间后再放行同一个查询"的语义——因为问题不在某个远端目标是否恢复，而在这次查询本身的资源需求。</text>
+  <text x="52" y="548" font-size="9" fill="#8a97ab">这正是资源型与网络型熔断在状态机形态上的根本差异：网络型熔断有"节点健康随时间变化"的假设；资源型熔断只回答"这一次查询是否超支"。</text>
+
+  <text x="52" y="608" font-size="9" fill="#8a97ab">Resource Group 三条大查询上限参数与语义、Query Queue 准入控制、官方文档对 big_query_mem_limit 场景使用"熔断"一词，均为官方文档级核实。</text>
+</svg>

@@ -12,7 +12,15 @@
 
 ![两层元数据：FE 逻辑 vs BE 本地 OlapMeta](Doris原理_元数据_06两层元数据.svg)
 
-元数据并非"全在 FE"。它分两层：**FE 全局逻辑元数据**（库/表/分区、Schema/物化定义、Tablet→BE 副本分布、事务/权限/WG）走"全内存 + EditLog + Image + BDBJE 复制"，记的是"有哪些对象、每个 Tablet 该在哪些 BE"；**BE 本地物理元数据**存在每块数据盘的 **OlapMeta（内嵌 RocksDB）** 里——Tablet Meta Header、Rowset Meta（版本→文件）、Delete Bitmap、Pending Publish Info，记的是"本机盘上到底有哪些版本、哪些文件"，导入/Compaction/Publish 一改动就落本地。BE 端 `OlapMeta::init` 在每块数据盘打开内嵌 RocksDB（`be/src/olap/olap_meta.cpp:77`），读写走 `OlapMeta::get/put`（`olap_meta.cpp:124`、`:156`）；Tablet Header 由 `TabletMetaManager::save`（`be/src/olap/tablet_meta_manager.cpp:90`）持久化，Delete Bitmap 与 Pending Publish 分别落 `save_delete_bitmap`（`tablet_meta_manager.cpp:236`）、`save_pending_publish_info`（`tablet_meta_manager.cpp:172`）。二者靠 **Tablet Report 对账**（FE"逻辑应有" vs BE"物理实有"）保持一致（见 集群自愈 · 对账）。下文 §二~§七聚焦 FE 这一层。
+元数据分两层。**FE 全局逻辑元数据**（库/表/分区、Schema/物化定义、Tablet→BE 副本分布、事务/权限/WG）走"全内存 + EditLog + Image + BDBJE 复制",记的是"有哪些对象、每个 Tablet 该在哪些 BE";**BE 本地物理元数据**存在每块数据盘的 **OlapMeta（内嵌 RocksDB）** 里,记的是"本机盘上到底有哪些版本、哪些文件"。二者靠 **Tablet Report 对账**（FE"逻辑应有" vs BE"物理实有"）保持一致（见 集群自愈 · 对账）。下文 §二~§七聚焦 FE 这一层。
+
+## 深化 · 两层元数据的载体与内容
+
+| 层 | 载体 | 记录内容 | 何时改动 |
+|---|---|---|---|
+| FE 逻辑元数据 | 全内存 + EditLog + Image + BDBJE 复制 | 库/表/分区、Schema/物化定义、Tablet→BE 副本分布、事务/权限/WG | DDL/事务/调度 |
+| BE 物理元数据 | 每盘 OlapMeta(内嵌 RocksDB) | Tablet Meta Header、Rowset Meta(版本→文件)、Delete Bitmap、Pending Publish Info | 导入/Compaction/Publish 落本地 |
+| 一致性 | Tablet Report 对账 | FE"逻辑应有" vs BE"物理实有" 周期比对 | 差异触发 Clone/删除 |
 
 ---
 

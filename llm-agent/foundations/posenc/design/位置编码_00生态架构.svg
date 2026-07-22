@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 600" font-family="-apple-system,'PingFang SC','Helvetica Neue',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.07"/>
+    </filter>
+    <marker id="arv" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#2dd4bf"/>
+    </marker>
+  </defs>
+  <rect width="960" height="600" fill="#fbfbfd"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="#1d1d1f">位置编码 · 生态架构</text>
+  <text x="30" y="54" font-size="12" fill="#6e6e73">自注意力本身对顺序无感，位置编码把「谁在前谁在后」的信息注入表征</text>
+
+  <!-- token 序列 -->
+  <g filter="url(#soft)"><rect x="40" y="120" width="150" height="70" rx="12" fill="#eef4ff" stroke="#0a84ff" stroke-width="1.4"/></g>
+  <text x="115" y="150" font-size="12" font-weight="600" fill="#1d1d1f" text-anchor="middle">Token 嵌入</text>
+  <text x="115" y="172" font-size="10" fill="#6e6e73" text-anchor="middle">只含语义，无顺序</text>
+
+  <!-- 位置信息 -->
+  <g filter="url(#soft)"><rect x="40" y="260" width="150" height="70" rx="12" fill="#e9fbf6" stroke="#2dd4bf" stroke-width="1.5"/></g>
+  <text x="115" y="290" font-size="12" font-weight="600" fill="#1d1d1f" text-anchor="middle">位置信息</text>
+  <text x="115" y="312" font-size="10" fill="#6e6e73" text-anchor="middle">第几个 token</text>
+
+  <!-- 注入方式 -->
+  <g filter="url(#soft)"><rect x="260" y="190" width="200" height="130" rx="12" fill="#e9fbf6" stroke="#2dd4bf" stroke-width="1.5"/></g>
+  <text x="360" y="222" font-size="12" font-weight="600" fill="#1d1d1f" text-anchor="middle">位置编码注入</text>
+  <text x="360" y="248" font-size="10" fill="#6e6e73" text-anchor="middle">加到嵌入上（绝对）</text>
+  <text x="360" y="270" font-size="10" fill="#6e6e73" text-anchor="middle">或旋转 QK（相对）</text>
+  <text x="360" y="298" font-size="10" fill="#2dd4bf" text-anchor="middle">让注意力感知距离</text>
+
+  <!-- 注意力 -->
+  <g filter="url(#soft)"><rect x="530" y="190" width="180" height="130" rx="12" fill="#f3ecff" stroke="#5e5ce6" stroke-width="1.5"/></g>
+  <text x="620" y="222" font-size="12" font-weight="600" fill="#1d1d1f" text-anchor="middle">自注意力层</text>
+  <text x="620" y="248" font-size="10" fill="#6e6e73" text-anchor="middle">现在能区分</text>
+  <text x="620" y="270" font-size="10" fill="#6e6e73" text-anchor="middle">「猫追狗」vs</text>
+  <text x="620" y="292" font-size="10" fill="#6e6e73" text-anchor="middle">「狗追猫」</text>
+
+  <!-- 长上下文 -->
+  <g filter="url(#soft)"><rect x="770" y="190" width="150" height="130" rx="12" fill="#fff3ea" stroke="#f5873a" stroke-width="1.5"/></g>
+  <text x="845" y="222" font-size="12" font-weight="600" fill="#1d1d1f" text-anchor="middle">长度外推</text>
+  <text x="845" y="248" font-size="10" fill="#6e6e73" text-anchor="middle">训练短、推理长</text>
+  <text x="845" y="270" font-size="10" fill="#6e6e73" text-anchor="middle">插值/NTK 扩窗</text>
+
+  <!-- 连线 -->
+  <path d="M190 155 C220 175 230 185 258 220" stroke="#2dd4bf" stroke-width="2" fill="none" marker-end="url(#arv)"/>
+  <path d="M190 295 C220 275 230 265 258 250" stroke="#2dd4bf" stroke-width="2" fill="none" marker-end="url(#arv)"/>
+  <path d="M460 255 L528 255" stroke="#2dd4bf" stroke-width="2.2" marker-end="url(#arv)"/>
+  <path d="M710 255 L768 255" stroke="#f5873a" stroke-width="2.2" marker-end="url(#arv)"/>
+
+  <!-- 三大机理 -->
+  <g filter="url(#soft)"><rect x="40" y="400" width="880" height="160" rx="12" fill="#ffffff" stroke="#d2d2d7" stroke-width="1.2"/></g>
+  <text x="60" y="428" font-size="12" font-weight="600" fill="#2dd4bf">三种机理如何演进</text>
+  <text x="60" y="456" font-size="10.5" fill="#6e6e73">· 绝对位置（P1）：正弦函数或可学习向量，直接给每个位置一个编码，加到 token 嵌入上</text>
+  <text x="60" y="482" font-size="10.5" fill="#6e6e73">· 旋转编码 RoPE（P2）：把位置写成旋转角，作用在 Q/K 上，让点积天然反映相对距离</text>
+  <text x="60" y="508" font-size="10.5" fill="#6e6e73">· 长度外推（P3）：位置插值、NTK-aware 缩放，让训练时的短窗口模型能处理更长上下文</text>
+  <text x="60" y="538" font-size="11" font-weight="600" fill="#2dd4bf">主线：绝对给「起点」，RoPE 给「相对关系」，外推给「更长的可用窗口」</text>
+</svg>
