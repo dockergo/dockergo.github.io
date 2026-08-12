@@ -322,7 +322,7 @@ TABS = [
     ("txnwalk", "原理详解", ""),
     ("lockwalk", "原理详解", ""),
     ("pcwalk", "原理详解", ""),
-    ("panowalk", "全景框架", ""),
+    ("panowalk", "架构地图", ""),
     ("compare", "数据库对比", ""),
 ]
 
@@ -337,7 +337,7 @@ TAB_META = {
     "txnwalk":    ("⇅", "原理详解 · 事务恢复：TxState→Command→WAL→崩溃重放", "原理"),
     "lockwalk":   ("⬡", "原理详解 · 锁并发：Forseti + dreadlocks + 锁粒度/锁序(非 MVCC)", "原理"),
     "pcwalk":     ("◲", "原理详解 · 页缓存：MuninnPageCache 堆外分页 + 页错误/淘汰", "原理"),
-    "panowalk":   ("◇", "全景框架 · 双维模型 → 总架构 → 依赖矩阵 → 依赖关系", "整体架构"),
+    "panowalk":   ("◇", "架构地图 · 双维模型 → 总架构 → 依赖矩阵 → 依赖关系", "整体架构"),
     "compare":    ("▦", "数据库对比 · Neo4j vs 关系库/文档库/其它图库 设计取舍", "整体架构"),
 }
 
@@ -406,8 +406,8 @@ THEMES = [
      "tabs": ["pcwalk"]},
 
     # ── Appendix · 参考 ──
-    {"id": "overallarch", "icon": "◇", "title": "全景框架", "cat": "appendix", "ord": 1,
-     "desc": "全景框架:双维模型(能力域×执行时机)· 总架构图(Cypher→规划→存储→页缓存/WAL)· 依赖矩阵 · 能力域依赖关系",
+    {"id": "overallarch", "icon": "◇", "title": "架构地图", "cat": "appendix", "ord": 1,
+     "desc": "架构地图:双维模型(能力域×执行时机)· 总架构图(Cypher→规划→存储→页缓存/WAL)· 依赖矩阵 · 能力域依赖关系",
      "tabs": ["panowalk"]},
 ]
 
@@ -535,9 +535,10 @@ _arch_hotspots_html = "\n".join(
         tid=tid, lab=lab, ttitle=_THEME_BY_ID[tid]["title"])
     for (x, y, w, h, tid, lab) in _ARCH_HOTSPOTS)
 
-# 未描绘主题(时间与窗口无独立架构区域、全景框架、对比)→ 底部补充 chip,保证主题→可达
-_ARCH_ALWAYS_CHIP = {"overallarch"}
-_ARCH_DEPICTED = {h[4] for h in _ARCH_HOTSPOTS} - _ARCH_ALWAYS_CHIP
+# 未描绘主题(时间与窗口无独立架构区域、架构地图、对比)→ 底部补充 chip,保证主题→可达
+_ARCH_ALWAYS_CHIP = set()
+_ARCH_NEVER_CHIP = {"overallarch"}
+_ARCH_DEPICTED = ({h[4] for h in _ARCH_HOTSPOTS} - _ARCH_ALWAYS_CHIP) | _ARCH_NEVER_CHIP
 _arch_extra_chips = "\n".join(
     '<button class="arch-chip" data-theme-id="{tid}">{ico} {title}</button>'.format(
         tid=th["id"], ico=th["icon"], title=th["title"])
@@ -2487,7 +2488,7 @@ html:not([data-theme="light"]) .svg-walk-img{filter:invert(.9) hue-rotate(180deg
     </a>
     <div class="brand-intro" style="display:flex;flex-direction:column;align-items:flex-start;margin-left:12px;min-width:0;max-width:min(60vw,760px)"><div style="font-size:15px;font-weight:600;color:var(--c-ink);line-height:1.3">Neo4j · 核心原理图谱</div><span style="margin-top:3px;font-size:11.5px;color:var(--c-ink3);line-height:1.5;text-align:left">原生图数据库:免索引邻接(节点直连关系指针),Cypher 声明式匹配编译成遍历算子,存储按定长 record 切分。</span></div>
     <label class="msearch"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input id="mq" type="text" placeholder="搜索模块 / 主线…" autocomplete="off" aria-label="搜索模块"/><kbd>/</kbd><div id="mqlist" class="mq-list"></div></label>
-    <a href="https://github.com/neo4j/neo4j" target="_blank" rel="noopener" title="GitHub 源码仓库" style="margin-left:auto;display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:50%;border:1px solid var(--c-line);color:var(--c-ink2);text-decoration:none;margin-right:8px"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.7.5.5 5.7.5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.2.8-.6v-2c-3.2.7-3.9-1.4-3.9-1.4-.5-1.3-1.3-1.7-1.3-1.7-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.7 1.3 3.4 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.8 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.3 1.2a11.4 11.4 0 0 1 6 0C17.3 4.7 18.3 5 18.3 5c.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.5-2.7 5.5-5.3 5.8.4.4.8 1.1.8 2.2v3.3c0 .4.2.7.8.6 4.6-1.5 7.9-5.8 7.9-10.9C23.5 5.7 18.3.5 12 .5z"/></svg></a><a href="https://neo4j.com" target="_blank" rel="noopener" title="项目官网" style="display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:50%;border:1px solid var(--c-line);color:var(--c-ink2);text-decoration:none;margin-right:8px"><img src="data:image/svg+xml;base64,PHN2ZyBmaWxsPSIjNDU4MUMzIiByb2xlPSJpbWciIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48dGl0bGU+TmVvNGo8L3RpdGxlPjxwYXRoIGQ9Ik05LjYyOSAxMy4yMjdjLS41OTMgMC0xLjEzOS4yLTEuNTguNTMzbC0yLjg5Mi0xLjk3NmEyLjYxIDIuNjEgMCAwIDAgLjEwMS0uNzExIDIuNjMzIDIuNjMzIDAgMCAwLTIuNjI5LTIuNjI5QTIuNjMyIDIuNjMyIDAgMCAwIDAgMTEuMDczYTIuNjMyIDIuNjMyIDAgMCAwIDIuNjI5IDIuNjI5Yy41OTMgMCAxLjEzOS0uMiAxLjU3OS0uNTMzTDcuMSAxNS4xNDVjLS4wNjMuMjI2LS4xLjQ2NS0uMS43MTEgMCAuMjQ3LjAzNy40ODQuMS43MTFsLTIuODkyIDEuOTc2YTIuNjA4IDIuNjA4IDAgMCAwLTEuNTc5LS41MzNBMi42MzIgMi42MzIgMCAwIDAgMCAyMC42MzlhMi42MzIgMi42MzIgMCAwIDAgMi42MjkgMi42MjkgMi42MzIgMi42MzIgMCAwIDAgMi42MjktMi42MjljMC0uMjQ3LS4wMzctLjQ4NS0uMTAxLS43MTFsMi44OTItMS45NzZjLjQ0MS4zMzMuOTg3LjUzMyAxLjU4LjUzM2EyLjYzMyAyLjYzMyAwIDAgMCAyLjYyOS0yLjYyOWMwLTEuNDUtMS4xOC0yLjYyOS0yLjYyOS0yLjYyOVpNMTYuMTEyLjczMmMtNC43MiAwLTcuODg4IDIuNzQ4LTcuODg4IDguMDgydjMuODAyYTMuNTI1IDMuNTI1IDAgMCAxIDMuMDcxLjAwOHYtMy44MWMwLTMuNDU5IDEuOTA3LTUuMjM3IDQuODE3LTUuMjM3czQuODE3IDEuNzc4IDQuODE3IDUuMjM3djguMzA5SDI0VjguODE0QzI0IDMuNDQ4IDIwLjgzMi43MzIgMTYuMTEyLjczMloiLz48L3N2Zz4=" width="18" height="18" alt="官网" style="display:block"/></a><button class="theme-toggle" id="themeToggle" title="切换深色 / 浅色主题" aria-label="切换主题">
+    <a href="https://github.com/neo4j/neo4j" target="_blank" rel="noopener" title="GitHub 源码仓库" style="margin-left:auto;display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:50%;border:1px solid var(--c-line);color:var(--c-ink2);text-decoration:none;margin-right:8px"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.7.5.5 5.7.5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.2.8-.6v-2c-3.2.7-3.9-1.4-3.9-1.4-.5-1.3-1.3-1.7-1.3-1.7-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.7 1.3 3.4 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.8 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.3 1.2a11.4 11.4 0 0 1 6 0C17.3 4.7 18.3 5 18.3 5c.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.5-2.7 5.5-5.3 5.8.4.4.8 1.1.8 2.2v3.3c0 .4.2.7.8.6 4.6-1.5 7.9-5.8 7.9-10.9C23.5 5.7 18.3.5 12 .5z"/></svg></a><a href="https://neo4j.com" target="_blank" rel="noopener" title="项目官网" style="display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:50%;border:1px solid var(--c-line);color:var(--c-ink2);text-decoration:none;margin-right:8px"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB3aWR0aD0iNjQiIGhlaWdodD0iNjQiPjxnIHRyYW5zZm9ybT0ibWF0cml4KC4zMzczNDEgMCAwIC4zMzczNDEgMy40MDM0MzIgLTI0LjAxNDYzNCkiPjxwYXRoIGQ9Ik0xNTkuOCAxNTcuMzVjMCA0My43OC0zNS40ODUgNzkuMjY1LTc5LjI2NSA3OS4yNjVTMS4yNyAyMDEuMTMgMS4yNyAxNTcuMzVzMzUuNDg1LTc5LjI2NSA3OS4yNjUtNzkuMjY1YzQzLjc4LS4wNCA3OS4yNjYgMzUuNDg1IDc5LjI2NiA3OS4yNjUiIGZpbGw9IiMwMDhkYzIiLz48ZyBmaWxsPSIjZmZmIj48dXNlIHhsaW5rOmhyZWY9IiNCIi8+PHVzZSB4bGluazpocmVmPSIjQiIgeD0iMS4wNzUiIHk9IjE3LjM5NyIvPjxwYXRoIGQ9Ik00MS4zNjMgMTY3LjE4YzAgMy40OTUtMi44NDIgNi4zMzctNi4zMzcgNi4zMzdzLTYuMzM3LTIuODQyLTYuMzM3LTYuMzM3IDIuODQyLTYuMzM3IDYuMzM3LTYuMzM3YzMuNDk2LS4wMzggNi4zMzcgMi44MDQgNi4zMzcgNi4zMzdtOC42OCAxNi41MTRjMCAzLjQ5NS0yLjg0MiA2LjMzNy02LjMzNyA2LjMzN3MtNi4zMzctMi44NDItNi4zMzctNi4zMzcgMi44NDItNi4zMzcgNi4zMzctNi4zMzdjMy40OTUtLjAzOCA2LjMzNyAyLjgwNCA2LjMzNyA2LjMzNyIvPjx1c2UgeGxpbms6aHJlZj0iI0MiLz48cGF0aCBkPSJNMTI5LjQyMyAxOTMuMTRjMCAzLjQ5NS0yLjg0MiA2LjMzNy02LjMzNyA2LjMzN3MtNi4zMzctMi44NDItNi4zMzctNi4zMzcgMi44NDItNi4zMzcgNi4zMzctNi4zMzcgNi4zMzcgMi44NDMgNi4zMzcgNi4zMzciLz48dXNlIHhsaW5rOmhyZWY9IiNDIiB4PSItMjEuODkiIHk9Ii0xMTAuMDI3Ii8+PHBhdGggZD0iTTc5LjM0NSA5MC45YzAgMy40OTUtMi44NDIgNi4zMzctNi4zMzcgNi4zMzdTNjYuNjcgOTQuNDA1IDY2LjY3IDkwLjlzMi44NDItNi4zMzcgNi4zMzctNi4zMzcgNi4zMzcgMi44NDMgNi4zMzcgNi4zMzciLz48L2c+PGcgZmlsbD0iIzY4YjM0NiIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utd2lkdGg9IjMuNSI+PGNpcmNsZSBjeD0iMTI0LjI3NyIgY3k9IjEzOC40NTQiIHI9IjQyLjI0NCIvPjxjaXJjbGUgY3g9IjY2LjQwMyIgY3k9IjIyNC41OTQiIHI9IjM0LjU2MyIvPjxjaXJjbGUgY3g9IjM3Ljk0NiIgY3k9Ijk1Ljk4IiByPSIyMy4wNDIiLz48L2c+PC9nPjxkZWZzID48cGF0aCBpZD0iQiIgZD0iTTM2LjQxIDEzMS4zNWMwIDMuNDk1LTIuODQyIDYuMzM3LTYuMzM3IDYuMzM3cy02LjMzNy0yLjg0Mi02LjMzNy02LjMzNyAyLjg0Mi02LjMzNyA2LjMzNy02LjMzN2E2LjMyIDYuMzIgMCAwIDEgNi4zMzcgNi4zMzciLz48cGF0aCBpZD0iQyIgZD0iTTExNy45MDIgMjA2Ljc3NWMwIDMuNDk1LTIuODQyIDYuMzM3LTYuMzM3IDYuMzM3cy02LjMzNy0yLjg0Mi02LjMzNy02LjMzNyAyLjg0Mi02LjMzNyA2LjMzNy02LjMzNyA2LjMzNyAyLjg0MiA2LjMzNyA2LjMzNyIvPjwvZGVmcz48L3N2Zz4=" width="18" height="18" alt="官网" style="display:block"/></a><button class="theme-toggle" id="themeToggle" title="切换深色 / 浅色主题" aria-label="切换主题">
       <span class="tt-ico tt-moon">☾</span><span class="tt-ico tt-sun">☀</span>
     </button>
   </header>

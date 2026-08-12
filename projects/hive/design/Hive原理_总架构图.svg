@@ -1,0 +1,153 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="540" viewBox="0 0 1080 540" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="hv-soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="hv-ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+    <marker id="hv-aHot" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+    <marker id="hv-aState" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#c99a3a"/></marker>
+    <marker id="hv-aCtl" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#5b7db1"/></marker>
+    <marker id="hv-aBg" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#8a5cae"/></marker>
+  </defs>
+
+  <rect x="0" y="0" width="1080" height="540" fill="#fbfbfd"/>
+
+  <!-- ===== 标题带 + 四型语义路径图例 ===== -->
+  <text x="30" y="26" font-size="14" font-weight="600" fill="#1d1d1f">Hive 总架构 · 判型 = 解耦式 SQL 数仓门面：SQL 编译层自管 × 存储 / 执行 / 元数据 三重解耦可插拔</text>
+  <line x1="34" y1="46" x2="62" y2="46" stroke="#2f9e6e" stroke-width="1.8" marker-end="url(#hv-aHot)"/>
+  <text x="68" y="50" font-size="10.5" fill="#3a3a3c">查询数据流 Hot</text>
+  <line x1="196" y1="46" x2="224" y2="46" stroke="#c99a3a" stroke-width="1.8" marker-end="url(#hv-aState)"/>
+  <text x="230" y="50" font-size="10.5" fill="#3a3a3c">物理读写 State</text>
+  <line x1="360" y1="46" x2="388" y2="46" stroke="#5b7db1" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#hv-aCtl)"/>
+  <text x="394" y="50" font-size="10.5" fill="#3a3a3c">元数据 / 事务控制 Control（虚线）</text>
+  <line x1="616" y1="46" x2="644" y2="46" stroke="#8a5cae" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#hv-aBg)"/>
+  <text x="650" y="50" font-size="10.5" fill="#3a3a3c">后台异步 Compaction（虚线）</text>
+  <text x="1050" y="50" font-size="10" fill="#a1a1a6" text-anchor="end">框 = 主线可下钻</text>
+
+  <!-- ===== 设计张力铭牌带 ===== -->
+  <rect x="30" y="56" width="1020" height="30" rx="9" fill="#f5f0fb" stroke="#ddcdf0"/>
+  <text x="46" y="75" font-size="11" font-weight="600" fill="#3d2a5a">设计张力</text>
+  <text x="120" y="75" font-size="10" fill="#6d5b8f">通用可插拔（SerDe 解释任意字节、Tez/MR/LLAP 换引擎、HMS 供全生态共享） vs 优化深度受限（存储不自管、无本地索引与精细数据布局，靠 CBO + 分区裁剪 + 列存补偿）</text>
+
+  <g transform="translate(0,92)">
+
+  <!-- ===== 客户端接入（非 Hive） ===== -->
+  <rect x="30" y="12" width="1020" height="56" rx="16" fill="#f7f7f9" stroke="#e6e6eb"/>
+  <text x="50" y="32" font-size="12" font-weight="600" fill="#6e6e73">客户端接入（非 Hive 组件 · 经协议接入）</text>
+  <g font-size="12" text-anchor="middle" fill="#6e6e73">
+    <rect x="150" y="40" width="120" height="22" rx="8" fill="#ffffff" stroke="#e2e3e8"/><text x="210" y="55">Beeline / CLI</text>
+    <rect x="286" y="40" width="120" height="22" rx="8" fill="#ffffff" stroke="#e2e3e8"/><text x="346" y="55">JDBC / ODBC</text>
+    <rect x="422" y="40" width="120" height="22" rx="8" fill="#ffffff" stroke="#e2e3e8"/><text x="482" y="55">BI / 报表</text>
+    <rect x="558" y="40" width="140" height="22" rx="8" fill="#ffffff" stroke="#e2e3e8"/><text x="628" y="55">Spark / Trino（读 HMS）</text>
+  </g>
+  <line x1="410" y1="68" x2="410" y2="84" stroke="#2f9e6e" stroke-width="1.8" marker-end="url(#hv-aHot)"/>
+
+  <g transform="translate(0,74)">
+
+  <!-- ===== SQL 前门 HiveServer2 ===== -->
+  <rect x="30" y="12" width="1020" height="58" rx="16" fill="#ffffff" stroke="#ececf1" filter="url(#hv-soft)" data-tid="hs2" data-lab="HiveServer2"/>
+  <text x="50" y="38" font-size="14" font-weight="600" fill="#1d1d1f">HiveServer2（SQL 前门）</text>
+  <text x="50" y="56" font-size="11" fill="#86868b">Thrift 服务 · 会话 / 认证 / 操作管理</text>
+  <g font-size="12" fill="#4a4e57" text-anchor="middle">
+    <rect x="360" y="26" width="150" height="32" rx="9" fill="#f4f5f7" stroke="#e2e3e8"/><text x="435" y="46">协议 / 会话</text>
+    <rect x="522" y="26" width="150" height="32" rx="9" fill="#f4f5f7" stroke="#e2e3e8"/><text x="597" y="46">认证鉴权（DCL）</text>
+    <rect x="684" y="26" width="150" height="32" rx="9" fill="#f4f5f7" stroke="#e2e3e8"/><text x="759" y="46">操作 / 结果集</text>
+  </g>
+  <line x1="410" y1="70" x2="410" y2="94" stroke="#2f9e6e" stroke-width="1.8" marker-end="url(#hv-aHot)"/>
+
+  <g transform="translate(0,84)">
+
+  <!-- ===== 左：保障能力域（事务） ===== -->
+  <rect x="30" y="12" width="240" height="292" rx="16" fill="#ffffff" stroke="#ececf1" filter="url(#hv-soft)"/>
+  <text x="48" y="38" font-size="14" font-weight="600" fill="#1d1d1f">保障能力域</text>
+  <text x="48" y="56" font-size="11" fill="#86868b">横切保障 · 正确性</text>
+  <g text-anchor="middle">
+    <rect x="46" y="72" width="208" height="70" data-tid="transaction" data-lab="事务一致性" rx="12" fill="#fdf6ea" stroke="#efdcb4"/>
+    <text x="150" y="100" font-size="13" fill="#7a5a1e">事务一致性（ACID）</text>
+    <text x="150" y="120" font-size="10" fill="#a98b52">TxnHandler · 全局事务 / 锁</text>
+    <text x="150" y="134" font-size="10" fill="#a98b52">delta / base 目录</text>
+    <rect x="222" y="80" width="24" height="15" rx="7" fill="#dbe6fb" stroke="#b6cdf0"/><text x="234" y="91" font-size="10" font-weight="600" fill="#274a78">C</text>
+    <rect x="46" y="158" width="208" height="60" data-tid="hms" data-lab="元数据服务" rx="12" fill="#ecf5ee" stroke="#c2ddc9"/>
+    <text x="150" y="184" font-size="13" fill="#2c5a3a">元数据服务（HMS）</text>
+    <text x="150" y="203" font-size="10" fill="#5a8a68">独立进程 + 外部 RDBMS</text>
+    <rect x="46" y="234" width="208" height="54" rx="12" fill="#f4f5f7" stroke="#e2e3e8"/>
+    <text x="150" y="257" font-size="12" fill="#4a4e57">外部 RDBMS</text>
+    <text x="150" y="274" font-size="10" fill="#86868b">MySQL / PostgreSQL / Derby</text>
+  </g>
+  <line x1="150" y1="218" x2="150" y2="234" stroke="#c99a3a" stroke-width="1.6" marker-end="url(#hv-aState)"/>
+
+  <!-- ===== 中：查询处理主链 ===== -->
+  <rect x="290" y="12" width="480" height="292" rx="16" fill="#ffffff" stroke="#ececf1" filter="url(#hv-soft)"/>
+  <text x="306" y="38" font-size="14" font-weight="600" fill="#1d1d1f">查询处理主链（Driver / Compiler）</text>
+  <text x="306" y="56" font-size="11" fill="#86868b">自上而下 = 一条 HQL 的编译执行深度</text>
+
+  <text x="306" y="80" font-size="11" fill="#86868b">① 接口主线</text>
+  <g font-size="13" text-anchor="middle">
+    <rect x="306" y="88" width="106" height="34" data-tid="ddl" data-lab="DDL" rx="10" fill="#f4eefb" stroke="#dcccf0"/><text x="359" y="110" fill="#4a2e78">DDL</text>
+    <rect x="420" y="88" width="106" height="34" data-tid="dml" data-lab="DML" rx="10" fill="#f4eefb" stroke="#dcccf0"/><text x="473" y="110" fill="#4a2e78">DML</text>
+    <rect x="534" y="88" width="106" height="34" data-tid="dql" data-lab="DQL" rx="10" fill="#f4eefb" stroke="#dcccf0"/><text x="587" y="110" fill="#4a2e78">DQL</text>
+    <rect x="648" y="88" width="106" height="34" data-tid="dcl" data-lab="DCL" rx="10" fill="#f4eefb" stroke="#dcccf0"/><text x="701" y="110" fill="#4a2e78">DCL</text>
+  </g>
+  <line x1="530" y1="122" x2="530" y2="138" stroke="#2f9e6e" stroke-width="1.8" marker-end="url(#hv-aHot)"/>
+
+  <text x="306" y="152" font-size="11" fill="#86868b">② 编译优化 · 服务 DQL/DML</text>
+  <g font-size="12.5" text-anchor="middle">
+    <rect x="306" y="160" width="106" height="40" data-tid="compile" data-lab="解析 Parser" rx="10" fill="#ecf2fb" stroke="#c4d5ee"/><text x="359" y="184" fill="#274a78">Parser</text>
+    <rect x="420" y="160" width="106" height="40" data-tid="compile" data-lab="语义分析" rx="10" fill="#ecf2fb" stroke="#c4d5ee"/><text x="473" y="184" fill="#274a78">语义分析</text>
+    <rect x="534" y="160" width="106" height="40" data-tid="compile" data-lab="Calcite CBO" rx="10" fill="#ecf2fb" stroke="#c4d5ee"/><text x="587" y="184" fill="#274a78">Calcite CBO</text>
+    <rect x="648" y="160" width="106" height="40" data-tid="compile" data-lab="物理计划" rx="10" fill="#ecf2fb" stroke="#c4d5ee"/><text x="701" y="184" fill="#274a78">物理计划</text>
+  </g>
+  <line x1="412" y1="180" x2="420" y2="180" stroke="#2f9e6e" stroke-width="1.6" marker-end="url(#hv-aHot)"/>
+  <line x1="526" y1="180" x2="534" y2="180" stroke="#2f9e6e" stroke-width="1.6" marker-end="url(#hv-aHot)"/>
+  <line x1="640" y1="180" x2="648" y2="180" stroke="#2f9e6e" stroke-width="1.6" marker-end="url(#hv-aHot)"/>
+  <line x1="530" y1="200" x2="530" y2="216" stroke="#2f9e6e" stroke-width="1.8" marker-end="url(#hv-aHot)"/>
+
+  <text x="306" y="230" font-size="11" fill="#86868b">③ 执行引擎（解耦 · 交外部框架跑）</text>
+  <g font-size="13" text-anchor="middle">
+    <rect x="306" y="238" width="140" height="52" data-tid="exec" data-lab="Tez DAG" rx="11" fill="#eef3fb" stroke="#c4d5ee"/><text x="376" y="262" fill="#274a78">Tez DAG</text><text x="376" y="279" font-size="10" fill="#5a6a8c">默认引擎</text>
+    <rect x="452" y="238" width="140" height="52" data-tid="exec" data-lab="MapReduce" rx="11" fill="#eef3fb" stroke="#c4d5ee"/><text x="522" y="262" fill="#274a78">MapReduce</text><text x="522" y="279" font-size="10" fill="#5a6a8c">兼容 legacy</text>
+    <rect x="598" y="238" width="156" height="52" data-tid="exec" data-lab="LLAP" rx="11" fill="#eef3fb" stroke="#c4d5ee"/><text x="676" y="262" fill="#274a78">LLAP + 向量化</text><text x="676" y="279" font-size="10" fill="#5a6a8c">低延迟交互</text>
+  </g>
+
+  <line x1="270" y1="180" x2="288" y2="180" stroke="#5b7db1" stroke-width="1.6" stroke-dasharray="4 4" marker-end="url(#hv-aCtl)"/>
+  <text x="279" y="173" font-size="10" fill="#a1a1a6" text-anchor="middle">元数据</text>
+
+  <!-- ===== 右：后台任务 ===== -->
+  <rect x="790" y="12" width="260" height="292" data-tid="compaction" data-lab="后台任务" rx="16" fill="#ffffff" stroke="#ececf1" filter="url(#hv-soft)"/>
+  <text x="808" y="38" font-size="14" font-weight="600" fill="#1d1d1f">后台任务</text>
+  <text x="808" y="56" font-size="11" fill="#86868b">异步横切 · 承接各域异步部分</text>
+  <g font-size="12" text-anchor="middle" fill="#4a4e57">
+    <rect x="806" y="72" width="228" height="40" rx="9" fill="#f4f5f7" stroke="#e2e3e8"/><text x="920" y="97">Compaction（合并 delta）</text>
+    <rect x="806" y="120" width="228" height="40" rx="9" fill="#f4f5f7" stroke="#e2e3e8"/><text x="920" y="145">统计信息收集</text>
+    <rect x="806" y="168" width="228" height="40" rx="9" fill="#f4f5f7" stroke="#e2e3e8"/><text x="920" y="193">Metastore 事件通知</text>
+    <rect x="806" y="216" width="228" height="40" rx="9" fill="#f4f5f7" stroke="#e2e3e8"/><text x="920" y="241">过期事务 / 锁清理</text>
+  </g>
+  <line x1="770" y1="264" x2="788" y2="264" stroke="#8a5cae" stroke-width="1.6" stroke-dasharray="4 4" marker-end="url(#hv-aBg)"/>
+  <text x="779" y="257" font-size="10" fill="#a1a1a6" text-anchor="middle">异步</text>
+
+  <line x1="530" y1="304" x2="530" y2="330" stroke="#c99a3a" stroke-width="1.8" marker-end="url(#hv-aState)"/>
+  <text x="540" y="322" font-size="10" fill="#a1a1a6">物理读写（不组织字节）</text>
+
+  <!-- ===== 底座：存储与序列化（解耦） ===== -->
+  <rect x="30" y="332" width="1020" height="176" rx="16" fill="#ffffff" stroke="#ececf1" filter="url(#hv-soft)"/>
+  <text x="50" y="358" font-size="13" font-weight="600" fill="#1d1d1f">底座 · 存储与序列化（存储解耦：Hive 不组织底层字节）</text>
+  <text x="50" y="380" font-size="11" fill="#4e7a5c">三件套解释外部字节 → 上层计算 / 优化逻辑不变</text>
+  <g text-anchor="middle">
+    <rect x="50" y="390" width="290" height="56" data-tid="storage" data-lab="SerDe" rx="12" fill="#ecf5ee" stroke="#c2ddc9"/>
+    <text x="195" y="414" font-size="13" fill="#2c5a3a">SerDe（序列化 / 反序列化）</text><text x="195" y="432" font-size="10" fill="#5a8a68">行 ↔ 字段 · ORC / Parquet / Text / Avro</text>
+    <rect x="356" y="390" width="290" height="56" data-tid="storage" data-lab="InputOutputFormat" rx="12" fill="#ecf5ee" stroke="#c2ddc9"/>
+    <text x="501" y="414" font-size="13" fill="#2c5a3a">Input / OutputFormat</text><text x="501" y="432" font-size="10" fill="#5a8a68">分片 / 记录读写</text>
+    <rect x="662" y="390" width="290" height="56" data-tid="storage" data-lab="StorageHandler" rx="12" fill="#ecf5ee" stroke="#c2ddc9"/>
+    <text x="807" y="414" font-size="13" fill="#2c5a3a">StorageHandler</text><text x="807" y="432" font-size="10" fill="#5a8a68">HBase / Iceberg / Kafka 等外部表</text>
+  </g>
+  <line x1="500" y1="446" x2="500" y2="462" stroke="#c99a3a" stroke-width="1.8" marker-end="url(#hv-aState)"/>
+  <g font-size="11" text-anchor="middle" fill="#6e6e73">
+    <rect x="50" y="466" width="290" height="30" rx="9" fill="#f7f7f9" stroke="#e6e6eb"/><text x="195" y="485">HDFS（默认）</text>
+    <rect x="356" y="466" width="290" height="30" rx="9" fill="#f7f7f9" stroke="#e6e6eb"/><text x="501" y="485">对象存储 S3 / OSS / GCS</text>
+    <rect x="662" y="466" width="290" height="30" rx="9" fill="#f7f7f9" stroke="#e6e6eb"/><text x="807" y="485">HBase / Iceberg / 外部源</text>
+  </g>
+
+  </g>
+  </g>
+  </g>
+</svg>

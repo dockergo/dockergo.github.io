@@ -47,7 +47,8 @@ def cyan(s):  return _c("36", s)
 def discover_projects():
     """发现所有含 gen.py 的项目子目录,返回 [(key, dir, gen_path)] 按名排序。
     新结构:projects/<name>/;向后兼容:projects/ 缺失时回退根级 *-design/。
-    另外把 topics/ 主题门户(若含 gen.py)也纳入,末位构建。"""
+    另把六大一级分层中除 projects/ 外含 gen.py 的分层(basic/topics/
+    principles/llm-agent)末位追加,各自单独构建(根 gen.py 只读它们的元数据常量)。"""
     out = []
     proot = os.path.join(HERE, "projects")
     if os.path.isdir(proot):
@@ -64,14 +65,13 @@ def discover_projects():
         if os.path.isfile(gen):
             key = entry[: -len(SUFFIX)] if strip else entry
             out.append((key, full, gen))
-    # 主题门户(topics/gen.py)作为一个特殊"项目"末位构建
-    tgen = os.path.join(HERE, "topics", "gen.py")
-    if os.path.isfile(tgen):
-        out.append(("topics", os.path.join(HERE, "topics"), tgen))
-    # 架构原理模式页(principles/gen.py,现无门户,直出 8 个详情页)同理,末位追加
-    prgen = os.path.join(HERE, "principles", "gen.py")
-    if os.path.isfile(prgen):
-        out.append(("principles", os.path.join(HERE, "principles"), prgen))
+    # 六大一级分层中,除 projects/ 外的其余含 gen.py 的门户/模式页作为特殊"项目"末位追加。
+    # 根 gen.py 只 import 这些子 gen.py 的元数据常量(不代跑),故它们必须在此各自单独构建,
+    # 否则改了其 design 内容后 update.py 不会刷新对应产物。scenarios/ 无 gen.py,不在此列。
+    for key in ("basic", "topics", "principles", "llm-agent"):
+        g = os.path.join(HERE, key, "gen.py")
+        if os.path.isfile(g):
+            out.append((key, os.path.join(HERE, key), g))
     return out
 
 

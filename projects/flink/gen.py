@@ -324,7 +324,7 @@ TABS = [
     ("ckptwalk", "原理详解", ""),
     ("timewalk", "原理详解", ""),
     ("netwalk", "原理详解", ""),
-    ("panowalk", "全景框架", ""),
+    ("panowalk", "架构地图", ""),
     ("compare", "计算引擎对比", ""),
 ]
 
@@ -341,7 +341,7 @@ TAB_META = {
     "ckptwalk":  ("⬡", "原理详解 · 检查点：异步屏障快照 → 对齐 → 增量 → 恢复重分布", "原理"),
     "timewalk":  ("◐", "原理详解 · 时间窗口：事件时间/水位线 + 窗口 assigner/trigger", "原理"),
     "netwalk":   ("▨", "原理详解 · 网络：ResultPartition↔InputGate + credit 流控 + 分区", "原理"),
-    "panowalk":  ("◇", "全景框架 · 双维模型 → 总架构 → 统一流批 → 依赖矩阵 → 依赖关系", "整体架构"),
+    "panowalk":  ("◇", "架构地图 · 双维模型 → 总架构 → 统一流批 → 依赖矩阵 → 依赖关系", "整体架构"),
     "compare":   ("▦", "计算引擎对比 · Flink vs Spark/Kafka Streams/Storm 设计取舍", "整体架构"),
 }
 
@@ -416,8 +416,8 @@ THEMES = [
      "tabs": ["netwalk"]},
 
     # ── Appendix · 参考 ──
-    {"id": "overallarch", "icon": "◇", "title": "全景框架", "cat": "appendix", "ord": 1,
-     "desc": "全景框架:双维模型(能力域×执行时机)· 总架构图(多 API + JobManager + TaskManager)· 统一流批 · 依赖矩阵 · 能力域依赖关系",
+    {"id": "overallarch", "icon": "◇", "title": "架构地图", "cat": "appendix", "ord": 1,
+     "desc": "架构地图:双维模型(能力域×执行时机)· 总架构图(多 API + JobManager + TaskManager)· 统一流批 · 依赖矩阵 · 能力域依赖关系",
      "tabs": ["panowalk"]},
 ]
 
@@ -539,9 +539,10 @@ _arch_hotspots_html = "\n".join(
         tid=tid, lab=lab, ttitle=_THEME_BY_ID[tid]["title"])
     for (x, y, w, h, tid, lab) in _ARCH_HOTSPOTS)
 
-# 未描绘主题(时间与窗口无独立架构区域、全景框架、对比)→ 底部补充 chip,保证主题→可达
-_ARCH_ALWAYS_CHIP = {"overallarch"}
-_ARCH_DEPICTED = {h[4] for h in _ARCH_HOTSPOTS} - _ARCH_ALWAYS_CHIP
+# 未描绘主题(时间与窗口无独立架构区域、架构地图、对比)→ 底部补充 chip,保证主题→可达
+_ARCH_ALWAYS_CHIP = set()
+_ARCH_NEVER_CHIP = {"overallarch"}
+_ARCH_DEPICTED = ({h[4] for h in _ARCH_HOTSPOTS} - _ARCH_ALWAYS_CHIP) | _ARCH_NEVER_CHIP
 _arch_extra_chips = "\n".join(
     '<button class="arch-chip" data-theme-id="{tid}">{ico} {title}</button>'.format(
         tid=th["id"], ico=th["icon"], title=th["title"])
@@ -615,7 +616,7 @@ _SVG_WALK_SPECS = {
     "netwalk": [("生产/消费端 · ResultPartition↔InputGate", "Flink原理_网络_01生产消费.svg"),
                 ("credit-based 流控 · 背压不阻塞 TCP", "Flink原理_网络_02credit.svg"),
                 ("分区 · keyed/forward/rebalance", "Flink原理_网络_03分区.svg")],
-    # ---- 全局图(全景框架)----
+    # ---- 全局图(架构地图)----
     "panowalk": [("双维模型 · 能力域 × 执行时机", "Flink原理_双维模型.svg"),
                  ("总架构图 · 多 API + JobManager + TaskManager", "Flink原理_总架构图.svg"),
                  ("统一流批 · 有界=流的特例", "Flink原理_统一流批.svg"),

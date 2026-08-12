@@ -332,7 +332,7 @@ TABS = [
     ("deploysvg", "物理部署", ""),
     ("depgraph", "依赖关系", ""),
     ("deploywalk", "部署形态概览", ""),
-    ("panowalk", "全景框架", ""),
+    ("panowalk", "架构地图", ""),
     ("qstour", "上手总览", ""),
     ("qssetup", "环境搭建", ""),
     ("qsddl", "建库建表", ""),
@@ -509,7 +509,7 @@ TAB_META = {
     "deploysvg":("▭", "物理部署视图 · FE/BE 角色 + MPP + 多级缓存", "部署"),
     "depgraph": ("◫", "能力域依赖关系 · 8 条支撑主线的依赖与治理关系", "参考"),
     "deploywalk":("◈", "部署形态概览 · 存算一体 / 存算分离 / 冷热分离 / 湖仓查询", "部署"),
-    "panowalk":("◇", "全景框架 · 双维模型 / 总架构图 / 物理部署 / 依赖矩阵 / 依赖关系", "参考"),
+    "panowalk":("◇", "架构地图 · 双维模型 / 总架构图 / 物理部署 / 依赖矩阵 / 依赖关系", "参考"),
     "qstour":("◈", "上手路线总览 · 环境→建表→写入→查询→导出 五步闭环 + 一条查询贯穿全引擎", "上手"),
     "qssetup":    ("①", "环境搭建 · 部署 FE/BE + MySQL 协议连接 + 注册 BE", "整体架构"),
     "qsddl":      ("②", "建库建表 · CREATE DATABASE/TABLE + 分区分桶模型", "整体架构"),
@@ -746,7 +746,7 @@ THEMES = [
      "tabs": ["cpwalk"]},
 
     # ── Appendix · 参考 ──
-    {"id": "overallarch", "icon": "◇", "title": "全景框架", "cat": "appendix", "ord": 1,
+    {"id": "overallarch", "icon": "◇", "title": "架构地图", "cat": "appendix", "ord": 1,
      "desc": "全库地图:双维模型(能力域×执行时机)· 总架构图(FE/BE + 两存储形态)· 存算一体 vs 存算分离 · 依赖矩阵(接口×能力域)· 能力域依赖关系图",
      "tabs": ["panowalk"]},
 ]
@@ -860,8 +860,11 @@ _arch_hotspots_html = "\n".join(
     for (x, y, w, h, tid, lab) in _ARCH_HOTSPOTS)
 
 # 架构图未描绘的主题(事务/执行未单独成块的能力域、全景框架、对比)→ 底部补充 chip。
-_ARCH_ALWAYS_CHIP = {"overallarch"}
-_ARCH_DEPICTED = {h[4] for h in _ARCH_HOTSPOTS} - _ARCH_ALWAYS_CHIP
+_ARCH_ALWAYS_CHIP = set()
+# overallarch(架构地图)是全局聚合视图,不作为独立入口出现在导航图热区或底部 chip 上;
+# 仅保留顶部 tab 可达。故既不派生热区(SVG 已移除自指矩形)也不生成 chip。
+_ARCH_NEVER_CHIP = {"overallarch"}
+_ARCH_DEPICTED = ({h[4] for h in _ARCH_HOTSPOTS} - _ARCH_ALWAYS_CHIP) | _ARCH_NEVER_CHIP
 _arch_extra_chips = "\n".join(
     '<button class="arch-chip" data-theme-id="{tid}">{ico} {title}</button>'.format(
         tid=th["id"], ico=th["icon"], title=th["title"])
@@ -959,7 +962,7 @@ _SVG_WALK_SPECS = {
                ("Compaction 调度 · 评分驱动", "StarRocks原理_后台_02Compaction调度.svg"),
                ("物化视图刷新 · MTMV vs Rollup", "StarRocks原理_后台_03物化视图.svg"),
                ("动态分区 · 元数据后台自维护", "StarRocks原理_后台_04动态分区.svg")],
-    # ---- 全局图(全景框架)----
+    # ---- 全局图(架构地图)----
     "panowalk": [("双维模型 · 能力域 × 执行时机", "StarRocks原理_双维模型.svg"),
                  ("总架构图 · FE/BE + 两存储形态", "StarRocks原理_总架构图.svg"),
                  ("存算一体 vs 存算分离", "StarRocks原理_存算两形态.svg"),

@@ -332,7 +332,7 @@ TABS = [
     ("deploysvg", "物理部署", ""),
     ("depgraph", "依赖关系", ""),
     ("deploywalk", "部署形态概览", ""),
-    ("panowalk", "全景框架", ""),
+    ("panowalk", "架构地图", ""),
     ("qstour", "上手总览", ""),
     ("qssetup", "环境搭建", ""),
     ("qsddl", "建库建表", ""),
@@ -509,7 +509,7 @@ TAB_META = {
     "deploysvg":("▭", "物理部署视图 · FE/BE 角色 + MPP + 多级缓存", "部署"),
     "depgraph": ("◫", "能力域依赖关系 · 8 条支撑主线的依赖与治理关系", "参考"),
     "deploywalk":("◈", "部署形态概览 · 存算一体 / 存算分离 / 冷热分离 / 湖仓查询", "部署"),
-    "panowalk":("◇", "全景框架 · 双维模型 / 总架构图 / 物理部署 / 依赖矩阵 / 依赖关系", "参考"),
+    "panowalk":("◇", "架构地图 · 双维模型 / 总架构图 / 物理部署 / 依赖矩阵 / 依赖关系", "参考"),
     "qstour":("◈", "上手路线总览 · 环境→建表→写入→查询→导出 五步闭环 + 一条查询贯穿全引擎", "上手"),
     "qssetup":    ("①", "环境搭建 · 部署 FE/BE + MySQL 协议连接 + 注册 BE", "整体架构"),
     "qsddl":      ("②", "建库建表 · CREATE DATABASE/TABLE + 分区分桶模型", "整体架构"),
@@ -741,7 +741,7 @@ THEMES = [
 
     # ── Appendix · 参考 ──
     {"id": "overallarch", "icon": "◇", "title": "架构与部署", "cat": "appendix", "ord": 1,
-     "desc": "全景框架:双维模型(能力域×执行时机)· 总架构图(coordinator–worker + 外部数据生态)· 物理部署视图 · 依赖矩阵(接口×能力域)· 能力域依赖关系",
+     "desc": "架构地图:双维模型(能力域×执行时机)· 总架构图(coordinator–worker + 外部数据生态)· 物理部署视图 · 依赖矩阵(接口×能力域)· 能力域依赖关系",
      "tabs": ["panowalk"]},
 ]
 
@@ -856,9 +856,10 @@ _arch_hotspots_html = "\n".join(
 
 # 架构图未描绘的主题(快速上手/参考等)→ 底部补充 chip,保证内容完整可达。
 # overallarch(架构与部署)虽有 4 个部署形态热区,但热区按部署形态命名、看不出主题全貌
-# (它还含全景框架/集成架构/依赖),故也放 chip,让用户按主题名直接进入。
-_ARCH_ALWAYS_CHIP = {"overallarch"}
-_ARCH_DEPICTED = {h[4] for h in _ARCH_HOTSPOTS} - _ARCH_ALWAYS_CHIP
+# (它还含架构地图/集成架构/依赖),故也放 chip,让用户按主题名直接进入。
+_ARCH_ALWAYS_CHIP = set()
+_ARCH_NEVER_CHIP = {"overallarch"}
+_ARCH_DEPICTED = ({h[4] for h in _ARCH_HOTSPOTS} - _ARCH_ALWAYS_CHIP) | _ARCH_NEVER_CHIP
 _arch_extra_chips = "\n".join(
     '<button class="arch-chip" data-theme-id="{tid}">{ico} {title}</button>'.format(
         tid=th["id"], ico=th["icon"], title=th["title"])
@@ -955,7 +956,7 @@ _SVG_WALK_SPECS = {
                ("下推 · 连接器 apply* 契约", "Trino原理_DQL_11下推.svg")],
     "cpwalk": [("数据交换全景 · 流式 vs 暂存(与 DQL 篇同源)", "Trino原理_DQL_09数据交换.svg"),
                ("连接器 Split → 数据读取", "Trino原理_连接器_02Split.svg")],
-    # ---- 全局图(全景框架)----
+    # ---- 全局图(架构地图)----
     "panowalk": [("双维模型 · 能力域 × 执行时机", "Trino原理_双维模型.svg"),
                  ("总架构图 · coordinator–worker + 外部数据生态", "Trino原理_总架构图.svg"),
                  ("物理部署视图 · coordinator/worker/discovery/catalog", "Trino原理_物理部署图.svg"),
