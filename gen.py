@@ -1231,7 +1231,7 @@ def build_agent_cards():
                    '#fff2e8', '#faf5ff', '#f3eefe', '#f5f0fb',
                    '#fff2f2', '#f2f7ff',
                    # 新版总架构图新增浅底(侧边栏冷灰底/引擎层/飞轮框)
-                   '#f8fafc', '#f1f5f9', '#fcf4ff', '#fffcf0']
+                   '#f8fafc', '#f1f5f9', '#fcf4ff', '#fffcf0', '#fdf4ff']
     for _tf in _tint_fills:
         svg_inline = svg_inline.replace('fill="{}"'.format(_tf), 'class="ag-tint"')
     # 4b) 横切治理带容器底(#f4f4f7 带 stroke)→ ag-band(层容器深色语义,与卡片区分层次)
