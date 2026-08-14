@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="820" height="410" viewBox="0 0 820 410" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs><marker id="a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker></defs>
+  <rect width="820" height="410" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">Physical Plan 算子树：数据自叶向根（含 Join 分叉与 Runtime Filter）</text>
+  <g text-anchor="middle" font-size="12">
+    <rect x="330" y="46" width="170" height="34" rx="10" fill="#fbeaea" stroke="#e7c3c3"/><text x="415" y="68" fill="#4a1414">ResultSink</text>
+    <rect x="330" y="100" width="170" height="34" rx="10" fill="#fdf1e3" stroke="#e8cf9a"/><text x="415" y="122" fill="#5a3410">Exchange · Gather</text>
+    <rect x="330" y="154" width="170" height="34" rx="10" fill="#eef3fb" stroke="#bcd0ec"/><text x="415" y="176" fill="#1b2a4a">Sort / TopN</text>
+    <rect x="330" y="208" width="170" height="34" rx="10" fill="#eef3fb" stroke="#bcd0ec"/><text x="415" y="230" fill="#1b2a4a">Aggregate</text>
+    <rect x="330" y="262" width="170" height="34" rx="10" fill="#eef3fb" stroke="#bcd0ec"/><text x="415" y="284" fill="#1b2a4a">HashJoin</text>
+    <rect x="120" y="336" width="200" height="44" rx="10" fill="#eafaf1" stroke="#bfe0cd"/><text x="220" y="356" fill="#12402a">OlapScan A（Probe）</text><text x="220" y="372" font-size="9.5" fill="#4e7a5c">+ Filter / Project</text>
+    <rect x="510" y="336" width="200" height="44" rx="10" fill="#eafaf1" stroke="#bfe0cd"/><text x="610" y="356" fill="#12402a">OlapScan B（Build）</text><text x="610" y="372" font-size="9.5" fill="#4e7a5c">小表 · 建哈希表</text>
+  </g>
+  <g stroke="#c7c7cc" stroke-width="1.4" fill="none">
+    <line x1="415" y1="100" x2="415" y2="80" marker-end="url(#a)"/>
+    <line x1="415" y1="154" x2="415" y2="134" marker-end="url(#a)"/>
+    <line x1="415" y1="208" x2="415" y2="188" marker-end="url(#a)"/>
+    <line x1="415" y1="262" x2="415" y2="242" marker-end="url(#a)"/>
+    <path d="M240,336 L360,296" marker-end="url(#a)"/>
+    <path d="M590,336 L470,296" marker-end="url(#a)"/>
+    <path d="M510,358 L360,358" stroke-dasharray="4 3" marker-end="url(#a)"/>
+  </g>
+  <text x="435" y="330" font-size="9.5" fill="#a1a1a6" text-anchor="middle">Probe / Build 汇入 Join</text>
+  <text x="435" y="352" font-size="9.5" fill="#a1a1a6" text-anchor="middle">Runtime Filter：Build → Probe 下推</text>
+  <g font-size="10" fill="#86868b">
+    <text x="520" y="66">根：返回客户端</text><text x="520" y="120">跨节点汇聚</text><text x="520" y="176">全局排序/TopN</text><text x="520" y="230">分组聚合</text>
+  </g>
+</svg>

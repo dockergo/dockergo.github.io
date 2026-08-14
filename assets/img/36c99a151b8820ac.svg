@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="520" viewBox="0 0 1080 520" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="520" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Milvus 元数据存储 · etcd / tikv（强一致 KV,与向量数据分开）</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">元数据小而关键(要正确非高吞吐):有哪些 collection、schema、段在哪、索引建到哪、TSO 水位 —— 存 etcd(默认)或 tikv,与海量向量数据(对象存储)分开</text>
+
+  <!-- catalog abstraction (top) -->
+  <rect x="30" y="92" width="620" height="196" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="46" y="114" font-size="11.5" font-weight="700" fill="#1b2a4a">catalog 抽象（metastore/kv）</text>
+  <text x="46" y="132" font-size="8" fill="#5b7db1">协调器把结构化元数据经 catalog 写入底层 KV</text>
+  <!-- RootCoord catalog -->
+  <rect x="46" y="146" width="290" height="126" rx="10" fill="#e7f0fb" stroke="#b9d2ef"/>
+  <text x="191" y="167" font-size="9.5" font-weight="700" text-anchor="middle" fill="#1b2a4a">RootCoord catalog</text>
+  <text x="191" y="183" font-size="7.5" text-anchor="middle" fill="#5b7db1">rootcoord/kv_catalog.go · 包 kv.TxnKV</text>
+  <g font-size="8" text-anchor="middle" fill="#274a78">
+    <rect x="58" y="192" width="128" height="30" rx="6" fill="#f3f7fc" stroke="#cfe0f2"/><text x="122" y="211">CollectionMeta/{id}</text>
+    <rect x="196" y="192" width="128" height="30" rx="6" fill="#f3f7fc" stroke="#cfe0f2"/><text x="260" y="211">PartitionMeta/{cid}/{pid}</text>
+    <rect x="58" y="228" width="128" height="30" rx="6" fill="#f3f7fc" stroke="#cfe0f2"/><text x="122" y="247">FieldMeta / …</text>
+    <rect x="196" y="228" width="128" height="30" rx="6" fill="#f3f7fc" stroke="#cfe0f2"/><text x="260" y="247">alias · function</text>
+  </g>
+  <!-- DataCoord catalog -->
+  <rect x="350" y="146" width="286" height="126" rx="10" fill="#e7f0fb" stroke="#b9d2ef"/>
+  <text x="493" y="167" font-size="9.5" font-weight="700" text-anchor="middle" fill="#1b2a4a">DataCoord catalog</text>
+  <text x="493" y="183" font-size="7.5" text-anchor="middle" fill="#5b7db1">datacoord/kv_catalog.go · 包 kv.MetaKv</text>
+  <g font-size="8" text-anchor="middle" fill="#274a78">
+    <rect x="362" y="192" width="262" height="30" rx="6" fill="#f3f7fc" stroke="#cfe0f2"/><text x="493" y="211">段信息(状态 / 行数 / 归属)</text>
+    <rect x="362" y="228" width="262" height="30" rx="6" fill="#f3f7fc" stroke="#cfe0f2"/><text x="493" y="247">binlog 路径 · 索引元</text>
+  </g>
+
+  <!-- transaction ops (top right) -->
+  <rect x="670" y="92" width="380" height="196" rx="14" fill="#f5faf6" stroke="#cfe6d5" filter="url(#soft)"/>
+  <text x="686" y="114" font-size="11" font-weight="700" fill="#12402a">事务操作 · 原子多键更新</text>
+  <text x="686" y="132" font-size="8" fill="#2f6f4f">embed_etcd_kv.go</text>
+  <g font-size="8.5">
+    <rect x="686" y="144" width="348" height="42" rx="8" fill="#eafaf1" stroke="#bfe0cd"/><text x="700" y="164" fill="#12402a" font-weight="600">MultiSave / MultiSaveAndRemove</text><text x="700" y="180" fill="#2f6f4f" font-size="8">带 predicate —— 原子多键更新,不会写一半</text>
+    <rect x="686" y="192" width="348" height="34" rx="7" fill="#e6f7ee" stroke="#bfe0cd"/><text x="700" y="213" fill="#2f6f4f">初始化(root_coord.go):按类型建 metaKV,catalog 建其上</text>
+    <rect x="686" y="232" width="348" height="40" rx="7" fill="#fff" stroke="#cfe6d5"/><text x="700" y="250" fill="#2f6f4f" font-size="8">MetaKvFactory · NewEtcdKV / NewTiKV</text><text x="700" y="264" fill="#2f6f4f" font-size="7.5">支持嵌入式 / 外部 etcd · TLS</text>
+  </g>
+
+  <!-- backend choice (bottom) -->
+  <rect x="30" y="306" width="500" height="120" rx="14" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="46" y="328" font-size="11" font-weight="700" fill="#5a3410">后端选择 · MetaStoreType（service_param.go）</text>
+  <g font-size="8.5" text-anchor="middle">
+    <rect x="46" y="342" width="230" height="72" rx="9" fill="#fef2e0" stroke="#e8cf9a"/><text x="161" y="366" fill="#5a3410" font-weight="700">etcd（默认）</text><text x="161" y="386" fill="#93762e">Raft 强一致 KV</text><text x="161" y="404" fill="#93762e" font-size="8">中小规模 · 简单</text>
+    <rect x="290" y="342" width="224" height="72" rx="9" fill="#fdf6ea" stroke="#efdcb4"/><text x="402" y="366" fill="#5a3410" font-weight="700">tikv（可选）</text><text x="402" y="386" fill="#93762e">constant.go</text><text x="402" y="404" fill="#93762e" font-size="8">超大元数据量可选</text>
+  </g>
+
+  <!-- object storage separation (bottom right) -->
+  <rect x="550" y="306" width="500" height="120" rx="14" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+  <text x="566" y="328" font-size="11" font-weight="700" fill="#5a3410">向量数据在对象存储(不在 etcd)</text>
+  <text x="566" y="350" font-size="8.8" fill="#93762e">etcd 只存元数据(schema / 段信息 / 索引元,小而关键)</text>
+  <text x="566" y="368" font-size="8.8" fill="#93762e">海量向量 binlog + 索引文件在 S3 / MinIO</text>
+  <text x="566" y="388" font-size="8.8" fill="#93762e">两者分开:元数据要正确一致,向量数据要高吞吐低成本</text>
+  <text x="566" y="408" font-size="8.8" fill="#93762e">段过多(小段碎片)会撑大 etcd → compaction 合段缓解</text>
+
+  <!-- arrow catalog -> backend -->
+  <line x1="191" y1="288" x2="191" y2="306" stroke="#86868b" stroke-width="1.4" marker-end="url(#ar)"/>
+  <text x="230" y="301" font-size="7.5" fill="#a1a1a6">落到底层 KV</text>
+
+  <!-- insight -->
+  <rect x="30" y="440" width="1020" height="66" rx="12" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="46" y="464" font-size="10.5" font-weight="700" fill="#1b2a4a">为什么 etcd</text>
+  <text x="46" y="484" font-size="8.8" fill="#5b7db1">要强一致(schema 错乱 = 数据错乱)· 要多节点共享(所有协调器 / 节点读同一份)· 量小(collection / 段 / 索引信息,非向量数据)—— etcd 的 Raft 强一致 KV 正合适</text>
+  <text x="46" y="501" font-size="8.8" fill="#5b7db1">生产用外部独立 etcd 集群(高可用),测试用嵌入式;etcd 是系统真相,须定期备份 —— 丢了即使对象存储有 binlog 也无法恢复结构</text>
+</svg>

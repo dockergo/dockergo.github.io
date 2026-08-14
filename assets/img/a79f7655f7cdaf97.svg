@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="560" viewBox="0 0 920 560" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="920" height="560" fill="#fbfbfd"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="#1d1d1f">日志复制：AppendEntries · 一致性检查 · nextIndex 回退 · pipeline</text>
+
+  <!-- Leader 侧 -->
+  <rect x="30" y="60" width="270" height="200" rx="13" fill="#fbf7ef" stroke="#efe2c8" filter="url(#soft)"/>
+  <text x="46" y="84" font-size="12.5" font-weight="600" fill="#8a6d1f">Leader（replication.go）</text>
+  <text x="46" y="104" font-size="10.5" fill="#a1885a">每 follower 一个 followerReplication</text>
+  <g font-size="10.5" fill="#a1885a">
+    <text x="46" y="128">· nextIndex：下一条要发的 index（:44）</text>
+    <text x="46" y="148">· matchIndex：已确认复制到的 index</text>
+    <text x="46" y="168">· replicate 协程持续推日志（:137）</text>
+    <text x="46" y="188">· pipeline 并发发多批（:446）</text>
+    <text x="46" y="208">· heartbeat 独立发空 AE 保活（:388）</text>
+    <text x="46" y="228">· 落后过多 → sendLatestSnapshot（:299）</text>
+  </g>
+
+  <!-- AppendEntries 报文 -->
+  <rect x="330" y="60" width="260" height="200" rx="13" fill="#f3f7fc" stroke="#cfe0f2" filter="url(#soft)"/>
+  <text x="346" y="84" font-size="12.5" font-weight="600" fill="#1b2a4a">AppendEntries 请求</text>
+  <g font-size="10.5" fill="#5b7db1">
+    <text x="346" y="108">Term：Leader 任期</text>
+    <text x="346" y="130">PrevLogEntry / PrevLogTerm</text>
+    <text x="346" y="152">Entries[]：新日志条目</text>
+    <text x="346" y="174">LeaderCommitIndex</text>
+  </g>
+  <text x="346" y="204" font-size="10" fill="#86868b">commands.go:27</text>
+  <text x="346" y="228" font-size="10" fill="#86868b">空 Entries = 心跳（保活 + 传播 commit）</text>
+
+  <!-- Follower 侧裁决 -->
+  <rect x="620" y="60" width="270" height="200" rx="13" fill="#f5faf6" stroke="#c9e6cf" filter="url(#soft)"/>
+  <text x="636" y="84" font-size="12.5" font-weight="600" fill="#1f5130">Follower 校验（raft.go:1458）</text>
+  <g font-size="10.5" fill="#4f9d69">
+    <text x="636" y="108">① Term &lt; 我 → 拒</text>
+    <text x="636" y="130">② Term ≥ 我 → 转 Follower、记 Leader</text>
+    <text x="636" y="152">③ PrevLog 处 term 不匹配 → 拒</text>
+    <text x="636" y="174">   （NoRetryBackoff=true）</text>
+    <text x="636" y="196">④ 冲突项 DeleteRange 删、追加新项</text>
+    <text x="636" y="218">⑤ commitIndex=min(LeaderCommit,</text>
+    <text x="636" y="236">   lastNewIndex)</text>
+  </g>
+
+  <path d="M300,150 L328,150" stroke="#c7c7cc" stroke-width="1.4" fill="none" marker-end="url(#ar)"/>
+  <path d="M590,150 L618,150" stroke="#c7c7cc" stroke-width="1.4" fill="none" marker-end="url(#ar)"/>
+
+  <!-- nextIndex 回退 -->
+  <rect x="30" y="288" width="860" height="150" rx="13" fill="#f7f7f9" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="46" y="312" font-size="12.5" font-weight="600" fill="#1d1d1f">日志不一致 → nextIndex 回退重试（replication.go:256）</text>
+  <text x="46" y="334" font-size="11" fill="#6e6e73">Follower 因 PrevLog 不匹配拒绝 → Leader 递减 nextIndex 往回找“最后一致点”，再从那里覆盖同步：</text>
+  <rect x="46" y="348" width="820" height="34" rx="8" fill="#ffffff" stroke="#e2e2e7"/>
+  <text x="56" y="370" font-size="11" fill="#1d1d1f"><tspan font-weight="600" fill="#8a2b1f">nextIndex = max( min(nextIndex-1, resp.LastLog+1), 1 )</tspan> —— 用 follower 回传的 LastLog 一步跳到位，避免逐条退</text>
+  <text x="46" y="404" font-size="10.5" fill="#86868b">找到一致点后，Follower 删掉冲突后缀（DeleteRange）、追加 Leader 的条目——Leader 日志是唯一真相（强 Leader 模型）。</text>
+  <text x="46" y="424" font-size="10.5" fill="#86868b">若冲突点落在配置项之前，Follower 回退 latestConfiguration 到 committed 版本，保持配置一致。</text>
+
+  <!-- 吞吐 -->
+  <rect x="30" y="456" width="860" height="82" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="46" y="480" font-size="12" font-weight="600" fill="#1b2a4a">吞吐优化</text>
+  <text x="46" y="502" font-size="10.5" fill="#5b7db1">· 一批最多 MaxAppendEntries=64 条（config.go）  · pipelineReplicate 不等上一批 ACK 就发下一批（:446）</text>
+  <text x="46" y="522" font-size="10.5" fill="#5b7db1">· heartbeat 走独立通道 + SetHeartbeatHandler 快路径，避免磁盘 IO 引起的队头阻塞</text>
+</svg>

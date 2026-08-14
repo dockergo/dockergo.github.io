@@ -1,0 +1,107 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="690" viewBox="0 0 1120 690" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="aB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#4a7fd0"/></marker>
+    <marker id="aG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+  </defs>
+  <rect width="1120" height="690" fill="#fbfbfd"/>
+
+  <text x="30" y="34" font-size="16" font-weight="700" fill="#1d1d1f">动态数组（A3）· 数组 + 自动扩容：尾插均摊 O(1)，满则倍增（×2）并拷贝</text>
+  <text x="30" y="55" font-size="10.5" fill="#6e6e73">底层仍是定长数组，额外记 size / capacity；容量用尽时换更大的一块并整体拷贝，把偶发的 O(n) 摊平成常数</text>
+
+  <!-- 图例 -->
+  <rect x="30" y="72" width="12" height="12" rx="2" fill="#4a7fd0"/><text x="48" y="82" font-size="10" fill="#3a3a3c">已用元素 (size)</text>
+  <rect x="200" y="72" width="12" height="12" rx="2" fill="#d99a2b"/><text x="218" y="82" font-size="10" fill="#3a3a3c">预留空位 (capacity)</text>
+  <rect x="370" y="72" width="12" height="12" rx="2" fill="#2f9e6e"/><text x="388" y="82" font-size="10" fill="#3a3a3c">新写入值 / 拷贝</text>
+
+  <!-- Panel A size vs capacity -->
+  <rect x="30" y="100" width="510" height="176" rx="14" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="52" y="128" font-size="13" font-weight="700" fill="#20375e">size 与 capacity</text>
+  <g font-size="11" text-anchor="middle">
+    <rect x="50" y="146" width="44" height="40" rx="4" fill="#dbe8fa" stroke="#9dbdea"/><text x="72" y="171" fill="#20375e">a</text>
+    <rect x="98" y="146" width="44" height="40" rx="4" fill="#dbe8fa" stroke="#9dbdea"/><text x="120" y="171" fill="#20375e">b</text>
+    <rect x="146" y="146" width="44" height="40" rx="4" fill="#dbe8fa" stroke="#9dbdea"/><text x="168" y="171" fill="#20375e">c</text>
+    <rect x="194" y="146" width="44" height="40" rx="4" fill="#dbe8fa" stroke="#9dbdea"/><text x="216" y="171" fill="#20375e">d</text>
+    <rect x="242" y="146" width="44" height="40" rx="4" fill="#dbe8fa" stroke="#9dbdea"/><text x="264" y="171" fill="#20375e">e</text>
+    <rect x="290" y="146" width="44" height="40" rx="4" fill="#fdf4e3" stroke="#e8cf95" stroke-dasharray="4 2"/>
+    <rect x="338" y="146" width="44" height="40" rx="4" fill="#fdf4e3" stroke="#e8cf95" stroke-dasharray="4 2"/>
+    <rect x="386" y="146" width="44" height="40" rx="4" fill="#fdf4e3" stroke="#e8cf95" stroke-dasharray="4 2"/>
+  </g>
+  <line x1="50" y1="198" x2="286" y2="198" stroke="#4a7fd0" stroke-width="1.5"/><text x="168" y="212" font-size="9.5" text-anchor="middle" fill="#20375e">size = 5（逻辑长度）</text>
+  <line x1="50" y1="224" x2="430" y2="224" stroke="#d99a2b" stroke-width="1.5"/><text x="240" y="238" font-size="9.5" text-anchor="middle" fill="#9a7420">capacity = 8（物理容量）</text>
+  <text x="52" y="262" font-size="9.5" fill="#8a97ab">恒有 size ≤ capacity；尾部预留空位承接后续 add</text>
+
+  <!-- Panel B 未满尾插 -->
+  <rect x="560" y="100" width="520" height="176" rx="14" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="582" y="128" font-size="13" font-weight="700" fill="#20375e">尾插未满 · add(num)</text>
+  <g font-size="11" text-anchor="middle">
+    <rect x="582" y="146" width="44" height="40" rx="4" fill="#dbe8fa" stroke="#9dbdea"/><text x="604" y="171" fill="#20375e">a</text>
+    <rect x="630" y="146" width="44" height="40" rx="4" fill="#dbe8fa" stroke="#9dbdea"/><text x="652" y="171" fill="#20375e">b</text>
+    <rect x="678" y="146" width="44" height="40" rx="4" fill="#dbe8fa" stroke="#9dbdea"/><text x="700" y="171" fill="#20375e">c</text>
+    <rect x="726" y="146" width="44" height="40" rx="4" fill="#dbe8fa" stroke="#9dbdea"/><text x="748" y="171" fill="#20375e">d</text>
+    <rect x="774" y="146" width="44" height="40" rx="4" fill="#dbe8fa" stroke="#9dbdea"/><text x="796" y="171" fill="#20375e">e</text>
+    <rect x="822" y="146" width="44" height="40" rx="4" fill="#e6f6ee" stroke="#2f9e6e" stroke-width="2"/><text x="844" y="171" fill="#20375e">f</text>
+    <rect x="870" y="146" width="44" height="40" rx="4" fill="#fdf4e3" stroke="#e8cf95" stroke-dasharray="4 2"/>
+    <rect x="918" y="146" width="44" height="40" rx="4" fill="#fdf4e3" stroke="#e8cf95" stroke-dasharray="4 2"/>
+  </g>
+  <line x1="844" y1="128" x2="844" y2="144" stroke="#2f9e6e" stroke-width="2" marker-end="url(#aG)"/>
+  <text x="844" y="204" font-size="9" text-anchor="middle" fill="#2f6b4e">arr[size]=f</text>
+  <text x="582" y="234" font-size="10.5" fill="#4a4a4f">size &lt; capacity：arr[size] = num；size++</text>
+  <rect x="582" y="246" width="290" height="24" rx="6" fill="#eafaf2" stroke="#bfe6d3"/>
+  <text x="594" y="262" font-size="10" fill="#2f6b4e">直接落位，无搬移 → 单次 <tspan font-weight="700">O(1)</tspan></text>
+  <text x="884" y="262" font-size="9.5" fill="#8a97ab">size: 5 → 6</text>
+
+  <!-- Panel C 扩容 -->
+  <rect x="30" y="292" width="1050" height="232" rx="14" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="52" y="320" font-size="13" font-weight="700" fill="#20375e">容量满触发扩容 · extendCapacity()：分配 ×2 新数组 → 拷贝旧元素 → 写入新值</text>
+  <text x="52" y="340" font-size="9.5" fill="#8a97ab">示例容量取 4（实现默认 10），扩容倍率 extendRatio = 2。此刻 add(e) 时 size==capacity，先扩容再写入。</text>
+
+  <!-- 旧数组 -->
+  <text x="60" y="372" font-size="10.5" font-weight="700" fill="#6e6e73">旧数组 · size = capacity = 4（已满）</text>
+  <g font-size="12" text-anchor="middle">
+    <rect x="80" y="380" width="56" height="40" rx="5" fill="#dbe8fa" stroke="#9dbdea"/><text x="108" y="405" fill="#20375e">a</text>
+    <rect x="140" y="380" width="56" height="40" rx="5" fill="#dbe8fa" stroke="#9dbdea"/><text x="168" y="405" fill="#20375e">b</text>
+    <rect x="200" y="380" width="56" height="40" rx="5" fill="#dbe8fa" stroke="#9dbdea"/><text x="228" y="405" fill="#20375e">c</text>
+    <rect x="260" y="380" width="56" height="40" rx="5" fill="#dbe8fa" stroke="#9dbdea"/><text x="288" y="405" fill="#20375e">d</text>
+  </g>
+
+  <!-- 拷贝箭头 -->
+  <line x1="108" y1="422" x2="108" y2="454" stroke="#2f9e6e" stroke-width="1.8" marker-end="url(#aG)"/>
+  <line x1="168" y1="422" x2="168" y2="454" stroke="#2f9e6e" stroke-width="1.8" marker-end="url(#aG)"/>
+  <line x1="228" y1="422" x2="228" y2="454" stroke="#2f9e6e" stroke-width="1.8" marker-end="url(#aG)"/>
+  <line x1="288" y1="422" x2="288" y2="454" stroke="#2f9e6e" stroke-width="1.8" marker-end="url(#aG)"/>
+  <text x="380" y="442" font-size="10" fill="#2f6b4e">↓ 逐个拷贝旧元素 O(n)</text>
+
+  <!-- 新数组 -->
+  <text x="34" y="481" font-size="10.5" font-weight="700" fill="#6e6e73">新数组</text>
+  <g font-size="12" text-anchor="middle">
+    <rect x="80" y="458" width="56" height="40" rx="5" fill="#dbe8fa" stroke="#9dbdea"/><text x="108" y="483" fill="#20375e">a</text>
+    <rect x="140" y="458" width="56" height="40" rx="5" fill="#dbe8fa" stroke="#9dbdea"/><text x="168" y="483" fill="#20375e">b</text>
+    <rect x="200" y="458" width="56" height="40" rx="5" fill="#dbe8fa" stroke="#9dbdea"/><text x="228" y="483" fill="#20375e">c</text>
+    <rect x="260" y="458" width="56" height="40" rx="5" fill="#dbe8fa" stroke="#9dbdea"/><text x="288" y="483" fill="#20375e">d</text>
+    <rect x="320" y="458" width="56" height="40" rx="5" fill="#e6f6ee" stroke="#2f9e6e" stroke-width="2"/><text x="348" y="483" fill="#20375e">e</text>
+    <rect x="380" y="458" width="56" height="40" rx="5" fill="#fdf4e3" stroke="#e8cf95" stroke-dasharray="4 2"/>
+    <rect x="440" y="458" width="56" height="40" rx="5" fill="#fdf4e3" stroke="#e8cf95" stroke-dasharray="4 2"/>
+    <rect x="500" y="458" width="56" height="40" rx="5" fill="#fdf4e3" stroke="#e8cf95" stroke-dasharray="4 2"/>
+  </g>
+  <line x1="80" y1="506" x2="376" y2="506" stroke="#4a7fd0" stroke-width="1.3"/><text x="228" y="519" font-size="9" text-anchor="middle" fill="#20375e">size = 5</text>
+  <line x1="380" y1="506" x2="556" y2="506" stroke="#d99a2b" stroke-width="1.3"/><text x="468" y="519" font-size="9" text-anchor="middle" fill="#9a7420">预留 ×3（capacity = 8）</text>
+
+
+  <!-- 步骤说明 -->
+  <text x="620" y="372" font-size="10.5" fill="#4a4a4f">add(e) 时 size == capacity，先扩容：</text>
+  <text x="620" y="394" font-size="10.5" fill="#4a4a4f"><tspan font-weight="700" fill="#d99a2b">①</tspan> 分配新数组，容量 = 旧 × extendRatio</text>
+  <text x="620" y="416" font-size="10.5" fill="#4a4a4f"><tspan font-weight="700" fill="#2f9e6e">②</tspan> 逐个拷贝旧元素到新数组（O(n)）</text>
+  <text x="620" y="438" font-size="10.5" fill="#4a4a4f"><tspan font-weight="700" fill="#4a7fd0">③</tspan> 更新 capacity，旧数组待回收</text>
+  <text x="620" y="460" font-size="10.5" fill="#4a4a4f"><tspan font-weight="700" fill="#2f9e6e">④</tspan> 回到 add：arr[size]=e；size++</text>
+  <rect x="620" y="474" width="430" height="30" rx="6" fill="#fdf4ea" stroke="#eecfa0"/>
+  <text x="632" y="493" font-size="10.5" fill="#9a7420">扩容单次是 <tspan font-weight="700">O(n)</tspan>，但只偶尔发生 —— 见下方均摊分析</text>
+
+  <!-- Panel D 均摊 -->
+  <rect x="30" y="536" width="1050" height="128" rx="14" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="52" y="562" font-size="13" font-weight="700" fill="#20375e">为什么均摊 O(1)？</text>
+  <text x="52" y="586" font-size="10.5" fill="#4a4a4f">倍增策略下，连续 n 次尾插只触发约 log2(n) 次扩容；各次拷贝量 1+2+4+…+n ≈ 2n。</text>
+  <text x="52" y="606" font-size="10.5" fill="#2f6b4e">总代价 ≈ 3n 摊到 n 次插入 → 平均每次 <tspan font-weight="700">O(1)</tspan>（摊还）。翻倍是关键：留出的空位越来越多，扩容越来越稀疏。</text>
+  <text x="52" y="626" font-size="10.5" fill="#8a4038">反例：若每次只 +1 扩容，总拷贝 1+2+…+n ≈ n^2/2 → 平均 O(n)，退化。</text>
+  <text x="52" y="650" font-size="9.5" fill="#8a97ab">myList 字段：arrCapacity（容量）· arrSize（元素数）· extendRatio = 2（倍率）。中间 insert / remove 仍需搬移，同数组为 O(n)。</text>
+</svg>

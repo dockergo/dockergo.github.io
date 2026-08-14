@@ -1,0 +1,181 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="720" viewBox="0 0 1120 720" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="aB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#4a7fd0"/></marker>
+    <marker id="aG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+    <marker id="aA" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#d99a2b"/></marker>
+    <marker id="aP" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#8a6fd0"/></marker>
+  </defs>
+  <rect width="1120" height="720" fill="#fbfbfd"/>
+
+  <text x="30" y="34" font-size="17" font-weight="700" fill="#1d1d1f">图 · 原理总览：顶点 V + 边 E 构成关系网，用两种表示存储、两种遍历访问</text>
+  <text x="30" y="56" font-size="11" fill="#6e6e73">本图以同一张「无向无权图」贯穿全篇（与 Go 实现一致）：顶点 1..5，边 (1,2)(1,3)(2,4)(2,5)(3,5)</text>
+
+  <!-- 图例 -->
+  <rect x="30" y="72" width="12" height="12" rx="2" fill="#4a7fd0"/><text x="48" y="82" font-size="10.5" fill="#3a3a3c">顶点 / 边 · 主结构</text>
+  <rect x="200" y="72" width="12" height="12" rx="2" fill="#d99a2b"/><text x="218" y="82" font-size="10.5" fill="#3a3a3c">两种表示 · 存储</text>
+  <rect x="360" y="72" width="12" height="12" rx="2" fill="#2f9e6e"/><text x="378" y="82" font-size="10.5" fill="#3a3a3c">两种遍历 · 访问序</text>
+  <rect x="530" y="72" width="12" height="12" rx="2" fill="#8a6fd0"/><text x="548" y="82" font-size="10.5" fill="#3a3a3c">遍历入口 · 起点</text>
+
+  <!-- ===== ① 图本体 ===== -->
+  <text x="30" y="112" font-size="12" font-weight="700" fill="#20375e">① 一张图 = 顶点集 V ＋ 边集 E</text>
+  <rect x="30" y="124" width="310" height="300" rx="12" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <!-- 边 -->
+  <g stroke="#4a7fd0" stroke-width="2">
+    <line x1="185" y1="185" x2="110" y2="262"/>
+    <line x1="185" y1="185" x2="260" y2="262"/>
+    <line x1="110" y1="262" x2="110" y2="352"/>
+    <line x1="110" y1="262" x2="260" y2="352"/>
+    <line x1="260" y1="262" x2="260" y2="352"/>
+  </g>
+  <!-- 顶点 -->
+  <g font-size="13" font-weight="700" text-anchor="middle">
+    <circle cx="185" cy="185" r="20" fill="#eaf1fb" stroke="#4a7fd0" stroke-width="1.6"/><text x="185" y="190" fill="#20375e">1</text>
+    <circle cx="110" cy="262" r="20" fill="#eaf1fb" stroke="#4a7fd0" stroke-width="1.6"/><text x="110" y="267" fill="#20375e">2</text>
+    <circle cx="260" cy="262" r="20" fill="#eaf1fb" stroke="#4a7fd0" stroke-width="1.6"/><text x="260" y="267" fill="#20375e">3</text>
+    <circle cx="110" cy="352" r="20" fill="#eaf1fb" stroke="#4a7fd0" stroke-width="1.6"/><text x="110" y="357" fill="#20375e">4</text>
+    <circle cx="260" cy="352" r="20" fill="#eaf1fb" stroke="#4a7fd0" stroke-width="1.6"/><text x="260" y="357" fill="#20375e">5</text>
+  </g>
+  <text x="185" y="408" font-size="10" fill="#6e6e73" text-anchor="middle">无向：边无方向，(u,v) 即 (v,u)</text>
+
+  <!-- 概念条 -->
+  <rect x="30" y="436" width="310" height="70" rx="10" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="46" y="458" font-size="10.5" font-weight="700" fill="#4a4a4f">图的三个变体</text>
+  <text x="46" y="477" font-size="10" fill="#4a4a4f">无向 (u,v)=(v,u)　·　有向 u→v 边带方向</text>
+  <text x="46" y="495" font-size="10" fill="#4a4a4f">带权：每条边附一个权重 w（距离/代价）</text>
+
+  <!-- ===== ② 两种表示 ===== -->
+  <text x="366" y="112" font-size="12" font-weight="700" fill="#8a5a12">② 存起来：两种表示（同一张图）</text>
+
+  <!-- 邻接矩阵 -->
+  <rect x="366" y="124" width="330" height="382" rx="12" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="384" y="148" font-size="11.5" font-weight="700" fill="#8a5a12">A · 邻接矩阵 M[i][j]=1 表 i–j 有边</text>
+  <!-- 列头 -->
+  <g font-size="10.5" text-anchor="middle" fill="#6e6e73">
+    <text x="470" y="176">1</text><text x="502" y="176">2</text><text x="534" y="176">3</text><text x="566" y="176">4</text><text x="598" y="176">5</text>
+  </g>
+  <!-- 行头 + 网格 -->
+  <g font-size="10.5" text-anchor="middle">
+    <!-- row v1: 0 1 1 0 0 -->
+    <text x="440" y="200" fill="#6e6e73">1</text>
+    <rect x="454" y="184" width="32" height="26" fill="#f4f4f6" stroke="#e4e7ec"/><text x="470" y="202" fill="#a1a1a6">0</text>
+    <rect x="486" y="184" width="32" height="26" fill="#fdf3e0" stroke="#e7c07a"/><text x="502" y="202" fill="#8a5a12" font-weight="700">1</text>
+    <rect x="518" y="184" width="32" height="26" fill="#fdf3e0" stroke="#e7c07a"/><text x="534" y="202" fill="#8a5a12" font-weight="700">1</text>
+    <rect x="550" y="184" width="32" height="26" fill="#f4f4f6" stroke="#e4e7ec"/><text x="566" y="202" fill="#a1a1a6">0</text>
+    <rect x="582" y="184" width="32" height="26" fill="#f4f4f6" stroke="#e4e7ec"/><text x="598" y="202" fill="#a1a1a6">0</text>
+    <!-- row v2: 1 0 0 1 1 -->
+    <text x="440" y="226" fill="#6e6e73">2</text>
+    <rect x="454" y="210" width="32" height="26" fill="#fdf3e0" stroke="#e7c07a"/><text x="470" y="228" fill="#8a5a12" font-weight="700">1</text>
+    <rect x="486" y="210" width="32" height="26" fill="#f4f4f6" stroke="#e4e7ec"/><text x="502" y="228" fill="#a1a1a6">0</text>
+    <rect x="518" y="210" width="32" height="26" fill="#f4f4f6" stroke="#e4e7ec"/><text x="534" y="228" fill="#a1a1a6">0</text>
+    <rect x="550" y="210" width="32" height="26" fill="#fdf3e0" stroke="#e7c07a"/><text x="566" y="228" fill="#8a5a12" font-weight="700">1</text>
+    <rect x="582" y="210" width="32" height="26" fill="#fdf3e0" stroke="#e7c07a"/><text x="598" y="228" fill="#8a5a12" font-weight="700">1</text>
+    <!-- row v3: 1 0 0 0 1 -->
+    <text x="440" y="252" fill="#6e6e73">3</text>
+    <rect x="454" y="236" width="32" height="26" fill="#fdf3e0" stroke="#e7c07a"/><text x="470" y="254" fill="#8a5a12" font-weight="700">1</text>
+    <rect x="486" y="236" width="32" height="26" fill="#f4f4f6" stroke="#e4e7ec"/><text x="502" y="254" fill="#a1a1a6">0</text>
+    <rect x="518" y="236" width="32" height="26" fill="#f4f4f6" stroke="#e4e7ec"/><text x="534" y="254" fill="#a1a1a6">0</text>
+    <rect x="550" y="236" width="32" height="26" fill="#f4f4f6" stroke="#e4e7ec"/><text x="566" y="254" fill="#a1a1a6">0</text>
+    <rect x="582" y="236" width="32" height="26" fill="#fdf3e0" stroke="#e7c07a"/><text x="598" y="254" fill="#8a5a12" font-weight="700">1</text>
+    <!-- row v4: 0 1 0 0 0 -->
+    <text x="440" y="278" fill="#6e6e73">4</text>
+    <rect x="454" y="262" width="32" height="26" fill="#f4f4f6" stroke="#e4e7ec"/><text x="470" y="280" fill="#a1a1a6">0</text>
+    <rect x="486" y="262" width="32" height="26" fill="#fdf3e0" stroke="#e7c07a"/><text x="502" y="280" fill="#8a5a12" font-weight="700">1</text>
+    <rect x="518" y="262" width="32" height="26" fill="#f4f4f6" stroke="#e4e7ec"/><text x="534" y="280" fill="#a1a1a6">0</text>
+    <rect x="550" y="262" width="32" height="26" fill="#f4f4f6" stroke="#e4e7ec"/><text x="566" y="280" fill="#a1a1a6">0</text>
+    <rect x="582" y="262" width="32" height="26" fill="#f4f4f6" stroke="#e4e7ec"/><text x="598" y="280" fill="#a1a1a6">0</text>
+    <!-- row v5: 0 1 1 0 0 -->
+    <text x="440" y="304" fill="#6e6e73">5</text>
+    <rect x="454" y="288" width="32" height="26" fill="#f4f4f6" stroke="#e4e7ec"/><text x="470" y="306" fill="#a1a1a6">0</text>
+    <rect x="486" y="288" width="32" height="26" fill="#fdf3e0" stroke="#e7c07a"/><text x="502" y="306" fill="#8a5a12" font-weight="700">1</text>
+    <rect x="518" y="288" width="32" height="26" fill="#fdf3e0" stroke="#e7c07a"/><text x="534" y="306" fill="#8a5a12" font-weight="700">1</text>
+    <rect x="550" y="288" width="32" height="26" fill="#f4f4f6" stroke="#e4e7ec"/><text x="566" y="306" fill="#a1a1a6">0</text>
+    <rect x="582" y="288" width="32" height="26" fill="#f4f4f6" stroke="#e4e7ec"/><text x="598" y="306" fill="#a1a1a6">0</text>
+  </g>
+  <text x="384" y="332" font-size="10" fill="#6e6e73">无向图关于主对角线对称：M[i][j]=M[j][i]</text>
+  <text x="384" y="349" font-size="10" fill="#6e6e73">空间 O(V²) · 查任意边 O(1) · 稠密图友好</text>
+
+  <!-- 邻接表 -->
+  <text x="384" y="378" font-size="11.5" font-weight="700" fill="#8a5a12">B · 邻接表：每个顶点挂一条邻居链</text>
+  <g font-size="11" text-anchor="middle">
+    <!-- v1 -->
+    <rect x="384" y="388" width="30" height="22" rx="4" fill="#fdf3e0" stroke="#e7c07a"/><text x="399" y="404" fill="#8a5a12" font-weight="700">1</text>
+    <rect x="430" y="388" width="26" height="22" rx="4" fill="#eaf1fb" stroke="#c6d9f2"/><text x="443" y="404" fill="#20375e">2</text>
+    <rect x="470" y="388" width="26" height="22" rx="4" fill="#eaf1fb" stroke="#c6d9f2"/><text x="483" y="404" fill="#20375e">3</text>
+    <!-- v2 -->
+    <rect x="384" y="416" width="30" height="22" rx="4" fill="#fdf3e0" stroke="#e7c07a"/><text x="399" y="432" fill="#8a5a12" font-weight="700">2</text>
+    <rect x="430" y="416" width="26" height="22" rx="4" fill="#eaf1fb" stroke="#c6d9f2"/><text x="443" y="432" fill="#20375e">1</text>
+    <rect x="470" y="416" width="26" height="22" rx="4" fill="#eaf1fb" stroke="#c6d9f2"/><text x="483" y="432" fill="#20375e">4</text>
+    <rect x="510" y="416" width="26" height="22" rx="4" fill="#eaf1fb" stroke="#c6d9f2"/><text x="523" y="432" fill="#20375e">5</text>
+    <!-- v3 -->
+    <rect x="384" y="444" width="30" height="22" rx="4" fill="#fdf3e0" stroke="#e7c07a"/><text x="399" y="460" fill="#8a5a12" font-weight="700">3</text>
+    <rect x="430" y="444" width="26" height="22" rx="4" fill="#eaf1fb" stroke="#c6d9f2"/><text x="443" y="460" fill="#20375e">1</text>
+    <rect x="470" y="444" width="26" height="22" rx="4" fill="#eaf1fb" stroke="#c6d9f2"/><text x="483" y="460" fill="#20375e">5</text>
+    <!-- v4 -->
+    <rect x="384" y="472" width="30" height="22" rx="4" fill="#fdf3e0" stroke="#e7c07a"/><text x="399" y="488" fill="#8a5a12" font-weight="700">4</text>
+    <rect x="430" y="472" width="26" height="22" rx="4" fill="#eaf1fb" stroke="#c6d9f2"/><text x="443" y="488" fill="#20375e">2</text>
+  </g>
+  <g font-size="11" text-anchor="middle">
+    <!-- v5 -->
+    <rect x="558" y="444" width="30" height="22" rx="4" fill="#fdf3e0" stroke="#e7c07a"/><text x="573" y="460" fill="#8a5a12" font-weight="700">5</text>
+    <rect x="604" y="444" width="26" height="22" rx="4" fill="#eaf1fb" stroke="#c6d9f2"/><text x="617" y="460" fill="#20375e">2</text>
+    <rect x="644" y="444" width="26" height="22" rx="4" fill="#eaf1fb" stroke="#c6d9f2"/><text x="657" y="460" fill="#20375e">3</text>
+  </g>
+  <text x="384" y="500" font-size="10" fill="#6e6e73">空间 O(V+E) · 稀疏图友好 · 遍历邻居快</text>
+
+  <!-- 图 → 两种表示 箭头 -->
+  <path d="M340 274 L353 274 L353 200 L366 200" fill="none" stroke="#d99a2b" stroke-width="1.8" marker-end="url(#aA)"/>
+
+  <!-- ===== ③ 两种遍历 ===== -->
+  <text x="722" y="112" font-size="12" font-weight="700" fill="#2f6b4e">③ 走一遍：两种遍历（起点 = 顶点 1，都用邻接表取邻居）</text>
+
+  <!-- BFS -->
+  <rect x="722" y="124" width="368" height="185" rx="12" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <rect x="738" y="140" width="12" height="12" rx="2" fill="#8a6fd0"/><text x="756" y="150" font-size="11.5" font-weight="700" fill="#2f6b4e">BFS 广度优先 · 队列 + visited，逐层扩散</text>
+  <text x="738" y="174" font-size="10.5" fill="#4a4a4f">从起点向外一圈圈铺开：先访问所有一步可达，再两步</text>
+  <g font-size="11" text-anchor="middle">
+    <text x="770" y="200" font-size="10" fill="#6e6e73" text-anchor="start">第0层</text>
+    <circle cx="850" cy="196" r="15" fill="#e3f4ec" stroke="#2f9e6e"/><text x="850" y="200" fill="#1f6b4a" font-weight="700">1</text>
+    <text x="770" y="230" font-size="10" fill="#6e6e73" text-anchor="start">第1层</text>
+    <circle cx="850" cy="226" r="15" fill="#e3f4ec" stroke="#2f9e6e"/><text x="850" y="230" fill="#1f6b4a" font-weight="700">2</text>
+    <circle cx="890" cy="226" r="15" fill="#e3f4ec" stroke="#2f9e6e"/><text x="890" y="230" fill="#1f6b4a" font-weight="700">3</text>
+    <text x="770" y="260" font-size="10" fill="#6e6e73" text-anchor="start">第2层</text>
+    <circle cx="850" cy="256" r="15" fill="#e3f4ec" stroke="#2f9e6e"/><text x="850" y="260" fill="#1f6b4a" font-weight="700">4</text>
+    <circle cx="890" cy="256" r="15" fill="#e3f4ec" stroke="#2f9e6e"/><text x="890" y="260" fill="#1f6b4a" font-weight="700">5</text>
+  </g>
+  <text x="960" y="200" font-size="10" fill="#4a4a4f">无权图里，层号 = 起点到该点</text>
+  <text x="960" y="216" font-size="10" fill="#4a4a4f">的最短边数（最短路）</text>
+  <text x="738" y="298" font-size="10.5" font-weight="700" fill="#2f6b4e">访问序 1 → 2 → 3 → 4 → 5</text>
+
+  <!-- DFS -->
+  <rect x="722" y="321" width="368" height="185" rx="12" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <rect x="738" y="337" width="12" height="12" rx="2" fill="#8a6fd0"/><text x="756" y="347" font-size="11.5" font-weight="700" fill="#2f6b4e">DFS 深度优先 · 递归/栈，一路到底再回溯</text>
+  <text x="738" y="371" font-size="10.5" fill="#4a4a4f">沿一条路径深入到无新邻居，退回上一步再探其它分支</text>
+  <g font-size="11" text-anchor="middle">
+    <circle cx="762" cy="410" r="15" fill="#e3f4ec" stroke="#2f9e6e"/><text x="762" y="414" fill="#1f6b4a" font-weight="700">1</text>
+    <circle cx="828" cy="410" r="15" fill="#e3f4ec" stroke="#2f9e6e"/><text x="828" y="414" fill="#1f6b4a" font-weight="700">2</text>
+    <circle cx="894" cy="410" r="15" fill="#e3f4ec" stroke="#2f9e6e"/><text x="894" y="414" fill="#1f6b4a" font-weight="700">4</text>
+    <circle cx="960" cy="410" r="15" fill="#e3f4ec" stroke="#2f9e6e"/><text x="960" y="414" fill="#1f6b4a" font-weight="700">5</text>
+    <circle cx="1026" cy="410" r="15" fill="#e3f4ec" stroke="#2f9e6e"/><text x="1026" y="414" fill="#1f6b4a" font-weight="700">3</text>
+  </g>
+  <g stroke="#2f9e6e" stroke-width="1.8" fill="none">
+    <line x1="777" y1="410" x2="811" y2="410" marker-end="url(#aG)"/>
+    <line x1="843" y1="410" x2="877" y2="410" marker-end="url(#aG)"/>
+    <line x1="909" y1="410" x2="943" y2="410" marker-end="url(#aG)"/>
+    <line x1="975" y1="410" x2="1009" y2="410" marker-end="url(#aG)"/>
+  </g>
+  <text x="894" y="446" font-size="9.5" fill="#8a4038" text-anchor="middle">↑ 4 是死路 → 回溯到 2 再走 5</text>
+  <text x="738" y="496" font-size="10.5" font-weight="700" fill="#2f6b4e">访问序 1 → 2 → 4 → 5 → 3</text>
+
+  <!-- 表示 → 遍历 箭头 -->
+  <path d="M696 216 L709 216 L709 200 L722 200" fill="none" stroke="#2f9e6e" stroke-width="1.8" marker-end="url(#aG)"/>
+
+  <!-- 底部：如何选 -->
+  <rect x="30" y="524" width="1060" height="170" rx="14" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="48" y="550" font-size="12" font-weight="700" fill="#1d1d1f">一句话地图</text>
+  <text x="48" y="576" font-size="10.5" fill="#4a4a4f"><tspan font-weight="700" fill="#8a5a12">表示法选型</tspan>　边多（稠密，E≈V²）→ 邻接矩阵，查边 O(1)、写起来直观；边少（稀疏，E≪V²）→ 邻接表，省空间、遍历邻居快。</text>
+  <text x="48" y="598" font-size="10.5" fill="#4a4a4f">　　多数真实图（社交、路网、依赖）都稀疏，故邻接表是默认；本篇的 BFS / DFS 也都建立在邻接表之上。</text>
+  <text x="48" y="626" font-size="10.5" fill="#4a4a4f"><tspan font-weight="700" fill="#2f6b4e">遍历选型</tspan>　要「最短路 / 逐层 / 就近」→ BFS（队列）；要「连通性 / 路径存在 / 拓扑 / 回溯搜索」→ DFS（递归栈）。</text>
+  <text x="48" y="648" font-size="10.5" fill="#4a4a4f">　　二者都靠 <tspan font-weight="700">visited 集合</tspan> 保证每个顶点只访问一次，时间同为 O(V+E)；区别只在「下一个访问谁」由队列还是栈决定。</text>
+  <text x="48" y="676" font-size="10" fill="#6e6e73">核心心智：图 = 关系；表示 = 怎么存这份关系；遍历 = 怎么系统地走遍它而不漏不重。下面 4 张图逐一拆解。</text>
+</svg>

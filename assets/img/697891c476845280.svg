@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="470" viewBox="0 0 900 470" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="900" height="470" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">逃逸诊断 · -gcflags=-m 读懂编译器判定</text>
+
+  <!-- command bar (blue) -->
+  <rect x="30" y="50" width="840" height="58" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="46" y="74" font-size="12.5" font-weight="600" fill="#1b2a4a">go build -gcflags=-m ./...</text>
+  <text x="46" y="94" font-size="10.5" fill="#5b7db1">编译器把每个变量的逃逸判定打成诊断行（-m 一层结论，-m -m 详细传播路径）</text>
+
+  <!-- three diagnostic cards -->
+  <!-- moved to heap (amber) -->
+  <rect x="30" y="128" width="270" height="150" rx="13" fill="#fdf6ec" stroke="#f0dcaf" filter="url(#soft)"/>
+  <text x="46" y="152" font-size="12" font-weight="600" fill="#6b4e16">moved to heap: x</text>
+  <text x="46" y="174" font-size="10" fill="#a9822f">具名局部变量被判逃逸，</text>
+  <text x="46" y="191" font-size="10" fill="#a9822f">其分配从栈搬到堆。</text>
+  <rect x="46" y="206" width="238" height="56" rx="9" fill="#ffffff" stroke="#f0dcaf"/>
+  <text x="60" y="227" font-size="10" fill="#6b4e16">常见于：return &amp;x、</text>
+  <text x="60" y="245" font-size="10" fill="#6b4e16">取局部变量地址并外传</text>
+
+  <!-- escapes to heap (amber) -->
+  <rect x="315" y="128" width="270" height="150" rx="13" fill="#fdf6ec" stroke="#f0dcaf" filter="url(#soft)"/>
+  <text x="331" y="152" font-size="12" font-weight="600" fill="#6b4e16">x escapes to heap</text>
+  <text x="331" y="174" font-size="10" fill="#a9822f">表达式（含匿名值）流向</text>
+  <text x="331" y="191" font-size="10" fill="#a9822f">堆位置，需堆分配。</text>
+  <rect x="331" y="206" width="238" height="56" rx="9" fill="#ffffff" stroke="#f0dcaf"/>
+  <text x="345" y="227" font-size="10" fill="#6b4e16">常见于：装入接口、</text>
+  <text x="345" y="245" font-size="10" fill="#6b4e16">fmt.Println(x) 的 any 参</text>
+
+  <!-- does not escape (green) -->
+  <rect x="600" y="128" width="270" height="150" rx="13" fill="#eef7f0" stroke="#bfe0c8" filter="url(#soft)"/>
+  <text x="616" y="152" font-size="12" font-weight="600" fill="#1d4a2b">does not escape</text>
+  <text x="616" y="174" font-size="10" fill="#4a8c60">值安全留栈，零 GC 成本</text>
+  <text x="616" y="191" font-size="10" fill="#4a8c60">——最理想的结果。</text>
+  <rect x="616" y="206" width="238" height="56" rx="9" fill="#ffffff" stroke="#bfe0c8"/>
+  <text x="630" y="227" font-size="10" fill="#1d4a2b">如 &amp;x 仅在函数内用，</text>
+  <text x="630" y="245" font-size="10" fill="#1d4a2b">new(T) 未外传 → 栈</text>
+
+  <!-- verbose path (purple) -->
+  <rect x="30" y="298" width="405" height="106" rx="13" fill="#f5f0fb" stroke="#ddcdf0" filter="url(#soft)"/>
+  <text x="46" y="322" font-size="12" font-weight="600" fill="#3d2a5a">-gcflags='-m -m' · 详细传播路径</text>
+  <text x="46" y="344" font-size="10" fill="#7d5bb1">打印逃逸链：from x (address-of) → ...</text>
+  <text x="46" y="362" font-size="10" fill="#7d5bb1">→ 到底哪一步把值送上堆，逐跳可见。</text>
+  <text x="46" y="386" font-size="10" fill="#7d5bb1">诊断来自 escape.go:322 / 329（moved / escapes）</text>
+
+  <!-- engineering (neutral) -->
+  <rect x="450" y="298" width="420" height="106" rx="13" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="466" y="322" font-size="12" font-weight="600" fill="#1d1d1f">工程用法</text>
+  <text x="466" y="344" font-size="10" fill="#3a3a3c">先看热点函数的逃逸行 → 定位不必要的堆分配</text>
+  <text x="466" y="362" font-size="10" fill="#3a3a3c">改法：返回值而非指针、避免接口装箱、预分配</text>
+  <text x="466" y="386" font-size="10" fill="#3a3a3c">配合 pprof/benchmark 的 -benchmem 验证 allocs/op</text>
+
+  <!-- anchor bar -->
+  <rect x="30" y="422" width="840" height="34" rx="10" fill="#f6f6f7" stroke="#e2e2e7"/>
+  <text x="46" y="443" font-size="10.5" fill="#6e6e73">锚点：诊断输出 escape.go:322（moved to heap） · escape.go:329（escapes to heap）</text>
+</svg>

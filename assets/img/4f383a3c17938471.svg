@@ -1,0 +1,105 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="640" viewBox="0 0 1120 640" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="aB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#4a7fd0"/></marker>
+    <marker id="aG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+    <marker id="aA" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#c99a3a"/></marker>
+  </defs>
+  <rect width="1120" height="640" fill="#fbfbfd"/>
+
+  <text x="30" y="32" font-size="15" font-weight="700" fill="#1d1d1f">图解点 ② B-link tree 无锁页分裂 · 每个节点带 high key + 右兄弟指针，分裂中途并发读靠 high key 判断该右移到 sibling</text>
+  <text x="30" y="53" font-size="10.5" fill="#6e6e73">普通 B+ 树分裂要锁父+子防并发读走空；B-link 树给节点加「high key（本节点最大键上界）+ 右兄弟指针」，把分裂拆成两步且对读友好，无需全树锁</text>
+
+  <!-- 图例 -->
+  <line x1="30" y1="80" x2="54" y2="80" stroke="#4a7fd0" stroke-width="2" marker-end="url(#aB)"/>
+  <text x="60" y="84" font-size="10" fill="#3a3a3c">下降查找（沿 child 指针）</text>
+  <line x1="290" y1="80" x2="314" y2="80" stroke="#2f9e6e" stroke-width="2" marker-end="url(#aG)"/>
+  <text x="320" y="84" font-size="10" fill="#3a3a3c">右移（key &gt; high key → 走 sibling）</text>
+  <line x1="600" y1="80" x2="624" y2="80" stroke="#c99a3a" stroke-width="2" stroke-dasharray="5 3" marker-end="url(#aA)"/>
+  <text x="630" y="84" font-size="10" fill="#3a3a3c">分裂两步：先建兄弟、后升父</text>
+
+  <!-- 左：分裂前 -->
+  <text x="40" y="126" font-size="11.5" font-weight="700" fill="#1d1d1f">分裂前：节点 P 已满（含 high key + 右兄弟指针）</text>
+  <!-- parent -->
+  <rect x="120" y="140" width="200" height="46" rx="8" fill="#eaf1fb" stroke="#c6d9f2"/>
+  <text x="220" y="162" font-size="10" font-weight="600" fill="#20375e" text-anchor="middle">父节点</text>
+  <text x="220" y="178" font-size="8.5" fill="#5a7099" text-anchor="middle">分隔键 → 指向 P</text>
+  <!-- node P full -->
+  <rect x="90" y="230" width="260" height="70" rx="9" fill="#fbf3e2" stroke="#ecd6a8"/>
+  <text x="104" y="252" font-size="10" font-weight="700" fill="#8a6417">节点 P（满）</text>
+  <g font-size="9" text-anchor="middle" fill="#8a6417">
+    <rect x="104" y="262" width="34" height="24" rx="4" fill="#fbf0d8" stroke="#e6ce9a"/><text x="121" y="278">10</text>
+    <rect x="140" y="262" width="34" height="24" rx="4" fill="#fbf0d8" stroke="#e6ce9a"/><text x="157" y="278">20</text>
+    <rect x="176" y="262" width="34" height="24" rx="4" fill="#fbf0d8" stroke="#e6ce9a"/><text x="193" y="278">30</text>
+    <rect x="212" y="262" width="34" height="24" rx="4" fill="#fbf0d8" stroke="#e6ce9a"/><text x="229" y="278">40</text>
+    <rect x="248" y="262" width="34" height="24" rx="4" fill="#fbf0d8" stroke="#e6ce9a"/><text x="265" y="278">50</text>
+  </g>
+  <text x="310" y="252" font-size="8.5" fill="#a5372c" text-anchor="end">high key = +∞</text>
+  <!-- right sibling existing -->
+  <rect x="370" y="230" width="120" height="70" rx="9" fill="#f4f4f6" stroke="#d7d7dd"/>
+  <text x="430" y="262" font-size="9" fill="#8a97ab" text-anchor="middle">原右兄弟 R</text>
+  <text x="430" y="280" font-size="8.5" fill="#a1a1a6" text-anchor="middle">键 ≥ 60</text>
+  <!-- sibling pointer -->
+  <line x1="350" y1="278" x2="368" y2="278" stroke="#2f9e6e" stroke-width="1.8" marker-end="url(#aG)"/>
+  <!-- parent → P -->
+  <line x1="200" y1="186" x2="180" y2="228" stroke="#4a7fd0" stroke-width="1.6" marker-end="url(#aB)"/>
+
+  <!-- 右：分裂后 -->
+  <text x="600" y="126" font-size="11.5" font-weight="700" fill="#1d1d1f">分裂后：P 拆为 P' + 新兄弟 Q，两步完成</text>
+  <!-- parent after -->
+  <rect x="690" y="140" width="240" height="46" rx="8" fill="#eaf1fb" stroke="#c6d9f2"/>
+  <text x="810" y="160" font-size="10" font-weight="600" fill="#20375e" text-anchor="middle">父节点（第 2 步升入 30）</text>
+  <text x="810" y="177" font-size="8.5" fill="#5a7099" text-anchor="middle">&lt;30 → P'   |   ≥30 → Q</text>
+  <!-- P' -->
+  <rect x="600" y="230" width="150" height="70" rx="9" fill="#eaf6f0" stroke="#bfe3d1"/>
+  <text x="612" y="252" font-size="10" font-weight="700" fill="#2f6b4e">P'（左半）</text>
+  <g font-size="9" text-anchor="middle" fill="#2f6b4e">
+    <rect x="612" y="262" width="34" height="24" rx="4" fill="#d7efe2" stroke="#9ed3b8"/><text x="629" y="278">10</text>
+    <rect x="648" y="262" width="34" height="24" rx="4" fill="#d7efe2" stroke="#9ed3b8"/><text x="665" y="278">20</text>
+  </g>
+  <text x="742" y="252" font-size="8.5" font-weight="700" fill="#a5372c" text-anchor="end">high=30</text>
+  <!-- Q new -->
+  <rect x="770" y="230" width="160" height="70" rx="9" fill="#eaf6f0" stroke="#bfe3d1"/>
+  <text x="782" y="252" font-size="10" font-weight="700" fill="#2f6b4e">Q（新兄弟）</text>
+  <g font-size="9" text-anchor="middle" fill="#2f6b4e">
+    <rect x="782" y="262" width="34" height="24" rx="4" fill="#d7efe2" stroke="#9ed3b8"/><text x="799" y="278">30</text>
+    <rect x="818" y="262" width="34" height="24" rx="4" fill="#d7efe2" stroke="#9ed3b8"/><text x="835" y="278">40</text>
+    <rect x="854" y="262" width="34" height="24" rx="4" fill="#d7efe2" stroke="#9ed3b8"/><text x="871" y="278">50</text>
+  </g>
+  <text x="922" y="252" font-size="8.5" fill="#a5372c" text-anchor="end">high=+∞</text>
+  <!-- P' → Q sibling -->
+  <line x1="750" y1="278" x2="768" y2="278" stroke="#2f9e6e" stroke-width="1.8" marker-end="url(#aG)"/>
+  <text x="759" y="272" font-size="7.5" fill="#2f6b4e" text-anchor="middle">→</text>
+  <!-- Q → old R -->
+  <line x1="930" y1="278" x2="952" y2="278" stroke="#2f9e6e" stroke-width="1.6" marker-end="url(#aG)"/>
+  <text x="948" y="270" font-size="8" fill="#8a97ab" text-anchor="end">→R</text>
+  <!-- parent → P' -->
+  <line x1="770" y1="186" x2="700" y2="228" stroke="#4a7fd0" stroke-width="1.6" marker-end="url(#aB)"/>
+  <line x1="850" y1="186" x2="850" y2="228" stroke="#4a7fd0" stroke-width="1.6" marker-end="url(#aB)"/>
+
+  <!-- 分裂两步 -->
+  <rect x="40" y="332" width="520" height="150" rx="13" fill="#ffffff" stroke="#ecd6a8" filter="url(#soft)"/>
+  <text x="62" y="358" font-size="12" font-weight="700" fill="#8a6417">分裂 = 两步局部原子操作（不锁全树）</text>
+  <text x="62" y="384" font-size="10" fill="#7a5a1a"><tspan font-weight="700">第 1 步</tspan>：建新兄弟 Q，搬右半键；令 P'.sibling→Q、Q.sibling→原R；</text>
+  <text x="106" y="402" font-size="10" fill="#7a5a1a">设 P'.high_key = 30。此刻树已「可达且正确」——</text>
+  <text x="106" y="420" font-size="10" fill="#7a5a1a">父还没更新，但 Q 已能经 P' 的兄弟指针到达。</text>
+  <text x="62" y="444" font-size="10" fill="#7a5a1a"><tspan font-weight="700">第 2 步</tspan>：把分隔键 30 + 指向 Q 升入父节点（父满则递归分裂）。</text>
+  <text x="62" y="466" font-size="9" fill="#a98a4a">两步之间只各自持有涉及节点的短暂锁 / CAS，粒度局部，读永不被阻塞。</text>
+
+  <!-- 并发读靠 high key 右移 -->
+  <rect x="580" y="332" width="510" height="150" rx="13" fill="#eaf6f0" stroke="#bfe3d1" filter="url(#soft)"/>
+  <text x="602" y="358" font-size="12" font-weight="700" fill="#2f6b4e">并发读命中「分裂中途」怎么办？靠 high key 右移</text>
+  <text x="602" y="384" font-size="10" fill="#2f6b4e">读 key=40，此前从父拿到的还是旧 P 的指针 → 落到 P'。</text>
+  <text x="602" y="404" font-size="10" fill="#2f6b4e">P' 判定：<tspan font-weight="700">40 &gt; high_key(30)</tspan> → 目标已被移到右兄弟。</text>
+  <text x="602" y="424" font-size="10" fill="#2f6b4e">→ 顺 sibling 指针右移到 Q，在 Q 中命中 40。</text>
+  <text x="602" y="446" font-size="10" font-weight="700" fill="#2f6b4e">读无需知道父是否已更新 —— high key 自愈了过期指针。</text>
+  <text x="602" y="466" font-size="9" fill="#5f9c81">代价：偶尔一次多跳一个兄弟；换来的是读写不互锁。</text>
+
+  <!-- 底部性质 -->
+  <rect x="40" y="500" width="1050" height="118" rx="13" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="58" y="526" font-size="11" font-weight="700" fill="#2f6b4e">核心不变式</text>
+  <text x="58" y="548" font-size="10" fill="#4a4a4f"><tspan font-weight="700">① high key 单调可判：</tspan>任意时刻，若 <tspan font-family="'SF Mono',monospace">查找键 &gt; 本节点 high key</tspan>，则目标一定在右兄弟方向，右移必不走空。</text>
+  <text x="58" y="570" font-size="10" fill="#4a4a4f"><tspan font-weight="700">② 兄弟链始终连通：</tspan>第 1 步就接好指针，任何中间态都能经「下降 + 右移」两种移动到达任一活键。</text>
+  <text x="58" y="592" font-size="10" fill="#4a4a4f"><tspan font-weight="700">③ 父更新可延后：</tspan>父指针过期只是「少一条捷径」，不影响正确性 —— 这正是免全树锁的关键。</text>
+  <text x="58" y="611" font-size="9" fill="#a1a1a6">对比普通 B+ 树：分裂需自底向上锁住父与子防读走空；B-link 用结构冗余（high key + sibling）换来无锁读。</text>
+</svg>

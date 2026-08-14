@@ -1,0 +1,160 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="772" viewBox="0 0 1120 772" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="aO" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#c4562f"/></marker>
+  </defs>
+  <rect width="1120" height="772" fill="#fbfbfd"/>
+
+  <text x="30" y="32" font-size="15" font-weight="700" fill="#1d1d1f">机制核心差异对比 · buddy vs slab、cgroup v1 vs v2 —— 分配器分工与资源隔离的两组取舍</text>
+  <text x="30" y="53" font-size="10.5" fill="#6e6e73">前一组是同一分配链的上下两层（尺度 / 碎片类型不同），后一组是资源隔离控制器的代际演进（层级模型 / 水位语义不同）</text>
+
+  <!-- 图例：4 语义色 -->
+  <rect x="30" y="66" width="12" height="12" rx="3" fill="#c4562f"/><text x="47" y="76" font-size="10" fill="#3a3a3c">buddy 伙伴系统</text>
+  <rect x="180" y="66" width="12" height="12" rx="3" fill="#2f9e6e"/><text x="197" y="76" font-size="10" fill="#3a3a3c">slab / slub</text>
+  <rect x="320" y="66" width="12" height="12" rx="3" fill="#4a7fd0"/><text x="337" y="76" font-size="10" fill="#3a3a3c">cgroup v1</text>
+  <rect x="450" y="66" width="12" height="12" rx="3" fill="#c99a3a"/><text x="467" y="76" font-size="10" fill="#3a3a3c">cgroup v2</text>
+
+  <!-- ============================================================ -->
+  <!-- 组一：buddy vs slab -->
+  <!-- ============================================================ -->
+  <text x="30" y="102" font-size="12.5" font-weight="700" fill="#1d1d1f">一、buddy vs slab —— 同一物理页分配链的两层，各解一种碎片</text>
+
+  <!-- 表头 -->
+  <rect x="30" y="112" width="180" height="38" rx="9" fill="#eef0f3" stroke="#e4e7ec"/>
+  <text x="120" y="136" font-size="12" font-weight="700" fill="#4a4a4f" text-anchor="middle">对比维度</text>
+  <rect x="218" y="112" width="432" height="38" rx="9" fill="#fbeee9" stroke="#eccabb"/>
+  <text x="434" y="136" font-size="13" font-weight="800" fill="#a5401f" text-anchor="middle">伙伴系统 buddy · 大块页</text>
+  <rect x="658" y="112" width="432" height="38" rx="9" fill="#eef7f2" stroke="#c9e6d7"/>
+  <text x="874" y="136" font-size="13" font-weight="800" fill="#2f6b4e" text-anchor="middle">Slab / Slub · 小对象池</text>
+
+  <!-- 行1：尺度 / 单位 -->
+  <rect x="30" y="154" width="180" height="72" rx="9" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="46" y="182" font-size="11.5" font-weight="700" fill="#1d1d1f">① 管理尺度</text>
+  <text x="46" y="202" font-size="9" fill="#8a97ab">分配的基本单位</text>
+  <rect x="218" y="154" width="432" height="72" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="234" y="180" font-size="10.5" font-weight="700" fill="#a5401f">以页为单位，2^order 连续页</text>
+  <text x="234" y="200" font-size="9.5" fill="#4a4a4f">按 2 的幂管理大块，请求向上取整</text>
+  <text x="234" y="216" font-size="9.5" fill="#4a4a4f">到最近 order；缺块则从更大 order 拆半</text>
+  <rect x="658" y="154" width="432" height="72" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="674" y="180" font-size="10.5" font-weight="700" fill="#2f6b4e">等长对象槽（远小于一页）</text>
+  <text x="674" y="200" font-size="9.5" fill="#4a4a4f">把整页切成同尺寸对象槽做对象池</text>
+  <text x="674" y="216" font-size="9.5" fill="#4a4a4f">面向内核海量同类小结构体（inode…）</text>
+
+  <!-- 行2：碎片类型（带小视觉） -->
+  <rect x="30" y="230" width="180" height="72" rx="9" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="46" y="258" font-size="11.5" font-weight="700" fill="#1d1d1f">② 碎片类型</text>
+  <text x="46" y="278" font-size="9" fill="#8a97ab">各自主攻哪种碎片</text>
+  <rect x="218" y="230" width="432" height="72" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="234" y="254" font-size="10.5" font-weight="700" fill="#a5401f">主攻外部碎片</text>
+  <text x="234" y="272" font-size="9.5" fill="#4a4a4f">释放时合并相邻「伙伴块」，</text>
+  <text x="234" y="288" font-size="9.5" fill="#4a4a4f">回收散落的空闲空间</text>
+  <text x="470" y="250" font-size="8" fill="#b07a5e">空闲散落 → 难拼大块</text>
+  <g>
+    <rect x="470" y="258" width="30" height="16" rx="2" fill="#c4562f"/>
+    <rect x="502" y="258" width="12" height="16" rx="2" fill="#f6ddd0" stroke="#dda98a"/>
+    <rect x="516" y="258" width="22" height="16" rx="2" fill="#c4562f"/>
+    <rect x="540" y="258" width="16" height="16" rx="2" fill="#f6ddd0" stroke="#dda98a"/>
+    <rect x="558" y="258" width="34" height="16" rx="2" fill="#c4562f"/>
+    <rect x="594" y="258" width="10" height="16" rx="2" fill="#f6ddd0" stroke="#dda98a"/>
+    <rect x="606" y="258" width="26" height="16" rx="2" fill="#c4562f"/>
+  </g>
+  <rect x="658" y="230" width="432" height="72" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="674" y="254" font-size="10.5" font-weight="700" fill="#2f6b4e">主攻内部碎片</text>
+  <text x="674" y="272" font-size="9.5" fill="#4a4a4f">同尺寸对象池，无每对象边角浪费；</text>
+  <text x="674" y="288" font-size="9.5" fill="#4a4a4f">对象复用免反复初始化</text>
+  <text x="912" y="250" font-size="8" fill="#5a9078">定长槽 → 紧密无浪费</text>
+  <g>
+    <rect x="912" y="258" width="24" height="16" rx="2" fill="#2f9e6e"/>
+    <rect x="938" y="258" width="24" height="16" rx="2" fill="#dff2e8" stroke="#9ed3b8"/>
+    <rect x="964" y="258" width="24" height="16" rx="2" fill="#2f9e6e"/>
+    <rect x="990" y="258" width="24" height="16" rx="2" fill="#2f9e6e"/>
+    <rect x="1016" y="258" width="24" height="16" rx="2" fill="#dff2e8" stroke="#9ed3b8"/>
+    <rect x="1042" y="258" width="24" height="16" rx="2" fill="#2f9e6e"/>
+  </g>
+
+  <!-- 行3：组织 / 分层供给 -->
+  <rect x="30" y="306" width="180" height="72" rx="9" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="46" y="334" font-size="11.5" font-weight="700" fill="#1d1d1f">③ 组织 · 供给</text>
+  <text x="46" y="354" font-size="9" fill="#8a97ab">数据结构与协作</text>
+  <rect x="218" y="306" width="432" height="72" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="234" y="332" font-size="10.5" font-weight="700" fill="#a5401f">每 order 一条空闲块链表</text>
+  <text x="234" y="350" font-size="9.5" fill="#4a4a4f">拆半分配 / 相邻合并回收；</text>
+  <text x="234" y="366" font-size="9.5" fill="#4a4a4f">直接管物理页，向上层供给整页</text>
+  <rect x="658" y="306" width="432" height="72" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="674" y="332" font-size="10.5" font-weight="700" fill="#2f6b4e">每种尺寸一个 cache</text>
+  <text x="674" y="350" font-size="9.5" fill="#4a4a4f">缺对象时向 buddy 申请整页再切槽；</text>
+  <text x="674" y="366" font-size="9.5" fill="#4a4a4f">分配 / 释放 O(1) 出入池，缓存热对象</text>
+  <!-- buddy → slab 供给整页 -->
+  <line x1="650" y1="342" x2="656" y2="342" stroke="#c4562f" stroke-width="2" marker-end="url(#aO)"/>
+  <text x="596" y="392" font-size="8.5" fill="#a5401f">slab 的页来自 buddy → 两层衔接：粗粒度靠 buddy、细粒度靠 slab</text>
+
+  <!-- ============================================================ -->
+  <!-- 组二：cgroup v1 vs v2 -->
+  <!-- ============================================================ -->
+  <text x="30" y="424" font-size="12.5" font-weight="700" fill="#1d1d1f">二、cgroup v1 vs v2 —— 资源隔离控制器的代际演进</text>
+
+  <!-- 表头 -->
+  <rect x="30" y="434" width="180" height="38" rx="9" fill="#eef0f3" stroke="#e4e7ec"/>
+  <text x="120" y="458" font-size="12" font-weight="700" fill="#4a4a4f" text-anchor="middle">对比维度</text>
+  <rect x="218" y="434" width="432" height="38" rx="9" fill="#eaf1fb" stroke="#c6d9f2"/>
+  <text x="434" y="458" font-size="13" font-weight="800" fill="#20375e" text-anchor="middle">cgroup v1 · 多层级割裂</text>
+  <rect x="658" y="434" width="432" height="38" rx="9" fill="#fbf3e2" stroke="#ecd6a8"/>
+  <text x="874" y="458" font-size="13" font-weight="800" fill="#8a6417" text-anchor="middle">cgroup v2 · 统一层级 + 分级水位</text>
+
+  <!-- 行1：层级模型（带小视觉） -->
+  <rect x="30" y="476" width="180" height="72" rx="9" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="46" y="504" font-size="11.5" font-weight="700" fill="#1d1d1f">① 层级模型</text>
+  <text x="46" y="524" font-size="9" fill="#8a97ab">控制器如何挂载</text>
+  <rect x="218" y="476" width="432" height="72" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="234" y="502" font-size="10.5" font-weight="700" fill="#20375e">各控制器独立挂载</text>
+  <text x="234" y="520" font-size="9.5" fill="#4a4a4f">memory / cpu / io 各自成树，</text>
+  <text x="234" y="536" font-size="9.5" fill="#4a4a4f">层级彼此割裂、易错配</text>
+  <g font-size="7" fill="#20375e" text-anchor="middle">
+    <rect x="556" y="500" width="26" height="26" rx="4" fill="#eaf1fb" stroke="#4a7fd0"/><text x="569" y="516">mem</text>
+    <rect x="588" y="500" width="26" height="26" rx="4" fill="#eaf1fb" stroke="#4a7fd0"/><text x="601" y="516">cpu</text>
+    <rect x="620" y="500" width="26" height="26" rx="4" fill="#eaf1fb" stroke="#4a7fd0"/><text x="633" y="516">io</text>
+  </g>
+  <rect x="658" y="476" width="432" height="72" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="674" y="502" font-size="10.5" font-weight="700" fill="#8a6417">统一单一层级树</text>
+  <text x="674" y="520" font-size="9.5" fill="#4a4a4f">所有控制器共用一棵层级，</text>
+  <text x="674" y="536" font-size="9.5" fill="#4a4a4f">进程归属唯一、语义一致</text>
+  <g>
+    <rect x="1010" y="482" width="26" height="16" rx="3" fill="#fbf3e2" stroke="#c99a3a"/>
+    <rect x="984" y="512" width="26" height="16" rx="3" fill="#fbf3e2" stroke="#c99a3a"/>
+    <rect x="1036" y="512" width="26" height="16" rx="3" fill="#fbf3e2" stroke="#c99a3a"/>
+    <line x1="1023" y1="498" x2="997" y2="512" stroke="#c99a3a" stroke-width="1.4"/>
+    <line x1="1023" y1="498" x2="1049" y2="512" stroke="#c99a3a" stroke-width="1.4"/>
+  </g>
+
+  <!-- 行2：内存水位语义 -->
+  <rect x="30" y="552" width="180" height="72" rx="9" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="46" y="580" font-size="11.5" font-weight="700" fill="#1d1d1f">② 内存水位</text>
+  <text x="46" y="600" font-size="9" fill="#8a97ab">软硬限如何表达</text>
+  <rect x="218" y="552" width="432" height="72" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="234" y="578" font-size="10.5" font-weight="700" fill="#20375e">软硬限分散、语义弱</text>
+  <text x="234" y="596" font-size="9.5" fill="#4a4a4f">soft_limit 仅尽力回收、无强约束，</text>
+  <text x="234" y="612" font-size="9.5" fill="#4a4a4f">limit 为硬限；缺乏分级回收</text>
+  <rect x="658" y="552" width="432" height="72" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="674" y="578" font-size="10.5" font-weight="700" fill="#8a6417">memory.high / memory.max 分级</text>
+  <text x="674" y="596" font-size="9.5" fill="#4a4a4f">high 软限：越过即节流 + 主动回收；</text>
+  <text x="674" y="612" font-size="9.5" fill="#4a4a4f">max 硬限：阻塞分配，兜底才 OOM</text>
+
+  <!-- 行3：压力反馈 / 现状 -->
+  <rect x="30" y="628" width="180" height="72" rx="9" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="46" y="656" font-size="11.5" font-weight="700" fill="#1d1d1f">③ 反馈 · 现状</text>
+  <text x="46" y="676" font-size="9" fill="#8a97ab">压力信号与采用</text>
+  <rect x="218" y="628" width="432" height="72" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="234" y="654" font-size="10.5" font-weight="700" fill="#20375e">缺乏统一压力信号</text>
+  <text x="234" y="672" font-size="9.5" fill="#4a4a4f">回收时机较被动，观测手段零散；</text>
+  <text x="234" y="688" font-size="9.5" fill="#4a4a4f">正逐步被淘汰</text>
+  <rect x="658" y="628" width="432" height="72" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="674" y="654" font-size="10.5" font-weight="700" fill="#8a6417">PSI 压力停顿指标</text>
+  <text x="674" y="672" font-size="9.5" fill="#4a4a4f">回收 / 调度反馈更一致、可观测；</text>
+  <text x="674" y="688" font-size="9.5" fill="#4a4a4f">当下容器运行时首选</text>
+
+  <!-- 底部一句话 -->
+  <rect x="30" y="712" width="1060" height="52" rx="12" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="48" y="736" font-size="10.5" font-weight="700" fill="#1d1d1f">一句话</text>
+  <text x="110" y="736" font-size="10" fill="#4a4a4f"><tspan font-weight="700" fill="#a5401f">buddy</tspan> 与 <tspan font-weight="700" fill="#2f6b4e">slab</tspan> 是同一分配链的上下两层——buddy 管大块解外部碎片，slab 管小对象解内部碎片，slab 的页正来自 buddy。</text>
+  <text x="110" y="756" font-size="9" fill="#8a97ab"><tspan font-weight="700" fill="#20375e">cgroup v1→v2</tspan> 是从「割裂多层级 + 分散软硬限」到「<tspan font-weight="700" fill="#8a6417">统一层级 + high/max 分级水位 + PSI 反馈</tspan>」的演进。</text>
+</svg>

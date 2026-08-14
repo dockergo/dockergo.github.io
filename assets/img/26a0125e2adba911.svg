@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="520" viewBox="0 0 1080 520" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect x="0" y="0" width="1080" height="520" fill="#fbfbfd"/>
+  <text x="40" y="38" font-size="16" font-weight="600" fill="#1d1d1f">VersionGraph 与 MVCC · 读快照如何选版本</text>
+  <text x="40" y="58" font-size="11.5" fill="#86868b">query snapshot → 拼连续 version 区间 → rowset 集合 → segment;读期间版本冻结</text>
+
+  <!-- 四段横链 -->
+  <rect x="30" y="82" width="220" height="150" rx="14" fill="#eef2fb" stroke="#c9d6ef" filter="url(#soft)"/>
+  <text x="140" y="106" font-size="12.5" font-weight="600" fill="#2f4a7c" text-anchor="middle">查询读快照</text>
+  <g font-size="9.5" fill="#5a6a8c" text-anchor="middle">
+    <text x="140" y="130">query 到达取 max_version</text>
+    <text x="140" y="152" font-size="12" font-weight="600" fill="#1d1d1f">snapshot = 12</text>
+    <text x="140" y="176">读 ≤12,后续导入不影响</text>
+    <text x="140" y="210" fill="#2f4a7c">读期间版本冻结</text>
+  </g>
+
+  <!-- 版本轴 -->
+  <rect x="290" y="82" width="480" height="150" rx="14" fill="#fbf7ef" stroke="#efe4cf" filter="url(#soft)"/>
+  <text x="308" y="106" font-size="12.5" font-weight="600" fill="#8a5a12">Tablet 版本轴(rowset)</text>
+  <text x="308" y="122" font-size="9" fill="#a98b52">TimestampedVersionTracker</text>
+  <g font-size="10" text-anchor="middle" fill="#8a5a12">
+    <rect x="308" y="134" width="120" height="40" rx="8" fill="#ffffff" stroke="#efe0c4"/><text x="368" y="158">[0-8] base</text>
+    <rect x="436" y="134" width="110" height="40" rx="8" fill="#ffffff" stroke="#efe0c4"/><text x="491" y="158">[9-10] cumu</text>
+    <rect x="554" y="134" width="90" height="40" rx="8" fill="#ffffff" stroke="#efe0c4"/><text x="599" y="158">[11]</text>
+    <rect x="652" y="134" width="100" height="40" rx="8" fill="#ffffff" stroke="#efe0c4"/><text x="702" y="158">[12]</text>
+  </g>
+  <rect x="308" y="184" width="444" height="34" rx="8" fill="#fdf1e7" stroke="#f2d9c2"/><text x="530" y="205" font-size="9.5" fill="#8a3a12" text-anchor="middle">[13-13] 导入中(未 publish)→ 不入可见集</text>
+
+  <!-- 选路 -->
+  <rect x="810" y="82" width="240" height="150" rx="14" fill="#f3f0fb" stroke="#ddd4f2" filter="url(#soft)"/>
+  <text x="930" y="106" font-size="12.5" font-weight="600" fill="#5b3fd6" text-anchor="middle">VersionGraph 选路</text>
+  <g font-size="9.5" fill="#8a6fc0" text-anchor="middle">
+    <text x="930" y="130">目标:拼 [0-12] 连续区间</text>
+    <text x="930" y="152" fill="#1d1d1f">最短路 [0-8]+[9-10]+[11]+[12]</text>
+    <text x="930" y="174">排除 [13] 未 publish</text>
+    <text x="930" y="196" fill="#a86a3a">有洞 → 报错 / 等待</text>
+    <text x="930" y="216" font-size="9">capture_consistent_rowsets</text>
+  </g>
+  <g stroke="#c7c7cc" stroke-width="1.6" fill="none">
+    <line x1="250" y1="150" x2="289" y2="150" marker-end="url(#ar)"/><text x="270" y="142" font-size="8" fill="#a1a1a6" text-anchor="middle">max=12</text>
+    <line x1="770" y1="150" x2="809" y2="150" marker-end="url(#ar)"/><text x="790" y="142" font-size="8" fill="#a1a1a6" text-anchor="middle">候选</text>
+  </g>
+
+  <!-- rowset 集合 -->
+  <rect x="30" y="252" width="480" height="110" rx="14" fill="#f5faf6" stroke="#e2ece5"/>
+  <text x="48" y="276" font-size="12.5" font-weight="600" fill="#2c5a3a">读取的 rowset 集合</text>
+  <g font-size="10" fill="#4e7a5c">
+    <text x="48" y="300">· 选中 4 个 rowset → 逐个读 segment</text>
+    <text x="48" y="322">· MoW:应用各 version 的 delete bitmap 跳旧行</text>
+    <text x="48" y="344" fill="#2c8a4a">最终行集 = 一致快照下的可见数据</text>
+  </g>
+  <line x1="930" y1="232" x2="510" y2="290" stroke="#c0a8e0" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#ar)"/>
+  <text x="700" y="262" font-size="9" fill="#8a6fc0" text-anchor="middle">选中集合</text>
+
+  <!-- Compaction 后语义保持 -->
+  <rect x="530" y="252" width="520" height="110" rx="14" fill="#faf4fb" stroke="#ecd9ef"/>
+  <text x="548" y="276" font-size="12.5" font-weight="600" fill="#7a3fb0">Compaction 后语义保持</text>
+  <g font-size="10" fill="#a06fc0">
+    <text x="548" y="300">· 合并前 [9-10]+[11]+[12] 三 rowset → cumulative 合成 [9-12]</text>
+    <text x="548" y="322">· 旧 rowset 仍被读快照引用 → 延迟 GC(不立即删)</text>
+    <text x="548" y="344">· version 连续 [0-8]+[9-12] 仍可拼任意 ≤12 快照</text>
+  </g>
+
+  <rect x="30" y="382" width="1020" height="116" rx="14" fill="#ffffff" stroke="#ececef" filter="url(#soft)"/>
+  <text x="50" y="406" font-size="13" font-weight="600" fill="#1d1d1f">MVCC 要点</text>
+  <g font-size="10.5" fill="#4a4e57">
+    <text x="50" y="430">· 读:锁定 max_version 快照,拼一段连续 rowset;读期间新导入(更大 version)完全不影响。</text>
+    <text x="50" y="452">· 写:每次导入生成新 version 区间;publish 定 version 后才进入可见集;version 必须连续无洞。</text>
+    <text x="50" y="474">· Compaction:只改物理组织(合小为大),不改版本可见语义;被引用的旧 rowset 延迟回收。</text>
+    <text x="50" y="490" font-size="9.5" fill="#86868b">写读互不阻塞的根本:读选一致 version 集,写只追加新 version,两者不共享可变状态。</text>
+  </g>
+</svg>

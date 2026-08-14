@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="500" viewBox="0 0 1080 500" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="500" fill="#fbfbfd"/>
+
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">五段管线 —— demux → decode →(filter)→ encode → mux</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">avformat + avcodec 协作 ｜ 中间可插滤镜;纯转封装 remux 可跳过 decode/encode ｜ 括注为源码位置</text>
+
+  <!-- 打开输入前置 -->
+  <rect x="30" y="82" width="1020" height="42" rx="11" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="50" y="108" font-size="10.5" fill="#4a2c6f"><tspan font-weight="600">① 打开输入:</tspan> avformat_open_input(demux.c:231) + avformat_find_stream_info(:2607) 探测流 → AVFormatContext</text>
+
+  <!-- 五段 y=150 h=118 -->
+  <!-- demux -->
+  <rect x="30" y="150" width="192" height="118" rx="12" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="126" y="178" font-size="12" font-weight="600" text-anchor="middle" fill="#5a3410">② demux 读包</text>
+  <text x="126" y="202" font-size="9" text-anchor="middle" fill="#93762e">av_read_frame</text>
+  <text x="126" y="220" font-size="8.5" text-anchor="middle" fill="#93762e">(demux.c:1588)</text>
+  <text x="126" y="244" font-size="9" text-anchor="middle" fill="#5a3410">从容器读出</text>
+  <text x="126" y="260" font-size="8.5" text-anchor="middle" fill="#93762e">压缩 AVPacket</text>
+
+  <!-- decode -->
+  <rect x="248" y="150" width="192" height="118" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="344" y="178" font-size="12" font-weight="600" text-anchor="middle" fill="#12402a">③ decode 解码</text>
+  <text x="344" y="202" font-size="9" text-anchor="middle" fill="#2f6f4f">send_packet(decode.c:730)</text>
+  <text x="344" y="220" font-size="9" text-anchor="middle" fill="#2f6f4f">receive_frame(avcodec.c:720)</text>
+  <text x="344" y="244" font-size="9" text-anchor="middle" fill="#12402a">得原始</text>
+  <text x="344" y="260" font-size="8.5" text-anchor="middle" fill="#2f6f4f">AVFrame</text>
+
+  <!-- filter -->
+  <rect x="466" y="150" width="148" height="118" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="540" y="178" font-size="12" font-weight="600" text-anchor="middle" fill="#1b2a4a">滤镜</text>
+  <text x="540" y="202" font-size="9" text-anchor="middle" fill="#5b7db1">AVFilterGraph</text>
+  <text x="540" y="226" font-size="9" text-anchor="middle" fill="#5b7db1">处理帧</text>
+  <text x="540" y="250" font-size="8.5" text-anchor="middle" fill="#8aa4c8">中间可插(可选)</text>
+
+  <!-- encode -->
+  <rect x="640" y="150" width="192" height="118" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="736" y="178" font-size="12" font-weight="600" text-anchor="middle" fill="#12402a">④ encode 编码</text>
+  <text x="736" y="202" font-size="9" text-anchor="middle" fill="#2f6f4f">send_frame(encode.c:544)</text>
+  <text x="736" y="220" font-size="9" text-anchor="middle" fill="#2f6f4f">receive_packet(:577)</text>
+  <text x="736" y="244" font-size="9" text-anchor="middle" fill="#12402a">得压缩</text>
+  <text x="736" y="260" font-size="8.5" text-anchor="middle" fill="#2f6f4f">AVPacket</text>
+
+  <!-- mux -->
+  <rect x="858" y="150" width="192" height="118" rx="12" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="954" y="178" font-size="12" font-weight="600" text-anchor="middle" fill="#5a3410">⑤ mux 写包</text>
+  <text x="954" y="202" font-size="9" text-anchor="middle" fill="#93762e">av_interleaved</text>
+  <text x="954" y="220" font-size="9" text-anchor="middle" fill="#93762e">_write_frame(mux.c:1223)</text>
+  <text x="954" y="244" font-size="9" text-anchor="middle" fill="#5a3410">封进容器</text>
+  <text x="954" y="260" font-size="8.5" text-anchor="middle" fill="#93762e">→ 输出文件</text>
+
+  <!-- 箭头 + 载体标注 -->
+  <path d="M222,209 L248,209" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M440,209 L466,209" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M614,209 L640,209" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M832,209 L858,209" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="235" y="146" font-size="8" text-anchor="middle" fill="#a1a1a6">packet</text>
+  <text x="453" y="146" font-size="8" text-anchor="middle" fill="#a1a1a6">frame</text>
+  <text x="627" y="146" font-size="8" text-anchor="middle" fill="#a1a1a6">frame</text>
+  <text x="845" y="146" font-size="8" text-anchor="middle" fill="#a1a1a6">packet</text>
+
+  <!-- remux 跳过 -->
+  <path d="M126,268 L126,320 L954,320 L954,268" stroke="#c7c7cc" stroke-width="1.3" stroke-dasharray="6 4" fill="none" marker-end="url(#ar)"/>
+  <rect x="400" y="300" width="280" height="40" rx="10" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="540" y="325" font-size="9.5" text-anchor="middle" fill="#5a3410">remux:压缩 packet 直接转封装,跳过 decode/encode</text>
+
+  <!-- 底部说明 -->
+  <rect x="30" y="360" width="1020" height="72" rx="12" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="50" y="384" font-size="11" font-weight="600" fill="#1d1d1f">要点</text>
+  <text x="50" y="405" font-size="9.5" fill="#6e6e73">五段管线 = libavformat(demux/mux 管容器)+ libavcodec(decode/encode 管编解码)协作;中间滤镜可选插入(见滤镜图篇)</text>
+  <text x="50" y="423" font-size="9.5" fill="#6e6e73">纯转封装(remux)只换容器不改编码,直接 packet demux→mux,跳过 decode/encode —— 快且无质量损失</text>
+
+  <text x="30" y="466" font-size="9" fill="#a1a1a6">源码基准 FFmpeg(git 1588bce) · libavformat/demux.c · libavcodec/decode.c encode.c · libavformat/mux.c</text>
+</svg>

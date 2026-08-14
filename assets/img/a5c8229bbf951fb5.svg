@@ -1,0 +1,204 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="720" viewBox="0 0 1080 720" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="aHot" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#0a84ff"/></marker>
+    <marker id="aCtl" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#7c5fe6"/></marker>
+    <marker id="aState" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#0f9e8e"/></marker>
+    <marker id="aFail" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#e8730f"/></marker>
+  </defs>
+
+  <rect width="1080" height="720" fill="#fbfbfd"/>
+
+  <!-- ===== 标题条 ===== -->
+  <rect x="0" y="0" width="1080" height="48" fill="#f4f5f7" stroke="#e6e6eb" data-tid="etcd原理_全景主线框架" data-lab="全景总览"/>
+  <text x="24" y="30" font-size="15" font-weight="700" fill="#1d1d1f">etcd 总架构 · 分布式控制面状态机</text>
+  <text x="288" y="30" font-size="11.5" fill="#8a8a90">写走 Raft 多数派 → 顺序 apply；读用 ReadIndex 免走日志 → 线性一致 + 高读吞吐</text>
+
+  <!-- ===== ① client 入口 ===== -->
+  <rect x="40" y="72" width="150" height="54" rx="11" fill="#eef0f3" stroke="#d2d6dd" filter="url(#soft)" data-tid="etcd原理_接触面_gRPC_API族" data-lab="接触面 gRPC API"/>
+  
+  <text x="60" y="94" font-size="11.5" font-weight="700" fill="#1d1d1f">client 入口</text>
+  <text x="60" y="112" font-size="9.5" fill="#8a8a90">etcdctl / clientv3 / k8s</text>
+
+  <!-- ===== 认证/RBAC（Control） ===== -->
+  <rect x="40" y="150" width="150" height="66" rx="11" fill="#eef0f3" stroke="#d2d6dd" filter="url(#soft)" data-tid="etcd原理_支撑_认证与权限" data-lab="认证与权限"/>
+  
+  <text x="60" y="171" font-size="11" font-weight="700" fill="#1d1d1f">认证 · RBAC</text>
+  <text x="60" y="188" font-size="9" fill="#5b6470">simpleToken / JWT 鉴权</text>
+  <text x="60" y="202" font-size="9" fill="#5b6470">role → key 区间权限</text>
+  <text x="60" y="213" font-size="8" fill="#a1a1a6">拦截器内</text>
+
+  <!-- ===== backend（State 持久层） ===== -->
+  <rect x="40" y="234" width="150" height="392" rx="12" fill="#e6f4f1" stroke="#b9dfd8" filter="url(#soft)" data-tid="etcd原理_支撑_backend" data-lab="backend 持久层"/>
+  
+  <text x="60" y="258" font-size="11" font-weight="700" fill="#0f6b5e">backend · boltdb</text>
+  <text x="56" y="284" font-size="9" fill="#2f6f5f">单文件 mmap B+tree</text>
+  <text x="56" y="306" font-size="9" fill="#2f6f5f">batchTx 批量写事务</text>
+  <text x="56" y="328" font-size="9" fill="#2f6f5f">读事务并发只读快照</text>
+  <text x="56" y="350" font-size="9" fill="#2f6f5f">MVCC 的 rev→KV 落此</text>
+  <text x="56" y="372" font-size="9" fill="#2f6f5f">quota 空间配额守门</text>
+  <text x="56" y="398" font-size="8.5" fill="#4c8567">defrag 回收碎片</text>
+  <text x="56" y="602" font-size="8" fill="#7fae9f">server/storage/backend</text>
+  <text x="56" y="616" font-size="7.5" fill="#9cc2b6">MVCC 与 WAL 之下的持久层</text>
+
+  <!-- ===== leader 节点外框 ===== -->
+  <rect x="215" y="66" width="600" height="560" rx="16" fill="#ffffff" stroke="#d0d0d6" filter="url(#soft)"/>
+  <text x="235" y="90" font-size="12" font-weight="700" fill="#1d1d1f">etcd Leader 节点 · 控制面状态机核心</text>
+
+  <!-- ① gRPC KV（Hot 入口） -->
+  <rect x="235" y="102" width="560" height="46" rx="9" fill="#eef0f3" stroke="#d2d6dd" data-tid="etcd原理_接触面_gRPC_API族" data-lab="gRPC KV 服务"/>
+  
+  <text x="255" y="122" font-size="10.5" font-weight="700" fill="#1d1d1f">① gRPC KV 服务（v3rpc）· 拦截器链：认证 → 配额 → 校验</text>
+  <text x="255" y="138" font-size="8.5" fill="#8a8a90"></text>
+
+  <!-- ② Propose（Hot） -->
+  <rect x="235" y="160" width="560" height="52" rx="9" fill="#eef0f3" stroke="#d2d6dd" data-tid="etcd原理_支撑_Raft共识" data-lab="EtcdServer Propose"/>
+  
+  <text x="255" y="180" font-size="10.5" font-weight="700" fill="#1d1d1f">② EtcdServer：编码 InternalRaftRequest → Propose 提交给 Raft</text>
+  <text x="255" y="198" font-size="8.5" fill="#8a8a90">Put processInternalRaftRequestOnce · Register(id) 阻塞到 apply</text>
+
+  <!-- ③ Raft 共识核心（Hot · 机器心脏，唯一浅蓝剖面） -->
+  <rect x="235" y="224" width="560" height="86" rx="10" fill="#e9f2ff" stroke="#a9ccf5" filter="url(#soft)" data-tid="etcd原理_支撑_Raft共识" data-lab="Raft 共识"/>
+  
+  <text x="255" y="244" font-size="11" font-weight="700" fill="#0a3d78">③ Raft 共识 · 复制状态机核心（go.etcd.io/raft/v3）</text>
+  <text x="255" y="264" font-size="9" fill="#2a5a92">追加 leader 日志 → MsgApp 复制 follower → 多数派 ack（quorum N/2+1）→ committed</text>
+  <text x="255" y="281" font-size="9" fill="#2a5a92">Ready 把 committed entries + 待持久化状态一并吐给上层 raftNode</text>
+  <text x="255" y="298" font-size="8.5" fill="#4a7ab0">同一序列在各副本确定性收敛 · 已 commit 必在多数派</text>
+  <text x="777" y="303" font-size="9.5" fill="#0a84ff" text-anchor="end" font-weight="600">Hot Path</text>
+
+  <!-- ④ raftNode Ready 循环（State：先落盘） -->
+  <rect x="235" y="322" width="270" height="94" rx="10" fill="#e6f4f1" stroke="#b9dfd8" data-tid="etcd原理_支撑_WAL与快照" data-lab="raftNode Ready 循环"/>
+  
+  <text x="255" y="342" font-size="10" font-weight="700" fill="#0f6b5e">④ raftNode Ready 循环</text>
+  <text x="255" y="362" font-size="9" fill="#2f6f5f">先写 WAL 落盘（fsync）</text>
+  <text x="255" y="378" font-size="9" fill="#2f6f5f">再发送消息给 peer</text>
+  <text x="255" y="394" font-size="9" fill="#2f6f5f">committed → 交 applier</text>
+  <text x="255" y="409" font-size="7.5" fill="#7fae9f">先持久化后应用（不可颠倒）</text>
+
+  <!-- WAL（State） -->
+  <rect x="525" y="322" width="270" height="94" rx="10" fill="#e6f4f1" stroke="#b9dfd8" data-tid="etcd原理_支撑_WAL与快照" data-lab="WAL 与快照"/>
+  
+  <text x="545" y="342" font-size="10" font-weight="700" fill="#0f6b5e">WAL · 预写日志</text>
+  <text x="545" y="362" font-size="9" fill="#2f6f5f">append-only 分段文件</text>
+  <text x="545" y="378" font-size="9" fill="#2f6f5f">crash 后回放恢复</text>
+  <text x="545" y="394" font-size="8.5" fill="#4c8567"></text>
+  <text x="545" y="409" font-size="7.5" fill="#7fae9f">fsync 延迟 = 写性能头号信号</text>
+
+  <!-- ⑤ applier（Hot 回落状态） -->
+  <rect x="235" y="428" width="560" height="50" rx="9" fill="#eef0f3" stroke="#d2d6dd" data-tid="etcd原理_支撑_MVCC存储" data-lab="applier 应用层"/>
+  
+  <text x="255" y="448" font-size="10.5" font-weight="700" fill="#1d1d1f">⑤ applier：按类型 apply（Put / Txn / Range / LeaseGrant …）</text>
+  <text x="255" y="465" font-size="8.5" fill="#8a8a90">applyEntryNormal · consistentIndex 持久化保证重启不重复 apply</text>
+
+  <!-- ⑥ MVCC（State） -->
+  <rect x="235" y="490" width="270" height="120" rx="10" fill="#e6f4f1" stroke="#b9dfd8" data-tid="etcd原理_支撑_MVCC存储" data-lab="MVCC 存储"/>
+  
+  <text x="255" y="510" font-size="10" font-weight="700" fill="#0f6b5e">⑥ MVCC 多版本存储</text>
+  <text x="255" y="530" font-size="9" fill="#2f6f5f">currentRev++（全局单调递增）</text>
+  <text x="255" y="546" font-size="9" fill="#2f6f5f">treeIndex：key → revision 链</text>
+  <text x="255" y="562" font-size="9" fill="#2f6f5f">boltdb：key=rev, val=KeyValue</text>
+  <text x="255" y="580" font-size="8.5" fill="#4c8567">treeIndex（内存 btree）</text>
+  <text x="255" y="596" font-size="7.5" fill="#7fae9f">读按 rev 查历史 → 一致性快照 / compaction 基础</text>
+
+  <!-- ⑦ Watch（State→通知） -->
+  <rect x="525" y="490" width="270" height="120" rx="10" fill="#e6f4f1" stroke="#b9dfd8" data-tid="etcd原理_支撑_Watch机制" data-lab="Watch 机制"/>
+  
+  <text x="545" y="510" font-size="10" font-weight="700" fill="#0f6b5e">⑦ Watch 事件</text>
+  <text x="545" y="530" font-size="9" fill="#2f6f5f">watchableStore 包裹 mvcc</text>
+  <text x="545" y="546" font-size="9" fill="#2f6f5f">synced / unsynced 两组</text>
+  <text x="545" y="562" font-size="9" fill="#2f6f5f">syncWatchers 按 rev 追赶推送</text>
+  <text x="545" y="580" font-size="8.5" fill="#4c8567"></text>
+  <text x="545" y="596" font-size="7.5" fill="#7fae9f">分组隔离背压 · applyWait.Trigger 唤醒②阻塞的 client</text>
+
+  <!-- ===== Follower 副本（Control 复制目标） ===== -->
+  <rect x="840" y="200" width="210" height="150" rx="12" fill="#eef0f3" stroke="#d2d6dd" filter="url(#soft)" data-tid="etcd原理_支撑_成员与集群" data-lab="成员与集群"/>
+  
+  <text x="860" y="222" font-size="10.5" font-weight="700" fill="#1d1d1f">Follower ×(N-1)</text>
+  <text x="860" y="244" font-size="9" fill="#5b6470">收 MsgApp → 写日志 → 回</text>
+  <text x="860" y="262" font-size="9" fill="#5b6470">各自 apply 到本地 MVCC</text>
+  <text x="860" y="280" font-size="9" fill="#5b6470">对等全量副本 · 不分片</text>
+  <text x="860" y="304" font-size="8.5" fill="#8a8a90">leader 挂 → Raft 重选举</text>
+  <text x="860" y="322" font-size="8.5" fill="#8a8a90">已 commit 数据不丢</text>
+  <text x="1032" y="343" font-size="9.5" fill="#7c5fe6" text-anchor="end" font-weight="600">Control</text>
+
+  <!-- ===== 线性一致读 ReadIndex（Control + Opt） ===== -->
+  <rect x="840" y="372" width="210" height="116" rx="12" fill="#eef0f3" stroke="#d2d6dd" filter="url(#soft)" data-tid="etcd原理_支撑_线性一致读" data-lab="线性一致读"/>
+  
+  <text x="860" y="393" font-size="10" font-weight="700" fill="#1d1d1f">线性一致读 ReadIndex</text>
+  <text x="860" y="412" font-size="9" fill="#5b6470">向 Raft 请 ReadIndex 拿 commit</text>
+  <text x="860" y="430" font-size="9" fill="#5b6470">等本地 applied 追上该 index</text>
+  <text x="860" y="448" font-size="9" fill="#5b6470">再读 MVCC ⑥ 保证读到最新</text>
+  <text x="860" y="466" font-size="8.5" fill="#8a8a90"></text>
+  <text x="860" y="482" font-size="7.5" fill="#a1a1a6">读不写日志 = 高读吞吐（Opt）</text>
+
+  <!-- ===== Lease 租约（Control） ===== -->
+  <rect x="840" y="506" width="210" height="116" rx="12" fill="#eef0f3" stroke="#d2d6dd" filter="url(#soft)" data-tid="etcd原理_支撑_Lease租约" data-lab="Lease 租约"/>
+  
+  <text x="860" y="527" font-size="10" font-weight="700" fill="#1d1d1f">Lease 租约</text>
+  <text x="860" y="546" font-size="9" fill="#5b6470">Grant → TTL；KeepAlive 续期</text>
+  <text x="860" y="564" font-size="9" fill="#5b6470">leader 检测过期 → 删挂靠</text>
+  <text x="860" y="582" font-size="9" fill="#5b6470">checkpoint 走 raft 同步剩余 TTL</text>
+  <text x="860" y="600" font-size="8.5" fill="#8a8a90">Grant</text>
+  <text x="860" y="616" font-size="7.5" fill="#a1a1a6">防 leader 切换后 TTL 重置</text>
+
+  <!-- ===== Hot 主脊：client → gRPC → Propose → Raft → applier → MVCC ===== -->
+  <g stroke="#0a84ff" stroke-width="2.2" fill="none">
+    <line x1="190" y1="99" x2="233" y2="120" marker-end="url(#aHot)"/>
+    <line x1="515" y1="148" x2="515" y2="158" marker-end="url(#aHot)"/>
+    <line x1="515" y1="212" x2="515" y2="222" marker-end="url(#aHot)"/>
+    <line x1="515" y1="416" x2="515" y2="426" marker-end="url(#aHot)"/>
+    <line x1="370" y1="478" x2="370" y2="488" marker-end="url(#aHot)"/>
+  </g>
+  <text x="524" y="425" font-size="8.5" font-weight="600" fill="#0a84ff">apply Hot</text>
+
+  <!-- Raft → Ready（committed 下发，Hot） -->
+  <line x1="370" y1="310" x2="370" y2="320" stroke="#0a84ff" stroke-width="2.2" fill="none" marker-end="url(#aHot)"/>
+
+  <!-- ===== State：Ready→WAL 落盘，WAL→backend，MVCC→backend，MVCC→Watch ===== -->
+  <g stroke="#0f9e8e" stroke-width="1.6" fill="none">
+    <line x1="505" y1="369" x2="523" y2="369" marker-end="url(#aState)"/>
+    <path d="M660,416 L660,600 L195,600" marker-end="url(#aState)"/>
+    <line x1="195" y1="545" x2="233" y2="545" marker-end="url(#aState)"/>
+    <line x1="505" y1="550" x2="523" y2="550" marker-end="url(#aState)"/>
+  </g>
+  <text x="509" y="364" font-size="8" fill="#0f9e8e">先写WAL</text>
+  <text x="509" y="545" font-size="8" fill="#0f9e8e">推事件</text>
+  <text x="200" y="540" font-size="8" fill="#0f9e8e">rev→KV 落盘</text>
+
+  <!-- ===== Control：auth拦截器、MsgApp复制/ack、ReadIndex问raft、Lease apply ===== -->
+  <g stroke="#7c5fe6" stroke-width="1.6" stroke-dasharray="6 4" fill="none">
+    <line x1="190" y1="176" x2="233" y2="130" marker-end="url(#aCtl)"/>
+    <path d="M840,255 L797,258" marker-end="url(#aCtl)"/>
+    <path d="M840,412 L797,300" marker-end="url(#aCtl)"/>
+    <path d="M840,545 L797,455" marker-end="url(#aCtl)"/>
+  </g>
+  <text x="196" y="150" font-size="8" fill="#7c5fe6">拦截器鉴权</text>
+  <text x="806" y="252" font-size="8" fill="#7c5fe6">MsgApp 复制</text>
+  <text x="806" y="360" font-size="8" fill="#7c5fe6">问 commitIndex</text>
+  <text x="806" y="500" font-size="8" fill="#7c5fe6">LeaseGrant apply</text>
+
+  <!-- follower ack 回 raft（Control 细线） -->
+  <path d="M838,300 L797,278" stroke="#7c5fe6" stroke-width="1.4" stroke-dasharray="4 3" fill="none" marker-end="url(#aCtl)"/>
+  <text x="806" y="320" font-size="7.5" fill="#9a86d6">ack</text>
+
+  <!-- ===== Failure：分区→少数派拒写(CP)，leader切换→线性读重试，snapshot 追赶 ===== -->
+  <path d="M945,350 L945,368" stroke="#e8730f" stroke-width="1.6" stroke-dasharray="3 3" fill="none" marker-end="url(#aFail)"/>
+  <text x="953" y="364" font-size="8" fill="#e8730f">leader 切换 → 线性读重试</text>
+
+  <!-- ===== Opt：backend batchTx 批量刷盘（灰点） ===== -->
+  <line x1="118" y1="380" x2="118" y2="398" stroke="#c7c7cc" stroke-width="1.5" stroke-dasharray="1.5 3" fill="none"/>
+
+  <!-- ===== 底部 铭牌：五路径图例 + 设计张力 ===== -->
+  <rect x="215" y="632" width="600" height="60" rx="11" fill="#f4f5f7" stroke="#e6e6eb"/>
+  <text x="235" y="654" font-size="10.5" font-weight="700" fill="#1d1d1f">设计张力 · 线性一致（强）vs 读吞吐</text>
+  <text x="235" y="674" font-size="9" fill="#5b6470">写必走 Raft 多数派复制 + 顺序 apply（正确）；读用 ReadIndex 免写日志（吞吐）。分区时少数派拒写 = CP 取向。</text>
+
+  <g font-size="9.5" fill="#5b6470">
+    <line x1="40" y1="656" x2="66" y2="656" stroke="#0a84ff" stroke-width="2.2"/><text x="72" y="659">Hot 写主脊</text>
+    <line x1="40" y1="674" x2="66" y2="674" stroke="#0f9e8e" stroke-width="1.6"/><text x="72" y="677">State 落盘/派生</text>
+    <line x1="40" y1="692" x2="66" y2="692" stroke="#7c5fe6" stroke-width="1.6" stroke-dasharray="6 4"/><text x="72" y="695">Control 复制/读/租约</text>
+    <line x1="838" y1="648" x2="864" y2="648" stroke="#e8730f" stroke-width="1.6" stroke-dasharray="3 3"/><text x="870" y="651">Failure 分区/切换</text>
+    <line x1="838" y1="668" x2="864" y2="668" stroke="#c7c7cc" stroke-width="1.5" stroke-dasharray="1.5 3"/><text x="870" y="671">Opt ReadIndex/批刷/checkpoint</text>
+    <text x="838" y="691" font-size="8" fill="#a1a1a6">每 follower = 对等全量副本，不分片</text>
+  </g>
+</svg>

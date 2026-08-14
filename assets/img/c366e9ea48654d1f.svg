@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="530" viewBox="0 0 1080 530" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="530" fill="#fbfbfd"/>
+
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">AVFrame · 原始帧 —— decode 的产物、encode 的输入、滤镜的处理对象</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">libavutil/frame.h:472 · 解码后原始数据(像素/采样) · 所有 data 指针必须指向 buf/extended_buf 之一(:479)</text>
+
+  <!-- 左:AVFrame 结构卡(绿=原始态/解码产物) -->
+  <rect x="30" y="76" width="560" height="424" rx="13" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="54" y="106" font-size="14" font-weight="700" fill="#12402a">AVFrame</text>
+  <text x="54" y="125" font-size="9.5" fill="#2f6f4f">struct · frame.h:472 · 原始像素图 / 一段音频采样</text>
+
+  <rect x="54" y="138" width="512" height="60" rx="10" fill="#ffffff" stroke="#ececf1"/>
+  <text x="74" y="162" font-size="12" font-weight="600" fill="#1d1d1f">data[AV_NUM_DATA_POINTERS=8]</text>
+  <text x="546" y="162" font-size="9" text-anchor="end" fill="#2f6f4f">:493</text>
+  <text x="74" y="184" font-size="9.5" fill="#6e6e73">多平面指针 · 平面 YUV 的 Y/U/V 各占一个指针</text>
+
+  <rect x="54" y="206" width="512" height="60" rx="10" fill="#ffffff" stroke="#ececf1"/>
+  <text x="74" y="230" font-size="12" font-weight="600" fill="#1d1d1f">linesize[]</text>
+  <text x="546" y="230" font-size="9" text-anchor="end" fill="#2f6f4f">:517</text>
+  <text x="74" y="252" font-size="9.5" fill="#6e6e73">每平面行字节数(含对齐) · 别当连续内存处理</text>
+
+  <rect x="54" y="274" width="248" height="58" rx="10" fill="#ffffff" stroke="#ececf1"/>
+  <text x="74" y="298" font-size="12" font-weight="600" fill="#1d1d1f">width / height</text>
+  <text x="282" y="298" font-size="9" text-anchor="end" fill="#2f6f4f">:544</text>
+  <text x="74" y="319" font-size="9.5" fill="#6e6e73">视频帧宽高</text>
+
+  <rect x="318" y="274" width="248" height="58" rx="10" fill="#ffffff" stroke="#ececf1"/>
+  <text x="338" y="298" font-size="12" font-weight="600" fill="#1d1d1f">nb_samples</text>
+  <text x="546" y="298" font-size="9" text-anchor="end" fill="#2f6f4f">:552</text>
+  <text x="338" y="319" font-size="9.5" fill="#6e6e73">音频每声道采样数</text>
+
+  <rect x="54" y="340" width="512" height="60" rx="10" fill="#f4eefb" stroke="#d9c7ec"/>
+  <text x="74" y="364" font-size="12" font-weight="600" fill="#3d2a5a">format</text>
+  <text x="546" y="364" font-size="9" text-anchor="end" fill="#7a5aa0">:559</text>
+  <text x="74" y="386" font-size="9.5" fill="#7a5aa0">视频存 AVPixelFormat · 音频存 AVSampleFormat</text>
+
+  <rect x="54" y="408" width="512" height="56" rx="10" fill="#ffffff" stroke="#ececf1"/>
+  <text x="74" y="432" font-size="12" font-weight="600" fill="#1d1d1f">buf[]</text>
+  <text x="546" y="432" font-size="9" text-anchor="end" fill="#2f6f4f">:649</text>
+  <text x="74" y="452" font-size="9.5" fill="#6e6e73">引用计数缓冲 · data 指针指向它,零拷贝共享</text>
+
+  <text x="54" y="486" font-size="9" fill="#2f6f4f">对照 AVPacket:frame 是原始态(像素/采样),packet 是压缩态(编码字节)</text>
+
+  <!-- 右上:多平面 YUV 示意 -->
+  <rect x="614" y="76" width="436" height="200" rx="13" fill="#ffffff" stroke="#e4e4ea" filter="url(#soft)"/>
+  <text x="636" y="104" font-size="12" font-weight="600" fill="#1d1d1f">多平面示意 · YUV420P 的 data[0/1/2]</text>
+  <rect x="636" y="118" width="126" height="72" rx="9" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="699" y="150" font-size="11" text-anchor="middle" fill="#1b2a4a">data[0] = Y</text>
+  <text x="699" y="170" font-size="8.5" text-anchor="middle" fill="#5b7db1">亮度平面</text>
+  <rect x="774" y="118" width="126" height="72" rx="9" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="837" y="150" font-size="11" text-anchor="middle" fill="#12402a">data[1] = U</text>
+  <text x="837" y="170" font-size="8.5" text-anchor="middle" fill="#2f6f4f">色度平面</text>
+  <rect x="912" y="118" width="118" height="72" rx="9" fill="#fff7e6" stroke="#e8cf9a"/>
+  <text x="971" y="150" font-size="11" text-anchor="middle" fill="#5a3410">data[2] = V</text>
+  <text x="971" y="170" font-size="8.5" text-anchor="middle" fill="#93762e">色度平面</text>
+  <text x="636" y="216" font-size="9.5" fill="#6e6e73">每平面各自 linesize(含行对齐),不是一块连续 buffer;</text>
+  <text x="636" y="234" font-size="9.5" fill="#6e6e73">打包格式(RGB)只用 data[0],平面格式(YUV)用多个。</text>
+  <text x="636" y="258" font-size="9" fill="#86868b">音频同理:平面采样格式每声道一个 data 指针</text>
+
+  <!-- 右下:frame 在管线中的位置 -->
+  <rect x="614" y="292" width="436" height="208" rx="13" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="636" y="320" font-size="12" font-weight="600" fill="#3d2a5a">frame 在管线中 · 原始态数据</text>
+  <rect x="636" y="336" width="120" height="46" rx="9" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="696" y="363" font-size="10" text-anchor="middle" fill="#12402a">decode 产出</text>
+  <rect x="778" y="336" width="120" height="46" rx="9" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="838" y="363" font-size="10" text-anchor="middle" fill="#1b2a4a">滤镜处理</text>
+  <rect x="920" y="336" width="110" height="46" rx="9" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="975" y="363" font-size="10" text-anchor="middle" fill="#12402a">encode 输入</text>
+  <path d="M756,359 L776,359" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M898,359 L918,359" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="636" y="410" font-size="9.5" fill="#7a5aa0">frame 是 decode 的产物 · 滤镜(scale/crop)的处理对象</text>
+  <text x="636" y="430" font-size="9.5" fill="#7a5aa0">· 也是 encode 的输入 —— 三段都作用于原始帧</text>
+  <text x="636" y="454" font-size="9" fill="#9a7ac0">滤镜只处理 AVFrame(原始),不碰 AVPacket(压缩)</text>
+  <text x="636" y="478" font-size="9" fill="#9a7ac0">故滤镜图必在 decode 之后、encode 之前</text>
+
+  <text x="30" y="520" font-size="9" fill="#a1a1a6">源码基准 FFmpeg(1588bce) · AVFrame=原始态载体(data[8] 多平面/linesize 含对齐/format 存像素或采样格式/buf 引用计数)</text>
+</svg>

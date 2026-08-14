@@ -1,0 +1,113 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="556" viewBox="0 0 1080 556" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="556" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">ORC 原理 · 双维模型（能力域 × 执行时机）</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">全前台无后台——纯文件格式库,进程内同步读写;接触面(读写 API + 向量批) + 支撑 6 能力域全部落在前台写/读路径,无守护线程</text>
+  <text x="30" y="64" font-size="9" fill="#a1a1a6">维度：能力域（↓ 接触面 / 支撑）× 执行时机（→ 前台 / 后台）</text>
+
+  <!-- timing column headers -->
+  <rect x="150" y="72" width="620" height="28" rx="9" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="460" y="90" font-size="11" font-weight="700" text-anchor="middle" fill="#12402a">执行时机 · 前台（同步 · 进程内 · ORC 全部能力落此）</text>
+  <rect x="782" y="72" width="268" height="28" rx="9" fill="#f7f7f9" stroke="#e3e3e8" filter="url(#soft)"/>
+  <text x="916" y="90" font-size="11" font-weight="700" text-anchor="middle" fill="#6e6e73">后台（守护 / 异步）</text>
+
+  <!-- row label: contact surface -->
+  <rect x="30" y="104" width="112" height="74" rx="12" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="86" y="136" font-size="11" font-weight="700" text-anchor="middle" fill="#3d2a5a">接触面</text>
+  <text x="86" y="154" font-size="8.5" text-anchor="middle" fill="#8a6db3">对接引擎</text>
+
+  <!-- contact surface · foreground cells -->
+  <rect x="150" y="104" width="305" height="74" rx="12" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="164" y="126" font-size="10.5" font-weight="700" fill="#3d2a5a">读写 API</text>
+  <text x="164" y="146" font-size="8.6" fill="#8a6db3">WriterImpl / ReaderImpl / RecordReader</text>
+  <text x="164" y="163" font-size="8.6" fill="#8a6db3">TreeWriter / TreeReader 树(镜像类型树)</text>
+
+  <rect x="465" y="104" width="305" height="74" rx="12" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="479" y="126" font-size="10.5" font-weight="700" fill="#3d2a5a">VectorizedRowBatch 向量批</text>
+  <text x="479" y="146" font-size="8.6" fill="#8a6db3">列式内存批(默认 1024 行)</text>
+  <text x="479" y="163" font-size="8.6" fill="#8a6db3">引擎给取的数据单位</text>
+
+  <!-- row label: 6 supports -->
+  <rect x="30" y="182" width="112" height="166" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="86" y="258" font-size="11" font-weight="700" text-anchor="middle" fill="#1b2a4a">支撑 ×6</text>
+  <text x="86" y="276" font-size="8.5" text-anchor="middle" fill="#5b7db1">格式内核</text>
+
+  <!-- 6 supports container -->
+  <rect x="150" y="182" width="620" height="166" rx="13" fill="#f3f7fc" stroke="#cfe0f2"/>
+  <text x="160" y="200" font-size="10" font-weight="700" fill="#274a78">6 条支撑主线（全部前台执行 · 无异步）</text>
+
+  <rect x="158" y="210" width="192" height="60" rx="10" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="254" y="234" font-size="10.5" font-weight="700" text-anchor="middle" fill="#1b2a4a">文件布局</text>
+  <text x="254" y="252" font-size="8.2" text-anchor="middle" fill="#5b7db1">4 段 + 倒读定位（核心）</text>
+
+  <rect x="364" y="210" width="192" height="60" rx="10" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="460" y="234" font-size="10.5" font-weight="700" text-anchor="middle" fill="#12402a">列编码</text>
+  <text x="460" y="252" font-size="8.2" text-anchor="middle" fill="#2f6f4f">stream + RLE + 字典</text>
+
+  <rect x="570" y="210" width="192" height="60" rx="10" fill="#e7f0fb" stroke="#b9d2ef" filter="url(#soft)"/>
+  <text x="666" y="234" font-size="10.5" font-weight="700" text-anchor="middle" fill="#1b2a4a">行组与索引</text>
+  <text x="666" y="252" font-size="8.2" text-anchor="middle" fill="#5b7db1">stride 10000 · seek/skip</text>
+
+  <rect x="158" y="280" width="192" height="60" rx="10" fill="#fbeaea" stroke="#e7c3c3" filter="url(#soft)"/>
+  <text x="254" y="304" font-size="10.5" font-weight="700" text-anchor="middle" fill="#4a1414">谓词下推 SARG</text>
+  <text x="254" y="322" font-size="8.2" text-anchor="middle" fill="#7a2a2a">统计+布隆跳 stripe/RG</text>
+
+  <rect x="364" y="280" width="192" height="60" rx="10" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="460" y="304" font-size="10.5" font-weight="700" text-anchor="middle" fill="#5a3410">列统计与布隆</text>
+  <text x="460" y="322" font-size="8.2" text-anchor="middle" fill="#93762e">3 级 min/max/count/sum</text>
+
+  <rect x="570" y="280" width="192" height="60" rx="10" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="666" y="304" font-size="10.5" font-weight="700" text-anchor="middle" fill="#3d2a5a">类型系统</text>
+  <text x="666" y="322" font-size="8.2" text-anchor="middle" fill="#8a6db3">TypeDescription · 列 ID</text>
+
+  <!-- background column (empty for both bands) -->
+  <rect x="782" y="104" width="268" height="244" rx="13" fill="#f7f7f9" stroke="#e3e3e8" filter="url(#soft)"/>
+  <text x="916" y="182" font-size="34" font-weight="700" text-anchor="middle" fill="#c3c3c9">无</text>
+  <text x="916" y="212" font-size="9.4" text-anchor="middle" fill="#8e8e93">无守护线程 / 后台异步任务</text>
+  <text x="916" y="230" font-size="9.4" text-anchor="middle" fill="#8e8e93">无 compaction / merge / flush 守护</text>
+  <text x="916" y="252" font-size="9.4" font-weight="700" text-anchor="middle" fill="#6e6e73">纯文件格式库,进程内同步读写</text>
+  <text x="916" y="284" font-size="8.4" text-anchor="middle" fill="#a1a1a6">对比:LSM 引擎有后台 compaction;</text>
+  <text x="916" y="300" font-size="8.4" text-anchor="middle" fill="#a1a1a6">ORC 只是被链接调用的读写库,无自有进程</text>
+
+  <!-- capabilities descend into foreground flow -->
+  <path d="M460,348 L460,360" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <!-- foreground execution flow -->
+  <rect x="30" y="360" width="1020" height="150" rx="14" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="44" y="380" font-size="11" font-weight="700" fill="#1d1d1f">前台执行流（同步链条 · 无后台介入）</text>
+
+  <!-- write path -->
+  <rect x="44" y="399" width="48" height="30" rx="9" fill="#fff7e6" stroke="#e8cf9a"/>
+  <text x="68" y="418" font-size="12" font-weight="700" text-anchor="middle" fill="#5a3410">写</text>
+  <rect x="100" y="392" width="300" height="44" rx="10" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="250" y="410" font-size="9.6" font-weight="600" text-anchor="middle" fill="#5a3410">TreeWriter 逐列攒 stream</text>
+  <text x="250" y="426" font-size="8.2" text-anchor="middle" fill="#93762e">每列一 writer,镜像类型树</text>
+  <rect x="420" y="392" width="300" height="44" rx="10" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="570" y="410" font-size="9.6" font-weight="600" text-anchor="middle" fill="#5a3410">满 64MB / 行数上限 → flush stripe</text>
+  <text x="570" y="426" font-size="8.2" text-anchor="middle" fill="#93762e">先 index streams 后 data streams</text>
+  <rect x="740" y="392" width="300" height="44" rx="10" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="890" y="410" font-size="9.6" font-weight="600" text-anchor="middle" fill="#5a3410">收尾写 footer + postscript</text>
+  <text x="890" y="426" font-size="8.2" text-anchor="middle" fill="#93762e">stripe 信息 / 类型 / 文件级统计</text>
+  <path d="M400,414 L420,414" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M720,414 L740,414" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <!-- read path -->
+  <rect x="44" y="457" width="48" height="30" rx="9" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="68" y="476" font-size="12" font-weight="700" text-anchor="middle" fill="#1b2a4a">读</text>
+  <rect x="100" y="450" width="300" height="44" rx="10" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="250" y="468" font-size="9.6" font-weight="600" text-anchor="middle" fill="#1b2a4a">末 16KB 倒读 postscript→footer</text>
+  <text x="250" y="484" font-size="8.2" text-anchor="middle" fill="#5b7db1">一次小 IO 拿全文件地图</text>
+  <rect x="420" y="450" width="300" height="44" rx="10" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="570" y="468" font-size="9.6" font-weight="600" text-anchor="middle" fill="#1b2a4a">SARG + 统计/布隆 剪枝</text>
+  <text x="570" y="484" font-size="8.2" text-anchor="middle" fill="#5b7db1">跳 stripe / row-group</text>
+  <rect x="740" y="450" width="300" height="44" rx="10" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="890" y="468" font-size="9.6" font-weight="600" text-anchor="middle" fill="#12402a">TreeReader 解码填 batch</text>
+  <text x="890" y="484" font-size="8.2" text-anchor="middle" fill="#2f6f4f">存活 row-group → VectorizedRowBatch</text>
+  <path d="M400,472 L420,472" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M720,472 L740,472" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <text x="30" y="534" font-size="9" fill="#a1a1a6">一句话:ORC 无后台维度——写(TreeWriter 攒 stream→flush stripe→footer)与读(倒读 footer→剪 stripe/RG→TreeReader 填 batch)都在前台同步完成,被引擎/表格式进程内调用</text>
+</svg>

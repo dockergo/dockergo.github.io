@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="480" viewBox="0 0 920 480" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="920" height="480" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">类型断言与类型 switch · x.(T) / x.(I) / switch x.(type)</text>
+  <text x="30" y="49" font-size="10.5" fill="#6e6e73">接口「向下转型」的唯一安全方式——编译期无法确定的类型关系在此运行期检查</text>
+
+  <!-- x.(T) assert to concrete type (blue = concrete) -->
+  <rect x="30" y="66" width="285" height="290" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="46" y="92" font-size="13" font-weight="600" fill="#1b2a4a">x.(T) · 断言到具体类型</text>
+  <text x="46" y="110" font-size="10.5" fill="#5b7db1">目标 T 是具体类型</text>
+
+  <rect x="46" y="122" width="253" height="56" rx="9" fill="#ffffff" stroke="#bcd0ec"/>
+  <text x="60" y="144" font-size="11" font-weight="600" fill="#1b2a4a">比较类型描述符是否相等</text>
+  <text x="60" y="163" font-size="10" fill="#5b7db1">接口 _type / itab.Type  ==  T 的 _type ?</text>
+
+  <line x1="172" y1="178" x2="172" y2="198" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <rect x="46" y="202" width="253" height="56" rx="9" fill="#eff9f2" stroke="#bfe0c8"/>
+  <text x="60" y="224" font-size="11" font-weight="600" fill="#1d4a2b">相等 → 取出 data</text>
+  <text x="60" y="243" font-size="10" fill="#4a8c60">断言成功，得到 T 类型的值</text>
+
+  <rect x="46" y="270" width="253" height="70" rx="9" fill="#fbeeee" stroke="#f0c4c4"/>
+  <text x="60" y="292" font-size="11" font-weight="600" fill="#7a1f1f">不等 → panic</text>
+  <text x="60" y="311" font-size="10" fill="#b15b5b">「, ok」形式则返回 (零值, false)</text>
+  <text x="60" y="329" font-size="10" fill="#b15b5b">v, ok := x.(T)</text>
+
+  <!-- x.(I) assert to interface (purple = interface) -->
+  <rect x="330" y="66" width="285" height="290" rx="13" fill="#f5f0fb" stroke="#ddcdf0" filter="url(#soft)"/>
+  <text x="346" y="92" font-size="13" font-weight="600" fill="#3d2a5a">x.(I) · 断言到接口</text>
+  <text x="346" y="110" font-size="10.5" fill="#7d5bb1">目标 I 是接口类型</text>
+
+  <rect x="346" y="122" width="253" height="56" rx="9" fill="#ffffff" stroke="#ddcdf0"/>
+  <text x="360" y="144" font-size="11" font-weight="600" fill="#3d2a5a">需目标接口 I 的 itab</text>
+  <text x="360" y="163" font-size="10" fill="#7d5bb1">assertE2I · iface.go:459</text>
+
+  <line x1="472" y1="178" x2="472" y2="198" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <rect x="346" y="202" width="253" height="56" rx="9" fill="#ffffff" stroke="#ddcdf0"/>
+  <text x="360" y="224" font-size="11" font-weight="600" fill="#3d2a5a">typeAssert · iface.go:477</text>
+  <text x="360" y="243" font-size="10" fill="#7d5bb1">解析 (动态类型, I) → itab</text>
+
+  <line x1="472" y1="258" x2="472" y2="278" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <rect x="346" y="282" width="253" height="58" rx="9" fill="#fdf6ec" stroke="#f0dcaf"/>
+  <text x="360" y="304" font-size="11" font-weight="600" fill="#6b4e16">每断言点缓存 abi.TypeAssert</text>
+  <text x="360" y="323" font-size="10" fill="#a9822f">记住上次命中的 itab · 热路径免查全局表</text>
+
+  <!-- type switch (blue -> uses Hash) -->
+  <rect x="630" y="66" width="260" height="290" rx="13" fill="#eef7f0" stroke="#bfe0c8" filter="url(#soft)"/>
+  <text x="646" y="92" font-size="13" font-weight="600" fill="#1d4a2b">switch x.(type)</text>
+  <text x="646" y="110" font-size="10.5" fill="#4a8c60">类型 switch · 多分支分派</text>
+
+  <rect x="646" y="122" width="228" height="56" rx="9" fill="#ffffff" stroke="#bfe0c8"/>
+  <text x="660" y="144" font-size="11" font-weight="600" fill="#1d4a2b">用 itab.Hash / _type.Hash</text>
+  <text x="660" y="163" font-size="10" fill="#4a8c60">快速分派到匹配的 case</text>
+
+  <line x1="760" y1="178" x2="760" y2="198" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <rect x="646" y="202" width="228" height="30" rx="8" fill="#ffffff" stroke="#bfe0c8"/>
+  <text x="660" y="221" font-size="10.5" fill="#3a3a3c">case int:  → Hash 匹配</text>
+  <rect x="646" y="238" width="228" height="30" rx="8" fill="#ffffff" stroke="#bfe0c8"/>
+  <text x="660" y="257" font-size="10.5" fill="#3a3a3c">case io.Reader: → 查 itab</text>
+  <rect x="646" y="274" width="228" height="30" rx="8" fill="#ffffff" stroke="#bfe0c8"/>
+  <text x="660" y="293" font-size="10.5" fill="#3a3a3c">default: → 兜底</text>
+  <text x="646" y="326" font-size="10" fill="#4a8c60">通常比连续 .(T),ok 断言快</text>
+
+  <!-- bottom note (amber) -->
+  <rect x="30" y="376" width="860" height="80" rx="12" fill="#fdf6ec" stroke="#f0dcaf" filter="url(#soft)"/>
+  <text x="46" y="401" font-size="12" font-weight="600" fill="#6b4e16">性能与工程要点</text>
+  <text x="46" y="422" font-size="10.5" fill="#a9822f">· x.(T) 只需比较类型描述符指针，最轻；x.(I) 需解析 itab，per-site 缓存把重复断言降到近 O(1)。</text>
+  <text x="46" y="441" font-size="10.5" fill="#a9822f">· 类型 switch 用 Hash 分派，多类型判定优于连续断言；断言失败无 ok 形式会 panic。</text>
+</svg>

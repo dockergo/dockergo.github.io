@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="420" viewBox="0 0 1020 420"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1020" height="420" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">算子的即时执行与操作族 · eager 立算立得</text>
+
+  <rect x="30" y="56" width="470" height="150" rx="14" fill="#eafaf1" stroke="#bce6cd" filter="url(#soft)"/>
+  <text x="48" y="80" font-size="12.5" font-weight="600" fill="#0f5132">即时执行（eager）</text>
+  <rect x="48" y="96" width="200" height="40" rx="9" fill="#ffffff" stroke="#bce6cd"/><text x="148" y="121" font-size="9.5" fill="#0f5132" text-anchor="middle">z = x + y</text>
+  <rect x="288" y="96" width="184" height="40" rx="9" fill="#ffffff" stroke="#bce6cd"/><text x="380" y="121" font-size="9.5" fill="#0f5132" text-anchor="middle">立刻得到结果张量 z</text>
+  <line x1="248" y1="116" x2="288" y2="116" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <text x="48" y="160" font-size="9.5" fill="#3f8f66">不攒图、不延迟——每个 Python 语句同步返回结果</text>
+  <text x="48" y="180" font-size="9.5" fill="#3f8f66">可 print(z)、断点看值、按值分支——研究/调试友好</text>
+  <text x="48" y="198" font-size="9" fill="#5aa06f">代价是逐算子派发开销（torch.compile 补）</text>
+
+  <rect x="520" y="56" width="470" height="150" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="538" y="80" font-size="12.5" font-weight="600" fill="#1b2a4a">函数式 vs 原地（in-place）</text>
+  <rect x="538" y="96" width="210" height="46" rx="9" fill="#ffffff" stroke="#bcd0ec"/><text x="643" y="116" font-size="9.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">add：返回新张量</text><text x="643" y="132" font-size="8.5" fill="#5b7db1" text-anchor="middle">不改输入，安全</text>
+  <rect x="762" y="96" width="210" height="46" rx="9" fill="#fff7e6" stroke="#f0dcae"/><text x="867" y="116" font-size="9.5" font-weight="600" fill="#7a4d00" text-anchor="middle">add_：原地改（尾下划线）</text><text x="867" y="132" font-size="8.5" fill="#9a7328" text-anchor="middle">省内存，但可能破坏 autograd</text>
+  <text x="538" y="162" font-size="9.5" fill="#5b7db1">约定：方法名带 `_` 后缀 = 原地修改（add_/relu_/zero_）</text>
+  <text x="538" y="182" font-size="9.5" fill="#5b7db1">`out=` 参数：把结果写进预分配张量</text>
+  <text x="538" y="200" font-size="9" fill="#8fa9cf">原地操作会覆盖反向需要的中间值 → 有时报错</text>
+
+  <rect x="30" y="222" width="960" height="120" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="48" y="246" font-size="12.5" font-weight="600" fill="#1d1d1f">常见操作族</text>
+  <rect x="48" y="262" width="220" height="66" rx="9" fill="#fff7e6" stroke="#f0dcae"/><text x="158" y="284" font-size="9.5" font-weight="600" fill="#7a4d00" text-anchor="middle">逐元素 / 归约</text><text x="158" y="304" font-size="8.5" fill="#9a7328" text-anchor="middle">add/mul/relu</text><text x="158" y="318" font-size="8.5" fill="#9a7328" text-anchor="middle">sum/mean/max</text>
+  <rect x="284" y="262" width="220" height="66" rx="9" fill="#eef3fb" stroke="#bcd0ec"/><text x="394" y="284" font-size="9.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">线性代数</text><text x="394" y="304" font-size="8.5" fill="#5b7db1" text-anchor="middle">matmul/@/bmm</text><text x="394" y="318" font-size="8.5" fill="#5b7db1" text-anchor="middle">conv/einsum</text>
+  <rect x="520" y="262" width="220" height="66" rx="9" fill="#eafaf1" stroke="#bce6cd"/><text x="630" y="284" font-size="9.5" font-weight="600" fill="#0f5132" text-anchor="middle">形状 / 索引</text><text x="630" y="304" font-size="8.5" fill="#3f8f66" text-anchor="middle">reshape/permute</text><text x="630" y="318" font-size="8.5" fill="#3f8f66" text-anchor="middle">cat/stack/切片</text>
+  <rect x="756" y="262" width="216" height="66" rx="9" fill="#f4eefb" stroke="#d9c9ef"/><text x="864" y="284" font-size="9.5" font-weight="600" fill="#3c1361" text-anchor="middle">设备 / 类型</text><text x="864" y="304" font-size="8.5" fill="#7a5aa8" text-anchor="middle">to/cuda/cpu</text><text x="864" y="318" font-size="8.5" fill="#7a5aa8" text-anchor="middle">float/half/cast</text>
+  <text x="48" y="360" font-size="9.5" fill="#86868b">这些用户可见算子，内部统一经 Dispatcher → ATen → 后端 kernel（见能力域）；~2000 个算子覆盖张量运算全谱。</text>
+  <text x="48" y="382" font-size="9" fill="#86868b">贯穿示例的 model(x) 展开就是 x @ W.T + b：一次 matmul 算子 + 一次 add（广播）算子。</text>
+</svg>

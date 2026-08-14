@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="300" viewBox="0 0 900 300" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs><filter id="s" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter><marker id="a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker></defs>
+  <rect width="900" height="300" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">MVCC：版本链 + 快照读，读写互不阻塞</text>
+
+  <!-- version timeline -->
+  <line x1="60" y1="92" x2="850" y2="92" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#a)"/>
+  <text x="856" y="96" font-size="9" fill="#a1a1a6">版本递增</text>
+  <g text-anchor="middle">
+    <circle cx="180" cy="92" r="5" fill="#bcd0ec" stroke="#8fb0d8"/><rect x="146" y="58" width="68" height="24" rx="7" fill="#eef3fb" stroke="#bcd0ec"/><text x="180" y="74" font-size="11" fill="#1b2a4a">v1</text>
+    <circle cx="430" cy="92" r="5" fill="#bcd0ec" stroke="#8fb0d8"/><rect x="396" y="58" width="68" height="24" rx="7" fill="#eef3fb" stroke="#bcd0ec"/><text x="430" y="74" font-size="11" fill="#1b2a4a">v2</text>
+    <circle cx="680" cy="92" r="5" fill="#bfe0cd" stroke="#8ec6a3"/><rect x="646" y="58" width="68" height="24" rx="7" fill="#eafaf1" stroke="#bfe0cd"/><text x="680" y="74" font-size="11" fill="#12402a">v3</text>
+  </g>
+  <path d="M680,40 L680,56" stroke="#c7c7cc" stroke-width="1.3" fill="none" marker-end="url(#a)"/>
+  <text x="680" y="36" font-size="9.5" fill="#a1a1a6" text-anchor="middle">写事务提交 → 生成 v3</text>
+
+  <!-- queries -->
+  <rect x="60" y="150" width="360" height="66" rx="12" fill="#ffffff" stroke="#ececf1" filter="url(#s)"/>
+  <text x="240" y="174" font-size="12" font-weight="600" fill="#1b2a4a" text-anchor="middle">Query A（v3 提交前开始）</text>
+  <text x="240" y="196" font-size="10" fill="#86868b" text-anchor="middle">锁定快照 v2 · 整条查询只读 v2，不受 v3 影响</text>
+  <path d="M240,150 L240,120 L430,120 L430,98" stroke="#c7c7cc" stroke-width="1.3" fill="none" stroke-dasharray="4 3" marker-end="url(#a)"/>
+
+  <rect x="480" y="150" width="360" height="66" rx="12" fill="#ffffff" stroke="#ececf1" filter="url(#s)"/>
+  <text x="660" y="174" font-size="12" font-weight="600" fill="#12402a" text-anchor="middle">Query B（v3 提交后开始）</text>
+  <text x="660" y="196" font-size="10" fill="#86868b" text-anchor="middle">锁定 v3 · 按 Delete Bitmap 跳过被覆盖旧行</text>
+  <path d="M660,150 L660,120 L680,120 L680,98" stroke="#c7c7cc" stroke-width="1.3" fill="none" stroke-dasharray="4 3" marker-end="url(#a)"/>
+
+  <!-- bottom band -->
+  <rect x="60" y="238" width="500" height="40" rx="10" fill="#fff9f0" stroke="#eddcbf"/>
+  <text x="310" y="256" font-size="10.5" fill="#7a5a1e" text-anchor="middle">主键表：v3 在 Publish 期用 Delete Bitmap</text>
+  <text x="310" y="270" font-size="10.5" fill="#7a5a1e" text-anchor="middle">标记旧版本被覆盖行，读时跳过、免实时合并</text>
+  <rect x="580" y="238" width="260" height="40" rx="10" fill="#f5faf6" stroke="#dbe9e0"/>
+  <text x="710" y="263" font-size="11" fill="#2c5a3a" text-anchor="middle">读不阻塞写 · 写不阻塞读</text>
+</svg>

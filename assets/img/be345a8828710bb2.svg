@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="540" viewBox="0 0 1060 540" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs><filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+  <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker></defs>
+  <rect width="1060" height="540" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">exactly-once：offset WAL + state checkpoint + 幂等 sink</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">OffsetSeqLog(checkpointing:54) · CommitLog(:51) · 目录 offsets/commits/state/metadata（Constants:21-24）</text>
+  <!-- three pillars -->
+  <g text-anchor="middle">
+    <rect x="40" y="76" width="310" height="150" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+    <text x="195" y="100" font-size="11" font-weight="700" fill="#1b2a4a">① 可重放 source + offset</text>
+    <text x="195" y="124" font-size="9" fill="#5b7db1">批开始前先写"这批处理</text>
+    <text x="195" y="140" font-size="9" fill="#5b7db1">哪段 offset"到 WAL</text>
+    <text x="195" y="162" font-size="8.5" fill="#8aa6cf">OffsetSeqLog（offsets/）</text>
+    <text x="195" y="182" font-size="8.5" fill="#8aa6cf">source 须可按 offset 重放</text>
+    <text x="195" y="204" font-size="8" fill="#8aa6cf">（Kafka/文件等）</text>
+    <rect x="375" y="76" width="310" height="150" rx="13" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+    <text x="530" y="100" font-size="11" font-weight="700" fill="#5a3410">② state checkpoint</text>
+    <text x="530" y="124" font-size="9" fill="#93762e">有状态算子的 state</text>
+    <text x="530" y="140" font-size="9" fill="#93762e">随每批持久化到 ckpt</text>
+    <text x="530" y="162" font-size="8.5" fill="#b08843">state/ 目录</text>
+    <text x="530" y="182" font-size="8.5" fill="#b08843">恢复时读回上次状态</text>
+    <text x="530" y="204" font-size="8" fill="#b08843">（见 state 篇）</text>
+    <rect x="710" y="76" width="310" height="150" rx="13" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+    <text x="865" y="100" font-size="11" font-weight="700" fill="#12402a">③ 幂等/事务 sink + commit</text>
+    <text x="865" y="124" font-size="9" fill="#2f6f4f">批成功后写 commit 日志</text>
+    <text x="865" y="140" font-size="9" fill="#2f6f4f">sink 幂等/事务写</text>
+    <text x="865" y="162" font-size="8.5" fill="#4c8567">CommitLog（commits/）</text>
+    <text x="865" y="182" font-size="8.5" fill="#4c8567">重复写同批不产生重复</text>
+    <text x="865" y="204" font-size="8" fill="#4c8567">"after successful batch"</text>
+  </g>
+  <!-- checkpoint dir -->
+  <rect x="40" y="242" width="480" height="150" rx="13" fill="#f4eefb" stroke="#d9c7ec"/>
+  <text x="60" y="266" font-size="11" font-weight="700" fill="#3d2a5a">checkpoint 目录结构（StreamingCheckpointConstants）</text>
+  <text x="60" y="290" font-size="9.5" fill="#7a5da5">· offsets/  —— 预写：每批要处理的 offset 范围（WAL）</text>
+  <text x="60" y="310" font-size="9.5" fill="#7a5da5">· commits/  —— 已成功提交的批号</text>
+  <text x="60" y="330" font-size="9.5" fill="#7a5da5">· state/  —— 有状态算子的状态快照</text>
+  <text x="60" y="350" font-size="9.5" fill="#7a5da5">· metadata/  —— 查询元数据（id 等）· sources/ 源进度</text>
+  <text x="60" y="374" font-size="9" fill="#9a7cc4">必设且稳定持久（HDFS/对象存储）——换目录=丢状态</text>
+  <!-- recovery -->
+  <rect x="540" y="242" width="480" height="150" rx="13" fill="#fbeef0" stroke="#f0cdd4"/>
+  <text x="560" y="266" font-size="11" font-weight="700" fill="#7a2230">故障恢复：如何达成 exactly-once</text>
+  <text x="560" y="290" font-size="9.5" fill="#a44">① 重启读 offsets/ 与 commits/</text>
+  <text x="560" y="310" font-size="9.5" fill="#a44">② 已 commit 的批 → 跳过（不重复处理）</text>
+  <text x="560" y="330" font-size="9.5" fill="#a44">③ 未 commit 的批 → 从上次 offset 重放</text>
+  <text x="560" y="350" font-size="9.5" fill="#a44">④ 配合幂等 sink → 重放不产生重复输出</text>
+  <text x="560" y="374" font-size="9" fill="#7a2230">= 每条恰好一次（不丢=重放；不重=commit+幂等）</text>
+  <rect x="40" y="404" width="980" height="76" rx="13" fill="#fdf9f0" stroke="#efe3cd"/>
+  <text x="60" y="428" font-size="11" font-weight="700" fill="#7a5a1e">与批容错的区别</text>
+  <text x="60" y="450" font-size="9.5" fill="#93762e">· 批处理：纯 lineage 重算，无 WAL/checkpoint（默认）——见容错篇</text>
+  <text x="60" y="470" font-size="9.5" fill="#93762e">· 流式：checkpoint + offset WAL + commit 是 exactly-once 的<tspan font-weight="600">必需基础设施</tspan>，两套机制不同</text>
+  <rect x="40" y="492" width="980" height="40" rx="12" fill="#f7f7f9" stroke="#e6e6ea"/>
+  <text x="60" y="517" font-size="10" fill="#4b4b50"><tspan font-weight="700" fill="#1d1d1f">一句话：</tspan>exactly-once 靠 offset WAL（先写要处理哪段）+ state checkpoint + 幂等 sink（commit 后跳过重放）——不丢不重。</text>
+</svg>

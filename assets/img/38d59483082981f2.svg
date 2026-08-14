@@ -1,0 +1,112 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="500" viewBox="0 0 900 500" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+    <marker id="arB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#5b7db1"/>
+    </marker>
+  </defs>
+  <rect width="900" height="500" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">happens-before · 同步动作建立的跨 goroutine 内存可见性</text>
+  <text x="30" y="49" font-size="11" fill="#6e6e73">同步动作连成 hb 链 → 一侧的写对另一侧的读可见；无 hb 关系并发读写同一变量 = 数据竞争</text>
+
+  <!-- legend -->
+  <rect x="640" y="20" width="12" height="12" rx="3" fill="#eef7f0" stroke="#bfe0c8"/>
+  <text x="656" y="30" font-size="10" fill="#4a8c60">goroutine 内读写</text>
+  <rect x="748" y="20" width="12" height="12" rx="3" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="764" y="30" font-size="10" fill="#5b7db1">同步动作</text>
+  <rect x="835" y="20" width="12" height="12" rx="3" fill="#fbeeee" stroke="#f0c4c4"/>
+  <text x="851" y="30" font-size="10" fill="#b15b5b">竞争</text>
+
+  <!-- ===== 左：典型场景 canonical example ===== -->
+  <text x="30" y="82" font-size="12" font-weight="600" fill="#1d1d1f">典型：channel 发送 → 接收 传递内存可见性</text>
+
+  <!-- Goroutine A -->
+  <rect x="30" y="96" width="230" height="150" rx="12" fill="#eef7f0" stroke="#bfe0c8" filter="url(#soft)"/>
+  <text x="46" y="118" font-size="12" font-weight="600" fill="#1d4a2b">Goroutine A</text>
+  <rect x="46" y="130" width="198" height="40" rx="8" fill="#ffffff" stroke="#bfe0c8"/>
+  <text x="60" y="147" font-size="11" fill="#1d4a2b">a = "hello"</text>
+  <text x="60" y="162" font-size="9.5" fill="#4a8c60">对共享变量 a 写</text>
+  <line x1="145" y1="170" x2="145" y2="184" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <text x="156" y="181" font-size="8.5" fill="#8e8e93">sequenced before</text>
+  <rect x="46" y="186" width="198" height="42" rx="8" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="60" y="204" font-size="11" font-weight="600" fill="#1b2a4a">c &lt;- 0（发送）</text>
+  <text x="60" y="219" font-size="9.5" fill="#5b7db1">同步动作：send</text>
+
+  <!-- Goroutine B -->
+  <rect x="470" y="96" width="230" height="150" rx="12" fill="#eef7f0" stroke="#bfe0c8" filter="url(#soft)"/>
+  <text x="486" y="118" font-size="12" font-weight="600" fill="#1d4a2b">Goroutine B</text>
+  <rect x="486" y="130" width="198" height="42" rx="8" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="500" y="148" font-size="11" font-weight="600" fill="#1b2a4a">&lt;-c（接收完成）</text>
+  <text x="500" y="163" font-size="9.5" fill="#5b7db1">同步动作：receive</text>
+  <line x1="585" y1="172" x2="585" y2="186" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <text x="596" y="183" font-size="8.5" fill="#8e8e93">sequenced before</text>
+  <rect x="486" y="188" width="198" height="40" rx="8" fill="#ffffff" stroke="#bfe0c8"/>
+  <text x="500" y="205" font-size="11" fill="#1d4a2b">print(a) 必读到 "hello"</text>
+  <text x="500" y="220" font-size="9.5" fill="#4a8c60">对共享变量 a 读</text>
+
+  <!-- hb edge send -> recv -->
+  <line x1="244" y1="207" x2="486" y2="151" stroke="#5b7db1" stroke-width="2" marker-end="url(#arB)"/>
+  <rect x="300" y="163" width="130" height="22" rx="6" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="365" y="178" font-size="10" font-weight="600" fill="#1b2a4a" text-anchor="middle">synchronized before</text>
+  <text x="365" y="240" font-size="9.5" fill="#6e6e73" text-anchor="middle">写 →seq 发送 →sync 接收 →seq 读：hb 链保证 a 的写对 B 可见</text>
+
+  <!-- ===== 下左：hb 规则目录 ===== -->
+  <text x="30" y="286" font-size="12" font-weight="600" fill="#1d1d1f">建立 happens-before 的同步动作（doc/go_mem.html）</text>
+  <rect x="30" y="298" width="500" height="182" rx="12" fill="#ffffff" stroke="#e2e2e7"/>
+  <!-- rows -->
+  <g font-size="10.5">
+    <rect x="46" y="312" width="150" height="24" rx="6" fill="#eef3fb" stroke="#bcd0ec"/>
+    <text x="121" y="328" fill="#1b2a4a" text-anchor="middle">channel 发送</text>
+    <line x1="196" y1="324" x2="248" y2="324" stroke="#5b7db1" stroke-width="1.5" marker-end="url(#arB)"/>
+    <text x="222" y="319" font-size="8" fill="#5b7db1" text-anchor="middle">hb</text>
+    <text x="256" y="328" fill="#4a4a4a">对应接收完成</text>
+
+    <rect x="46" y="342" width="150" height="24" rx="6" fill="#eef3fb" stroke="#bcd0ec"/>
+    <text x="121" y="358" fill="#1b2a4a" text-anchor="middle">close(ch) 关闭</text>
+    <line x1="196" y1="354" x2="248" y2="354" stroke="#5b7db1" stroke-width="1.5" marker-end="url(#arB)"/>
+    <text x="222" y="349" font-size="8" fill="#5b7db1" text-anchor="middle">hb</text>
+    <text x="256" y="358" fill="#4a4a4a">接收到零值</text>
+
+    <rect x="46" y="372" width="150" height="24" rx="6" fill="#eef3fb" stroke="#bcd0ec"/>
+    <text x="121" y="388" fill="#1b2a4a" text-anchor="middle">无缓冲接收</text>
+    <line x1="196" y1="384" x2="248" y2="384" stroke="#5b7db1" stroke-width="1.5" marker-end="url(#arB)"/>
+    <text x="222" y="379" font-size="8" fill="#5b7db1" text-anchor="middle">hb</text>
+    <text x="256" y="388" fill="#4a4a4a">对应发送完成</text>
+
+    <rect x="46" y="402" width="150" height="24" rx="6" fill="#eef3fb" stroke="#bcd0ec"/>
+    <text x="121" y="418" fill="#1b2a4a" text-anchor="middle">Mutex.Unlock</text>
+    <line x1="196" y1="414" x2="248" y2="414" stroke="#5b7db1" stroke-width="1.5" marker-end="url(#arB)"/>
+    <text x="222" y="409" font-size="8" fill="#5b7db1" text-anchor="middle">hb</text>
+    <text x="256" y="418" fill="#4a4a4a">后续 Lock 返回</text>
+
+    <rect x="46" y="432" width="150" height="24" rx="6" fill="#eef3fb" stroke="#bcd0ec"/>
+    <text x="121" y="448" fill="#1b2a4a" text-anchor="middle">Once.Do 完成</text>
+    <line x1="196" y1="444" x2="248" y2="444" stroke="#5b7db1" stroke-width="1.5" marker-end="url(#arB)"/>
+    <text x="222" y="439" font-size="8" fill="#5b7db1" text-anchor="middle">hb</text>
+    <text x="256" y="448" fill="#4a4a4a">任何 Do 返回</text>
+
+    <text x="376" y="418" font-size="10" fill="#6e6e73">sync/atomic：</text>
+    <text x="376" y="434" font-size="10" fill="#6e6e73">提供顺序一致</text>
+    <text x="376" y="450" font-size="10" fill="#6e6e73">的原子操作序</text>
+  </g>
+
+  <!-- ===== 下右：数据竞争 ===== -->
+  <text x="560" y="286" font-size="12" font-weight="600" fill="#1d1d1f">反例：无 hb → 数据竞争</text>
+  <rect x="560" y="298" width="310" height="182" rx="12" fill="#fbeeee" stroke="#f0c4c4" filter="url(#soft)"/>
+  <rect x="578" y="316" width="130" height="46" rx="8" fill="#ffffff" stroke="#f0c4c4"/>
+  <text x="592" y="335" font-size="10.5" font-weight="600" fill="#7a1f1f">Goroutine A</text>
+  <text x="592" y="352" font-size="10" fill="#b15b5b">a = 1（写）</text>
+  <rect x="722" y="316" width="130" height="46" rx="8" fill="#ffffff" stroke="#f0c4c4"/>
+  <text x="736" y="335" font-size="10.5" font-weight="600" fill="#7a1f1f">Goroutine B</text>
+  <text x="736" y="352" font-size="10" fill="#b15b5b">print(a)（读）</text>
+  <text x="715" y="344" font-size="12" fill="#f0c4c4" text-anchor="middle">✕</text>
+  <text x="592" y="392" font-size="10.5" fill="#7a1f1f">两侧无任何同步动作相连 → 无 hb 边</text>
+  <text x="592" y="414" font-size="10.5" fill="#7a1f1f">读可能看到旧值 / 撕裂值：行为未定义</text>
+  <text x="592" y="440" font-size="10.5" font-weight="600" fill="#7a1f1f">修复：加 channel / Mutex / atomic 建立 hb</text>
+  <text x="592" y="462" font-size="10" fill="#b15b5b">检测：go build/test -race（运行期插桩抓竞争）</text>
+</svg>

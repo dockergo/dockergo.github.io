@@ -1,0 +1,122 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="680" viewBox="0 0 1080 680" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="aHot" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+    <marker id="aState" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#c99a3a"/></marker>
+    <marker id="aCtl" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#5b7db1"/></marker>
+    <marker id="aFail" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#d38236"/></marker>
+    <marker id="aX" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#8a5cae"/></marker>
+  </defs>
+  <rect width="1080" height="680" fill="#fbfbfd"/>
+
+  <!-- ===== 标题带 · 判型 ===== -->
+  <text x="30" y="26" font-size="14" font-weight="600" fill="#1d1d1f">containerd 总架构 · 工业级容器运行时：守护进程 + 插件化子系统，一切皆插件经依赖图装配，每容器一 shim 进程隔离，被 k8s 经 CRI 驱动</text>
+  <text x="30" y="44" font-size="10.5" fill="#6e6e73">分层脊：接触面（gRPC/TTRPC + ctr + CRI）→ 守护进程装配（插件依赖图）→ 核心服务/存储真源（内容寻址 + 快照 CoW + bbolt 元数据）→ 运行时下沉（shim 进程 → runc/OCI）　源码基准 v2.3</text>
+
+  <!-- ===== 设计张力铭牌带（显式）===== -->
+  <rect x="24" y="52" width="1032" height="48" rx="10" fill="#fbf2ea" stroke="#e6cdae"/>
+  <text x="40" y="72" font-size="11" font-weight="700" fill="#b0651f">设计张力</text>
+  <text x="104" y="72" font-size="10" fill="#5a4a3a">插件化解耦·可扩展<tspan fill="#8a6d3b">（每子系统一 plugin，按 Requires 依赖图拓扑装配；shim 隔离容器生命周期）</tspan><tspan font-weight="700" fill="#c0392b"> ⟷ vs ⟷ </tspan>守护进程重启的状态一致</text>
+  <text x="104" y="89" font-size="9.5" fill="#5a4a3a">shim 是<tspan font-weight="700" fill="#b0651f">独立进程</tspan>而非 daemon 子模块：containerd 可随时重启升级，<tspan font-weight="700" fill="#b0651f">容器不随之死</tspan>；重启后按落盘参数重连接管——解耦换来可升级性，代价是需持久化连接态与重连逻辑</text>
+
+  <!-- ===== 图例：五型语义路径 ===== -->
+  <line x1="40" y1="114" x2="62" y2="114" stroke="#2f9e6e" stroke-width="1.8" marker-end="url(#aHot)"/>
+  <text x="68" y="118" font-size="10" fill="#3a3a3c">Hot · 拉取 / 拉起运行流</text>
+  <line x1="214" y1="114" x2="236" y2="114" stroke="#5b7db1" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#aCtl)"/>
+  <text x="242" y="118" font-size="10" fill="#3a3a3c">Control · gRPC 派发 + 插件依赖注入</text>
+  <line x1="482" y1="114" x2="504" y2="114" stroke="#c99a3a" stroke-width="1.8" marker-end="url(#aState)"/>
+  <text x="510" y="118" font-size="10" fill="#3a3a3c">State · 内容寻址 + 快照存储真源</text>
+  <line x1="726" y1="114" x2="748" y2="114" stroke="#d38236" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#aFail)"/>
+  <text x="754" y="118" font-size="10" fill="#3a3a3c">失败 · daemon 重启 shim 存活</text>
+  <line x1="940" y1="114" x2="962" y2="114" stroke="#8a5cae" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#aX)"/>
+  <text x="968" y="118" font-size="10" fill="#3a3a3c">横切 · CRI + 事件</text>
+
+  <!-- ===== powers 立身带（pano 下钻）===== -->
+  <rect x="24" y="128" width="1032" height="26" rx="8" fill="#f6f6f8" stroke="#e2e2e7" data-tid="Containerd原理_全景主线框架" data-lab="全景主线框架"/>
+  <text x="40" y="145" font-size="10" fill="#4a4a4f">powers：容器运行时事实标准 —— 一切皆插件、内容寻址不可变存储、快照写时复制、shim 进程隔离让 daemon 可平滑升级；上层 Docker / Kubernetes 皆构建其上</text>
+
+  <!-- ===== ① 接触面 ===== -->
+  <rect x="24" y="160" width="1032" height="84" rx="14" fill="#f4eefb" stroke="#d9c9ef" filter="url(#soft)"/>
+  <text x="40" y="179" font-size="12" font-weight="600" fill="#3c1361">① 接触面 · gRPC / TTRPC API + ctr 客户端 —— 命名空间隔离的对象读写入口（不直接碰容器进程）</text>
+  <rect x="40" y="188" width="628" height="48" rx="9" fill="#fff" stroke="#d9c9ef" data-tid="Containerd原理_接口_gRPC服务与客户端" data-lab="gRPC 服务与客户端"/>
+  <text x="56" y="208" font-size="11" font-weight="600" fill="#3c1361">gRPC / TTRPC 服务 · services 层派发</text>
+  <text x="56" y="226" font-size="9" fill="#8a5cae">ctr / client 发起请求 · 每请求带 namespace · 每个服务本身就是一个 GRPC plugin</text>
+  <rect x="684" y="188" width="356" height="48" rx="9" fill="#fff" stroke="#c9b6e4" data-tid="Containerd原理_支撑_CRI插件" data-lab="CRI 插件"/>
+  <text x="700" y="208" font-size="11" font-weight="600" fill="#6f3ea8">CRI plugin（k8s 经此驱动 · 横切）</text>
+  <text x="700" y="226" font-size="9" fill="#9a76c0">RunPodSandbox · CreateContainer · 一个 GRPC plugin 拉齐十余依赖</text>
+
+  <!-- ===== ② 守护进程 + 插件依赖图 ===== -->
+  <rect x="24" y="252" width="1032" height="92" rx="14" fill="#f6f8fc" stroke="#cfe0f2"/>
+  <text x="40" y="271" font-size="12" font-weight="600" fill="#5b7db1">② containerd 守护进程 · 装配核心：一切皆插件（这是 containerd 的定义性特质）</text>
+  <rect x="40" y="280" width="1000" height="58" rx="10" fill="#e9f0fb" stroke="#bcd0ec" filter="url(#soft)" data-tid="Containerd原理_支撑_插件化架构" data-lab="插件化架构"/>
+  <text x="56" y="301" font-size="11.5" font-weight="600" fill="#1b2a4a">插件化架构 · 一切皆插件</text>
+  <text x="56" y="322" font-size="9.5" fill="#5b7db1">Requires 声明依赖类型　→　依赖图拓扑排序（先装被依赖者）　→　Init(ctx) 从共享 plugin set 取依赖做注入　—— 禁用某插件即裁剪对应能力</text>
+
+  <!-- ===== ③④ 核心服务 + 存储真源 ===== -->
+  <rect x="24" y="350" width="1032" height="132" rx="14" fill="#fbf7ef" stroke="#ecdcbf"/>
+  <text x="40" y="369" font-size="12" font-weight="600" fill="#8a6d3b">③ 核心服务（只读写对象 / 元数据）+ ④ 存储真源 · 内容寻址 + 快照 CoW，bbolt 元数据统管引用与 GC</text>
+  <rect x="40" y="378" width="320" height="98" rx="10" fill="#fff" stroke="#ecdcbf" filter="url(#soft)" data-tid="Containerd原理_支撑_内容寻址存储" data-lab="内容寻址存储"/>
+  <text x="56" y="399" font-size="11" font-weight="600" fill="#8a6d3b">内容寻址存储 content store</text>
+  <text x="56" y="417" font-size="9" fill="#b08535">摘要即路径 blobs/&lt;algo&gt;/&lt;digest&gt;</text>
+  <text x="56" y="434" font-size="9" fill="#b08535">ingest 暂存 → commit 校验入库</text>
+  <text x="56" y="451" font-size="9" fill="#b08535">bbolt 元数据 + 租约 leases（GC 根）</text>
+  <text x="56" y="468" font-size="9" fill="#b08535">不可变 · 同一层跨镜像天然共享</text>
+  <rect x="372" y="378" width="320" height="98" rx="10" fill="#fff" stroke="#ecdcbf" filter="url(#soft)" data-tid="Containerd原理_支撑_快照与CoW层" data-lab="快照与 CoW"/>
+  <text x="388" y="399" font-size="11" font-weight="600" fill="#8a6d3b">快照 snapshotter（CoW）</text>
+  <text x="388" y="417" font-size="9" fill="#b08535">Prepare / View → 挂载 → Commit</text>
+  <text x="388" y="434" font-size="9" fill="#b08535">Active ↔ Committed 生命周期</text>
+  <text x="388" y="451" font-size="9" fill="#b08535">overlayfs 写时复制层栈</text>
+  <text x="388" y="468" font-size="9" fill="#b08535">Mounts 返给运行时挂 rootfs</text>
+  <rect x="704" y="378" width="336" height="98" rx="10" fill="#fff" stroke="#ecdcbf" filter="url(#soft)" data-tid="Containerd原理_支撑_镜像拉取与解包" data-lab="镜像拉取与解包"/>
+  <text x="720" y="399" font-size="11" font-weight="600" fill="#8a6d3b">镜像拉取与解包</text>
+  <text x="720" y="417" font-size="9" fill="#b08535">resolve → fetch 层落 content 存储</text>
+  <text x="720" y="434" font-size="9" fill="#b08535">unpack：diff.Applier 解包成快照</text>
+  <text x="720" y="451" font-size="9" fill="#b08535">内容寻址天然去重 / 可断点续传</text>
+  <text x="720" y="468" font-size="9" fill="#b08535">拉取是 Hot 流的第一段</text>
+
+  <!-- ===== ⑤ 运行时下沉 ===== -->
+  <rect x="24" y="488" width="1032" height="84" rx="14" fill="#f5faf6" stroke="#cfe6d2"/>
+  <text x="40" y="507" font-size="12" font-weight="600" fill="#1d8f3f">⑤ 运行时下沉 · task / exec → runtime v2 → 每容器一 shim 进程 → runc / OCI（实际容器在此产生）</text>
+  <rect x="40" y="516" width="480" height="48" rx="9" fill="#fff" stroke="#cfe6d2" filter="url(#soft)" data-tid="Containerd原理_支撑_task与事件总线" data-lab="task 与事件总线"/>
+  <text x="56" y="536" font-size="11" font-weight="600" fill="#1d1d1f">task / exec 服务 + 事件总线 events</text>
+  <text x="56" y="553" font-size="9" fill="#6e6e73">Create / Start / Exec / Delete 派发到 v2 runtime · exchange 扇出订阅</text>
+  <rect x="536" y="516" width="504" height="48" rx="9" fill="#fff" stroke="#cfe6d2" filter="url(#soft)" data-tid="Containerd原理_支撑_运行时shim" data-lab="运行时 shim"/>
+  <text x="552" y="536" font-size="11" font-weight="600" fill="#1d1d1f">运行时 v2 shim · 每容器一独立进程</text>
+  <text x="552" y="553" font-size="9" fill="#6e6e73">task_manager 启动 shim 二进制 → shim 调 runc 拉起容器（OCI）</text>
+
+  <!-- ===== 底部：shim 存活带 ===== -->
+  <rect x="24" y="578" width="1032" height="26" rx="8" fill="#eafaf1" stroke="#b8e6cd"/>
+  <text x="40" y="595" font-size="10" fill="#1c6b45">shim 独立进程：containerd 重启 / 升级，容器不随之死；重启后扫 state 目录、按落盘 bootstrap.json 重连接管存活的 shim（LoadExistingShims）</text>
+
+  <!-- ===== 语义分型连线 ===== -->
+  <!-- Control：gRPC 接触面 → 守护进程插件图（请求派发） -->
+  <line x1="330" y1="236" x2="330" y2="280" stroke="#5b7db1" stroke-width="1.8" stroke-dasharray="5 3" marker-end="url(#aCtl)"/>
+  <text x="336" y="258" font-size="8" fill="#5b7db1">gRPC 请求派发</text>
+  <!-- 横切：CRI → 守护进程插件图 -->
+  <line x1="862" y1="236" x2="862" y2="280" stroke="#8a5cae" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#aX)"/>
+  <text x="856" y="258" font-size="8" fill="#8a5cae" text-anchor="end">CRI 转 gRPC</text>
+  <!-- Control：插件图 → 核心服务 / 存储（依赖注入后驱动） -->
+  <line x1="200" y1="338" x2="200" y2="378" stroke="#5b7db1" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#aCtl)"/>
+  <text x="206" y="360" font-size="8" fill="#5b7db1">按依赖驱动子系统</text>
+  <!-- State：内容存储 ↔ 快照（unpack 落层）＋ 快照 ↔ 镜像 -->
+  <line x1="360" y1="420" x2="372" y2="420" stroke="#c99a3a" stroke-width="1.8" marker-start="url(#aState)" marker-end="url(#aState)"/>
+  <!-- Hot：镜像拉取 → 快照（unpack 成快照层） -->
+  <line x1="704" y1="440" x2="692" y2="440" stroke="#2f9e6e" stroke-width="1.8" marker-end="url(#aHot)"/>
+  <text x="698" y="432" font-size="7.5" fill="#2f9e6e" text-anchor="end">unpack→快照</text>
+  <!-- State：快照 → 运行时（Mounts 挂 rootfs） -->
+  <line x1="500" y1="476" x2="500" y2="516" stroke="#c99a3a" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#aState)"/>
+  <!-- Hot：task → 运行时 shim -->
+  <line x1="520" y1="540" x2="536" y2="540" stroke="#2f9e6e" stroke-width="1.8" marker-end="url(#aHot)"/>
+  <!-- Hot：shim → runc/OCI（真实容器） -->
+  <line x1="788" y1="564" x2="788" y2="578" stroke="#2f9e6e" stroke-width="1.8" marker-end="url(#aHot)"/>
+  <!-- 失败：daemon 重启 → shim 存活并重连（右侧回路） -->
+  <path d="M1066,340 L1066,540 L1040,540" fill="none" stroke="#d38236" stroke-width="1.5" stroke-dasharray="5 3" marker-end="url(#aFail)"/>
+  <text x="1072" y="440" font-size="8" fill="#d38236" text-anchor="middle" transform="rotate(-90 1072 440)">containerd 重启 · shim 存活并重连</text>
+  <!-- 横切：事件总线扇出（左侧回路） -->
+  <path d="M14,540 L14,300 L24,300" fill="none" stroke="#8a5cae" stroke-width="1.5" stroke-dasharray="5 3" marker-end="url(#aX)"/>
+  <text x="10" y="420" font-size="8" fill="#8a5cae" text-anchor="middle" transform="rotate(-90 10 420)">events 事件总线扇出订阅</text>
+
+  <!-- ===== 读法 ===== -->
+  <text x="540" y="632" font-size="10" fill="#4a4a4f" text-anchor="middle">读法：客户端 / CRI 经 gRPC 提交 → 守护进程按插件依赖图派发到各子系统 → 镜像拉取落内容存储、解包成快照(CoW) → task 为每容器启动一个 shim 进程 → shim 调 runc/OCI 拉起真实容器</text>
+  <text x="540" y="650" font-size="10" fill="#4a4a4f" text-anchor="middle">一切皆插件让能力可插拔组合，shim 进程隔离让 containerd 与容器生命周期解耦——守护进程可平滑升级而不杀容器</text>
+</svg>

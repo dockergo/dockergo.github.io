@@ -1,0 +1,101 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="520" viewBox="0 0 920 520" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="920" height="520" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">代码发射 · genssa → 架构后端 SSAGenValue → obj.Prog → obj 汇编器 → 目标文件</text>
+
+  <!-- input -->
+  <rect x="30" y="58" width="200" height="48" rx="11" fill="#fdf6ec" stroke="#f0dcaf" filter="url(#soft)"/>
+  <text x="46" y="80" font-size="11.5" font-weight="600" fill="#6b4e16">最终机器相关 SSA</text>
+  <text x="46" y="98" font-size="9.5" fill="#a9822f">已调度 + 已分配寄存器</text>
+  <line x1="130" y1="106" x2="130" y2="126" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- step 1: genssa (amber) -->
+  <rect x="30" y="128" width="420" height="220" rx="13" fill="#fdf6ec" stroke="#f0dcaf" filter="url(#soft)"/>
+  <text x="46" y="152" font-size="12.5" font-weight="600" fill="#6b4e16">1 · genssa · 遍历调度好的 Block / Value</text>
+  <text x="46" y="170" font-size="10" fill="#a9822f">ssagen/ssa.go:6978 · 逐 Value 交给架构后端翻译</text>
+
+  <rect x="46" y="182" width="388" height="46" rx="8" fill="#ffffff" stroke="#f0dcaf"/>
+  <text x="56" y="201" font-size="10.5" font-weight="600" fill="#6b4e16">对每个 Value 调 SSAGenValue（架构后端）</text>
+  <text x="56" y="218" font-size="9.5" fill="#a9822f">如 amd64/ssa.go:227 的 ssaGenValue：机器相关 Op → obj.Prog</text>
+
+  <!-- example translate -->
+  <rect x="46" y="236" width="185" height="46" rx="8" fill="#f5f0fb" stroke="#ddcdf0"/>
+  <text x="56" y="255" font-size="10" fill="#3d2a5a">v = AMD64ADDQ a b</text>
+  <text x="56" y="272" font-size="9.5" fill="#7d5bb1">一个机器相关 SSA Op</text>
+  <line x1="231" y1="259" x2="253" y2="259" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <rect x="255" y="236" width="179" height="46" rx="8" fill="#ffffff" stroke="#f0dcaf"/>
+  <text x="265" y="255" font-size="10" fill="#3a3a3c">ADDQ a, b</text>
+  <text x="265" y="272" font-size="9.5" fill="#a9822f">一条或几条 obj.Prog</text>
+
+  <!-- prologue insert (red) -->
+  <rect x="46" y="290" width="388" height="46" rx="8" fill="#fbeeee" stroke="#f0c4c4"/>
+  <text x="56" y="309" font-size="10.5" font-weight="600" fill="#7a1f1f">同时插入函数序言 / 尾声</text>
+  <text x="56" y="326" font-size="9.5" fill="#b15b5b">序言：栈检查 + 栈帧分配（抢占点）· 尾声：恢复 —— 见【栈管理】</text>
+
+  <line x1="450" y1="238" x2="472" y2="238" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- step 2: obj.Prog list (neutral) -->
+  <rect x="474" y="128" width="200" height="220" rx="13" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="490" y="152" font-size="12.5" font-weight="600" fill="#1d1d1f">2 · obj.Prog 列表</text>
+  <text x="490" y="170" font-size="9.5" fill="#6e6e73">抽象机器指令序列</text>
+  <rect x="490" y="182" width="168" height="24" rx="6" fill="#f6f6f7" stroke="#e2e2e7"/>
+  <text x="500" y="199" font-size="9.5" fill="#3a3a3c">TEXT ·f(SB)</text>
+  <rect x="490" y="210" width="168" height="24" rx="6" fill="#f6f6f7" stroke="#e2e2e7"/>
+  <text x="500" y="227" font-size="9.5" fill="#3a3a3c">SUBQ $16, SP</text>
+  <rect x="490" y="238" width="168" height="24" rx="6" fill="#f6f6f7" stroke="#e2e2e7"/>
+  <text x="500" y="255" font-size="9.5" fill="#3a3a3c">ADDQ AX, BX</text>
+  <rect x="490" y="266" width="168" height="24" rx="6" fill="#f6f6f7" stroke="#e2e2e7"/>
+  <text x="500" y="283" font-size="9.5" fill="#3a3a3c">CALL runtime·x(SB)</text>
+  <rect x="490" y="294" width="168" height="24" rx="6" fill="#f6f6f7" stroke="#e2e2e7"/>
+  <text x="500" y="311" font-size="9.5" fill="#3a3a3c">RET</text>
+  <text x="490" y="336" font-size="9.5" fill="#a3a3a8">仍是符号引用，未编码</text>
+
+  <line x1="674" y1="238" x2="696" y2="238" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- step 3: obj assembler (amber) -->
+  <rect x="698" y="128" width="192" height="220" rx="13" fill="#fdf6ec" stroke="#f0dcaf" filter="url(#soft)"/>
+  <text x="714" y="152" font-size="12.5" font-weight="600" fill="#6b4e16">3 · obj 汇编器</text>
+  <text x="714" y="170" font-size="9.5" fill="#a9822f">Flushplist · plist.go:24</text>
+  <rect x="714" y="182" width="160" height="52" rx="8" fill="#ffffff" stroke="#f0dcaf"/>
+  <text x="724" y="201" font-size="10" fill="#3a3a3c">Prog 列表 → 编码成</text>
+  <text x="724" y="218" font-size="10" font-weight="600" fill="#6b4e16">机器码字节</text>
+  <rect x="714" y="242" width="160" height="52" rx="8" fill="#ffffff" stroke="#f0dcaf"/>
+  <text x="724" y="261" font-size="10" font-weight="600" fill="#6b4e16">生成重定位记录</text>
+  <text x="724" y="278" font-size="9.5" fill="#a9822f">调用/全局地址待链接期填</text>
+  <text x="714" y="316" font-size="9.5" fill="#c6a45f">每架构各自的编码规则</text>
+  <text x="714" y="334" font-size="9.5" fill="#c6a45f">把抽象指令定成字节</text>
+
+  <!-- down to object file -->
+  <line x1="460" y1="348" x2="460" y2="372" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- output: object file (green = success) -->
+  <rect x="30" y="376" width="860" height="128" rx="13" fill="#eef7f0" stroke="#bfe0c8" filter="url(#soft)"/>
+  <text x="46" y="400" font-size="12.5" font-weight="600" fill="#1d4a2b">产物 · 目标文件 .o（交给链接器 · 见【go命令与链接】）</text>
+  <rect x="46" y="412" width="200" height="76" rx="8" fill="#ffffff" stroke="#bfe0c8"/>
+  <text x="56" y="432" font-size="10.5" font-weight="600" fill="#1d4a2b">机器码 + 符号表</text>
+  <text x="56" y="450" font-size="9.5" fill="#4a8c60">每个函数的机器码字节，</text>
+  <text x="56" y="466" font-size="9.5" fill="#4a8c60">及其符号名与地址占位</text>
+  <text x="56" y="482" font-size="9" fill="#8fbf9c">供链接期符号解析</text>
+  <rect x="256" y="412" width="200" height="76" rx="8" fill="#ffffff" stroke="#bfe0c8"/>
+  <text x="266" y="432" font-size="10.5" font-weight="600" fill="#1d4a2b">重定位记录</text>
+  <text x="266" y="450" font-size="9.5" fill="#4a8c60">跨符号引用（调用别的包、</text>
+  <text x="266" y="466" font-size="9.5" fill="#4a8c60">引用全局变量地址）</text>
+  <text x="266" y="482" font-size="9" fill="#8fbf9c">链接期回填真实地址</text>
+  <rect x="466" y="412" width="200" height="76" rx="8" fill="#ffffff" stroke="#bfe0c8"/>
+  <text x="476" y="432" font-size="10.5" font-weight="600" fill="#1d4a2b">类型信息</text>
+  <text x="476" y="450" font-size="9.5" fill="#4a8c60">rtype / itab 等描述符，</text>
+  <text x="476" y="466" font-size="9.5" fill="#4a8c60">支撑接口 / 反射</text>
+  <text x="476" y="482" font-size="9" fill="#8fbf9c">见【接口与反射】</text>
+  <rect x="676" y="412" width="200" height="76" rx="8" fill="#ffffff" stroke="#bfe0c8"/>
+  <text x="686" y="432" font-size="10.5" font-weight="600" fill="#1d4a2b">pclntab 素材</text>
+  <text x="686" y="450" font-size="9.5" fill="#4a8c60">PC→行号 / 函数元数据，</text>
+  <text x="686" y="466" font-size="9.5" fill="#4a8c60">供栈回溯与 panic 定位</text>
+  <text x="686" y="482" font-size="9" fill="#8fbf9c">运行期 traceback 用</text>
+</svg>

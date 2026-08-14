@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="470" viewBox="0 0 1000 470" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1000" height="470" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">高精度定时器 hrtimer：每 CPU 用红黑树按到期排序，最左节点即下次 clockevent 中断时刻，纳秒级、事件驱动</text>
+
+  <!-- 数据结构 -->
+  <rect x="28" y="52" width="608" height="196" rx="13" fill="#fbfbfd" stroke="#ececf1"/>
+  <text x="44" y="74" font-size="11.5" font-weight="600" fill="#1d1d1f">数据结构 · 每 CPU 一套</text>
+
+  <rect x="48" y="92" width="140" height="60" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="118" y="114" font-size="10.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">hrtimer_cpu_base</text>
+  <text x="118" y="130" font-size="9.5" fill="#5b7db1" text-anchor="middle">per-CPU</text>
+  <text x="118" y="146" font-size="9.5" fill="#5b7db1" text-anchor="middle">active_bases 位图</text>
+
+  <rect x="216" y="92" width="140" height="60" rx="11" fill="#f3f7fc" stroke="#cfe0f2" filter="url(#soft)"/>
+  <text x="286" y="114" font-size="10.5" font-weight="600" fill="#274a78" text-anchor="middle">clock base ×N</text>
+  <text x="286" y="130" font-size="9.5" fill="#5b7db1" text-anchor="middle">HRTIMER_MAX_</text>
+  <text x="286" y="146" font-size="9.5" fill="#5b7db1" text-anchor="middle">CLOCK_BASES</text>
+
+  <line x1="188" y1="122" x2="214" y2="122" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <line x1="356" y1="122" x2="390" y2="122" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <rect x="392" y="90" width="224" height="146" rx="12" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="504" y="110" font-size="9.5" font-weight="600" fill="#5a3410" text-anchor="middle">timerqueue（红黑树，按到期排序）</text>
+  <line x1="504" y1="142" x2="462" y2="178" stroke="#c7c7cc" stroke-width="1.3"/>
+  <line x1="504" y1="142" x2="552" y2="178" stroke="#c7c7cc" stroke-width="1.3"/>
+  <line x1="462" y1="178" x2="436" y2="208" stroke="#c7c7cc" stroke-width="1.3"/>
+  <circle cx="504" cy="142" r="11" fill="#fff7e6" stroke="#e8cf9a" stroke-width="1.6"/>
+  <circle cx="552" cy="178" r="11" fill="#fff7e6" stroke="#e8cf9a" stroke-width="1.6"/>
+  <circle cx="462" cy="178" r="11" fill="#fff7e6" stroke="#e8cf9a" stroke-width="1.6"/>
+  <circle cx="436" cy="208" r="11" fill="#eafaf1" stroke="#5aa06a" stroke-width="2.4"/>
+  <text x="410" y="212" font-size="9" fill="#2f6f4f" text-anchor="end">最早</text>
+  <text x="504" y="230" font-size="9" fill="#5a3410" text-anchor="middle">最左节点 = 最早到期 = 下次中断时刻</text>
+
+  <!-- 插入流 -->
+  <rect x="28" y="256" width="608" height="66" rx="13" fill="#f5faf6" stroke="#e2ece5"/>
+  <text x="44" y="277" font-size="11" font-weight="600" fill="#2c5a3a">插入 · enqueue</text>
+  <rect x="48" y="284" width="112" height="30" rx="9" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="104" y="303" font-size="9.5" fill="#1b2a4a" text-anchor="middle">hrtimer_start</text>
+  <rect x="174" y="284" width="140" height="30" rx="9" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="244" y="303" font-size="9.5" fill="#1b2a4a" text-anchor="middle">enqueue_hrtimer :1104</text>
+  <rect x="328" y="284" width="140" height="30" rx="9" fill="#fff7e6" stroke="#e8cf9a"/>
+  <text x="398" y="303" font-size="9.5" fill="#5a3410" text-anchor="middle">timerqueue_add :1117</text>
+  <rect x="482" y="284" width="150" height="30" rx="9" fill="#f3f7fc" stroke="#cfe0f2"/>
+  <text x="557" y="303" font-size="9" fill="#274a78" text-anchor="middle">若成最早→重编程 clockevent</text>
+  <line x1="160" y1="299" x2="172" y2="299" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <line x1="314" y1="299" x2="326" y2="299" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <line x1="468" y1="299" x2="480" y2="299" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- 到期流 -->
+  <rect x="28" y="330" width="608" height="100" rx="13" fill="#fbfbfd" stroke="#ececf1"/>
+  <text x="44" y="351" font-size="11" font-weight="600" fill="#1d1d1f">到期 · hrtimer_interrupt（hrtimer.c:2083）</text>
+  <rect x="48" y="360" width="150" height="30" rx="9" fill="#f3f7fc" stroke="#cfe0f2"/>
+  <text x="123" y="379" font-size="9.5" fill="#274a78" text-anchor="middle">硬件 clockevent 到点</text>
+  <rect x="214" y="360" width="170" height="30" rx="9" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="299" y="379" font-size="9.5" fill="#1b2a4a" text-anchor="middle">hrtimer_interrupt :2083</text>
+  <rect x="400" y="360" width="150" height="30" rx="9" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="475" y="379" font-size="9" fill="#12402a" text-anchor="middle">跑到期 __hrtimer_run_queues :2113</text>
+  <line x1="198" y1="375" x2="212" y2="375" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <line x1="384" y1="375" x2="398" y2="375" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <text x="44" y="412" font-size="9.5" fill="#6e6e73">软回调经 raise HRTIMER_SOFTIRQ :2110 延到软中断上下文；跑完重算 next_event 并重编程；防挂起 retries &lt; 3 :2129。</text>
+
+  <!-- 右：对照 -->
+  <rect x="648" y="52" width="324" height="378" rx="13" fill="#fbfbfd" stroke="#ececf1"/>
+  <text x="810" y="74" font-size="11.5" font-weight="600" fill="#1d1d1f" text-anchor="middle">hrtimer vs 低精度 timer wheel</text>
+
+  <rect x="664" y="88" width="292" height="150" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="680" y="110" font-size="10.5" font-weight="600" fill="#1b2a4a">hrtimer（本图）</text>
+  <text x="680" y="131" font-size="10" fill="#1b2a4a">· 数据结构：红黑树 / timerqueue</text>
+  <text x="680" y="151" font-size="10" fill="#1b2a4a">· 精度：纳秒级</text>
+  <text x="680" y="171" font-size="10" fill="#1b2a4a">· 驱动：clockevent 到点（事件驱动）</text>
+  <text x="680" y="191" font-size="10" fill="#1b2a4a">· 增删：O(log n)</text>
+  <text x="680" y="211" font-size="10" fill="#1b2a4a">· 用途：nanosleep、调度截止期、</text>
+  <text x="680" y="228" font-size="10" fill="#5b7db1">　高精度定时</text>
+
+  <rect x="664" y="252" width="292" height="150" rx="11" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="680" y="274" font-size="10.5" font-weight="600" fill="#5a3410">timer wheel（低精度）</text>
+  <text x="680" y="295" font-size="10" fill="#5a3410">· 数据结构：分级定时器轮（哈希桶）</text>
+  <text x="680" y="315" font-size="10" fill="#5a3410">· 精度：tick 级（HZ 决定，约 ms）</text>
+  <text x="680" y="335" font-size="10" fill="#5a3410">· 驱动：每 tick 扫到期桶（周期驱动）</text>
+  <text x="680" y="355" font-size="10" fill="#5a3410">· 增删：O(1)（近似）</text>
+  <text x="680" y="375" font-size="10" fill="#5a3410">· 用途：网络重传、IO 超时</text>
+  <text x="680" y="392" font-size="10" fill="#93762e">　（多在到期前被取消）</text>
+</svg>

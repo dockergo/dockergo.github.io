@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="520" viewBox="0 0 1080 520" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="520" fill="#fbfbfd"/>
+
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">send/receive 解耦 —— 送入与取出分开,自然处理 1:N / N:1</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">现代编解码送满就取、取空就送 ｜ 老 API 一次 decode 回调假设"一包一帧",无法应对 B 帧/延迟</text>
+
+  <!-- 解码 卡 -->
+  <rect x="30" y="80" width="500" height="176" rx="14" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="52" y="108" font-size="12.5" font-weight="600" fill="#12402a">解码 · send_packet / receive_frame</text>
+  <rect x="52" y="122" width="130" height="66" rx="10" fill="#fff7e6" stroke="#e8cf9a"/>
+  <text x="117" y="150" font-size="10" font-weight="600" text-anchor="middle" fill="#5a3410">send_packet</text>
+  <text x="117" y="170" font-size="8.5" text-anchor="middle" fill="#93762e">送压缩包</text>
+  <rect x="378" y="122" width="130" height="66" rx="10" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="443" y="150" font-size="10" font-weight="600" text-anchor="middle" fill="#12402a">receive_frame</text>
+  <text x="443" y="170" font-size="8.5" text-anchor="middle" fill="#2f6f4f">收原始帧</text>
+  <text x="280" y="145" font-size="10" text-anchor="middle" fill="#2f6f4f" font-weight="600">解码器</text>
+  <text x="280" y="164" font-size="8" text-anchor="middle" fill="#4a8a63">1:N / N:1</text>
+  <path d="M182,155 L246,155" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M314,155 L378,155" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="52" y="212" font-size="9" fill="#2f6f4f">一个 packet 可能产多帧(如含 B 帧),或需多包才出一帧</text>
+  <text x="52" y="230" font-size="8.5" fill="#4a8a63">内部 ff_decode_receive_frame_internal(decode.c:625)按 cb_type 分派:</text>
+  <text x="52" y="246" font-size="8.5" fill="#4a8a63">FF_CODEC_CB_TYPE_RECEIVE_FRAME 调 cb.receive_frame,否则 decode_simple_receive_frame</text>
+
+  <!-- 编码 卡 -->
+  <rect x="550" y="80" width="500" height="176" rx="14" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="572" y="108" font-size="12.5" font-weight="600" fill="#12402a">编码 · send_frame / receive_packet</text>
+  <rect x="572" y="122" width="130" height="66" rx="10" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="637" y="150" font-size="10" font-weight="600" text-anchor="middle" fill="#12402a">send_frame</text>
+  <text x="637" y="170" font-size="8.5" text-anchor="middle" fill="#2f6f4f">送原始帧</text>
+  <rect x="898" y="122" width="130" height="66" rx="10" fill="#fff7e6" stroke="#e8cf9a"/>
+  <text x="963" y="150" font-size="10" font-weight="600" text-anchor="middle" fill="#5a3410">receive_packet</text>
+  <text x="963" y="170" font-size="8.5" text-anchor="middle" fill="#93762e">收压缩包</text>
+  <text x="800" y="145" font-size="10" text-anchor="middle" fill="#2f6f4f" font-weight="600">编码器</text>
+  <text x="800" y="164" font-size="8" text-anchor="middle" fill="#4a8a63">1:N / N:1</text>
+  <path d="M702,155 L766,155" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M834,155 L898,155" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="572" y="212" font-size="9" fill="#2f6f4f">encode.c:399;编码器必须返回引用计数缓冲(encode.c:419)</text>
+  <text x="572" y="230" font-size="8.5" fill="#4a8a63">可能攒多帧才出一个包(码率控制/前向预测),送入取出比例不定</text>
+
+  <!-- 流控 y=282 -->
+  <text x="30" y="300" font-size="12" font-weight="700" fill="#1d1d1f">流控信号</text>
+  <rect x="30" y="310" width="330" height="86" rx="12" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="195" y="336" font-size="11" font-weight="600" text-anchor="middle" fill="#5a3410">AVERROR(EAGAIN)</text>
+  <text x="195" y="358" font-size="8.5" text-anchor="middle" fill="#93762e">需更多输入 / 输出已满</text>
+  <text x="195" y="378" font-size="8.5" text-anchor="middle" fill="#93762e">先 receive 取输出再 send 送入</text>
+
+  <rect x="376" y="310" width="330" height="86" rx="12" fill="#fbeaea" stroke="#e6b8b8" filter="url(#soft)"/>
+  <text x="541" y="336" font-size="11" font-weight="600" text-anchor="middle" fill="#7a2a2a">AVERROR_EOF</text>
+  <text x="541" y="358" font-size="8.5" text-anchor="middle" fill="#a05a5a">结束标志</text>
+  <text x="541" y="378" font-size="8.5" text-anchor="middle" fill="#a05a5a">无更多输出可取</text>
+
+  <rect x="722" y="310" width="328" height="86" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="886" y="336" font-size="11" font-weight="600" text-anchor="middle" fill="#1b2a4a">draining 冲刷</text>
+  <text x="886" y="358" font-size="8.5" text-anchor="middle" fill="#5b7db1">send NULL 触发冲刷</text>
+  <text x="886" y="378" font-size="8.5" text-anchor="middle" fill="#5b7db1">取尽后置 draining_done</text>
+
+  <!-- 新旧对比 y=414 -->
+  <rect x="30" y="414" width="1020" height="66" rx="12" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="50" y="438" font-size="11" font-weight="600" fill="#1d1d1f">对比旧一次性 decode 回调</text>
+  <text x="50" y="459" font-size="9.5" fill="#6e6e73">老 API 一次 decode(got_frame_ptr)回调假设"一包一帧",但现代编码(B 帧/延迟)是 1:N / N:1</text>
+  <text x="50" y="475" font-size="9" fill="#86868b">send/receive 把送入和取出分开——送满就取、取空就送,自然处理任意包帧比例</text>
+
+  <text x="30" y="504" font-size="9" fill="#a1a1a6">源码基准 FFmpeg(git 1588bce) · libavcodec/decode.c:625/730 · avcodec.c:720 · encode.c:399/419</text>
+</svg>

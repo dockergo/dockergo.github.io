@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="510" viewBox="0 0 1080 510" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="510" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Rust 所有权三规则 —— 借用检查编译期验证,合起来无 GC 杜绝内存错误</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">所有权防重复释放 · 借用规则防数据竞争 · 生命周期防悬垂 —— 三条一起,运行时零开销</text>
+
+  <!-- Rule 1: 所有权+move (green) -->
+  <rect x="40" y="86" width="320" height="220" rx="14" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="62" y="112" font-size="12.5" font-weight="600" fill="#12402a">① 所有权 + move</text>
+  <text x="62" y="134" font-size="10" fill="#2f6f4f">每值唯一 owner</text>
+  <text x="62" y="154" font-size="10" fill="#2f6f4f">赋值/传参 move 转移所有权</text>
+  <rect x="62" y="168" width="276" height="46" rx="8" fill="#ffffff" stroke="#bfe0cd"/>
+  <text x="200" y="188" font-size="9.5" text-anchor="middle" fill="#12402a">原变量失效 (编译期禁再用)</text>
+  <text x="200" y="204" font-size="9" text-anchor="middle" fill="#2f6f4f">防 double-free</text>
+  <text x="62" y="236" font-size="10" fill="#2f6f4f">Copy 类型(整数等)例外:位拷贝</text>
+  <rect x="62" y="250" width="276" height="44" rx="8" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="200" y="270" font-size="9.5" font-weight="600" text-anchor="middle" fill="#2c5a3a">防重复释放</text>
+  <text x="200" y="286" font-size="9" text-anchor="middle" fill="#2f6f4f">每值恰好析构一次</text>
+
+  <!-- Rule 2: 借用规则 (blue) -->
+  <rect x="380" y="86" width="320" height="220" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="402" y="112" font-size="12.5" font-weight="600" fill="#1b2a4a">② 借用规则(读写互斥)</text>
+  <rect x="402" y="126" width="276" height="44" rx="8" fill="#ffffff" stroke="#bcd0ec"/>
+  <text x="540" y="146" font-size="9.5" font-weight="600" text-anchor="middle" fill="#1b2a4a">&amp;T 不可变借用 · 可多个</text>
+  <text x="540" y="162" font-size="9" text-anchor="middle" fill="#5b7db1">共享只读</text>
+  <rect x="402" y="176" width="276" height="44" rx="8" fill="#fff7e6" stroke="#e8cf9a"/>
+  <text x="540" y="196" font-size="9.5" font-weight="600" text-anchor="middle" fill="#5a3410">&amp;mut T 可变借用 · 唯一</text>
+  <text x="540" y="212" font-size="9" text-anchor="middle" fill="#93762e">独占可写</text>
+  <text x="402" y="240" font-size="10" fill="#1b2a4a">二者不能同时存在(可变期不许其它借用)</text>
+  <rect x="402" y="250" width="276" height="44" rx="8" fill="#f4eefb" stroke="#d9c7ec"/>
+  <text x="540" y="270" font-size="9.5" font-weight="600" text-anchor="middle" fill="#3d2a5a">防数据竞争</text>
+  <text x="540" y="286" font-size="9" text-anchor="middle" fill="#7c68a6">编译期版的读写锁</text>
+
+  <!-- Rule 3: 生命周期 (purple) -->
+  <rect x="720" y="86" width="320" height="220" rx="14" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="742" y="112" font-size="12.5" font-weight="600" fill="#3d2a5a">③ 生命周期</text>
+  <text x="742" y="134" font-size="10" fill="#7c68a6">借用不能超过被借值的生命周期</text>
+  <rect x="742" y="148" width="276" height="46" rx="8" fill="#ffffff" stroke="#d9c7ec"/>
+  <text x="880" y="168" font-size="9.5" text-anchor="middle" fill="#3d2a5a">universal_regions.rs</text>
+  <text x="880" y="184" font-size="9" text-anchor="middle" fill="#7c68a6">提取函数上声明的生命周期参数</text>
+  <text x="742" y="216" font-size="9.5" fill="#3d2a5a">如 &lt;'a, 'b: 'b&gt; 等标注</text>
+  <text x="742" y="236" font-size="10" fill="#3d2a5a">区域推断验证所有借用约束满足</text>
+  <rect x="742" y="250" width="276" height="44" rx="8" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="880" y="270" font-size="9.5" font-weight="600" text-anchor="middle" fill="#12402a">防悬垂</text>
+  <text x="880" y="286" font-size="9" text-anchor="middle" fill="#2f6f4f">引用不指向已释放的值</text>
+
+  <!-- bottom result band (green) -->
+  <rect x="40" y="330" width="1000" height="88" rx="14" fill="#f5faf6" stroke="#cfe6d5" filter="url(#soft)"/>
+  <text x="62" y="356" font-size="12" font-weight="600" fill="#2c5a3a">三条合起来 · 编译期杜绝内存错误,无需 GC</text>
+  <text x="62" y="380" font-size="10" fill="#2c5a3a">所有权防重复释放 + 借用规则防数据竞争(可变唯一 = 编译期读写锁) + 生命周期防悬垂</text>
+  <text x="62" y="402" font-size="10" fill="#2c5a3a">过不了不编译 —— 把内存错误挡在编译期,运行时零开销</text>
+
+  <text x="30" y="450" font-size="9.5" fill="#a1a1a6">误区:所有权限制太死没法写 —— 需共享可变用 Rc&lt;RefCell&gt; / Arc&lt;Mutex&gt;(运行时借用/锁),编译期检查是默认安全网</text>
+  <text x="30" y="474" font-size="9" fill="#a1a1a6">报错:E0502(可变+不可变冲突)、E0499(多可变)、E0505(move 走还借用) · 源码基准 Rust 1.99.0</text>
+</svg>

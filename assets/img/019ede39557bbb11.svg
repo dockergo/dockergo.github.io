@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="430" viewBox="0 0 1020 430"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1020" height="430" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">访问控制闸门 · 沙箱化嵌入时逐层收口（settings.hpp）</text>
+
+  <!-- 请求 -->
+  <rect x="40" y="120" width="150" height="70" rx="11" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="115" y="148" font-size="10.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">SQL 想访问</text>
+  <text x="115" y="168" font-size="9" fill="#5b7db1" text-anchor="middle">外部文件 / 网络 /</text>
+  <text x="115" y="182" font-size="9" fill="#5b7db1" text-anchor="middle">加载扩展</text>
+
+  <!-- 闸门1 -->
+  <rect x="230" y="110" width="180" height="90" rx="11" fill="#fff7e6" stroke="#f0dcae"/>
+  <text x="320" y="134" font-size="10.5" font-weight="600" fill="#7a4d00" text-anchor="middle">闸门① 外部访问</text>
+  <text x="320" y="154" font-size="9" fill="#9a7328" text-anchor="middle">enable_external_access?</text>
+  <text x="320" y="172" font-size="9" fill="#9a7328" text-anchor="middle">否 → 除白名单路径外</text>
+  <text x="320" y="186" font-size="9" fill="#9a7328" text-anchor="middle">一律拒绝</text>
+
+  <!-- 闸门2 -->
+  <rect x="450" y="110" width="180" height="90" rx="11" fill="#fff7e6" stroke="#f0dcae"/>
+  <text x="540" y="134" font-size="10.5" font-weight="600" fill="#7a4d00" text-anchor="middle">闸门② 路径白名单</text>
+  <text x="540" y="154" font-size="9" fill="#9a7328" text-anchor="middle">allowed_paths /</text>
+  <text x="540" y="172" font-size="9" fill="#9a7328" text-anchor="middle">allowed_directories</text>
+  <text x="540" y="186" font-size="9" fill="#9a7328" text-anchor="middle">config.hpp:141/143</text>
+
+  <!-- 闸门3 -->
+  <rect x="670" y="110" width="180" height="90" rx="11" fill="#fff7e6" stroke="#f0dcae"/>
+  <text x="760" y="134" font-size="10.5" font-weight="600" fill="#7a4d00" text-anchor="middle">闸门③ 扩展信任</text>
+  <text x="760" y="154" font-size="9" fill="#9a7328" text-anchor="middle">allow_unsigned_extensions</text>
+  <text x="760" y="172" font-size="9" fill="#9a7328" text-anchor="middle">allow_community_extensions</text>
+  <text x="760" y="186" font-size="9" fill="#9a7328" text-anchor="middle">settings.hpp:165/219</text>
+
+  <!-- 通过 -->
+  <rect x="890" y="120" width="100" height="70" rx="11" fill="#eafaf1" stroke="#bce6cd"/>
+  <text x="940" y="150" font-size="10.5" font-weight="600" fill="#0f5132" text-anchor="middle">放行</text>
+  <text x="940" y="170" font-size="9" fill="#3f8f66" text-anchor="middle">执行访问</text>
+
+  <line x1="190" y1="155" x2="230" y2="155" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="410" y1="155" x2="450" y2="155" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="630" y1="155" x2="670" y2="155" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="850" y1="155" x2="890" y2="155" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+
+  <!-- 拒绝 -->
+  <rect x="230" y="230" width="620" height="50" rx="10" fill="#fbeaea" stroke="#f0cccc"/>
+  <text x="540" y="252" font-size="10.5" font-weight="600" fill="#7d1f1f" text-anchor="middle">任一闸门不通过 → 报错拒绝（不静默降级）</text>
+  <text x="540" y="270" font-size="9" fill="#b06a6a" text-anchor="middle">默认信任本地、按需开放外部；生产嵌入建议最小授权</text>
+  <line x1="320" y1="200" x2="320" y2="230" stroke="#e0a0a0" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="540" y1="200" x2="540" y2="230" stroke="#e0a0a0" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="760" y1="200" x2="760" y2="230" stroke="#e0a0a0" stroke-width="1.2" marker-end="url(#ar)"/>
+
+  <!-- lock -->
+  <rect x="40" y="310" width="950" height="96" rx="14" fill="#f4eefb" stroke="#d9c9ef" filter="url(#soft)"/>
+  <text x="58" y="334" font-size="12" font-weight="600" fill="#3c1361">封印：lock_configuration = true（settings.hpp:1443）</text>
+  <text x="58" y="358" font-size="10.5" fill="#7a5aa8">先把上面各闸门配好（关外部访问、限路径、禁不签名扩展），再 lock_configuration 锁死——之后 SQL 无法改回这些设置。</text>
+  <text x="58" y="380" font-size="10.5" fill="#7a5aa8">这是"把 DuckDB 当受控执行沙箱嵌入"的标准姿势：宿主先设策略并封印，再对不可信来源开放执行 SQL。</text>
+  <text x="58" y="398" font-size="9.5" fill="#a58fc9">白名单选项（始终允许修改）除外，settings.hpp:232。</text>
+</svg>

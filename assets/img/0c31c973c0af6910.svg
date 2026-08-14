@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="536" viewBox="0 0 1080 536" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="536" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Flink 原理 · 依赖矩阵（接触面 × 支撑能力域）</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">两 API 汇入统一后端;有状态算子依赖状态+检查点,窗口依赖时间窗口+状态,跨子任务数据依赖网络栈</text>
+
+  <!-- column headers (support domains) -->
+  <g text-anchor="middle" font-size="8.6" font-weight="600">
+    <rect x="250" y="70" width="150" height="42" rx="8" fill="#eef3fb" stroke="#bcd0ec"/><text x="325" y="88" fill="#1b2a4a">状态管理</text><text x="325" y="103" font-size="7.4" font-weight="400" fill="#5b7db1">keyed/operator</text>
+    <rect x="408" y="70" width="150" height="42" rx="8" fill="#eafaf1" stroke="#bfe0cd"/><text x="483" y="88" fill="#12402a">检查点容错</text><text x="483" y="103" font-size="7.4" font-weight="400" fill="#2f6f4f">分布式快照</text>
+    <rect x="566" y="70" width="150" height="42" rx="8" fill="#eef3fb" stroke="#bcd0ec"/><text x="641" y="88" fill="#1b2a4a">时间与窗口</text><text x="641" y="103" font-size="7.4" font-weight="400" fill="#5b7db1">水位线/触发</text>
+    <rect x="724" y="70" width="150" height="42" rx="8" fill="#fff7e6" stroke="#e8cf9a"/><text x="799" y="88" fill="#5a3410">网络与交换</text><text x="799" y="103" font-size="7.4" font-weight="400" fill="#93762e">credit 分区</text>
+    <rect x="882" y="70" width="150" height="42" rx="8" fill="#eef3fb" stroke="#bcd0ec"/><text x="957" y="88" fill="#1b2a4a">图变换+调度</text><text x="957" y="103" font-size="7.4" font-weight="400" fill="#5b7db1">统一管线</text>
+  </g>
+
+  <!-- row: DataStream -->
+  <rect x="30" y="122" width="204" height="86" rx="10" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="46" y="150" font-size="10.5" font-weight="700" fill="#3d2a5a">DataStream API</text>
+  <text x="46" y="168" font-size="8" fill="#7a5aa8">命令式,精细控制</text>
+  <text x="46" y="184" font-size="8" fill="#7a5aa8">状态/定时器/窗口</text>
+  <text x="46" y="200" font-size="8" fill="#7a5aa8">直控算子行为</text>
+
+  <g text-anchor="middle" font-size="8" fill="#5a3410">
+    <rect x="250" y="122" width="150" height="86" rx="9" fill="#fdf6ea" stroke="#efdcb4"/><text x="325" y="160" font-weight="600">有状态算子</text><text x="325" y="176" font-size="7.4" fill="#93762e">依赖状态存取</text>
+    <rect x="408" y="122" width="150" height="86" rx="9" fill="#fdf6ea" stroke="#efdcb4"/><text x="483" y="160" font-weight="600">精确一次</text><text x="483" y="176" font-size="7.4" fill="#93762e">依赖检查点</text>
+    <rect x="566" y="122" width="150" height="86" rx="9" fill="#fdf6ea" stroke="#efdcb4"/><text x="641" y="160" font-weight="600">window 算子</text><text x="641" y="176" font-size="7.4" fill="#93762e">时间窗口+状态</text>
+    <rect x="724" y="122" width="150" height="86" rx="9" fill="#fdf6ea" stroke="#efdcb4"/><text x="799" y="160" font-weight="600">keyBy 重分区</text><text x="799" y="176" font-size="7.4" fill="#93762e">key-group 分区</text>
+    <rect x="882" y="122" width="150" height="86" rx="9" fill="#fdf6ea" stroke="#efdcb4"/><text x="957" y="160" font-weight="600">累积 Transformation</text><text x="957" y="176" font-size="7.4" fill="#93762e">→ StreamGraph</text>
+  </g>
+
+  <!-- row: Table/SQL -->
+  <rect x="30" y="218" width="204" height="86" rx="10" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="46" y="246" font-size="10.5" font-weight="700" fill="#3d2a5a">Table / SQL API</text>
+  <text x="46" y="264" font-size="8" fill="#7a5aa8">声明式,Calcite 优化</text>
+  <text x="46" y="280" font-size="8" fill="#7a5aa8">关系逻辑 + 优化器</text>
+  <text x="46" y="296" font-size="8" fill="#7a5aa8">语义翻译到算子</text>
+
+  <g text-anchor="middle" font-size="8" fill="#5a3410">
+    <rect x="250" y="218" width="150" height="86" rx="9" fill="#fdf6ea" stroke="#efdcb4"/><text x="325" y="256" font-weight="600">聚合/Join 状态</text><text x="325" y="272" font-size="7.4" fill="#93762e">retract/upsert</text>
+    <rect x="408" y="218" width="150" height="86" rx="9" fill="#fdf6ea" stroke="#efdcb4"/><text x="483" y="256" font-weight="600">流上一致性</text><text x="483" y="272" font-size="7.4" fill="#93762e">依赖检查点</text>
+    <rect x="566" y="218" width="150" height="86" rx="9" fill="#fdf6ea" stroke="#efdcb4"/><text x="641" y="256" font-weight="600">窗口聚合 SQL</text><text x="641" y="272" font-size="7.4" fill="#93762e">时间窗口+状态</text>
+    <rect x="724" y="218" width="150" height="86" rx="9" fill="#fdf6ea" stroke="#efdcb4"/><text x="799" y="256" font-weight="600">shuffle 交换</text><text x="799" y="272" font-size="7.4" fill="#93762e">优化器决定分区</text>
+    <rect x="882" y="218" width="150" height="86" rx="9" fill="#fdf6ea" stroke="#efdcb4"/><text x="957" y="252" font-weight="600">Planner 产</text><text x="957" y="266" font-weight="600">Transformation</text><text x="957" y="282" font-size="7.4" fill="#93762e">→ 同一 StreamGraph</text>
+  </g>
+
+  <!-- convergence note -->
+  <rect x="30" y="318" width="1002" height="52" rx="12" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="46" y="340" font-size="10.5" font-weight="700" fill="#1b2a4a">统一后端</text>
+  <text x="46" y="359" font-size="8.8" fill="#5b7db1">两 API 最终都汇入同一条 StreamGraph→JobGraph→ExecutionGraph 管线——矩阵每一格的依赖,都由这套统一支撑能力域承接。</text>
+
+  <!-- rule rows -->
+  <rect x="30" y="382" width="1002" height="120" rx="12" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="46" y="404" font-size="10.5" font-weight="700" fill="#1d1d1f">三条依赖规则（读矩阵的钥匙）</text>
+  <g font-size="8.8">
+    <rect x="46" y="414" width="316" height="36" rx="8" fill="#eafaf1" stroke="#bfe0cd"/><text x="60" y="430" font-weight="600" fill="#12402a">有状态算子</text><text x="60" y="444" font-size="8" fill="#2f6f4f">依赖 状态管理 + 检查点容错</text>
+    <rect x="374" y="414" width="316" height="36" rx="8" fill="#eef3fb" stroke="#bcd0ec"/><text x="388" y="430" font-weight="600" fill="#1b2a4a">窗口</text><text x="388" y="444" font-size="8" fill="#5b7db1">依赖 时间与窗口 + 状态管理</text>
+    <rect x="702" y="414" width="316" height="36" rx="8" fill="#fff7e6" stroke="#e8cf9a"/><text x="716" y="430" font-weight="600" fill="#5a3410">跨子任务数据</text><text x="716" y="444" font-size="8" fill="#93762e">依赖 网络与数据交换栈</text>
+  </g>
+  <text x="46" y="472" font-size="8.6" fill="#6e6e73">矩阵读法:行=接触面 API,列=支撑能力域,格=该 API 在该能力域上产生的具体依赖。</text>
+  <text x="46" y="490" font-size="8.6" fill="#6e6e73">越靠右的列越接近物理执行(网络/调度);越靠左的列越接近应用语义(状态/容错)。</text>
+</svg>

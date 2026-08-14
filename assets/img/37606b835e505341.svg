@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="520" viewBox="0 0 1080 520" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="520" fill="#fbfbfd"/>
+
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">PD 分离 —— prefill 与 decode 拆到不同实例,KV 跨实例传输</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">两阶段资源特征相反:prefill 吃算力、decode 吃带宽;混在一台会互相干扰。分离后各自独立扩缩、各自选并行配置</text>
+
+  <!-- 图例 -->
+  <rect x="700" y="18" width="12" height="12" rx="3" fill="#eafaf1" stroke="#bfe0cd"/><text x="717" y="28" font-size="9.5" fill="#12402a">Prefill 实例</text>
+  <rect x="800" y="18" width="12" height="12" rx="3" fill="#eef3fb" stroke="#c2d3ee"/><text x="817" y="28" font-size="9.5" fill="#2b5aa8">Decode 实例</text>
+  <rect x="900" y="18" width="12" height="12" rx="3" fill="#fff7e6" stroke="#e8cf9a"/><text x="917" y="28" font-size="9.5" fill="#5a3410">KV 传输</text>
+
+  <!-- Prefill 实例 -->
+  <rect x="30" y="70" width="360" height="230" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="50" y="94" font-size="12.5" font-weight="700" fill="#12402a">Prefill 实例(算力密集)</text>
+  <text x="50" y="112" font-size="9" fill="#2f6f4f">接请求 · 对整个 prompt 做一次 prefill</text>
+
+  <rect x="50" y="124" width="320" height="40" rx="8" fill="#ffffff" stroke="#bfe0cd"/>
+  <text x="60" y="141" font-size="9.5" fill="#2f6f4f">输入:完整 prompt(t0 … tn)</text>
+  <text x="60" y="156" font-size="8.5" fill="#86868b">首 token 延迟主要花在这里</text>
+
+  <path d="M210,164 L210,180" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <rect x="50" y="180" width="320" height="42" rx="8" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="210" y="200" font-size="10" font-weight="600" text-anchor="middle" fill="#12402a">大矩阵乘 · 打满 GPU 算力</text>
+  <text x="210" y="215" font-size="8.5" text-anchor="middle" fill="#2f6f4f">算出整段 prompt 的 K/V,写入本地 KV 块</text>
+
+  <path d="M210,222 L210,238" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <rect x="50" y="238" width="320" height="48" rx="8" fill="#fff7e6" stroke="#e8cf9a"/>
+  <text x="210" y="258" font-size="9.5" font-weight="600" text-anchor="middle" fill="#5a3410">KV Connector · save_kv</text>
+  <text x="210" y="274" font-size="8.5" text-anchor="middle" fill="#93762e">把这段 KV 交给传输层,自身随即释放块</text>
+
+  <!-- KV 传输通道 -->
+  <rect x="410" y="150" width="260" height="120" rx="12" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="540" y="176" font-size="11.5" font-weight="700" text-anchor="middle" fill="#5a3410">KV 传输层(kv_transfer)</text>
+  <text x="540" y="196" font-size="9" text-anchor="middle" fill="#93762e">NIXL / mooncake / RDMA 等</text>
+  <text x="540" y="214" font-size="9" text-anchor="middle" fill="#93762e">lookup buffer 对齐两侧请求顺序</text>
+  <text x="540" y="232" font-size="8.5" text-anchor="middle" fill="#86868b">prefill 与 decode 处理顺序可能不同,</text>
+  <text x="540" y="248" font-size="8.5" text-anchor="middle" fill="#86868b">用查找缓冲按 token 键取对应 KV</text>
+
+  <path d="M370,254 Q392,254 392,210 L408,210" stroke="#e8cf9a" stroke-width="2" fill="none" marker-end="url(#ar)"/>
+  <path d="M670,210 L690,210" stroke="#e8cf9a" stroke-width="2" fill="none" marker-end="url(#ar)"/>
+
+  <!-- Decode 实例 -->
+  <rect x="690" y="70" width="360" height="230" rx="12" fill="#eef3fb" stroke="#c2d3ee" filter="url(#soft)"/>
+  <text x="710" y="94" font-size="12.5" font-weight="700" fill="#2b5aa8">Decode 实例(带宽密集)</text>
+  <text x="710" y="112" font-size="9" fill="#3f6fbf">收到远端 KV 后,只做逐 token 解码</text>
+
+  <rect x="710" y="124" width="320" height="46" rx="8" fill="#ffffff" stroke="#c2d3ee"/>
+  <text x="870" y="143" font-size="9.5" font-weight="600" text-anchor="middle" fill="#2b5aa8">WAITING_FOR_REMOTE_KVS</text>
+  <text x="870" y="159" font-size="8.5" text-anchor="middle" fill="#86868b">调度器让请求等 KV 到齐再进 running</text>
+
+  <path d="M870,170 L870,186" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <rect x="710" y="186" width="320" height="42" rx="8" fill="#eef3fb" stroke="#c2d3ee"/>
+  <text x="870" y="206" font-size="10" font-weight="600" text-anchor="middle" fill="#2b5aa8">连续批处理 · 逐 token 生成</text>
+  <text x="870" y="221" font-size="8.5" text-anchor="middle" fill="#3f6fbf">读历史 KV + 每步追加一格,直到停止</text>
+
+  <path d="M870,228 L870,244" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <rect x="710" y="244" width="320" height="42" rx="8" fill="#f7f7f9" stroke="#e2e2e6"/>
+  <text x="870" y="264" font-size="9.5" font-weight="600" text-anchor="middle" fill="#1d1d1f">流式返回 token 给客户端</text>
+  <text x="870" y="279" font-size="8.5" text-anchor="middle" fill="#86868b">解码期算力有余,靠大 batch 摊带宽</text>
+
+  <!-- 底部:为什么分 -->
+  <rect x="30" y="316" width="1020" height="176" rx="12" fill="#ffffff" stroke="#ececef" filter="url(#soft)"/>
+  <text x="50" y="340" font-size="12" font-weight="700" fill="#1d1d1f">为什么要分开 · 混部 vs 分离</text>
+
+  <rect x="50" y="354" width="486" height="122" rx="10" fill="#fbeaea" stroke="#e6b8b8"/>
+  <text x="70" y="376" font-size="10.5" font-weight="600" fill="#7a2a2a">混部(prefill+decode 同一实例)</text>
+  <text x="70" y="398" font-size="9" fill="#a05a5a">· prefill 尖峰抢算力 → 正在解码的请求被拖慢(TBT 抖动)</text>
+  <text x="70" y="416" font-size="9" fill="#a05a5a">· 两阶段最优并行配置不同,只能折中一套</text>
+  <text x="70" y="434" font-size="9" fill="#a05a5a">· 无法按各自负载独立扩缩</text>
+  <text x="70" y="456" font-size="8.5" fill="#a05a5a">chunked prefill 能缓解干扰,但仍共享同一资源池</text>
+
+  <rect x="546" y="354" width="484" height="122" rx="10" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="566" y="376" font-size="10.5" font-weight="600" fill="#12402a">PD 分离</text>
+  <text x="566" y="398" font-size="9" fill="#2f6f4f">· prefill 池堆算力(大 TP)、decode 池堆副本吃带宽,各自最优</text>
+  <text x="566" y="416" font-size="9" fill="#2f6f4f">· 首 token 延迟(prefill)与逐 token 延迟(decode)互不干扰</text>
+  <text x="566" y="434" font-size="9" fill="#2f6f4f">· 两池按流量独立扩缩</text>
+  <text x="566" y="456" font-size="8.5" fill="#2f6f4f">代价:引入跨实例 KV 传输开销,需高速网络(RDMA)撑住</text>
+
+  <text x="30" y="510" font-size="9" fill="#a1a1a6" opacity="0"> </text>
+</svg>

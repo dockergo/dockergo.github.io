@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="430" viewBox="0 0 1020 430"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1020" height="430" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">Hash 聚合 · radix 分区并行（GROUP BY region, SUM(amount)）</text>
+
+  <!-- 各线程本地聚合 -->
+  <rect x="30" y="50" width="600" height="230" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="48" y="74" font-size="12.5" font-weight="600" fill="#1d1d1f">阶段一 · 各线程本地 partial 聚合（RadixPartitionedHashTable）</text>
+
+  <!-- 线程1 -->
+  <rect x="48" y="90" width="180" height="170" rx="11" fill="#eafaf1" stroke="#bce6cd"/>
+  <text x="138" y="110" font-size="10.5" font-weight="600" fill="#0f5132" text-anchor="middle">线程1</text>
+  <text x="138" y="128" font-size="8.5" fill="#3f8f66" text-anchor="middle">按 hash(region) 低位分区</text>
+  <rect x="60" y="138" width="156" height="26" rx="6" fill="#ffffff" stroke="#bce6cd"/><text x="138" y="155" font-size="8.5" fill="#0f5132" text-anchor="middle">分区0: {EU→Σ, US→Σ}</text>
+  <rect x="60" y="168" width="156" height="26" rx="6" fill="#ffffff" stroke="#bce6cd"/><text x="138" y="185" font-size="8.5" fill="#0f5132" text-anchor="middle">分区1: {APAC→Σ}</text>
+  <rect x="60" y="198" width="156" height="26" rx="6" fill="#ffffff" stroke="#bce6cd"/><text x="138" y="215" font-size="8.5" fill="#0f5132" text-anchor="middle">分区2: …</text>
+  <text x="138" y="245" font-size="8" fill="#3f8f66" text-anchor="middle">同 region 累加进同一槽</text>
+
+  <!-- 线程N -->
+  <rect x="248" y="90" width="180" height="170" rx="11" fill="#eafaf1" stroke="#bce6cd"/>
+  <text x="338" y="110" font-size="10.5" font-weight="600" fill="#0f5132" text-anchor="middle">线程N</text>
+  <text x="338" y="128" font-size="8.5" fill="#3f8f66" text-anchor="middle">同样的分区函数</text>
+  <rect x="260" y="138" width="156" height="26" rx="6" fill="#ffffff" stroke="#bce6cd"/><text x="338" y="155" font-size="8.5" fill="#0f5132" text-anchor="middle">分区0: {EU→Σ}</text>
+  <rect x="260" y="168" width="156" height="26" rx="6" fill="#ffffff" stroke="#bce6cd"/><text x="338" y="185" font-size="8.5" fill="#0f5132" text-anchor="middle">分区1: {APAC→Σ}</text>
+  <rect x="260" y="198" width="156" height="26" rx="6" fill="#ffffff" stroke="#bce6cd"/><text x="338" y="215" font-size="8.5" fill="#0f5132" text-anchor="middle">分区2: …</text>
+
+  <rect x="448" y="90" width="166" height="170" rx="11" fill="#fbeaea" stroke="#f0cccc"/>
+  <text x="531" y="112" font-size="10.5" font-weight="600" fill="#7d1f1f" text-anchor="middle">内存压力时</text>
+  <text x="531" y="136" font-size="9" fill="#b06a6a" text-anchor="middle">某分区过大 →</text>
+  <text x="531" y="154" font-size="9" fill="#b06a6a" text-anchor="middle">继续按更高位</text>
+  <text x="531" y="172" font-size="9" fill="#b06a6a" text-anchor="middle">radix 再分区</text>
+  <text x="531" y="196" font-size="9" fill="#b06a6a" text-anchor="middle">或溢写临时文件</text>
+  <text x="531" y="220" font-size="9" fill="#b06a6a" text-anchor="middle">（larger-than-memory）</text>
+
+  <!-- 阶段二 合并读出 -->
+  <rect x="30" y="296" width="960" height="120" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="48" y="320" font-size="12.5" font-weight="600" fill="#1d1d1f">阶段二 · Finalize + Source：按分区合并，再读出</text>
+
+  <rect x="48" y="336" width="280" height="62" rx="11" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="188" y="360" font-size="10.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">同一分区跨线程合并（Combine）</text>
+  <text x="188" y="380" font-size="9" fill="#5b7db1" text-anchor="middle">分区独立 → 可并行合并、互不加锁</text>
+
+  <rect x="360" y="336" width="280" height="62" rx="11" fill="#eafaf1" stroke="#bce6cd"/>
+  <text x="500" y="360" font-size="10.5" font-weight="600" fill="#0f5132" text-anchor="middle">每分区产出最终分组行</text>
+  <text x="500" y="380" font-size="9" fill="#3f8f66" text-anchor="middle">{EU→ΣΣ, US→ΣΣ, APAC→ΣΣ}</text>
+
+  <rect x="672" y="336" width="298" height="62" rx="11" fill="#f6f6f8" stroke="#e2e2e7"/>
+  <text x="821" y="360" font-size="10.5" font-weight="600" fill="#6a6a70" text-anchor="middle">作为 Source 推给下游</text>
+  <text x="821" y="380" font-size="9" fill="#8a8a90" text-anchor="middle">→ 排序 → LIMIT（本例）</text>
+
+  <line x1="328" y1="367" x2="360" y2="367" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="640" y1="367" x2="672" y2="367" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+
+  <line x1="220" y1="260" x2="220" y2="296" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+  <text x="234" y="284" font-size="9" fill="#86868b">Finalize</text>
+</svg>

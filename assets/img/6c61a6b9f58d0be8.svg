@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="380" viewBox="0 0 1000 380"
+     font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="aG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+    <marker id="aA" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#c99a3a"/></marker>
+  </defs>
+  <rect width="1000" height="380" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">Grappler 内存优化 · 用算力/带宽换峰值显存</text>
+  <text x="970" y="30" font-size="9.5" fill="#a1a1a6" text-anchor="end">图级 memory pass</text>
+  <line x1="30" y1="44" x2="970" y2="44" stroke="#e4e7ec" stroke-width="1"/>
+
+  <!-- 左：重算 -->
+  <rect x="30" y="58" width="466" height="278" rx="14" fill="#eafaf1" stroke="#bce6cd" filter="url(#soft)"/>
+  <text x="52" y="82" font-size="12.5" font-weight="600" fill="#0f5132">重算换显存（RecomputeSubgraph）· 即梯度检查点</text>
+  <text x="52" y="102" font-size="9.5" fill="#2f6f4f">前向中间激活标记"用完即丢"，反向要用时重算一遍</text>
+
+  <!-- 前向链 -->
+  <rect x="52" y="118" width="92" height="40" rx="8" fill="#ffffff" stroke="#bce6cd"/><text x="98" y="142" font-size="9.5" fill="#0f5132" text-anchor="middle">前向 A</text>
+  <rect x="176" y="118" width="92" height="40" rx="8" fill="#ffffff" stroke="#bce6cd" stroke-dasharray="4 2"/><text x="222" y="138" font-size="9.5" fill="#0f5132" text-anchor="middle">激活 B</text><text x="222" y="152" font-size="7.5" fill="#7a2a2a" text-anchor="middle">用完即丢</text>
+  <rect x="300" y="118" width="92" height="40" rx="8" fill="#ffffff" stroke="#bce6cd"/><text x="346" y="142" font-size="9.5" fill="#0f5132" text-anchor="middle">前向 C</text>
+  <line x1="144" y1="138" x2="176" y2="138" stroke="#2f9e6e" stroke-width="1.6" marker-end="url(#aG)"/>
+  <line x1="268" y1="138" x2="300" y2="138" stroke="#2f9e6e" stroke-width="1.6" marker-end="url(#aG)"/>
+
+  <!-- 反向需要 B -> 重算 -->
+  <rect x="176" y="212" width="92" height="40" rx="8" fill="#f4eefb" stroke="#d9c9ef"/><text x="222" y="232" font-size="9.5" fill="#3c1361" text-anchor="middle">反向用 B</text><text x="222" y="246" font-size="7.5" fill="#7a4fb0" text-anchor="middle">触发重算</text>
+  <path d="M98 158 L98 232 L176 232" fill="none" stroke="#c99a3a" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#aA)"/>
+  <text x="120" y="200" font-size="8.5" fill="#93762e">从 A 重算出 B</text>
+
+  <rect x="52" y="272" width="422" height="52" rx="10" fill="#ffffff" stroke="#ececf1"/>
+  <text x="66" y="294" font-size="9.5" fill="#494950">代价：多一次前向计算；收益：峰值显存大降。</text>
+  <text x="66" y="313" font-size="9.5" fill="#494950">长序列 / 大模型训练缓解 OOM 的首选。</text>
+
+  <!-- 右：换出 -->
+  <rect x="518" y="58" width="452" height="278" rx="14" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="540" y="82" font-size="12.5" font-weight="600" fill="#5a3410">换出（SwappingPass）· device ↔ host 搬运</text>
+  <text x="540" y="102" font-size="9.5" fill="#93762e">暂不用的张量搬到主存，临用前再搬回显存</text>
+
+  <rect x="540" y="128" width="180" height="56" rx="10" fill="#ffffff" stroke="#e8cf9a"/><text x="630" y="152" font-size="10" font-weight="600" fill="#5a3410" text-anchor="middle">GPU 显存</text><text x="630" y="170" font-size="8.5" fill="#93762e" text-anchor="middle">紧张，容量有限</text>
+  <rect x="770" y="128" width="180" height="56" rx="10" fill="#ffffff" stroke="#e8cf9a"/><text x="860" y="152" font-size="10" font-weight="600" fill="#5a3410" text-anchor="middle">Host 主存</text><text x="860" y="170" font-size="8.5" fill="#93762e" text-anchor="middle">大、暂存空闲张量</text>
+  <line x1="720" y1="146" x2="770" y2="146" stroke="#c99a3a" stroke-width="1.6" marker-end="url(#aA)"/><text x="745" y="140" font-size="8" fill="#93762e" text-anchor="middle">换出</text>
+  <line x1="770" y1="168" x2="720" y2="168" stroke="#c99a3a" stroke-width="1.6" marker-end="url(#aA)"/><text x="745" y="182" font-size="8" fill="#93762e" text-anchor="middle">临用搬回</text>
+
+  <rect x="540" y="200" width="410" height="52" rx="10" fill="#ffffff" stroke="#ececf1"/>
+  <text x="554" y="222" font-size="9.5" fill="#494950">代价：PCIe 拷贝带宽 + 调度时机；</text>
+  <text x="554" y="241" font-size="9.5" fill="#494950">收益：让超显存的中间张量"腾挪"过去。</text>
+
+  <rect x="540" y="268" width="410" height="56" rx="10" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="554" y="290" font-size="9.5" fill="#1b2a4a">两者都是<tspan font-weight="600">图级 pass</tspan>：改写 GraphDef 插入重算/换出节点，</text>
+  <text x="554" y="309" font-size="9.5" fill="#1b2a4a">对用户代码透明；只在图模式（tf.function）生效。</text>
+</svg>

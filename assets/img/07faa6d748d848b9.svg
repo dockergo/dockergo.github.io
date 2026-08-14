@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="500" viewBox="0 0 1000 500" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1000" height="500" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">plug 按任务攒批合并 · mq-deadline 用"扇区排序红黑树 + 读写 deadline FIFO"决定派发顺序</text>
+
+  <!-- 左 plug -->
+  <rect x="28" y="54" width="300" height="420" rx="13" fill="#fbfbfd" stroke="#ececf1"/>
+  <text x="46" y="76" font-size="11.5" font-weight="600" fill="#1d1d1f">plug 攒批（每任务）</text>
+
+  <rect x="48" y="90" width="260" height="44" rx="10" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="178" y="110" font-size="10.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">进程执行（如回写循环）</text>
+  <text x="178" y="126" font-size="9" fill="#5b7db1" text-anchor="middle">短时间内产生多个块请求</text>
+
+  <rect x="48" y="152" width="260" height="116" rx="11" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="178" y="173" font-size="10.5" font-weight="600" fill="#12402a" text-anchor="middle">blk_plug（blkdev.h:1181）</text>
+  <text x="64" y="196" font-size="9.5" fill="#12402a">· mq_list：暂存的 request 链</text>
+  <text x="64" y="216" font-size="9.5" fill="#12402a">· rq_count 计数（:1189）</text>
+  <text x="64" y="236" font-size="9.5" fill="#12402a">· 每任务私有，不跨任务</text>
+  <text x="64" y="256" font-size="9" fill="#2f6f4f">相邻请求先攒着，不逐个下发</text>
+
+  <rect x="48" y="286" width="260" height="94" rx="11" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="178" y="307" font-size="10.5" font-weight="600" fill="#5a3410" text-anchor="middle">flush 统一下发</text>
+  <text x="64" y="329" font-size="9.5" fill="#93762e">· flush_plug_list（blk-mq.c:2969）</text>
+  <text x="64" y="349" font-size="9.5" fill="#93762e">· 触发：主动 unplug / 调度切换</text>
+  <text x="64" y="369" font-size="9.5" fill="#93762e">· 期间相邻请求合并、批量派发</text>
+
+  <text x="46" y="404" font-size="9" fill="#a1a1a6">价值：减少驱动交互与锁获取次数</text>
+
+  <g stroke="#c7c7cc" stroke-width="1.6" fill="none">
+    <path d="M178,134 L178,152" marker-end="url(#ar)"/>
+    <path d="M178,268 L178,286" marker-end="url(#ar)"/>
+  </g>
+
+  <!-- 右 mq-deadline -->
+  <rect x="350" y="54" width="622" height="420" rx="13" fill="#fbfbfd" stroke="#ececf1"/>
+  <text x="368" y="76" font-size="11.5" font-weight="600" fill="#1d1d1f">mq-deadline 决策（block/mq-deadline.c，每优先级 dd_per_prio 两套结构）</text>
+
+  <rect x="370" y="92" width="186" height="86" rx="11" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="463" y="113" font-size="10.5" font-weight="600" fill="#12402a" text-anchor="middle">红黑树 sort_list</text>
+  <text x="463" y="134" font-size="9.5" fill="#2f6f4f" text-anchor="middle">按扇区排序</text>
+  <text x="463" y="152" font-size="9.5" fill="#2f6f4f" text-anchor="middle">电梯/合并用</text>
+  <text x="463" y="169" font-size="9" fill="#2f6f4f" text-anchor="middle">顺序访问、省寻道</text>
+
+  <rect x="572" y="92" width="184" height="86" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="664" y="113" font-size="10.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">FIFO 读 fifo_list</text>
+  <text x="664" y="134" font-size="9.5" fill="#5b7db1" text-anchor="middle">按到达时间排序</text>
+  <text x="664" y="152" font-size="9.5" fill="#5b7db1" text-anchor="middle">read_expire = HZ/2</text>
+  <text x="664" y="169" font-size="9" fill="#5b7db1" text-anchor="middle">默认 500ms（:30）</text>
+
+  <rect x="772" y="92" width="184" height="86" rx="11" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="864" y="113" font-size="10.5" font-weight="600" fill="#5a3410" text-anchor="middle">FIFO 写 fifo_list</text>
+  <text x="864" y="134" font-size="9.5" fill="#93762e" text-anchor="middle">按到达时间排序</text>
+  <text x="864" y="152" font-size="9.5" fill="#93762e" text-anchor="middle">write_expire = 5*HZ</text>
+  <text x="864" y="169" font-size="9" fill="#93762e" text-anchor="middle">默认 5s（:31）</text>
+
+  <!-- 决策步骤 -->
+  <rect x="370" y="208" width="186" height="128" rx="11" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="463" y="229" font-size="10.5" font-weight="600" fill="#1d1d1f" text-anchor="middle">① 批处理</text>
+  <text x="386" y="252" font-size="9.5" fill="#6e6e73">同方向沿红黑树</text>
+  <text x="386" y="270" font-size="9.5" fill="#6e6e73">扇序连续取请求</text>
+  <text x="386" y="288" font-size="9.5" fill="#6e6e73">直到 fifo_batch 上限</text>
+  <text x="386" y="312" font-size="9" fill="#a1a1a6">扇序批发、寻道最省</text>
+
+  <rect x="572" y="208" width="184" height="128" rx="11" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="664" y="229" font-size="10.5" font-weight="600" fill="#1d1d1f" text-anchor="middle">② 换向选方向</text>
+  <text x="588" y="252" font-size="9.5" fill="#6e6e73">批结束优先选读</text>
+  <text x="588" y="270" font-size="9.5" fill="#6e6e73">（同步、更敏感）</text>
+  <text x="588" y="288" font-size="9.5" fill="#6e6e73">写被饿 writes_starved</text>
+  <text x="588" y="306" font-size="9.5" fill="#6e6e73">次（默认 2，:37）才轮写</text>
+
+  <rect x="772" y="208" width="184" height="128" rx="11" fill="#fbeaea" stroke="#e7c3c3" filter="url(#soft)"/>
+  <text x="864" y="229" font-size="10.5" font-weight="600" fill="#4a1414" text-anchor="middle">③ 超时抢占</text>
+  <text x="788" y="252" font-size="9.5" fill="#7a2a2a">选定方向内，若队首</text>
+  <text x="788" y="270" font-size="9.5" fill="#7a2a2a">FIFO 请求 deadline 过</text>
+  <text x="788" y="288" font-size="9.5" fill="#7a2a2a">→ 跳去服务最早超时者</text>
+  <text x="788" y="312" font-size="9" fill="#7a2a2a">防止被排序无限推迟</text>
+
+  <g stroke="#c7c7cc" stroke-width="1.5" fill="none">
+    <path d="M463,178 L463,208" marker-end="url(#ar)"/>
+    <path d="M556,272 L572,272" marker-end="url(#ar)"/>
+    <path d="M756,272 L772,272" marker-end="url(#ar)"/>
+    <path d="M664,178 L664,208" marker-end="url(#ar)"/>
+    <path d="M864,178 L864,208" marker-end="url(#ar)"/>
+  </g>
+
+  <text x="368" y="366" font-size="9.5" fill="#6e6e73">dd_dispatch_request :452 → __dd_dispatch_request :325 驱动上述选择</text>
+  <text x="368" y="386" font-size="9.5" fill="#6e6e73">效果：顺序访问省寻道 + 读优先降延迟 + deadline 兜底防饿死</text>
+
+  <!-- 左→右 -->
+  <path d="M308,320 L338,320 L338,135 L370,135" stroke="#c7c7cc" stroke-width="1.6" fill="none" marker-end="url(#ar)"/>
+  <text x="333" y="200" font-size="8.5" fill="#a1a1a6" text-anchor="middle">入</text>
+  <text x="333" y="214" font-size="8.5" fill="#a1a1a6" text-anchor="middle">调</text>
+  <text x="333" y="228" font-size="8.5" fill="#a1a1a6" text-anchor="middle">度</text>
+  <text x="333" y="242" font-size="8.5" fill="#a1a1a6" text-anchor="middle">器</text>
+</svg>

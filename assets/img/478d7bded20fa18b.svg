@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="380" viewBox="0 0 920 380" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+    <marker id="arx" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#8a5cae"/></marker>
+  </defs>
+  <rect width="920" height="380" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">task 状态机与事件发射 · 每步转移 Publish 一个 topic，exec 独立记账</text>
+
+  <!-- task 主状态机 -->
+  <text x="30" y="62" font-size="12" font-weight="600" fill="#1d8f3f">task = 容器主进程（PID 1）的生命周期</text>
+
+  <rect x="40" y="80" width="150" height="60" rx="11" fill="#f5faf6" stroke="#cfe6d2" filter="url(#soft)"/>
+  <text x="115" y="106" font-size="11" font-weight="600" fill="#1d8f3f" text-anchor="middle">Created</text>
+  <text x="115" y="126" font-size="9" fill="#4a8a5c" text-anchor="middle">Create :171 起 shim</text>
+
+  <rect x="290" y="80" width="150" height="60" rx="11" fill="#f5faf6" stroke="#cfe6d2" filter="url(#soft)"/>
+  <text x="365" y="106" font-size="11" font-weight="600" fill="#1d8f3f" text-anchor="middle">Running</text>
+  <text x="365" y="126" font-size="9" fill="#4a8a5c" text-anchor="middle">Start :295 起主进程</text>
+
+  <rect x="540" y="80" width="150" height="60" rx="11" fill="#fbf7ef" stroke="#ecdcbf" filter="url(#soft)"/>
+  <text x="615" y="106" font-size="11" font-weight="600" fill="#8a6d3b" text-anchor="middle">Stopped</text>
+  <text x="615" y="126" font-size="9" fill="#b08535" text-anchor="middle">主进程退出（上报）</text>
+
+  <rect x="740" y="80" width="150" height="60" rx="11" fill="#f7f7f9" stroke="#ececef" filter="url(#soft)"/>
+  <text x="815" y="106" font-size="11" font-weight="600" fill="#3a3a3c" text-anchor="middle">Deleted</text>
+  <text x="815" y="126" font-size="9" fill="#6e6e73" text-anchor="middle">Delete :318 回收</text>
+
+  <path d="M190 110 L290 110" fill="none" stroke="#b8b8bf" stroke-width="1.6" marker-end="url(#ar)"/>
+  <path d="M440 110 L540 110" fill="none" stroke="#b8b8bf" stroke-width="1.6" marker-end="url(#ar)"/>
+  <path d="M690 110 L740 110" fill="none" stroke="#b8b8bf" stroke-width="1.6" marker-end="url(#ar)"/>
+
+  <!-- 事件发射 -->
+  <text x="30" y="176" font-size="11" fill="#8a5cae">↓ 每步转移向 events exchange Publish 一个 topic（core/runtime/events.go）</text>
+  <g font-size="9">
+    <rect x="40" y="186" width="150" height="26" rx="6" fill="#faf4fb" stroke="#e4cdea"/><text x="115" y="203" fill="#8944ab" text-anchor="middle">/tasks/create :26</text>
+    <rect x="290" y="186" width="150" height="26" rx="6" fill="#faf4fb" stroke="#e4cdea"/><text x="365" y="203" fill="#8944ab" text-anchor="middle">/tasks/start :28</text>
+    <rect x="540" y="186" width="150" height="26" rx="6" fill="#faf4fb" stroke="#e4cdea"/><text x="615" y="203" fill="#8944ab" text-anchor="middle">/tasks/exit :32</text>
+    <rect x="740" y="186" width="150" height="26" rx="6" fill="#faf4fb" stroke="#e4cdea"/><text x="815" y="203" fill="#8944ab" text-anchor="middle">/tasks/delete :34</text>
+  </g>
+  <path d="M115 140 L115 186" fill="none" stroke="#8a5cae" stroke-width="1.3" stroke-dasharray="4 3" marker-end="url(#arx)"/>
+  <path d="M365 140 L365 186" fill="none" stroke="#8a5cae" stroke-width="1.3" stroke-dasharray="4 3" marker-end="url(#arx)"/>
+  <path d="M615 140 L615 186" fill="none" stroke="#8a5cae" stroke-width="1.3" stroke-dasharray="4 3" marker-end="url(#arx)"/>
+  <path d="M815 140 L815 186" fill="none" stroke="#8a5cae" stroke-width="1.3" stroke-dasharray="4 3" marker-end="url(#arx)"/>
+
+  <!-- exec 分支 -->
+  <rect x="30" y="238" width="500" height="100" rx="12" fill="#f6f8fc" stroke="#cfe0f2"/>
+  <text x="46" y="260" font-size="11.5" font-weight="600" fill="#5b7db1">exec = 容器内新进程（独立记账，不影响主 task）</text>
+  <text x="46" y="284" font-size="10" fill="#1b2a4a">Exec :518 在同一命名空间起新进程，共享 rootfs / cgroup</text>
+  <text x="46" y="304" font-size="10" fill="#1b2a4a">有独立 process id，DeleteProcess :346 单独清理</text>
+  <text x="46" y="324" font-size="9.5" fill="#5b7db1">事件：/tasks/exec-added、/tasks/exec-started</text>
+
+  <!-- 订阅侧 -->
+  <rect x="550" y="238" width="340" height="100" rx="12" fill="#faf4fb" stroke="#e4cdea"/>
+  <text x="566" y="260" font-size="11.5" font-weight="600" fill="#8944ab">订阅者按 topic/namespace 过滤各取所需</text>
+  <text x="566" y="284" font-size="9.5" fill="#9a76c0">· CRI 订阅 /tasks/exit → 更新 Pod 状态回报 kubelet</text>
+  <text x="566" y="303" font-size="9.5" fill="#9a76c0">· 监控计数、ctr events 实时观察</text>
+  <text x="566" y="324" font-size="9" fill="#a1a1a6">事件是"变化通知"非真源，丢事件不致命（真源在元数据库/shim）</text>
+
+  <text x="30" y="364" font-size="11" fill="#a1a1a6">tasks 服务只派发（local.go:268 → v2Runtime），runtime/shim 才真正操作容器；状态转移与事件发射一一对应</text>
+</svg>

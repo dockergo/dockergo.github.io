@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="520" viewBox="0 0 1080 520"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1080" height="520" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Milvus 检索 · search(ANN)与 query(标量取)</text>
+  <text x="30" y="50" font-size="11" fill="#a1a1a6">两者都带 guaranteeTimestamp,QueryNode 等 tSafe 追上该 ts 才返回一致快照</text>
+
+  <!-- search -->
+  <rect x="40" y="72" width="480" height="240" rx="14" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="60" y="98" font-size="13" font-weight="600" fill="#3d2a5a">search(ANN 最近邻)· 核心操作</text>
+  <text x="60" y="120" font-size="9.5" fill="#3d2a5a">输入:查询向量 + topK + metric(L2/IP/COSINE)</text>
+  <text x="60" y="140" font-size="9.5" fill="#3d2a5a">可带标量过滤表达式 expr(见预过滤)</text>
+
+  <rect x="60" y="152" width="440" height="60" rx="10" fill="#ffffff" stroke="#d9c7ec"/>
+  <text x="280" y="176" font-size="10" font-weight="600" fill="#3d2a5a" text-anchor="middle">Proxy 下发到持有相关段的 QueryNode</text>
+  <text x="280" y="196" font-size="9.5" fill="#6e6e73" text-anchor="middle">各段并行 ANN → 归并取全局 topK 返回</text>
+
+  <text x="60" y="238" font-size="10" font-weight="600" fill="#3d2a5a">为什么 search 是核心</text>
+  <text x="60" y="258" font-size="9.5" fill="#6e6e73">向量库存在意义就是"相似度检索"</text>
+  <text x="60" y="278" font-size="9.5" fill="#6e6e73">RAG 找相关文档 · 推荐找相似物品 · 图搜找相似图</text>
+  <text x="60" y="298" font-size="9" fill="#a1a1a6">误区:search 是精确最近邻 —— 是 ANN 近似(除非 FLAT)</text>
+
+  <!-- query -->
+  <rect x="560" y="72" width="480" height="240" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="580" y="98" font-size="13" font-weight="600" fill="#1b2a4a">query(标量条件取)</text>
+  <text x="580" y="120" font-size="9.5" fill="#274a78">按标量谓词取实体,不做向量相似度</text>
+  <text x="580" y="140" font-size="9.5" fill="#274a78">类似 SELECT ... WHERE(task_query.go:860)</text>
+
+  <rect x="580" y="152" width="440" height="60" rx="10" fill="#ffffff" stroke="#bcd0ec"/>
+  <text x="800" y="176" font-size="10" font-weight="600" fill="#1b2a4a" text-anchor="middle">用标量索引/字段扫描筛出实体</text>
+  <text x="800" y="196" font-size="9.5" fill="#6e6e73" text-anchor="middle">返回满足条件的行,无 topK 排序语义</text>
+
+  <text x="580" y="238" font-size="10" font-weight="600" fill="#1b2a4a">与 search 的区别</text>
+  <text x="580" y="258" font-size="9.5" fill="#5b7db1">search = 相似度检索(距离排序,近似)</text>
+  <text x="580" y="278" font-size="9.5" fill="#5b7db1">query = 关系式条件取(精确谓词,无向量)</text>
+  <text x="580" y="298" font-size="9" fill="#a1a1a6">二者互补:先 query 缩范围,再 search 找相似</text>
+
+  <!-- shared consistency layer -->
+  <rect x="40" y="336" width="1000" height="86" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="60" y="362" font-size="12" font-weight="600" fill="#1b2a4a">共用:一致性(guaranteeTimestamp 读一致快照)</text>
+  <text x="60" y="386" font-size="10" fill="#274a78">两者都带 guaranteeTimestamp —— QueryNode 等 tSafe(已消费日志水位)追上该 ts 才返回</text>
+  <text x="60" y="406" font-size="10" fill="#274a78">保证读到一致快照;一致性级别(Strong/Bounded/Eventually/Session)= 选不同 guaranteeTs</text>
+
+  <!-- iterator -->
+  <rect x="40" y="440" width="1000" height="60" rx="13" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="60" y="464" font-size="11" font-weight="600" fill="#1d1d1f">iterator 分页</text>
+  <text x="60" y="486" font-size="10" fill="#3f3f45">钉住 MvccTimestamp 保跨页快照稳定 —— 分页遍历期间看同一时间点的数据,不受新写入干扰</text>
+
+  <!-- connector -->
+  <path d="M280,312 L280,336" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M800,312 L800,336" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+</svg>

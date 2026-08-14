@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="430" viewBox="0 0 1020 430"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1020" height="430" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">系统目录 · 元数据本身就是表（pg_catalog）+ 缓存加速</text>
+
+  <!-- 目录表 -->
+  <rect x="30" y="56" width="600" height="240" rx="14" fill="#fff7e6" stroke="#f0dcae" filter="url(#soft)"/>
+  <text x="48" y="80" font-size="12.5" font-weight="600" fill="#7a4d00">核心系统目录表（都是普通 heap 表）</text>
+  <rect x="48" y="96" width="180" height="56" rx="9" fill="#ffffff" stroke="#f0dcae"/><text x="138" y="118" font-size="10" font-weight="600" fill="#7a4d00" text-anchor="middle">pg_class</text><text x="138" y="138" font-size="8.5" fill="#9a7328" text-anchor="middle">所有表/索引/视图/序列</text>
+  <rect x="238" y="96" width="180" height="56" rx="9" fill="#ffffff" stroke="#f0dcae"/><text x="328" y="118" font-size="10" font-weight="600" fill="#7a4d00" text-anchor="middle">pg_attribute</text><text x="328" y="138" font-size="8.5" fill="#9a7328" text-anchor="middle">列定义</text>
+  <rect x="428" y="96" width="184" height="56" rx="9" fill="#ffffff" stroke="#f0dcae"/><text x="520" y="118" font-size="10" font-weight="600" fill="#7a4d00" text-anchor="middle">pg_index</text><text x="520" y="138" font-size="8.5" fill="#9a7328" text-anchor="middle">索引定义</text>
+  <rect x="48" y="164" width="180" height="56" rx="9" fill="#ffffff" stroke="#f0dcae"/><text x="138" y="186" font-size="10" font-weight="600" fill="#7a4d00" text-anchor="middle">pg_statistic</text><text x="138" y="206" font-size="8.5" fill="#9a7328" text-anchor="middle">优化器用的列统计</text>
+  <rect x="238" y="164" width="180" height="56" rx="9" fill="#ffffff" stroke="#f0dcae"/><text x="328" y="186" font-size="10" font-weight="600" fill="#7a4d00" text-anchor="middle">pg_depend</text><text x="328" y="206" font-size="8.5" fill="#9a7328" text-anchor="middle">对象依赖（DROP CASCADE）</text>
+  <rect x="428" y="164" width="184" height="56" rx="9" fill="#ffffff" stroke="#f0dcae"/><text x="520" y="186" font-size="10" font-weight="600" fill="#7a4d00" text-anchor="middle">pg_proc / pg_type…</text><text x="520" y="206" font-size="8.5" fill="#9a7328" text-anchor="middle">函数 / 类型</text>
+  <rect x="48" y="232" width="564" height="52" rx="9" fill="#fdfdf5" stroke="#f0dcae"/><text x="330" y="254" font-size="9.5" fill="#9a7328" text-anchor="middle">妙处：目录是表 → DDL 复用 heap 写 + MVCC + WAL；查元数据就是查表（可 SELECT pg_class）</text><text x="330" y="272" font-size="8.5" fill="#b8912e" text-anchor="middle">bootstrap 阶段先建这些目录表本身</text>
+
+  <!-- 缓存 -->
+  <rect x="650" y="56" width="340" height="240" rx="14" fill="#eafaf1" stroke="#bce6cd" filter="url(#soft)"/>
+  <text x="668" y="80" font-size="12.5" font-weight="600" fill="#0f5132">缓存加速（每 backend 私有）</text>
+  <rect x="668" y="96" width="304" height="66" rx="10" fill="#ffffff" stroke="#bce6cd"/><text x="820" y="118" font-size="10" font-weight="600" fill="#0f5132" text-anchor="middle">syscache</text><text x="820" y="138" font-size="8.5" fill="#3f8f66" text-anchor="middle">按 key 缓存目录行</text><text x="820" y="154" font-size="8.5" fill="#3f8f66" text-anchor="middle">（如按 oid 查 pg_class 行）</text>
+  <rect x="668" y="172" width="304" height="66" rx="10" fill="#ffffff" stroke="#bce6cd"/><text x="820" y="194" font-size="10" font-weight="600" fill="#0f5132" text-anchor="middle">relcache</text><text x="820" y="214" font-size="8.5" fill="#3f8f66" text-anchor="middle">缓存表的完整描述</text><text x="820" y="230" font-size="8.5" fill="#3f8f66" text-anchor="middle">（列/索引/约束，避免反复查目录）</text>
+  <rect x="668" y="248" width="304" height="40" rx="10" fill="#fdfdf5" stroke="#bce6cd"/><text x="820" y="272" font-size="9" fill="#0f5132" text-anchor="middle">DDL 改目录 → 缓存失效广播（invalidation）</text>
+
+  <!-- 意义 -->
+  <rect x="30" y="316" width="960" height="98" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="48" y="340" font-size="12" font-weight="600" fill="#1d1d1f">要点</text>
+  <text x="48" y="364" font-size="10.5" fill="#494950">• 每次查询编译都要频繁读目录（表结构/函数/统计），全走磁盘表太慢 → syscache/relcache 内存缓存。</text>
+  <text x="48" y="386" font-size="10.5" fill="#494950">• DDL 提交后经共享失效消息让所有 backend 的缓存失效，保证看到新定义。</text>
+  <text x="48" y="408" font-size="10.5" fill="#86868b">对照 DuckDB：DuckDB 目录在内存 + checkpoint 序列化；PostgreSQL 目录是磁盘表 + 内存缓存，二者都"元数据即数据"。</text>
+</svg>

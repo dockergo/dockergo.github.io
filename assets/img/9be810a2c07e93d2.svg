@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="440" viewBox="0 0 1000 440" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs><filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#0f9e8e"/></marker></defs>
+  <rect width="1000" height="440" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Parquet 原理 · DELTA 与 BYTE_STREAM_SPLIT</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">针对“递增整数/字符串前缀/浮点”的专用编码：只存差值或按字节位面拆分,给通用压缩器制造更多可压缩结构</text>
+
+  <!-- DELTA_BINARY_PACKED -->
+  <rect x="30" y="76" width="455" height="150" rx="12" fill="#e9f2ff" stroke="#a9ccf5" filter="url(#soft)"/>
+  <text x="48" y="100" font-size="11" font-weight="700" fill="#0a3d78">DELTA_BINARY_PACKED = 5（INT32/INT64）</text>
+  <text x="48" y="120" font-size="8.8" fill="#2a5a92">存相邻差值,差值小 → 位宽小;适合递增 id/时间戳</text>
+  <g text-anchor="middle" font-size="8.6">
+    <rect x="48" y="132" width="200" height="28" rx="6" fill="#fff" stroke="#a9ccf5"/><text x="148" y="150" fill="#0a3d78">原值 100,102,105,109</text>
+    <rect x="256" y="132" width="200" height="28" rx="6" fill="#f3f9ff" stroke="#bcd8f5"/><text x="356" y="150" fill="#2a5a92">存 基值100 + Δ[2,3,4]</text>
+  </g>
+  <text x="48" y="184" font-size="8.6" fill="#5b7db1">· 分块 + mini-block,每块自适应位宽存差值</text>
+  <text x="48" y="202" font-size="8.6" fill="#5b7db1">· 严格递增列差值恒正且小,极致压缩</text>
+  <text x="48" y="220" font-size="8.4" fill="#7fa0c4">派生：DELTA_LENGTH_BYTE_ARRAY(=6) 长度走 delta,字节接后</text>
+
+  <!-- DELTA_BYTE_ARRAY -->
+  <rect x="505" y="76" width="465" height="150" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="523" y="100" font-size="11" font-weight="700" fill="#12402a">DELTA_BYTE_ARRAY = 7（字符串前缀）</text>
+  <text x="523" y="120" font-size="8.8" fill="#2f6f5f">存与前一串的公共前缀长度 + 剩余后缀;适合排序字符串</text>
+  <g text-anchor="middle" font-size="8.6">
+    <rect x="523" y="132" width="130" height="28" rx="6" fill="#fff" stroke="#b9dfd8"/><text x="588" y="150" fill="#0f6b5e">"parquet"</text>
+    <rect x="659" y="132" width="290" height="28" rx="6" fill="#e6f4f1" stroke="#b9dfd8"/><text x="804" y="150" fill="#0f6b5e">"parquetformat" → 前缀7 + "format"</text>
+  </g>
+  <text x="523" y="184" font-size="8.6" fill="#2f6f5f">· 前缀长度用 DELTA_BINARY_PACKED 编码</text>
+  <text x="523" y="202" font-size="8.6" fill="#2f6f5f">· 后缀用 DELTA_LENGTH_BYTE_ARRAY 编码</text>
+  <text x="523" y="220" font-size="8.4" fill="#4c8567">已排序/共前缀多的字典键、URL 列收益显著</text>
+
+  <!-- BYTE_STREAM_SPLIT -->
+  <rect x="30" y="248" width="940" height="96" rx="12" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+  <text x="48" y="272" font-size="11" font-weight="700" fill="#5a3410">BYTE_STREAM_SPLIT = 9（FLOAT/DOUBLE/INT32/INT64/FIXED）</text>
+  <text x="48" y="292" font-size="9" fill="#93762e">不改变字节总量,而是把每个值的第 k 个字节聚到一起（按“字节位面”重排）——同位面字节相似度高,交给 codec 后压缩率更好。</text>
+  <g text-anchor="middle" font-size="8.4">
+    <rect x="48" y="304" width="290" height="28" rx="6" fill="#fff" stroke="#efdcb4"/><text x="193" y="322" fill="#5a3410">原: [b0 b1 b2 b3][b0 b1 b2 b3]…</text>
+    <path d="M344,318 L372,318" stroke="#e8730f" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+    <rect x="378" y="304" width="380" height="28" rx="6" fill="#fbf6ef" stroke="#e6d8c4"/><text x="568" y="322" fill="#93762e">重排: [所有b0][所有b1][所有b2][所有b3]</text>
+    <text x="880" y="322" fill="#a1877f">配合 ZSTD 更佳</text>
+  </g>
+
+  <rect x="30" y="356" width="940" height="62" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="48" y="380" font-size="9.6" fill="#1b2a4a">选择直觉：递增整数 → DELTA_BINARY_PACKED;有序/共前缀字符串 → DELTA_BYTE_ARRAY;科学计算浮点 → BYTE_STREAM_SPLIT。</text>
+  <text x="48" y="400" font-size="9" fill="#5b7db1">这些都是“编码层”变换,产出仍是页体字节流,再叠加页级压缩(codec);编码集合记入 ColumnMetaData.encodings。</text>
+</svg>

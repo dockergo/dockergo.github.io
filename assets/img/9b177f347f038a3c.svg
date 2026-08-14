@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="290" viewBox="0 0 900 290" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs><filter id="s" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter><marker id="a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker></defs>
+  <rect width="900" height="290" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">导入事务生命周期：Begin → Write → Commit → Publish（Label 幂等）</text>
+  <g text-anchor="middle">
+    <rect x="30" y="70" width="180" height="66" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#s)"/><text x="120" y="96" font-size="12.5" font-weight="600" fill="#1b2a4a">Begin</text><text x="120" y="116" font-size="9.5" fill="#5b7db1">分配 txn_id + Label</text>
+    <rect x="245" y="70" width="180" height="66" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#s)"/><text x="335" y="96" font-size="12.5" font-weight="600" fill="#1b2a4a">Write</text><text x="335" y="116" font-size="9.5" fill="#5b7db1">MemTable→Flush→Rowset</text>
+    <rect x="460" y="70" width="180" height="66" rx="12" fill="#fff7e6" stroke="#e8cf9a" filter="url(#s)"/><text x="550" y="96" font-size="12.5" font-weight="600" fill="#5a3410">Commit</text><text x="550" y="116" font-size="9.5" fill="#93762e">记元数据 + quorum 校验</text>
+    <rect x="675" y="70" width="195" height="66" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#s)"/><text x="772" y="96" font-size="12.5" font-weight="600" fill="#12402a">Publish → VISIBLE</text><text x="772" y="116" font-size="9.5" fill="#2f6f4f">版本对齐；主键算 Delete Bitmap</text>
+  </g>
+  <g stroke="#c7c7cc" stroke-width="1.5" fill="none">
+    <line x1="210" y1="103" x2="245" y2="103" marker-end="url(#a)"/>
+    <line x1="425" y1="103" x2="460" y2="103" marker-end="url(#a)"/>
+    <line x1="640" y1="103" x2="675" y2="103" marker-end="url(#a)"/>
+  </g>
+  <rect x="330" y="176" width="240" height="44" rx="11" fill="#fbeaea" stroke="#e7c3c3"/><text x="450" y="198" font-size="12" font-weight="600" fill="#4a1414" text-anchor="middle">Abort（失败/超时）</text><text x="450" y="214" font-size="9.5" fill="#a05252" text-anchor="middle">整体回滚，不留半批</text>
+  <path d="M335,136 L335,160 L400,160 L400,176" stroke="#c7c7cc" stroke-width="1.3" fill="none" marker-end="url(#a)"/>
+  <rect x="30" y="240" width="840" height="34" rx="10" fill="#fff9f0" stroke="#eddcbf"/><text x="450" y="261" font-size="10.5" fill="#7a5a1e" text-anchor="middle">Commit ≠ Visible：Publish 才可见；Label 进已用集合防重复导入；2PC 导入由外部触发最终 Commit</text>
+</svg>

@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="560" viewBox="0 0 1020 560"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1020" height="560" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">HTTP 请求 11 阶段 · 灵魂主线（ngx_http_core_module.h:111-128）</text>
+  <text x="30" y="50" font-size="10.5" fill="#86868b">贯穿示例：GET /api/users 命中 location /api/ { proxy_pass http://api; }</text>
+
+  <!-- phases -->
+  <g>
+    <rect x="40" y="66" width="300" height="42" rx="9" fill="#eef3fb" stroke="#bcd0ec"/><text x="56" y="86" font-size="10.5" font-weight="600" fill="#1b2a4a">1 POST_READ</text><text x="56" y="101" font-size="8.5" fill="#5b7db1">读完请求头后最早的钩子（如 realip 取真实 IP）</text>
+    <rect x="40" y="116" width="300" height="42" rx="9" fill="#eef3fb" stroke="#bcd0ec"/><text x="56" y="136" font-size="10.5" font-weight="600" fill="#1b2a4a">2 SERVER_REWRITE</text><text x="56" y="151" font-size="8.5" fill="#5b7db1">server 级 rewrite 规则（选定 location 前改 URI）</text>
+    <rect x="40" y="166" width="300" height="42" rx="9" fill="#fff7e6" stroke="#f0dcae"/><text x="56" y="186" font-size="10.5" font-weight="600" fill="#7a4d00">3 FIND_CONFIG</text><text x="56" y="201" font-size="8.5" fill="#9a7328">按 URI 匹配 location → 选定本请求的配置</text>
+    <rect x="40" y="216" width="300" height="42" rx="9" fill="#eef3fb" stroke="#bcd0ec"/><text x="56" y="236" font-size="10.5" font-weight="600" fill="#1b2a4a">4 REWRITE</text><text x="56" y="251" font-size="8.5" fill="#5b7db1">location 级 rewrite</text>
+    <rect x="40" y="266" width="300" height="42" rx="9" fill="#eef3fb" stroke="#bcd0ec"/><text x="56" y="286" font-size="10.5" font-weight="600" fill="#1b2a4a">5 POST_REWRITE</text><text x="56" y="301" font-size="8.5" fill="#5b7db1">rewrite 后若 URI 变了 → 跳回 FIND_CONFIG</text>
+    <rect x="40" y="316" width="300" height="42" rx="9" fill="#f4eefb" stroke="#d9c9ef"/><text x="56" y="336" font-size="10.5" font-weight="600" fill="#3c1361">6 PREACCESS</text><text x="56" y="351" font-size="8.5" fill="#7a5aa8">访问控制前：限流 limit_req/limit_conn</text>
+  </g>
+  <g>
+    <rect x="360" y="66" width="300" height="42" rx="9" fill="#fbeaea" stroke="#f0cccc"/><text x="376" y="86" font-size="10.5" font-weight="600" fill="#7d1f1f">7 ACCESS</text><text x="376" y="101" font-size="8.5" fill="#b06a6a">访问控制：allow/deny、auth 认证</text>
+    <rect x="360" y="116" width="300" height="42" rx="9" fill="#fbeaea" stroke="#f0cccc"/><text x="376" y="136" font-size="10.5" font-weight="600" fill="#7d1f1f">8 POST_ACCESS</text><text x="376" y="151" font-size="8.5" fill="#b06a6a">satisfy 逻辑收敛（any/all 授权判定）</text>
+    <rect x="360" y="166" width="300" height="42" rx="9" fill="#f4eefb" stroke="#d9c9ef"/><text x="376" y="186" font-size="10.5" font-weight="600" fill="#3c1361">9 PRECONTENT</text><text x="376" y="201" font-size="8.5" fill="#7a5aa8">内容前：try_files、mirror、auth_request</text>
+    <rect x="360" y="216" width="300" height="62" rx="9" fill="#eafaf1" stroke="#bce6cd"/><text x="376" y="238" font-size="10.5" font-weight="600" fill="#0f5132">10 CONTENT（产内容）</text><text x="376" y="257" font-size="8.5" fill="#3f8f66">content handler：静态文件 / proxy_pass / fastcgi</text><text x="376" y="271" font-size="8.5" fill="#3f8f66">本例 → proxy 到 upstream api</text>
+    <rect x="360" y="286" width="300" height="42" rx="9" fill="#fff7e6" stroke="#f0dcae"/><text x="376" y="306" font-size="10.5" font-weight="600" fill="#7a4d00">11 LOG</text><text x="376" y="321" font-size="8.5" fill="#9a7328">记 access log（响应发完后）</text>
+  </g>
+
+  <!-- 箭头串联 -->
+  <line x1="190" y1="108" x2="190" y2="116" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="190" y1="158" x2="190" y2="166" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="190" y1="208" x2="190" y2="216" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="190" y1="258" x2="190" y2="266" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="190" y1="308" x2="190" y2="316" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="340" y1="337" x2="510" y2="108" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="510" y1="108" x2="510" y2="116" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="510" y1="158" x2="510" y2="166" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="510" y1="208" x2="510" y2="216" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="510" y1="278" x2="510" y2="286" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+
+  <!-- 右侧要点 -->
+  <rect x="690" y="66" width="300" height="262" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="708" y="90" font-size="12" font-weight="600" fill="#1d1d1f">阶段模型要点</text>
+  <text x="708" y="114" font-size="9.5" fill="#494950">• 模块把 handler <tspan font-weight="600">挂在某个 phase</tspan>上——</text>
+  <text x="708" y="130" font-size="9.5" fill="#494950">  这是所有 HTTP 模块的挂载点。</text>
+  <text x="708" y="152" font-size="9.5" fill="#494950">• 同一 phase 可挂多个 handler，</text>
+  <text x="708" y="168" font-size="9.5" fill="#494950">  依注册序执行。</text>
+  <text x="708" y="190" font-size="9.5" fill="#494950">• CONTENT 阶段特殊：只跑选中的</text>
+  <text x="708" y="206" font-size="9.5" fill="#494950">  一个 content handler 产响应。</text>
+  <text x="708" y="228" font-size="9.5" fill="#494950">• 各阶段 handler 返回码决定：</text>
+  <text x="708" y="244" font-size="9.5" fill="#494950">  继续 / 跳阶段 / 直接返回错误。</text>
+  <text x="708" y="266" font-size="9.5" fill="#494950">• 请求可在任意点因错误/重定向</text>
+  <text x="708" y="282" font-size="9.5" fill="#494950">  提前结束，但 LOG 总会执行。</text>
+  <text x="708" y="308" font-size="9" fill="#86868b">POST_REWRITE 可跳回 FIND_CONFIG</text>
+
+  <!-- 底部 filter -->
+  <rect x="40" y="356" width="950" height="180" rx="14" fill="#f4eefb" stroke="#d9c9ef" filter="url(#soft)"/>
+  <text x="58" y="380" font-size="12.5" font-weight="600" fill="#3c1361">CONTENT 产出后 → filter 输出链加工 → 发送</text>
+  <rect x="58" y="396" width="200" height="56" rx="10" fill="#ffffff" stroke="#d9c9ef"/><text x="158" y="420" font-size="10" font-weight="600" fill="#3c1361" text-anchor="middle">content handler 产</text><text x="158" y="438" font-size="8.5" fill="#7a5aa8" text-anchor="middle">header + body（chain buffer）</text>
+  <rect x="278" y="396" width="230" height="56" rx="10" fill="#ffffff" stroke="#d9c9ef"/><text x="393" y="420" font-size="10" font-weight="600" fill="#3c1361" text-anchor="middle">header filter 链</text><text x="393" y="438" font-size="8.5" fill="#7a5aa8" text-anchor="middle">加/改响应头（gzip 标记、chunked）</text>
+  <rect x="528" y="396" width="230" height="56" rx="10" fill="#ffffff" stroke="#d9c9ef"/><text x="643" y="420" font-size="10" font-weight="600" fill="#3c1361" text-anchor="middle">body filter 链</text><text x="643" y="438" font-size="8.5" fill="#7a5aa8" text-anchor="middle">压缩/分块/SSI 改写响应体</text>
+  <rect x="778" y="396" width="192" height="56" rx="10" fill="#eafaf1" stroke="#bce6cd"/><text x="874" y="420" font-size="10" font-weight="600" fill="#0f5132" text-anchor="middle">写回客户端</text><text x="874" y="438" font-size="8.5" fill="#3f8f66" text-anchor="middle">非阻塞发送</text>
+  <line x1="258" y1="424" x2="278" y2="424" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="508" y1="424" x2="528" y2="424" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="758" y1="424" x2="778" y2="424" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <text x="58" y="480" font-size="9.5" fill="#7a5aa8">ngx_http_output_filter（core_module.c:1925）→ ngx_http_top_body_filter；header 走 ngx_http_top_header_filter（http.c:74）。</text>
+  <text x="58" y="502" font-size="9.5" fill="#7a5aa8">filter 是"责任链"：每个 filter 处理后调 next，链尾是真正写 socket 的 writer filter。</text>
+  <text x="58" y="524" font-size="9.5" fill="#a58fc9">见"模块体系"篇详解 handler / filter / upstream 三类模块如何挂进这条流水线。</text>
+</svg>

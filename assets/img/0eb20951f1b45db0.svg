@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="560" viewBox="0 0 1080 560" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+  </defs>
+  <rect width="1080" height="560" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Parquet 原理 · 双维模型（能力域 × 执行时机）</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">全前台无后台——纯文件格式规范 + 读写库,进程内同步编解码;接触面(类型系统 schema 树) + 支撑各能力域全部落在前台写/读路径,无守护线程/无后台合并</text>
+  <text x="30" y="64" font-size="9" fill="#a1a1a6">维度：能力域（↓ 接触面 / 支撑）× 执行时机（→ 前台 / 后台）</text>
+
+  <!-- timing headers -->
+  <rect x="150" y="72" width="640" height="28" rx="9" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="470" y="90" font-size="11" font-weight="700" text-anchor="middle" fill="#12402a">执行时机 · 前台（同步 · 进程内 · Parquet 全部能力落此）</text>
+  <rect x="802" y="72" width="248" height="28" rx="9" fill="#f7f7f9" stroke="#e3e3e8" filter="url(#soft)"/>
+  <text x="926" y="90" font-size="11" font-weight="700" text-anchor="middle" fill="#6e6e73">后台（守护 / 异步）· 无</text>
+
+  <!-- 接触面 row -->
+  <rect x="30" y="104" width="112" height="66" rx="12" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="86" y="132" font-size="11" font-weight="700" text-anchor="middle" fill="#3d2a5a">接触面</text>
+  <text x="86" y="150" font-size="8.5" text-anchor="middle" fill="#8a6db3">对接引擎</text>
+
+  <rect x="150" y="104" width="640" height="66" rx="12" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="164" y="126" font-size="10.5" font-weight="700" fill="#3d2a5a">类型系统与 schema 树</text>
+  <text x="164" y="146" font-size="8.6" fill="#8a6db3">8 种物理 Type + LogicalType 注解 · SchemaElement 深度优先扁平化</text>
+  <text x="164" y="162" font-size="8.6" fill="#8a6db3">REQUIRED/OPTIONAL/REPEATED 决定 max def/rep 级 · 引擎给取的接口</text>
+  <rect x="802" y="104" width="248" height="66" rx="12" fill="#f7f7f9" stroke="#e8e8ec"/>
+  <text x="926" y="141" font-size="9" text-anchor="middle" fill="#a1a1a6">格式规范无进程,更无后台</text>
+
+  <!-- 支撑 row -->
+  <rect x="30" y="176" width="112" height="356" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="86" y="348" font-size="11" font-weight="700" text-anchor="middle" fill="#1b2a4a">支撑</text>
+  <text x="86" y="366" font-size="8.5" text-anchor="middle" fill="#5b7db1">格式内核</text>
+
+  <rect x="150" y="176" width="640" height="356" rx="13" fill="#f3f7fc" stroke="#cfe0f2"/>
+  <text x="160" y="194" font-size="10" font-weight="700" fill="#274a78">支撑能力域（全部前台执行 · 无异步 · 按“布局 / 编码 / 索引统计 / 安全 / 路径”分层）</text>
+
+  <!-- 布局层 -->
+  <rect x="158" y="204" width="310" height="60" rx="10" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+  <text x="172" y="225" font-size="10" font-weight="700" fill="#5a3410">文件布局</text>
+  <text x="172" y="242" font-size="8.2" fill="#93762e">PAR1 + 行组 + FileMetaData 尾置 + PAR1</text>
+  <text x="172" y="256" font-size="8.2" fill="#93762e">单遍写：数据先落盘,元数据后写</text>
+  <rect x="478" y="204" width="304" height="60" rx="10" fill="#e9f2ff" stroke="#a9ccf5" filter="url(#soft)"/>
+  <text x="492" y="225" font-size="10" font-weight="700" fill="#0a3d78">列块与页组装</text>
+  <text x="492" y="242" font-size="8.2" fill="#2a5a92">ColumnChunk = 页背靠背,字典页居首</text>
+  <text x="492" y="256" font-size="8.2" fill="#2a5a92">ColumnMetaData 记偏移/编码/统计</text>
+
+  <!-- 编码层 -->
+  <rect x="158" y="272" width="200" height="60" rx="10" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="172" y="293" font-size="10" font-weight="700" fill="#12402a">Dremel 嵌套编码</text>
+  <text x="172" y="310" font-size="8.2" fill="#2f6f5f">definition / repetition 级</text>
+  <text x="172" y="324" font-size="8.2" fill="#2f6f5f">把嵌套压平进列</text>
+  <rect x="368" y="272" width="200" height="60" rx="10" fill="#e9f2ff" stroke="#a9ccf5" filter="url(#soft)"/>
+  <text x="382" y="293" font-size="10" font-weight="700" fill="#0a3d78">列编码</text>
+  <text x="382" y="310" font-size="8.2" fill="#2a5a92">PLAIN / RLE / 字典</text>
+  <text x="382" y="324" font-size="8.2" fill="#2a5a92">DELTA / BYTE_STREAM_SPLIT</text>
+  <rect x="578" y="272" width="204" height="60" rx="10" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+  <text x="592" y="293" font-size="10" font-weight="700" fill="#5a3410">压缩与页</text>
+  <text x="592" y="310" font-size="8.2" fill="#93762e">SNAPPY/ZSTD/GZIP… + CRC</text>
+  <text x="592" y="324" font-size="8.2" fill="#93762e">四型页 · V2 级不压缩</text>
+
+  <!-- 索引统计层 -->
+  <rect x="158" y="340" width="200" height="60" rx="10" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="172" y="361" font-size="10" font-weight="700" fill="#12402a">统计与排序</text>
+  <text x="172" y="378" font-size="8.2" fill="#2f6f5f">Statistics min/max/null</text>
+  <text x="172" y="392" font-size="8.2" fill="#2f6f5f">ColumnOrder / SortingColumn</text>
+  <rect x="368" y="340" width="200" height="60" rx="10" fill="#e6f4f1" stroke="#b9dfd8" filter="url(#soft)"/>
+  <text x="382" y="361" font-size="10" font-weight="700" fill="#0f6b5e">PageIndex 跳页</text>
+  <text x="382" y="378" font-size="8.2" fill="#2f6f5f">ColumnIndex + OffsetIndex</text>
+  <text x="382" y="392" font-size="8.2" fill="#2f6f5f">尾部集中 · 两级裁页</text>
+  <rect x="578" y="340" width="204" height="60" rx="10" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="592" y="361" font-size="10" font-weight="700" fill="#12402a">布隆过滤器</text>
+  <text x="592" y="378" font-size="8.2" fill="#2f6f5f">SplitBlock + XxHash</text>
+  <text x="592" y="392" font-size="8.2" fill="#2f6f5f">等值查询补 min/max</text>
+
+  <!-- 安全 + 路径层 -->
+  <rect x="158" y="408" width="200" height="60" rx="10" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="172" y="429" font-size="10" font-weight="700" fill="#3d2a5a">模块化加密</text>
+  <text x="172" y="446" font-size="8.2" fill="#8a6db3">AES-GCM / GCM-CTR</text>
+  <text x="172" y="460" font-size="8.2" fill="#8a6db3">footer/列双密钥 · AAD</text>
+  <rect x="368" y="408" width="200" height="60" rx="10" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+  <text x="382" y="429" font-size="10" font-weight="700" fill="#5a3410">写路径</text>
+  <text x="382" y="446" font-size="8.2" fill="#93762e">缓冲行组 → 切 → 编码压缩</text>
+  <text x="382" y="460" font-size="8.2" fill="#93762e">列块背靠背 → 元数据尾置</text>
+  <rect x="578" y="408" width="204" height="60" rx="10" fill="#e9f2ff" stroke="#a9ccf5" filter="url(#soft)"/>
+  <text x="592" y="429" font-size="10" font-weight="700" fill="#0a3d78">读路径</text>
+  <text x="592" y="446" font-size="8.2" fill="#2a5a92">尾读元数据 → 列裁剪</text>
+  <text x="592" y="460" font-size="8.2" fill="#2a5a92">裁页 → 解码 rep/def 组装</text>
+
+  <text x="160" y="500" font-size="8.6" fill="#5b7db1">要点：Parquet 无后台线程、无 compaction、无守护进程——写侧一次遍历生成文件,读侧一次尾读拿全图;所有能力域都是被引擎同步调用的“库函数”。</text>
+  <text x="160" y="518" font-size="8.6" fill="#5b7db1">对比：像 LSM/表格式那样的后台合并、快照清理属于上层引擎(如 Iceberg/Doris),不在 Parquet 格式内。</text>
+
+  <!-- 后台空列 -->
+  <rect x="802" y="176" width="248" height="356" rx="13" fill="#f7f7f9" stroke="#ececf0"/>
+  <text x="926" y="348" font-size="10" text-anchor="middle" fill="#b8b8bf">（空）</text>
+  <text x="926" y="368" font-size="8.4" text-anchor="middle" fill="#c2c2c8">无后台守护 / 无异步合并</text>
+</svg>

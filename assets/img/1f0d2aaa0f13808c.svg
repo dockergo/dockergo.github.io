@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="520" viewBox="0 0 1080 520" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs><filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter></defs>
+  <rect width="1080" height="520" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">运行形态：集群规模 vs 容错能力（永远用奇数节点）</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">容错数 = quorum−1 = ⌈(N+1)/2⌉−1 = ⌊(N−1)/2⌋ · 偶数节点无收益反增开销</text>
+  <g text-anchor="middle">
+    <rect x="40" y="76" width="235" height="180" rx="13" fill="#fbeef0" stroke="#f0cdd4" filter="url(#soft)"/>
+    <text x="157" y="102" font-size="12" font-weight="700" fill="#7a2230">单节点</text>
+    <text x="157" y="128" font-size="26" fill="#a44">1</text>
+    <text x="157" y="156" font-size="9" fill="#a44">quorum = 1</text>
+    <text x="157" y="176" font-size="9" font-weight="700" fill="#7a2230">容忍 0 故障</text>
+    <text x="157" y="198" font-size="8.5" fill="#a44">一挂即不可用</text>
+    <text x="157" y="216" font-size="8.5" fill="#a44">无 Raft 复制意义</text>
+    <text x="157" y="238" font-size="8" fill="#7a2230">仅开发/测试</text>
+
+    <rect x="290" y="76" width="235" height="180" rx="13" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+    <text x="407" y="102" font-size="12" font-weight="700" fill="#12402a">3 节点 ★推荐</text>
+    <text x="407" y="128" font-size="26" fill="#1b8f3f">3</text>
+    <text x="407" y="156" font-size="9" fill="#2f6f4f">quorum = 2</text>
+    <text x="407" y="176" font-size="9" font-weight="700" fill="#12402a">容忍 1 故障</text>
+    <text x="407" y="198" font-size="8.5" fill="#2f6f4f">生产最小配置</text>
+    <text x="407" y="216" font-size="8.5" fill="#2f6f4f">写延迟 = 次快节点</text>
+    <text x="407" y="238" font-size="8" fill="#4c8567">多数团队默认选此</text>
+
+    <rect x="540" y="76" width="235" height="180" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+    <text x="657" y="102" font-size="12" font-weight="700" fill="#1b2a4a">5 节点</text>
+    <text x="657" y="128" font-size="26" fill="#2f6fd0">5</text>
+    <text x="657" y="156" font-size="9" fill="#5b7db1">quorum = 3</text>
+    <text x="657" y="176" font-size="9" font-weight="700" fill="#1b2a4a">容忍 2 故障</text>
+    <text x="657" y="198" font-size="8.5" fill="#5b7db1">高可用生产</text>
+    <text x="657" y="216" font-size="8.5" fill="#5b7db1">写要 3 个 ack，略慢</text>
+    <text x="657" y="238" font-size="8" fill="#8aa6cf">跨可用区容灾</text>
+
+    <rect x="790" y="76" width="250" height="180" rx="13" fill="#fdf9f0" stroke="#efe3cd" filter="url(#soft)"/>
+    <text x="915" y="102" font-size="12" font-weight="700" fill="#7a5a1e">learner（非投票）</text>
+    <text x="915" y="126" font-size="9" fill="#93762e">加入集群但不投票</text>
+    <text x="915" y="146" font-size="9" fill="#93762e">先追平数据快照</text>
+    <text x="915" y="166" font-size="9" fill="#93762e">追平后 promote 为投票成员</text>
+    <text x="915" y="188" font-size="8.5" fill="#b08843">不计入 quorum</text>
+    <text x="915" y="208" font-size="8.5" fill="#b08843">避免新成员拖慢多数派</text>
+    <text x="915" y="230" font-size="8" fill="#b08843">扩容/替换的安全过渡</text>
+  </g>
+  <rect x="40" y="278" width="1000" height="110" rx="12" fill="#fbeef0" stroke="#f0cdd4"/>
+  <text x="60" y="302" font-size="11" font-weight="700" fill="#7a2230">为什么永远用奇数节点</text>
+  <text x="60" y="324" font-size="9.5" fill="#a44">· 3 节点 quorum=2 容忍 1；4 节点 quorum=3 仍只容忍 1——多一个节点，容错没涨，反而多一份复制开销与更慢的写</text>
+  <text x="60" y="344" font-size="9.5" fill="#a44">· 偶数节点还增大"脑裂平票"风险窗口；奇数节点数学上永远有明确多数派</text>
+  <text x="60" y="364" font-size="9.5" fill="#7a2230">· 结论：1（测试）→ 3（生产标配）→ 5（高可用）→ 7（极少，写延迟已明显）。超过 7 收益递减、写变慢</text>
+  <rect x="40" y="404" width="1000" height="96" rx="12" fill="#f7f7f9" stroke="#e6e6ea"/>
+  <text x="60" y="428" font-size="11" font-weight="700" fill="#1d1d1f">写延迟与集群规模的权衡</text>
+  <text x="60" y="450" font-size="9.5" fill="#48484c">· 每次写要等 quorum 个节点（含 leader 自己）落盘 ack——节点越多，quorum 越大，写延迟越接近"第 quorum 快"的节点</text>
+  <text x="60" y="470" font-size="9.5" fill="#48484c">· 因此 etcd 集群不是越大越好：3 节点通常是吞吐/延迟/容错的最佳平衡点，5 节点用于对可用性要求极高的场景</text>
+  <text x="60" y="490" font-size="9" fill="#86868b">· 扩容/换节点用 learner 先追平再 promote，避免未追平的新成员进入投票集拖慢 quorum 或造成数据风险。</text>
+</svg>

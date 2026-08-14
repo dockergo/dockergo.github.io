@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="520" viewBox="0 0 1080 520" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect x="0" y="0" width="1080" height="520" fill="#fbfbfd"/>
+  <text x="40" y="38" font-size="16" font-weight="600" fill="#1d1d1f">Workload Group 资源组隔离结构</text>
+  <text x="40" y="58" font-size="11.5" fill="#86868b">多租户隔离:_min/_max_cpu_percent · _memory_limit · _scan_thread_num · _total_query_slot_count</text>
+
+  <!-- 中心:WorkloadGroup -->
+  <rect x="400" y="80" width="280" height="70" rx="14" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+  <text x="540" y="108" font-size="14" font-weight="600" fill="#8a5a12" text-anchor="middle">WorkloadGroup(资源组)</text>
+  <text x="540" y="130" font-size="10" fill="#a98b52" text-anchor="middle">一个租户/一类负载一组 · admission control</text>
+
+  <!-- 5 维隔离,放射 -->
+  <g stroke="#c7c7cc" stroke-width="1.5" fill="none">
+    <line x1="470" y1="150" x2="180" y2="196" marker-end="url(#ar)"/>
+    <line x1="510" y1="150" x2="430" y2="196" marker-end="url(#ar)"/>
+    <line x1="540" y1="150" x2="678" y2="196" marker-end="url(#ar)"/>
+    <line x1="600" y1="150" x2="900" y2="196" marker-end="url(#ar)"/>
+  </g>
+  <g font-size="11">
+    <!-- CPU -->
+    <rect x="30" y="196" width="290" height="150" rx="13" fill="#f6f8fc" stroke="#e6ecf4"/>
+    <text x="48" y="218" font-size="12" font-weight="600" fill="#1d5fb8">① CPU 隔离 → CgroupCpuCtl</text>
+    <rect x="46" y="230" width="258" height="46" rx="9" fill="#ffffff" stroke="#c4d5ee"/><text x="60" y="249" font-size="10" fill="#4a4e57">V1: cpu.shares + cpu.cfs_quota_us</text><text x="60" y="266" font-size="10" fill="#4a4e57">V2: cpu.weight + cpu.max</text>
+    <rect x="46" y="284" width="258" height="50" rx="9" fill="#eef3fc" stroke="#c4d5ee"/><text x="60" y="303" font-size="9.5" fill="#1d5fb8">/sys/fs/cgroup/{doris}/query/{wg_id}/</text><text x="60" y="320" font-size="9" fill="#7d93b5">add_thread_to_cgroup 写线程入 tasks</text>
+    <!-- 内存 -->
+    <rect x="336" y="196" width="220" height="150" rx="13" fill="#faf4fb" stroke="#ecd9ef"/>
+    <text x="354" y="218" font-size="12" font-weight="600" fill="#7a3fb0">② 内存隔离</text>
+    <text x="354" y="242" font-size="10" fill="#4a4e57">_memory_limit 组上限</text>
+    <text x="354" y="264" font-size="10" fill="#4a4e57">_memory_low/high_watermark</text>
+    <rect x="352" y="278" width="188" height="52" rx="9" fill="#ffffff" stroke="#ecd9ef"/><text x="366" y="298" font-size="9.5" fill="#a06fc0">超 high 水位 →</text><text x="366" y="315" font-size="9.5" fill="#a06fc0">组内 spill / cancel</text>
+    <!-- 并发槽 -->
+    <rect x="572" y="196" width="210" height="150" rx="13" fill="#f5faf6" stroke="#e2ece5"/>
+    <text x="590" y="218" font-size="12" font-weight="600" fill="#2c5a3a">③ 并发槽位 query slot</text>
+    <text x="590" y="242" font-size="10" fill="#4a4e57">_total_query_slot_count</text>
+    <rect x="588" y="256" width="178" height="74" rx="9" fill="#ffffff" stroke="#cfe6d5"/><text x="602" y="276" font-size="9.5" fill="#2c5a3a">限组内并发查询数</text><text x="602" y="294" font-size="9.5" fill="#2c5a3a">满则排队</text><text x="602" y="312" font-size="9" fill="#4e7a5c">admission control 准入</text>
+    <!-- IO -->
+    <rect x="798" y="196" width="252" height="150" rx="13" fill="#fbf7ef" stroke="#efe4cf"/>
+    <text x="816" y="218" font-size="12" font-weight="600" fill="#8a5a12">④ IO 隔离</text>
+    <text x="816" y="242" font-size="10" fill="#4a4e57">_scan_bytes_per_second</text>
+    <text x="816" y="264" font-size="10" fill="#4a4e57">_remote_scan_bytes_per_second</text>
+    <rect x="814" y="278" width="220" height="52" rx="9" fill="#ffffff" stroke="#efe0c4"/><text x="828" y="298" font-size="9.5" fill="#a98b52">经 IOThrottle 限流</text><text x="828" y="315" font-size="9.5" fill="#a98b52">按 data_dir 分别限速</text>
+  </g>
+
+  <!-- 底:组内专属线程池 -->
+  <rect x="30" y="360" width="1020" height="140" rx="14" fill="#ffffff" stroke="#ececef" filter="url(#soft)"/>
+  <text x="50" y="384" font-size="13" font-weight="600" fill="#1d1d1f">⑤ 组内专属线程池 · 端到端 CPU 归属</text>
+  <g font-size="10.5" fill="#4a4e57">
+    <text x="50" y="408">· get_memtable_flush_pool 等按 wg 隔离,每组一套线程池,绑定该组 CgroupCpuCtl。</text>
+    <text x="50" y="430">· 执行/扫描/flush 线程都归属对应 wg 的 cgroup → 一个租户的重查询不会抢占其他租户的 CPU。</text>
+    <text x="50" y="452">· 效果:CPU(cgroup)+ 内存(watermark)+ 并发(slot)+ IO(throttle)四维隔离,大查询不拖垮全集群。</text>
+    <text x="50" y="478" font-size="9.5" fill="#86868b">条件式治理见「资源与负载管理」走查的 Workload Policy(按条件动态限流/降级)。</text>
+  </g>
+</svg>

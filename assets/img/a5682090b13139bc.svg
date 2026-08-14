@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="560" viewBox="0 0 1060 560" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1060" height="560" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">具体文件系统接入：注册 file_system_type → 挂载建 super_block 并填 s_root → 之后所有操作经函数指针分派到 ext4 的实现</text>
+
+  <text x="28" y="72" font-size="11.5" font-weight="600" fill="#2b3a55">挂载流程（以 ext4 为例）</text>
+
+  <!-- 左：挂载流程 -->
+  <rect x="28" y="88" width="560" height="58" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="44" y="109" font-size="10.5" font-weight="600" fill="#1b2a4a">① 注册 register_filesystem(&amp;ext4_fs_type)（filesystems.c:72）</text>
+  <text x="44" y="130" font-size="9" fill="#5b7db1">file_system_type{ name, init_fs_context, kill_sb, fs_supers }（fs.h:2272）挂入全局链</text>
+
+  <rect x="28" y="160" width="560" height="58" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="44" y="181" font-size="10.5" font-weight="600" fill="#1b2a4a">② mount(2) → do_new_mount（namespace.c:3790）</text>
+  <text x="44" y="202" font-size="9" fill="#5b7db1">get_fs_type("ext4") 查到 fs_type → fs_context_for_mount 建 fs_context，init_fs_context 设 fc-&gt;ops</text>
+
+  <rect x="28" y="232" width="560" height="58" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="44" y="253" font-size="10.5" font-weight="600" fill="#1b2a4a">③ vfs_get_tree（super.c:1743）→ fc-&gt;ops-&gt;get_tree(fc)（:1754）</text>
+  <text x="44" y="274" font-size="9" fill="#5b7db1">→ ext4_get_tree（ext4/super.c:5854）→ get_tree_bdev(fc, ext4_fill_super)（:5856）</text>
+
+  <rect x="28" y="304" width="560" height="66" rx="11" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="44" y="325" font-size="10.5" font-weight="600" fill="#5a3410">④ get_tree_bdev_flags（super.c:1662）</text>
+  <text x="44" y="345" font-size="9" fill="#93762e">lookup_bdev 找块设备（:1673）→ sget_dev 找/建 super_block（:1680）</text>
+  <text x="44" y="362" font-size="9" fill="#93762e">→ 调回调 fill_super（:1694），即 ext4_fill_super</text>
+
+  <rect x="28" y="384" width="560" height="66" rx="11" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="44" y="405" font-size="10.5" font-weight="600" fill="#5a3410">⑤ ext4_fill_super（:5804）→ __ext4_fill_super（:5334）</text>
+  <text x="44" y="425" font-size="9" fill="#93762e">读盘上超级块 → sb-&gt;s_op = &amp;ext4_sops（:5462）</text>
+  <text x="44" y="442" font-size="9" fill="#93762e">→ sb-&gt;s_root = d_make_root(root)（:5611），即该 fs 的根 dentry</text>
+
+  <rect x="28" y="464" width="560" height="48" rx="11" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="44" y="485" font-size="10.5" font-weight="600" fill="#12402a">⑥ do_add_mount（namespace.c:3720）：把 s_root 接到挂载点</text>
+  <text x="44" y="502" font-size="9" fill="#2f6f4f">该子树从此对进程可见，路径解析可下探到 ext4</text>
+
+  <g stroke="#c7c7cc" stroke-width="1.6" fill="none">
+    <path d="M308,146 L308,160" marker-end="url(#ar)"/>
+    <path d="M308,218 L308,232" marker-end="url(#ar)"/>
+    <path d="M308,290 L308,304" marker-end="url(#ar)"/>
+    <path d="M308,370 L308,384" marker-end="url(#ar)"/>
+    <path d="M308,450 L308,464" marker-end="url(#ar)"/>
+  </g>
+
+  <!-- 右：接口多态 -->
+  <rect x="612" y="88" width="420" height="424" rx="13" fill="#f4eefb" stroke="#d9c7ec"/>
+  <text x="628" y="110" font-size="11" font-weight="600" fill="#3d2a5a">挂载后：接口多态</text>
+  <text x="628" y="127" font-size="9" fill="#6a4e93">VFS 通用层只调函数指针，具体 fs 填实现</text>
+
+  <rect x="628" y="140" width="388" height="60" rx="11" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="644" y="161" font-size="10.5" font-weight="600" fill="#1d1d1f">super_block（该 ext4 实例）</text>
+  <text x="644" y="181" font-size="9" fill="#6e6e73">s_op / i_op / a_ops / f_op 分别指向 ↓</text>
+  <text x="644" y="196" font-size="9" fill="#6e6e73">s_root → 根 dentry · s_type → ext4_fs_type</text>
+
+  <rect x="628" y="220" width="388" height="52" rx="11" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="644" y="240" font-size="10" font-weight="600" fill="#3d2a5a">super_operations · ext4_sops（super.c:1659）</text>
+  <text x="644" y="259" font-size="9" fill="#6a4e93">alloc_inode / statfs / sync_fs / evict_inode …</text>
+
+  <rect x="628" y="284" width="388" height="52" rx="11" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="644" y="304" font-size="10" font-weight="600" fill="#3d2a5a">inode_operations · ext4_dir_inode_operations（namei.c:4222）</text>
+  <text x="644" y="323" font-size="9" fill="#6a4e93">.lookup = ext4_lookup（:4224）· create / mkdir / rename …</text>
+
+  <rect x="628" y="348" width="388" height="52" rx="11" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="644" y="368" font-size="10" font-weight="600" fill="#3d2a5a">address_space_operations · ext4_aops（inode.c:3949）</text>
+  <text x="644" y="387" font-size="9" fill="#6a4e93">.read_folio = ext4_read_folio（:3950）· writepages / write_begin …</text>
+
+  <rect x="628" y="412" width="388" height="52" rx="11" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="644" y="432" font-size="10" font-weight="600" fill="#3d2a5a">file_operations · ext4_file_operations（file.c:974）</text>
+  <text x="644" y="451" font-size="9" fill="#6a4e93">.read_iter / .write_iter / .mmap / .fsync …</text>
+
+  <text x="628" y="484" font-size="9" fill="#6a4e93">VFS 调 -&gt;lookup / -&gt;read_folio / -&gt;read_iter 落到 ext4 实现；</text>
+  <text x="628" y="500" font-size="9" fill="#8a72ad">换 xfs/tmpfs 只是换这组表 → 详见「read/write 全路径」「路径解析」。</text>
+
+  <g stroke="#c7c7cc" stroke-width="1.6" fill="none">
+    <path d="M588,335 L612,335" marker-end="url(#ar)"/>
+    <path d="M822,200 L822,220" marker-end="url(#ar)"/>
+  </g>
+  <text x="590" y="327" font-size="8" fill="#a1a1a6">填 ops</text>
+</svg>

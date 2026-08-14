@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="580" viewBox="0 0 1060 580" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1060" height="580" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">INSERT 建 Part：一次 INSERT = 至少一个不可变 Part（DML 视角）</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">物理细节见「存储引擎 · 写入建 Part」；这里看 DML 关心的"批大小 → Part 数"的因果</text>
+
+  <!-- good vs bad -->
+  <rect x="40" y="72" width="480" height="240" rx="14" fill="#fbeef0" stroke="#f0cdd4"/>
+  <text x="280" y="96" font-size="12" font-weight="700" fill="#7a2230" text-anchor="middle">❌ 高频小批量 INSERT</text>
+  <g text-anchor="middle" font-size="8.5">
+    <rect x="60" y="110" width="130" height="34" rx="7" fill="#fff" stroke="#f0cdd4"/><text x="125" y="131" fill="#7a2230">INSERT 1 行</text>
+    <rect x="200" y="110" width="130" height="34" rx="7" fill="#fff" stroke="#f0cdd4"/><text x="265" y="131" fill="#7a2230">INSERT 1 行</text>
+    <rect x="340" y="110" width="150" height="34" rx="7" fill="#fff" stroke="#f0cdd4"/><text x="415" y="131" fill="#7a2230">INSERT 1 行 × N</text>
+  </g>
+  <text x="280" y="166" font-size="9" fill="#a44" text-anchor="middle">↓ 每条各产一个 Part</text>
+  <g text-anchor="middle" font-size="7.5" fill="#5a3410">
+    <rect x="66" y="176" width="52" height="30" rx="5" fill="#fdf6ea" stroke="#efdcb4"/><text x="92" y="195">Part</text>
+    <rect x="124" y="176" width="52" height="30" rx="5" fill="#fdf6ea" stroke="#efdcb4"/><text x="150" y="195">Part</text>
+    <rect x="182" y="176" width="52" height="30" rx="5" fill="#fdf6ea" stroke="#efdcb4"/><text x="208" y="195">Part</text>
+    <rect x="240" y="176" width="52" height="30" rx="5" fill="#fdf6ea" stroke="#efdcb4"/><text x="266" y="195">Part</text>
+    <rect x="298" y="176" width="52" height="30" rx="5" fill="#fdf6ea" stroke="#efdcb4"/><text x="324" y="195">Part</text>
+    <rect x="356" y="176" width="52" height="30" rx="5" fill="#fdf6ea" stroke="#efdcb4"/><text x="382" y="195">Part</text>
+    <rect x="414" y="176" width="52" height="30" rx="5" fill="#fdf6ea" stroke="#efdcb4"/><text x="440" y="195">…爆炸</text>
+  </g>
+  <text x="280" y="234" font-size="9.5" font-weight="600" fill="#7a2230" text-anchor="middle">后果</text>
+  <text x="60" y="254" font-size="8.5" fill="#a44" text-anchor="start">· 查询要归并成百上千个 Part → 慢</text>
+  <text x="60" y="272" font-size="8.5" fill="#a44" text-anchor="start">· 后台 merge 疲于奔命，CPU/IO 高</text>
+  <text x="60" y="290" font-size="8.5" fill="#a44" text-anchor="start">· 可能触发 "too many parts" 报错拒写</text>
+
+  <rect x="540" y="72" width="480" height="240" rx="14" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="780" y="96" font-size="12" font-weight="700" fill="#12402a" text-anchor="middle">✓ 批量 INSERT（推荐）</text>
+  <g text-anchor="middle" font-size="8.5">
+    <rect x="560" y="110" width="440" height="34" rx="7" fill="#fff" stroke="#bfe0cd"/><text x="780" y="131" fill="#12402a">INSERT … VALUES (万行/批)　或　INSERT … SELECT</text>
+  </g>
+  <text x="780" y="166" font-size="9" fill="#2f6f4f" text-anchor="middle">↓ 攒够一批产一个大 Part</text>
+  <g text-anchor="middle" font-size="8.5" fill="#5a3410">
+    <rect x="600" y="176" width="160" height="46" rx="7" fill="#fdf6ea" stroke="#efdcb4"/><text x="680" y="196" font-weight="600">一个大 Part</text><text x="680" y="212" fill="#93762e">万行 · Wide 格式</text>
+    <rect x="800" y="176" width="160" height="46" rx="7" fill="#fdf6ea" stroke="#efdcb4"/><text x="880" y="196" font-weight="600">一个大 Part</text><text x="880" y="212" fill="#93762e">下一批</text>
+  </g>
+  <text x="780" y="244" font-size="9.5" font-weight="600" fill="#12402a" text-anchor="middle">收益</text>
+  <text x="560" y="264" font-size="8.5" fill="#2f6f4f" text-anchor="start">· Part 数少 → 查询归并快</text>
+  <text x="560" y="282" font-size="8.5" fill="#2f6f4f" text-anchor="start">· merge 压力小</text>
+  <text x="560" y="300" font-size="8.5" fill="#2f6f4f" text-anchor="start">· 直接进 Wide 格式，列裁剪友好</text>
+
+  <!-- rule of thumb -->
+  <rect x="40" y="332" width="980" height="90" rx="13" fill="#fdf9f0" stroke="#efe3cd"/>
+  <text x="60" y="356" font-size="11" font-weight="700" fill="#7a5a1e">经验法则</text>
+  <text x="60" y="378" font-size="10" fill="#93762e">· 单批建议：几千 ~ 几十万行/批（而非逐行）；批越大 Part 越少，但内存与延迟上升，取平衡</text>
+  <text x="60" y="398" font-size="10" fill="#93762e">· 无法客户端攒批（如高并发单条上报）→ 开 async insert 让服务端攒（见下页）</text>
+  <text x="60" y="416" font-size="9" fill="#b08843">· 每分区每次 INSERT 也各产一个 Part：跨很多分区的一次 INSERT 会一次产多个 Part（按分区切分）</text>
+
+  <rect x="40" y="440" width="980" height="118" rx="12" fill="#f7f7f9" stroke="#e6e6ea"/>
+  <text x="60" y="464" font-size="11" font-weight="700" fill="#1d1d1f">一句话</text>
+  <text x="60" y="486" font-size="10" fill="#4b4b50">DML 最重要的实践认知：写入的粒度不是"行"而是"Part"，一次 INSERT 至少一个 Part。</text>
+  <text x="60" y="506" font-size="10" fill="#4b4b50">因此"怎么写"直接决定"查得快不快"——批量写少而大的 Part，避免逐行写海量小 Part。</text>
+  <text x="60" y="526" font-size="10" fill="#4b4b50">这是从 Doris（MemTable 攒批对用户透明）迁移过来最容易踩的坑：ClickHouse 把攒批的责任交给了你（或 async insert）。</text>
+  <text x="60" y="546" font-size="9" fill="#8a8a8f">物理写入链路（分区切分 → 主键排序 → 流式写列 → 原子 rename）详见「存储引擎 · 写入建 Part」。</text>
+</svg>

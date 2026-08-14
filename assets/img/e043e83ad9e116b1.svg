@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="680" viewBox="0 0 1080 680" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="1080" height="680" fill="#fbfbfd"/>
+  <text x="40" y="40" font-size="16" font-weight="600" fill="#1d1d1f">湖仓查询部署 · Lakehouse Federation(Multi-Catalog)</text>
+  <text x="40" y="60" font-size="11.5" fill="#86868b">除内表外,查询经连接器旁路存储引擎直读外部表格式 —— 数据不由 Doris 组织,元数据来自外部 Metastore</text>
+
+  <!-- Client -->
+  <rect x="410" y="76" width="260" height="34" rx="11" fill="#ffffff" stroke="#ececef" filter="url(#soft)"/>
+  <text x="540" y="98" font-size="12" fill="#1d1d1f" text-anchor="middle">MySQL Client / JDBC / Arrow Flight SQL</text>
+  <line x1="540" y1="110" x2="540" y2="130" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- FE -->
+  <rect x="40" y="130" width="1000" height="96" rx="16" fill="#f6f8fc" stroke="#e6ecf4"/>
+  <text x="60" y="153" font-size="13" font-weight="600" fill="#1d1d1f">FE 前端 · Java(元数据 + 规划 + 调度)</text>
+  <g text-anchor="middle" font-size="11.5" fill="#1d5fb8">
+    <rect x="60" y="162" width="220" height="52" rx="11" fill="#ffffff" stroke="#ececef" filter="url(#soft)"/><text x="170" y="184" font-weight="600">Nereids 优化器</text><text x="170" y="202" font-size="9.5" fill="#86868b">解析→绑定→RBO/CBO</text>
+    <rect x="292" y="162" width="220" height="52" rx="11" fill="#ffffff" stroke="#ececef" filter="url(#soft)"/><text x="402" y="184" font-weight="600">CatalogMgr</text><text x="402" y="202" font-size="9.5" fill="#86868b">Internal + External Catalog</text>
+    <rect x="524" y="162" width="248" height="52" rx="11" fill="#ffffff" stroke="#ececef" filter="url(#soft)"/><text x="648" y="184" font-weight="600">ExternalMetaCacheMgr</text><text x="648" y="202" font-size="9.5" fill="#86868b">partition/file/schema · Caffeine+TTL</text>
+    <rect x="784" y="162" width="200" height="52" rx="11" fill="#ffffff" stroke="#ececef" filter="url(#soft)"/><text x="884" y="184" font-weight="600">Coordinator</text><text x="884" y="202" font-size="9.5" fill="#86868b">切 Fragment · 下发 BE</text>
+  </g>
+  <line x1="540" y1="226" x2="540" y2="248" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- BE -->
+  <rect x="40" y="248" width="1000" height="120" rx="16" fill="#fbf7ef" stroke="#efe4cf"/>
+  <text x="60" y="271" font-size="13" font-weight="600" fill="#1d1d1f">BE 后端 · C++(Pipeline 向量化 · 格式分派 Reader)</text>
+  <g text-anchor="middle" font-size="11" fill="#8a5a12">
+    <rect x="60" y="282" width="200" height="72" rx="11" fill="#ffffff" stroke="#ececef" filter="url(#soft)"/><text x="160" y="312" font-weight="600" fill="#1d1d1f">PipelineTask</text><text x="160" y="330" font-size="9.5" fill="#86868b">调度 · 向量化算子</text>
+    <rect x="280" y="282" width="240" height="72" rx="11" fill="#ffffff" stroke="#cfe6d5" filter="url(#soft)"/><text x="400" y="308" font-weight="600" fill="#2c5a3a">内表 SegmentIterator</text><text x="400" y="326" font-size="9.5" fill="#86868b">列存 + 三索引 + 延迟物化</text>
+    <rect x="530" y="282" width="240" height="72" rx="11" fill="#ffffff" stroke="#c9d6ef" filter="url(#soft)"/><text x="650" y="308" font-weight="600" fill="#2f4a7c">外表 NativeReader</text><text x="650" y="326" font-size="9.5" fill="#86868b">C++ 直读 Parquet/ORC</text>
+    <rect x="780" y="282" width="204" height="72" rx="11" fill="#ffffff" stroke="#c9d6ef" filter="url(#soft)"/><text x="882" y="308" font-weight="600" fill="#2f4a7c">外表 JniConnector</text><text x="882" y="326" font-size="9.5" fill="#86868b">JNI 读 Hudi/Avro</text>
+  </g>
+  <line x1="260" y1="318" x2="279" y2="318" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+
+  <!-- 数据源 Catalog -->
+  <rect x="40" y="390" width="620" height="112" rx="16" fill="#f5faf6" stroke="#e2ece5"/>
+  <text x="60" y="413" font-size="13" font-weight="600" fill="#1d1d1f">数据源 · 内表 + 外部 Catalog(Doris 侧连接器)</text>
+  <g text-anchor="middle" font-size="10.5" fill="#4a4e57">
+    <rect x="60" y="424" width="185" height="30" rx="9" fill="#ffffff" stroke="#cfe6d5"/><text x="152" y="443">内表 Tablet/Rowset/Segment</text>
+    <rect x="255" y="424" width="185" height="30" rx="9" fill="#ffffff" stroke="#c9d6ef"/><text x="347" y="443">HMSExternalCatalog</text>
+    <rect x="450" y="424" width="200" height="30" rx="9" fill="#ffffff" stroke="#c9d6ef"/><text x="550" y="443">IcebergExternalCatalog</text>
+    <rect x="60" y="460" width="185" height="30" rx="9" fill="#ffffff" stroke="#c9d6ef"/><text x="152" y="479">PaimonExternalCatalog</text>
+    <rect x="255" y="460" width="185" height="30" rx="9" fill="#ffffff" stroke="#c9d6ef"/><text x="347" y="479">JdbcExternalCatalog</text>
+  </g>
+
+  <!-- Metastore -->
+  <rect x="680" y="390" width="360" height="112" rx="16" fill="#faf4fb" stroke="#ecd9ef"/>
+  <text x="700" y="413" font-size="13" font-weight="600" fill="#1d1d1f">Metastore · 外部元数据服务</text>
+  <g text-anchor="middle" font-size="10.5" fill="#7a3fb0">
+    <rect x="700" y="424" width="150" height="30" rx="9" fill="#ffffff" stroke="#ecd9ef"/><text x="775" y="443">Hive Metastore</text>
+    <rect x="860" y="424" width="160" height="30" rx="9" fill="#ffffff" stroke="#ecd9ef"/><text x="940" y="443">Iceberg REST/Glue</text>
+    <rect x="700" y="460" width="150" height="30" rx="9" fill="#ffffff" stroke="#ecd9ef"/><text x="775" y="479">Paimon Catalog</text>
+    <rect x="860" y="460" width="160" height="30" rx="9" fill="#ffffff" stroke="#ecd9ef"/><text x="940" y="479">JDBC 源库字典</text>
+  </g>
+
+  <!-- 连线 BE→源 / 源→metastore -->
+  <g stroke="#c7c7cc" stroke-width="1.5" fill="none">
+    <path d="M400,354 L152,423" marker-end="url(#ar)"/>
+    <path d="M650,354 L550,423" marker-end="url(#ar)"/>
+    <path d="M882,354 L347,423" marker-end="url(#ar)" stroke-dasharray="4 4"/>
+  </g>
+  <g stroke="#c7c7cc" stroke-width="1.3" stroke-dasharray="4 4" fill="none">
+    <path d="M347,454 L775,423" marker-end="url(#ar)"/>
+    <path d="M550,454 L900,423" marker-end="url(#ar)"/>
+  </g>
+  <text x="500" y="378" font-size="9.5" fill="#a1a1a6" text-anchor="middle">取元数据(FE MetaCache 缓存)</text>
+
+  <!-- 底层存储 -->
+  <line x1="540" y1="502" x2="540" y2="524" stroke="#c7c7cc" stroke-width="1.4" stroke-dasharray="4 4" marker-end="url(#ar)"/>
+  <text x="640" y="518" font-size="10" fill="#a1a1a6">定位文件</text>
+  <rect x="40" y="524" width="1000" height="80" rx="16" fill="#f7f7f9" stroke="#ececef"/>
+  <text x="60" y="548" font-size="13" font-weight="600" fill="#1d1d1f">底层存储 · 数据文件</text>
+  <g text-anchor="middle" font-size="12" fill="#4a4e57">
+    <rect x="90" y="558" width="270" height="34" rx="10" fill="#ffffff" stroke="#ececef" filter="url(#soft)"/><text x="225" y="580">本地磁盘(存算一体)</text>
+    <rect x="405" y="558" width="270" height="34" rx="10" fill="#ffffff" stroke="#ececef" filter="url(#soft)"/><text x="540" y="580">HDFS</text>
+    <rect x="720" y="558" width="270" height="34" rx="10" fill="#ffffff" stroke="#ececef" filter="url(#soft)"/><text x="855" y="580">S3 / OSS / COS / GCS</text>
+  </g>
+</svg>

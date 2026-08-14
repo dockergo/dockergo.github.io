@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="940" height="560" viewBox="0 0 940 560" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="940" height="560" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">sync.Mutex · 三级竞争路径 + 正常/饥饿双模式</text>
+
+  <!-- state int32 (amber storage) -->
+  <rect x="40" y="58" width="580" height="96" rx="13" fill="#fdf6ec" stroke="#f0dcaf" filter="url(#soft)"/>
+  <text x="56" y="82" font-size="12.5" font-weight="600" fill="#6b4e16">状态压进一个 int32</text>
+  <text x="56" y="100" font-size="9.5" fill="#c6a45f">internal/sync/mutex.go:20（sync.Mutex 是它的薄封装）</text>
+  <!-- bit layout -->
+  <g text-anchor="middle" font-size="9">
+    <rect x="56" y="112" width="80" height="32" rx="6" fill="#ffffff" stroke="#e6cd94"/><text x="96" y="132" fill="#6b4e16">bit0 Locked</text>
+    <rect x="144" y="112" width="80" height="32" rx="6" fill="#ffffff" stroke="#e6cd94"/><text x="184" y="132" fill="#6b4e16">bit1 Woken</text>
+    <rect x="232" y="112" width="88" height="32" rx="6" fill="#ffffff" stroke="#e6cd94"/><text x="276" y="132" fill="#6b4e16">bit2 Starving</text>
+    <rect x="328" y="112" width="284" height="32" rx="6" fill="#ffffff" stroke="#e6cd94"/><text x="470" y="132" fill="#6b4e16">bit3.. 等待者计数 waiterCount</text>
+  </g>
+
+  <!-- three-level path -->
+  <text x="40" y="182" font-size="12" font-weight="600" fill="#1d1d1f">按竞争激烈程度升级 →</text>
+
+  <!-- Level 1: CAS (green) -->
+  <rect x="40" y="196" width="280" height="150" rx="13" fill="#eef7f0" stroke="#bfe0c8" filter="url(#soft)"/>
+  <text x="56" y="220" font-size="12" font-weight="600" fill="#1d4a2b">① 无竞争 · 一次 CAS</text>
+  <rect x="56" y="234" width="248" height="34" rx="8" fill="#ffffff" stroke="#bfe0c8"/>
+  <text x="180" y="255" font-size="10" font-weight="600" fill="#1d4a2b" text-anchor="middle">CAS(0 → Locked) 成功</text>
+  <text x="56" y="290" font-size="10" fill="#4a8c60">锁空闲，直接原子拿下，</text>
+  <text x="56" y="307" font-size="10" fill="#4a8c60">零系统调用、零调度，极快。</text>
+  <text x="56" y="333" font-size="9.5" fill="#7fb894">绝大多数无争用场景走这里</text>
+
+  <line x1="320" y1="271" x2="352" y2="271" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <text x="336" y="263" font-size="8.5" fill="#8e8e93" text-anchor="middle">失败</text>
+
+  <!-- Level 2: spin (blue) -->
+  <rect x="356" y="196" width="264" height="150" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="372" y="220" font-size="12" font-weight="600" fill="#1b2a4a">② 短竞争 · 自旋</text>
+  <rect x="372" y="234" width="232" height="34" rx="8" fill="#ffffff" stroke="#bcd0ec"/>
+  <text x="488" y="255" font-size="10" font-weight="600" fill="#1b2a4a" text-anchor="middle">自旋几次 + 重试 CAS</text>
+  <text x="372" y="290" font-size="10" fill="#5b7db1">赌持有者很快释放（短临界区），</text>
+  <text x="372" y="307" font-size="10" fill="#5b7db1">自旋期间不让出 M，避免调度开销。</text>
+  <text x="372" y="333" font-size="9.5" fill="#8fabd4">有次数上限，自旋无果才升级</text>
+
+  <line x1="620" y1="271" x2="652" y2="271" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <text x="636" y="263" font-size="8.5" fill="#8e8e93" text-anchor="middle">无果</text>
+
+  <!-- Level 3: queue (red) -->
+  <rect x="656" y="196" width="244" height="150" rx="13" fill="#fbeeee" stroke="#f0c4c4" filter="url(#soft)"/>
+  <text x="672" y="220" font-size="12" font-weight="600" fill="#7a1f1f">③ 长竞争 · 入队</text>
+  <rect x="672" y="234" width="212" height="34" rx="8" fill="#ffffff" stroke="#f0c4c4"/>
+  <text x="778" y="255" font-size="10" font-weight="600" fill="#7a1f1f" text-anchor="middle">semacquire 入信号量队列</text>
+  <text x="672" y="290" font-size="10" fill="#b15b5b">挂进 semaRoot，gopark 让出 M，</text>
+  <text x="672" y="307" font-size="10" fill="#b15b5b">等 Unlock 时 semrelease 唤醒。</text>
+  <text x="672" y="333" font-size="9.5" fill="#cf9a9a">waiterCount++，睡眠不占 CPU</text>
+
+  <!-- two modes (purple rule) -->
+  <rect x="40" y="362" width="600" height="182" rx="13" fill="#f5f0fb" stroke="#ddcdf0" filter="url(#soft)"/>
+  <text x="56" y="386" font-size="12.5" font-weight="600" fill="#3d2a5a">两种模式 · 吞吐 vs 公平</text>
+
+  <rect x="56" y="398" width="280" height="130" rx="10" fill="#ffffff" stroke="#ddcdf0"/>
+  <text x="72" y="420" font-size="11" font-weight="600" fill="#3d2a5a">正常模式（默认）</text>
+  <text x="72" y="441" font-size="9.5" fill="#7d5bb1">新来者与被唤醒的队首竞争锁。</text>
+  <text x="72" y="459" font-size="9.5" fill="#7d5bb1">新来者在 CPU 上、更易抢到 →</text>
+  <text x="72" y="477" font-size="9.5" fill="#7d5bb1">吞吐高，但队首可能反复抢不到、</text>
+  <text x="72" y="495" font-size="9.5" fill="#7d5bb1">被「插队」饿死。</text>
+
+  <rect x="348" y="398" width="280" height="130" rx="10" fill="#fbeeee" stroke="#f0c4c4"/>
+  <text x="364" y="420" font-size="11" font-weight="600" fill="#7a1f1f">饥饿模式</text>
+  <text x="364" y="441" font-size="9.5" fill="#b15b5b">某等待者超 1ms 没拿到锁则切入</text>
+  <text x="364" y="459" font-size="9.5" fill="#b15b5b">（starvationThresholdNs=1ms）。</text>
+  <text x="364" y="477" font-size="9.5" fill="#b15b5b">锁直接手递手给队首、新来者不竞争</text>
+  <text x="364" y="495" font-size="9.5" fill="#b15b5b">→ 牺牲吞吐保公平，队列清空后退回。</text>
+
+  <!-- friends column (neutral) -->
+  <rect x="656" y="362" width="244" height="182" rx="13" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="672" y="386" font-size="12" font-weight="600" fill="#1d1d1f">Mutex 的朋友们</text>
+  <rect x="672" y="398" width="212" height="40" rx="8" fill="#f6f6f7" stroke="#e2e2e7"/>
+  <text x="682" y="416" font-size="10" font-weight="600" fill="#1d1d1f">RWMutex</text>
+  <text x="682" y="431" font-size="8.5" fill="#6e6e73">readerCount/readerWait，写者挡新读者</text>
+  <rect x="672" y="444" width="212" height="40" rx="8" fill="#f6f6f7" stroke="#e2e2e7"/>
+  <text x="682" y="462" font-size="10" font-weight="600" fill="#1d1d1f">WaitGroup</text>
+  <text x="682" y="477" font-size="8.5" fill="#6e6e73">uint64 打包「计数+等待者」，Add/Wait</text>
+  <rect x="672" y="490" width="212" height="40" rx="8" fill="#f6f6f7" stroke="#e2e2e7"/>
+  <text x="682" y="508" font-size="10" font-weight="600" fill="#1d1d1f">Once</text>
+  <text x="682" y="523" font-size="8.5" fill="#6e6e73">done 原子 + Mutex，保证 Do 只跑一次</text>
+</svg>

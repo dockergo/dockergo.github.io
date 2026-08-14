@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="500" viewBox="0 0 900 500" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="arA" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#c98a12"/></marker>
+  </defs>
+  <rect width="900" height="500" fill="#fbfbfd"/>
+  <text x="30" y="32" font-size="15" font-weight="600" fill="#1d1d1f">Storage 接口（宿主实现·库只读）+ 快照追平</text>
+  <text x="30" y="52" font-size="10.5" fill="#8a8a90">storage.go:48 Storage · :104 MemoryStorage · raft.go:1840 handleSnapshot · :1860 restore</text>
+
+  <!-- Storage 接口 -->
+  <rect x="40" y="76" width="410" height="230" rx="13" fill="#fbf3e3" stroke="#ecd9b0" filter="url(#soft)"/>
+  <text x="56" y="100" font-size="12.5" font-weight="700" fill="#8a6013">type Storage interface（库只读 · 宿主实现）</text>
+  <g font-size="10.5" fill="#a1791f">
+    <rect x="56" y="112" width="378" height="30" rx="7" fill="#fff" stroke="#ecd9b0"/>
+    <text x="66" y="131"><tspan font-weight="700" fill="#8a6013">InitialState()</tspan> → HardState + ConfState（:56）</text>
+    <rect x="56" y="148" width="378" height="30" rx="7" fill="#fff" stroke="#ecd9b0"/>
+    <text x="66" y="167"><tspan font-weight="700" fill="#8a6013">Entries(lo,hi,max)</tspan> 取区间日志（:77）</text>
+    <rect x="56" y="184" width="378" height="30" rx="7" fill="#fff" stroke="#ecd9b0"/>
+    <text x="66" y="203"><tspan font-weight="700" fill="#8a6013">Term(i)</tspan> / <tspan font-weight="700" fill="#8a6013">FirstIndex</tspan> / <tspan font-weight="700" fill="#8a6013">LastIndex</tspan>（:83-90）</text>
+    <rect x="56" y="220" width="378" height="30" rx="7" fill="#fff" stroke="#ecd9b0"/>
+    <text x="66" y="239"><tspan font-weight="700" fill="#8a6013">Snapshot()</tspan> → 最近快照（:95）</text>
+  </g>
+  <text x="56" y="272" font-size="10" fill="#a1791f">MemoryStorage 是参考实现（storage.go:104）；</text>
+  <text x="56" y="290" font-size="10" fill="#a1791f">生产由宿主接 WAL / boltdb —— 库不打开文件。</text>
+
+  <!-- 边界 -->
+  <rect x="470" y="76" width="390" height="230" rx="13" fill="#eef6f0" stroke="#c3e2ce" filter="url(#soft)"/>
+  <text x="486" y="100" font-size="12.5" font-weight="700" fill="#1f6b47">I/O 全外包（对照 hashicorp）</text>
+  <g font-size="10.5" fill="#2f7a54">
+    <text x="486" y="126">· 库只调 Storage 的只读方法取历史</text>
+    <text x="486" y="150">· 写 = 宿主消费 Ready.Entries 自己落盘</text>
+    <text x="486" y="174">· Storage 出错 → raft 变 inoperable（:45-47）</text>
+    <text x="486" y="198">· caller 拥有返回 slice，不可 mutate 条目（:62-66）</text>
+    <text x="486" y="222">· 快照持久化也走 Ready.Snapshot + HardState 同批</text>
+  </g>
+  <rect x="486" y="238" width="358" height="56" rx="9" fill="#fff" stroke="#c9e0d2"/>
+  <text x="498" y="258" font-size="10" fill="#1f6b47">对照 hashicorp/raft：后者 LogStore/StableStore/</text>
+  <text x="498" y="276" font-size="10" fill="#1f6b47">SnapshotStore 三件套注入，库自管读写；etcd 只读 Storage。</text>
+
+  <!-- 快照追平 -->
+  <rect x="40" y="326" width="820" height="146" rx="13" fill="#f7f7f9" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="56" y="350" font-size="12" font-weight="700" fill="#1d1d1f">快照追平落后 follower（MsgSnap）</text>
+  <g font-size="10.5" fill="#6e6e73">
+    <text x="56" y="374">· follower 落后太多、leader 已 Compact 掉所需日志 → 发 MsgSnap 而非 MsgApp</text>
+    <text x="56" y="396">· follower handleSnapshot（raft.go:1840）→ restore（:1860）恢复日志与配置</text>
+    <text x="56" y="418">· restore 拒绝过期快照：snapshot.Index ≤ committed 直接 return false（:1861-1862）</text>
+    <text x="56" y="440">· 成功 → 回 MsgAppResp{Index: lastIndex}；失败 → 回 committed（:1849/:1853）</text>
+    <text x="56" y="462">· 快照落盘同样经 Ready.Snapshot 由宿主承担；宿主做完调 ReportSnapshot 回报</text>
+  </g>
+</svg>

@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="600" viewBox="0 0 1120 600" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="aB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#4a7fd0"/></marker>
+    <marker id="aG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+    <marker id="aO" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#c98a2b"/></marker>
+  </defs>
+  <rect width="1120" height="600" fill="#fbfbfd"/>
+
+  <text x="30" y="32" font-size="15" font-weight="700" fill="#1d1d1f">原子广播提交 · Leader 把每个写封成带 zxid 的事务提案(PROPOSE)，过半 ACK 后广播 COMMIT —— 两阶段、全序、原子</text>
+  <text x="30" y="53" font-size="10.5" fill="#6e6e73">zxid = ⟨epoch, counter⟩：epoch 标识 Leader 届次，counter 在届内单调递增；FIFO 有序信道保证提案按 zxid 顺序到达与提交</text>
+
+  <!-- 图例 -->
+  <line x1="30" y1="80" x2="54" y2="80" stroke="#4a7fd0" stroke-width="2" marker-end="url(#aB)"/>
+  <text x="60" y="84" font-size="10" fill="#3a3a3c">PROPOSE(zxid, txn)</text>
+  <line x1="240" y1="80" x2="264" y2="80" stroke="#c98a2b" stroke-width="2" marker-end="url(#aO)"/>
+  <text x="270" y="84" font-size="10" fill="#3a3a3c">ACK（follower 已落盘）</text>
+  <line x1="470" y1="80" x2="494" y2="80" stroke="#2f9e6e" stroke-width="2" marker-end="url(#aG)"/>
+  <text x="500" y="84" font-size="10" fill="#3a3a3c">COMMIT（提交生效）</text>
+
+  <!-- 角色 -->
+  <text x="150" y="122" font-size="12" font-weight="700" fill="#2f6b4e" text-anchor="middle">Leader</text>
+  <text x="700" y="122" font-size="12" font-weight="700" fill="#20375e" text-anchor="middle">Followers</text>
+  <line x1="150" y1="132" x2="150" y2="510" stroke="#bfe3d1" stroke-width="2"/>
+  <line x1="560" y1="132" x2="560" y2="510" stroke="#c6d9f2" stroke-width="1.6"/>
+  <line x1="760" y1="132" x2="760" y2="510" stroke="#c6d9f2" stroke-width="1.6"/>
+  <line x1="960" y1="132" x2="960" y2="510" stroke="#c6d9f2" stroke-width="1.6"/>
+  <text x="560" y="148" font-size="9.5" fill="#5a7099" text-anchor="middle">F1</text>
+  <text x="760" y="148" font-size="9.5" fill="#5a7099" text-anchor="middle">F2</text>
+  <text x="960" y="148" font-size="9.5" fill="#5a7099" text-anchor="middle">F3</text>
+
+  <!-- 客户端写入 -->
+  <rect x="40" y="162" width="220" height="34" rx="8" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="52" y="184" font-size="9.5" fill="#4a4a4f">客户端写 → 转发给 Leader</text>
+  <line x1="150" y1="196" x2="150" y2="214" stroke="#4a7fd0" stroke-width="1.6" marker-end="url(#aB)"/>
+
+  <!-- Phase 1: PROPOSE -->
+  <rect x="30" y="218" width="1060" height="86" rx="12" fill="#eaf1fb" stroke="#c6d9f2"/>
+  <text x="48" y="240" font-size="11.5" font-weight="700" fill="#20375e">① PROPOSE：Leader 分配下一个 zxid，按 FIFO 顺序广播提案，follower 落盘后回 ACK</text>
+  <line x1="150" y1="262" x2="552" y2="262" stroke="#4a7fd0" stroke-width="1.8" marker-end="url(#aB)"/>
+  <line x1="150" y1="264" x2="752" y2="272" stroke="#4a7fd0" stroke-width="1.8" marker-end="url(#aB)"/>
+  <line x1="150" y1="266" x2="952" y2="280" stroke="#4a7fd0" stroke-width="1.8" marker-end="url(#aB)"/>
+  <text x="330" y="256" font-size="9.5" fill="#20375e">PROPOSE(zxid=⟨e,c⟩, txn)</text>
+  <!-- ACK 回 -->
+  <line x1="560" y1="288" x2="158" y2="298" stroke="#c98a2b" stroke-width="1.4" stroke-dasharray="4 3" marker-end="url(#aO)"/>
+  <line x1="760" y1="292" x2="158" y2="300" stroke="#c98a2b" stroke-width="1.4" stroke-dasharray="4 3" marker-end="url(#aO)"/>
+  <text x="360" y="300" font-size="9.5" fill="#8a5a12">ACK（写入本地事务日志成功）</text>
+
+  <!-- quorum 判定 -->
+  <rect x="300" y="316" width="520" height="30" rx="8" fill="#eaf6f0" stroke="#bfe3d1"/>
+  <text x="314" y="335" font-size="9.5" fill="#2f6b4e">Leader 收到含自身在内的<tspan font-weight="700"> 过半 ACK</tspan> → 该 zxid 达成 quorum，可提交</text>
+
+  <!-- Phase 2: COMMIT -->
+  <rect x="30" y="356" width="1060" height="86" rx="12" fill="#eaf6f0" stroke="#bfe3d1"/>
+  <text x="48" y="378" font-size="11.5" font-weight="700" fill="#2f6b4e">② COMMIT：Leader 广播提交，各副本按 zxid 升序 apply 到状态机（数据树）</text>
+  <line x1="150" y1="400" x2="552" y2="400" stroke="#2f9e6e" stroke-width="1.8" marker-end="url(#aG)"/>
+  <line x1="150" y1="402" x2="752" y2="410" stroke="#2f9e6e" stroke-width="1.8" marker-end="url(#aG)"/>
+  <line x1="150" y1="404" x2="952" y2="418" stroke="#2f9e6e" stroke-width="1.8" marker-end="url(#aG)"/>
+  <text x="330" y="394" font-size="9.5" fill="#2f6b4e">COMMIT(zxid)</text>
+  <text x="330" y="432" font-size="9.5" fill="#3f8a63">全序保证：所有副本以完全相同的 zxid 顺序 apply → 状态收敛一致</text>
+
+  <!-- 底部性质 -->
+  <rect x="30" y="454" width="1060" height="132" rx="12" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="52" y="478" font-size="11" font-weight="700" fill="#1d1d1f">原子广播的两条保证</text>
+  <line x1="52" y1="488" x2="1068" y2="488" stroke="#eef0f3" stroke-width="1"/>
+  <text x="52" y="512" font-size="10.5" font-weight="700" fill="#2f6b4e">全序 (Total order)</text>
+  <text x="200" y="512" font-size="10" fill="#4a4a4f">按 zxid 定序：任意两条消息在所有副本上的先后一致。FIFO 信道 + 单调 counter 是全序的物理基础。</text>
+  <text x="52" y="540" font-size="10.5" font-weight="700" fill="#4a7fd0">因果前缀</text>
+  <text x="200" y="540" font-size="10" fill="#4a4a4f">若 COMMIT 了 zxid=X，则 X 之前的所有提案都已被提交 —— 提交是一个连续前缀，不留空洞。</text>
+  <text x="52" y="568" font-size="10" fill="#8a97ab">与 Raft 对照：ZAB 的 PROPOSE/ACK/COMMIT ≈ AppendEntries + commitIndex 推进；zxid.epoch ≈ term，counter ≈ log index。</text>
+</svg>

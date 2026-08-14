@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="440" viewBox="0 0 1000 440" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1000" height="440" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">系统调用分派：nr 防投机边界检查 → switch(nr) → SYSCALL_DEFINE 包装链</text>
+
+  <!-- 主链 -->
+  <rect x="28" y="66" width="220" height="88" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="138" y="90" font-size="11.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">do_syscall_64 (syscall_64.c:87)</text>
+  <text x="44" y="114" font-size="9.5" fill="#5b7db1">syscall_enter_from_user_mode</text>
+  <text x="44" y="132" font-size="9.5" fill="#5b7db1">→ 跑 seccomp / ptrace / 审计钩子</text>
+  <text x="44" y="149" font-size="9.5" fill="#5b7db1">拿到系统调用号 nr</text>
+
+  <rect x="288" y="66" width="220" height="88" rx="12" fill="#fbeaea" stroke="#e7c3c3" filter="url(#soft)"/>
+  <text x="398" y="90" font-size="11.5" font-weight="600" fill="#4a1414" text-anchor="middle">边界检查（防投机）</text>
+  <text x="304" y="114" font-size="9.5" fill="#7a2a2a">do_syscall_x64 (syscall_64.c:53)</text>
+  <text x="304" y="132" font-size="9.5" fill="#7a2a2a">unr &lt; NR_syscalls ?</text>
+  <text x="304" y="149" font-size="9.5" fill="#7a2a2a">array_index_nospec (:62) 抗 Spectre</text>
+
+  <rect x="548" y="66" width="220" height="88" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="658" y="90" font-size="11.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">x64_sys_call (syscall_64.c:35)</text>
+  <text x="564" y="114" font-size="9.5" fill="#5b7db1">switch (nr) {</text>
+  <text x="564" y="132" font-size="9.5" fill="#5b7db1">  case nr: return __x64_sys_xxx;</text>
+  <text x="564" y="149" font-size="9.5" fill="#5b7db1">  default: __x64_sys_ni_syscall</text>
+
+  <rect x="808" y="66" width="164" height="88" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="890" y="90" font-size="11.5" font-weight="600" fill="#12402a" text-anchor="middle">具体实现</text>
+  <text x="824" y="114" font-size="9.5" fill="#2f6f4f">__x64_sys_xxx</text>
+  <text x="824" y="132" font-size="9.5" fill="#2f6f4f">跑业务逻辑</text>
+  <text x="824" y="149" font-size="9.5" fill="#2f6f4f">→ 分派能力域</text>
+
+  <g stroke="#c7c7cc" stroke-width="1.6" fill="none">
+    <line x1="248" y1="110" x2="288" y2="110" marker-end="url(#ar)"/>
+    <line x1="508" y1="110" x2="548" y2="110" marker-end="url(#ar)"/>
+    <line x1="768" y1="110" x2="808" y2="110" marker-end="url(#ar)"/>
+  </g>
+
+  <!-- SYSCALL_DEFINE 展开 -->
+  <rect x="28" y="188" width="620" height="212" rx="13" fill="#fbfbfd" stroke="#ececf1"/>
+  <text x="46" y="210" font-size="11.5" font-weight="600" fill="#1d1d1f">__x64_sys_xxx 从何而来：SYSCALL_DEFINEn 宏展开 (syscalls.h:218)</text>
+
+  <rect x="52" y="228" width="270" height="52" rx="10" fill="#f4eefb" stroke="#d9c7ec"/><text x="187" y="250" font-size="10.5" font-weight="600" fill="#3d2a5a" text-anchor="middle">SYSCALL_DEFINE3(read, ...)</text><text x="187" y="267" font-size="8.5" fill="#7a5aa6" text-anchor="middle">开发者写的一行</text>
+
+  <rect x="52" y="300" width="270" height="52" rx="10" fill="#ffffff" stroke="#ececf1"/><text x="187" y="322" font-size="10" font-weight="600" fill="#1d1d1f" text-anchor="middle">__se_sys_read（符号扩展层）</text><text x="187" y="339" font-size="8.5" fill="#6e6e73" text-anchor="middle">32 位参数符号扩展为 long</text>
+
+  <rect x="360" y="300" width="264" height="52" rx="10" fill="#eafaf1" stroke="#bfe0cd"/><text x="492" y="322" font-size="10" font-weight="600" fill="#12402a" text-anchor="middle">__do_sys_read（真正实现体）</text><text x="492" y="339" font-size="8.5" fill="#2f6f4f" text-anchor="middle">你写的函数体在这里</text>
+
+  <rect x="360" y="228" width="264" height="52" rx="10" fill="#eef3fb" stroke="#bcd0ec"/><text x="492" y="250" font-size="10" font-weight="600" fill="#1b2a4a" text-anchor="middle">__x64_sys_read（asmlinkage 入口）</text><text x="492" y="267" font-size="8.5" fill="#5b7db1" text-anchor="middle">switch 里 case 调的就是它</text>
+
+  <g stroke="#c7c7cc" stroke-width="1.5" fill="none">
+    <path d="M187,280 L187,300" marker-end="url(#ar)"/>
+    <path d="M322,326 L360,326" marker-end="url(#ar)"/>
+    <path d="M492,300 L492,280" marker-end="url(#ar)"/>
+    <path d="M322,254 L360,254" marker-end="url(#ar)"/>
+  </g>
+  <text x="341" y="292" font-size="8" fill="#a1a1a6" text-anchor="middle">别名</text>
+
+  <!-- 右注释 -->
+  <rect x="668" y="188" width="304" height="212" rx="12" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="820" y="210" font-size="11.5" font-weight="600" fill="#1d1d1f" text-anchor="middle">两个关键设计</text>
+  <text x="684" y="238" font-size="10.5" font-weight="600" fill="#4a1414">· 分派已改为 switch，不再是表</text>
+  <text x="684" y="256" font-size="10" fill="#7a2a2a">sys_call_table[] 仅留给 tracing</text>
+  <text x="684" y="272" font-size="10" fill="#7a2a2a">用（syscall_64.c:24）</text>
+  <line x1="684" y1="288" x2="956" y2="288" stroke="#ececf1"/>
+  <text x="684" y="312" font-size="10.5" font-weight="600" fill="#12402a">· nr 必过 array_index_nospec</text>
+  <text x="684" y="330" font-size="10" fill="#2f6f4f">越界的 nr 被夹到安全值，防止</text>
+  <text x="684" y="346" font-size="10" fill="#2f6f4f">投机执行越界读（Spectre v1）</text>
+  <line x1="684" y1="362" x2="956" y2="362" stroke="#ececf1"/>
+  <text x="684" y="384" font-size="9.5" fill="#6e6e73">完成后 syscall_exit_to_user_mode</text>
+</svg>

@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="560" viewBox="0 0 1080 560" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="560" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="700" fill="#1d1d1f">四层元数据树 · 自带全部文件清单 + 列统计,读取不 list 目录</text>
+  <text x="30" y="49" font-size="9.5" fill="#a1a1a6">metadata.json → manifest list → manifest → data file,顺树而下按统计剪枝</text>
+
+  <!-- level 1 -->
+  <rect x="30" y="70" width="1020" height="86" rx="13" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="46" y="93" font-size="11.5" font-weight="700" fill="#1b2a4a">① TableMetadata（metadata.json · 根,按值持整棵树）</text>
+  <text x="46" y="112" font-size="9" fill="#5b7db1">metadataFileLocation · lastSequenceNumber · schemas/specs(+ById 索引)· currentSnapshotId · snapshots 列表</text>
+  <text x="46" y="132" font-size="9" fill="#5b7db1">当前快照 = snapshotsById.get(currentSnapshotId) · refs 命名分支/标签</text>
+  <text x="46" y="150" font-size="8.2" fill="#a1a1a6">提交产新根,旧根保留 —— 时间旅行的入口</text>
+
+  <line x1="540" y1="156" x2="540" y2="176" stroke="#b8b8bf" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- level 2 -->
+  <rect x="30" y="176" width="1020" height="72" rx="13" fill="#e7f0fb" stroke="#b9d2ef"/>
+  <text x="46" y="199" font-size="11.5" font-weight="700" fill="#1b2a4a">② Snapshot → 指向【一个】manifest list 文件</text>
+  <text x="46" y="218" font-size="9" fill="#5b7db1">manifestListLocation · 每个快照记 sequenceNumber、parentId、operation、summary</text>
+  <text x="46" y="238" font-size="8.2" fill="#a1a1a6">快照不可变;一个快照对应一个 manifest list</text>
+
+  <line x1="540" y1="248" x2="540" y2="268" stroke="#b8b8bf" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- level 3 -->
+  <rect x="30" y="268" width="1020" height="86" rx="13" fill="#f3f7fc" stroke="#cfe0f2"/>
+  <text x="46" y="291" font-size="11.5" font-weight="700" fill="#274a78">③ Manifest list = ManifestFile 记录列表（第一级剪枝的燃料）</text>
+  <text x="46" y="310" font-size="9" fill="#5b7db1">partition_spec_id · content(0 数据/1 删除)· sequence_number · 增删文件/行计数</text>
+  <text x="46" y="330" font-size="9" fill="#5b7db1">partitions 摘要(每分区字段 lower/upper/null)—— 用它在 manifest 级剪掉整批文件</text>
+  <text x="46" y="348" font-size="8.2" fill="#a1a1a6">每行 = 一个 manifest 文件的元信息</text>
+
+  <line x1="540" y1="354" x2="540" y2="374" stroke="#b8b8bf" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- level 4 -->
+  <rect x="30" y="374" width="1020" height="96" rx="13" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="46" y="397" font-size="11.5" font-weight="700" fill="#5a3410">④ Manifest → ManifestEntry → DataFile（第二级剪枝的燃料）</text>
+  <text x="46" y="416" font-size="9" fill="#93762e">ManifestEntry:status(EXISTING/ADDED/DELETED)· snapshot_id · data/file sequence number · data_file</text>
+  <text x="46" y="436" font-size="9" fill="#93762e">DataFile:file_path · content(0 数据/1 位置删/2 等值删)· 列统计 column_sizes/value_counts/null_value_counts/lower_bounds/upper_bounds</text>
+  <text x="46" y="456" font-size="8.2" fill="#b3934a">per-file min/max/null 让查询谓词跳过整个文件</text>
+
+  <rect x="30" y="486" width="1020" height="60" rx="12" fill="#f7f9fc" stroke="#e5ecf5"/>
+  <text x="46" y="510" font-size="10.5" font-weight="700" fill="#1b2a4a">关键:元数据自带全部 data file 路径 + 分区值 + 列统计</text>
+  <text x="46" y="531" font-size="9.5" fill="#5b7db1">读取顺树而下、按统计两级剪枝,从不 list 对象存储目录(那既慢又无一致性)—— 这是 Iceberg 相对 Hive"list 目录"的根本优势</text>
+</svg>

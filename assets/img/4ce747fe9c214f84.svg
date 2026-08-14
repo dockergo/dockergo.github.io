@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="330" viewBox="0 0 1000 330" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs><filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter><marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker></defs>
+  <rect width="1000" height="330" fill="#fbfbfd"/>
+  <text x="40" y="30" font-size="14" font-weight="600" fill="#1d1d1f">两阶段聚合：先本地预聚合压数据量，再 Shuffle 做全局聚合，省网络</text>
+  <g text-anchor="middle">
+    <!-- BE local pre-agg -->
+    <rect x="40" y="70" width="220" height="120" rx="13" fill="#f5faf6" stroke="#e2ece5" filter="url(#soft)"/><text x="150" y="94" font-size="12.5" font-weight="600" fill="#2c5a3a">各 BE · 本地预聚合</text>
+    <rect x="60" y="106" width="180" height="26" rx="7" fill="#eef3fb" stroke="#bcd0ec"/><text x="150" y="124" font-size="10.5" fill="#1b2a4a">Scan → 局部 group by</text>
+    <rect x="60" y="138" width="180" height="26" rx="7" fill="#eafaf1" stroke="#bfe0cd"/><text x="150" y="156" font-size="10.5" fill="#12402a">部分聚合结果（已压缩）</text>
+    <text x="150" y="182" font-size="10" fill="#86868b">大量原始行 → 少量分组</text>
+
+    <rect x="410" y="108" width="180" height="52" rx="12" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/><text x="500" y="130" font-size="12" font-weight="600" fill="#5a3410">Exchange</text><text x="500" y="148" font-size="10" fill="#93762e">按 group key Shuffle</text>
+
+    <rect x="740" y="70" width="220" height="120" rx="13" fill="#f5faf6" stroke="#e2ece5" filter="url(#soft)"/><text x="850" y="94" font-size="12.5" font-weight="600" fill="#2c5a3a">聚合节点 · 全局聚合</text>
+    <rect x="760" y="106" width="180" height="26" rx="7" fill="#eef3fb" stroke="#bcd0ec"/><text x="850" y="124" font-size="10.5" fill="#1b2a4a">同 key 汇聚 merge</text>
+    <rect x="760" y="138" width="180" height="26" rx="7" fill="#eafaf1" stroke="#bfe0cd"/><text x="850" y="156" font-size="10.5" fill="#12402a">最终聚合结果</text>
+  </g>
+  <g stroke="#c7c7cc" stroke-width="1.5" fill="none"><line x1="260" y1="134" x2="410" y2="134" marker-end="url(#ar)"/><line x1="590" y1="134" x2="740" y2="134" marker-end="url(#ar)"/></g>
+  <text x="335" y="126" font-size="9.5" fill="#a1a1a6" text-anchor="middle">只传预聚合结果</text>
+  <rect x="40" y="230" width="920" height="62" rx="12" fill="#fafafb" stroke="#ececf1"/>
+  <text x="500" y="256" font-size="11.5" fill="#6e6e73" text-anchor="middle">低基数分组：预聚合把行数压到极小，Shuffle 数据量骤降，收益大。</text>
+  <text x="500" y="278" font-size="11.5" fill="#6e6e73" text-anchor="middle">高基数分组：预聚合压不动、几乎等同直接 Shuffle，可退化为单阶段。</text>
+</svg>

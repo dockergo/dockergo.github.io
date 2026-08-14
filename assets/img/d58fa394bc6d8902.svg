@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="560" viewBox="0 0 1060 560" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1060" height="560" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Raft 日志复制与选主：多数派确认才提交（强一致底座）</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">3/5 节点 Raft 组 · Leader 复制日志给 Follower · 多数派提交 · 这是上层"最终一致"依赖的强一致底座</text>
+
+  <!-- raft group -->
+  <g text-anchor="middle">
+    <rect x="420" y="80" width="220" height="70" rx="13" fill="#f2fbf6" stroke="#cdeadb" filter="url(#soft)"/><text x="530" y="106" font-size="12" font-weight="700" fill="#12402a">Keeper Leader</text><text x="530" y="126" font-size="8.5" fill="#2f6f4f">接收所有写请求</text><text x="530" y="142" font-size="8" fill="#4c8567">把写作为 Raft 日志复制出去</text>
+    <rect x="120" y="200" width="200" height="64" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/><text x="220" y="226" font-size="11" font-weight="600" fill="#1b2a4a">Follower 1</text><text x="220" y="246" font-size="8.5" fill="#5b7db1">接收日志 + 确认</text>
+    <rect x="740" y="200" width="200" height="64" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/><text x="840" y="226" font-size="11" font-weight="600" fill="#1b2a4a">Follower 2</text><text x="840" y="246" font-size="8.5" fill="#5b7db1">接收日志 + 确认</text>
+  </g>
+  <g stroke="#9ccbb0" stroke-width="1.5" fill="none">
+    <path d="M470,150 L260,200" marker-end="url(#ar)"/>
+    <path d="M590,150 L800,200" marker-end="url(#ar)"/>
+  </g>
+  <g stroke="#c4d8f0" stroke-width="1.3" fill="none" stroke-dasharray="4 3">
+    <path d="M280,200 L490,152" marker-end="url(#ar)"/>
+    <path d="M780,200 L570,152" marker-end="url(#ar)"/>
+  </g>
+  <text x="330" y="180" font-size="8" fill="#4c8567">① 复制日志</text>
+  <text x="700" y="180" font-size="8" fill="#5b7db1">② 确认 ack</text>
+
+  <!-- commit rule -->
+  <rect x="330" y="288" width="400" height="80" rx="13" fill="#fdf9f0" stroke="#efe3cd"/>
+  <text x="530" y="312" font-size="11" font-weight="700" fill="#7a5a1e" text-anchor="middle">③ 多数派确认 → 提交</text>
+  <text x="530" y="332" font-size="9" fill="#93762e" text-anchor="middle">3 节点需 2 个确认（含 Leader 自己）</text>
+  <text x="530" y="350" font-size="9" fill="#93762e" text-anchor="middle">提交后应用到状态机 → 对客户端可见</text>
+  <g stroke="#c7c7cc" stroke-width="1.4" fill="none"><line x1="530" y1="264" x2="530" y2="288" marker-end="url(#ar)"/></g>
+
+  <!-- election -->
+  <rect x="40" y="300" width="270" height="130" rx="13" fill="#f6f2fb" stroke="#d9c9ec"/>
+  <text x="175" y="324" font-size="11" font-weight="700" fill="#3d2a5a" text-anchor="middle">Leader 故障 → 选举</text>
+  <text x="55" y="348" font-size="9" fill="#7a5da5">· Follower 超时未收心跳</text>
+  <text x="55" y="368" font-size="9" fill="#7a5da5">· 发起选举，拉票</text>
+  <text x="55" y="388" font-size="9" fill="#7a5da5">· 获多数票者成新 Leader</text>
+  <text x="55" y="410" font-size="8.5" fill="#9a7cc4">3 节点容忍 1 个故障</text>
+
+  <!-- consistency contrast -->
+  <rect x="750" y="300" width="270" height="130" rx="13" fill="#fbeef0" stroke="#f0cdd4"/>
+  <text x="885" y="324" font-size="11" font-weight="700" fill="#7a2230" text-anchor="middle">两种一致性别混淆</text>
+  <text x="765" y="348" font-size="9" fill="#a44">Keeper 内部：Raft 强一致</text>
+  <text x="765" y="366" font-size="8.5" fill="#7a2230">（znode 线性一致）</text>
+  <text x="765" y="388" font-size="9" fill="#a44">表数据：最终一致</text>
+  <text x="765" y="406" font-size="8.5" fill="#7a2230">（副本异步收敛）</text>
+
+  <rect x="40" y="446" width="980" height="94" rx="12" fill="#f7f7f9" stroke="#e6e6ea"/>
+  <text x="60" y="470" font-size="11" font-weight="700" fill="#1d1d1f">一句话</text>
+  <text x="60" y="492" font-size="10" fill="#4b4b50">Keeper 是 3/5 节点 Raft 组：Leader 把每个写操作作为日志复制给 Follower，多数派确认后才提交并应用到状态机，</text>
+  <text x="60" y="510" font-size="10" fill="#4b4b50">Leader 故障时选举新主。这保证 znode 强一致（线性一致）——正是上层 ReplicatedMergeTree "表数据最终一致"</text>
+  <text x="60" y="528" font-size="10" fill="#4b4b50">所依赖的强一致底座：协调元数据必须强一致，表数据才能靠它安全地最终收敛。</text>
+</svg>

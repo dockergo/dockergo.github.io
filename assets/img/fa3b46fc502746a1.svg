@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="440" viewBox="0 0 1020 440"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1020" height="440" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">torch.compile 三段栈 · Dynamo → AOTAutograd → Inductor（torch/_dynamo,_inductor）</text>
+
+  <rect x="30" y="56" width="960" height="200" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <rect x="48" y="76" width="290" height="160" rx="11" fill="#f4eefb" stroke="#d9c9ef"/>
+  <text x="193" y="100" font-size="11" font-weight="600" fill="#3c1361" text-anchor="middle">① Dynamo（抓图）</text>
+  <text x="64" y="124" font-size="9" fill="#7a5aa8">拦 Python 字节码执行</text>
+  <text x="64" y="144" font-size="9" fill="#7a5aa8">把张量运算抽成 FX 图</text>
+  <text x="64" y="164" font-size="9" fill="#7a5aa8">遇不能抓的（如打印/复杂</text>
+  <text x="64" y="182" font-size="9" fill="#7a5aa8">Python）→ graph break 回退 eager</text>
+  <text x="64" y="204" font-size="8.5" fill="#a58fc9">产出：一段可优化的算子图</text>
+  <text x="64" y="222" font-size="8.5" fill="#a58fc9">+ guards（复用条件）</text>
+
+  <rect x="356" y="76" width="290" height="160" rx="11" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="501" y="100" font-size="11" font-weight="600" fill="#1b2a4a" text-anchor="middle">② AOTAutograd</text>
+  <text x="372" y="124" font-size="9" fill="#5b7db1">提前把前向图 + 反向图</text>
+  <text x="372" y="144" font-size="9" fill="#5b7db1">一起 trace 出来</text>
+  <text x="372" y="164" font-size="9" fill="#5b7db1">把复合算子降解成</text>
+  <text x="372" y="182" font-size="9" fill="#5b7db1">基础算子集（更好优化）</text>
+  <text x="372" y="204" font-size="8.5" fill="#8fa9cf">产出：前向+反向的联合图</text>
+  <text x="372" y="222" font-size="8.5" fill="#8fa9cf">（训练也能整图编译）</text>
+
+  <rect x="664" y="76" width="308" height="160" rx="11" fill="#eafaf1" stroke="#bce6cd"/>
+  <text x="818" y="100" font-size="11" font-weight="600" fill="#0f5132" text-anchor="middle">③ Inductor（codegen）</text>
+  <text x="680" y="124" font-size="9" fill="#3f8f66">在算子图上做融合/调度</text>
+  <text x="680" y="144" font-size="9" fill="#3f8f66">生成 GPU 的 Triton kernel</text>
+  <text x="680" y="164" font-size="9" fill="#3f8f66">与 CPU 的 C++/OpenMP kernel</text>
+  <text x="680" y="182" font-size="9" fill="#3f8f66">减少派发/访存、算子融合</text>
+  <text x="680" y="204" font-size="8.5" fill="#5aa06f">产出：编译好的高效 kernel</text>
+  <text x="680" y="222" font-size="8.5" fill="#5aa06f">缓存复用，避免重编译</text>
+
+  <line x1="338" y1="156" x2="356" y2="156" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="646" y1="156" x2="664" y2="156" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+
+  <!-- 价值 + 回退 -->
+  <rect x="30" y="272" width="470" height="134" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="48" y="296" font-size="12" font-weight="600" fill="#1b2a4a">为什么快</text>
+  <text x="48" y="320" font-size="9.5" fill="#5b7db1">· eager 逐算子：每算子一次 Python↔C++ 派发 + 读写显存</text>
+  <text x="48" y="340" font-size="9.5" fill="#5b7db1">· 编译后：多算子融合成一个 kernel，一次读写、省派发</text>
+  <text x="48" y="360" font-size="9.5" fill="#5b7db1">· 访存密集的逐元素链收益最大（如 LayerNorm）</text>
+  <text x="48" y="384" font-size="9" fill="#8fa9cf">一行 model = torch.compile(model)，写法不变</text>
+
+  <rect x="520" y="272" width="470" height="134" rx="14" fill="#fff7e6" stroke="#f0dcae" filter="url(#soft)"/>
+  <text x="538" y="296" font-size="12" font-weight="600" fill="#7a4d00">优雅回退：graph break</text>
+  <text x="538" y="320" font-size="9.5" fill="#9a7328">· 抓不了的片段自动切回 eager 执行</text>
+  <text x="538" y="340" font-size="9.5" fill="#9a7328">· 图被切成多段、各自编译，接缝处走 eager</text>
+  <text x="538" y="360" font-size="9.5" fill="#9a7328">· 保证"总能跑"，只是 break 多则收益少</text>
+  <text x="538" y="384" font-size="9" fill="#b8912e">这就是"动态优先、编译加速可选"的落地</text>
+</svg>

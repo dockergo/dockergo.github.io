@@ -1,0 +1,105 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="640" viewBox="0 0 1120 640" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="aB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#4a7fd0"/></marker>
+    <marker id="aG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+    <marker id="aR" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#d1544a"/></marker>
+  </defs>
+  <rect width="1120" height="640" fill="#fbfbfd"/>
+
+  <text x="30" y="32" font-size="15" font-weight="700" fill="#1d1d1f">成员变更 · 增删节点时若新旧配置的多数派不相交，可能同时选出两个 Leader（脑裂）—— 变更必须让新旧多数派始终相交</text>
+  <text x="30" y="53" font-size="10.5" fill="#6e6e73">两条安全路径：联合共识 C_old,new 让两配置的多数派叠加生效；单节点变更每次只增减一个，保证相邻配置多数派天然相交</text>
+
+  <!-- 图例 -->
+  <line x1="30" y1="80" x2="54" y2="80" stroke="#2f9e6e" stroke-width="2" marker-end="url(#aG)"/>
+  <text x="60" y="84" font-size="10" fill="#3a3a3c">安全过渡（多数派相交）</text>
+  <line x1="270" y1="80" x2="294" y2="80" stroke="#d1544a" stroke-width="2" stroke-dasharray="5 3" marker-end="url(#aR)"/>
+  <text x="300" y="84" font-size="10" fill="#3a3a3c">危险：直接切换会出现脑裂</text>
+
+  <!-- 顶部危险示意 -->
+  <rect x="30" y="100" width="1060" height="118" rx="14" fill="#fdf3f2" stroke="#f0d4d0" filter="url(#soft)"/>
+  <text x="52" y="126" font-size="12.5" font-weight="700" fill="#8a4038">✗ 反例：从 C_old={A,B,C} 直接跳到 C_new={A,B,C,D,E}</text>
+  <text x="52" y="150" font-size="10" fill="#4a4a4f">切换瞬间不同节点看到的配置不一致：{A,B} 用旧配置以为过半（2/3），{C,D,E} 用新配置也以为过半（3/5）</text>
+  <text x="52" y="172" font-size="10" fill="#4a4a4f">→ <tspan font-weight="700" fill="#d1544a">同一 term 里选出两个 Leader</tspan>，各自提交冲突的日志 —— 违反选举安全。根因：C_old 与 C_new 的多数派可以不相交。</text>
+  <!-- 两团 -->
+  <g font-size="9" text-anchor="middle">
+    <circle cx="740" cy="150" r="14" fill="#eaf1fb" stroke="#c6d9f2"/><text x="740" y="154" fill="#20375e">A</text>
+    <circle cx="778" cy="150" r="14" fill="#eaf1fb" stroke="#c6d9f2"/><text x="778" y="154" fill="#20375e">B</text>
+    <rect x="726" y="176" width="66" height="18" rx="6" fill="#fbe6e3" stroke="#e8a79f"/><text x="759" y="189" fill="#8a4038">旧多数派</text>
+    <circle cx="880" cy="150" r="14" fill="#eaf6f0" stroke="#bfe3d1"/><text x="880" y="154" fill="#2f6b4e">C</text>
+    <circle cx="918" cy="150" r="14" fill="#eaf6f0" stroke="#bfe3d1"/><text x="918" y="154" fill="#2f6b4e">D</text>
+    <circle cx="956" cy="150" r="14" fill="#eaf6f0" stroke="#bfe3d1"/><text x="956" y="154" fill="#2f6b4e">E</text>
+    <rect x="852" y="176" width="104" height="18" rx="6" fill="#eaf6f0" stroke="#bfe3d1"/><text x="904" y="189" fill="#2f6b4e">新多数派（不含 A/B）</text>
+  </g>
+  <text x="1000" y="154" font-size="20" fill="#d1544a">⚡</text>
+
+  <!-- 左：联合共识 -->
+  <rect x="30" y="238" width="530" height="378" rx="14" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="52" y="264" font-size="13" font-weight="700" fill="#20375e">方案 A · 联合共识 Joint Consensus（两阶段）</text>
+
+  <!-- 阶段盒 -->
+  <rect x="52" y="284" width="486" height="66" rx="10" fill="#eaf1fb" stroke="#c6d9f2"/>
+  <text x="66" y="306" font-size="11" font-weight="700" fill="#20375e">① 提交过渡配置 C_old,new</text>
+  <text x="66" y="325" font-size="9.5" fill="#3a4a66">此阶段的每个决议都需<tspan font-weight="700"> 同时</tspan>获得 C_old 的多数派 <tspan font-weight="700">和</tspan> C_new 的多数派</text>
+  <text x="66" y="341" font-size="9.5" fill="#3a4a66">→ 两配置被「叠加」绑定，任一方都无法单独选出 Leader</text>
+
+  <line x1="295" y1="350" x2="295" y2="378" stroke="#2f9e6e" stroke-width="2" marker-end="url(#aG)"/>
+  <text x="305" y="370" font-size="9" fill="#2f6b4e">C_old,new 一旦提交，变更已跨越安全点</text>
+
+  <rect x="52" y="386" width="486" height="60" rx="10" fill="#eaf6f0" stroke="#bfe3d1"/>
+  <text x="66" y="408" font-size="11" font-weight="700" fill="#2f6b4e">② 提交最终配置 C_new</text>
+  <text x="66" y="427" font-size="9.5" fill="#3f8a63">此后只需 C_new 多数派；C_old 节点若不在新配置则可安全下线</text>
+
+  <!-- 时间轴 -->
+  <line x1="70" y1="486" x2="520" y2="486" stroke="#d7d7dd" stroke-width="1.2"/>
+  <circle cx="130" cy="486" r="6" fill="#4a7fd0"/><text x="130" y="474" font-size="8.5" fill="#20375e" text-anchor="middle">C_old</text>
+  <circle cx="300" cy="486" r="7" fill="#8a5cae"/><text x="300" y="474" font-size="8.5" fill="#6f3ea8" text-anchor="middle">C_old,new</text>
+  <circle cx="470" cy="486" r="6" fill="#2f9e6e"/><text x="470" y="474" font-size="8.5" fill="#2f6b4e" text-anchor="middle">C_new</text>
+  <text x="300" y="506" font-size="8.5" fill="#8a5cae" text-anchor="middle">重叠期：两多数派都要满足</text>
+
+  <text x="52" y="540" font-size="9.5" fill="#4a4a4f">安全依据：过渡期强制「新旧多数派同时满足」，故切换全程</text>
+  <text x="52" y="558" font-size="9.5" fill="#4a4a4f">不存在两个能独立达成多数的不相交集合 → 不可能双 Leader。</text>
+  <text x="52" y="582" font-size="9" fill="#8a97ab">代价：实现较复杂，需处理过渡配置下的选举 / 复制 / 宕机恢复。</text>
+  <text x="52" y="600" font-size="9" fill="#8a97ab">优点：一次可任意增删多个成员。</text>
+
+  <!-- 右：单节点变更 -->
+  <rect x="580" y="238" width="510" height="378" rx="14" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="602" y="264" font-size="13" font-weight="700" fill="#2f6b4e">方案 B · 单节点变更（每次 ±1，主流实现）</text>
+
+  <text x="602" y="290" font-size="10" fill="#4a4a4f">关键观察：奇偶两配置只差一个成员时，其多数派</text>
+  <text x="602" y="307" font-size="10" font-weight="700" fill="#2f6b4e">必然相交（至少共享一个成员）→ 无需过渡配置</text>
+
+  <!-- 逐步增长图 -->
+  <g font-size="9" text-anchor="middle">
+    <!-- 3 -> 4 -->
+    <text x="660" y="342" font-size="10" font-weight="700" fill="#20375e">3 节点</text>
+    <circle cx="626" cy="368" r="13" fill="#eaf1fb" stroke="#c6d9f2"/><text x="626" y="372" fill="#20375e">A</text>
+    <circle cx="660" cy="368" r="13" fill="#eaf1fb" stroke="#c6d9f2"/><text x="660" y="372" fill="#20375e">B</text>
+    <circle cx="694" cy="368" r="13" fill="#eaf1fb" stroke="#c6d9f2"/><text x="694" y="372" fill="#20375e">C</text>
+    <text x="660" y="398" fill="#5a7099">多数派=2</text>
+
+    <text x="855" y="342" font-size="10" font-weight="700" fill="#2f6b4e">+D → 4 节点</text>
+    <circle cx="805" cy="368" r="13" fill="#eaf1fb" stroke="#c6d9f2"/><text x="805" y="372" fill="#20375e">A</text>
+    <circle cx="839" cy="368" r="13" fill="#eaf1fb" stroke="#c6d9f2"/><text x="839" y="372" fill="#20375e">B</text>
+    <circle cx="873" cy="368" r="13" fill="#eaf1fb" stroke="#c6d9f2"/><text x="873" y="372" fill="#20375e">C</text>
+    <circle cx="907" cy="368" r="13" fill="#eaf6f0" stroke="#bfe3d1"/><text x="907" y="372" fill="#2f6b4e">D</text>
+    <text x="856" y="398" fill="#5a7099">多数派=3</text>
+  </g>
+  <line x1="712" y1="368" x2="788" y2="368" stroke="#2f9e6e" stroke-width="2" marker-end="url(#aG)"/>
+  <text x="750" y="358" font-size="8.5" fill="#2f6b4e" text-anchor="middle">+1</text>
+
+  <rect x="602" y="416" width="466" height="30" rx="8" fill="#eaf6f0" stroke="#bfe3d1"/>
+  <text x="616" y="435" font-size="9.5" fill="#2f6b4e">{A,B,C} 多数派(任2) ∩ {A,B,C,D} 多数派(任3) ≠ ∅ —— 必有公共成员</text>
+
+  <!-- 流程 -->
+  <text x="602" y="470" font-size="10.5" font-weight="700" fill="#1d1d1f">变更流程（作为一条特殊日志条目复制）</text>
+  <rect x="602" y="480" width="466" height="26" rx="7" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="614" y="497" font-size="9.5" fill="#4a4a4f">① 新增节点先作为 learner 追日志，不计入投票，直到追平</text>
+  <rect x="602" y="510" width="466" height="26" rx="7" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="614" y="527" font-size="9.5" fill="#4a4a4f">② Leader 追加 ConfChange 条目，复制到（新配置）多数派即提交</text>
+  <rect x="602" y="540" width="466" height="26" rx="7" fill="#eaf6f0" stroke="#bfe3d1"/>
+  <text x="614" y="557" font-size="9.5" fill="#2f6b4e">③ 条目一旦应用，节点即按新配置计票；多步变更需串行、逐个提交</text>
+
+  <text x="602" y="586" font-size="9" fill="#8a97ab">注意：增删多个成员需拆成多次单步；每步等前一步提交后再发起，避免并发变更破坏相交前提。</text>
+  <text x="602" y="604" font-size="9" fill="#8a97ab">优点：实现简单；缺点：批量扩缩容需多轮。</text>
+</svg>

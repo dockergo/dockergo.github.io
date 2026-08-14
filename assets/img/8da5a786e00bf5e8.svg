@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="500" viewBox="0 0 1000 500" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="d4" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="m1" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#5b7db1"/></marker>
+    <marker id="m2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#c99a3a"/></marker>
+    <marker id="m3" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+    <marker id="m4" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#8a5cae"/></marker>
+  </defs>
+  <rect width="1000" height="500" fill="#fbfbfd"/>
+  <text x="24" y="30" font-size="14" font-weight="700" fill="#1d1d1f">Rewriter 静态改写 → cpCache 惰性解析 · invoke/字段首执符号解析全过程</text>
+  <text x="24" y="49" font-size="10" fill="#6e6e73">类链接后一次性把字节码操作数改写为指向 cpCache 的间接索引；运行期首次执行时才做符号解析并把结果回填 entry，此后走缓存零重复解析</text>
+
+  <!-- ① Rewriter 静态改写 -->
+  <rect x="24" y="66" width="952" height="106" rx="12" fill="#f6f8fc" stroke="#cfe0f2"/>
+  <text x="40" y="86" font-size="11" font-weight="600" fill="#5b7db1">① 类链接后一次性改写（Rewriter）· 把常量池索引换成 cpCache entry 序号，并建立缓存</text>
+  <g text-anchor="middle">
+    <rect x="44" y="98" width="210" height="58" rx="9" fill="#fff" stroke="#cfe0f2" filter="url(#d4)"/>
+    <text x="149" y="120" font-size="10" font-weight="600" fill="#1b2a4a">原始字节码</text>
+    <text x="149" y="137" font-size="8.5" fill="#6e6e73">invokevirtual / getfield</text>
+    <text x="149" y="149" font-size="8" fill="#9a9aa0">操作数=常量池符号索引</text>
+    <rect x="286" y="98" width="210" height="58" rx="9" fill="#fff" stroke="#cfe0f2" filter="url(#d4)"/>
+    <text x="391" y="120" font-size="10" font-weight="600" fill="#1b2a4a">扫描全部方法字节码</text>
+    <text x="391" y="137" font-size="8.5" fill="#6e6e73">遍历 opcode，登记 cp_index</text>
+    <text x="391" y="149" font-size="8" fill="#9a9aa0">rewriter.cpp:372 scan_method</text>
+    <rect x="528" y="98" width="210" height="58" rx="9" fill="#fff" stroke="#cfe0f2" filter="url(#d4)"/>
+    <text x="633" y="120" font-size="10" font-weight="600" fill="#1b2a4a">改写为间接索引</text>
+    <text x="633" y="137" font-size="8.5" fill="#6e6e73">u2 操作数改指向 entry 序号</text>
+    <text x="633" y="149" font-size="8" fill="#9a9aa0">rewriter.cpp:187 / :200</text>
+    <rect x="770" y="98" width="206" height="58" rx="9" fill="#fff" stroke="#cfe0f2" filter="url(#d4)"/>
+    <text x="873" y="120" font-size="10" font-weight="600" fill="#1b2a4a">建 ConstantPoolCache</text>
+    <text x="873" y="137" font-size="8.5" fill="#6e6e73">分配三张 entry 表</text>
+    <text x="873" y="149" font-size="8" fill="#9a9aa0">rewriter.cpp:107</text>
+  </g>
+  <line x1="254" y1="127" x2="286" y2="127" stroke="#5b7db1" stroke-width="1.5" marker-end="url(#m1)"/>
+  <line x1="496" y1="127" x2="528" y2="127" stroke="#5b7db1" stroke-width="1.5" marker-end="url(#m1)"/>
+  <line x1="738" y1="127" x2="770" y2="127" stroke="#5b7db1" stroke-width="1.5" marker-end="url(#m1)"/>
+
+  <!-- ② cpCache 三张 entry 表 -->
+  <rect x="24" y="186" width="952" height="104" rx="12" fill="#eef6f2" stroke="#cfe6da"/>
+  <text x="40" y="206" font-size="11" font-weight="600" fill="#2a8f6a">② ConstantPoolCache 的三张解析结果表（初始为未解析，惰性回填）</text>
+  <g text-anchor="middle">
+    <rect x="44" y="218" width="296" height="60" rx="9" fill="#fff" stroke="#cfe6da" filter="url(#d4)"/>
+    <text x="192" y="238" font-size="10" font-weight="600" fill="#207a58">ResolvedFieldEntry</text>
+    <text x="192" y="255" font-size="8.5" fill="#6e6e73">字段偏移 / TosState / is_volatile</text>
+    <text x="192" y="270" font-size="8" fill="#9a9aa0">oops/resolvedFieldEntry.hpp</text>
+    <rect x="352" y="218" width="296" height="60" rx="9" fill="#fff" stroke="#cfe6da" filter="url(#d4)"/>
+    <text x="500" y="238" font-size="10" font-weight="600" fill="#207a58">ResolvedMethodEntry</text>
+    <text x="500" y="255" font-size="8.5" fill="#6e6e73">Method* / vtable 或 itable 索引 / 参数大小</text>
+    <text x="500" y="270" font-size="8" fill="#9a9aa0">oops/resolvedMethodEntry.hpp</text>
+    <rect x="660" y="218" width="316" height="60" rx="9" fill="#fff" stroke="#cfe6da" filter="url(#d4)"/>
+    <text x="818" y="238" font-size="10" font-weight="600" fill="#207a58">ResolvedIndyEntry</text>
+    <text x="818" y="255" font-size="8.5" fill="#6e6e73">CallSite / appendix（invokedynamic 专用）</text>
+    <text x="818" y="270" font-size="8" fill="#9a9aa0">oops/resolvedIndyEntry.hpp · cpCache.hpp:51</text>
+  </g>
+  <path d="M873,156 L873,172 L500,172 L500,186" fill="none" stroke="#5b7db1" stroke-width="1.5" marker-end="url(#m1)"/>
+  <text x="690" y="168" font-size="8" fill="#5b7db1">初始 entry 为空（未解析）</text>
+
+  <!-- ③ 首执惰性解析 -->
+  <rect x="24" y="304" width="620" height="182" rx="12" fill="#fbf7ef" stroke="#ecdcbf"/>
+  <text x="40" y="324" font-size="11" font-weight="600" fill="#8a6d3b">③ 首次执行：entry 未解析 → 陷入解析 → 回填</text>
+  <g text-anchor="middle">
+    <rect x="44" y="336" width="270" height="46" rx="9" fill="#fff" stroke="#ecdcbf" filter="url(#d4)"/>
+    <text x="179" y="356" font-size="10" font-weight="600" fill="#8a5a1a">解释器执行 invoke/getfield</text>
+    <text x="179" y="372" font-size="8" fill="#6e6e73">读 entry，发现解析标志为空</text>
+    <rect x="44" y="396" width="270" height="46" rx="9" fill="#fff" stroke="#ecdcbf" filter="url(#d4)"/>
+    <text x="179" y="416" font-size="10" font-weight="600" fill="#8a5a1a">陷入 InterpreterRuntime</text>
+    <text x="179" y="432" font-size="8" fill="#6e6e73">resolve_from_cache（runtime:977）</text>
+    <rect x="350" y="336" width="278" height="46" rx="9" fill="#fff" stroke="#ecdcbf" filter="url(#d4)"/>
+    <text x="489" y="356" font-size="10" font-weight="600" fill="#8a5a1a">resolve_invoke / _new</text>
+    <text x="489" y="372" font-size="8" fill="#6e6e73">runtime:778 · :947 indy · :215 new</text>
+    <rect x="350" y="396" width="278" height="46" rx="9" fill="#fff" stroke="#ecdcbf" filter="url(#d4)"/>
+    <text x="489" y="416" font-size="10" font-weight="600" fill="#8a5a1a">回填 entry（set 解析结果）</text>
+    <text x="489" y="432" font-size="8" fill="#6e6e73">写入 Method* / 偏移 / CallSite</text>
+  </g>
+  <line x1="179" y1="382" x2="179" y2="396" stroke="#c99a3a" stroke-width="1.5" marker-end="url(#m2)"/>
+  <line x1="314" y1="419" x2="350" y2="419" stroke="#c99a3a" stroke-width="1.5" marker-end="url(#m2)"/>
+  <path d="M489,396 L489,359" fill="none" stroke="#c99a3a" stroke-width="1.4" stroke-dasharray="4 3" marker-end="url(#m2)"/>
+  <text x="40" y="468" font-size="8.5" fill="#9a9aa0">符号解析核心：LinkResolver::resolve_method（linkResolver.cpp:753）· resolve_field（:994）</text>
+
+  <!-- LinkResolver 侧栏 -->
+  <rect x="660" y="304" width="316" height="182" rx="12" fill="#f4eefb" stroke="#d9c9ef"/>
+  <text x="676" y="324" font-size="11" font-weight="600" fill="#6f3ea8">LinkResolver · 符号引用 → 直接引用</text>
+  <rect x="676" y="336" width="284" height="40" rx="7" fill="#fff" stroke="#d9c9ef"/>
+  <text x="686" y="353" font-size="8.7" fill="#6f3ea8">linktime_resolve_virtual_method（:1368）</text>
+  <text x="686" y="368" font-size="8" fill="#9a9aa0">校验+定位 → vtable index</text>
+  <rect x="676" y="382" width="284" height="40" rx="7" fill="#fff" stroke="#d9c9ef"/>
+  <text x="686" y="399" font-size="8.7" fill="#6f3ea8">linktime_resolve_interface_method（:1512）</text>
+  <text x="686" y="414" font-size="8" fill="#9a9aa0">itable index</text>
+  <rect x="676" y="428" width="284" height="44" rx="7" fill="#f5faf6" stroke="#cfe6d2"/>
+  <text x="686" y="446" font-size="9" font-weight="600" fill="#207a58">后续执行：entry 已解析</text>
+  <text x="686" y="462" font-size="8" fill="#2a8f6a">直接读 Method*/偏移，零重复解析</text>
+  <line x1="628" y1="359" x2="660" y2="359" stroke="#8a5cae" stroke-width="1.5" marker-end="url(#m4)"/>
+  <line x1="818" y1="472" x2="818" y2="486" stroke="#2f9e6e" stroke-width="1.5" marker-end="url(#m3)"/>
+</svg>

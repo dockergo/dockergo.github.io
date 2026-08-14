@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="500" viewBox="0 0 920 500" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="920" height="500" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">泛型全景 · 类型参数、约束、实例化</text>
+
+  <!-- source signature (neutral) -->
+  <rect x="30" y="50" width="860" height="58" rx="13" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="46" y="74" font-size="12.5" font-weight="600" fill="#1d1d1f">泛型函数定义</text>
+  <text x="46" y="96" font-size="11.5" fill="#3a3a3c" font-family="'SF Mono','Menlo',monospace">func Map[T any, U any](s []T, f func(T) U) []U</text>
+
+  <!-- three concept cards -->
+  <!-- type params (purple) -->
+  <rect x="30" y="128" width="278" height="150" rx="13" fill="#f5f0fb" stroke="#ddcdf0" filter="url(#soft)"/>
+  <text x="46" y="152" font-size="12" font-weight="600" fill="#3d2a5a">① 类型参数 type parameter</text>
+  <rect x="46" y="166" width="246" height="34" rx="8" fill="#ffffff" stroke="#ddcdf0"/>
+  <text x="60" y="188" font-size="11" fill="#3d2a5a" font-family="'SF Mono','Menlo',monospace">[T any, U any]</text>
+  <text x="46" y="222" font-size="10" fill="#7d5bb1">T / U 是类型参数（占位类型）</text>
+  <text x="46" y="240" font-size="10" fill="#7d5bb1">写在 [ ] 中，作用于函数或类型</text>
+  <text x="46" y="262" font-size="10" fill="#7d5bb1">any / 约束 限定其可取的类型</text>
+
+  <!-- constraint (purple) -->
+  <rect x="322" y="128" width="278" height="150" rx="13" fill="#f5f0fb" stroke="#ddcdf0" filter="url(#soft)"/>
+  <text x="338" y="152" font-size="12" font-weight="600" fill="#3d2a5a">② 约束 constraint</text>
+  <rect x="338" y="166" width="246" height="34" rx="8" fill="#ffffff" stroke="#ddcdf0"/>
+  <text x="352" y="188" font-size="11" fill="#3d2a5a" font-family="'SF Mono','Menlo',monospace">~int | ~string</text>
+  <text x="338" y="222" font-size="10" fill="#7d5bb1">本质是接口 —— 限定方法集 +</text>
+  <text x="338" y="240" font-size="10" fill="#7d5bb1">类型集（~ 表底层类型，| 表并）</text>
+  <text x="338" y="262" font-size="10" fill="#7d5bb1">comparable / constraints.Ordered</text>
+
+  <!-- instantiation (purple) -->
+  <rect x="614" y="128" width="276" height="150" rx="13" fill="#f5f0fb" stroke="#ddcdf0" filter="url(#soft)"/>
+  <text x="630" y="152" font-size="12" font-weight="600" fill="#3d2a5a">③ 实例化 instantiation</text>
+  <rect x="630" y="166" width="244" height="34" rx="8" fill="#ffffff" stroke="#ddcdf0"/>
+  <text x="644" y="188" font-size="11" fill="#3d2a5a" font-family="'SF Mono','Menlo',monospace">Map[int, string](...)</text>
+  <text x="630" y="222" font-size="10" fill="#7d5bb1">用具体类型替换参数</text>
+  <text x="630" y="240" font-size="10" fill="#7d5bb1">显式：写出 [int, string]</text>
+  <text x="630" y="262" font-size="10" fill="#7d5bb1">推断：编译器从实参推出</text>
+
+  <!-- core question (blue) -->
+  <rect x="30" y="300" width="860" height="80" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="46" y="324" font-size="12.5" font-weight="600" fill="#1b2a4a">核心问题：编译泛型如何生成代码？</text>
+  <rect x="46" y="336" width="400" height="32" rx="8" fill="#ffffff" stroke="#cfe0f2"/>
+  <text x="246" y="357" font-size="10.5" fill="#1b2a4a" text-anchor="middle" font-family="'SF Mono','Menlo',monospace">Map[int,string] vs Map[float64,bool]</text>
+  <text x="466" y="349" font-size="11" fill="#5b7db1">共享一份机器码，还是各生成一份？</text>
+  <text x="466" y="368" font-size="11" font-weight="600" fill="#1b2a4a">Go 的答案：按 "GC 形状" 分组（见后续图）</text>
+
+  <!-- spectrum (amber/green) -->
+  <rect x="30" y="400" width="860" height="82" rx="13" fill="#f6f6f7" stroke="#e2e2e7"/>
+  <text x="46" y="424" font-size="11.5" font-weight="600" fill="#1d1d1f">实现光谱：Go 在两极间取折中</text>
+  <rect x="46" y="436" width="256" height="34" rx="8" fill="#fdf6ec" stroke="#f0dcaf"/>
+  <text x="174" y="457" font-size="10" fill="#6b4e16" text-anchor="middle">全单态化：大 / 最快（C++）</text>
+  <rect x="332" y="436" width="256" height="34" rx="8" fill="#eef7f0" stroke="#bfe0c8"/>
+  <text x="460" y="457" font-size="10" font-weight="600" fill="#1d4a2b" text-anchor="middle">GC shape + 字典：中 / 中（Go）</text>
+  <rect x="618" y="436" width="256" height="34" rx="8" fill="#fbeeee" stroke="#f0c4c4"/>
+  <text x="746" y="457" font-size="10" fill="#7a1f1f" text-anchor="middle">类型擦除装箱：小 / 慢（Java）</text>
+</svg>

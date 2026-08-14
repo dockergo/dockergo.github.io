@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="510" viewBox="0 0 1080 510" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1080" height="510" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">ORC 列统计 · ColumnStatistics 每列摘要</text>
+  <text x="30" y="50" font-size="12" fill="#a1a1a6">= numberOfValues + 一个类型化子消息 + hasNull;让 reader 不看数据就知范围/有无 null/多少行</text>
+
+  <!-- ColumnStatistics container -->
+  <rect x="60" y="72" width="440" height="290" rx="14" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="80" y="97" font-size="13" font-weight="600" fill="#5a3410">ColumnStatistics (proto)</text>
+
+  <!-- numberOfValues -->
+  <rect x="80" y="112" width="400" height="52" rx="10" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="280" y="135" font-size="11" font-weight="600" fill="#1d1d1f" text-anchor="middle">numberOfValues</text>
+  <text x="280" y="154" font-size="9.5" fill="#6e6e73" text-anchor="middle">非 null 值的行数</text>
+
+  <!-- min/max -->
+  <rect x="80" y="172" width="400" height="58" rx="10" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+  <text x="280" y="195" font-size="11" font-weight="600" fill="#5a3410" text-anchor="middle">min / max &#8212; 范围剪枝的核心</text>
+  <text x="280" y="215" font-size="9.5" fill="#93762e" text-anchor="middle">多数原始类型有 (整数/浮点/字符串/date/decimal…)</text>
+
+  <!-- sum -->
+  <rect x="80" y="238" width="400" height="52" rx="10" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+  <text x="280" y="261" font-size="11" font-weight="600" fill="#5a3410" text-anchor="middle">sum &#8212; 整数 / 浮点 / decimal 额外有</text>
+  <text x="280" y="280" font-size="9.5" fill="#93762e" text-anchor="middle">整数 IntegerStatistics.sum 溢出则丢;字符串存总长度作 sum</text>
+
+  <!-- hasNull -->
+  <rect x="80" y="298" width="400" height="52" rx="10" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="280" y="321" font-size="11" font-weight="600" fill="#1b2a4a" text-anchor="middle">hasNull (Hive 1.1+)</text>
+  <text x="280" y="340" font-size="9.5" fill="#5b7db1" text-anchor="middle">支撑 IS NULL 剪枝 &#8212; 无 null 的块跳过 IS NULL 查询</text>
+
+  <path d="M500,217 L556,217" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="528" y="209" font-size="9" fill="#a1a1a6" text-anchor="middle">类型化子消息</text>
+
+  <!-- typed sub-messages -->
+  <rect x="560" y="72" width="460" height="290" rx="14" fill="#f5faf6" stroke="#cfe6d5" filter="url(#soft)"/>
+  <text x="580" y="97" font-size="13" font-weight="600" fill="#2c5a3a">各类型专门子消息 (按类型二选一)</text>
+
+  <rect x="580" y="112" width="200" height="50" rx="10" fill="#ffffff" stroke="#ececf1"/>
+  <text x="680" y="133" font-size="10.5" font-weight="600" fill="#1d1d1f" text-anchor="middle">IntegerStatistics</text>
+  <text x="680" y="150" font-size="9" fill="#6e6e73" text-anchor="middle">min/max/sum</text>
+
+  <rect x="800" y="112" width="200" height="50" rx="10" fill="#ffffff" stroke="#ececf1"/>
+  <text x="900" y="133" font-size="10.5" font-weight="600" fill="#1d1d1f" text-anchor="middle">DoubleStatistics</text>
+  <text x="900" y="150" font-size="9" fill="#6e6e73" text-anchor="middle">min/max/sum</text>
+
+  <rect x="580" y="170" width="200" height="50" rx="10" fill="#ffffff" stroke="#ececf1"/>
+  <text x="680" y="191" font-size="10.5" font-weight="600" fill="#1d1d1f" text-anchor="middle">StringStatistics</text>
+  <text x="680" y="208" font-size="9" fill="#6e6e73" text-anchor="middle">min/max + 总长度</text>
+
+  <rect x="800" y="170" width="200" height="50" rx="10" fill="#ffffff" stroke="#ececf1"/>
+  <text x="900" y="191" font-size="10.5" font-weight="600" fill="#1d1d1f" text-anchor="middle">DecimalStatistics</text>
+  <text x="900" y="208" font-size="9" fill="#6e6e73" text-anchor="middle">min/max/sum</text>
+
+  <rect x="580" y="228" width="200" height="50" rx="10" fill="#ffffff" stroke="#ececf1"/>
+  <text x="680" y="249" font-size="10.5" font-weight="600" fill="#1d1d1f" text-anchor="middle">DateStatistics</text>
+  <text x="680" y="266" font-size="9" fill="#6e6e73" text-anchor="middle">min/max</text>
+
+  <rect x="800" y="228" width="200" height="50" rx="10" fill="#ffffff" stroke="#ececf1"/>
+  <text x="900" y="249" font-size="10.5" font-weight="600" fill="#1d1d1f" text-anchor="middle">TimestampStatistics</text>
+  <text x="900" y="266" font-size="9" fill="#6e6e73" text-anchor="middle">min/max</text>
+
+  <rect x="580" y="286" width="200" height="50" rx="10" fill="#ffffff" stroke="#ececf1"/>
+  <text x="680" y="307" font-size="10.5" font-weight="600" fill="#1d1d1f" text-anchor="middle">BinaryStatistics</text>
+  <text x="680" y="324" font-size="9" fill="#6e6e73" text-anchor="middle">总长度</text>
+
+  <rect x="800" y="286" width="200" height="50" rx="10" fill="#ffffff" stroke="#ececf1"/>
+  <text x="900" y="307" font-size="10.5" font-weight="600" fill="#1d1d1f" text-anchor="middle">BucketStatistics</text>
+  <text x="900" y="324" font-size="9" fill="#6e6e73" text-anchor="middle">boolean 计数</text>
+
+  <text x="540" y="400" font-size="9.5" fill="#a1a1a6" text-anchor="middle">统计是跳读判据:min/max 处理范围查询,等值查询 (col=5) 光靠范围不够,需布隆过滤器补位 (见布隆篇)</text>
+</svg>

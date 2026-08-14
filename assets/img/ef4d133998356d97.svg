@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="540" viewBox="0 0 1040 540" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1040" height="540" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Trino 动态过滤 SPI · 连接器读前查询 DynamicFilter 裁剪</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">本篇讲连接器侧如何"消费"动态过滤(规划期如何织入见 DQL 动态过滤篇)</text>
+
+  <!-- two consumption points -->
+  <rect x="30" y="72" width="490" height="200" rx="13" fill="#fff7e6" stroke="#e8cf9a"/>
+  <text x="46" y="94" font-size="11" font-weight="700" fill="#5a3410">消费点 ① split 级（getSplits 时）</text>
+  <rect x="50" y="108" width="450" height="60" rx="9" fill="#fdf6ea" stroke="#e8cf9a"/><text x="64" y="128" font-size="9" font-weight="600" fill="#5a3410">SplitManager 查询 DynamicFilter</text><text x="64" y="146" font-size="8.5" fill="#93762e">若谓词已就绪 → 跳过整个不匹配的分区/文件</text><text x="64" y="162" font-size="8.5" fill="#93762e">→ 根本不生成那些 split(最省)</text>
+  <rect x="50" y="178" width="450" height="80" rx="9" fill="#fff" stroke="#e8cf9a"/><text x="64" y="198" font-size="9" font-weight="600" fill="#5a3410">例：Hive 表按 day 分区</text><text x="64" y="216" font-size="8.5" fill="#93762e">Join 维表命中 day∈{今天},动态过滤下发后</text><text x="64" y="234" font-size="8.5" fill="#93762e">SplitManager 只列今天分区的文件</text><text x="64" y="250" font-size="8.5" fill="#93762e">→ 其余分区连 split 都不产</text>
+
+  <rect x="540" y="72" width="470" height="200" rx="13" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="556" y="94" font-size="11" font-weight="700" fill="#2c5a3a">消费点 ② 读取级（PageSource 读时）</text>
+  <rect x="556" y="108" width="440" height="60" rx="9" fill="#fff" stroke="#cfe6d5"/><text x="570" y="128" font-size="9" font-weight="600" fill="#2c5a3a">PageSource 读文件时查 DynamicFilter</text><text x="570" y="146" font-size="8.5" fill="#2f6f4f">→ 行组(row group)级 min/max 跳过</text><text x="570" y="162" font-size="8.5" fill="#2f6f4f">→ 页级、甚至行级过滤</text>
+  <rect x="556" y="178" width="440" height="80" rx="9" fill="#fff" stroke="#cfe6d5"/><text x="570" y="198" font-size="9" font-weight="600" fill="#2c5a3a">例：ORC/Parquet 列存</text><text x="570" y="216" font-size="8.5" fill="#2f6f4f">每行组带列 min/max 统计</text><text x="570" y="234" font-size="8.5" fill="#2f6f4f">动态过滤 o.cust∈{3,7,12} 与统计不交 → 跳过该行组</text><text x="570" y="250" font-size="8.5" fill="#2f6f4f">读取量随过滤选择性数量级下降</text>
+
+  <!-- timing -->
+  <rect x="30" y="292" width="980" height="110" rx="13" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="46" y="314" font-size="11" font-weight="700" fill="#1b2a4a">时序：构建侧先跑,探测侧才拿得到</text>
+  <g font-size="8.8" text-anchor="middle">
+    <rect x="50" y="328" width="200" height="52" rx="9" fill="#eafaf1" stroke="#bfe0cd"/><text x="150" y="348" font-weight="600" fill="#12402a">构建侧 Join 小表跑完</text><text x="150" y="366" fill="#2f6f4f">收集实际 key 值域</text>
+    <rect x="290" y="328" width="200" height="52" rx="9" fill="#f3f7fc" stroke="#cfe0f2"/><text x="390" y="348" font-weight="600" fill="#274a78">引擎下发 DynamicFilter</text><text x="390" y="366" fill="#5b7db1">PARTITIONED 跨节点汇总</text>
+    <rect x="530" y="328" width="200" height="52" rx="9" fill="#fff7e6" stroke="#e8cf9a"/><text x="630" y="348" font-weight="600" fill="#5a3410">连接器查询并裁剪</text><text x="630" y="366" fill="#93762e">split/行组/行级</text>
+    <rect x="770" y="328" width="220" height="52" rx="9" fill="#f5faf6" stroke="#cfe6d5"/><text x="880" y="348" font-weight="600" fill="#2c5a3a">未就绪则等一小段</text><text x="880" y="366" fill="#2f6f4f">有超时兜底,不无限阻塞</text>
+  </g>
+  <line x1="250" y1="354" x2="290" y2="354" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+  <line x1="490" y1="354" x2="530" y2="354" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+  <line x1="730" y1="354" x2="770" y2="354" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+
+  <!-- notes -->
+  <rect x="30" y="422" width="980" height="98" rx="13" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="46" y="444" font-size="11" font-weight="700" fill="#1d1d1f">要点</text>
+  <text x="46" y="466" font-size="9" fill="#6e6e73">· SPI 接口 io.trino.spi.connector.DynamicFilter：连接器主动 poll,不是被动接收 —— 拿到就用,没就绪就先按静态谓词读</text>
+  <text x="46" y="484" font-size="9" fill="#6e6e73">· PARTITIONED Join：各节点构建侧局部值域需跨节点汇总成全局谓词;REPLICATED(广播)Join：每 worker 本地即可生成</text>
+  <text x="46" y="502" font-size="9" fill="#b1483a">· 归属：动态过滤是【连接器框架】(消费)+【查询规划与优化】(织入)协作;开关 enable-dynamic-filtering。是联邦大表 Join 提速命门</text>
+</svg>

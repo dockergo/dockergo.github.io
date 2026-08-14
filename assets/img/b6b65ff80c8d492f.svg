@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="680" viewBox="0 0 900 680" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect x="0" y="0" width="900" height="680" fill="#fbfbfd"/>
+  <text x="40" y="38" font-size="15" font-weight="600" fill="#1d1d1f">⑤ DISTRIBUTED PLAN · 切 Fragment 下发多 BE</text>
+  <text x="40" y="58" font-size="11" fill="#86868b">在 Exchange 边界切成 PlanFragment,每个 Fragment 多实例并行,跨节点用 Exchange 交换</text>
+
+  <!-- Fragment 0 -->
+  <rect x="40" y="76" width="820" height="120" rx="14" fill="#f6f8fc" stroke="#e6ecf4"/>
+  <text x="58" y="98" font-size="12" font-weight="600" fill="#1d5fb8">Fragment 0 · 汇聚(1 实例)</text>
+  <g text-anchor="middle" font-size="10.5" fill="#274a78">
+    <rect x="120" y="110" width="150" height="34" rx="9" fill="#ffffff" stroke="#c4d5ee" filter="url(#soft)"/><text x="195" y="131">ResultSink</text>
+    <rect x="300" y="110" width="150" height="34" rx="9" fill="#ffffff" stroke="#c4d5ee" filter="url(#soft)"/><text x="375" y="131">TopN 10(final)</text>
+    <rect x="480" y="110" width="170" height="34" rx="9" fill="#ffffff" stroke="#c4d5ee" filter="url(#soft)"/><text x="565" y="131">HashAgg GLOBAL</text>
+    <rect x="680" y="110" width="150" height="34" rx="9" fill="#eef2fb" stroke="#c9d6ef" filter="url(#soft)"/><text x="755" y="131">ExchangeNode</text>
+  </g>
+  <g stroke="#c7c7cc" stroke-width="1.4" fill="none">
+    <line x1="300" y1="127" x2="271" y2="127" marker-end="url(#ar)"/>
+    <line x1="480" y1="127" x2="451" y2="127" marker-end="url(#ar)"/>
+    <line x1="680" y1="127" x2="651" y2="127" marker-end="url(#ar)"/>
+  </g>
+
+  <!-- Fragment 1 -->
+  <rect x="40" y="256" width="820" height="150" rx="14" fill="#fbf7ef" stroke="#efe4cf"/>
+  <text x="58" y="278" font-size="12" font-weight="600" fill="#8a5a12">Fragment 1 · Join + 预聚合(N 实例)</text>
+  <g text-anchor="middle" font-size="10.5" fill="#8a5a12">
+    <rect x="120" y="292" width="170" height="34" rx="9" fill="#ffffff" stroke="#efe0c4" filter="url(#soft)"/><text x="205" y="313">HashAgg LOCAL</text>
+    <rect x="320" y="292" width="170" height="34" rx="9" fill="#eef2fb" stroke="#c9d6ef" filter="url(#soft)"/><text x="405" y="313">HashJoin INNER</text>
+    <rect x="120" y="350" width="240" height="40" rx="9" fill="#f5faf6" stroke="#cfe6d5" filter="url(#soft)"/><text x="240" y="368" fill="#2c5a3a">OlapScan orders</text><text x="240" y="382" font-size="8.5" fill="#4e7a5c">分区裁剪</text>
+    <rect x="520" y="292" width="170" height="34" rx="9" fill="#eef2fb" stroke="#c9d6ef" filter="url(#soft)"/><text x="605" y="313">ExchangeNode</text>
+  </g>
+  <g stroke="#c7c7cc" stroke-width="1.4" fill="none">
+    <line x1="320" y1="309" x2="291" y2="309" marker-end="url(#ar)"/>
+    <line x1="405" y1="326" x2="290" y2="349" marker-end="url(#ar)"/>
+    <line x1="520" y1="309" x2="491" y2="309" marker-end="url(#ar)"/>
+  </g>
+
+  <!-- Fragment 2 -->
+  <rect x="40" y="466" width="820" height="96" rx="14" fill="#f5faf6" stroke="#e2ece5"/>
+  <text x="58" y="488" font-size="12" font-weight="600" fill="#2c5a3a">Fragment 2 · 广播 users(N 实例)</text>
+  <rect x="120" y="502" width="260" height="44" rx="9" fill="#ffffff" stroke="#cfe6d5" filter="url(#soft)"/><text x="250" y="522" font-size="10.5" fill="#2c5a3a" text-anchor="middle">OlapScan users</text><text x="250" y="538" font-size="8.5" fill="#4e7a5c" text-anchor="middle">age&gt;30 下推</text>
+
+  <!-- 跨 Fragment 虚线 Exchange -->
+  <g stroke="#8fb0e8" stroke-width="1.6" stroke-dasharray="5 4" fill="none">
+    <path d="M755,144 L755,230 L560,230 L470,255" marker-end="url(#ar)"/>
+    <path d="M605,326 L605,430 L280,430 L260,465" marker-end="url(#ar)"/>
+  </g>
+  <text x="600" y="224" font-size="9.5" fill="#5a6a8c">F1.HashAgg LOCAL —SHUFFLE by region→ F0.Exchange</text>
+  <text x="470" y="452" font-size="9.5" fill="#5a6a8c">F2.users —BROADCAST→ F1.Exchange</text>
+  <text x="40" y="600" font-size="10.5" fill="#86868b">3 个 Fragment:F2 广播 users → F1 做 Join+本地预聚合 → F0 全局聚合+TopN 汇聚返回。实线=Fragment 内,虚线=跨节点 Exchange。</text>
+</svg>

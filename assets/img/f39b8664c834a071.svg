@@ -1,0 +1,97 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="560" viewBox="0 0 1080 560" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+    <marker id="arg" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#8fbf9f"/></marker>
+  </defs>
+  <rect width="1080" height="560" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Milvus 分布式检索 · scatter-gather 归并（Proxy → shardDelegator → 段并行 ANN → 两级 reduce）</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">一次 search 被拆到多节点并行、再逐级归并成全局 topK：Proxy 按 vchannel 散、delegator 按段所在节点散、各段并行 ANN、逐层合并回全局 topK</text>
+  <!-- legend -->
+  <g font-size="9" fill="#6e6e73">
+    <rect x="712" y="39" width="14" height="9" rx="2" fill="#eef3fb" stroke="#bcd0ec"/><text x="731" y="47">控制 / 路由</text>
+    <rect x="828" y="39" width="14" height="9" rx="2" fill="#eafaf1" stroke="#bfe0cd"/><text x="847" y="47">向量 / 结果流</text>
+    <line x1="946" y1="44" x2="966" y2="44" stroke="#8fbf9f" stroke-width="2" marker-end="url(#arg)"/><text x="972" y="47">归并回程</text>
+  </g>
+
+  <!-- Stage 1: Proxy scatter -->
+  <rect x="30" y="74" width="196" height="410" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <circle cx="50" cy="94" r="9" fill="#fff" stroke="#bcd0ec"/><text x="50" y="97" font-size="9" font-weight="700" text-anchor="middle" fill="#1b2a4a">1</text>
+  <text x="128" y="98" font-size="10.5" font-weight="700" text-anchor="middle" fill="#1b2a4a">Proxy · 按 vchannel 散</text>
+  <rect x="46" y="118" width="164" height="52" rx="9" fill="#f3f7fc" stroke="#cfe0f2"/>
+  <text x="128" y="139" font-size="9.5" text-anchor="middle" fill="#274a78">searchTask</text>
+  <text x="128" y="156" font-size="8" text-anchor="middle" fill="#5b7db1">解析 expr + guaranteeTs</text>
+  <text x="128" y="192" font-size="8.5" text-anchor="middle" fill="#274a78">每 shard(vchannel) 一个</text>
+  <rect x="46" y="200" width="164" height="40" rx="8" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="128" y="224" font-size="9" text-anchor="middle" fill="#1b2a4a">shard leader · vchannel-0</text>
+  <rect x="46" y="248" width="164" height="40" rx="8" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="128" y="272" font-size="9" text-anchor="middle" fill="#1b2a4a">shard leader · vchannel-1</text>
+  <text x="128" y="308" font-size="8" text-anchor="middle" fill="#5b7db1">… ×N vchannel 并行下发</text>
+
+  <!-- Stage 2: delegator gate + pin -->
+  <rect x="242" y="74" width="204" height="410" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <circle cx="262" cy="94" r="9" fill="#fff" stroke="#bcd0ec"/><text x="262" y="97" font-size="9" font-weight="700" text-anchor="middle" fill="#1b2a4a">2</text>
+  <text x="344" y="98" font-size="10.5" font-weight="700" text-anchor="middle" fill="#1b2a4a">shardDelegator</text>
+  <rect x="258" y="118" width="172" height="66" rx="9" fill="#f3f7fc" stroke="#cfe0f2"/>
+  <text x="344" y="139" font-size="9.5" text-anchor="middle" fill="#274a78" font-weight="600">tSafe 闸门</text>
+  <text x="344" y="156" font-size="8" text-anchor="middle" fill="#5b7db1">waitTSafe：等 tSafe</text>
+  <text x="344" y="170" font-size="8" text-anchor="middle" fill="#5b7db1">≥ guaranteeTs 才放行</text>
+  <rect x="258" y="196" width="172" height="88" rx="9" fill="#f3f7fc" stroke="#cfe0f2"/>
+  <text x="344" y="217" font-size="9.5" text-anchor="middle" fill="#274a78" font-weight="600">PinReadableSegments</text>
+  <text x="344" y="233" font-size="8" text-anchor="middle" fill="#5b7db1">钉住可读段快照</text>
+  <rect x="270" y="242" width="72" height="32" rx="7" fill="#eafaf1" stroke="#bfe0cd"/><text x="306" y="262" font-size="8.5" text-anchor="middle" fill="#12402a">sealed[]</text>
+  <rect x="348" y="242" width="72" height="32" rx="7" fill="#eafaf1" stroke="#bfe0cd"/><text x="384" y="262" font-size="8.5" text-anchor="middle" fill="#12402a">growing[]</text>
+  <text x="344" y="308" font-size="8" text-anchor="middle" fill="#5b7db1">organizeSubTask 按段所在节点分组</text>
+  <text x="344" y="326" font-size="8" text-anchor="middle" fill="#5b7db1">sealed→Historical · growing→Streaming</text>
+
+  <!-- Stage 3: workers parallel ANN -->
+  <rect x="462" y="74" width="300" height="410" rx="14" fill="#f5faf6" stroke="#cfe6d5" filter="url(#soft)"/>
+  <circle cx="482" cy="94" r="9" fill="#fff" stroke="#cfe6d5"/><text x="482" y="97" font-size="9" font-weight="700" text-anchor="middle" fill="#12402a">3</text>
+  <text x="612" y="98" font-size="10.5" font-weight="700" text-anchor="middle" fill="#12402a">段并行 ANN（SearchSegments）</text>
+  <!-- remote worker A -->
+  <rect x="478" y="116" width="268" height="86" rx="9" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="490" y="134" font-size="9" font-weight="600" fill="#12402a">QueryNode 工作节点 A（Historical）</text>
+  <rect x="490" y="142" width="118" height="48" rx="7" fill="#d9f0e1" stroke="#a9d3ba"/><text x="549" y="162" font-size="8.5" text-anchor="middle" fill="#12402a">sealed 段</text><text x="549" y="178" font-size="7.5" text-anchor="middle" fill="#2f6f4f">有索引→knowhere</text>
+  <rect x="616" y="142" width="118" height="48" rx="7" fill="#d9f0e1" stroke="#a9d3ba"/><text x="675" y="162" font-size="8.5" text-anchor="middle" fill="#12402a">sealed 段</text><text x="675" y="178" font-size="7.5" text-anchor="middle" fill="#2f6f4f">无索引→暴力</text>
+  <!-- remote worker B -->
+  <rect x="478" y="212" width="268" height="70" rx="9" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="490" y="230" font-size="9" font-weight="600" fill="#12402a">QueryNode 工作节点 B（Historical）</text>
+  <rect x="490" y="238" width="244" height="36" rx="7" fill="#d9f0e1" stroke="#a9d3ba"/><text x="612" y="261" font-size="8.5" text-anchor="middle" fill="#12402a">sealed 段 · ANN → 局部 topK</text>
+  <!-- local growing -->
+  <rect x="478" y="292" width="268" height="66" rx="9" fill="#fff7e6" stroke="#e8cf9a"/>
+  <text x="490" y="310" font-size="9" font-weight="600" fill="#5a3410">本地 delegator（Streaming）</text>
+  <rect x="490" y="318" width="244" height="34" rx="7" fill="#fdf6ea" stroke="#efdcb4"/><text x="612" y="340" font-size="8.5" text-anchor="middle" fill="#5a3410">growing 段（内存可变·无索引）→ 暴力</text>
+  <text x="612" y="378" font-size="8" text-anchor="middle" fill="#2f6f4f">各段并行、bitset 预过滤在 ANN 内跳过被删/被过滤行</text>
+
+  <!-- Stage 4/5: reduce -->
+  <rect x="778" y="74" width="272" height="410" rx="14" fill="#f5faf6" stroke="#cfe6d5" filter="url(#soft)"/>
+  <circle cx="798" cy="94" r="9" fill="#fff" stroke="#cfe6d5"/><text x="798" y="97" font-size="9" font-weight="700" text-anchor="middle" fill="#12402a">4</text>
+  <text x="920" y="98" font-size="10.5" font-weight="700" text-anchor="middle" fill="#12402a">两级归并 reduce</text>
+  <rect x="794" y="120" width="240" height="80" rx="9" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="914" y="141" font-size="9.5" text-anchor="middle" fill="#12402a" font-weight="600">① delegator 级</text>
+  <text x="914" y="158" font-size="8" text-anchor="middle" fill="#2f6f4f">ReduceSearchOnQueryNode</text>
+  <text x="914" y="174" font-size="8" text-anchor="middle" fill="#2f6f4f">合本 shard 各段 → 该 vchannel topK</text>
+  <text x="914" y="191" font-size="7.5" text-anchor="middle" fill="#2f6f4f">按 metric 排序 · group_by/rerank</text>
+  <rect x="794" y="214" width="240" height="80" rx="9" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="914" y="235" font-size="9.5" text-anchor="middle" fill="#1b2a4a" font-weight="600">② Proxy 级（全局）</text>
+  <text x="914" y="252" font-size="8" text-anchor="middle" fill="#5b7db1">合并所有 vchannel 的局部 topK</text>
+  <text x="914" y="268" font-size="8" text-anchor="middle" fill="#5b7db1">→ 全局 topK</text>
+  <text x="914" y="285" font-size="7.5" text-anchor="middle" fill="#5b7db1">回填字段 → 返回 client</text>
+  <rect x="794" y="308" width="240" height="52" rx="9" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="914" y="329" font-size="8.5" text-anchor="middle" fill="#6e6e73">为什么两级：段/节点各出局部 topK，</text>
+  <text x="914" y="344" font-size="8.5" text-anchor="middle" fill="#6e6e73">全局 topK ⊆ 局部 topK 之并 → 逐层收敛</text>
+
+  <!-- flow arrows -->
+  <line x1="226" y1="230" x2="242" y2="230" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <line x1="446" y1="240" x2="462" y2="240" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <!-- reduce return arrows (green) -->
+  <path d="M746,159 L778,159" stroke="#8fbf9f" stroke-width="2" fill="none" marker-end="url(#arg)"/>
+  <path d="M746,247 C762,247 770,220 778,180" stroke="#8fbf9f" stroke-width="2" fill="none" marker-end="url(#arg)"/>
+  <path d="M746,335 C762,335 770,210 778,185" stroke="#8fbf9f" stroke-width="1.6" fill="none" marker-end="url(#arg)"/>
+  <path d="M914,200 L914,214" stroke="#8fbf9f" stroke-width="2" fill="none" marker-end="url(#arg)"/>
+
+  <!-- bottom insight -->
+  <rect x="30" y="494" width="1020" height="54" rx="12" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="46" y="516" font-size="10" font-weight="700" fill="#1d1d1f">要点</text>
+  <text x="46" y="535" font-size="8.8" fill="#6e6e73">散-并-合三段：Proxy 按 vchannel 散给 shard delegator，delegator 过 tSafe 闸门（读一致快照）后钉段快照、按段所在节点再散（sealed 走远程 QueryNode/Historical、growing 走本地/Streaming）；各段并行 ANN；结果先在 delegator 合成本 shard topK、再回 Proxy 合成全局 topK。段越多并行度越高，但归并与网络开销也随之上升。</text>
+</svg>

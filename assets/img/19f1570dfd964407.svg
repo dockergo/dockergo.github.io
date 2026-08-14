@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="500" viewBox="0 0 1080 500" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs><filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+  <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker></defs>
+  <rect width="1080" height="500" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">ReadIndex 的 leader 确认：防"旧 leader"读旧数据</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">发起 ReadIndex 时 leader 先广播心跳、确认多数派仍认可 → 才用其 commit index · readIndexRetryTime=500ms(read.go:33)</text>
+  <!-- problem: stale leader -->
+  <rect x="40" y="76" width="1000" height="150" rx="12" fill="#fbeef0" stroke="#f0cdd4"/>
+  <text x="60" y="100" font-size="11" font-weight="700" fill="#7a2230">问题：网络分区下的"旧 leader"</text>
+  <g text-anchor="middle" font-size="8.5">
+    <rect x="70" y="112" width="230" height="80" rx="9" fill="#fff" stroke="#f0cdd4"/><text x="185" y="134" font-weight="600" fill="#7a2230">旧 leader A（被分区隔离）</text><text x="185" y="154" fill="#a44">自认为还是 leader</text><text x="185" y="170" fill="#7a2230">commit index 停在旧值</text><text x="185" y="184" fill="#a44">不知道外面选了新 leader</text>
+    <rect x="330" y="112" width="230" height="80" rx="9" fill="#fff" stroke="#bcd0ec"/><text x="445" y="134" font-weight="600" fill="#1b2a4a">新 leader B（多数派侧）</text><text x="445" y="154" fill="#5b7db1">已选出、已提交新数据</text><text x="445" y="170" fill="#8aa6cf">commit index 更高</text>
+    <rect x="590" y="112" width="450" height="80" rx="9" fill="#fdeef0" stroke="#f0cdd4"/><text x="815" y="134" font-weight="600" fill="#a44">若 A 直接用自己的 commit index 服务读</text><text x="815" y="154" fill="#7a2230">→ 漏掉 B 提交的新数据 → 读到旧值</text><text x="815" y="174" fill="#a44">→ 违反线性一致（脑裂读）</text>
+  </g>
+  <text x="60" y="214" font-size="9" fill="#7a2230">仅靠"我自认为是 leader"不够——必须实时确认"多数派此刻仍认可我"</text>
+  <!-- solution -->
+  <rect x="40" y="246" width="1000" height="130" rx="12" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="60" y="270" font-size="11" font-weight="700" fill="#12402a">解法：发起 ReadIndex 前先做一轮心跳确认</text>
+  <g text-anchor="middle" font-size="8.5">
+    <rect x="70" y="284" width="290" height="50" rx="8" fill="#fff" stroke="#bfe0cd"/><text x="215" y="304" font-weight="600" fill="#12402a">leader 广播心跳给所有 follower</text><text x="215" y="322" fill="#2f6f4f">"我要确认我还是 leader"</text>
+    <rect x="390" y="284" width="290" height="50" rx="8" fill="#fff" stroke="#bfe0cd"/><text x="535" y="304" font-weight="600" fill="#12402a">收到多数派心跳响应</text><text x="535" y="322" fill="#2f6f4f">→ 证明仍被多数派认可为 leader</text>
+    <rect x="710" y="284" width="310" height="50" rx="8" fill="#f2fbf6" stroke="#cdeadb"/><text x="865" y="304" font-weight="600" fill="#12402a">才返回 read index</text><text x="865" y="322" fill="#2f6f4f">旧 leader A 收不到多数派响应 → 无法服务读</text>
+  </g>
+  <text x="60" y="360" font-size="9" fill="#4c8567">CheckQuorum（见 Raft 篇）辅助：leader 联系不上多数派会主动退位，与此配合确保无脑裂读</text>
+  <rect x="40" y="392" width="1000" height="56" rx="12" fill="#f7f7f9" stroke="#e6e6ea"/>
+  <text x="60" y="416" font-size="11" font-weight="700" fill="#1d1d1f">一句话</text>
+  <text x="60" y="438" font-size="10" fill="#4b4b50">ReadIndex 的一轮心跳是"确认我此刻仍被多数派认可为 leader"（非复制这次读）——旧 leader 收不到多数派响应就无法服务读，杜绝脑裂下读旧数据。这就是线性读比串行读多出的成本。</text>
+</svg>

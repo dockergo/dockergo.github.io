@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="392" viewBox="0 0 1000 392" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1000" height="392" fill="#fbfbfd"/>
+  <text x="30" y="28" font-size="14" font-weight="600" fill="#1d1d1f">节拍 tick：周期模式每次点亮 update_process_times，无节拍模式停 tick 靠 hrtimer 兜底</text>
+
+  <!-- legend -->
+  <g font-size="9.5">
+    <circle cx="36" cy="46" r="5" fill="#eef3fb" stroke="#bcd0ec"/><text x="46" y="49" fill="#5b7db1">节拍处理</text>
+    <circle cx="136" cy="46" r="5" fill="#eafaf1" stroke="#bfe0cd"/><text x="146" y="49" fill="#2f6f4f">全局·仅一颗 CPU</text>
+    <circle cx="286" cy="46" r="5" fill="#fff7e6" stroke="#e8cf9a"/><text x="296" y="49" fill="#93762e">每颗 CPU 本地</text>
+    <circle cx="426" cy="46" r="5" fill="#f4eefb" stroke="#d9c7ec"/><text x="436" y="49" fill="#6e6e73">无节拍省电模式</text>
+  </g>
+
+  <!-- clock_event 源 -->
+  <rect x="380" y="64" width="240" height="42" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="500" y="82" font-size="10.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">clock_event 时钟事件设备</text>
+  <text x="500" y="98" font-size="9" fill="#5b7db1" text-anchor="middle">到未来某点触发一次中断</text>
+
+  <g stroke="#c7c7cc" stroke-width="1.5" fill="none">
+    <path d="M440,106 L440,124 L250,124 L250,142" marker-end="url(#ar)"/>
+    <path d="M560,106 L560,124 L745,124 L745,142" marker-end="url(#ar)"/>
+  </g>
+
+  <!-- 左：周期节拍 -->
+  <text x="60" y="138" font-size="11" font-weight="600" fill="#1b2a4a">周期模式（NO_HZ 关）· tick_handle_periodic → tick_periodic</text>
+  <rect x="60" y="146" width="380" height="42" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="250" y="164" font-size="10.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">tick_periodic：一次中断，两条线同时点亮</text>
+  <text x="250" y="180" font-size="9" fill="#5b7db1" text-anchor="middle">tick-common.c:86</text>
+
+  <rect x="60" y="226" width="180" height="112" rx="11" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="150" y="248" font-size="10.5" font-weight="600" fill="#12402a" text-anchor="middle">仅 tick_do_timer_cpu</text>
+  <text x="150" y="268" font-size="9.5" fill="#2f6f4f" text-anchor="middle">被选中的那一颗 CPU</text>
+  <text x="150" y="290" font-size="9.5" fill="#2f6f4f" text-anchor="middle">do_timer(1) 推进全局 jiffies</text>
+  <text x="150" y="310" font-size="9.5" fill="#2f6f4f" text-anchor="middle">update_wall_time 更新墙钟</text>
+  <text x="150" y="330" font-size="9" fill="#2f6f4f" text-anchor="middle">全局时间只由一颗推进</text>
+
+  <rect x="260" y="226" width="180" height="112" rx="11" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="350" y="248" font-size="10.5" font-weight="600" fill="#5a3410" text-anchor="middle">每颗 CPU 都跑</text>
+  <text x="350" y="268" font-size="9.5" fill="#93762e" text-anchor="middle">update_process_times</text>
+  <text x="350" y="290" font-size="9.5" fill="#93762e" text-anchor="middle">本地 CPU 时间记账</text>
+  <text x="350" y="310" font-size="9.5" fill="#93762e" text-anchor="middle">扫描到期定时器</text>
+  <text x="350" y="330" font-size="9.5" fill="#93762e" text-anchor="middle">sched_tick 调度节拍</text>
+
+  <g stroke="#c7c7cc" stroke-width="1.5" fill="none">
+    <path d="M180,188 L150,188 L150,226" marker-end="url(#ar)"/>
+    <path d="M320,188 L350,188 L350,226" marker-end="url(#ar)"/>
+  </g>
+
+  <!-- 右：无节拍 -->
+  <text x="540" y="138" font-size="11" font-weight="600" fill="#3d2a5a">无节拍模式（省电 / 降抖动）· 停掉周期 tick</text>
+  <rect x="540" y="146" width="400" height="58" rx="11" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="740" y="168" font-size="10.5" font-weight="600" fill="#3d2a5a" text-anchor="middle">NO_HZ_IDLE</text>
+  <text x="740" y="188" font-size="9.5" fill="#6e6e73" text-anchor="middle">CPU 进入空闲即停周期 tick — 无事别每毫秒醒一次</text>
+
+  <rect x="540" y="216" width="400" height="58" rx="11" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="740" y="238" font-size="10.5" font-weight="600" fill="#3d2a5a" text-anchor="middle">NO_HZ_FULL</text>
+  <text x="740" y="258" font-size="9.5" fill="#6e6e73" text-anchor="middle">只剩单个可运行任务也停 tick — HPC/实时消抖动</text>
+
+  <rect x="540" y="286" width="400" height="52" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="740" y="307" font-size="10.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">停 tick 后靠一个 hrtimer 兜底</text>
+  <text x="740" y="325" font-size="9" fill="#5b7db1" text-anchor="middle">记录“下一个真正该醒的时刻”，到点再单次唤醒</text>
+
+  <g stroke="#c7c7cc" stroke-width="1.5" fill="none">
+    <path d="M740,204 L740,216" marker-end="url(#ar)"/>
+    <path d="M740,274 L740,286" marker-end="url(#ar)"/>
+  </g>
+
+  <text x="500" y="368" font-size="9.5" fill="#86868b" text-anchor="middle">全局 jiffies 只由 tick_do_timer_cpu 一颗推进；到期定时器扫描与调度节拍则每颗 CPU 各自在 update_process_times 里做</text>
+</svg>

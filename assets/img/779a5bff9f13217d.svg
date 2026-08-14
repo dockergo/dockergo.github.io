@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="520" viewBox="0 0 1080 520"
+     font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1080" height="520" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Neo4j 成本规划器:IDP Join 排序 + 索引选择</text>
+  <text x="30" y="50" font-size="11.5" fill="#a1a1a6">成本模型 + IDP(迭代动态规划)选最优计划 —— Cypher 性能的大脑</text>
+
+  <!-- input -->
+  <rect x="40" y="78" width="220" height="120" rx="13" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="150" y="102" font-size="12" font-weight="700" fill="#3d2a5a" text-anchor="middle">逻辑计划候选</text>
+  <text x="60" y="126" font-size="10" fill="#8b7aa8">规划器要决定:</text>
+  <text x="60" y="145" font-size="9.5" fill="#8b7aa8">· 从哪找起点</text>
+  <text x="60" y="163" font-size="9.5" fill="#8b7aa8">· 按什么顺序展开</text>
+  <text x="60" y="181" font-size="9.5" fill="#8b7aa8">· hash join 还是 expand</text>
+
+  <!-- IDP -->
+  <rect x="300" y="78" width="300" height="120" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="450" y="102" font-size="12.5" font-weight="700" fill="#1b2a4a" text-anchor="middle">IDP Join 排序(迭代动态规划)</text>
+  <text x="320" y="126" font-size="10" fill="#274a78">动态规划枚举 join 顺序</text>
+  <rect x="320" y="136" width="260" height="26" rx="7" fill="#ffffff" stroke="#bcd0ec"/>
+  <text x="330" y="153" font-size="10" font-weight="600" fill="#1b2a4a">maxTableSize 默认 128 —— 限制 DP 表大小</text>
+  <text x="320" y="180" font-size="9.5" fill="#5b7db1">DPSolverConfig 用 Integer.MAX_VALUE 做全 DP;无独立"贪心"求解器</text>
+
+  <!-- cost model -->
+  <rect x="640" y="78" width="400" height="120" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="840" y="102" font-size="12.5" font-weight="700" fill="#1b2a4a" text-anchor="middle">成本模型(CardinalityCostModel)</text>
+  <rect x="660" y="114" width="176" height="30" rx="7" fill="#ffffff" stroke="#bcd0ec"/>
+  <text x="748" y="128" font-size="9.5" fill="#274a78" text-anchor="middle">DEFAULT_COST_PER_ROW</text>
+  <text x="748" y="140" font-size="9.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">= 0.1</text>
+  <rect x="844" y="114" width="176" height="30" rx="7" fill="#ffffff" stroke="#bcd0ec"/>
+  <text x="932" y="128" font-size="9.5" fill="#274a78" text-anchor="middle">EXPAND_ALL_COST</text>
+  <text x="932" y="140" font-size="9.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">= 1.5</text>
+  <rect x="660" y="150" width="176" height="30" rx="7" fill="#ffffff" stroke="#bcd0ec"/>
+  <text x="748" y="164" font-size="9.5" fill="#274a78" text-anchor="middle">PROBE_BUILD_COST</text>
+  <text x="748" y="176" font-size="9.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">= 3.1</text>
+  <rect x="844" y="150" width="176" height="30" rx="7" fill="#fff7e6" stroke="#e8cf9a"/>
+  <text x="932" y="164" font-size="9.5" fill="#93762e" text-anchor="middle">STORE_LOOKUP_COST_PER_ROW</text>
+  <text x="932" y="176" font-size="9.5" font-weight="600" fill="#5a3410" text-anchor="middle">= 6.2</text>
+
+  <!-- connectors row1 -->
+  <path d="M260,138 L300,138" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M600,138 L640,138" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="602" y="131" font-size="8.5" fill="#a1a1a6">加权</text>
+
+  <!-- index leaf planner -->
+  <rect x="40" y="232" width="470" height="140" rx="14" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="60" y="258" font-size="12.5" font-weight="700" fill="#5a3410">索引选择:leaf planner 选起点</text>
+  <text x="60" y="280" font-size="10" fill="#93762e">生成候选起点计划,按成本比较选最优:</text>
+  <rect x="60" y="292" width="130" height="52" rx="9" fill="#ffffff" stroke="#e8cf9a"/>
+  <text x="125" y="313" font-size="10" font-weight="600" fill="#5a3410" text-anchor="middle">索引 seek</text>
+  <text x="125" y="330" font-size="8.5" fill="#93762e" text-anchor="middle">NodeIndexLeafPlanner</text>
+  <rect x="200" y="292" width="130" height="52" rx="9" fill="#ffffff" stroke="#e8cf9a"/>
+  <text x="265" y="313" font-size="10" font-weight="600" fill="#5a3410" text-anchor="middle">label 扫描</text>
+  <text x="265" y="330" font-size="8.5" fill="#93762e" text-anchor="middle">按 label 取节点</text>
+  <rect x="340" y="292" width="150" height="52" rx="9" fill="#ffffff" stroke="#e8cf9a"/>
+  <text x="415" y="313" font-size="10" font-weight="600" fill="#5a3410" text-anchor="middle">id 查找</text>
+  <text x="415" y="330" font-size="8.5" fill="#93762e" text-anchor="middle">按 id 直接定位</text>
+
+  <!-- cardinality estimation -->
+  <rect x="530" y="232" width="510" height="140" rx="14" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="550" y="258" font-size="12.5" font-weight="700" fill="#12402a">基数估计:假设独立性模型 + 统计</text>
+  <text x="550" y="280" font-size="10" fill="#2f6f4f">assumeIndependence/ —— 估每步产生多少行,喂给成本模型</text>
+  <rect x="550" y="292" width="470" height="30" rx="8" fill="#ffffff" stroke="#bfe0cd"/>
+  <text x="560" y="311" font-size="9.5" font-weight="600" fill="#12402a">成本 = 基数估计 × 各算子权重 —— 枚举计划取总成本最小者</text>
+  <text x="550" y="342" font-size="9" fill="#2f6f4f">统计过期(数据大变)会导致估计失真、选错计划 —— 需保持统计新鲜</text>
+
+  <!-- decision output -->
+  <rect x="40" y="404" width="1000" height="92" rx="14" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="60" y="432" font-size="13" font-weight="700" fill="#3d2a5a">规划器决定:从哪找起点(全扫 / label 扫 / 索引 seek)· 展开顺序 · hash join 还是 expand</text>
+  <text x="60" y="456" font-size="10.5" fill="#8b7aa8">IDP 用 maxTableSize / 迭代上限调节搜索开销;成本模型加权常量把"存储查找贵、逐行处理便宜"编码进选择。</text>
+  <text x="60" y="478" font-size="9.5" fill="#a1a1a6">IDPSolver.scala:96 · IDPSolverConfig.scala:31 · CardinalityCostModel.scala:449 · NodeIndexLeafPlanner.scala</text>
+</svg>

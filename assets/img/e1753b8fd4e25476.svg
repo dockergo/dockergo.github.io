@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="510" viewBox="0 0 1080 510" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="510" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">StarRocks 资源组分类器 · ResourceGroupClassifier 把请求归组</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">按 user/role/query_type/source_ip/db 等匹配;多分类器按匹配度选最优;未命中进默认组</text>
+
+  <!-- incoming request -->
+  <rect x="30" y="80" width="200" height="150" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="130" y="106" font-size="11" font-weight="700" text-anchor="middle" fill="#1b2a4a">进入的请求</text>
+  <g text-anchor="middle" font-size="8.5">
+    <text x="130" y="130" fill="#5b7db1">携带上下文属性:</text>
+    <rect x="46" y="140" width="168" height="18" rx="4" fill="#f3f7fc" stroke="#cfe0f2"/><text x="130" y="153" fill="#274a78">user = etl_user</text>
+    <rect x="46" y="162" width="168" height="18" rx="4" fill="#f3f7fc" stroke="#cfe0f2"/><text x="130" y="175" fill="#274a78">query_type = INSERT</text>
+    <rect x="46" y="184" width="168" height="18" rx="4" fill="#f3f7fc" stroke="#cfe0f2"/><text x="130" y="197" fill="#274a78">source_ip = 10.0.*</text>
+    <rect x="46" y="206" width="168" height="18" rx="4" fill="#f3f7fc" stroke="#cfe0f2"/><text x="130" y="219" fill="#274a78">role / db …</text>
+  </g>
+
+  <!-- classifier engine -->
+  <rect x="290" y="80" width="330" height="360" rx="13" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="455" y="106" font-size="11.5" font-weight="700" text-anchor="middle" fill="#5a3d78">ResourceGroupClassifier</text>
+  <text x="455" y="122" font-size="8" text-anchor="middle" fill="#8d6bb0">catalog/ResourceGroupClassifier.java</text>
+
+  <text x="310" y="146" font-size="9" font-weight="700" fill="#5a3d78">匹配维度(条件):</text>
+  <g text-anchor="middle" font-size="8">
+    <rect x="310" y="156" width="140" height="26" rx="6" fill="#faf4fb" stroke="#e2d2ee"/><text x="380" y="173" fill="#5a3d78">user</text>
+    <rect x="460" y="156" width="140" height="26" rx="6" fill="#faf4fb" stroke="#e2d2ee"/><text x="530" y="173" fill="#5a3d78">role</text>
+    <rect x="310" y="188" width="140" height="26" rx="6" fill="#faf4fb" stroke="#e2d2ee"/><text x="380" y="205" fill="#5a3d78">query_type</text>
+    <rect x="460" y="188" width="140" height="26" rx="6" fill="#faf4fb" stroke="#e2d2ee"/><text x="530" y="205" fill="#5a3d78">source_ip</text>
+    <rect x="310" y="220" width="140" height="26" rx="6" fill="#faf4fb" stroke="#e2d2ee"/><text x="380" y="237" fill="#5a3d78">db</text>
+    <rect x="460" y="220" width="140" height="26" rx="6" fill="#faf4fb" stroke="#e2d2ee"/><text x="530" y="237" fill="#5a3d78">query 并发标签</text>
+  </g>
+
+  <rect x="310" y="262" width="290" height="72" rx="10" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="455" y="284" font-size="9.5" text-anchor="middle" font-weight="600" fill="#12402a">多分类器按匹配度选最优</text>
+  <text x="455" y="303" font-size="8" text-anchor="middle" fill="#2f6f4f">更具体的分类器优先(非按顺序取第一个)</text>
+  <text x="455" y="320" font-size="8" text-anchor="middle" fill="#2f6f4f">命中多个 → 匹配度最高者胜出</text>
+
+  <rect x="310" y="346" width="290" height="80" rx="10" fill="#fff" stroke="#d9c7ec"/>
+  <text x="455" y="368" font-size="9" text-anchor="middle" font-weight="600" fill="#5a3d78">示例请求匹配</text>
+  <text x="455" y="388" font-size="8" text-anchor="middle" fill="#8d6bb0">user=etl_user &amp; query_type=INSERT</text>
+  <text x="455" y="404" font-size="8" text-anchor="middle" fill="#8d6bb0">2 条命中,取匹配度更高者</text>
+  <text x="455" y="420" font-size="8" text-anchor="middle" fill="#2f6f4f">→ 归到 rg_etl 组</text>
+
+  <line x1="230" y1="155" x2="288" y2="155" stroke="#c7c7cc" stroke-width="1.6" marker-end="url(#ar)"/>
+  <text x="259" y="148" font-size="7.5" text-anchor="middle" fill="#86868b">归组</text>
+
+  <!-- target groups -->
+  <rect x="680" y="80" width="370" height="360" rx="13" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="696" y="104" font-size="10.5" font-weight="700" fill="#1d1d1f">归入的资源组(独立配额,互不抢占)</text>
+  <g>
+    <rect x="696" y="116" width="338" height="66" rx="10" fill="#eef3fb" stroke="#bcd0ec"/><text x="712" y="138" font-size="9.5" font-weight="600" fill="#1b2a4a">rg_online · 在线业务</text><text x="712" y="156" font-size="8" fill="#5b7db1">高 cpu_weight 保延迟,并发适中</text><text x="712" y="172" font-size="8" fill="#5b7db1">命中:query_type=SELECT · user=app</text>
+    <rect x="696" y="192" width="338" height="66" rx="10" fill="#fff7e6" stroke="#e8cf9a"/><text x="712" y="214" font-size="9.5" font-weight="600" fill="#5a3410">rg_etl · 批量 ETL</text><text x="712" y="232" font-size="8" fill="#93762e">低 cpu_weight 让路,大查询限额宽</text><text x="712" y="248" font-size="8" fill="#93762e">命中:query_type=INSERT · user=etl_user</text>
+    <rect x="696" y="268" width="338" height="66" rx="10" fill="#eafaf1" stroke="#bfe0cd"/><text x="712" y="290" font-size="9.5" font-weight="600" fill="#12402a">rg_adhoc · 临时分析</text><text x="712" y="308" font-size="8" fill="#2f6f4f">中等份额,大查询熔断收紧</text><text x="712" y="324" font-size="8" fill="#2f6f4f">命中:db=analytics</text>
+    <rect x="696" y="344" width="338" height="66" rx="10" fill="#fbeaea" stroke="#e6b8b8"/><text x="712" y="366" font-size="9.5" font-weight="600" fill="#8a2a2a">default_wg · 默认组</text><text x="712" y="384" font-size="8" fill="#a5453a">未命中任何分类器的请求兜底</text><text x="712" y="400" font-size="8" fill="#a5453a">保证每个请求都有组可归</text>
+  </g>
+
+  <line x1="620" y1="149" x2="694" y2="149" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+  <line x1="620" y1="225" x2="694" y2="225" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+  <line x1="620" y1="301" x2="694" y2="301" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+  <path d="M455,426 L455,462 L676,462 L676,392 L694,392" fill="none" stroke="#c7c7cc" stroke-width="1.3" stroke-dasharray="4 3" marker-end="url(#ar)"/>
+  <text x="500" y="478" font-size="8" fill="#86868b">未命中 → 默认组</text>
+
+  <rect x="30" y="452" width="360" height="46" rx="11" fill="#f4eefb" stroke="#d9c7ec"/>
+  <text x="46" y="474" font-size="9" font-weight="700" fill="#5a3d78">关键点</text>
+  <text x="46" y="490" font-size="8" fill="#8d6bb0">匹配度择优,不是顺序取第一个;总有默认组兜底。</text>
+</svg>

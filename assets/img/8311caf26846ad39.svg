@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="480" viewBox="0 0 1000 480"
+     font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1000" height="480" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">XLA 编译与融合 · 把可编译子图聚成簇，降解为大 kernel</text>
+
+  <!-- 聚类流程 -->
+  <rect x="30" y="52" width="940" height="180" rx="14" fill="#eafaf1" stroke="#bce6cd" filter="url(#soft)"/>
+  <text x="52" y="76" font-size="12.5" font-weight="600" fill="#0f5132">自动聚类：MarkForCompilationPass 把相邻可编译 op 圈成 cluster（mark_for_compilation_pass.cc:95）</text>
+  <rect x="52" y="92" width="215" height="70" rx="10" fill="#ffffff" stroke="#bce6cd"/><text x="159" y="116" font-size="9.5" font-weight="600" fill="#0f5132" text-anchor="middle">标记可编译 op</text><text x="159" y="134" font-size="8.5" fill="#2f6f4f" text-anchor="middle">元素级/矩阵等</text><text x="159" y="150" font-size="8.5" fill="#2f6f4f" text-anchor="middle">XLA 支持的算子</text>
+  <rect x="295" y="92" width="215" height="70" rx="10" fill="#ffffff" stroke="#bce6cd"/><text x="402" y="116" font-size="9.5" font-weight="600" fill="#0f5132" text-anchor="middle">聚成 cluster</text><text x="402" y="134" font-size="8.5" fill="#2f6f4f" text-anchor="middle">相邻同设备合并</text><text x="402" y="150" font-size="8.5" fill="#2f6f4f" text-anchor="middle">≥ min_cluster_size</text>
+  <rect x="538" y="92" width="215" height="70" rx="10" fill="#ffffff" stroke="#bce6cd"/><text x="645" y="116" font-size="9.5" font-weight="600" fill="#0f5132" text-anchor="middle">降解为 XLA op 对</text><text x="645" y="134" font-size="8.5" fill="#2f6f4f" text-anchor="middle">_XlaCompile</text><text x="645" y="150" font-size="8.5" fill="#2f6f4f" text-anchor="middle">+ _XlaRun</text>
+  <rect x="781" y="92" width="167" height="70" rx="10" fill="#f3f7fc" stroke="#cfe0f2"/><text x="864" y="116" font-size="9.5" font-weight="600" fill="#274a78" text-anchor="middle">未编译部分</text><text x="864" y="134" font-size="8.5" fill="#5b7db1" text-anchor="middle">仍走常规</text><text x="864" y="150" font-size="8.5" fill="#5b7db1" text-anchor="middle">Executor 执行</text>
+  <line x1="267" y1="127" x2="295" y2="127" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <line x1="510" y1="127" x2="538" y2="127" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <line x1="753" y1="127" x2="781" y2="127" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+  <text x="52" y="196" font-size="9.5" fill="#2f6f4f">jit_compile=True 强制整个 tf.function 走 XLA；自动聚类是"图里挑能编的段"，二者都触发 XLA 编译</text>
+  <text x="52" y="214" font-size="9" fill="#5b9e78">小簇（&lt; min_cluster_size）不值得编译，跳过（mark_for_compilation_pass.cc:1016）</text>
+
+  <!-- 编译 + 融合 -->
+  <rect x="30" y="252" width="600" height="146" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="52" y="276" font-size="12" font-weight="600" fill="#1b2a4a">编译：XlaCompiler 生成 HLO，融合成少量大 kernel</text>
+  <rect x="52" y="292" width="270" height="40" rx="9" fill="#ffffff" stroke="#bcd0ec"/><text x="187" y="316" font-size="9" fill="#1b2a4a" text-anchor="middle">cluster 子图 → HLO（tf2xla/xla_compiler.cc）</text>
+  <line x1="187" y1="332" x2="187" y2="346" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+  <rect x="52" y="346" width="270" height="40" rx="9" fill="#eafaf1" stroke="#bce6cd"/><text x="187" y="370" font-size="9" fill="#0f5132" text-anchor="middle">算子融合 + 布局/内存优化</text>
+  <rect x="338" y="292" width="276" height="94" rx="9" fill="#fdf6ea" stroke="#efdcb4"/><text x="476" y="316" font-size="9.5" font-weight="600" fill="#5a3410" text-anchor="middle">收益</text><text x="476" y="338" font-size="8.5" fill="#93762e" text-anchor="middle">少启动几十个小 kernel → 一个大 kernel</text><text x="476" y="358" font-size="8.5" fill="#93762e" text-anchor="middle">中间张量不落显存（留寄存器/共享内存）</text><text x="476" y="378" font-size="8.5" fill="#93762e" text-anchor="middle">编译一次、缓存复用</text>
+
+  <!-- 对比 -->
+  <rect x="650" y="252" width="320" height="146" rx="14" fill="#f4eefb" stroke="#d9c9ef" filter="url(#soft)"/>
+  <text x="672" y="276" font-size="12" font-weight="600" fill="#3c1361">与 torch.compile 对照</text>
+  <text x="672" y="300" font-size="9.5" fill="#7a4fb0">· 同样"抓子图 → 降解 → 融合 codegen"</text>
+  <text x="672" y="322" font-size="9.5" fill="#7a4fb0">· TF：Grappler 之上的 XLA cluster</text>
+  <text x="672" y="344" font-size="9.5" fill="#7a4fb0">· PyTorch：Dynamo 抓图 + Inductor</text>
+  <text x="672" y="368" font-size="9" fill="#a58fc9">思路神似，都是"编译加速可选层"</text>
+
+  <!-- 收尾 -->
+  <rect x="30" y="418" width="940" height="46" rx="12" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="52" y="446" font-size="10.5" fill="#494950">口诀：<tspan font-weight="600" fill="#0f5132">聚类 → _XlaCompile/_XlaRun → HLO → 融合成大 kernel</tspan>；形状稳定、计算密集时收益大，动态形状/频繁重编译时慎用。</text>
+</svg>

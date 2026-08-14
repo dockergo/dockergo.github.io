@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="360" viewBox="0 0 900 360" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="bp" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="bph" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+    <marker id="bps" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#c99a3a"/></marker>
+  </defs>
+  <rect width="900" height="360" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">Buffer Pool · 页缓存 + LRU 淘汰 + 异步刷脏</text>
+  <text x="30" y="48" font-size="10.5" fill="#6e6e73">读写先落内存；脏页挂 flush_list，page cleaner 后台刷盘 → 磁盘 I/O 与事务解耦</text>
+
+  <!-- Buffer Pool -->
+  <rect x="230" y="72" width="440" height="150" rx="12" fill="#fbf7ef" stroke="#ecdcbf" filter="url(#bp)"/>
+  <text x="450" y="96" font-size="12" font-weight="700" fill="#8a6d3b" text-anchor="middle">Buffer Pool（内存页缓存池）</text>
+  <g text-anchor="middle" font-size="8.5">
+    <rect x="250" y="110" width="70" height="40" rx="6" fill="#eef7f1" stroke="#8fcaa8"/><text x="285" y="134" fill="#1c7a4d">热页</text>
+    <rect x="326" y="110" width="70" height="40" rx="6" fill="#eef7f1" stroke="#8fcaa8"/><text x="361" y="134" fill="#1c7a4d">热页</text>
+    <rect x="402" y="110" width="70" height="40" rx="6" fill="#fff7f1" stroke="#f0d4b8"/><text x="437" y="130" fill="#b0651f">脏页</text><text x="437" y="144" font-size="7" fill="#b0651f">待刷</text>
+    <rect x="478" y="110" width="70" height="40" rx="6" fill="#fff" stroke="#ecdcbf"/><text x="513" y="134" fill="#8a6d3b">干净页</text>
+    <rect x="554" y="110" width="96" height="40" rx="6" fill="#f2f2f5" stroke="#d2d2d7"/><text x="602" y="130" fill="#8a94a6">冷页</text><text x="602" y="144" font-size="7" fill="#8a94a6">LRU 尾→淘汰</text>
+  </g>
+  <text x="450" y="176" font-size="9" fill="#6e6e73" text-anchor="middle">young/old 分区 LRU：防全表扫冲走热页</text>
+  <text x="450" y="196" font-size="9" fill="#b08535" text-anchor="middle">flush_list：所有脏页按修改顺序挂链</text>
+  <text x="450" y="214" font-size="8" fill="#c3ab7e" text-anchor="middle">buf_pool_ptr `buf0buf.h:99` · flush_list `buf0buf.h:127`</text>
+
+  <!-- 事务读写 -->
+  <rect x="40" y="110" width="140" height="70" rx="10" fill="#eef7f1" stroke="#8fcaa8" filter="url(#bp)"/>
+  <text x="110" y="138" font-size="10.5" font-weight="700" fill="#1c7a4d" text-anchor="middle">事务读写</text>
+  <text x="110" y="158" font-size="8.3" fill="#3c7a58" text-anchor="middle">命中即内存操作</text>
+  <line x1="180" y1="145" x2="230" y2="145" stroke="#2f9e6e" stroke-width="1.8" marker-end="url(#bph)"/>
+
+  <!-- 磁盘 -->
+  <rect x="720" y="90" width="140" height="120" rx="10" fill="#eafaf1" stroke="#b8e6cd" filter="url(#bp)"/>
+  <text x="790" y="126" font-size="10.5" font-weight="700" fill="#1c6b45" text-anchor="middle">磁盘数据文件</text>
+  <text x="790" y="146" font-size="8.3" fill="#2e8b57" text-anchor="middle">.ibd 页（16KB）</text>
+  <text x="790" y="166" font-size="8.3" fill="#2e8b57" text-anchor="middle">缺页从此读入</text>
+  <line x1="670" y1="130" x2="720" y2="130" stroke="#c99a3a" stroke-width="1.6" marker-start="url(#bps)" marker-end="url(#bps)"/>
+
+  <!-- page cleaner -->
+  <rect x="300" y="252" width="300" height="66" rx="11" fill="#fff7f1" stroke="#f0d4b8" filter="url(#bp)"/>
+  <text x="450" y="276" font-size="10.5" font-weight="700" fill="#b0651f" text-anchor="middle">page cleaner 后台线程</text>
+  <text x="450" y="294" font-size="8.5" fill="#8a6d3b" text-anchor="middle">异步把 flush_list 脏页刷盘（不阻塞事务）</text>
+  <text x="450" y="310" font-size="8" fill="#b0651f" text-anchor="middle">buf_page_cleaner_is_active `buf0flu.cc:84`</text>
+  <line x1="437" y1="150" x2="437" y2="252" stroke="#c99a3a" stroke-width="1.5" stroke-dasharray="5 3" marker-end="url(#bps)"/>
+  <path d="M600,285 C680,285 790,250 790,210" fill="none" stroke="#c99a3a" stroke-width="1.5" stroke-dasharray="5 3" marker-end="url(#bps)"/>
+  <text x="700" y="270" font-size="8" fill="#b08535" text-anchor="middle">刷盘</text>
+
+  <text x="150" y="300" font-size="9.5" fill="#4a4a4f">"写快"关键：改内存 + 顺序写 redo，脏页慢慢刷（redo 兜底持久）</text>
+</svg>

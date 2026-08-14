@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="540" viewBox="0 0 1040 540" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1040" height="540" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Trino 安全全景 · 认证 → 两层访问控制</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">请求先过认证(你是谁),再过访问控制(你能做什么);访问控制系统级+连接器级都过才行</text>
+
+  <!-- flow stages -->
+  <g font-size="8.8" text-anchor="middle">
+    <rect x="30" y="76" width="180" height="70" rx="10" fill="#f7f7f9" stroke="#ececf1"/><text x="120" y="98" font-size="9.5" font-weight="700" fill="#4b4b50">HTTP 请求</text><text x="120" y="118" fill="#6e6e73">带凭据</text><text x="120" y="134" fill="#6e6e73">(Basic/Bearer/证书…)</text>
+    <rect x="250" y="76" width="220" height="70" rx="10" fill="#faf4fb" stroke="#e2d2ee"/><text x="360" y="98" font-size="9.5" font-weight="700" fill="#5a3d78">① 认证 AuthenticationFilter</text><text x="360" y="118" fill="#7a5a95">有序 Authenticator 逐个尝试</text><text x="360" y="134" fill="#7a5a95">首个成功 → 确定 Identity</text>
+    <rect x="510" y="76" width="220" height="70" rx="10" fill="#eef3fb" stroke="#bcd0ec"/><text x="620" y="98" font-size="9.5" font-weight="700" fill="#1b2a4a">分析/执行</text><text x="620" y="118" fill="#5b7db1">StatementAnalyzer 期</text><text x="620" y="134" fill="#5b7db1">对每表/列鉴权</text>
+    <rect x="770" y="76" width="240" height="70" rx="10" fill="#f5faf6" stroke="#cfe6d5"/><text x="890" y="98" font-size="9.5" font-weight="700" fill="#2c5a3a">② 访问控制</text><text x="890" y="118" fill="#2f6f4f">AccessControlManager</text><text x="890" y="134" fill="#2f6f4f">系统级 + 连接器级</text>
+  </g>
+  <line x1="210" y1="111" x2="250" y2="111" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+  <line x1="470" y1="111" x2="510" y2="111" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+  <line x1="730" y1="111" x2="770" y2="111" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+
+  <!-- auth detail -->
+  <rect x="30" y="166" width="490" height="170" rx="13" fill="#faf4fb" stroke="#e2d2ee"/>
+  <text x="46" y="188" font-size="11" font-weight="700" fill="#5a3d78">认证：first-success-wins</text>
+  <text x="46" y="210" font-size="9" fill="#7a5a95">· Authenticator.authenticate(request) → Identity 或抛异常</text>
+  <text x="46" y="228" font-size="9" fill="#7a5a95">· 有序列表(http-server.authentication.type)逐个试,首成即停</text>
+  <text x="46" y="246" font-size="9" fill="#7a5a95">· 全失败 → 聚合成一个 401 + WWW-Authenticate 头</text>
+  <text x="46" y="264" font-size="9" fill="#7a5a95">· 安全连接用全列表;非安全 HTTP 仅 InsecureAuthenticator(需显式允许)</text>
+  <text x="46" y="286" font-size="8.5" fill="#93762e">内置：Password/Certificate/Kerberos/JWT/OAuth2/Header/Insecure</text>
+  <text x="46" y="306" font-size="8.5" fill="#93762e">位置：io.trino.server.security(HTTP 层)</text>
+  <text x="46" y="326" font-size="8" fill="#7a5a95">详见认证篇</text>
+
+  <!-- access control detail -->
+  <rect x="540" y="166" width="470" height="170" rx="13" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="556" y="188" font-size="11" font-weight="700" fill="#1b2a4a">访问控制：两层叠加</text>
+  <text x="556" y="210" font-size="9" fill="#5b7db1">· 系统级 SystemAccessControl(列表,全部咨询,任一拒即失败)</text>
+  <text x="556" y="228" font-size="9" fill="#5b7db1">· 连接器级 ConnectorAccessControl(按 catalog;无则放行)</text>
+  <text x="556" y="246" font-size="9" fill="#5b7db1">· 顺序:系统级先、连接器级后,两者都过</text>
+  <text x="556" y="264" font-size="9" fill="#5b7db1">· 两种风格:checkCanXxx(抛异常) / filterXxx(返子集)</text>
+  <text x="556" y="286" font-size="8.5" fill="#93762e">deny-by-default:SPI default 方法都拒绝/返空</text>
+  <text x="556" y="306" font-size="8.5" fill="#93762e">位置:引擎侧 io.trino.security / SPI io.trino.spi.security</text>
+  <text x="556" y="326" font-size="8" fill="#5b7db1">详见两层控制篇</text>
+
+  <!-- takeaway -->
+  <rect x="30" y="356" width="980" height="160" rx="13" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="46" y="378" font-size="11" font-weight="700" fill="#1d1d1f">DCL 覆盖面（横切所有主线）</text>
+  <text x="46" y="400" font-size="9" fill="#6e6e73">· 认证确定"你是谁"(Identity:user/groups/roles/principal);访问控制决定"你能做什么"</text>
+  <text x="46" y="418" font-size="9" fill="#6e6e73">· 语句级：checkCanSelectFromColumns / checkCanInsertIntoTable / checkCanCreateTable / …(读写定义各有校验)</text>
+  <text x="46" y="436" font-size="9" fill="#6e6e73">· 数据级：行过滤(RowFilter)+列掩码(ColumnMask),两层 ViewExpression 合并注入,对用户透明</text>
+  <text x="46" y="454" font-size="9" fill="#6e6e73">· 角色：Identity 带 enabledRoles/catalogRoles;GRANT/REVOKE 走 grant/revoke 类权限方法</text>
+  <text x="46" y="476" font-size="9" fill="#b1483a">· 归属：DDL/DML 的鉴权也走这套(每条语句先鉴权);本篇覆盖控制面,语句执行在各接触面主线</text>
+  <text x="46" y="496" font-size="8.5" fill="#6e6e73">· 与存算一体引擎差异：Trino 权限可下沉到连接器(catalog 级),因为数据/权限的真相在外部源</text>
+</svg>

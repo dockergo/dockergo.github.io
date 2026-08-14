@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="500" viewBox="0 0 1000 500" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="s2" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="a1" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#5b7db1"/></marker>
+    <marker id="a2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+    <marker id="ao" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#c2611f"/></marker>
+  </defs>
+  <rect width="1000" height="500" fill="#fbfbfd"/>
+  <text x="24" y="28" font-size="14" font-weight="700" fill="#1d1d1f">G1 与 ZGC：两条并发路径 · 把可并发的阶段从 Stop-The-World 里挪走</text>
+  <text x="24" y="47" font-size="10" fill="#6e6e73">G1 把"标记"并发化、只 STW 疏散并限流 CSet；ZGC 用着色指针+加载屏障连"重定位"也并发化，只 STW 根扫描（停顿与堆大小近乎无关）。</text>
+
+  <!-- G1 lane -->
+  <rect x="24" y="58" width="952" height="192" rx="13" fill="#f5faf6" stroke="#cfe6d2"/>
+  <text x="40" y="80" font-size="11.5" font-weight="600" fill="#1d8f3f">G1 · 分区 Region + 并发标记增量停顿（默认收集器）</text>
+
+  <!-- Region 网格 -->
+  <text x="40" y="100" font-size="8.5" fill="#3a3a3c">堆 = 等长 Region，动态角色</text>
+  <g>
+    <rect x="40" y="108" width="24" height="24" rx="3" fill="#e8f5ec" stroke="#cfe6d2"/><rect x="69" y="108" width="24" height="24" rx="3" fill="#e8f5ec" stroke="#cfe6d2"/><rect x="98" y="108" width="24" height="24" rx="3" fill="#fdf3ec" stroke="#f3d9c4"/><rect x="127" y="108" width="24" height="24" rx="3" fill="#fff" stroke="#e2e2e7"/><rect x="156" y="108" width="24" height="24" rx="3" fill="#f4eefb" stroke="#d9c9ef"/><rect x="185" y="108" width="24" height="24" rx="3" fill="#fdf3ec" stroke="#f3d9c4"/>
+    <rect x="40" y="137" width="24" height="24" rx="3" fill="#fdf3ec" stroke="#f3d9c4"/><rect x="69" y="137" width="24" height="24" rx="3" fill="#fff" stroke="#e2e2e7"/><rect x="98" y="137" width="24" height="24" rx="3" fill="#e8f5ec" stroke="#cfe6d2"/><rect x="127" y="137" width="24" height="24" rx="3" fill="#fdf3ec" stroke="#f3d9c4"/><rect x="156" y="137" width="24" height="24" rx="3" fill="#fdf3ec" stroke="#f3d9c4"/><rect x="185" y="137" width="24" height="24" rx="3" fill="#fff" stroke="#e2e2e7"/>
+    <rect x="40" y="166" width="24" height="24" rx="3" fill="#fff" stroke="#e2e2e7"/><rect x="69" y="166" width="24" height="24" rx="3" fill="#fdf3ec" stroke="#f3d9c4"/><rect x="98" y="166" width="24" height="24" rx="3" fill="#fdf3ec" stroke="#f3d9c4"/><rect x="127" y="166" width="24" height="24" rx="3" fill="#e8f5ec" stroke="#cfe6d2"/><rect x="156" y="166" width="24" height="24" rx="3" fill="#fff" stroke="#e2e2e7"/><rect x="185" y="166" width="24" height="24" rx="3" fill="#f4eefb" stroke="#d9c9ef"/>
+  </g>
+  <text x="40" y="204" font-size="7.5" fill="#4e9e78"><tspan fill="#1d8f3f">绿</tspan>Eden/Surv · <tspan fill="#c2611f">橙</tspan>Old · <tspan fill="#6f3ea8">紫</tspan>Humongous · 白Free</text>
+  <text x="40" y="217" font-size="7.5" fill="#6e6e73">g1HeapRegion.hpp:71 class G1HeapRegion</text>
+  <text x="40" y="229" font-size="7.5" fill="#6e6e73">:302 GrainBytes（1–32MB）</text>
+
+  <!-- G1 阶段流水 -->
+  <g text-anchor="middle">
+    <rect x="250" y="104" width="130" height="64" rx="9" fill="#fdf3ec" stroke="#f3d9c4" filter="url(#s2)"/>
+    <text x="315" y="126" font-size="9.5" font-weight="600" fill="#c2611f">① 初始标记</text><text x="315" y="143" font-size="7.5" fill="#6e6e73">STW 短·搭 Young GC</text><text x="315" y="157" font-size="7.5" fill="#d18a4a">标记 GC 根</text>
+    <rect x="392" y="104" width="130" height="64" rx="9" fill="#e8f5ec" stroke="#cfe6d2" filter="url(#s2)"/>
+    <text x="457" y="126" font-size="9.5" font-weight="600" fill="#1c6b45">② 并发标记</text><text x="457" y="143" font-size="7.5" fill="#6e6e73">与业务并跑·SATB 兜漏</text><text x="457" y="157" font-size="7.5" fill="#4e9e78">g1ConcurrentMark.hpp:325</text>
+    <rect x="534" y="104" width="130" height="64" rx="9" fill="#fdf3ec" stroke="#f3d9c4" filter="url(#s2)"/>
+    <text x="599" y="126" font-size="9.5" font-weight="600" fill="#c2611f">③ 最终标记 Remark</text><text x="599" y="143" font-size="7.5" fill="#6e6e73">STW 短·清 SATB 残留</text><text x="599" y="157" font-size="7.5" fill="#d18a4a">处理弱引用</text>
+    <rect x="676" y="104" width="130" height="64" rx="9" fill="#e8f5ec" stroke="#cfe6d2" filter="url(#s2)"/>
+    <text x="741" y="126" font-size="9.5" font-weight="600" fill="#1c6b45">④ 清理 Cleanup</text><text x="741" y="143" font-size="7.5" fill="#6e6e73">统计存活·回收空 Region</text><text x="741" y="157" font-size="7.5" fill="#4e9e78">算各 Region 回报</text>
+    <rect x="818" y="104" width="130" height="64" rx="9" fill="#fdf3ec" stroke="#f3d9c4" filter="url(#s2)"/>
+    <text x="883" y="126" font-size="9.5" font-weight="600" fill="#c2611f">⑤ 疏散停顿</text><text x="883" y="143" font-size="7.5" fill="#6e6e73">STW·复制存活·限 CSet</text><text x="883" y="157" font-size="7.5" fill="#d18a4a">do_collection_pause</text>
+  </g>
+  <line x1="380" y1="136" x2="392" y2="136" stroke="#2f9e6e" stroke-width="1.5" marker-end="url(#a2)"/>
+  <line x1="522" y1="136" x2="534" y2="136" stroke="#2f9e6e" stroke-width="1.5" marker-end="url(#a2)"/>
+  <line x1="664" y1="136" x2="676" y2="136" stroke="#2f9e6e" stroke-width="1.5" marker-end="url(#a2)"/>
+  <line x1="806" y1="136" x2="818" y2="136" stroke="#2f9e6e" stroke-width="1.5" marker-end="url(#a2)"/>
+
+  <rect x="250" y="186" width="698" height="52" rx="9" fill="#fff" stroke="#e2e2e7"/>
+  <text x="264" y="205" font-size="8.5" fill="#3a3a3c"><tspan font-weight="600" fill="#c2611f">停顿只在 STW 阶段</tspan>（①③⑤）；标记主体与业务并跑。软目标 -XX:MaxGCPauseMillis 决定挑多少 Region 进 CSet，停顿时长 ∝ CSet 而非堆大小。</text>
+  <text x="264" y="223" font-size="7.5" fill="#8a8a8f">g1CollectedHeap.cpp:489 do_collection_pause · :1863 collect(GCCause) · :832 concurrent_cycle_abort（退化 Full 前中止并发周期）</text>
+
+  <!-- ZGC lane -->
+  <rect x="24" y="262" width="952" height="196" rx="13" fill="#fdf3ec" stroke="#f3d9c4"/>
+  <text x="40" y="284" font-size="11.5" font-weight="600" fill="#c2611f">ZGC · 着色指针 + 加载屏障并发重定位（超大堆·亚毫秒停顿）</text>
+
+  <!-- 着色指针示意 -->
+  <text x="40" y="304" font-size="8.5" fill="#3a3a3c">zpointer 高位存 GC 颜色</text>
+  <g>
+    <rect x="40" y="312" width="52" height="30" rx="3" fill="#f4eefb" stroke="#d9c9ef"/><text x="66" y="331" font-size="7" text-anchor="middle" fill="#6f3ea8">metadata</text>
+    <rect x="92" y="312" width="117" height="30" rx="3" fill="#e8f5ec" stroke="#cfe6d2"/><text x="150" y="331" font-size="7.5" text-anchor="middle" fill="#1c6b45">address bits</text>
+  </g>
+  <text x="40" y="356" font-size="7.5" fill="#6e6e73">colored bits：marked0/marked1/remapped</text>
+  <text x="40" y="368" font-size="7.5" fill="#a06a2a">zAddress.hpp:48 metadata bits in colored pointer</text>
+  <text x="40" y="383" font-size="7.5" fill="#6e6e73">读引用时按颜色判断对象是否已搬走</text>
+
+  <!-- ZGC 阶段流水 -->
+  <g text-anchor="middle">
+    <rect x="250" y="300" width="160" height="64" rx="9" fill="#fdf3ec" stroke="#f3d9c4" filter="url(#s2)"/>
+    <text x="330" y="322" font-size="9.5" font-weight="600" fill="#c2611f">① STW 根扫描</text><text x="330" y="339" font-size="7.5" fill="#6e6e73">唯一 STW·极短</text><text x="330" y="353" font-size="7.5" fill="#d18a4a">与堆大小无关</text>
+    <rect x="424" y="300" width="160" height="64" rx="9" fill="#e8f5ec" stroke="#cfe6d2" filter="url(#s2)"/>
+    <text x="504" y="322" font-size="9.5" font-weight="600" fill="#1c6b45">② 并发标记</text><text x="504" y="339" font-size="7.5" fill="#6e6e73">加载屏障 keep-alive</text><text x="504" y="353" font-size="7.5" fill="#4e9e78">与业务并跑</text>
+    <rect x="598" y="300" width="160" height="64" rx="9" fill="#f6f8fc" stroke="#cfe0f2" filter="url(#s2)"/>
+    <text x="678" y="322" font-size="9.5" font-weight="600" fill="#5b7db1">③ 重定位集选择</text><text x="678" y="339" font-size="7.5" fill="#6e6e73">选回报高的页</text><text x="678" y="353" font-size="7.5" fill="#7f9ec4">建转发表</text>
+    <rect x="772" y="300" width="160" height="64" rx="9" fill="#e8f5ec" stroke="#cfe6d2" filter="url(#s2)"/>
+    <text x="852" y="322" font-size="9.5" font-weight="600" fill="#1c6b45">④ 并发重定位</text><text x="852" y="339" font-size="7.5" fill="#6e6e73">复制到新页·读屏障自愈</text><text x="852" y="353" font-size="7.5" fill="#4e9e78">zRelocate.hpp:117/:118</text>
+  </g>
+  <line x1="410" y1="332" x2="424" y2="332" stroke="#c2611f" stroke-width="1.5" marker-end="url(#ao)"/>
+  <line x1="584" y1="332" x2="598" y2="332" stroke="#2f9e6e" stroke-width="1.5" marker-end="url(#a2)"/>
+  <line x1="758" y1="332" x2="772" y2="332" stroke="#5b7db1" stroke-width="1.5" marker-end="url(#a1)"/>
+
+  <rect x="250" y="382" width="682" height="66" rx="9" fill="#fff" stroke="#e2e2e7"/>
+  <text x="264" y="401" font-size="9" font-weight="600" fill="#c2611f">引用自愈闭环（业务线程读到旧引用时当场纠正）</text>
+  <text x="264" y="419" font-size="8.5" fill="#3a3a3c">load oop → load_barrier_on_oop_field(p) → 颜色为旧色？ → relocate_or_remap → remap 到新地址 → 业务拿到最新引用</text>
+  <text x="264" y="437" font-size="7.5" fill="#8a8a8f">zBarrier.hpp:149 load_barrier_on_oop_field · :88 relocate_or_remap · :89 remap　｜　Shenandoah 同理：转发指针 + shenandoahForwarding.hpp:37 get_forwardee</text>
+
+  <text x="24" y="480" font-size="9.5" fill="#6e6e73">对比核心：<tspan font-weight="600" fill="#1d1d1f">G1 停顿来自"复制存活对象"（限 CSet 可控）；ZGC 把复制也并发化，停顿只剩"根扫描"，故与堆规模解耦——代价是每次引用加载都过读屏障。</tspan></text>
+</svg>

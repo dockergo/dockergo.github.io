@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="420" viewBox="0 0 920 420" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="arx" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#8a5cae"/></marker>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="920" height="420" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">CRI 桥接 · kubelet 经 CRI 调用 → CRI plugin 编排 → 复用 containerd 既有子系统</text>
+
+  <!-- kubelet -->
+  <rect x="30" y="66" width="150" height="120" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="105" y="90" font-size="12" font-weight="600" fill="#1b2a4a" text-anchor="middle">kubelet</text>
+  <text x="46" y="114" font-size="9.5" fill="#5b7db1">PullImage</text>
+  <text x="46" y="132" font-size="9.5" fill="#5b7db1">RunPodSandbox</text>
+  <text x="46" y="150" font-size="9.5" fill="#5b7db1">CreateContainer</text>
+  <text x="46" y="168" font-size="9.5" fill="#5b7db1">StartContainer</text>
+
+  <!-- CRI plugin -->
+  <rect x="230" y="56" width="250" height="150" rx="11" fill="#f4eefb" stroke="#d9c9ef" filter="url(#soft)"/>
+  <text x="355" y="80" font-size="12" font-weight="600" fill="#3c1361" text-anchor="middle">CRI plugin（GRPCPlugin, ID="cri"）</text>
+  <text x="246" y="102" font-size="9.5" fill="#6f3ea8">编排层：把 CRI 调用翻译成</text>
+  <text x="246" y="118" font-size="9.5" fill="#6f3ea8">对既有子系统的操作</text>
+  <text x="246" y="138" font-size="9.5" fill="#6f3ea8">RunPodSandbox sandbox_run.go:54</text>
+  <text x="246" y="154" font-size="9.5" fill="#6f3ea8">CreateContainer container_create.go:60</text>
+  <text x="246" y="172" font-size="9" fill="#9a76c0">cri.go:48 Register · initCRIService:70</text>
+  <text x="246" y="188" font-size="9" fill="#9a76c0">criService（service.go:120）· ns=k8s.io</text>
+
+  <!-- 依赖注入 -->
+  <rect x="530" y="56" width="360" height="150" rx="11" fill="#f6f8fc" stroke="#cfe0f2" filter="url(#soft)"/>
+  <text x="710" y="80" font-size="12" font-weight="600" fill="#5b7db1" text-anchor="middle">Requires 注入的子系统（cri.go:51）</text>
+  <g font-size="9">
+    <rect x="546" y="92" width="160" height="24" rx="6" fill="#fff" stroke="#cfe0f2"/><text x="554" y="108" fill="#1b2a4a">CRIServicePlugin(runtime/images)</text>
+    <rect x="716" y="92" width="158" height="24" rx="6" fill="#fff" stroke="#cfe0f2"/><text x="724" y="108" fill="#1b2a4a">SandboxControllerPlugin</text>
+    <rect x="546" y="122" width="120" height="24" rx="6" fill="#fff" stroke="#cfe0f2"/><text x="554" y="138" fill="#1b2a4a">ShimPlugin</text>
+    <rect x="676" y="122" width="110" height="24" rx="6" fill="#fff" stroke="#cfe0f2"/><text x="684" y="138" fill="#1b2a4a">EventPlugin</text>
+    <rect x="796" y="122" width="78" height="24" rx="6" fill="#fff" stroke="#cfe0f2"/><text x="804" y="138" fill="#1b2a4a">Lease</text>
+    <rect x="546" y="152" width="120" height="24" rx="6" fill="#fff" stroke="#cfe0f2"/><text x="554" y="168" fill="#1b2a4a">TransferPlugin</text>
+    <rect x="676" y="152" width="120" height="24" rx="6" fill="#fff" stroke="#cfe0f2"/><text x="684" y="168" fill="#1b2a4a">ServicePlugin</text>
+    <rect x="806" y="152" width="68" height="24" rx="6" fill="#fff" stroke="#cfe0f2"/><text x="814" y="168" fill="#1b2a4a">NRI…</text>
+  </g>
+  <text x="546" y="194" font-size="9" fill="#5b7db1">ic.GetByID(CRIServicePlugin,"runtime"/"images")（:75/:81）一定取得到——Graph 已排它们在前</text>
+
+  <path d="M180 126 L230 126" fill="none" stroke="#b8b8bf" stroke-width="1.6" marker-end="url(#ar)"/>
+  <text x="186" y="118" font-size="9" fill="#8a8a8f">CRI gRPC</text>
+  <path d="M480 130 L530 130" fill="none" stroke="#8a5cae" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#arx)"/>
+  <text x="486" y="122" font-size="9" fill="#8a5cae">依赖注入</text>
+
+  <!-- 映射表 -->
+  <rect x="30" y="228" width="860" height="120" rx="11" fill="#f5faf6" stroke="#cfe6d2"/>
+  <text x="46" y="250" font-size="11.5" font-weight="600" fill="#1d8f3f">CRI 调用 → containerd 子系统映射（复用全部核心能力，不含新容器引擎）</text>
+  <g font-size="9.5" fill="#4a8a5c">
+    <text x="46" y="274">· PullImage → content store + snapshotter + transfer（拉镜像、去重、解包成快照）</text>
+    <text x="46" y="296">· RunPodSandbox → sandbox controller + task/shim（建 pause 容器 + 网络命名空间，Pod 的地基）</text>
+    <text x="46" y="318">· CreateContainer → containers 元数据 + snapshotter（建容器对象 + Prepare rootfs）</text>
+    <text x="46" y="340">· StartContainer → tasks 服务 + runtime v2 shim（起容器 task）；退出感知 → events exchange 订阅</text>
+  </g>
+
+  <text x="30" y="378" font-size="11.5" fill="#6e6e73"><tspan font-weight="600" fill="#1d1d1f">价值集大成：</tspan>"给 Kubernetes 用"只是加一个编排插件，复用 content/snapshot/task/shim/events 全部子系统，不改核心</text>
+  <text x="30" y="402" font-size="11" fill="#a1a1a6">同 Pod 容器共享 sandbox（pause）的网络命名空间；CRI 对象固定落 k8s.io 命名空间，与 Docker 的 moby 隔离</text>
+</svg>

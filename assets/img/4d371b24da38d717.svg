@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="430" viewBox="0 0 1020 430"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1020" height="430" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">phase 引擎 · 数组 + checker 驱动，可暂停可恢复（ngx_http_core_run_phases，core_module.c:884）</text>
+
+  <!-- 引擎结构 -->
+  <rect x="30" y="56" width="470" height="200" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="48" y="80" font-size="12.5" font-weight="600" fill="#1d1d1f">phase handler 数组 + 游标</text>
+  <text x="48" y="102" font-size="9.5" fill="#494950">所有阶段的 handler 编译期展平成一个数组，</text>
+  <text x="48" y="118" font-size="9.5" fill="#494950">请求带一个游标 r-&gt;phase_handler 指当前位置。</text>
+  <rect x="48" y="130" width="140" height="34" rx="7" fill="#eef3fb" stroke="#bcd0ec"/><text x="118" y="152" font-size="9" fill="#1b2a4a" text-anchor="middle">[0] POST_READ h</text>
+  <rect x="196" y="130" width="140" height="34" rx="7" fill="#eef3fb" stroke="#bcd0ec"/><text x="266" y="152" font-size="9" fill="#1b2a4a" text-anchor="middle">[1] REWRITE h</text>
+  <rect x="344" y="130" width="140" height="34" rx="7" fill="#fbeaea" stroke="#f0cccc"/><text x="414" y="152" font-size="9" fill="#7d1f1f" text-anchor="middle">[k] ACCESS h</text>
+  <rect x="48" y="172" width="140" height="34" rx="7" fill="#eafaf1" stroke="#bce6cd"/><text x="118" y="194" font-size="9" fill="#0f5132" text-anchor="middle">[m] CONTENT h</text>
+  <rect x="196" y="172" width="140" height="34" rx="7" fill="#fff7e6" stroke="#f0dcae"/><text x="266" y="194" font-size="9" fill="#7a4d00" text-anchor="middle">[n] LOG h</text>
+  <text x="48" y="230" font-size="9.5" fill="#86868b">每个 phase 有一个 checker（如 generic_phase:906、</text>
+  <text x="48" y="246" font-size="9.5" fill="#86868b">content_phase:1292）决定如何调 handler 与推进游标。</text>
+
+  <!-- 返回码 -->
+  <rect x="520" y="56" width="470" height="200" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="538" y="80" font-size="12.5" font-weight="600" fill="#1b2a4a">handler 返回码 → checker 动作</text>
+  <rect x="538" y="96" width="434" height="34" rx="8" fill="#ffffff" stroke="#bcd0ec"/><text x="554" y="118" font-size="9.5" fill="#1b2a4a">NGX_OK / DECLINED → 推进到下一 handler</text>
+  <rect x="538" y="136" width="434" height="34" rx="8" fill="#ffffff" stroke="#bcd0ec"/><text x="554" y="158" font-size="9.5" fill="#1b2a4a">NGX_AGAIN / NGX_DONE → 暂停，等事件再回来</text>
+  <rect x="538" y="176" width="434" height="34" rx="8" fill="#ffffff" stroke="#bcd0ec"/><text x="554" y="198" font-size="9.5" fill="#1b2a4a">NGX_HTTP_... 状态码 → 结束请求返回该响应</text>
+  <text x="538" y="234" font-size="9.5" fill="#5b7db1">正是"暂停/恢复"让阻塞点（等后端、等磁盘）不占线程——</text>
+  <text x="538" y="250" font-size="9.5" fill="#5b7db1">返回 AGAIN，事件就绪后 write_event_handler 再驱动 run_phases。</text>
+
+  <!-- 可恢复机制 -->
+  <rect x="30" y="272" width="960" height="144" rx="14" fill="#eafaf1" stroke="#bce6cd" filter="url(#soft)"/>
+  <text x="48" y="296" font-size="12.5" font-weight="600" fill="#0f5132">可暂停可恢复：与事件循环无缝衔接</text>
+  <rect x="48" y="312" width="230" height="86" rx="10" fill="#ffffff" stroke="#bce6cd"/><text x="163" y="336" font-size="10" font-weight="600" fill="#0f5132" text-anchor="middle">跑到需等待处</text><text x="163" y="356" font-size="8.5" fill="#3f8f66" text-anchor="middle">如 proxy 到后端、等响应</text><text x="163" y="374" font-size="8.5" fill="#3f8f66" text-anchor="middle">handler 返回 AGAIN</text>
+  <rect x="298" y="312" width="230" height="86" rx="10" fill="#ffffff" stroke="#bce6cd"/><text x="413" y="336" font-size="10" font-weight="600" fill="#0f5132" text-anchor="middle">worker 转去处理别的连接</text><text x="413" y="356" font-size="8.5" fill="#3f8f66" text-anchor="middle">当前请求让出线程</text><text x="413" y="374" font-size="8.5" fill="#3f8f66" text-anchor="middle">不空等</text>
+  <rect x="548" y="312" width="230" height="86" rx="10" fill="#ffffff" stroke="#bce6cd"/><text x="663" y="336" font-size="10" font-weight="600" fill="#0f5132" text-anchor="middle">后端就绪事件到</text><text x="663" y="356" font-size="8.5" fill="#3f8f66" text-anchor="middle">write_event_handler</text><text x="663" y="374" font-size="8.5" fill="#3f8f66" text-anchor="middle">= run_phases（:878）</text>
+  <rect x="798" y="312" width="174" height="86" rx="10" fill="#fdfdf5" stroke="#bce6cd"/><text x="885" y="336" font-size="10" font-weight="600" fill="#0f5132" text-anchor="middle">从游标续跑</text><text x="885" y="356" font-size="8.5" fill="#3f8f66" text-anchor="middle">回到上次暂停的</text><text x="885" y="374" font-size="8.5" fill="#3f8f66" text-anchor="middle">phase 继续</text>
+  <line x1="278" y1="355" x2="298" y2="355" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="528" y1="355" x2="548" y2="355" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="778" y1="355" x2="798" y2="355" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+</svg>

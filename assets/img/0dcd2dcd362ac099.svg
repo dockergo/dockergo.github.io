@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="640" viewBox="0 0 1080 640" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="1080" height="640" fill="#fbfbfd"/>
+  <text x="40" y="40" font-size="16" font-weight="600" fill="#1d1d1f">存算分离部署 · Storage-Compute Decoupled</text>
+  <text x="40" y="60" font-size="11.5" fill="#86868b">计算无状态、数据在共享对象存储 —— 分钟级弹性扩缩不搬数据,本地 SSD 仅作 FileCache 兜底</text>
+
+  <!-- ① FE -->
+  <rect x="40" y="80" width="1000" height="66" rx="16" fill="#f6f8fc" stroke="#e6ecf4"/>
+  <text x="60" y="104" font-size="13" font-weight="600" fill="#1d1d1f">① FE · 查询规划(无本地数据元数据)</text>
+  <rect x="360" y="110" width="360" height="28" rx="9" fill="#ffffff" stroke="#ececef" filter="url(#soft)"/>
+  <text x="540" y="129" font-size="11.5" fill="#1d5fb8" text-anchor="middle">经 MetaService RPC 取 Tablet/Rowset 元数据</text>
+  <line x1="300" y1="146" x2="300" y2="172" stroke="#c7c7cc" stroke-width="1.4" stroke-dasharray="4 4" marker-end="url(#ar)"/>
+  <text x="230" y="166" font-size="10" fill="#a1a1a6">取元数据</text>
+  <line x1="780" y1="146" x2="780" y2="298" stroke="#c7c7cc" stroke-width="1.6" marker-end="url(#ar)"/>
+  <text x="792" y="220" font-size="10" fill="#a1a1a6">下发计算</text>
+
+  <!-- ② MetaService -->
+  <rect x="40" y="172" width="700" height="104" rx="16" fill="#faf4fb" stroke="#ecd9ef"/>
+  <text x="60" y="196" font-size="13" font-weight="600" fill="#1d1d1f">② MetaService · 独立 C++ 服务</text>
+  <rect x="60" y="208" width="320" height="56" rx="12" fill="#ffffff" stroke="#ececef" filter="url(#soft)"/>
+  <text x="220" y="233" font-size="12.5" font-weight="600" fill="#7a3fb0" text-anchor="middle">MetaServiceImpl</text>
+  <text x="220" y="252" font-size="10.5" fill="#86868b" text-anchor="middle">管 Tablet/Rowset/Txn + Storage Vault</text>
+  <line x1="380" y1="236" x2="404" y2="236" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <rect x="404" y="208" width="316" height="56" rx="12" fill="#ffffff" stroke="#ececef" filter="url(#soft)"/>
+  <text x="562" y="233" font-size="12.5" font-weight="600" fill="#7a3fb0" text-anchor="middle">FdbTxnKv → FoundationDB</text>
+  <text x="562" y="252" font-size="10.5" fill="#86868b" text-anchor="middle">分布式 ACID KV · 强一致</text>
+
+  <!-- ③ Compute Node 无状态 -->
+  <rect x="40" y="298" width="1000" height="130" rx="16" fill="#fbf7ef" stroke="#efe4cf"/>
+  <text x="60" y="322" font-size="13" font-weight="600" fill="#1d1d1f">③ BE 计算节点(无状态 · CloudStorageEngine)</text>
+  <g text-anchor="middle" font-size="11.5" fill="#8a5a12">
+    <rect x="70" y="334" width="290" height="80" rx="13" fill="#ffffff" stroke="#ececef" filter="url(#soft)"/><text x="215" y="362" font-weight="600" fill="#1d1d1f">Compute Node-1</text><text x="215" y="384" font-size="10.5" fill="#86868b">无本地数据 · 拉元数据即算</text>
+    <rect x="385" y="334" width="290" height="80" rx="13" fill="#ffffff" stroke="#ececef" filter="url(#soft)"/><text x="530" y="362" font-weight="600" fill="#1d1d1f">Compute Node-2</text><text x="530" y="384" font-size="10.5" fill="#86868b">无本地数据 · 拉元数据即算</text>
+    <rect x="700" y="334" width="290" height="80" rx="13" fill="#ffffff" stroke="#ececef" filter="url(#soft)"/><text x="845" y="362" font-weight="600" fill="#1d1d1f">Compute Node ×N</text><text x="845" y="384" font-size="10.5" fill="#86868b">分钟级扩缩 · 不搬数据</text>
+  </g>
+  <line x1="540" y1="428" x2="540" y2="450" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- ④ BlockFileCache 四队列 -->
+  <rect x="40" y="450" width="1000" height="80" rx="16" fill="#f5faf6" stroke="#e2ece5"/>
+  <text x="60" y="474" font-size="13" font-weight="600" fill="#1d1d1f">④ BlockFileCache · 本地 SSD 四队列(命中免回源)</text>
+  <g text-anchor="middle" font-size="11">
+    <rect x="70" y="484" width="222" height="36" rx="9" fill="#ffffff" stroke="#cfe6d5" filter="url(#soft)"/><text x="181" y="500" fill="#2c5a3a">TTL Queue(50%)</text><text x="181" y="514" font-size="9.5" fill="#86868b">优先级最高 · 不驱逐</text>
+    <rect x="302" y="484" width="222" height="36" rx="9" fill="#ffffff" stroke="#cfe6d5" filter="url(#soft)"/><text x="413" y="500" fill="#2c5a3a">INDEX Queue(5%)</text><text x="413" y="514" font-size="9.5" fill="#86868b">索引缓存</text>
+    <rect x="534" y="484" width="222" height="36" rx="9" fill="#ffffff" stroke="#cfe6d5" filter="url(#soft)"/><text x="645" y="500" fill="#2c5a3a">NORMAL Queue(40%)</text><text x="645" y="514" font-size="9.5" fill="#86868b">LRU 淘汰</text>
+    <rect x="766" y="484" width="224" height="36" rx="9" fill="#ffffff" stroke="#cfe6d5" filter="url(#soft)"/><text x="878" y="500" fill="#2c5a3a">DISPOSABLE(5%)</text><text x="878" y="514" font-size="9.5" fill="#86868b">最先驱逐</text>
+  </g>
+  <line x1="300" y1="530" x2="300" y2="552" stroke="#c7c7cc" stroke-width="1.6" marker-start="url(#ar)" marker-end="url(#ar)"/>
+  <text x="360" y="546" font-size="10" fill="#a1a1a6">miss 回源 / 命中免读</text>
+
+  <!-- ⑤ 共享对象存储 -->
+  <rect x="40" y="552" width="1000" height="70" rx="16" fill="#f7f7f9" stroke="#ececef"/>
+  <text x="60" y="576" font-size="13" font-weight="600" fill="#1d1d1f">⑤ 共享对象存储 + Recycler</text>
+  <g text-anchor="middle" font-size="11.5">
+    <rect x="270" y="584" width="360" height="30" rx="9" fill="#ffffff" stroke="#ececef" filter="url(#soft)"/><text x="450" y="604" fill="#8a5a12">S3/OSS/COS(Storage Vault)· 所有 BE 共享单副本</text>
+    <rect x="640" y="584" width="310" height="30" rx="9" fill="#ffffff" stroke="#ececef" filter="url(#soft)"/><text x="795" y="604" fill="#8a5a12">Recycler · 异步清理孤立 Segment</text>
+  </g>
+</svg>

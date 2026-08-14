@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="440" viewBox="0 0 1000 440" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="wb_s" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="wb_a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#5b7db1"/></marker>
+    <marker id="wb_o" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#d38236"/></marker>
+  </defs>
+  <rect width="1000" height="440" fill="#fbfbfd"/>
+  <text x="24" y="30" font-size="14" font-weight="700" fill="#1d1d1f">分代假说 + 写屏障：Minor GC 如何不扫全老年代就找到跨代引用</text>
+  <text x="24" y="49" font-size="10" fill="#6e6e73">弱分代假说：多数对象朝生夕死。难点：回收新生代时若只扫新生代，会漏掉「老年代→新生代」的跨代引用。解法 = 写屏障记下跨代写，GC 只扫记下的部分</text>
+
+  <!-- 分代堆 -->
+  <rect x="24" y="66" width="952" height="96" rx="12" fill="#f5faf6" stroke="#cfe6d2"/>
+  <text x="40" y="86" font-size="11" font-weight="600" fill="#1d8f3f">① 分代堆 · 新生代频繁小回收（Minor GC），老年代少做但代价高</text>
+  <g text-anchor="middle">
+    <rect x="44" y="98" width="380" height="50" rx="9" fill="#fff" stroke="#cfe6d2" filter="url(#wb_s)"/>
+    <text x="234" y="120" font-size="10.5" font-weight="600" fill="#1c6b45">新生代 Young（Eden + Survivor）</text><text x="234" y="138" font-size="8" fill="#6e6e73">Minor GC 只扫这里 · 复制存活 · 熬过多次晋升老年代</text>
+    <rect x="556" y="98" width="420" height="50" rx="9" fill="#fff" stroke="#ecdcbf" filter="url(#wb_s)"/>
+    <text x="766" y="120" font-size="10.5" font-weight="600" fill="#8a5a1a">老年代 Old</text><text x="766" y="138" font-size="8" fill="#6e6e73">存活久的对象 · Minor GC 不整体扫（否则分代成本优势荡然无存）</text>
+  </g>
+  <path d="M556,116 Q490,116 424,116" fill="none" stroke="#d38236" stroke-width="1.6" marker-end="url(#wb_o)"/>
+  <text x="490" y="108" font-size="8" fill="#d38236" text-anchor="middle">跨代引用 a.f=b</text>
+
+  <!-- 写屏障两分支 -->
+  <rect x="24" y="176" width="466" height="180" rx="12" fill="#f6f8fc" stroke="#cfe0f2"/>
+  <text x="40" y="196" font-size="11" font-weight="600" fill="#5b7db1">② Serial / Parallel · 卡表 Card Table（CardTableBarrierSet）</text>
+  <g text-anchor="middle">
+    <rect x="44" y="208" width="426" height="44" rx="9" fill="#fff" stroke="#cfe0f2" filter="url(#wb_s)"/>
+    <text x="257" y="228" font-size="9.5" font-weight="600" fill="#1b2a4a">写屏障：a.f = b 时把 a 所在「卡」标脏</text><text x="257" y="244" font-size="8" fill="#6e6e73">老年代按 512B 划成卡 · 一次字节写，极廉价</text>
+    <rect x="44" y="262" width="426" height="44" rx="9" fill="#eef3fb" stroke="#cfe0f2"/>
+    <text x="257" y="282" font-size="9.5" font-weight="600" fill="#1b2a4a">Minor GC：只扫描脏卡，非整个老年代</text><text x="257" y="298" font-size="8" fill="#6e6e73">脏卡里才可能有指向新生代的引用</text>
+  </g>
+  <text x="257" y="330" font-size="9" fill="#3a3a3c" text-anchor="middle">记忆集（RSet）只是把"哪里可能有跨代引用"记下来，</text>
+  <text x="257" y="346" font-size="9" fill="#3a3a3c" text-anchor="middle">换取"扫脏卡"而非"扫全老年代"。</text>
+
+  <!-- G1 双屏障 -->
+  <rect x="510" y="176" width="466" height="180" rx="12" fill="#fbf7ef" stroke="#ecdcbf"/>
+  <text x="526" y="196" font-size="11" font-weight="600" fill="#8a6d3b">③ G1 · Region 化 + 前屏障(SATB) + 后屏障(RSet)</text>
+  <g text-anchor="middle">
+    <rect x="530" y="208" width="426" height="44" rx="9" fill="#fff" stroke="#ecdcbf" filter="url(#wb_s)"/>
+    <text x="743" y="228" font-size="9.5" font-weight="600" fill="#8a5a1a">前屏障 write_ref_field_pre（g1BarrierSet.hpp:102）</text><text x="743" y="244" font-size="8" fill="#6e6e73">并发标记期覆盖引用前，先把旧值入 SATB 队列 → 防漏标</text>
+    <rect x="530" y="262" width="426" height="44" rx="9" fill="#fff" stroke="#ecdcbf" filter="url(#wb_s)"/>
+    <text x="743" y="282" font-size="9.5" font-weight="600" fill="#8a5a1a">后屏障 write_ref_field_post（:107）</text><text x="743" y="298" font-size="8" fill="#6e6e73">记跨 Region 引用到目标 Region 的 RSet → 只回收部分 Region（CSet）</text>
+  </g>
+  <text x="743" y="330" font-size="9" fill="#3a3a3c" text-anchor="middle">堆切成等长 Region（g1HeapRegion.hpp:71，GrainBytes 1–32MB），</text>
+  <text x="743" y="346" font-size="9" fill="#3a3a3c" text-anchor="middle">动态扮演 Eden/Survivor/Old/Humongous。</text>
+
+  <!-- 底部不变量 -->
+  <rect x="24" y="370" width="952" height="52" rx="12" fill="#fbfbfd" stroke="#e2e2e7"/>
+  <text x="40" y="392" font-size="10.5" font-weight="600" fill="#1d1d1f">核心权衡</text>
+  <text x="40" y="412" font-size="9" fill="#3a3a3c">写屏障把成本压在"较稀疏的引用写入"上（写少读多），配合卡表/RSet 缩小扫描面——这是分代 GC 用少量写开销换回收局部性的根本。</text>
+</svg>

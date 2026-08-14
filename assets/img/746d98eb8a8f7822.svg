@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="540" viewBox="0 0 1080 540" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="540" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">RocksDB WAL 生命周期 · 创建 → 同步 → 删除(与 MemTable/Flush 联动)</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">每个活跃 MemTable 对应一个 WAL;sync 决定持久强度;所覆盖的所有 CF 都 flush 后 WAL 才可删</text>
+
+  <!-- three stages -->
+  <!-- create -->
+  <rect x="30" y="70" width="330" height="200" rx="13" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="46" y="92" font-size="11.5" font-weight="700" fill="#12402a">① 创建</text>
+  <rect x="46" y="104" width="300" height="46" rx="8" fill="#eafaf1" stroke="#bfe0cd"/><text x="60" y="124" font-size="8.8" font-weight="600" fill="#12402a">活跃 MemTable ↔ 一个 WAL</text><text x="60" y="140" font-size="8.3" fill="#2f6f4f">写先追加 WAL,再插 MemTable</text>
+  <rect x="46" y="158" width="300" height="46" rx="8" fill="#f5faf6" stroke="#cfe6d5"/><text x="60" y="178" font-size="8.8" font-weight="600" fill="#2c5a3a">切换 MemTable 时</text><text x="60" y="194" font-size="8.3" fill="#2f6f4f">MemTable 转 immutable,可能建新 WAL 接后续写</text>
+  <rect x="46" y="212" width="300" height="46" rx="8" fill="#fff" stroke="#cfe6d5"/><text x="60" y="232" font-size="8.5" fill="#2c5a3a">同一 WAL 可含多个 CF 的写</text><text x="60" y="248" font-size="8" fill="#93762e">(共享 WAL,见 CF 主线)</text>
+
+  <!-- sync -->
+  <rect x="375" y="70" width="330" height="200" rx="13" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="391" y="92" font-size="11.5" font-weight="700" fill="#1b2a4a">② 同步(持久强度)</text>
+  <rect x="391" y="104" width="300" height="66" rx="8" fill="#e6f7ee" stroke="#bfe0cd"/><text x="405" y="124" font-size="8.8" font-weight="600" fill="#12402a">sync=true → 每次 fsync</text><text x="405" y="142" font-size="8.3" fill="#2f6f4f">最持久:整机断电也不丢</text><text x="405" y="158" font-size="8.3" fill="#b1483a">最慢:每写一次落盘</text>
+  <rect x="391" y="178" width="300" height="66" rx="8" fill="#fff7e6" stroke="#e8cf9a"/><text x="405" y="198" font-size="8.8" font-weight="600" fill="#5a3410">sync=false(默认)→ OS 异步刷</text><text x="405" y="216" font-size="8.3" fill="#93762e">快:数据在 OS 缓冲,进程崩不丢</text><text x="405" y="232" font-size="8.3" fill="#b1483a">整机断电可能丢最后几条</text>
+  <text x="391" y="260" font-size="8" fill="#5b7db1">disableWAL=true:完全跳过(最快,崩溃丢未flush)</text>
+
+  <!-- delete -->
+  <rect x="720" y="70" width="330" height="200" rx="13" fill="#fdf4f3" stroke="#ecc6c1"/>
+  <text x="736" y="92" font-size="11.5" font-weight="700" fill="#7a2016">③ 删除(可回收时机)</text>
+  <rect x="736" y="104" width="300" height="66" rx="8" fill="#fdeeeb" stroke="#ecc6c1"/><text x="750" y="124" font-size="8.8" font-weight="600" fill="#7a2016">条件:所覆盖的所有 CF</text><text x="750" y="142" font-size="8.3" fill="#a5453a">相关 MemTable 都 flush 成 SST</text><text x="750" y="158" font-size="8.3" fill="#a5453a">→ 该 WAL 不再被恢复需要</text>
+  <rect x="736" y="178" width="300" height="40" rx="8" fill="#fff" stroke="#ecc6c1"/><text x="750" y="198" font-size="8.5" fill="#7a2016">可先归档(WAL archive)</text><text x="750" y="212" font-size="8" fill="#a5453a">供复制/增量备份(WAL_ttl_seconds)</text>
+  <rect x="736" y="226" width="300" height="32" rx="8" fill="#fdf6ea" stroke="#efdcb4"/><text x="750" y="246" font-size="8.3" fill="#5a3410">max_total_wal_size 超限 → 逼 flush 释放老 WAL</text>
+
+  <line x1="360" y1="170" x2="375" y2="170" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="705" y1="170" x2="720" y2="170" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+
+  <!-- interplay -->
+  <rect x="30" y="286" width="1020" height="150" rx="13" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="46" y="308" font-size="11" font-weight="700" fill="#1d1d1f">与 MemTable/Flush 的联动(为什么 Flush 能释放 WAL)</text>
+  <g font-size="8.5" text-anchor="middle">
+    <rect x="46" y="322" width="150" height="44" rx="8" fill="#eafaf1" stroke="#bfe0cd"/><text x="121" y="342" font-weight="600" fill="#12402a">写入</text><text x="121" y="358" fill="#2f6f4f">追加 WAL + 插 MemTable</text>
+    <rect x="256" y="322" width="150" height="44" rx="8" fill="#eef3fb" stroke="#bcd0ec"/><text x="331" y="342" font-weight="600" fill="#1b2a4a">MemTable 满</text><text x="331" y="358" fill="#5b7db1">转 immutable</text>
+    <rect x="466" y="322" width="150" height="44" rx="8" fill="#eef3fb" stroke="#bcd0ec"/><text x="541" y="342" font-weight="600" fill="#1b2a4a">Flush</text><text x="541" y="358" fill="#5b7db1">immutable → SST</text>
+    <rect x="676" y="322" width="150" height="44" rx="8" fill="#fdf6ea" stroke="#efdcb4"/><text x="751" y="342" font-weight="600" fill="#5a3410">数据已在 SST</text><text x="751" y="358" fill="#93762e">不再依赖 WAL</text>
+    <rect x="886" y="322" width="148" height="44" rx="8" fill="#fdeeeb" stroke="#ecc6c1"/><text x="960" y="342" font-weight="600" fill="#7a2016">老 WAL 可删</text><text x="960" y="358" fill="#a5453a">(所有CF都flush)</text>
+  </g>
+  <line x1="196" y1="344" x2="256" y2="344" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="406" y1="344" x2="466" y2="344" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="616" y1="344" x2="676" y2="344" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="826" y1="344" x2="886" y2="344" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <text x="46" y="392" font-size="9" fill="#6e6e73">· WAL 存在是为了保护"还在易失 MemTable 里、尚未落 SST"的数据;一旦这些数据都 flush 进持久 SST,对应 WAL 就完成使命</text>
+  <text x="46" y="410" font-size="9" fill="#6e6e73">· 共享 WAL 的坑:某个 CF 迟迟不 flush,会拖住整个 WAL 不能删 → WAL 堆积;atomic_flush 或调 flush 策略可缓解</text>
+  <text x="46" y="428" font-size="8.5" fill="#b1483a">· 归属:WAL 由【写入路径】追加;可删时机由【Flush】决定;跨 CF 覆盖关系见【ColumnFamily】</text>
+
+  <!-- notes -->
+  <rect x="30" y="452" width="1020" height="52" rx="13" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="46" y="474" font-size="11" font-weight="700" fill="#2c5a3a">一句话</text>
+  <text x="46" y="494" font-size="9" fill="#2f6f4f">· WAL 的一生跟着 MemTable 走:随活跃 MemTable 生,靠 sync 定持久强度,等它守护的数据都 flush 成 SST 才死 —— 这是"顺序日志换持久 + 可回收"的闭环</text>
+</svg>

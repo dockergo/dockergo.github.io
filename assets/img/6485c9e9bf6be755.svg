@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="700" viewBox="0 0 1060 700" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1060" height="700" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">双维模型：能力域（管什么）× 执行时机（driver 规划 / executor 执行）</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">接触面=编程接口层（多 API）；9 条支撑能力域按"计算·规划 / 计算·执行 / 资源 / 保障 / 流式"分层</text>
+
+  <text x="45" y="88" font-size="11" font-weight="700" fill="#1d1d1f">纵轴：能力域</text>
+  <text x="530" y="676" font-size="11" font-weight="700" fill="#1d1d1f" text-anchor="middle">横轴：执行时机　driver 侧规划　←→　executor 侧执行　←→　后台</text>
+
+  <!-- driver band -->
+  <rect x="150" y="100" width="360" height="530" rx="16" fill="#f3f7fc" stroke="#e3ecf7"/>
+  <text x="330" y="122" font-size="12" font-weight="600" fill="#274a78" text-anchor="middle">driver 侧规划</text>
+  <!-- executor band -->
+  <rect x="524" y="100" width="360" height="530" rx="16" fill="#fdf9f0" stroke="#efe3cd"/>
+  <text x="704" y="122" font-size="12" font-weight="600" fill="#7a5a1e" text-anchor="middle">executor 侧执行</text>
+  <!-- background band -->
+  <rect x="898" y="100" width="122" height="530" rx="16" fill="#fff3e0" stroke="#e8cf9a" stroke-dasharray="5 3"/>
+  <text x="959" y="122" font-size="11" font-weight="600" fill="#7a5a1e" text-anchor="middle">后台</text>
+
+  <!-- interface (top, spans driver) -->
+  <text x="60" y="152" font-size="10" font-weight="700" fill="#3d2a5a">接触面</text>
+  <rect x="164" y="138" width="332" height="40" rx="9" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/><text x="330" y="156" font-size="10.5" font-weight="600" fill="#3d2a5a" text-anchor="middle">编程接口层（RDD/DataFrame/SQL/Streaming）</text><text x="330" y="171" font-size="8" fill="#7a5da5" text-anchor="middle">SparkSession 统一入口 · driver 侧构建</text>
+
+  <!-- capability rows -->
+  <g font-size="9.5" text-anchor="middle">
+    <!-- 计算·规划 (driver) -->
+    <rect x="164" y="188" width="332" height="38" rx="8" fill="#e9f1fb" stroke="#c4d8f0"/><text x="330" y="205" font-weight="600" fill="#1b2a4a">Catalyst 优化</text><text x="330" y="219" font-size="8" fill="#5b7db1">分析→逻辑优化→物理→CBO（SQL/DF）</text>
+    <rect x="164" y="234" width="332" height="38" rx="8" fill="#e9f1fb" stroke="#c4d8f0"/><text x="330" y="251" font-weight="600" fill="#1b2a4a">Tungsten 代码生成</text><text x="330" y="265" font-size="8" fill="#5b7db1">whole-stage codegen（driver 生成，executor 跑）</text>
+    <!-- 计算·执行 (spans driver+executor) -->
+    <rect x="164" y="280" width="556" height="38" rx="8" fill="#eafaf1" stroke="#bfe0cd"/><text x="330" y="297" font-weight="600" fill="#12402a">执行模型（DAG/Stage/Task/lineage）</text><text x="330" y="311" font-size="8" fill="#2f6f4f">driver 切 stage 分派 · executor 跑 task</text>
+    <rect x="164" y="324" width="556" height="38" rx="8" fill="#eafaf1" stroke="#bfe0cd"/><text x="330" y="341" font-weight="600" fill="#12402a">Shuffle</text><text x="440" y="355" font-size="8" fill="#2f6f4f">executor 间 map write / reduce read · driver 侧 AQE 重优化</text>
+    <!-- 资源 (spans) -->
+    <rect x="164" y="370" width="694" height="38" rx="8" fill="#f6f2fb" stroke="#d9c9ec"/><text x="330" y="387" font-weight="600" fill="#3d2a5a">调度与集群管理</text><text x="500" y="401" font-size="8" fill="#7a5da5">driver DAG/Task 调度 · executor 领 task · cluster mgr 给资源 · 后台动态伸缩</text>
+    <rect x="524" y="416" width="334" height="38" rx="8" fill="#f6f2fb" stroke="#d9c9ec"/><text x="691" y="433" font-weight="600" fill="#3d2a5a">内存管理</text><text x="691" y="447" font-size="8" fill="#7a5da5">executor 统一内存 execution/storage 借用 + spill</text>
+    <rect x="524" y="462" width="334" height="38" rx="8" fill="#f6f2fb" stroke="#d9c9ec"/><text x="691" y="479" font-weight="600" fill="#3d2a5a">存储与缓存（BlockManager）</text><text x="691" y="493" font-size="8" fill="#7a5da5">executor 存块 · driver BlockManagerMaster 记位置</text>
+    <!-- 保障 (spans) -->
+    <rect x="164" y="508" width="694" height="38" rx="8" fill="#fbeef0" stroke="#f0cdd4"/><text x="330" y="525" font-weight="600" fill="#7a2230">容错</text><text x="500" y="539" font-size="8" fill="#a44">driver lineage 重算/重试决策 · executor 执行重算 · 后台推测执行</text>
+    <!-- 流式 (spans) -->
+    <rect x="164" y="552" width="694" height="38" rx="8" fill="#eef3fb" stroke="#bcd0ec"/><text x="330" y="569" font-weight="600" fill="#1b2a4a">Structured Streaming</text><text x="500" y="583" font-size="8" fill="#5b7db1">driver 驱动 micro-batch · executor 跑批 + state · 后台 checkpoint</text>
+  </g>
+
+  <!-- background-only note -->
+  <g text-anchor="middle" font-size="8" fill="#93762e">
+    <text x="959" y="392">动态资源伸缩</text>
+    <text x="959" y="524">推测执行</text>
+    <text x="959" y="576">checkpoint</text>
+    <text x="959" y="300">block 清理</text>
+  </g>
+
+  <line x1="180" y1="612" x2="1000" y2="612" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <text x="60" y="656" font-size="9" fill="#8a8a8f">读法：一行=一个能力域；跨 driver/executor 两栏说明它两侧都有职责（driver 规划、executor 执行）；后台栏承接异步部分。</text>
+</svg>

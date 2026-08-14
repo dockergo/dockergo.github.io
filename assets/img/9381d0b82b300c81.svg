@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="640" viewBox="0 0 1060 640" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1060" height="640" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">RDD 五要素与窄/宽依赖：不可变 + 血缘 = 容错与切 stage 的根</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">RDD.scala（五要素）· Dependency.scala（窄:52 / 宽 ShuffleDependency:84）</text>
+
+  <!-- 5 properties -->
+  <rect x="40" y="72" width="440" height="240" rx="14" fill="#f4eefb" stroke="#d9c7ec"/>
+  <text x="260" y="96" font-size="12" font-weight="700" fill="#3d2a5a" text-anchor="middle">RDD 五要素（RDD.scala）</text>
+  <g text-anchor="start" font-size="9">
+    <rect x="60" y="110" width="400" height="30" rx="7" fill="#fff" stroke="#d9c7ec"/><text x="74" y="129" fill="#3d2a5a">① 分区集 getPartitions（:125）——数据切成多少片</text>
+    <rect x="60" y="146" width="400" height="30" rx="7" fill="#fff" stroke="#d9c7ec"/><text x="74" y="165" fill="#3d2a5a">② 计算函数 compute（:116）——如何算一个分区</text>
+    <rect x="60" y="182" width="400" height="30" rx="7" fill="#fff" stroke="#d9c7ec"/><text x="74" y="201" fill="#3d2a5a">③ 依赖 getDependencies（:131）——父 RDD 是谁（=lineage）</text>
+    <rect x="60" y="218" width="400" height="30" rx="7" fill="#fff" stroke="#d9c7ec"/><text x="74" y="237" fill="#3d2a5a">④ 分区器 partitioner（:139）——shuffle 后如何分布</text>
+    <rect x="60" y="254" width="400" height="30" rx="7" fill="#fff" stroke="#d9c7ec"/><text x="74" y="273" fill="#3d2a5a">⑤ 优先位置 getPreferredLocations（:136）——locality</text>
+  </g>
+  <text x="260" y="302" font-size="8.5" fill="#7a5da5" text-anchor="middle">RDD 不可变：转换产生新 RDD，③ 的依赖链就是血缘</text>
+
+  <!-- narrow vs wide -->
+  <rect x="500" y="72" width="520" height="240" rx="14" fill="#f7f7f9" stroke="#e6e6ea"/>
+  <text x="760" y="96" font-size="12" font-weight="700" fill="#1d1d1f" text-anchor="middle">两类依赖决定 stage 边界</text>
+  <!-- narrow -->
+  <rect x="520" y="110" width="240" height="180" rx="12" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="640" y="130" font-size="10.5" font-weight="700" fill="#12402a" text-anchor="middle">窄依赖 NarrowDependency（:52）</text>
+  <g text-anchor="middle" font-size="7.5" fill="#2f6f4f">
+    <rect x="540" y="142" width="40" height="20" rx="4" fill="#fff" stroke="#bfe0cd"/><rect x="540" y="166" width="40" height="20" rx="4" fill="#fff" stroke="#bfe0cd"/><rect x="540" y="190" width="40" height="20" rx="4" fill="#fff" stroke="#bfe0cd"/>
+    <rect x="700" y="142" width="40" height="20" rx="4" fill="#f2fbf6" stroke="#cdeadb"/><rect x="700" y="166" width="40" height="20" rx="4" fill="#f2fbf6" stroke="#cdeadb"/><rect x="700" y="190" width="40" height="20" rx="4" fill="#f2fbf6" stroke="#cdeadb"/>
+  </g>
+  <g stroke="#9ccbb0" stroke-width="1.2" fill="none">
+    <line x1="580" y1="152" x2="700" y2="152" marker-end="url(#ar)"/>
+    <line x1="580" y1="176" x2="700" y2="176" marker-end="url(#ar)"/>
+    <line x1="580" y1="200" x2="700" y2="200" marker-end="url(#ar)"/>
+  </g>
+  <text x="640" y="232" font-size="8" fill="#2f6f4f" text-anchor="middle">子分区只依赖父固定分区（1对1）</text>
+  <text x="640" y="248" font-size="8.5" font-weight="600" fill="#12402a" text-anchor="middle">→ 可流水线，同一 stage 内（:49-50）</text>
+  <text x="640" y="266" font-size="7.5" fill="#4c8567" text-anchor="middle">OneToOne(:266) / Range(:280)</text>
+  <text x="640" y="280" font-size="7.5" fill="#4c8567" text-anchor="middle">map/filter/union</text>
+  <!-- wide -->
+  <rect x="770" y="110" width="240" height="180" rx="12" fill="#fff7e6" stroke="#e8cf9a"/>
+  <text x="890" y="130" font-size="10.5" font-weight="700" fill="#5a3410" text-anchor="middle">宽依赖 ShuffleDependency（:84）</text>
+  <g text-anchor="middle" font-size="7.5">
+    <rect x="790" y="142" width="36" height="20" rx="4" fill="#fff" stroke="#e8cf9a"/><rect x="790" y="166" width="36" height="20" rx="4" fill="#fff" stroke="#e8cf9a"/><rect x="790" y="190" width="36" height="20" rx="4" fill="#fff" stroke="#e8cf9a"/>
+    <rect x="954" y="152" width="36" height="20" rx="4" fill="#fdf6ea" stroke="#efdcb4"/><rect x="954" y="180" width="36" height="20" rx="4" fill="#fdf6ea" stroke="#efdcb4"/>
+  </g>
+  <g stroke="#d8b48a" stroke-width="1" fill="none">
+    <line x1="826" y1="152" x2="954" y2="162"/><line x1="826" y1="152" x2="954" y2="190"/>
+    <line x1="826" y1="176" x2="954" y2="162" marker-end="url(#ar)"/><line x1="826" y1="176" x2="954" y2="190" marker-end="url(#ar)"/>
+    <line x1="826" y1="200" x2="954" y2="162"/><line x1="826" y1="200" x2="954" y2="190"/>
+  </g>
+  <text x="890" y="232" font-size="8" fill="#93762e" text-anchor="middle">子分区依赖父所有分区（多对多）</text>
+  <text x="890" y="248" font-size="8.5" font-weight="600" fill="#5a3410" text-anchor="middle">→ 切 stage 边界 + shuffle</text>
+  <text x="890" y="266" font-size="7.5" fill="#b08843" text-anchor="middle">携 partitioner:86 · shuffleId:129</text>
+  <text x="890" y="280" font-size="7.5" fill="#b08843" text-anchor="middle">reduceByKey/join/groupBy</text>
+
+  <!-- immutable + lineage callout -->
+  <rect x="40" y="330" width="980" height="90" rx="13" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="60" y="354" font-size="11" font-weight="700" fill="#12402a">为什么"不可变 + 血缘"是根</text>
+  <text x="60" y="376" font-size="9.5" fill="#2f6f4f">· RDD 不可变 → 转换只是记录"从父怎么算"，不改父 → 依赖链（lineage）完整可回溯</text>
+  <text x="60" y="394" font-size="9.5" fill="#2f6f4f">· 丢分区 → 沿血缘重算（容错，见深化）；依赖类型 → 决定切不切 stage（执行，见下张）</text>
+  <text x="60" y="412" font-size="9" fill="#4c8567">· 一个概念（RDD 依赖）同时支撑了容错与调度两大机制——这是 Spark 设计的精妙处</text>
+
+  <rect x="40" y="436" width="980" height="90" rx="12" fill="#f7f7f9" stroke="#e6e6ea"/>
+  <text x="60" y="460" font-size="11" font-weight="700" fill="#1d1d1f">一句话</text>
+  <text x="60" y="482" font-size="10" fill="#4b4b50">RDD 由五要素定义、不可变，其依赖链即血缘。依赖分两类：窄依赖（1对1/固定）可流水线折进同一 stage；</text>
+  <text x="60" y="500" font-size="10" fill="#4b4b50">宽依赖（shuffle，多对多，携 partitioner+shuffleId）是 stage 边界。这一个"依赖"概念同时决定了容错（血缘重算）与调度（切 stage）。</text>
+</svg>

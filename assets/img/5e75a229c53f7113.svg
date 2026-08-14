@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="540" viewBox="0 0 1060 540" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1060" height="540" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Tungsten 三支柱：codegen + UnsafeRow + 堆外内存</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">Catalyst 产物理计划后，Tungsten 让它跑得像手写代码 · 只服务 DataFrame/SQL（RDD 不经）</text>
+
+  <g text-anchor="middle">
+    <rect x="40" y="80" width="310" height="180" rx="14" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+    <text x="195" y="106" font-size="12" font-weight="700" fill="#12402a">① whole-stage codegen</text>
+    <text x="195" y="130" font-size="9" fill="#2f6f4f">一串算子 → 一个 Java 函数</text>
+    <text x="195" y="150" font-size="9" fill="#2f6f4f">消除虚函数调用</text>
+    <text x="195" y="170" font-size="9" fill="#2f6f4f">数据在寄存器/栈流转</text>
+    <text x="195" y="196" font-size="8.5" fill="#4c8567">WholeStageCodegenExec:643</text>
+    <text x="195" y="216" font-size="8.5" fill="#4c8567">CodegenSupport produce-consume</text>
+    <text x="195" y="240" font-size="8" fill="#8aa6cf">解决：Volcano 逐行虚调用慢</text>
+
+    <rect x="375" y="80" width="310" height="180" rx="14" fill="#e9f1fb" stroke="#c4d8f0" filter="url(#soft)"/>
+    <text x="530" y="106" font-size="12" font-weight="700" fill="#1b2a4a">② UnsafeRow 二进制行</text>
+    <text x="530" y="130" font-size="9" fill="#5b7db1">紧凑二进制格式</text>
+    <text x="530" y="150" font-size="9" fill="#5b7db1">null 位图+固定区+变长区</text>
+    <text x="530" y="170" font-size="9" fill="#5b7db1">免 Java 对象头开销</text>
+    <text x="530" y="196" font-size="8.5" fill="#8aa6cf">UnsafeRow.java:63</text>
+    <text x="530" y="216" font-size="8.5" fill="#8aa6cf">缓存友好 · 免反序列化比较</text>
+    <text x="530" y="240" font-size="8" fill="#8aa6cf">解决：Java 对象开销大、GC 压力</text>
+
+    <rect x="710" y="80" width="310" height="180" rx="14" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+    <text x="865" y="106" font-size="12" font-weight="700" fill="#5a3410">③ 堆外内存</text>
+    <text x="865" y="130" font-size="9" fill="#93762e">TaskMemoryManager 直接管字节</text>
+    <text x="865" y="150" font-size="9" fill="#93762e">绕开 JVM 堆与 GC</text>
+    <text x="865" y="170" font-size="9" fill="#93762e">精确控制内存、可 spill</text>
+    <text x="865" y="196" font-size="8.5" fill="#b08843">MemoryConsumer / TaskMemoryManager</text>
+    <text x="865" y="216" font-size="8.5" fill="#b08843">spark.memory.offHeap.enabled</text>
+    <text x="865" y="240" font-size="8" fill="#b08843">解决：GC 停顿、内存不可控</text>
+  </g>
+
+  <rect x="40" y="284" width="980" height="70" rx="13" fill="#f4eefb" stroke="#d9c7ec"/>
+  <text x="60" y="308" font-size="11" font-weight="700" fill="#3d2a5a">三者协同</text>
+  <text x="60" y="330" font-size="9.5" fill="#7a5da5">· 生成的 codegen 代码直接操作 UnsafeRow 字节（免对象/免反序列化）；UnsafeRow 存在堆外内存里（免 GC）</text>
+  <text x="60" y="348" font-size="9" fill="#9a7cc4">· 三支柱合力把 Spark 的 CPU 效率从"解释执行"推近"编译执行"——DataFrame/SQL 比 RDD 快的执行期根源</text>
+
+  <rect x="40" y="366" width="980" height="90" rx="13" fill="#fbeef0" stroke="#f0cdd4"/>
+  <text x="60" y="390" font-size="11" font-weight="700" fill="#7a2230">与 RDD 的差异</text>
+  <text x="60" y="412" font-size="9.5" fill="#a44">· RDD 不过 Catalyst → 也不经 Tungsten：跑普通 JVM 对象、Volcano 迭代器、堆内内存</text>
+  <text x="60" y="430" font-size="9.5" fill="#a44">· DataFrame/SQL 过 Catalyst 产 SparkPlan → Tungsten codegen 编译执行——这是结构化 API 快的执行期来源</text>
+  <text x="60" y="448" font-size="9" fill="#7a2230">· 所以：结构化数据用 DataFrame/SQL，不仅规划期（Catalyst）快，执行期（Tungsten）也快</text>
+
+  <rect x="40" y="468" width="980" height="60" rx="12" fill="#f7f7f9" stroke="#e6e6ea"/>
+  <text x="60" y="492" font-size="11" font-weight="700" fill="#1d1d1f">一句话</text>
+  <text x="60" y="514" font-size="10" fill="#4b4b50">Tungsten 三支柱——whole-stage codegen（算子融成一个函数免虚调用）、UnsafeRow（紧凑二进制行免对象开销）、堆外内存（绕 GC）——把 CPU 效率推近手写代码，是 DataFrame/SQL 执行期的加速引擎。</text>
+</svg>

@@ -1,0 +1,142 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="720" viewBox="0 0 1120 720" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="aB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#4a7fd0"/></marker>
+    <marker id="aG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+    <marker id="aA" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#d99a2b"/></marker>
+  </defs>
+  <rect width="1120" height="720" fill="#fbfbfd"/>
+
+  <text x="30" y="34" font-size="17" font-weight="700" fill="#1d1d1f">分治 · 原理总览：把问题拆成同构子问题 → 递归求解 → 合并子解</text>
+  <text x="30" y="56" font-size="11" fill="#6e6e73">递归树刻画分裂过程，主定理 T(n)=a·T(n/b)+f(n) 给出复杂度直觉；归并 / 快排 / 二分 / 建树 / 汉诺塔都是同一骨架的特例</text>
+
+  <!-- 图例 -->
+  <rect x="30" y="72" width="12" height="12" rx="2" fill="#d99a2b"/><text x="48" y="82" font-size="10.5" fill="#3a3a3c">分 · 划分子问题</text>
+  <rect x="190" y="72" width="12" height="12" rx="2" fill="#4a7fd0"/><text x="208" y="82" font-size="10.5" fill="#3a3a3c">治 · 递归求解</text>
+  <rect x="330" y="72" width="12" height="12" rx="2" fill="#2f9e6e"/><text x="348" y="82" font-size="10.5" fill="#3a3a3c">合 · 合并子解</text>
+  <rect x="470" y="72" width="12" height="12" rx="2" fill="#8a6fd0"/><text x="488" y="82" font-size="10.5" fill="#3a3a3c">递归骨架 / 边界</text>
+
+  <!-- ===== ① 三步骨架 ===== -->
+  <text x="30" y="116" font-size="12" font-weight="700" fill="#8a5a12">① 分治三步：分 → 治 → 合（递归到最小子问题 base case 触底后自底向上合并）</text>
+
+  <rect x="40" y="130" width="300" height="74" rx="12" fill="#fdf3e0" stroke="#e7c07a" filter="url(#soft)"/>
+  <text x="60" y="156" font-size="14" font-weight="700" fill="#8a5a12">分 · 划分</text>
+  <text x="60" y="178" font-size="11" fill="#5a4a2a">把原问题拆成 a 个规模约 n/b 的</text>
+  <text x="60" y="194" font-size="11" fill="#5a4a2a">同构子问题（结构与原问题一致）</text>
+
+  <rect x="410" y="130" width="300" height="74" rx="12" fill="#eaf1fb" stroke="#4a7fd0" stroke-width="1.3" filter="url(#soft)"/>
+  <text x="430" y="156" font-size="14" font-weight="700" fill="#20375e">治 · 求解</text>
+  <text x="430" y="178" font-size="11" fill="#3a4a63">对每个子问题递归地施加同一策略，</text>
+  <text x="430" y="194" font-size="11" fill="#3a4a63">直到触底（空 / 单元素）直接返回</text>
+
+  <rect x="780" y="130" width="300" height="74" rx="12" fill="#e6f4ec" stroke="#2f9e6e" stroke-width="1.3" filter="url(#soft)"/>
+  <text x="800" y="156" font-size="14" font-weight="700" fill="#1f6b47">合 · 合并</text>
+  <text x="800" y="178" font-size="11" fill="#2a5a43">以 f(n) 的代价把子解拼成原解</text>
+  <text x="800" y="194" font-size="11" fill="#2a5a43">（归并两段 / 链接左右子树 …）</text>
+
+  <line x1="340" y1="167" x2="410" y2="167" stroke="#8a6fd0" stroke-width="2" marker-end="url(#aB)"/>
+  <line x1="710" y1="167" x2="780" y2="167" stroke="#8a6fd0" stroke-width="2" marker-end="url(#aG)"/>
+  <text x="375" y="160" font-size="10" fill="#6e6e73" text-anchor="middle">递归</text>
+  <text x="745" y="160" font-size="10" fill="#6e6e73" text-anchor="middle">回溯</text>
+
+  <!-- ===== ② 递归树 ===== -->
+  <text x="30" y="238" font-size="12" font-weight="700" fill="#20375e">② 递归树：每层子问题数 ×a、规模 ÷b —— 向下是「分」，触底后向上是「合」</text>
+
+  <!-- 分/合 侧向箭头 -->
+  <line x1="46" y1="262" x2="46" y2="426" stroke="#d99a2b" stroke-width="2" marker-end="url(#aA)"/>
+  <text x="40" y="256" font-size="10" fill="#8a5a12">分↓</text>
+  <line x1="556" y1="426" x2="556" y2="262" stroke="#2f9e6e" stroke-width="2" marker-end="url(#aG)"/>
+  <text x="548" y="256" font-size="10" fill="#1f6b47">合↑</text>
+
+  <!-- Level 0 -->
+  <rect x="256" y="262" width="90" height="30" rx="6" fill="#eaf1fb" stroke="#4a7fd0" stroke-width="1.3"/><text x="301" y="282" font-size="12" font-weight="700" fill="#20375e" text-anchor="middle">T(n)</text>
+  <!-- Level 1 -->
+  <rect x="140" y="326" width="80" height="28" rx="6" fill="#eaf1fb" stroke="#c6d9f2"/><text x="180" y="345" font-size="11" fill="#20375e" text-anchor="middle">T(n/2)</text>
+  <rect x="380" y="326" width="80" height="28" rx="6" fill="#eaf1fb" stroke="#c6d9f2"/><text x="420" y="345" font-size="11" fill="#20375e" text-anchor="middle">T(n/2)</text>
+  <!-- Level 2 -->
+  <rect x="78" y="388" width="64" height="26" rx="6" fill="#f2f7ff" stroke="#c6d9f2"/><text x="110" y="405" font-size="10" fill="#20375e" text-anchor="middle">T(n/4)</text>
+  <rect x="198" y="388" width="64" height="26" rx="6" fill="#f2f7ff" stroke="#c6d9f2"/><text x="230" y="405" font-size="10" fill="#20375e" text-anchor="middle">T(n/4)</text>
+  <rect x="338" y="388" width="64" height="26" rx="6" fill="#f2f7ff" stroke="#c6d9f2"/><text x="370" y="405" font-size="10" fill="#20375e" text-anchor="middle">T(n/4)</text>
+  <rect x="458" y="388" width="64" height="26" rx="6" fill="#f2f7ff" stroke="#c6d9f2"/><text x="490" y="405" font-size="10" fill="#20375e" text-anchor="middle">T(n/4)</text>
+
+  <!-- edges L0->L1 (orthogonal) -->
+  <path d="M301 292 V310 H180 V326" fill="none" stroke="#8a6fd0" stroke-width="1.4"/>
+  <path d="M301 292 V310 H420 V326" fill="none" stroke="#8a6fd0" stroke-width="1.4"/>
+  <!-- edges L1->L2 -->
+  <path d="M180 354 V372 H110 V388" fill="none" stroke="#8a6fd0" stroke-width="1.2"/>
+  <path d="M180 354 V372 H230 V388" fill="none" stroke="#8a6fd0" stroke-width="1.2"/>
+  <path d="M420 354 V372 H370 V388" fill="none" stroke="#8a6fd0" stroke-width="1.2"/>
+  <path d="M420 354 V372 H490 V388" fill="none" stroke="#8a6fd0" stroke-width="1.2"/>
+
+  <text x="301" y="432" font-size="10" fill="#a1a1a6" text-anchor="middle">⋯ 继续二分，共 log₂n 层，触底 base case ⋯</text>
+
+  <!-- 每层代价标注 -->
+  <text x="70" y="282" font-size="9.5" fill="#8a5a12">合并 f(n)</text>
+  <text x="66" y="345" font-size="9.5" fill="#8a5a12">2·f(n/2)</text>
+  <text x="66" y="378" font-size="9.5" fill="#8a5a12">4·f(n/4)</text>
+
+  <!-- ===== ③ 主定理直觉 ===== -->
+  <rect x="580" y="248" width="510" height="196" rx="14" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="602" y="274" font-size="13" font-weight="700" fill="#1d1d1f">主定理直觉　T(n) = a·T(n/b) + f(n)</text>
+  <text x="602" y="296" font-size="10.5" fill="#4a4a4f">a = 子问题个数　b = 规模缩小倍数　f(n) = 分与合的代价</text>
+  <text x="602" y="314" font-size="10" fill="#6e6e73">比较合并代价 f(n) 与叶子总量 n^(log_b a)，谁大谁主导：</text>
+
+  <circle cx="612" cy="336" r="5" fill="#2f9e6e"/><text x="626" y="340" font-size="10.5" fill="#2a5a43">① 合并重：f(n) 更大 → 总复杂度 ≈ O(f(n))</text>
+  <circle cx="612" cy="362" r="5" fill="#4a7fd0"/><text x="626" y="366" font-size="10.5" fill="#3a4a63">② 均衡：f(n)≈n^(log_b a) → ×log n 层 → O(n^(log_b a)·log n)</text>
+  <circle cx="612" cy="388" r="5" fill="#d99a2b"/><text x="626" y="392" font-size="10.5" fill="#8a5a12">③ 分裂重：叶子更多 → 总复杂度 ≈ O(n^(log_b a))</text>
+
+  <rect x="602" y="406" width="466" height="28" rx="8" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="614" y="424" font-size="10" fill="#4a4a4f">归并 / 快排 属②→O(n log n)；二分 a=1 属②→O(log n)；汉诺塔是「规模减一」不折半，另算</text>
+
+  <!-- ===== ④ 成员归位 ===== -->
+  <text x="30" y="474" font-size="12" font-weight="700" fill="#8a5a12">④ 成员归位：都是分治，只是 (a, b, f) 不同 —— 本条目聚焦 二分 / 建树 / 汉诺塔 三例</text>
+
+  <!-- 5 cards -->
+  <!-- card1 二分 (DC1) -->
+  <rect x="40" y="490" width="200" height="168" rx="12" fill="#ffffff" stroke="#d99a2b" stroke-width="1.6" filter="url(#soft)"/>
+  <text x="56" y="514" font-size="12.5" font-weight="700" fill="#8a5a12">二分查找 · DC1</text>
+  <rect x="56" y="524" width="168" height="26" rx="6" fill="#eaf1fb" stroke="#c6d9f2"/><text x="140" y="541" font-size="10.5" fill="#20375e" text-anchor="middle">T(n)=T(n/2)+O(1)</text>
+  <text x="56" y="570" font-size="10.5" fill="#4a4a4f">a=1　b=2　f=O(1)</text>
+  <text x="56" y="590" font-size="10.5" fill="#4a4a4f">只递归有目标的一侧</text>
+  <text x="140" y="628" font-size="20" font-weight="700" fill="#2f9e6e" text-anchor="middle">O(log n)</text>
+  <text x="140" y="648" font-size="9.5" fill="#6e6e73" text-anchor="middle">丢掉半个区间</text>
+
+  <!-- card2 归并 -->
+  <rect x="250" y="490" width="200" height="168" rx="12" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="266" y="514" font-size="12.5" font-weight="700" fill="#1f6b47">归并排序</text>
+  <rect x="266" y="524" width="168" height="26" rx="6" fill="#e6f4ec" stroke="#a8ddc3"/><text x="350" y="541" font-size="10.5" fill="#1f6b47" text-anchor="middle">T(n)=2T(n/2)+O(n)</text>
+  <text x="266" y="570" font-size="10.5" fill="#4a4a4f">a=2　b=2　f=O(n)</text>
+  <text x="266" y="590" font-size="10.5" fill="#4a4a4f">合并两段有序子数组</text>
+  <text x="350" y="628" font-size="18" font-weight="700" fill="#2f9e6e" text-anchor="middle">O(n log n)</text>
+  <text x="350" y="648" font-size="9.5" fill="#6e6e73" text-anchor="middle">均衡型②</text>
+
+  <!-- card3 快排 -->
+  <rect x="460" y="490" width="200" height="168" rx="12" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="476" y="514" font-size="12.5" font-weight="700" fill="#1f6b47">快速排序</text>
+  <rect x="476" y="524" width="168" height="26" rx="6" fill="#e6f4ec" stroke="#a8ddc3"/><text x="560" y="541" font-size="10.5" fill="#1f6b47" text-anchor="middle">T(n)=2T(n/2)+O(n)</text>
+  <text x="476" y="570" font-size="10.5" fill="#4a4a4f">划分即「分」也即「合」</text>
+  <text x="476" y="590" font-size="10.5" fill="#4a4a4f">基准把数组分两半</text>
+  <text x="560" y="628" font-size="17" font-weight="700" fill="#2f9e6e" text-anchor="middle">≈O(n log n)</text>
+  <text x="560" y="648" font-size="9.5" fill="#6e6e73" text-anchor="middle">最坏 O(n²)</text>
+
+  <!-- card4 建树 (DC2) -->
+  <rect x="670" y="490" width="200" height="168" rx="12" fill="#ffffff" stroke="#d99a2b" stroke-width="1.6" filter="url(#soft)"/>
+  <text x="686" y="514" font-size="12.5" font-weight="700" fill="#8a5a12">构建二叉树 · DC2</text>
+  <rect x="686" y="524" width="168" height="26" rx="6" fill="#fdf3e0" stroke="#e7c07a"/><text x="770" y="541" font-size="10.5" fill="#8a5a12" text-anchor="middle">T=2T(·)+O(1)</text>
+  <text x="686" y="570" font-size="10.5" fill="#4a4a4f">前序定根，中序分左右</text>
+  <text x="686" y="590" font-size="10.5" fill="#4a4a4f">哈希表 O(1) 定位根</text>
+  <text x="770" y="628" font-size="20" font-weight="700" fill="#2f9e6e" text-anchor="middle">O(n)</text>
+  <text x="770" y="648" font-size="9.5" fill="#6e6e73" text-anchor="middle">每节点建一次</text>
+
+  <!-- card5 汉诺塔 (DC3) -->
+  <rect x="880" y="490" width="200" height="168" rx="12" fill="#ffffff" stroke="#d99a2b" stroke-width="1.6" filter="url(#soft)"/>
+  <text x="896" y="514" font-size="12.5" font-weight="700" fill="#8a5a12">汉诺塔 · DC3</text>
+  <rect x="896" y="524" width="168" height="26" rx="6" fill="#fdf3e0" stroke="#e7c07a"/><text x="980" y="541" font-size="10.5" fill="#8a5a12" text-anchor="middle">T(n)=2T(n-1)+O(1)</text>
+  <text x="896" y="570" font-size="10.5" fill="#8a4038">规模减一，非折半</text>
+  <text x="896" y="590" font-size="10.5" fill="#4a4a4f">子问题数 a=2 → 指数树</text>
+  <text x="980" y="628" font-size="20" font-weight="700" fill="#d1544a" text-anchor="middle">O(2ⁿ)</text>
+  <text x="980" y="648" font-size="9.5" fill="#6e6e73" text-anchor="middle">2ⁿ-1 次移动</text>
+
+  <text x="30" y="694" font-size="10.5" fill="#6e6e73">要点：分治三要素 = 子问题同构可分解 · 子问题相互独立（无重叠）· 子解可合并；重叠子问题应改用动态规划记忆化。</text>
+  <text x="30" y="710" font-size="10.5" fill="#6e6e73">效率来源：把 O(n²) 级操作拆小后常数变优（n>4 已划算），且子问题独立 → 天然可并行。</text>
+</svg>

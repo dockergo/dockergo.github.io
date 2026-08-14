@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1140" height="600" viewBox="0 0 1140 600" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="aP" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#8a5cae"/></marker>
+    <marker id="aG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+    <marker id="aR" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#d1544a"/></marker>
+  </defs>
+  <rect width="1140" height="600" fill="#fbfbfd"/>
+
+  <text x="30" y="32" font-size="15" font-weight="700" fill="#1d1d1f">Kafka 幂等生产者 · PID + 每分区严格递增序列号，broker 端 checkSequence 识别重复 batch 并丢弃——这是"幂等键去重"最典范的真实实现</text>
+  <text x="30" y="53" font-size="10.5" fill="#6e6e73">ProducerAppendInfo.checkSequence 校验序列号；ProducerStateEntry.findDuplicateBatch 按 PID+序列号做去重判定——正是这一机制让"重试发送"在 broker 侧变得安全</text>
+
+  <!-- 图例 -->
+  <line x1="30" y1="80" x2="54" y2="80" stroke="#8a5cae" stroke-width="2" marker-end="url(#aP)"/>
+  <text x="60" y="84" font-size="10" fill="#3a3a3c">生产者发送（含重试）</text>
+  <line x1="230" y1="80" x2="254" y2="80" stroke="#2f9e6e" stroke-width="2" marker-end="url(#aG)"/>
+  <text x="260" y="84" font-size="10" fill="#3a3a3c">序列号连续 → 正常追加</text>
+  <line x1="450" y1="80" x2="474" y2="80" stroke="#d1544a" stroke-width="2" stroke-dasharray="5 3" marker-end="url(#aR)"/>
+  <text x="480" y="84" font-size="10" fill="#3a3a3c">序列号重复 → 判重丢弃</text>
+  <text x="1110" y="84" font-size="10" fill="#a1a1a6" text-anchor="end">Kafka · 源码级核实</text>
+  <line x1="30" y1="96" x2="1110" y2="96" stroke="#e4e7ec" stroke-width="1"/>
+
+  <!-- Panel A: PID + 序列号分配 -->
+  <rect x="30" y="112" width="330" height="230" rx="14" fill="#f4eefb" stroke="#dcc9ef" filter="url(#soft)"/>
+  <text x="195" y="138" font-size="12.5" font-weight="700" fill="#6f3ea8" text-anchor="middle">生产者 · PID + 每分区序列号</text>
+  <text x="50" y="162" font-size="9.5" fill="#5a3a7a">初始化时向 broker 申请 PID</text>
+  <text x="50" y="182" font-size="9.5" fill="#5a3a7a">（Producer ID，会话级标识）</text>
+  <rect x="50" y="196" width="260" height="60" rx="8" fill="#ffffff" stroke="#dcc9ef"/>
+  <text x="64" y="216" font-size="9" font-weight="700" fill="#6f3ea8">每个分区独立维护序列号</text>
+  <text x="64" y="234" font-size="8.5" fill="#5a3a7a">同一 PID 下，发往同一分区的</text>
+  <text x="64" y="248" font-size="8.5" fill="#5a3a7a">batch 序列号严格递增（0,1,2…）</text>
+  <text x="50" y="278" font-size="9.5" fill="#5a3a7a">发送 batch #5 超时未确认</text>
+  <text x="50" y="298" font-size="9.5" font-weight="700" fill="#6f3ea8">→ 客户端重试，重发同一 batch #5</text>
+  <text x="50" y="318" font-size="8.5" fill="#8a6bab">（序列号不变，因为逻辑上是同一条消息）</text>
+
+  <line x1="360" y1="220" x2="400" y2="220" stroke="#8a5cae" stroke-width="2" marker-end="url(#aP)"/>
+  <text x="364" y="212" font-size="8.5" fill="#5a3a7a">batch #5（重发）</text>
+
+  <!-- Panel B: broker 端状态 -->
+  <rect x="400" y="112" width="330" height="230" rx="14" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="565" y="138" font-size="12.5" font-weight="700" fill="#1d1d1f" text-anchor="middle">Broker · ProducerStateEntry（per PID+分区）</text>
+  <rect x="418" y="152" width="294" height="70" rx="9" fill="#ffffff" stroke="#e4e7ec"/>
+  <text x="432" y="172" font-size="9.5" font-weight="700" fill="#1d1d1f">已记录状态</text>
+  <text x="432" y="190" font-size="8.5" fill="#4a4a4f">lastSequence = 4（batch #4 已确认写入）</text>
+  <text x="432" y="206" font-size="8.5" fill="#4a4a4f">近期已处理 batch 的序列号窗口</text>
+  <rect x="418" y="232" width="294" height="94" rx="9" fill="#eaf1fb" stroke="#c6d9f2"/>
+  <text x="432" y="252" font-size="9.5" font-weight="700" fill="#20375e">ProducerAppendInfo.checkSequence</text>
+  <text x="432" y="270" font-size="8.5" fill="#3a4a63">校验新到 batch 的序列号是否</text>
+  <text x="432" y="286" font-size="8.5" fill="#3a4a63">= lastSequence + 1（严格递增）</text>
+  <text x="432" y="304" font-size="8.5" fill="#3a4a63">epoch 变化时序列号随之重置校验</text>
+  <text x="432" y="318" font-size="8.5" fill="#5a7099">（防跨会话的序列号误判）</text>
+
+  <line x1="730" y1="220" x2="770" y2="220" stroke="#c99a3a" stroke-width="1.8" marker-end="url(#aP)"/>
+
+  <!-- Panel C: 判定分支 -->
+  <rect x="770" y="112" width="340" height="230" rx="14" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="940" y="138" font-size="12.5" font-weight="700" fill="#1d1d1f" text-anchor="middle">ProducerStateEntry.findDuplicateBatch</text>
+
+  <rect x="788" y="154" width="304" height="80" rx="9" fill="#fbe6e3" stroke="#e8a79f"/>
+  <text x="802" y="176" font-size="10" font-weight="700" fill="#8a4038">情形①：序列号 = 5，命中重复窗口</text>
+  <text x="802" y="196" font-size="8.5" fill="#b06a60">findDuplicateBatch 判定这是 batch #5</text>
+  <text x="802" y="212" font-size="8.5" fill="#b06a60">的重发 → 直接返回此前已记录的</text>
+  <text x="802" y="226" font-size="8.5" fill="#b06a60">写入结果，不重复追加日志</text>
+
+  <rect x="788" y="242" width="304" height="80" rx="9" fill="#eaf6f0" stroke="#bfe3d1"/>
+  <text x="802" y="264" font-size="10" font-weight="700" fill="#2f6b4e">情形②：序列号 = 5，未命中（首次）</text>
+  <text x="802" y="284" font-size="8.5" fill="#3f8a63">checkSequence 通过 → 正常追加</text>
+  <text x="802" y="300" font-size="8.5" fill="#3f8a63">→ lastSequence 更新为 5</text>
+  <text x="802" y="314" font-size="8.5" fill="#3f8a63">→ 记入去重窗口供后续重发比对</text>
+
+  <!-- Panel D: 效果总结 -->
+  <rect x="30" y="366" width="1080" height="120" rx="14" fill="#e4f4f4" stroke="#bfe1e1" filter="url(#soft)"/>
+  <text x="52" y="392" font-size="12" font-weight="700" fill="#1d6b6e">效果：客户端"发送超时后重试"这个动作，在 broker 侧变成了安全操作</text>
+  <text x="52" y="414" font-size="9.5" fill="#1a6d70">客户端不需要自己判断"上次到底写成功了没有"——即使超时其实已经写入成功、客户端仍然重发，broker 也只会写一次。</text>
+  <text x="52" y="432" font-size="9.5" fill="#1a6d70">这就是"幂等键去重"的典范实现：幂等键 = PID + 分区 + 序列号，由 broker 端权威判定是否重复，客户端无需协调即可安全重试。</text>
+  <text x="52" y="454" font-size="9.5" fill="#1a6d70">这正是 at-least-once 投递下做到"发送层面幂等"的机制——保证的是 produce 请求重试不重复写入，与 Kafka 消费端/事务相关的更大投递语义保证是另一层话题，本图不展开。</text>
+  <text x="52" y="474" font-size="8.5" fill="#4a8a8c">→ 这一"幂等使重试安全"的关系，正是 B5（nginx proxy_next_upstream 安全重试）需要依赖的前提，两者配对关系见 CMP。</text>
+
+  <text x="52" y="518" font-size="9" fill="#8a97ab">范围说明：本图只覆盖幂等生产者的 PID+序列号去重机制本身；消费者组、事务生产者、exactly-once 等更大话题不在本图断言范围内。</text>
+</svg>

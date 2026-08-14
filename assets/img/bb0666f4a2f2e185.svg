@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="470" viewBox="0 0 900 470" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+    <marker id="arG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#7ab48f"/>
+    </marker>
+  </defs>
+  <rect width="900" height="470" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">栈增长触发链 · 函数序言检查 → morestack（切 g0）→ newstack 决策</text>
+  <text x="30" y="48" font-size="11" fill="#6e6e73">增长只发生在函数调用边界（序言），运行中的函数不会「半路栈爆」——进入前已保证栈够用</text>
+
+  <!-- step 1: prologue check (blue - 编译器驱动) -->
+  <rect x="30" y="72" width="300" height="118" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="46" y="95" font-size="12.5" font-weight="600" fill="#1b2a4a">① 函数序言检查</text>
+  <text x="46" y="114" font-size="10.5" fill="#5b7db1">编译器（SSA 后端）在每个非叶</text>
+  <text x="46" y="130" font-size="10.5" fill="#5b7db1">/ 大帧函数序言插入一句比较：</text>
+  <rect x="46" y="140" width="268" height="34" rx="8" fill="#ffffff" stroke="#cfe0f2"/>
+  <text x="180" y="162" font-size="11.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">SP &lt; g.stackguard0 ?</text>
+
+  <!-- decision: enough? -->
+  <line x1="330" y1="131" x2="374" y2="131" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <rect x="376" y="88" width="180" height="86" rx="12" fill="#f5f0fb" stroke="#ddcdf0" filter="url(#soft)"/>
+  <text x="466" y="120" font-size="11.5" font-weight="600" fill="#3d2a5a" text-anchor="middle">栈够用？</text>
+  <text x="466" y="141" font-size="10" fill="#7d5bb1" text-anchor="middle">SP 是否逼近哨兵</text>
+  <text x="466" y="158" font-size="10" fill="#7d5bb1" text-anchor="middle">判定分支</text>
+
+  <!-- yes: continue (green) -->
+  <line x1="556" y1="110" x2="700" y2="110" stroke="#7ab48f" stroke-width="1.5" marker-end="url(#arG)"/>
+  <text x="628" y="102" font-size="9.5" fill="#4a8c60" text-anchor="middle">是（多数情况）</text>
+  <rect x="702" y="82" width="168" height="58" rx="12" fill="#eef7f0" stroke="#bfe0c8" filter="url(#soft)"/>
+  <text x="786" y="106" font-size="11" font-weight="600" fill="#1d4a2b" text-anchor="middle">正常进入函数体</text>
+  <text x="786" y="125" font-size="9.5" fill="#4a8c60" text-anchor="middle">零开销、直接执行</text>
+
+  <!-- no: down to morestack -->
+  <line x1="466" y1="174" x2="466" y2="212" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <text x="484" y="197" font-size="9.5" fill="#8e8e93">否 → 栈不够（或被抢占）</text>
+
+  <!-- step 2: morestack (amber) -->
+  <rect x="200" y="214" width="532" height="90" rx="12" fill="#fdf6ec" stroke="#f0dcaf" filter="url(#soft)"/>
+  <text x="216" y="237" font-size="12.5" font-weight="600" fill="#6b4e16">② morestack（汇编）<tspan fill="#a9822f" font-weight="400"> · asm_amd64.s:597</tspan></text>
+  <text x="216" y="258" font-size="10.5" fill="#a9822f">a. 保存当前现场（sp/pc/g）到 m.morebuf</text>
+  <text x="216" y="276" font-size="10.5" fill="#a9822f">b. 切换到 M 的 g0 栈（调度专用栈，容量充足）</text>
+  <text x="216" y="294" font-size="10.5" fill="#a9822f">c. 在 g0 上调用 newstack</text>
+
+  <line x1="466" y1="304" x2="466" y2="332" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- step 3: newstack decision (blue - 共同决策点) -->
+  <rect x="200" y="334" width="532" height="118" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="216" y="357" font-size="12.5" font-weight="600" fill="#1b2a4a">③ newstack · 增长与抢占的共同决策点<tspan fill="#5b7db1" font-weight="400"> · stack.go:1026</tspan></text>
+  <!-- branch a: preempt -->
+  <rect x="216" y="368" width="248" height="72" rx="9" fill="#fbeeee" stroke="#f0c4c4"/>
+  <text x="228" y="389" font-size="10.5" font-weight="600" fill="#7a1f1f">是抢占请求？</text>
+  <text x="228" y="407" font-size="9.5" fill="#b15b5b">stackguard0 == stackPreempt</text>
+  <text x="228" y="424" font-size="9.5" fill="#b15b5b">→ 让出 CPU（见抢占哨兵图）</text>
+  <!-- branch b: real grow -->
+  <rect x="472" y="368" width="248" height="72" rx="9" fill="#eef7f0" stroke="#bfe0c8"/>
+  <text x="484" y="389" font-size="10.5" font-weight="600" fill="#1d4a2b">真的栈不够？</text>
+  <text x="484" y="407" font-size="9.5" fill="#4a8c60">→ copystack 分配 2× 新栈搬移</text>
+  <text x="484" y="424" font-size="9.5" fill="#4a8c60">→ 回原函数序言重试（见 copystack 图）</text>
+
+  <!-- side note (right, purple rule) -->
+  <rect x="750" y="214" width="120" height="238" rx="12" fill="#f5f0fb" stroke="#ddcdf0" filter="url(#soft)"/>
+  <text x="810" y="238" font-size="11" font-weight="600" fill="#3d2a5a" text-anchor="middle">归属</text>
+  <text x="810" y="262" font-size="9.5" fill="#7d5bb1" text-anchor="middle">序言检查</text>
+  <text x="810" y="278" font-size="9.5" fill="#7d5bb1" text-anchor="middle">由 SSA 后端</text>
+  <text x="810" y="294" font-size="9.5" fill="#7d5bb1" text-anchor="middle">编译期插入</text>
+  <line x1="770" y1="312" x2="850" y2="312" stroke="#ddcdf0" stroke-width="1"/>
+  <text x="810" y="334" font-size="9.5" fill="#7d5bb1" text-anchor="middle">切 g0 后</text>
+  <text x="810" y="350" font-size="9.5" fill="#7d5bb1" text-anchor="middle">增长逻辑</text>
+  <text x="810" y="366" font-size="9.5" fill="#7d5bb1" text-anchor="middle">在 g0 上跑</text>
+  <line x1="770" y1="384" x2="850" y2="384" stroke="#ddcdf0" stroke-width="1"/>
+  <text x="810" y="406" font-size="9.5" fill="#7d5bb1" text-anchor="middle">NOSPLIT 函数</text>
+  <text x="810" y="422" font-size="9.5" fill="#7d5bb1" text-anchor="middle">不做检查，</text>
+  <text x="810" y="438" font-size="9.5" fill="#7d5bb1" text-anchor="middle">栈预算受限</text>
+</svg>

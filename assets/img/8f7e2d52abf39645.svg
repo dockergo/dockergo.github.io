@@ -1,0 +1,126 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1140" height="680" viewBox="0 0 1140 680" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="aT" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2aa0a4"/></marker>
+    <marker id="aG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+    <marker id="aB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#4a7fd0"/></marker>
+    <marker id="aA" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#c99a3a"/></marker>
+  </defs>
+  <rect width="1140" height="680" fill="#fbfbfd"/>
+
+  <!-- 判型标题带 -->
+  <text x="30" y="32" font-size="15" font-weight="700" fill="#1d1d1f">高性能网络 I/O 与协议栈 · 数据面绕开内核拷贝把字节直送用户态，控制面用带标签 / 偏移的协议做前后兼容再由 sidecar 统一治理</text>
+  <text x="30" y="53" font-size="10.5" fill="#6e6e73">网卡收帧 → 内核态协议栈 vs 用户态旁路（二选一）→ 传输 / 协议复用 → 序列化编解码 → 应用；零拷贝贯穿数据面，协议治理贯穿控制面</text>
+
+  <!-- 语义图例（≥4 路径） -->
+  <line x1="30" y1="82" x2="54" y2="82" stroke="#2aa0a4" stroke-width="2" marker-end="url(#aT)"/>
+  <text x="60" y="86" font-size="10" fill="#3a3a3c">数据面字节流：网卡 → 应用</text>
+  <line x1="252" y1="82" x2="276" y2="82" stroke="#2f9e6e" stroke-width="2" marker-end="url(#aG)"/>
+  <text x="282" y="86" font-size="10" fill="#3a3a3c">用户态旁路 · 零拷贝直达</text>
+  <line x1="486" y1="82" x2="510" y2="82" stroke="#4a7fd0" stroke-width="2" marker-end="url(#aB)"/>
+  <text x="516" y="86" font-size="10" fill="#3a3a3c">内核态协议栈（含一次拷贝）</text>
+  <line x1="742" y1="82" x2="766" y2="82" stroke="#c99a3a" stroke-width="2" stroke-dasharray="5 3" marker-end="url(#aA)"/>
+  <text x="772" y="86" font-size="10" fill="#3a3a3c">控制面 · sidecar 协议治理</text>
+  <text x="1110" y="86" font-size="10" fill="#a1a1a6" text-anchor="end">概念层机理</text>
+  <line x1="30" y1="98" x2="1110" y2="98" stroke="#e4e7ec" stroke-width="1"/>
+
+  <!-- 网卡 NIC -->
+  <rect x="28" y="256" width="150" height="150" rx="13" fill="#ffffff" stroke="#d9dde4" filter="url(#soft)"/>
+  <text x="103" y="284" font-size="12.5" font-weight="700" fill="#1d1d1f" text-anchor="middle">网卡 NIC · DMA</text>
+  <line x1="44" y1="294" x2="162" y2="294" stroke="#e4e7ec" stroke-width="1"/>
+  <text x="103" y="316" font-size="9.5" fill="#4a4a4f" text-anchor="middle">收帧后 DMA 直写内存</text>
+  <text x="103" y="338" font-size="9.5" fill="#4a4a4f" text-anchor="middle">中断 or 轮询驱动</text>
+  <text x="103" y="360" font-size="9.5" fill="#4a4a4f" text-anchor="middle">硬件卸载 校验 / 分片</text>
+  <text x="103" y="388" font-size="8.5" fill="#8a97ab" text-anchor="middle">字节进入主机的第一站</text>
+
+  <!-- 内核态协议栈（上分支） -->
+  <rect x="208" y="140" width="252" height="150" rx="13" fill="#eaf1fb" stroke="#c6d9f2" filter="url(#soft)"/>
+  <text x="334" y="166" font-size="12" font-weight="700" fill="#20375e" text-anchor="middle">内核态协议栈 · 通用路径</text>
+  <text x="224" y="190" font-size="9.5" fill="#3a4a63">硬中断 → 软中断 → socket 缓冲</text>
+  <text x="224" y="212" font-size="9.5" fill="#3a4a63">内核跑 TCP / IP，管重传拥塞</text>
+  <text x="224" y="234" font-size="9.5" fill="#3a4a63">syscall 把数据拷到用户空间</text>
+  <text x="224" y="256" font-size="9.5" fill="#3a4a63">通用、安全，但有拷贝 / 上下文切换</text>
+  <text x="224" y="278" font-size="8.5" fill="#8a97ab">一次内核→用户拷贝是主要开销</text>
+
+  <!-- 用户态旁路（下分支） -->
+  <rect x="208" y="360" width="252" height="180" rx="13" fill="#e3f4f4" stroke="#bfe3e4" filter="url(#soft)"/>
+  <text x="334" y="386" font-size="12" font-weight="700" fill="#1a6d70" text-anchor="middle">用户态旁路 · kernel bypass</text>
+  <text x="224" y="410" font-size="9.5" fill="#1a6d70">驱动映射到用户态，轮询取包</text>
+  <text x="224" y="432" font-size="9.5" fill="#1a6d70">网卡 DMA 直入用户态 mbuf 环</text>
+  <text x="224" y="454" font-size="9.5" fill="#1a6d70">免内核-用户拷贝、免中断</text>
+  <text x="224" y="476" font-size="9.5" fill="#1a6d70">极致低时延 / 高吞吐，占一核轮询</text>
+  <rect x="224" y="492" width="220" height="34" rx="8" fill="#ffffff" stroke="#bfe3e4"/>
+  <text x="334" y="514" font-size="9" fill="#2f6b4e" text-anchor="middle">零拷贝机理 → 见 图解点 ①</text>
+
+  <!-- 传输 / 协议复用 -->
+  <rect x="490" y="200" width="224" height="290" rx="14" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="602" y="226" font-size="12" font-weight="700" fill="#2f6b4e" text-anchor="middle">传输 / 协议复用</text>
+  <rect x="508" y="242" width="188" height="104" rx="10" fill="#eaf6f0" stroke="#bfe3d1"/>
+  <text x="602" y="266" font-size="10.5" font-weight="600" fill="#2f6b4e" text-anchor="middle">TCP 连接</text>
+  <text x="524" y="288" font-size="9" fill="#2f6b4e">面向连接 · 有序可靠字节流</text>
+  <text x="524" y="308" font-size="9" fill="#2f6b4e">连接建立 / 拥塞控制 由此层负责</text>
+  <text x="524" y="328" font-size="9" fill="#2f6b4e">上层复用同一条连接省握手</text>
+  <rect x="508" y="356" width="188" height="118" rx="10" fill="#eaf1fb" stroke="#c6d9f2"/>
+  <text x="602" y="380" font-size="10.5" font-weight="600" fill="#20375e" text-anchor="middle">HTTP/2 · 多 stream 复用</text>
+  <text x="524" y="402" font-size="9" fill="#3a4a63">一条 TCP 上并发多 stream</text>
+  <text x="524" y="422" font-size="9" fill="#3a4a63">逐流 + 连接级 WINDOW 流控</text>
+  <text x="524" y="442" font-size="9" fill="#3a4a63">帧交织，避免队头阻塞</text>
+  <text x="524" y="462" font-size="8.5" fill="#8a97ab">复用 / 流控机理 → 见 图解点 ③</text>
+
+  <!-- 序列化 · 跨语言 -->
+  <rect x="744" y="200" width="192" height="290" rx="14" fill="#fbf3e2" stroke="#ecd6a8"/>
+  <text x="840" y="226" font-size="12" font-weight="700" fill="#8a6417" text-anchor="middle">序列化 · 跨语言编解码</text>
+  <text x="760" y="252" font-size="9.5" fill="#7a5a1a">结构化对象 ↔ 紧凑字节</text>
+  <rect x="760" y="266" width="160" height="86" rx="9" fill="#ffffff" stroke="#ecd6a8"/>
+  <text x="840" y="288" font-size="10" font-weight="600" fill="#8a6417" text-anchor="middle">Protobuf · 标签号</text>
+  <text x="774" y="308" font-size="8.5" fill="#7a5a1a">字段用 tag 编号定位</text>
+  <text x="774" y="326" font-size="8.5" fill="#7a5a1a">增删字段前后兼容</text>
+  <text x="774" y="344" font-size="8.5" fill="#7a5a1a">需解析才能取值</text>
+  <rect x="760" y="360" width="160" height="86" rx="9" fill="#ffffff" stroke="#ecd6a8"/>
+  <text x="840" y="382" font-size="10" font-weight="600" fill="#8a6417" text-anchor="middle">FlatBuffers · 偏移表</text>
+  <text x="774" y="402" font-size="8.5" fill="#7a5a1a">vtable 偏移直接寻址</text>
+  <text x="774" y="420" font-size="8.5" fill="#7a5a1a">零解析、就地读取</text>
+  <text x="774" y="438" font-size="8.5" fill="#7a5a1a">偏移演进保兼容</text>
+  <text x="760" y="466" font-size="8.5" fill="#a98a3a">兼容策略对比 → 见 图解点 ②</text>
+
+  <!-- 应用 -->
+  <rect x="966" y="256" width="146" height="150" rx="13" fill="#ffffff" stroke="#d9dde4" filter="url(#soft)"/>
+  <text x="1039" y="284" font-size="12.5" font-weight="700" fill="#1d1d1f" text-anchor="middle">应用</text>
+  <line x1="982" y1="294" x2="1096" y2="294" stroke="#e4e7ec" stroke-width="1"/>
+  <text x="1039" y="316" font-size="9.5" fill="#4a4a4f" text-anchor="middle">消费解码后的消息</text>
+  <text x="1039" y="338" font-size="9.5" fill="#4a4a4f" text-anchor="middle">只见业务对象</text>
+  <text x="1039" y="360" font-size="9.5" fill="#4a4a4f" text-anchor="middle">不关心传输细节</text>
+  <text x="1039" y="388" font-size="8.5" fill="#8a97ab" text-anchor="middle">字节旅程的终点</text>
+
+  <!-- Sidecar 治理带（控制面贯穿） -->
+  <rect x="490" y="520" width="622" height="120" rx="14" fill="#fbf3e2" stroke="#ecd6a8" filter="url(#soft)"/>
+  <text x="510" y="546" font-size="12" font-weight="700" fill="#8a6417">Sidecar 协议治理 · 控制面贯穿</text>
+  <text x="510" y="570" font-size="9.5" fill="#7a5a1a">① iptables 劫持进出流量，应用无感</text>
+  <text x="510" y="592" font-size="9.5" fill="#7a5a1a">② mTLS 加密 · 路由 · 限流 · 观测统一下沉</text>
+  <text x="510" y="614" font-size="9.5" fill="#7a5a1a">③ 与业务解耦，横切能力由基础设施接管</text>
+  <text x="820" y="570" font-size="9.5" fill="#7a5a1a">治理作用于传输 / 协议层</text>
+  <text x="820" y="592" font-size="9.5" fill="#7a5a1a">对上层应用透明</text>
+  <text x="820" y="614" font-size="8.5" fill="#a98a3a">劫持治理机理 → 见 图解点 ③</text>
+
+  <!-- 连线 -->
+  <!-- NIC → 内核态 -->
+  <line x1="178" y1="300" x2="206" y2="230" stroke="#4a7fd0" stroke-width="2" marker-end="url(#aB)"/>
+  <text x="150" y="238" font-size="8.5" fill="#2f5c98">中断</text>
+  <!-- NIC → 旁路 -->
+  <line x1="178" y1="360" x2="206" y2="430" stroke="#2f9e6e" stroke-width="2" marker-end="url(#aG)"/>
+  <text x="150" y="430" font-size="8.5" fill="#2f6b4e">轮询 DMA</text>
+  <!-- 内核态 → 传输 -->
+  <line x1="460" y1="230" x2="488" y2="280" stroke="#4a7fd0" stroke-width="2" marker-end="url(#aB)"/>
+  <text x="462" y="252" font-size="8.5" fill="#2f5c98">拷贝后交付</text>
+  <!-- 旁路 → 传输（零拷贝） -->
+  <line x1="460" y1="430" x2="488" y2="400" stroke="#2f9e6e" stroke-width="2" marker-end="url(#aG)"/>
+  <text x="462" y="452" font-size="8.5" fill="#2f6b4e">零拷贝直达</text>
+  <!-- 传输 → 序列化 -->
+  <line x1="714" y1="330" x2="742" y2="330" stroke="#2aa0a4" stroke-width="2.4" marker-end="url(#aT)"/>
+  <!-- 序列化 → 应用 -->
+  <line x1="936" y1="330" x2="964" y2="330" stroke="#2aa0a4" stroke-width="2.4" marker-end="url(#aT)"/>
+  <!-- sidecar → 传输 / 协议（治理，虚线向上） -->
+  <line x1="602" y1="518" x2="602" y2="492" stroke="#c99a3a" stroke-width="1.8" stroke-dasharray="5 3" marker-end="url(#aA)"/>
+  <text x="608" y="512" font-size="8.5" fill="#8a6417">劫持</text>
+  <line x1="900" y1="518" x2="880" y2="492" stroke="#c99a3a" stroke-width="1.8" stroke-dasharray="5 3" marker-end="url(#aA)"/>
+</svg>

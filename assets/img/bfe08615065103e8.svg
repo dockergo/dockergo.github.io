@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="360" viewBox="0 0 900 360" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="h1" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="h1a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#1c7a4d"/></marker>
+  </defs>
+  <rect width="900" height="360" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">两级抽象 · handlerton（每引擎单例）+ handler（每表实例）</text>
+  <text x="30" y="48" font-size="10.5" fill="#6e6e73">★ 灵魂：Server 层只面向这套虚函数编程，不知底层是 B+树还是堆表</text>
+
+  <!-- handlerton -->
+  <rect x="40" y="76" width="380" height="120" rx="12" fill="#eef7f1" stroke="#8fcaa8" stroke-width="1.5" filter="url(#h1)"/>
+  <text x="60" y="100" font-size="12" font-weight="700" fill="#1c7a4d">handlerton（每引擎单例）</text>
+  <text x="60" y="117" font-size="8.5" fill="#3c7a58">引擎"总入口"：函数指针登记引擎级能力</text>
+  <g font-size="9.5" fill="#1d1d1f">
+    <rect x="58" y="126" width="160" height="26" rx="6" fill="#fff" stroke="#cfe6d6"/><text x="138" y="144" text-anchor="middle">commit / rollback</text>
+    <rect x="228" y="126" width="170" height="26" rx="6" fill="#fff" stroke="#cfe6d6"/><text x="313" y="144" text-anchor="middle">prepare（供 2PC）</text>
+    <rect x="58" y="158" width="340" height="26" rx="6" fill="#fff" stroke="#cfe6d6"/><text x="228" y="176" text-anchor="middle" font-weight="600" fill="#1c7a4d">create → 产出 handler 实例</text>
+  </g>
+
+  <!-- handler -->
+  <rect x="480" y="76" width="380" height="120" rx="12" fill="#eef7f1" stroke="#8fcaa8" stroke-width="1.5" filter="url(#h1)"/>
+  <text x="500" y="100" font-size="12" font-weight="700" fill="#1c7a4d">handler（每表实例）</text>
+  <text x="500" y="117" font-size="8.5" fill="#3c7a58">"对这张表能做什么"：一组表级虚函数</text>
+  <g font-size="9.5" fill="#1d1d1f">
+    <rect x="498" y="126" width="165" height="26" rx="6" fill="#fff" stroke="#cfe6d6"/><text x="580" y="144" text-anchor="middle">write_row 插入</text>
+    <rect x="673" y="126" width="165" height="26" rx="6" fill="#fff" stroke="#cfe6d6"/><text x="755" y="144" text-anchor="middle">index_read 索引定位</text>
+    <rect x="498" y="158" width="165" height="26" rx="6" fill="#fff" stroke="#cfe6d6"/><text x="580" y="176" text-anchor="middle">rnd_next 顺序读</text>
+    <rect x="673" y="158" width="165" height="26" rx="6" fill="#fff" stroke="#cfe6d6"/><text x="755" y="176" text-anchor="middle">external_lock 事务边界</text>
+  </g>
+  <path d="M420,150 L480,150" fill="none" stroke="#1c7a4d" stroke-width="1.6" marker-end="url(#h1a)"/>
+  <text x="450" y="142" font-size="8" fill="#1c7a4d" text-anchor="middle">create</text>
+
+  <!-- 引擎实现 -->
+  <text x="40" y="228" font-size="11.5" font-weight="700" fill="#8a6d3b">各引擎实现同一接口（可插拔）</text>
+  <g text-anchor="middle">
+    <rect x="40" y="242" width="260" height="78" rx="10" fill="#fbf7ef" stroke="#ecdcbf" filter="url(#h1)"/>
+    <text x="170" y="266" font-size="11" font-weight="700" fill="#8a6d3b">InnoDB（默认）</text>
+    <text x="170" y="284" font-size="8.5" fill="#b08535">ha_innobase 实现全部虚函数</text>
+    <text x="170" y="302" font-size="8" fill="#c3ab7e">innobase_commit `ha_innodb.cc:971`</text>
+    <rect x="320" y="242" width="260" height="78" rx="10" fill="#fbf7ef" stroke="#ecdcbf" filter="url(#h1)"/>
+    <text x="450" y="266" font-size="11" font-weight="600" fill="#8a6d3b">MyISAM</text>
+    <text x="450" y="284" font-size="8.5" fill="#b08535">表锁 · 无事务 · 非聚簇</text>
+    <text x="450" y="302" font-size="8" fill="#c3ab7e">同一接口不同实现</text>
+    <rect x="600" y="242" width="260" height="78" rx="10" fill="#fbf7ef" stroke="#ecdcbf" filter="url(#h1)"/>
+    <text x="730" y="266" font-size="11" font-weight="600" fill="#8a6d3b">Memory / CSV / …</text>
+    <text x="730" y="284" font-size="8.5" fill="#b08535">内存表 / 特殊存储</text>
+    <text x="730" y="302" font-size="8" fill="#c3ab7e">证明缝的可插拔性</text>
+  </g>
+  <text x="450" y="344" font-size="9" fill="#8a94a6" text-anchor="middle">锚点：struct handlerton `sql/handler.h:698` · class handler `sql/handler.h:2157` · (*create) `:772` · ha_write_row `:2437`</text>
+</svg>

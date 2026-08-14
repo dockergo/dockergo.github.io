@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="480" viewBox="0 0 1080 480" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect x="0" y="0" width="1080" height="480" fill="#fbfbfd"/>
+  <text x="40" y="38" font-size="16" font-weight="600" fill="#1d1d1f">Merge-on-Write · delete bitmap 标删旧版本(主键表)</text>
+  <text x="40" y="58" font-size="11.5" fill="#86868b">写入即时算 delete bitmap 标记旧行为删,读时跳过,无需现场归并去重</text>
+  <rect x="40" y="76" width="1000" height="30" rx="8" fill="#faf4fb" stroke="#ecd9ef"/>
+  <text x="56" y="96" font-size="10.5" fill="#7a3fb0" font-family="ui-monospace,Menlo,monospace">CREATE TABLE orders(id INT UNIQUE KEY, status, amount) PROPERTIES(enable_unique_key_merge_on_write=true)</text>
+
+  <!-- 两个源 rowset -->
+  <g font-size="10.5">
+    <rect x="40" y="128" width="440" height="130" rx="13" fill="#eef2fb" stroke="#c9d6ef"/>
+    <text x="60" y="150" font-size="12" font-weight="600" fill="#2f4a7c">rowset-1(早)</text>
+    <!-- table header -->
+    <text x="70" y="176" font-size="9" fill="#5a6a8c">id</text><text x="150" y="176" font-size="9" fill="#5a6a8c">status</text><text x="270" y="176" font-size="9" fill="#5a6a8c">amount</text><text x="380" y="176" font-size="9" fill="#5a6a8c">__VERSION__</text>
+    <line x1="60" y1="182" x2="460" y2="182" stroke="#c9d6ef"/>
+    <text x="70" y="202" fill="#4a4e57">1</text><text x="150" y="202" fill="#4a4e57">NEW</text><text x="270" y="202" fill="#4a4e57">100</text><text x="380" y="202" fill="#4a4e57">v2</text>
+    <text x="70" y="226" fill="#4a4e57">2</text><text x="150" y="226" fill="#4a4e57">NEW</text><text x="270" y="226" fill="#4a4e57">200</text><text x="380" y="226" fill="#4a4e57">v2</text>
+    <text x="60" y="248" font-size="9" fill="#8a94a6">两行明细</text>
+
+    <rect x="600" y="128" width="440" height="130" rx="13" fill="#faf4fb" stroke="#ecd9ef"/>
+    <text x="620" y="150" font-size="12" font-weight="600" fill="#7a3fb0">rowset-2(UPSERT id=1)</text>
+    <text x="630" y="176" font-size="9" fill="#a06fc0">id</text><text x="710" y="176" font-size="9" fill="#a06fc0">status</text><text x="830" y="176" font-size="9" fill="#a06fc0">amount</text><text x="940" y="176" font-size="9" fill="#a06fc0">__VERSION__</text>
+    <line x1="620" y1="182" x2="1020" y2="182" stroke="#ecd9ef"/>
+    <text x="630" y="202" fill="#4a4e57">1</text><text x="710" y="202" fill="#4a4e57">PAID</text><text x="830" y="202" fill="#4a4e57">150</text><text x="940" y="202" fill="#4a4e57">v3</text>
+    <text x="620" y="234" font-size="9" fill="#c0a0d8">写入期算 delete bitmap:标记 rowset-1 的 id=1 为删</text>
+  </g>
+
+  <!-- merge arrows -->
+  <g stroke="#c7c7cc" stroke-width="1.6" fill="none">
+    <line x1="260" y1="258" x2="440" y2="300" marker-end="url(#ar)"/>
+    <line x1="820" y1="258" x2="640" y2="300" marker-end="url(#ar)"/>
+  </g>
+  <text x="540" y="285" font-size="10" fill="#7a3fb0" text-anchor="middle">delete bitmap 生效</text>
+
+  <!-- 读取有效行 -->
+  <rect x="240" y="308" width="600" height="140" rx="14" fill="#f5faf6" stroke="#cfe6d5" filter="url(#soft)"/>
+  <text x="540" y="332" font-size="13" font-weight="600" fill="#2c5a3a" text-anchor="middle">读取有效行(delete bitmap 跳过旧版本)</text>
+  <g font-size="11">
+    <text x="290" y="360" font-size="9" fill="#4e7a5c">id</text><text x="400" y="360" font-size="9" fill="#4e7a5c">status</text><text x="540" y="360" font-size="9" fill="#4e7a5c">amount</text><text x="680" y="360" font-size="9" fill="#4e7a5c">__VERSION__</text>
+    <line x1="280" y1="366" x2="800" y2="366" stroke="#cfe6d5"/>
+    <text x="290" y="390" fill="#1d1d1f" font-weight="600">1</text><text x="400" y="390" fill="#1d1d1f">PAID</text><text x="540" y="390" fill="#1d1d1f">150</text><text x="680" y="390" fill="#2c8a4a" font-weight="600">v3 ✓</text><text x="820" y="390" font-size="9" fill="#a86a3a" text-anchor="end">rowset-1 id=1 标删</text>
+    <text x="290" y="416" fill="#1d1d1f" font-weight="600">2</text><text x="400" y="416" fill="#1d1d1f">NEW</text><text x="540" y="416" fill="#1d1d1f">200</text><text x="680" y="416" fill="#2c8a4a" font-weight="600">v2 ✓</text>
+  </g>
+  <text x="40" y="470" font-size="10.5" fill="#86868b">MoW 把去重成本从"读时归并"前移到"写时算 bitmap":读接近明细表性能;代价是写放大 + 点查旧版本。适合高频更新 + 高频查询。</text>
+</svg>

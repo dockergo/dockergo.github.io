@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="430" viewBox="0 0 1020 430"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1020" height="430" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">限流 · limit_req 漏桶 与 limit_conn 计数（PREACCESS 阶段）</text>
+
+  <!-- limit_req 漏桶 -->
+  <rect x="30" y="56" width="600" height="230" rx="14" fill="#f4eefb" stroke="#d9c9ef" filter="url(#soft)"/>
+  <text x="48" y="80" font-size="12.5" font-weight="600" fill="#3c1361">limit_req：漏桶算法（limit_req_module.c）</text>
+  <rect x="48" y="96" width="270" height="80" rx="10" fill="#ffffff" stroke="#d9c9ef"/><text x="183" y="120" font-size="10" font-weight="600" fill="#3c1361" text-anchor="middle">rate = 每秒放行速率</text><text x="183" y="142" font-size="8.5" fill="#7a5aa8" text-anchor="middle">按 key（如 $binary_remote_addr）</text><text x="183" y="160" font-size="8.5" fill="#7a5aa8" text-anchor="middle">在共享内存记每 key 的 excess 水位</text>
+  <rect x="338" y="96" width="274" height="80" rx="10" fill="#ffffff" stroke="#d9c9ef"/><text x="475" y="120" font-size="10" font-weight="600" fill="#3c1361" text-anchor="middle">excess 累积（module.c:27）</text><text x="475" y="142" font-size="8.5" fill="#7a5aa8" text-anchor="middle">来快了 excess 涨、随时间按 rate 漏掉</text><text x="475" y="160" font-size="8.5" fill="#7a5aa8" text-anchor="middle">lookup 计算当前 excess（:68）</text>
+  <rect x="48" y="188" width="180" height="84" rx="10" fill="#eafaf1" stroke="#bce6cd"/><text x="138" y="212" font-size="9.5" font-weight="600" fill="#0f5132" text-anchor="middle">excess ≤ burst</text><text x="138" y="232" font-size="8.5" fill="#3f8f66" text-anchor="middle">放行</text><text x="138" y="252" font-size="8.5" fill="#3f8f66" text-anchor="middle">（可配 delay 平滑）</text>
+  <rect x="238" y="188" width="180" height="84" rx="10" fill="#fff7e6" stroke="#f0dcae"/><text x="328" y="212" font-size="9.5" font-weight="600" fill="#7a4d00" text-anchor="middle">超 burst + nodelay</text><text x="328" y="232" font-size="8.5" fill="#9a7328" text-anchor="middle">立即放行但计入</text><text x="328" y="252" font-size="8.5" fill="#9a7328" text-anchor="middle">突发允许</text>
+  <rect x="428" y="188" width="184" height="84" rx="10" fill="#fbeaea" stroke="#f0cccc"/><text x="520" y="212" font-size="9.5" font-weight="600" fill="#7d1f1f" text-anchor="middle">远超 → 拒绝</text><text x="520" y="232" font-size="8.5" fill="#b06a6a" text-anchor="middle">返回 503</text><text x="520" y="252" font-size="8.5" fill="#b06a6a" text-anchor="middle">limit_req_status 可改</text>
+
+  <!-- limit_conn -->
+  <rect x="650" y="56" width="340" height="230" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="668" y="80" font-size="12.5" font-weight="600" fill="#1b2a4a">limit_conn：并发连接数</text>
+  <rect x="668" y="96" width="304" height="56" rx="10" fill="#ffffff" stroke="#bcd0ec"/><text x="820" y="118" font-size="9.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">共享内存计数 by key</text><text x="820" y="138" font-size="8.5" fill="#5b7db1" text-anchor="middle">连接开始 +1、结束 -1</text>
+  <rect x="668" y="160" width="304" height="56" rx="10" fill="#ffffff" stroke="#bcd0ec"/><text x="820" y="182" font-size="9.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">超上限 → 拒绝新连接</text><text x="820" y="202" font-size="8.5" fill="#5b7db1" text-anchor="middle">限制单 IP 并发数</text>
+  <rect x="668" y="224" width="304" height="48" rx="10" fill="#eafaf1" stroke="#bce6cd"/><text x="820" y="246" font-size="9.5" fill="#0f5132" text-anchor="middle">共享内存让多 worker 计数一致</text><text x="820" y="262" font-size="8" fill="#3f8f66" text-anchor="middle">（否则各 worker 各算无意义）</text>
+
+  <!-- 位置 -->
+  <rect x="30" y="302" width="960" height="112" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="48" y="326" font-size="12.5" font-weight="600" fill="#1d1d1f">为什么在 PREACCESS 阶段</text>
+  <text x="48" y="350" font-size="10.5" fill="#494950">限流挂在 PREACCESS（鉴权前）——在花代价做鉴权/回源前就把洪峰挡住，保护后端与自身。</text>
+  <text x="48" y="372" font-size="10.5" fill="#494950">key 用共享内存跨 worker 统计（一个 IP 的请求可能落到不同 worker，必须共享才准）。</text>
+  <text x="48" y="394" font-size="10.5" fill="#86868b">漏桶（limit_req）平滑速率，计数（limit_conn）限并发；二者常配合用，前者防刷、后者防连接耗尽。</text>
+</svg>

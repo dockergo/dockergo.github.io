@@ -1,0 +1,120 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1140" height="680" viewBox="0 0 1140 680" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="aO" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#c4562f"/></marker>
+    <marker id="aB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#4a7fd0"/></marker>
+    <marker id="aG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+    <marker id="aA" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#c99a3a"/></marker>
+  </defs>
+  <rect width="1140" height="680" fill="#fbfbfd"/>
+
+  <!-- 判型标题带 -->
+  <text x="30" y="32" font-size="15" font-weight="700" fill="#1d1d1f">操作系统内存管理与资源调度 · 页表把虚拟地址翻译成物理页、TLB 做缓存，分配器分层供给物理页，cgroup 用水位线把资源关进笼子</text>
+  <text x="30" y="53" font-size="10.5" fill="#6e6e73">进程只见虚拟地址 → 翻译层（TLB / 页表）定位物理帧 → 分配器（伙伴 + Slab）供给物理页 → cgroup 用水位线做资源隔离与回收；地址虚拟化 + 物理隔离两条主线</text>
+
+  <!-- 语义图例（≥4 路径） -->
+  <line x1="30" y1="82" x2="54" y2="82" stroke="#c4562f" stroke-width="2" marker-end="url(#aO)"/>
+  <text x="60" y="86" font-size="10" fill="#3a3a3c">地址翻译主链：虚拟 → 物理</text>
+  <line x1="252" y1="82" x2="276" y2="82" stroke="#4a7fd0" stroke-width="2" marker-end="url(#aB)"/>
+  <text x="282" y="86" font-size="10" fill="#3a3a3c">缺页 → 陷入内核补映射</text>
+  <line x1="470" y1="82" x2="494" y2="82" stroke="#2f9e6e" stroke-width="2" marker-end="url(#aG)"/>
+  <text x="500" y="86" font-size="10" fill="#3a3a3c">分配器供给物理页</text>
+  <line x1="672" y1="82" x2="696" y2="82" stroke="#c99a3a" stroke-width="2" stroke-dasharray="5 3" marker-end="url(#aA)"/>
+  <text x="702" y="86" font-size="10" fill="#3a3a3c">cgroup 水位 · 隔离与回收</text>
+  <text x="1110" y="86" font-size="10" fill="#a1a1a6" text-anchor="end">概念层机理</text>
+  <line x1="30" y1="98" x2="1110" y2="98" stroke="#e4e7ec" stroke-width="1"/>
+
+  <!-- 进程 · 虚拟地址空间 -->
+  <rect x="28" y="250" width="168" height="180" rx="13" fill="#ffffff" stroke="#d9dde4" filter="url(#soft)"/>
+  <text x="112" y="278" font-size="12.5" font-weight="700" fill="#1d1d1f" text-anchor="middle">进程 · 虚拟地址</text>
+  <line x1="44" y1="288" x2="180" y2="288" stroke="#e4e7ec" stroke-width="1"/>
+  <text x="112" y="310" font-size="9.5" fill="#4a4a4f" text-anchor="middle">只见连续虚拟空间</text>
+  <text x="112" y="330" font-size="9.5" fill="#4a4a4f" text-anchor="middle">代码 / 堆 / 栈 / 映射</text>
+  <text x="112" y="350" font-size="9.5" fill="#4a4a4f" text-anchor="middle">每进程独立、互相隔离</text>
+  <text x="112" y="372" font-size="9.5" fill="#4a4a4f" text-anchor="middle">访存发出虚拟地址 VA</text>
+  <text x="112" y="410" font-size="8.5" fill="#8a97ab" text-anchor="middle">不知道也不关心物理位置</text>
+
+  <!-- 翻译层：TLB + 页表 -->
+  <rect x="228" y="164" width="300" height="360" rx="14" fill="#fbeee9" stroke="#eccabb"/>
+  <text x="378" y="190" font-size="12.5" font-weight="700" fill="#a5401f" text-anchor="middle">地址翻译层 · VA → PA</text>
+
+  <rect x="248" y="206" width="260" height="128" rx="11" fill="#ffffff" stroke="#eccabb" filter="url(#soft)"/>
+  <text x="378" y="230" font-size="11.5" font-weight="700" fill="#a5401f" text-anchor="middle">TLB · 翻译缓存</text>
+  <text x="264" y="254" font-size="9.5" fill="#8a3a1c">缓存近期 VA→PA 映射</text>
+  <text x="264" y="276" font-size="9.5" fill="#8a3a1c">命中 → 一步得物理帧（快）</text>
+  <text x="264" y="298" font-size="9.5" fill="#8a3a1c">未命中 → 触发页表 walk</text>
+  <text x="264" y="320" font-size="8.5" fill="#b07a5e">硬件级缓存，容量小、极快</text>
+
+  <rect x="248" y="346" width="260" height="158" rx="11" fill="#ffffff" stroke="#eccabb" filter="url(#soft)"/>
+  <text x="378" y="370" font-size="11.5" font-weight="700" fill="#a5401f" text-anchor="middle">多级页表 · page table</text>
+  <text x="264" y="394" font-size="9.5" fill="#8a3a1c">按 VA 分段逐级索引</text>
+  <text x="264" y="416" font-size="9.5" fill="#8a3a1c">叶子项 = 物理帧号 + 权限位</text>
+  <text x="264" y="438" font-size="9.5" fill="#8a3a1c">命中 → 回填 TLB 供下次复用</text>
+  <text x="264" y="460" font-size="9.5" fill="#8a3a1c">缺项（页不在）→ 缺页陷入内核</text>
+  <text x="264" y="482" font-size="8.5" fill="#b07a5e">命中 / 未命中 / 缺页路径 → 见 图解点 ①</text>
+
+  <!-- 物理内存 + 分配器 -->
+  <rect x="560" y="164" width="300" height="360" rx="14" fill="#eef7f2" stroke="#c9e6d7"/>
+  <text x="710" y="190" font-size="12.5" font-weight="700" fill="#2f6b4e" text-anchor="middle">物理内存 · 分配器分层供给</text>
+
+  <rect x="580" y="206" width="260" height="128" rx="11" fill="#ffffff" stroke="#c9e6d7" filter="url(#soft)"/>
+  <text x="710" y="230" font-size="11.5" font-weight="700" fill="#2f6b4e" text-anchor="middle">伙伴系统 · 大块页</text>
+  <text x="596" y="254" font-size="9.5" fill="#2f6b4e">以页为单位、按 2^order 管理</text>
+  <text x="596" y="276" font-size="9.5" fill="#2f6b4e">大块拆半、相邻空闲合并</text>
+  <text x="596" y="298" font-size="9.5" fill="#2f6b4e">给内核 / Slab / 缺页取整页</text>
+  <text x="596" y="320" font-size="8.5" fill="#5a9078">解决外部碎片</text>
+
+  <rect x="580" y="346" width="260" height="158" rx="11" fill="#ffffff" stroke="#c9e6d7" filter="url(#soft)"/>
+  <text x="710" y="370" font-size="11.5" font-weight="700" fill="#2f6b4e" text-anchor="middle">Slab / Slub · 小对象</text>
+  <text x="596" y="394" font-size="9.5" fill="#2f6b4e">在整页之上切同尺寸对象</text>
+  <text x="596" y="416" font-size="9.5" fill="#2f6b4e">对象池：分配 / 释放即出入池</text>
+  <text x="596" y="438" font-size="9.5" fill="#2f6b4e">缓存热对象，免反复初始化</text>
+  <text x="596" y="460" font-size="9.5" fill="#2f6b4e">供内核频繁的小结构体</text>
+  <text x="596" y="482" font-size="8.5" fill="#5a9078">分层链路 → 见 图解点 ②</text>
+
+  <!-- cgroup 资源隔离 -->
+  <rect x="892" y="164" width="220" height="360" rx="14" fill="#fbf3e2" stroke="#ecd6a8"/>
+  <text x="1002" y="190" font-size="12.5" font-weight="700" fill="#8a6417" text-anchor="middle">cgroup · 资源隔离</text>
+  <text x="908" y="216" font-size="9.5" fill="#7a5a1a">给每组进程设内存边界</text>
+
+  <rect x="908" y="230" width="188" height="72" rx="10" fill="#ffffff" stroke="#ecd6a8"/>
+  <text x="1002" y="252" font-size="10.5" font-weight="600" fill="#8a6417" text-anchor="middle">mem.high · 软限</text>
+  <text x="922" y="272" font-size="9" fill="#7a5a1a">超过 → 节流并加压回收</text>
+  <text x="922" y="290" font-size="9" fill="#7a5a1a">不直接杀，先给回收机会</text>
+
+  <rect x="908" y="314" width="188" height="72" rx="10" fill="#ffffff" stroke="#ecd6a8"/>
+  <text x="1002" y="336" font-size="10.5" font-weight="600" fill="#8a6417" text-anchor="middle">mem.max · 硬限</text>
+  <text x="922" y="356" font-size="9" fill="#7a5a1a">触顶 → 阻塞分配 / 强回收</text>
+  <text x="922" y="374" font-size="9" fill="#7a5a1a">回收仍不够 → 触发 OOM</text>
+
+  <rect x="908" y="398" width="188" height="72" rx="10" fill="#fdecea" stroke="#f3c9c3"/>
+  <text x="1002" y="420" font-size="10.5" font-weight="600" fill="#b23b30" text-anchor="middle">OOM killer</text>
+  <text x="922" y="440" font-size="9" fill="#9a4038">选进程杀掉释放内存</text>
+  <text x="922" y="458" font-size="9" fill="#9a4038">水位状态机 → 见 图解点 ③</text>
+  <text x="908" y="494" font-size="8.5" fill="#a98a3a">把物理资源关进笼子，组间互不挤占</text>
+
+  <!-- 连线 -->
+  <!-- 进程 → 翻译 (VA) -->
+  <line x1="196" y1="300" x2="226" y2="280" stroke="#c4562f" stroke-width="2.4" marker-end="url(#aO)"/>
+  <text x="196" y="292" font-size="8.5" fill="#a5401f">发 VA</text>
+  <!-- 翻译 → 物理 (PA) -->
+  <line x1="528" y1="270" x2="558" y2="270" stroke="#c4562f" stroke-width="2.4" marker-end="url(#aO)"/>
+  <text x="530" y="262" font-size="8.5" fill="#a5401f">得 PA</text>
+  <!-- 缺页：翻译 → 物理(分配整页) -->
+  <line x1="528" y1="430" x2="558" y2="430" stroke="#4a7fd0" stroke-width="2" stroke-dasharray="1 0" marker-end="url(#aB)"/>
+  <text x="524" y="422" font-size="8.5" fill="#2f5c98">缺页取页</text>
+  <!-- 伙伴 → slab (供给) -->
+  <line x1="710" y1="334" x2="710" y2="344" stroke="#2f9e6e" stroke-width="2" marker-end="url(#aG)"/>
+  <!-- cgroup 约束物理内存 (dashed) -->
+  <line x1="890" y1="344" x2="862" y2="344" stroke="#c99a3a" stroke-width="1.8" stroke-dasharray="5 3" marker-end="url(#aA)"/>
+  <text x="828" y="336" font-size="8.5" fill="#8a6417">水位约束</text>
+
+  <!-- 底部两条主线注解 -->
+  <rect x="28" y="556" width="1084" height="96" rx="13" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="48" y="582" font-size="11.5" font-weight="700" fill="#a5401f">主线一 · 地址虚拟化</text>
+  <text x="48" y="604" font-size="9.5" fill="#5a4a44">页表 + TLB 把「进程眼中的连续虚拟地址」翻译到「散落的物理帧」，让每个进程都以为独占整片内存，彼此隔离</text>
+  <text x="48" y="624" font-size="9.5" fill="#5a4a44">按需分配：真正访问到才建立映射（缺页），未用的页不占物理内存</text>
+  <text x="620" y="582" font-size="11.5" font-weight="700" fill="#2f6b4e">主线二 · 物理资源隔离</text>
+  <text x="620" y="604" font-size="9.5" fill="#44544c">分配器决定「物理页怎么高效供给」，cgroup 决定「每组能用多少、超了怎么办」</text>
+  <text x="620" y="624" font-size="9.5" fill="#44544c">水位线把回收压力分级：软限先节流回收，硬限阻塞分配，兜底才动 OOM</text>
+</svg>

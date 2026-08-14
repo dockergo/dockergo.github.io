@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="330" viewBox="0 0 900 330" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="sl1" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="lh" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+  </defs>
+  <rect width="900" height="330" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">一条 SQL 的旅程 · 六站流水</text>
+  <text x="30" y="48" font-size="10.5" fill="#6e6e73">连接 → 派发 → 解析 → 优化 → 执行 → 返回；执行阶段经 handler 缝下到引擎</text>
+
+  <g text-anchor="middle">
+    <rect x="30" y="80" width="128" height="72" rx="10" fill="#eef2f7" stroke="#d4ddeb" filter="url(#sl1)"/>
+    <text x="94" y="106" font-size="10.5" font-weight="700" fill="#3f5573">① 连接</text><text x="94" y="124" font-size="8.3" fill="#6a7c96">绑定 THD 会话</text><text x="94" y="140" font-size="7.5" fill="#9aa8bd">do_command 主循环</text>
+
+    <rect x="176" y="80" width="128" height="72" rx="10" fill="#f4f7fc" stroke="#cfe0f2" filter="url(#sl1)"/>
+    <text x="240" y="106" font-size="10.5" font-weight="700" fill="#5b7db1">② 派发</text><text x="240" y="124" font-size="8.3" fill="#6e6e73">按命令类型分流</text><text x="240" y="140" font-size="7.5" fill="#9aa8bd">dispatch_command</text>
+
+    <rect x="322" y="80" width="128" height="72" rx="10" fill="#f4f7fc" stroke="#cfe0f2" filter="url(#sl1)"/>
+    <text x="386" y="106" font-size="10.5" font-weight="700" fill="#1d1d1f">③ 解析</text><text x="386" y="124" font-size="8.3" fill="#6e6e73">SQL→语法树</text><text x="386" y="140" font-size="7.5" fill="#9aa8bd">名称/权限检查</text>
+
+    <rect x="468" y="80" width="128" height="72" rx="10" fill="#f4f7fc" stroke="#cfe0f2" filter="url(#sl1)"/>
+    <text x="532" y="106" font-size="10.5" font-weight="700" fill="#5b7db1">④ 优化</text><text x="532" y="124" font-size="8.3" fill="#6e6e73">代价选计划</text><text x="532" y="140" font-size="7.5" fill="#9aa8bd">JOIN::optimize</text>
+
+    <rect x="614" y="80" width="128" height="72" rx="10" fill="#eef7f1" stroke="#8fcaa8" filter="url(#sl1)"/>
+    <text x="678" y="106" font-size="10.5" font-weight="700" fill="#1c7a4d">⑤ 执行</text><text x="678" y="124" font-size="8.3" fill="#3c7a58">火山逐行迭代</text><text x="678" y="140" font-size="7.5" fill="#6ba489">sub_select</text>
+
+    <rect x="760" y="80" width="110" height="72" rx="10" fill="#eef2f7" stroke="#d4ddeb" filter="url(#sl1)"/>
+    <text x="815" y="106" font-size="10.5" font-weight="700" fill="#3f5573">⑥ 返回</text><text x="815" y="124" font-size="8.3" fill="#6a7c96">结果集回送</text><text x="815" y="140" font-size="7.5" fill="#9aa8bd">网络协议</text>
+  </g>
+  <g stroke="#2f9e6e" stroke-width="1.8" marker-end="url(#lh)">
+    <line x1="158" y1="116" x2="176" y2="116"/><line x1="304" y1="116" x2="322" y2="116"/>
+    <line x1="450" y1="116" x2="468" y2="116"/><line x1="596" y1="116" x2="614" y2="116"/>
+    <line x1="742" y1="116" x2="760" y2="116"/>
+  </g>
+
+  <!-- 执行下探引擎 -->
+  <rect x="560" y="196" width="240" height="60" rx="11" fill="#fbf7ef" stroke="#ecdcbf" filter="url(#sl1)"/>
+  <text x="680" y="220" font-size="10.5" font-weight="600" fill="#8a6d3b" text-anchor="middle">存储引擎（InnoDB）</text>
+  <text x="680" y="238" font-size="8.3" fill="#b08535" text-anchor="middle">经 handler 缝取/写行 · row_search_mvcc</text>
+  <line x1="678" y1="152" x2="678" y2="196" stroke="#2f9e6e" stroke-width="1.8" marker-end="url(#lh)"/>
+  <text x="690" y="178" font-size="8" fill="#2f9e6e">ha_write_row / index_read</text>
+
+  <text x="450" y="292" font-size="10" fill="#4a4a4f" text-anchor="middle">前四站在 Server 层完成（引擎无关）；第五站起才穿过 handler 缝进入具体引擎</text>
+  <text x="450" y="312" font-size="9" fill="#8a94a6" text-anchor="middle">锚点：THD `sql/sql_class.h:1465` · dispatch_command `sql/sql_parse.cc:1218` · JOIN::optimize `sql/sql_optimizer.cc:138` · JOIN::exec `sql/sql_executor.cc:104`</text>
+</svg>

@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="440" viewBox="0 0 1000 440" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs><filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter></defs>
+  <rect width="1000" height="440" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Parquet 原理 · 定义级（definition level）：路径上第几层 optional 有值</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">definition level = 从根到叶的路径上,“可为空”（optional/repeated）字段里实际有值的层数;它告诉读者 null 发生在哪一层</text>
+
+  <!-- schema path -->
+  <text x="30" y="80" font-size="11" font-weight="700" fill="#1b2a4a">示例路径：a.b.c（a、b 为 optional 分组，c 为 optional 叶）→ max def level = 3</text>
+
+  <rect x="30" y="94" width="150" height="40" rx="9" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/><text x="105" y="119" font-size="9.4" text-anchor="middle" fill="#1b2a4a">a（optional）</text>
+  <rect x="220" y="94" width="150" height="40" rx="9" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/><text x="295" y="119" font-size="9.4" text-anchor="middle" fill="#1b2a4a">b（optional）</text>
+  <rect x="410" y="94" width="150" height="40" rx="9" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/><text x="485" y="119" font-size="9.4" text-anchor="middle" fill="#12402a">c（optional 叶）</text>
+  <path d="M180,114 L220,114" stroke="#b8b8bf" stroke-width="1.4" fill="none"/>
+  <path d="M370,114 L410,114" stroke="#b8b8bf" stroke-width="1.4" fill="none"/>
+
+  <!-- def level 表 -->
+  <text x="30" y="172" font-size="11" font-weight="700" fill="#5a3410">不同取值场景下 c 的 definition level</text>
+
+  <g font-size="9">
+    <rect x="30" y="184" width="940" height="30" rx="6" fill="#f4f5f7" stroke="#e3e3e8"/>
+    <text x="46" y="204" font-size="9" font-weight="700" fill="#33373e">场景</text>
+    <text x="500" y="204" font-size="9" font-weight="700" fill="#33373e">def level</text>
+    <text x="640" y="204" font-size="9" font-weight="700" fill="#33373e">含义</text>
+
+    <rect x="30" y="216" width="940" height="30" rx="6" fill="#fff" stroke="#eceef1"/>
+    <text x="46" y="236" fill="#5b6470">a 为 null（整条路径断在第 1 层）</text>
+    <text x="512" y="236" font-weight="700" fill="#0a3d78">0</text>
+    <text x="640" y="236" fill="#5b6470">a 本身缺失,b、c 无从谈起</text>
+
+    <rect x="30" y="248" width="940" height="30" rx="6" fill="#fafbfc" stroke="#eceef1"/>
+    <text x="46" y="268" fill="#5b6470">a 有值、b 为 null</text>
+    <text x="512" y="268" font-weight="700" fill="#0a3d78">1</text>
+    <text x="640" y="268" fill="#5b6470">第 1 层 optional 有值,断在第 2 层</text>
+
+    <rect x="30" y="280" width="940" height="30" rx="6" fill="#fff" stroke="#eceef1"/>
+    <text x="46" y="300" fill="#5b6470">a、b 有值、c 为 null</text>
+    <text x="512" y="300" font-weight="700" fill="#0a3d78">2</text>
+    <text x="640" y="300" fill="#5b6470">前 2 层有值,叶 c 缺失（null）</text>
+
+    <rect x="30" y="312" width="940" height="30" rx="6" fill="#fafbfc" stroke="#eceef1"/>
+    <text x="46" y="332" fill="#5b6470">a、b、c 全有值</text>
+    <text x="512" y="332" font-weight="700" fill="#12402a">3 = max</text>
+    <text x="640" y="332" fill="#5b6470">达到 max def level → c 真正有值</text>
+  </g>
+
+  <rect x="30" y="356" width="940" height="66" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="48" y="380" font-size="9.6" fill="#12402a">规则：def level 达到 max（本例 3）才表示叶有真实值;小于 max 表示在某一层为 null,数值本身不占空间。</text>
+  <text x="48" y="400" font-size="9.6" fill="#2f6f5f">max def/rep level 由 schema 的 repetition_type 静态算出;REQUIRED 字段不增加 def 上限（必有值,不用记）。</text>
+  <text x="48" y="416" font-size="8.6" fill="#4c8567">definition levels 用 RLE/Bit-Packing 混合编码,连续相同值高度压缩（如全非空 = 一段 run）。</text>
+</svg>

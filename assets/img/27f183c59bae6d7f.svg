@@ -1,0 +1,104 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="760" viewBox="0 0 1120 760" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="aB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#4a7fd0"/></marker>
+    <marker id="aG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+    <marker id="aR" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#d1544a"/></marker>
+    <marker id="aX" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b7b7bd"/></marker>
+  </defs>
+  <rect width="1120" height="760" fill="#fbfbfd"/>
+
+  <text x="30" y="34" font-size="16" font-weight="700" fill="#1d1d1f">链表（A2）· 节点靠 next 指针串联：按位访问要遍历 O(n)，改指针的增删 O(1)</text>
+  <text x="30" y="55" font-size="10.5" fill="#6e6e73">每个节点存 val 和指向后继的 next；没有地址公式，只能顺链走 —— 但正因如此，局部增删只需重接几根指针</text>
+
+  <!-- 图例 -->
+  <rect x="30" y="72" width="12" height="12" rx="2" fill="#4a7fd0"/><text x="48" y="82" font-size="10" fill="#3a3a3c">节点 val | next 指针</text>
+  <rect x="230" y="72" width="12" height="12" rx="2" fill="#2f9e6e"/><text x="248" y="82" font-size="10" fill="#3a3a3c">遍历跳数 / 新结点 P</text>
+  <rect x="430" y="72" width="12" height="12" rx="2" fill="#d1544a"/><text x="448" y="82" font-size="10" fill="#3a3a3c">被删除 / 断开的指针</text>
+
+  <!-- Panel A 结构 + 遍历 -->
+  <rect x="30" y="100" width="1050" height="186" rx="14" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="52" y="128" font-size="13" font-weight="700" fill="#20375e">节点结构 + 按位访问 · access(head, 2)：从 head 顺链走 2 跳到达</text>
+
+  <rect x="60" y="170" width="50" height="44" rx="5" fill="#ede7fb" stroke="#c9baf0"/><text x="85" y="197" font-size="11" text-anchor="middle" fill="#4b3b82">head</text>
+  <line x1="110" y1="192" x2="158" y2="192" stroke="#4a7fd0" stroke-width="2" marker-end="url(#aB)"/>
+
+  <g font-size="12" text-anchor="middle">
+    <rect x="160" y="170" width="96" height="44" rx="5" fill="#eaf1fb" stroke="#c6d9f2"/><line x1="220" y1="170" x2="220" y2="214" stroke="#c6d9f2"/><text x="190" y="197" fill="#20375e">1</text><text x="238" y="197" font-size="9" fill="#5a7099">next</text>
+    <rect x="320" y="170" width="96" height="44" rx="5" fill="#eaf1fb" stroke="#c6d9f2"/><line x1="380" y1="170" x2="380" y2="214" stroke="#c6d9f2"/><text x="350" y="197" fill="#20375e">2</text><text x="398" y="197" font-size="9" fill="#5a7099">next</text>
+    <rect x="480" y="170" width="96" height="44" rx="5" fill="#e6f6ee" stroke="#2f9e6e" stroke-width="2"/><line x1="540" y1="170" x2="540" y2="214" stroke="#bfe6d3"/><text x="510" y="197" fill="#20375e">3</text><text x="558" y="197" font-size="9" fill="#5a7099">next</text>
+    <rect x="640" y="170" width="96" height="44" rx="5" fill="#eaf1fb" stroke="#c6d9f2"/><line x1="700" y1="170" x2="700" y2="214" stroke="#c6d9f2"/><text x="670" y="197" fill="#20375e">4</text><text x="718" y="197" font-size="9" fill="#5a7099">next</text>
+  </g>
+  <g font-size="9" text-anchor="middle" fill="#8a97ab"><text x="208" y="230">n0</text><text x="368" y="230">n1</text><text x="528" y="230">n2 · 命中</text><text x="688" y="230">n3</text></g>
+
+  <line x1="256" y1="192" x2="318" y2="192" stroke="#2f9e6e" stroke-width="2" marker-end="url(#aG)"/><text x="287" y="160" font-size="9" text-anchor="middle" fill="#2f6b4e">hop1</text>
+  <line x1="416" y1="192" x2="478" y2="192" stroke="#2f9e6e" stroke-width="2" marker-end="url(#aG)"/><text x="447" y="160" font-size="9" text-anchor="middle" fill="#2f6b4e">hop2</text>
+  <line x1="576" y1="192" x2="638" y2="192" stroke="#4a7fd0" stroke-width="2" marker-end="url(#aB)"/>
+  <text x="775" y="196" font-size="12" fill="#a1a1a6">⊥</text>
+  <line x1="736" y1="192" x2="768" y2="192" stroke="#4a7fd0" stroke-width="2" marker-end="url(#aB)"/>
+
+  <text x="800" y="176" font-size="10.5" fill="#4a4a4f">for i:=0; i&lt;index; i++</text>
+  <text x="800" y="196" font-size="10.5" fill="#4a4a4f">head = head.Next（走一跳）</text>
+  <text x="800" y="216" font-size="10.5" fill="#8a4038">查第 k 个需 k 跳，无法跳过 → <tspan font-weight="700">O(n)</tspan></text>
+  <text x="52" y="266" font-size="9.5" fill="#8a97ab">对比数组：链表没有 addr = base + i×s 的地址公式，只能一个接一个顺指针走。尾部以 next = ⊥（nil）标记链尾。</text>
+
+  <!-- Panel B 结点后插 -->
+  <rect x="30" y="298" width="1050" height="234" rx="14" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="52" y="326" font-size="13" font-weight="700" fill="#20375e">结点后插 · insertNode(n0, P)：在 n0 之后插入 P，只重接指针</text>
+
+  <text x="52" y="356" font-size="10.5" font-weight="700" fill="#6e6e73">接线前</text>
+  <g font-size="12" text-anchor="middle">
+    <rect x="150" y="362" width="90" height="40" rx="5" fill="#eaf1fb" stroke="#c6d9f2"/><line x1="206" y1="362" x2="206" y2="402" stroke="#c6d9f2"/><text x="178" y="387" fill="#20375e">1</text><text x="223" y="387" font-size="9" fill="#5a7099">next</text>
+    <rect x="320" y="362" width="90" height="40" rx="5" fill="#eaf1fb" stroke="#c6d9f2"/><line x1="376" y1="362" x2="376" y2="402" stroke="#c6d9f2"/><text x="348" y="387" fill="#20375e">2</text><text x="393" y="387" font-size="9" fill="#5a7099">next</text>
+    <rect x="490" y="362" width="90" height="40" rx="5" fill="#eaf1fb" stroke="#c6d9f2"/><line x1="546" y1="362" x2="546" y2="402" stroke="#c6d9f2"/><text x="518" y="387" fill="#20375e">3</text><text x="563" y="387" font-size="9" fill="#5a7099">next</text>
+  </g>
+  <line x1="240" y1="382" x2="318" y2="382" stroke="#4a7fd0" stroke-width="2" marker-end="url(#aB)"/>
+  <line x1="410" y1="382" x2="488" y2="382" stroke="#4a7fd0" stroke-width="2" marker-end="url(#aB)"/>
+  <g font-size="9" text-anchor="middle" fill="#8a97ab"><text x="195" y="416">n0</text><text x="365" y="416">n1</text><text x="535" y="416">n2</text></g>
+  <!-- 新结点 P -->
+  <rect x="235" y="440" width="90" height="40" rx="5" fill="#e6f6ee" stroke="#2f9e6e" stroke-width="1.8" stroke-dasharray="4 3"/><line x1="291" y1="440" x2="291" y2="480" stroke="#bfe6d3"/><text x="263" y="465" font-size="12" text-anchor="middle" fill="#20375e">99</text><text x="308" y="465" font-size="9" text-anchor="middle" fill="#5a7099">next</text>
+  <text x="280" y="496" font-size="9" text-anchor="middle" fill="#2f6b4e">P（待插入）</text>
+
+  <text x="620" y="356" font-size="10.5" fill="#4a4a4f">仅三步指针操作，与链长无关：</text>
+  <text x="620" y="378" font-size="10.5" fill="#4a4a4f"><tspan font-weight="700" fill="#2f6b4e">①</tspan> n1 = n0.Next　　记住原后继</text>
+  <text x="620" y="400" font-size="10.5" fill="#4a4a4f"><tspan font-weight="700" fill="#2f6b4e">②</tspan> P.Next = n1　　P 指向原后继</text>
+  <text x="620" y="422" font-size="10.5" fill="#4a4a4f"><tspan font-weight="700" fill="#2f6b4e">③</tspan> n0.Next = P　　前驱改指 P</text>
+  <rect x="620" y="436" width="420" height="28" rx="6" fill="#eafaf2" stroke="#bfe6d3"/>
+  <text x="632" y="454" font-size="10.5" fill="#2f6b4e">不搬移任何数据 → <tspan font-weight="700">O(1)</tspan>（前提：已握有 n0）</text>
+  <text x="620" y="484" font-size="9.5" fill="#8a97ab">顺序不能反：先接 P.Next 再改 n0.Next，否则会丢失原后继</text>
+
+  <text x="52" y="470" font-size="10.5" font-weight="700" fill="#6e6e73">接线后</text>
+  <text x="52" y="500" font-size="9.5" fill="#8a97ab">n0 → P → n1</text>
+  <g font-size="12" text-anchor="middle">
+    <rect x="130" y="482" width="70" height="34" rx="5" fill="#eaf1fb" stroke="#c6d9f2"/><text x="165" y="504" fill="#20375e">1</text>
+    <rect x="250" y="482" width="70" height="34" rx="5" fill="#e6f6ee" stroke="#2f9e6e" stroke-width="1.8"/><text x="285" y="504" fill="#20375e">99</text>
+    <rect x="370" y="482" width="70" height="34" rx="5" fill="#eaf1fb" stroke="#c6d9f2"/><text x="405" y="504" fill="#20375e">2</text>
+  </g>
+  <line x1="200" y1="499" x2="248" y2="499" stroke="#2f9e6e" stroke-width="2" marker-end="url(#aG)"/>
+  <line x1="320" y1="499" x2="368" y2="499" stroke="#2f9e6e" stroke-width="2" marker-end="url(#aG)"/>
+
+  <!-- Panel C 删除 -->
+  <rect x="30" y="544" width="1050" height="204" rx="14" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="52" y="572" font-size="13" font-weight="700" fill="#20375e">结点后删 · removeItem(n0)：删掉 n0 之后的首个结点，绕过即可</text>
+
+  <text x="52" y="602" font-size="10.5" font-weight="700" fill="#6e6e73">删除前</text>
+  <g font-size="12" text-anchor="middle">
+    <rect x="150" y="608" width="90" height="40" rx="5" fill="#eaf1fb" stroke="#c6d9f2"/><line x1="206" y1="608" x2="206" y2="648" stroke="#c6d9f2"/><text x="178" y="633" fill="#20375e">1</text><text x="223" y="633" font-size="9" fill="#5a7099">next</text>
+    <rect x="320" y="608" width="90" height="40" rx="5" fill="#fbecea" stroke="#d1544a" stroke-width="2"/><line x1="376" y1="608" x2="376" y2="648" stroke="#eec5c0"/><text x="348" y="633" fill="#8a4038">2</text><text x="393" y="633" font-size="9" fill="#b06a60">next</text>
+    <rect x="490" y="608" width="90" height="40" rx="5" fill="#eaf1fb" stroke="#c6d9f2"/><line x1="546" y1="608" x2="546" y2="648" stroke="#c6d9f2"/><text x="518" y="633" fill="#20375e">3</text><text x="563" y="633" font-size="9" fill="#5a7099">next</text>
+  </g>
+  <g font-size="9" text-anchor="middle" fill="#8a97ab"><text x="195" y="662">n0</text><text x="365" y="662">P（待删）</text><text x="535" y="662">n1</text></g>
+  <!-- 旧链 n0->P 断开 -->
+  <line x1="240" y1="628" x2="318" y2="628" stroke="#b7b7bd" stroke-width="1.8" stroke-dasharray="4 3" marker-end="url(#aX)"/>
+  <line x1="410" y1="628" x2="488" y2="628" stroke="#b7b7bd" stroke-width="1.8" stroke-dasharray="4 3" marker-end="url(#aX)"/>
+  <!-- 新链 n0->n1 跨越 -->
+  <path d="M195 648 L195 692 L535 692 L535 650" fill="none" stroke="#4a7fd0" stroke-width="2" marker-end="url(#aB)"/>
+  <text x="365" y="708" font-size="9.5" text-anchor="middle" fill="#20375e">n0.Next = n1（跨过 P）</text>
+
+  <text x="640" y="602" font-size="10.5" fill="#4a4a4f">同样只改一根指针：</text>
+  <text x="640" y="624" font-size="10.5" fill="#4a4a4f"><tspan font-weight="700" fill="#4a7fd0">①</tspan> P = n0.Next　　② n1 = P.Next</text>
+  <text x="640" y="646" font-size="10.5" fill="#4a4a4f"><tspan font-weight="700" fill="#4a7fd0">③</tspan> n0.Next = n1　让前驱直接指向 P 的后继</text>
+  <rect x="640" y="660" width="400" height="28" rx="6" fill="#eafaf2" stroke="#bfe6d3"/>
+  <text x="652" y="678" font-size="10.5" fill="#2f6b4e">P 脱链后成为垃圾，等待回收 → <tspan font-weight="700">O(1)</tspan></text>
+  <text x="640" y="710" font-size="9.5" fill="#8a97ab">链表把"结构变动"变廉价，代价是失去 O(1) 随机访问与额外指针开销</text>
+</svg>

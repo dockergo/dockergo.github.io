@@ -1,0 +1,160 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="780" viewBox="0 0 1120 780" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="aG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+    <marker id="aA" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#d99a2b"/></marker>
+    <marker id="aR" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#d1544a"/></marker>
+    <marker id="aG2" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+  </defs>
+  <rect width="1120" height="780" fill="#fbfbfd"/>
+
+  <text x="30" y="34" font-size="17" font-weight="700" fill="#1d1d1f">二叉搜索树 BST · 有序性「左 &lt; 根 &lt; 右」贯穿查找 / 插入 / 删除</text>
+  <text x="30" y="56" font-size="11" fill="#6e6e73">每一步用一次比较砍掉一半子树 → 平均 O(log n)；插入总落到空位，删除按孩子数分三种情形处理</text>
+
+  <!-- 图例 -->
+  <rect x="30" y="72" width="12" height="12" rx="2" fill="#2f9e6e"/><text x="48" y="82" font-size="10.5" fill="#3a3a3c">查找 / 后继路径</text>
+  <rect x="180" y="72" width="12" height="12" rx="2" fill="#d99a2b"/><text x="198" y="82" font-size="10.5" fill="#3a3a3c">新插入 / 落位</text>
+  <rect x="320" y="72" width="12" height="12" rx="2" fill="#d1544a"/><text x="338" y="82" font-size="10.5" fill="#3a3a3c">待删除节点</text>
+  <rect x="450" y="72" width="12" height="12" rx="2" fill="#eaf1fb" stroke="#c6d9f2"/><text x="468" y="82" font-size="10.5" fill="#3a3a3c">普通节点</text>
+
+  <!-- ===== ① 查找 ===== -->
+  <rect x="30" y="98" width="525" height="300" rx="12" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="50" y="122" font-size="12.5" font-weight="700" fill="#20375e">① 查找 search(6)：比大小选边，逐层下潜</text>
+  <!-- 边 -->
+  <line x1="180" y1="155" x2="130" y2="205" stroke="#2f9e6e" stroke-width="2.2"/>
+  <line x1="180" y1="155" x2="255" y2="205" stroke="#9dbdea" stroke-width="1.6"/>
+  <line x1="130" y1="205" x2="105" y2="255" stroke="#9dbdea" stroke-width="1.6"/>
+  <line x1="130" y1="205" x2="160" y2="255" stroke="#2f9e6e" stroke-width="2.2"/>
+  <line x1="255" y1="205" x2="230" y2="255" stroke="#9dbdea" stroke-width="1.6"/>
+  <line x1="255" y1="205" x2="285" y2="255" stroke="#9dbdea" stroke-width="1.6"/>
+  <g font-size="11" text-anchor="middle">
+    <circle cx="180" cy="155" r="15" fill="#eaf1fb" stroke="#4a7fd0" stroke-width="1.4"/><text x="180" y="159" fill="#20375e" font-weight="700">8</text>
+    <circle cx="130" cy="205" r="15" fill="#e7f4ee" stroke="#2f9e6e" stroke-width="1.6"/><text x="130" y="209" fill="#1f6b4e">4</text>
+    <circle cx="255" cy="205" r="15" fill="#eaf1fb" stroke="#4a7fd0" stroke-width="1.4"/><text x="255" y="209" fill="#20375e">13</text>
+    <circle cx="105" cy="255" r="15" fill="#eaf1fb" stroke="#4a7fd0" stroke-width="1.4"/><text x="105" y="259" fill="#20375e">2</text>
+    <circle cx="160" cy="255" r="15" fill="#e7f4ee" stroke="#2f9e6e" stroke-width="1.8"/><text x="160" y="259" fill="#1f6b4e" font-weight="700">6</text>
+    <circle cx="230" cy="255" r="15" fill="#eaf1fb" stroke="#4a7fd0" stroke-width="1.4"/><text x="230" y="259" fill="#20375e">11</text>
+    <circle cx="285" cy="255" r="15" fill="#eaf1fb" stroke="#4a7fd0" stroke-width="1.4"/><text x="285" y="259" fill="#20375e">15</text>
+  </g>
+  <text x="340" y="160" font-size="10.5" fill="#4a4a4f">6 &lt; 8 → 走左</text>
+  <text x="340" y="184" font-size="10.5" fill="#4a4a4f">6 &gt; 4 → 走右</text>
+  <text x="340" y="208" font-size="10.5" fill="#2f9e6e" font-weight="700">= 6 → 命中</text>
+  <text x="340" y="236" font-size="10" fill="#8a97ab">越过叶仍未等 → 不存在</text>
+  <rect x="50" y="300" width="485" height="76" rx="10" fill="#e7f4ee" stroke="#b5e0cd"/>
+  <text x="68" y="324" font-size="10.5" fill="#1f6b4e">每次比较排除一整棵子树，走过的节点数 = 目标深度。</text>
+  <text x="68" y="346" font-size="10.5" fill="#1f6b4e">树平衡时路径长 O(log n)；退化成链时 O(n) —— 这正是 AVL 要救的。</text>
+  <text x="68" y="366" font-size="10" fill="#5a8a76">插入、删除的第一步都是这一套「查找定位」。</text>
+
+  <!-- ===== ② 插入 ===== -->
+  <rect x="565" y="98" width="525" height="300" rx="12" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="585" y="122" font-size="12.5" font-weight="700" fill="#20375e">② 插入 insert(5)：走到空位挂上去</text>
+  <line x1="720" y1="155" x2="670" y2="205" stroke="#d99a2b" stroke-width="2.2"/>
+  <line x1="720" y1="155" x2="795" y2="205" stroke="#9dbdea" stroke-width="1.6"/>
+  <line x1="670" y1="205" x2="645" y2="255" stroke="#9dbdea" stroke-width="1.6"/>
+  <line x1="670" y1="205" x2="700" y2="255" stroke="#d99a2b" stroke-width="2.2"/>
+  <line x1="795" y1="205" x2="770" y2="255" stroke="#9dbdea" stroke-width="1.6"/>
+  <line x1="795" y1="205" x2="825" y2="255" stroke="#9dbdea" stroke-width="1.6"/>
+  <!-- 空位落点 -->
+  <line x1="700" y1="255" x2="675" y2="305" stroke="#d99a2b" stroke-width="2" stroke-dasharray="4 3" marker-end="url(#aA)"/>
+  <g font-size="11" text-anchor="middle">
+    <circle cx="720" cy="155" r="15" fill="#eaf1fb" stroke="#4a7fd0" stroke-width="1.4"/><text x="720" y="159" fill="#20375e" font-weight="700">8</text>
+    <circle cx="670" cy="205" r="15" fill="#eaf1fb" stroke="#4a7fd0" stroke-width="1.4"/><text x="670" y="209" fill="#20375e">4</text>
+    <circle cx="795" cy="205" r="15" fill="#eaf1fb" stroke="#4a7fd0" stroke-width="1.4"/><text x="795" y="209" fill="#20375e">13</text>
+    <circle cx="645" cy="255" r="15" fill="#eaf1fb" stroke="#4a7fd0" stroke-width="1.4"/><text x="645" y="259" fill="#20375e">2</text>
+    <circle cx="700" cy="255" r="15" fill="#eaf1fb" stroke="#4a7fd0" stroke-width="1.4"/><text x="700" y="259" fill="#20375e">6</text>
+    <circle cx="770" cy="255" r="15" fill="#eaf1fb" stroke="#4a7fd0" stroke-width="1.4"/><text x="770" y="259" fill="#20375e">11</text>
+    <circle cx="825" cy="255" r="15" fill="#eaf1fb" stroke="#4a7fd0" stroke-width="1.4"/><text x="825" y="259" fill="#20375e">15</text>
+    <circle cx="670" cy="315" r="15" fill="#fdf3e0" stroke="#d99a2b" stroke-width="1.8"/><text x="670" y="319" fill="#5a4a2a" font-weight="700">5</text>
+  </g>
+  <text x="855" y="160" font-size="10.5" fill="#4a4a4f">5 &lt; 8 → 左</text>
+  <text x="855" y="182" font-size="10.5" fill="#4a4a4f">5 &gt; 4 → 右</text>
+  <text x="855" y="204" font-size="10.5" fill="#4a4a4f">5 &lt; 6 → 左</text>
+  <text x="855" y="226" font-size="10.5" fill="#8a5a12" font-weight="700">左为空 → 落此</text>
+  <rect x="585" y="336" width="485" height="46" rx="10" fill="#fff7e8" stroke="#e7c07a"/>
+  <text x="603" y="358" font-size="10.5" fill="#5a4a2a">新节点永远作为叶插入到「查找失败处」的空指针上，天然维持有序性。</text>
+  <text x="603" y="376" font-size="10" fill="#8a5a12">遇到相等的键则不插（去重）。</text>
+
+  <!-- ===== ③ 删除三情形 ===== -->
+  <rect x="30" y="412" width="1060" height="348" rx="12" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="50" y="436" font-size="12.5" font-weight="700" fill="#20375e">③ 删除：先查找定位，再按「待删节点的孩子数」分三种情形</text>
+  <!-- 分隔线 -->
+  <line x1="385" y1="450" x2="385" y2="748" stroke="#eef0f3" stroke-width="1.4"/>
+  <line x1="740" y1="450" x2="740" y2="748" stroke="#eef0f3" stroke-width="1.4"/>
+
+  <!-- 情形1 叶 -->
+  <text x="207" y="470" font-size="11.5" font-weight="700" fill="#8a4038" text-anchor="middle">情形 1 · 叶节点</text>
+  <text x="207" y="488" font-size="10" fill="#6e6e73" text-anchor="middle">无孩子 → 直接摘除</text>
+  <text x="70" y="512" font-size="9.5" fill="#8a97ab">删除前</text>
+  <line x1="200" y1="522" x2="170" y2="560" stroke="#9dbdea" stroke-width="1.6"/>
+  <line x1="200" y1="522" x2="235" y2="560" stroke="#9dbdea" stroke-width="1.6"/>
+  <g font-size="10.5" text-anchor="middle">
+    <circle cx="200" cy="522" r="13" fill="#eaf1fb" stroke="#4a7fd0" stroke-width="1.4"/><text x="200" y="526" fill="#20375e">4</text>
+    <circle cx="170" cy="560" r="13" fill="#fbe6e3" stroke="#d1544a" stroke-width="1.7"/><text x="170" y="564" fill="#8a4038">2</text>
+    <circle cx="235" cy="560" r="13" fill="#eaf1fb" stroke="#4a7fd0" stroke-width="1.4"/><text x="235" y="564" fill="#20375e">6</text>
+  </g>
+  <line x1="200" y1="588" x2="200" y2="612" stroke="#d1544a" stroke-width="1.8" marker-end="url(#aR)"/>
+  <text x="215" y="604" font-size="9" fill="#8a4038">删 2</text>
+  <text x="70" y="636" font-size="9.5" fill="#8a97ab">删除后</text>
+  <line x1="200" y1="646" x2="235" y2="684" stroke="#9dbdea" stroke-width="1.6"/>
+  <g font-size="10.5" text-anchor="middle">
+    <circle cx="200" cy="646" r="13" fill="#eaf1fb" stroke="#4a7fd0" stroke-width="1.4"/><text x="200" y="650" fill="#20375e">4</text>
+    <circle cx="235" cy="684" r="13" fill="#eaf1fb" stroke="#4a7fd0" stroke-width="1.4"/><text x="235" y="688" fill="#20375e">6</text>
+  </g>
+  <text x="207" y="722" font-size="9.5" fill="#4a4a4f" text-anchor="middle">父的对应指针置空</text>
+  <text x="207" y="740" font-size="9" fill="#8a97ab" text-anchor="middle">最简单，无需搬移</text>
+
+  <!-- 情形2 单子 -->
+  <text x="562" y="470" font-size="11.5" font-weight="700" fill="#8a4038" text-anchor="middle">情形 2 · 单个孩子</text>
+  <text x="562" y="488" font-size="10" fill="#6e6e73" text-anchor="middle">唯一子节点顶替其位</text>
+  <text x="420" y="512" font-size="9.5" fill="#8a97ab">删除前</text>
+  <line x1="555" y1="522" x2="530" y2="560" stroke="#9dbdea" stroke-width="1.6"/>
+  <line x1="530" y1="560" x2="510" y2="596" stroke="#9dbdea" stroke-width="1.6"/>
+  <g font-size="10.5" text-anchor="middle">
+    <circle cx="555" cy="522" r="13" fill="#eaf1fb" stroke="#4a7fd0" stroke-width="1.4"/><text x="555" y="526" fill="#20375e">13</text>
+    <circle cx="530" cy="560" r="13" fill="#fbe6e3" stroke="#d1544a" stroke-width="1.7"/><text x="530" y="564" fill="#8a4038">11</text>
+    <circle cx="510" cy="596" r="13" fill="#eaf1fb" stroke="#4a7fd0" stroke-width="1.4"/><text x="510" y="600" fill="#20375e">12</text>
+  </g>
+  <text x="588" y="564" font-size="9" fill="#8a4038">删 11</text>
+  <line x1="620" y1="558" x2="644" y2="558" stroke="#d1544a" stroke-width="1.8" marker-end="url(#aR)"/>
+  <text x="632" y="600" font-size="9.5" fill="#8a97ab" text-anchor="middle">删除后</text>
+  <line x1="630" y1="632" x2="612" y2="668" stroke="#2f9e6e" stroke-width="2"/>
+  <g font-size="10.5" text-anchor="middle">
+    <circle cx="655" cy="632" r="13" fill="#eaf1fb" stroke="#4a7fd0" stroke-width="1.4"/><text x="655" y="636" fill="#20375e">13</text>
+    <circle cx="605" cy="668" r="13" fill="#e7f4ee" stroke="#2f9e6e" stroke-width="1.6"/><text x="605" y="672" fill="#1f6b4e">12</text>
+  </g>
+  <text x="562" y="722" font-size="9.5" fill="#4a4a4f" text-anchor="middle">让父直接指向那个孩子</text>
+  <text x="562" y="740" font-size="9" fill="#8a97ab" text-anchor="middle">跳过被删节点，链不断</text>
+
+  <!-- 情形3 双子 -->
+  <text x="912" y="470" font-size="11.5" font-weight="700" fill="#8a4038" text-anchor="middle">情形 3 · 两个孩子</text>
+  <text x="912" y="488" font-size="10" fill="#6e6e73" text-anchor="middle">用中序后继替换，再删后继</text>
+  <text x="770" y="512" font-size="9.5" fill="#8a97ab">删除前</text>
+  <line x1="905" y1="522" x2="872" y2="558" stroke="#9dbdea" stroke-width="1.6"/>
+  <line x1="905" y1="522" x2="945" y2="558" stroke="#9dbdea" stroke-width="1.6"/>
+  <line x1="945" y1="558" x2="920" y2="594" stroke="#2f9e6e" stroke-width="2"/>
+  <line x1="945" y1="558" x2="975" y2="594" stroke="#9dbdea" stroke-width="1.6"/>
+  <g font-size="10.5" text-anchor="middle">
+    <circle cx="905" cy="522" r="13" fill="#fbe6e3" stroke="#d1544a" stroke-width="1.7"/><text x="905" y="526" fill="#8a4038">8</text>
+    <circle cx="872" cy="558" r="13" fill="#eaf1fb" stroke="#4a7fd0" stroke-width="1.4"/><text x="872" y="562" fill="#20375e">4</text>
+    <circle cx="945" cy="558" r="13" fill="#eaf1fb" stroke="#4a7fd0" stroke-width="1.4"/><text x="945" y="562" fill="#20375e">13</text>
+    <circle cx="920" cy="594" r="13" fill="#e7f4ee" stroke="#2f9e6e" stroke-width="1.7"/><text x="920" y="598" fill="#1f6b4e">11</text>
+    <circle cx="975" cy="594" r="13" fill="#eaf1fb" stroke="#4a7fd0" stroke-width="1.4"/><text x="975" y="598" fill="#20375e">15</text>
+  </g>
+  <text x="1000" y="598" font-size="8.5" fill="#2f6b4e">后继=右子树最小</text>
+  <!-- 替换箭头 11->8 -->
+  <path d="M907 594 L1030 594 L1030 522 L920 522" fill="none" stroke="#2f9e6e" stroke-width="1.6" stroke-dasharray="4 3" marker-end="url(#aG)"/>
+  <text x="1042" y="560" font-size="8.5" fill="#2f6b4e" text-anchor="middle">值上移</text>
+  <text x="820" y="642" font-size="9.5" fill="#8a97ab">删除后</text>
+  <line x1="905" y1="652" x2="880" y2="688" stroke="#9dbdea" stroke-width="1.6"/>
+  <line x1="905" y1="652" x2="945" y2="688" stroke="#9dbdea" stroke-width="1.6"/>
+  <line x1="945" y1="688" x2="972" y2="720" stroke="#9dbdea" stroke-width="1.6"/>
+  <g font-size="10.5" text-anchor="middle">
+    <circle cx="905" cy="652" r="13" fill="#e7f4ee" stroke="#2f9e6e" stroke-width="1.6"/><text x="905" y="656" fill="#1f6b4e" font-weight="700">11</text>
+    <circle cx="880" cy="688" r="13" fill="#eaf1fb" stroke="#4a7fd0" stroke-width="1.4"/><text x="880" y="692" fill="#20375e">4</text>
+    <circle cx="945" cy="688" r="13" fill="#eaf1fb" stroke="#4a7fd0" stroke-width="1.4"/><text x="945" y="692" fill="#20375e">13</text>
+    <circle cx="972" cy="720" r="13" fill="#eaf1fb" stroke="#4a7fd0" stroke-width="1.4"/><text x="972" y="724" fill="#20375e">15</text>
+  </g>
+  <text x="820" y="712" font-size="9" fill="#4a4a4f">后继值填入</text>
+  <text x="820" y="728" font-size="9" fill="#4a4a4f">删除位，原后</text>
+  <text x="820" y="744" font-size="9" fill="#4a4a4f">继(≤1子)递归删</text>
+</svg>

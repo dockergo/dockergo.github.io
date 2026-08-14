@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="700" viewBox="0 0 1120 700" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="aB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#4a7fd0"/></marker>
+    <marker id="aG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+    <marker id="aA" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#d99a2b"/></marker>
+  </defs>
+  <rect width="1120" height="700" fill="#fbfbfd"/>
+
+  <text x="30" y="34" font-size="17" font-weight="700" fill="#1d1d1f">GD2 · 分数背包：按「单位价值 v/w」降序装入，物品可切分，最后一件部分装满</text>
+  <text x="30" y="56" font-size="11" fill="#6e6e73">物品可任意切分是关键——只要还有容量就优先塞「每公斤最值钱」的，塞不下就切一块补满，贪心必得最优</text>
+
+  <!-- 图例 -->
+  <rect x="30" y="72" width="12" height="12" rx="2" fill="#d99a2b"/><text x="48" y="82" font-size="10.5" fill="#3a3a3c">物品 (w 重 / v 值)</text>
+  <rect x="190" y="72" width="12" height="12" rx="2" fill="#4a7fd0"/><text x="208" y="82" font-size="10.5" fill="#3a3a3c">整件装入</text>
+  <rect x="300" y="72" width="12" height="12" rx="2" fill="#2f9e6e"/><text x="318" y="82" font-size="10.5" fill="#3a3a3c">部分切分装入</text>
+
+  <!-- ===== ① 原始物品与单位价值 ===== -->
+  <text x="30" y="118" font-size="12" font-weight="700" fill="#8a5a12">① 计算每件的单位价值 v/w（每公斤值多少钱）—— 例：cap = 50</text>
+
+  <g font-size="11" text-anchor="middle">
+    <rect x="40" y="132" width="180" height="60" rx="10" fill="#fdf3e0" stroke="#e7c07a"/>
+    <text x="130" y="152" font-weight="700" fill="#8a5a12">A · w10 v50</text><text x="130" y="180" fill="#8a4038">v/w = 5.0</text>
+    <rect x="240" y="132" width="180" height="60" rx="10" fill="#fdf3e0" stroke="#e7c07a"/>
+    <text x="330" y="152" font-weight="700" fill="#8a5a12">B · w20 v120</text><text x="330" y="180" fill="#1f6b47" font-weight="700">v/w = 6.0</text>
+    <rect x="440" y="132" width="180" height="60" rx="10" fill="#fdf3e0" stroke="#e7c07a"/>
+    <text x="530" y="152" font-weight="700" fill="#8a5a12">C · w30 v150</text><text x="530" y="180" fill="#8a4038">v/w = 5.0</text>
+    <rect x="640" y="132" width="180" height="60" rx="10" fill="#fdf3e0" stroke="#e7c07a"/>
+    <text x="730" y="152" font-weight="700" fill="#8a5a12">D · w40 v210</text><text x="730" y="180" fill="#8a4038">v/w = 5.25</text>
+    <rect x="840" y="132" width="180" height="60" rx="10" fill="#fdf3e0" stroke="#e7c07a"/>
+    <text x="930" y="152" font-weight="700" fill="#8a5a12">E · w50 v240</text><text x="930" y="180" fill="#8a4038">v/w = 4.8</text>
+  </g>
+
+  <line x1="560" y1="204" x2="560" y2="230" stroke="#d99a2b" stroke-width="2" marker-end="url(#aA)"/>
+  <text x="572" y="222" font-size="10.5" fill="#8a5a12">sort.Slice 按 v/w 从高到低（O(n log n)，本图核心代价）</text>
+
+  <!-- ===== ② 排序后 ===== -->
+  <text x="30" y="256" font-size="12" font-weight="700" fill="#8a5a12">② 排序后的处理顺序：B(6.0) → D(5.25) → A(5.0) → C(5.0) → E(4.8)</text>
+
+  <g font-size="11" text-anchor="middle">
+    <rect x="40" y="270" width="130" height="44" rx="9" fill="#eaf1fb" stroke="#4a7fd0" stroke-width="1.4"/><text x="105" y="290" font-weight="700" fill="#20375e">B 6.0</text><text x="105" y="306" font-size="9.5" fill="#5a7099">w20 v120</text>
+    <rect x="200" y="270" width="130" height="44" rx="9" fill="#e6f4ec" stroke="#2f9e6e" stroke-width="1.4"/><text x="265" y="290" font-weight="700" fill="#1f6b47">D 5.25</text><text x="265" y="306" font-size="9.5" fill="#2a5a43">w40 v210</text>
+    <rect x="360" y="270" width="130" height="44" rx="9" fill="#f4f4f6" stroke="#d7d7dd"/><text x="425" y="290" fill="#8a8a8e">A 5.0</text><text x="425" y="306" font-size="9.5" fill="#a1a1a6">未触及</text>
+    <rect x="520" y="270" width="130" height="44" rx="9" fill="#f4f4f6" stroke="#d7d7dd"/><text x="585" y="290" fill="#8a8a8e">C 5.0</text><text x="585" y="306" font-size="9.5" fill="#a1a1a6">未触及</text>
+    <rect x="680" y="270" width="130" height="44" rx="9" fill="#f4f4f6" stroke="#d7d7dd"/><text x="745" y="290" fill="#8a8a8e">E 4.8</text><text x="745" y="306" font-size="9.5" fill="#a1a1a6">未触及</text>
+  </g>
+  <line x1="170" y1="292" x2="200" y2="292" stroke="#d99a2b" stroke-width="1.6" marker-end="url(#aA)"/>
+  <text x="850" y="288" font-size="10" fill="#6e6e73">容量满即停，</text>
+  <text x="850" y="304" font-size="10" fill="#6e6e73">后三件不必看</text>
+
+  <!-- ===== ③ 逐个装入背包 ===== -->
+  <text x="30" y="352" font-size="12" font-weight="700" fill="#8a5a12">③ 逐个装入容量条（总容量 50）：整件能放就放，放不下则切一块补满</text>
+
+  <rect x="90" y="372" width="900" height="52" rx="8" fill="#f4f4f6" stroke="#d7d7dd"/>
+  <!-- B 整件 w20 -> 20/50*900 = 360 -->
+  <rect x="90" y="372" width="360" height="52" rx="8" fill="#dbe8fa" stroke="#4a7fd0" stroke-width="1.5"/>
+  <text x="270" y="396" font-size="12" fill="#20375e" font-weight="700" text-anchor="middle">B 整件 w20</text>
+  <text x="270" y="413" font-size="10" fill="#3a4a63" text-anchor="middle">+值 120，cap 50→30</text>
+  <!-- D 部分 30/40 -> 30/50*900 = 540, x from 450 to 990 -->
+  <rect x="450" y="372" width="540" height="52" rx="8" fill="#d6efe1" stroke="#2f9e6e" stroke-width="1.5"/>
+  <text x="720" y="396" font-size="12" fill="#1f6b47" font-weight="700" text-anchor="middle">D 只切 30 / 40（剩余容量装不下整件）</text>
+  <text x="720" y="413" font-size="10" fill="#2a5a43" text-anchor="middle">+值 210 × 30/40 = 157.5，cap 30→0，break</text>
+  <text x="90" y="440" font-size="9.5" fill="#a1a1a6">0</text>
+  <text x="450" y="440" font-size="9.5" fill="#a1a1a6" text-anchor="middle">20</text>
+  <text x="990" y="440" font-size="9.5" fill="#a1a1a6" text-anchor="end">50（满）</text>
+
+  <!-- ===== ④ 结果 + 正确性 ===== -->
+  <rect x="40" y="464" width="470" height="96" rx="12" fill="#e6f4ec" stroke="#2f9e6e" stroke-width="1.3" filter="url(#soft)"/>
+  <text x="62" y="490" font-size="13" font-weight="700" fill="#1f6b47">总价值 = 120 + 157.5 = 277.5</text>
+  <text x="62" y="514" font-size="10.5" fill="#2a5a43">整件循环：item.w ≤ cap → res += v，cap -= w</text>
+  <text x="62" y="533" font-size="10.5" fill="#2a5a43">装不下：res += v/w × cap（切一块），cap 归零后 break</text>
+  <text x="62" y="552" font-size="10.5" fill="#4a4a4f">每公斤都用在最值钱的物品上，无一公斤浪费</text>
+
+  <rect x="530" y="464" width="550" height="96" rx="12" fill="#ffffff" stroke="#2f9e6e" stroke-width="1.3" filter="url(#soft)"/>
+  <text x="552" y="490" font-size="13" font-weight="700" fill="#1f6b47">为何贪心正确（交换论证）</text>
+  <text x="552" y="514" font-size="10.5" fill="#4a4a4f">若某最优解含一公斤低 v/w、却留着高 v/w 没装满，</text>
+  <text x="552" y="533" font-size="10.5" fill="#4a4a4f">把这一公斤换成高 v/w 的，总价不减——故存在以「最高 v/w 优先」开头的最优解。</text>
+  <text x="552" y="552" font-size="10.5" fill="#8a5a12">可切分是前提：0/1 背包不可切，贪心失效，须用动规。</text>
+
+  <!-- 底部对比 -->
+  <rect x="40" y="576" width="1040" height="100" rx="12" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="58" y="600" font-size="11.5" font-weight="700" fill="#8a5a12">分数背包 vs 0/1 背包</text>
+  <line x1="58" y1="612" x2="1062" y2="612" stroke="#e4e7ec"/>
+  <text x="58" y="634" font-size="10.5" fill="#1f6b47" font-weight="700">分数背包（本图）</text>
+  <text x="230" y="634" font-size="10.5" fill="#4a4a4f">物品可切 → 贪心（按 v/w 排序）O(n log n) 得最优</text>
+  <text x="58" y="658" font-size="10.5" fill="#8a4038" font-weight="700">0/1 背包（对照）</text>
+  <text x="230" y="658" font-size="10.5" fill="#4a4a4f">每件只能整取或不取 → 贪心失效，须动规填表 O(n·cap)，因「切不动」破坏了贪心选择性质</text>
+</svg>

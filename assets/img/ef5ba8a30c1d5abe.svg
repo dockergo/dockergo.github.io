@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="340" viewBox="0 0 1000 340" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1000" height="340" fill="#fbfbfd"/>
+  <text x="40" y="30" font-size="14" font-weight="600" fill="#1d1d1f">Runtime Filter：Build 侧运行时生成过滤器，下推 Probe 侧 Scan 提前裁行</text>
+
+  <!-- Build side -->
+  <rect x="40" y="66" width="230" height="46" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/><text x="155" y="94" font-size="12.5" font-weight="600" fill="#12402a" text-anchor="middle">维表/小表 Scan（Build）</text>
+  <rect x="40" y="150" width="230" height="66" rx="12" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/><text x="155" y="178" font-size="12.5" font-weight="600" fill="#5a3410" text-anchor="middle">生成 Runtime Filter</text><text x="155" y="198" font-size="10.5" fill="#93762e" text-anchor="middle">IN（少值）/ Bloom（多值）/ MinMax（范围）</text>
+  <line x1="155" y1="112" x2="155" y2="150" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <!-- Probe side -->
+  <rect x="620" y="66" width="340" height="46" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/><text x="790" y="94" font-size="12.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">事实表/大表 Scan（Probe）</text>
+  <text x="620" y="150" font-size="11" fill="#a05252">无 RF：读全部行</text>
+  <rect x="620" y="158" width="340" height="18" rx="5" fill="#fbeaea" stroke="#e7c3c3"/>
+  <text x="620" y="196" font-size="11" fill="#2f6f4f">有 RF：扫描阶段跳过不匹配 → 只读命中</text>
+  <rect x="620" y="204" width="96" height="18" rx="5" fill="#eafaf1" stroke="#bfe0cd"/>
+  <rect x="620" y="250" width="340" height="44" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/><text x="790" y="278" font-size="12.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">HashJoin Probe（少算少传）</text>
+  <line x1="790" y1="222" x2="790" y2="250" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <!-- RF pushdown -->
+  <path d="M270,183 L440,183 L440,89 L620,89" stroke="#c7c7cc" stroke-width="1.6" fill="none" stroke-dasharray="5 3" marker-end="url(#ar)"/>
+  <text x="445" y="176" font-size="10.5" font-weight="600" fill="#6e6e73" text-anchor="middle">下推裁行</text>
+
+  <rect x="40" y="250" width="500" height="44" rx="11" fill="#fafafb" stroke="#ececf1"/>
+  <text x="290" y="272" font-size="11" fill="#6e6e73" text-anchor="middle">尽力而为：Probe 短暂等待 RF 就绪；</text>
+  <text x="290" y="288" font-size="11" fill="#6e6e73" text-anchor="middle">超时则直接扫（不影响正确性，只影响裁剪收益）</text>
+</svg>

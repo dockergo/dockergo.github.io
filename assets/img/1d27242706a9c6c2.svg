@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="640" viewBox="0 0 1120 640" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="aR" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#d1544a"/></marker>
+    <marker id="aA" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#d98a00"/></marker>
+    <marker id="aG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+  </defs>
+  <rect width="1120" height="640" fill="#fbfbfd"/>
+
+  <text x="30" y="32" font-size="15" font-weight="700" fill="#1d1d1f">图解点 ③ 表达式树 JIT 编译为 IR · 表达式树 → 中间表示（IR）→ 机器码，消除逐行解释每行都付的分支 / 分派开销</text>
+  <text x="30" y="53" font-size="10.5" fill="#6e6e73">解释执行每行都遍历表达式树、按节点类型分支、做虚调用；JIT 在查询开始时把这棵树「就地编译」成一段专用机器码，之后每行直接跑原生指令，省掉全部解释开销</text>
+
+  <!-- 图例 -->
+  <line x1="30" y1="80" x2="54" y2="80" stroke="#d1544a" stroke-width="2" marker-end="url(#aR)"/>
+  <text x="60" y="84" font-size="10" fill="#3a3a3c">解释路径（每行重复遍历树）</text>
+  <line x1="330" y1="80" x2="354" y2="80" stroke="#d98a00" stroke-width="2" stroke-dasharray="5 3" marker-end="url(#aA)"/>
+  <text x="360" y="84" font-size="10" fill="#3a3a3c">编译路径（一次性：树 → IR → 机器码）</text>
+  <line x1="680" y1="80" x2="704" y2="80" stroke="#2f9e6e" stroke-width="2" marker-end="url(#aG)"/>
+  <text x="710" y="84" font-size="10" fill="#3a3a3c">执行编译后的原生指令</text>
+
+  <!-- 表达式树 -->
+  <text x="40" y="122" font-size="11" font-weight="700" fill="#1d1d1f">表达式（如 a * 2 + b）→ 表达式树</text>
+  <g font-size="10" text-anchor="middle">
+    <!-- + root -->
+    <circle cx="150" cy="160" r="22" fill="#fbf3e2" stroke="#e6ce9a"/><text x="150" y="165" fill="#8a6417">+</text>
+    <!-- * left -->
+    <circle cx="100" cy="222" r="22" fill="#fbf3e2" stroke="#e6ce9a"/><text x="100" y="227" fill="#8a6417">×</text>
+    <!-- b right -->
+    <circle cx="210" cy="222" r="20" fill="#eaf1fb" stroke="#c6d9f2"/><text x="210" y="227" fill="#20375e">b</text>
+    <!-- a -->
+    <circle cx="66" cy="286" r="20" fill="#eaf1fb" stroke="#c6d9f2"/><text x="66" y="291" fill="#20375e">a</text>
+    <!-- 2 -->
+    <circle cx="134" cy="286" r="20" fill="#eaf6f0" stroke="#bfe3d1"/><text x="134" y="291" fill="#2f6b4e">2</text>
+  </g>
+  <line x1="136" y1="178" x2="112" y2="204" stroke="#c9ab6a" stroke-width="1.5"/>
+  <line x1="166" y1="176" x2="196" y2="206" stroke="#c9ab6a" stroke-width="1.5"/>
+  <line x1="88" y1="240" x2="74" y2="268" stroke="#c9ab6a" stroke-width="1.5"/>
+  <line x1="112" y1="240" x2="128" y2="268" stroke="#c9ab6a" stroke-width="1.5"/>
+
+  <!-- 上路：解释 -->
+  <rect x="260" y="118" width="820" height="152" rx="14" fill="#fbeceb" stroke="#e8b9b3" filter="url(#soft)"/>
+  <text x="282" y="144" font-size="12" font-weight="700" fill="#a5372c">解释执行：每一行都把整棵树重走一遍</text>
+  <text x="282" y="166" font-size="10" fill="#8a4038">对每一行 row：递归 eval(node) —— 根据 node 类型 switch/虚调用，取子结果，再算本节点</text>
+
+  <!-- per-row loop illustration -->
+  <g font-size="9" text-anchor="middle">
+    <rect x="282" y="182" width="120" height="60" rx="8" fill="#f6d9d5" stroke="#d99a90"/><text x="342" y="204" fill="#8a4038">eval(+)</text><text x="342" y="220" font-size="8" fill="#b06a60">判类型→分支</text><text x="342" y="234" font-size="8" fill="#b06a60">虚调用×N</text>
+    <rect x="418" y="182" width="120" height="60" rx="8" fill="#f6d9d5" stroke="#d99a90"/><text x="478" y="204" fill="#8a4038">eval(×)</text><text x="478" y="220" font-size="8" fill="#b06a60">判类型→分支</text>
+    <rect x="554" y="182" width="120" height="60" rx="8" fill="#f6d9d5" stroke="#d99a90"/><text x="614" y="204" fill="#8a4038">取 a / 2 / b</text><text x="614" y="220" font-size="8" fill="#b06a60">装箱 / 拆箱</text>
+  </g>
+  <line x1="402" y1="212" x2="416" y2="212" stroke="#d1544a" stroke-width="1.4" marker-end="url(#aR)"/>
+  <line x1="538" y1="212" x2="552" y2="212" stroke="#d1544a" stroke-width="1.4" marker-end="url(#aR)"/>
+  <rect x="700" y="182" width="360" height="60" rx="8" fill="#fff" stroke="#e8b9b3"/>
+  <text x="716" y="204" font-size="9.5" fill="#8a4038">上述开销 <tspan font-weight="700">乘以行数</tspan>：树遍历 + 类型分支 + 虚调用</text>
+  <text x="716" y="222" font-size="9.5" fill="#8a4038">每一行都重复付一遍 —— 真正的乘加只占极小部分</text>
+  <text x="716" y="236" font-size="8.5" fill="#b06a60">「解释开销」是逐行执行的主要成本</text>
+
+  <!-- 中路：编译 -->
+  <text x="40" y="330" font-size="11.5" font-weight="700" fill="#8a6417">JIT：查询开始时，把这棵树一次性编译成专用代码（编译一次，执行万次才划算）</text>
+
+  <!-- 树 → IR -->
+  <rect x="40" y="346" width="300" height="130" rx="12" fill="#fdf6e8" stroke="#ecd6a8"/>
+  <text x="56" y="370" font-size="11" font-weight="700" fill="#8a6417">① 树 → IR（中间表示）</text>
+  <text x="56" y="392" font-size="9" fill="#7a5a1a">按树结构展开成线性、类型已定的指令：</text>
+  <g font-family="'SF Mono',ui-monospace,Menlo,monospace" font-size="9" fill="#7a5a1a">
+    <text x="56" y="412">t0 = load a</text>
+    <text x="56" y="428">t1 = mul t0, 2</text>
+    <text x="56" y="444">t2 = load b</text>
+    <text x="56" y="460">ret = add t1, t2</text>
+  </g>
+  <text x="200" y="412" font-size="8.5" fill="#a98a4a">类型在编译期定死</text>
+  <text x="200" y="428" font-size="8.5" fill="#a98a4a">无运行期判类型</text>
+
+  <!-- IR → 机器码 -->
+  <rect x="360" y="346" width="300" height="130" rx="12" fill="#fdf6e8" stroke="#ecd6a8"/>
+  <text x="376" y="370" font-size="11" font-weight="700" fill="#8a6417">② IR → 机器码（优化 + codegen）</text>
+  <text x="376" y="392" font-size="9" fill="#7a5a1a">编译器优化：常量折叠、内联、寄存器分配</text>
+  <text x="376" y="410" font-size="9" fill="#7a5a1a">生成本架构原生指令，可自动向量化</text>
+  <g font-family="'SF Mono',ui-monospace,Menlo,monospace" font-size="9" fill="#8a6417">
+    <text x="376" y="434">imul reg, [a], 2</text>
+    <text x="376" y="450">add  reg, [b]</text>
+  </g>
+  <text x="376" y="468" font-size="8.5" fill="#a98a4a">一段紧凑、无分支、可内联的函数</text>
+
+  <line x1="340" y1="411" x2="358" y2="411" stroke="#d98a00" stroke-width="1.8" stroke-dasharray="5 3" marker-end="url(#aA)"/>
+
+  <!-- 编译后执行 -->
+  <rect x="680" y="346" width="400" height="130" rx="12" fill="#eaf6f0" stroke="#bfe3d1" filter="url(#soft)"/>
+  <text x="696" y="370" font-size="11" font-weight="700" fill="#2f6b4e">③ 每行直接跑这段机器码</text>
+  <text x="696" y="392" font-size="9.5" fill="#4a7a63">无树遍历、无类型分支、无虚调用</text>
+  <text x="696" y="412" font-size="9.5" fill="#4a7a63">CPU 直接执行乘加原生指令</text>
+  <text x="696" y="432" font-size="9.5" fill="#4a7a63">分支预测 / 流水线 / 寄存器全部受益</text>
+  <text x="696" y="456" font-size="9" fill="#5f9c81">同一份逻辑，从「每行解释一棵树」变成「每行几条指令」</text>
+  <line x1="660" y1="411" x2="678" y2="411" stroke="#2f9e6e" stroke-width="1.8" marker-end="url(#aG)"/>
+
+  <!-- 底部：权衡 -->
+  <rect x="40" y="496" width="1040" height="120" rx="13" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="58" y="522" font-size="11" font-weight="700" fill="#8a6417">核心权衡：编译有固定成本，靠「执行次数」摊销</text>
+  <text x="58" y="544" font-size="10" fill="#4a4a4f"><tspan font-weight="700">收益：</tspan>消除逐行解释开销（树遍历 + 类型分支 + 虚调用），把「解释一棵树」压成「几条原生指令」，热点表达式可快数倍。</text>
+  <text x="58" y="566" font-size="10" fill="#4a4a4f"><tspan font-weight="700">代价：</tspan>编译本身耗时（毫秒级）。<tspan font-weight="700">编译一次、执行万次</tspan>才划算 —— 短查询 / 小数据量下解释反而更快。</text>
+  <text x="58" y="588" font-size="10" fill="#4a4a4f"><tspan font-weight="700">与向量化关系：</tspan>向量化「拓宽每次处理的数据（批）」，JIT「压缩每次处理的指令（编译）」；二者正交，常组合成向量化 + JIT。</text>
+  <text x="58" y="609" font-size="9" fill="#a1a1a6">不变式：编译产物与解释语义严格等价，只改执行形态、不改结果；类型在编译期定死，故要求列类型已知。</text>
+</svg>

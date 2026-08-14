@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="540" viewBox="0 0 1080 540" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="540" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="700" fill="#1d1d1f">回收 · expire snapshots + 清理孤儿文件</text>
+  <text x="30" y="49" font-size="9.5" fill="#a1a1a6">时间旅行的代价是旧快照/文件无限增长;两步回收把不再被任何存活快照引用的数据/元数据删掉</text>
+
+  <!-- expire snapshots -->
+  <rect x="30" y="72" width="500" height="200" rx="13" fill="#e7f0fb" stroke="#b9d2ef"/>
+  <text x="46" y="96" font-size="11" font-weight="700" fill="#1b2a4a">① expire snapshots（RemoveSnapshots）</text>
+  <text x="46" y="118" font-size="9.3" fill="#5b7db1">按保留策略(保留时长/最少个数)选出过期快照</text>
+  <text x="46" y="138" font-size="9.3" fill="#5b7db1">从 TableMetadata 移除这些快照条目(提交新元数据)</text>
+  <text x="46" y="158" font-size="9.3" fill="#5b7db1">RemoveSnapshots.commit → cleanExpiredSnapshots</text>
+  <text x="46" y="178" font-size="9.3" fill="#5b7db1">删除仅被过期快照引用的 manifest / data file</text>
+  <g text-anchor="middle" font-size="8.4">
+    <rect x="46" y="196" width="100" height="28" rx="7" fill="#f7f7f9" stroke="#e3e3e8"/><text x="96" y="214" fill="#8e8e93">S1(过期)</text>
+    <rect x="156" y="196" width="100" height="28" rx="7" fill="#f7f7f9" stroke="#e3e3e8"/><text x="206" y="214" fill="#8e8e93">S2(过期)</text>
+    <rect x="266" y="196" width="100" height="28" rx="7" fill="#f5faf6" stroke="#cfe6d5"/><text x="316" y="214" fill="#12402a">S3(保留)</text>
+    <rect x="376" y="196" width="130" height="28" rx="7" fill="#e7f0fb" stroke="#b9d2ef"/><text x="441" y="214" fill="#1b2a4a">S4(current)</text>
+  </g>
+  <text x="46" y="248" font-size="8.4" fill="#4a6fa0">时间旅行边界:只能回溯到最老保留快照</text>
+  <text x="46" y="264" font-size="8.4" fill="#a1a1a6">过期后其独占的文件才可被物理删除</text>
+
+  <!-- orphan files -->
+  <rect x="550" y="72" width="500" height="200" rx="13" fill="#f9ecec" stroke="#e8c9c9"/>
+  <text x="566" y="96" font-size="11" font-weight="700" fill="#7a2230">② remove orphan files（DeleteOrphanFiles）</text>
+  <text x="566" y="118" font-size="9.3" fill="#a85560">孤儿 = 存储上存在、但【不被任何元数据引用】的文件</text>
+  <text x="566" y="138" font-size="9.3" fill="#c07882">来源:失败/中断的写任务留下的临时 data/manifest</text>
+  <text x="566" y="158" font-size="9.3" fill="#a85560">对比"存储实际文件列表" vs "元数据引用集合"</text>
+  <text x="566" y="178" font-size="9.3" fill="#a85560">差集 = 孤儿,超过阈值年龄后删除</text>
+  <text x="566" y="204" font-size="8.6" fill="#c07882">⚠ 必须设"最小年龄"(默认 3 天):否则可能</text>
+  <text x="566" y="222" font-size="8.6" fill="#c07882">误删正在提交、尚未被元数据引用的新文件</text>
+  <text x="566" y="248" font-size="8.4" fill="#a1a1a6">BaseDeleteOrphanFiles / Spark DeleteOrphanFilesSparkAction</text>
+
+  <!-- expire does NOT remove orphans -->
+  <rect x="30" y="288" width="1020" height="70" rx="12" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="46" y="312" font-size="10.5" font-weight="700" fill="#5a3410">两者分工不同,都要跑</text>
+  <text x="46" y="334" font-size="9.3" fill="#93762e">expire snapshots 只删"被过期快照引用"的文件;它管不了从没进过元数据的孤儿。孤儿要靠 remove orphan files 扫存储对比清理。</text>
+  <text x="46" y="352" font-size="8.4" fill="#b3934a">典型维护流水:compaction → expire snapshots → remove orphan files,周期调度</text>
+
+  <rect x="30" y="374" width="1020" height="76" rx="12" fill="#f7f9fc" stroke="#e5ecf5"/>
+  <text x="46" y="398" font-size="10.5" font-weight="700" fill="#1b2a4a">保留策略是"能回溯多久"与"存储膨胀"的权衡</text>
+  <text x="46" y="420" font-size="9.3" fill="#5b7db1">保留久 → 时间旅行窗口长,但旧快照/文件堆积、元数据大;保留短 → 省空间,但回溯窗口小、误删风险(下游还在读旧快照)。</text>
+  <text x="46" y="438" font-size="9.3" fill="#5b7db1">按业务对"历史可见性"的需求设 max-snapshot-age-ms / min-snapshots-to-keep。</text>
+
+  <rect x="30" y="466" width="1020" height="56" rx="12" fill="#f0f0f4" stroke="#d2d2d7"/>
+  <text x="46" y="490" font-size="10" font-weight="700" fill="#48484a">常见误区</text>
+  <text x="46" y="510" font-size="9" fill="#6e6e73">"时间旅行零成本" —— 读免费,但保留旧快照的存储不免费,需 expire 回收;"expire 了就干净了" —— 孤儿还在,需单独清。</text>
+</svg>

@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="500" viewBox="0 0 1080 500" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+  </defs>
+  <rect width="1080" height="500" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">RocksDB 缓存内容与淘汰 · 三类块 + 优先级 + 防污染</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">index/filter 也占缓存(超大文件很大);优先级/钉住让高收益块留住;大扫描不填缓存防污染</text>
+
+  <!-- priorities -->
+  <rect x="30" y="70" width="500" height="200" rx="13" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="46" y="92" font-size="11" font-weight="700" fill="#1b2a4a">缓存优先级与钉住</text>
+  <rect x="46" y="104" width="470" height="40" rx="8" fill="#f5faf6" stroke="#cfe6d5"/><text x="60" y="124" font-size="9" font-weight="600" fill="#2c5a3a">high 优先级:index / filter</text><text x="60" y="138" font-size="8.3" fill="#2f6f4f">读它们收益大(定位/短路)→ 更不易淘汰</text>
+  <rect x="46" y="152" width="470" height="40" rx="8" fill="#eef3fb" stroke="#bcd0ec"/><text x="60" y="172" font-size="9" font-weight="600" fill="#1b2a4a">low 优先级:data block</text><text x="60" y="186" font-size="8.3" fill="#5b7db1">数据块多、可再读盘 → 优先被淘汰</text>
+  <rect x="46" y="200" width="470" height="40" rx="8" fill="#fdf6ea" stroke="#efdcb4"/><text x="60" y="220" font-size="9" font-weight="600" fill="#5a3410">pin_l0_filter_and_index_blocks_in_cache</text><text x="60" y="234" font-size="8.3" fill="#93762e">钉住 L0 的 filter/index(L0 最常查)</text>
+  <text x="46" y="258" font-size="8.3" fill="#5b7db1">cache_index_and_filter_blocks_with_high_priority</text>
+
+  <!-- anti-pollution -->
+  <rect x="550" y="70" width="500" height="200" rx="13" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="566" y="92" font-size="11" font-weight="700" fill="#12402a">防缓存污染</text>
+  <rect x="566" y="104" width="470" height="50" rx="8" fill="#fff7e6" stroke="#e8cf9a"/><text x="580" y="124" font-size="9" font-weight="600" fill="#5a3410">问题:大范围扫描</text><text x="580" y="142" font-size="8.3" fill="#93762e">一次性读海量块灌进缓存 → 挤出真正的热点数据</text>
+  <rect x="566" y="162" width="470" height="50" rx="8" fill="#eafaf1" stroke="#bfe0cd"/><text x="580" y="182" font-size="9" font-weight="600" fill="#12402a">解:ReadOptions::fill_cache=false</text><text x="580" y="200" font-size="8.3" fill="#2f6f4f">扫描读的块不进缓存 → 不污染热点</text>
+  <rect x="566" y="220" width="470" height="40" rx="8" fill="#fff" stroke="#cfe6d5"/><text x="580" y="240" font-size="8.5" fill="#2c5a3a">Compaction 读的块也可不进 cache(避免污染)</text><text x="580" y="254" font-size="8" fill="#93762e">大批量顺序访问 vs 随机热点,策略不同</text>
+
+  <!-- eviction + compressed cache -->
+  <rect x="30" y="286" width="1020" height="130" rx="13" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="46" y="308" font-size="11" font-weight="700" fill="#1d1d1f">淘汰与二级缓存</text>
+  <text x="46" y="330" font-size="9" fill="#6e6e73">· 淘汰:容量满时按 LRU(或 clock 近似)淘汰最久未用的块;高优先级块在同等条件下更晚被淘汰</text>
+  <text x="46" y="348" font-size="9" fill="#6e6e73">· 超大文件的 index/filter 本身可能几十 MB → partitioned index/filter 分块按需入 cache(见 SST FilterIndex),避免全常驻</text>
+  <text x="46" y="366" font-size="9" fill="#6e6e73">· 可选 compressed block cache(二级):缓存压缩块,在 block cache(解压)与磁盘之间;内存紧时用压缩块换更多缓存条目</text>
+  <text x="46" y="384" font-size="9" fill="#6e6e73">· 分层缓存(secondary cache):可挂 SSD 作 block cache 的二级,热数据内存、温数据 SSD</text>
+  <text x="46" y="404" font-size="8.5" fill="#b1483a">· 归属:缓存策略是本主线;被缓存的块结构在【SST】;命中判断在【读取路径】</text>
+
+  <!-- notes -->
+  <rect x="30" y="432" width="1020" height="56" rx="13" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="46" y="454" font-size="11" font-weight="700" fill="#2c5a3a">要点</text>
+  <text x="46" y="476" font-size="9" fill="#2f6f4f">· 缓存不是"越大越好也不是随便填":要区分热点(留)与一次性扫描(不填),并让高收益的 index/filter 优先留住——这是缓存调优的核心</text>
+</svg>

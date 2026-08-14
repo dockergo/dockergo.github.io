@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="480" viewBox="0 0 1080 480" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs><filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+  <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker></defs>
+  <rect width="1080" height="480" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">成员发现与启动：static / discovery + new / existing</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">config.go: --initial-cluster(:683) · --initial-cluster-state new/existing · 加入已有集群顺序不能反</text>
+  <rect x="40" y="76" width="490" height="140" rx="12" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="60" y="100" font-size="11" font-weight="700" fill="#1b2a4a">首次组建新集群（state=new）</text>
+  <text x="60" y="124" font-size="9.5" fill="#5b7db1">· static：--initial-cluster 列全部成员 name→peerURL</text>
+  <text x="75" y="142" font-size="8.5" fill="#8aa6cf">每个节点配同样列表，启动按表互联</text>
+  <text x="60" y="162" font-size="9.5" fill="#5b7db1">· discovery：经已有 etcd / DNS SRV 动态发现 peers</text>
+  <text x="75" y="180" font-size="8.5" fill="#8aa6cf">适合不预知 IP 的场景</text>
+  <text x="60" y="202" font-size="9" fill="#8aa6cf">所有初始成员同时以 state=new 启动 → 选出首个 leader</text>
+  <rect x="550" y="76" width="490" height="140" rx="12" fill="#fdf9f0" stroke="#efe3cd"/>
+  <text x="570" y="100" font-size="11" font-weight="700" fill="#7a5a1e">加入已有集群（state=existing）</text>
+  <text x="570" y="124" font-size="9.5" fill="#93762e">· ① 先在现有集群 MemberAdd（登记新成员 peerURL）</text>
+  <text x="570" y="144" font-size="9.5" fill="#93762e">· ② 再启动新节点，state=existing</text>
+  <text x="570" y="164" font-size="9.5" fill="#a44">· 顺序不能反！先启动再 MemberAdd → 新节点</text>
+  <text x="585" y="182" font-size="9" fill="#7a2230">找不到自己在成员表的位置 → 起不来</text>
+  <text x="570" y="204" font-size="9" fill="#b08843">现有集群已知道它，新节点才能正确加入 Raft</text>
+  <rect x="40" y="236" width="1000" height="110" rx="12" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="60" y="260" font-size="11" font-weight="700" fill="#12402a">生产扩容标准姿势（结合 learner）</text>
+  <g text-anchor="middle" font-size="8.5">
+    <rect x="70" y="274" width="215" height="50" rx="8" fill="#fff" stroke="#bfe0cd"/><text x="177" y="294" font-weight="600" fill="#12402a">① MemberAddAsLearner</text><text x="177" y="312" fill="#2f6f4f">现集群登记为 learner</text>
+    <rect x="305" y="274" width="215" height="50" rx="8" fill="#fff" stroke="#bfe0cd"/><text x="412" y="294" font-weight="600" fill="#12402a">② 启动 learner 节点</text><text x="412" y="312" fill="#2f6f4f">state=existing，追平数据</text>
+    <rect x="540" y="274" width="215" height="50" rx="8" fill="#fff" stroke="#bfe0cd"/><text x="647" y="294" font-weight="600" fill="#12402a">③ 确认健康</text><text x="647" y="312" fill="#2f6f4f">数据追上、endpoint 正常</text>
+    <rect x="775" y="274" width="215" height="50" rx="8" fill="#f2fbf6" stroke="#cdeadb"/><text x="882" y="294" font-weight="600" fill="#12402a">④ MemberPromote</text><text x="882" y="312" fill="#2f6f4f">转投票成员，扩容完成</text>
+  </g>
+  <g stroke="#c7c7cc" stroke-width="1.3" fill="none">
+    <line x1="285" y1="299" x2="305" y2="299" marker-end="url(#ar)"/>
+    <line x1="520" y1="299" x2="540" y2="299" marker-end="url(#ar)"/>
+    <line x1="755" y1="299" x2="775" y2="299" marker-end="url(#ar)"/>
+  </g>
+  <rect x="40" y="360" width="1000" height="56" rx="12" fill="#f7f7f9" stroke="#e6e6ea"/>
+  <text x="60" y="384" font-size="11" font-weight="700" fill="#1d1d1f">一句话</text>
+  <text x="60" y="406" font-size="10" fill="#4b4b50">首次组建用 --initial-cluster（static）或 discovery + state=new；加入已有集群必须先 MemberAdd 再启动（state=existing）——生产扩容走 learner 四步：登记→追平→确认→promote。</text>
+</svg>

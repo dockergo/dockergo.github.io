@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="640" viewBox="0 0 1120 640" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="aP" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#8a5cae"/></marker>
+    <marker id="aG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+    <marker id="aB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#4a7fd0"/></marker>
+  </defs>
+  <rect width="1120" height="640" fill="#fbfbfd"/>
+
+  <text x="30" y="32" font-size="15" font-weight="700" fill="#1d1d1f">图解点 ③ Read Index / Lease 绕日志的读一致性 · 读不写日志：确认「我仍是 Leader」+ 等 applied ≥ readIndex，即可安全返回快照</text>
+  <text x="30" y="53" font-size="10.5" fill="#6e6e73">把读也走日志复制太贵；线性一致读只需两个保证：① 读时刻确有最新 commit 视图；② 本地状态机已 apply 到该点 —— 无需为读产生新日志条目</text>
+
+  <!-- 图例 -->
+  <line x1="30" y1="80" x2="54" y2="80" stroke="#8a5cae" stroke-width="2" marker-end="url(#aP)"/>
+  <text x="60" y="84" font-size="10" fill="#3a3a3c">读请求路径（不进日志）</text>
+  <line x1="280" y1="80" x2="304" y2="80" stroke="#4a7fd0" stroke-width="2" marker-end="url(#aB)"/>
+  <text x="310" y="84" font-size="10" fill="#3a3a3c">Leader 身份确认（心跳/lease）</text>
+  <line x1="560" y1="80" x2="584" y2="80" stroke="#2f9e6e" stroke-width="2" marker-end="url(#aG)"/>
+  <text x="590" y="84" font-size="10" fill="#3a3a3c">等 applied 追平后返回</text>
+
+  <!-- 左：ReadIndex 方案 -->
+  <rect x="30" y="108" width="530" height="330" rx="14" fill="#f4eefb" stroke="#dcc9ef" filter="url(#soft)"/>
+  <text x="52" y="136" font-size="13" font-weight="700" fill="#6f3ea8">方案 A · ReadIndex（每次读确认多数派）</text>
+
+  <rect x="52" y="152" width="486" height="40" rx="9" fill="#fff" stroke="#dcc9ef"/>
+  <text x="66" y="177" font-size="10.5" fill="#5a3a7a"><tspan font-weight="700">① 记录 readIndex</tspan> = 当前 commit index（读发起瞬间）</text>
+
+  <rect x="52" y="200" width="486" height="40" rx="9" fill="#fff" stroke="#dcc9ef"/>
+  <text x="66" y="225" font-size="10.5" fill="#5a3a7a"><tspan font-weight="700">② 广播一轮心跳</tspan>，收到多数派响应 → 确认「此刻我仍是 Leader」</text>
+
+  <rect x="52" y="248" width="486" height="40" rx="9" fill="#fff" stroke="#dcc9ef"/>
+  <text x="66" y="273" font-size="10.5" fill="#5a3a7a"><tspan font-weight="700">③ 等待 applyIndex ≥ readIndex</tspan>（本地状态机追平该点）</text>
+
+  <rect x="52" y="296" width="486" height="40" rx="9" fill="#eaf6f0" stroke="#bfe3d1"/>
+  <text x="66" y="321" font-size="10.5" fill="#2f6b4e"><tspan font-weight="700">④ 直接读本地状态机快照返回</tspan> —— 无新日志、无落盘</text>
+
+  <text x="52" y="366" font-size="9.5" fill="#8a5cae">为何正确：多数派心跳证明没有更高任期的新 Leader 已提交更新的写；</text>
+  <text x="52" y="384" font-size="9.5" fill="#8a5cae">故 readIndex 之前的所有已提交写都对本次读可见，满足线性一致。</text>
+  <text x="52" y="410" font-size="9" fill="#a07cc0">代价：每次读一轮心跳 RTT（可对并发读合批：一轮心跳服务一批读）</text>
+
+  <!-- 右：Lease 方案 -->
+  <rect x="580" y="108" width="510" height="330" rx="14" fill="#eaf1fb" stroke="#c6d9f2" filter="url(#soft)"/>
+  <text x="602" y="136" font-size="13" font-weight="700" fill="#20375e">方案 B · Lease Read（时钟租约免心跳）</text>
+
+  <rect x="602" y="152" width="466" height="46" rx="9" fill="#fff" stroke="#c6d9f2"/>
+  <text x="616" y="174" font-size="10.5" fill="#2f4a70"><tspan font-weight="700">① Leader 持有 lease</tspan>：选举成功后获得一段有效期</text>
+  <text x="616" y="190" font-size="9" fill="#5a7099">lease 时长 &lt; 选举超时，保证租约内不会有新 Leader 产生</text>
+
+  <rect x="602" y="206" width="466" height="46" rx="9" fill="#fff" stroke="#c6d9f2"/>
+  <text x="616" y="228" font-size="10.5" fill="#2f4a70"><tspan font-weight="700">② lease 未过期</tspan> → 无需心跳即认定自己仍是唯一 Leader</text>
+  <text x="616" y="244" font-size="9" fill="#5a7099">每次成功心跳顺延 lease，稳态下几乎总在有效期内</text>
+
+  <rect x="602" y="260" width="466" height="40" rx="9" fill="#fff" stroke="#c6d9f2"/>
+  <text x="616" y="285" font-size="10.5" fill="#2f4a70"><tspan font-weight="700">③ 等 applyIndex ≥ commitIndex</tspan> 后直接读本地</text>
+
+  <rect x="602" y="308" width="466" height="40" rx="9" fill="#eaf6f0" stroke="#bfe3d1"/>
+  <text x="616" y="333" font-size="10.5" fill="#2f6b4e"><tspan font-weight="700">④ 省掉每读一轮心跳</tspan> → 读延迟最低</text>
+
+  <text x="602" y="374" font-size="9.5" fill="#4a7fd0">前提假设：各节点时钟漂移有界（clock drift bound）。</text>
+  <text x="602" y="392" font-size="9.5" fill="#c4562f">风险：时钟假设被破坏（大幅漂移/暂停）可能读到过期视图 —— 比 ReadIndex 弱。</text>
+  <text x="602" y="416" font-size="9" fill="#7a90b0">工程折中：稳态用 lease 提速，异常/时钟不可信时回退 ReadIndex。</text>
+
+  <!-- 底部对比条 -->
+  <rect x="30" y="458" width="1060" height="158" rx="14" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="52" y="484" font-size="12" font-weight="700" fill="#1d1d1f">共同点：读都「绕开日志」，且都要 applied 追平</text>
+  <line x1="52" y1="496" x2="1068" y2="496" stroke="#eef0f3" stroke-width="1"/>
+
+  <text x="52" y="522" font-size="10.5" font-weight="700" fill="#6f3ea8">身份确认</text>
+  <text x="150" y="522" font-size="10" fill="#4a4a4f">ReadIndex 用「一轮多数派心跳」实证；Lease 用「时钟租约」推断 —— 一个靠通信、一个靠时间。</text>
+
+  <text x="52" y="550" font-size="10.5" font-weight="700" fill="#2f6b4e">applied 屏障</text>
+  <text x="150" y="550" font-size="10" fill="#4a4a4f">两者都必须等本地 applyIndex ≥ readIndex/commitIndex，否则会读到「已提交但本机尚未回放」的旧值。</text>
+
+  <text x="52" y="578" font-size="10.5" font-weight="700" fill="#4a7fd0">Follower 读</text>
+  <text x="150" y="578" font-size="10" fill="#4a4a4f">Follower 也可服务读：先向 Leader 索取 readIndex，再等本地 applied 追平 —— 把读扩散到副本、分摊 Leader 压力。</text>
+
+  <text x="52" y="604" font-size="10.5" font-weight="700" fill="#c4562f">失效退化</text>
+  <text x="150" y="604" font-size="10" fill="#4a4a4f">网络分区中旧 Leader 心跳收不到多数派 → ReadIndex 自动阻塞，不会返回脑裂的陈旧数据。</text>
+</svg>

@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="420" viewBox="0 0 1000 420" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs><filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter></defs>
+  <rect width="1000" height="420" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Parquet 原理 · 压缩 codec（页级、可逐列不同）</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">压缩作用在“编码之后的页体字节流”上,逐页独立;每列可选不同 codec,记于 ColumnMetaData.codec;codec 是通用字节流算法,不理解列语义</text>
+
+  <!-- codec 表 -->
+  <g>
+    <rect x="30" y="76" width="220" height="70" rx="11" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+    <text x="46" y="100" font-size="11" font-weight="700" fill="#5a3410">UNCOMPRESSED</text>
+    <text x="46" y="122" font-size="8.6" fill="#93762e">不压缩,最快</text>
+    <text x="46" y="138" font-size="8.6" fill="#93762e">已高度编码/CPU 紧张时</text>
+
+    <rect x="266" y="76" width="220" height="70" rx="11" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+    <text x="282" y="100" font-size="11" font-weight="700" fill="#12402a">SNAPPY</text>
+    <text x="282" y="122" font-size="8.6" fill="#2f6f5f">极快,压缩率中等</text>
+    <text x="282" y="138" font-size="8.6" fill="#2f6f5f">常见默认之一</text>
+
+    <rect x="502" y="76" width="220" height="70" rx="11" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+    <text x="518" y="100" font-size="11" font-weight="700" fill="#12402a">ZSTD</text>
+    <text x="518" y="122" font-size="8.6" fill="#2f6f5f">压缩率/速度均衡</text>
+    <text x="518" y="138" font-size="8.6" fill="#2f6f5f">现代推荐默认</text>
+
+    <rect x="738" y="76" width="232" height="70" rx="11" fill="#e9f2ff" stroke="#a9ccf5" filter="url(#soft)"/>
+    <text x="754" y="100" font-size="11" font-weight="700" fill="#0a3d78">GZIP</text>
+    <text x="754" y="122" font-size="8.6" fill="#2a5a92">压缩率高,较慢</text>
+    <text x="754" y="138" font-size="8.6" fill="#2a5a92">冷数据/带宽敏感</text>
+
+    <rect x="30" y="162" width="220" height="70" rx="11" fill="#e9f2ff" stroke="#a9ccf5" filter="url(#soft)"/>
+    <text x="46" y="186" font-size="11" font-weight="700" fill="#0a3d78">LZ4_RAW</text>
+    <text x="46" y="208" font-size="8.6" fill="#2a5a92">极快,现行 LZ4 帧</text>
+    <text x="46" y="224" font-size="8.6" fill="#2a5a92">取代已弃用 LZ4</text>
+
+    <rect x="266" y="162" width="220" height="70" rx="11" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+    <text x="282" y="186" font-size="11" font-weight="700" fill="#5a3410">BROTLI</text>
+    <text x="282" y="208" font-size="8.6" fill="#93762e">高压缩率</text>
+    <text x="282" y="224" font-size="8.6" fill="#93762e">文本类收益好</text>
+
+    <rect x="502" y="162" width="220" height="70" rx="11" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+    <text x="518" y="186" font-size="11" font-weight="700" fill="#5a3410">LZO</text>
+    <text x="518" y="208" font-size="8.6" fill="#93762e">快,历史遗留</text>
+    <text x="518" y="224" font-size="8.6" fill="#93762e">兼容旧生态</text>
+
+    <rect x="738" y="162" width="232" height="70" rx="11" fill="#f7f7f9" stroke="#e3e3e8" filter="url(#soft)"/>
+    <text x="754" y="186" font-size="11" font-weight="700" fill="#8a8a90">LZ4（已弃用）</text>
+    <text x="754" y="208" font-size="8.6" fill="#a1a1a6">旧实现帧格式歧义</text>
+    <text x="754" y="224" font-size="8.6" fill="#a1a1a6">新写用 LZ4_RAW</text>
+  </g>
+
+  <!-- 流水 -->
+  <rect x="30" y="252" width="940" height="72" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="48" y="276" font-size="11" font-weight="700" fill="#1b2a4a">页体处理流水（写方向）</text>
+  <text x="48" y="300" font-size="9.4" fill="#5b7db1">列值 → 编码（PLAIN/字典/DELTA…）→ codec 压缩 → 页体;PageHeader 同时记 uncompressed_page_size 与 compressed_page_size 供读端分配缓冲。</text>
+  <text x="48" y="318" font-size="8.6" fill="#7fa0c4">读方向反过来：按 PageHeader 大小取出压缩块 → 解压 → 按 encodings 解码 → 得列值。</text>
+
+  <rect x="30" y="336" width="940" height="70" rx="12" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+  <text x="48" y="360" font-size="9.6" fill="#5a3410">要点：codec 逐页独立压/解 → 读者可只解压需要的页;codec 逐列可不同 → 高基数列用 ZSTD、已字典化列可 UNCOMPRESSED。</text>
+  <text x="48" y="380" font-size="9.6" fill="#93762e">codec 与编码正交：编码利用列语义,codec 是通用字节流算法,二者叠加。CompressionCodec 枚举列出全部合法值。</text>
+  <text x="48" y="398" font-size="8.6" fill="#a1877f">除已弃用 LZ4 外,所有 codec 压缩的是原始（编码后）页体字节;LZ4_RAW 用无帧头的裸块以消除歧义。</text>
+</svg>

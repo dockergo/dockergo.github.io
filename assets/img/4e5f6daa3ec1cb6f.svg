@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="350" viewBox="0 0 900 350" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="w1" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="w1h" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+    <marker id="w1s" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#c99a3a"/></marker>
+  </defs>
+  <rect width="900" height="350" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">WAL 预写日志 · 先写 redo（顺序快），后刷数据页（异步慢）</text>
+  <text x="30" y="48" font-size="10.5" fill="#6e6e73">提交只需 redo 落盘即持久；把"随机写数据页"换成"顺序写日志"</text>
+
+  <!-- 事务改动 -->
+  <rect x="40" y="86" width="150" height="70" rx="11" fill="#eef7f1" stroke="#8fcaa8" filter="url(#w1)"/>
+  <text x="115" y="114" font-size="10.5" font-weight="700" fill="#1c7a4d" text-anchor="middle">事务改动一页</text>
+  <text x="115" y="134" font-size="8.3" fill="#3c7a58" text-anchor="middle">生成 redo 记录</text>
+
+  <!-- redo log -->
+  <rect x="260" y="80" width="260" height="82" rx="11" fill="#fbf7ef" stroke="#ecdcbf" filter="url(#w1)"/>
+  <text x="390" y="104" font-size="11" font-weight="700" fill="#8a6d3b" text-anchor="middle">① 先写 redo log（顺序追加）</text>
+  <text x="390" y="124" font-size="8.5" fill="#b08535" text-anchor="middle">log_write_up_to → fsync 落盘</text>
+  <text x="390" y="142" font-size="8.5" fill="#b08535" text-anchor="middle">redo 落盘 = 事务持久（即使脏页在内存）</text>
+  <text x="390" y="157" font-size="7.8" fill="#c3ab7e" text-anchor="middle">LSN 标记位置 · `log0log.cc:1217`</text>
+
+  <!-- 数据页 -->
+  <rect x="590" y="80" width="270" height="82" rx="11" fill="#fff7f1" stroke="#f0d4b8" filter="url(#w1)"/>
+  <text x="725" y="104" font-size="11" font-weight="700" fill="#b0651f" text-anchor="middle">② 后改内存数据页（脏页）</text>
+  <text x="725" y="124" font-size="8.5" fill="#8a6d3b" text-anchor="middle">page cleaner 异步刷盘（慢慢来）</text>
+  <text x="725" y="142" font-size="8.5" fill="#8a6d3b" text-anchor="middle">不阻塞提交</text>
+
+  <line x1="190" y1="121" x2="260" y2="121" stroke="#2f9e6e" stroke-width="1.8" marker-end="url(#w1h)"/>
+  <line x1="520" y1="121" x2="590" y2="121" stroke="#c99a3a" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#w1s)"/>
+
+  <!-- checkpoint 时间线 -->
+  <text x="40" y="212" font-size="11" font-weight="700" fill="#1d1d1f">checkpoint 与 LSN 时间线</text>
+  <line x1="60" y1="252" x2="840" y2="252" stroke="#d2d2d7" stroke-width="2"/>
+  <g text-anchor="middle" font-size="8.5">
+    <circle cx="200" cy="252" r="6" fill="#5b7db1"/><text x="200" y="278" fill="#5b7db1">checkpoint LSN</text><text x="200" y="292" fill="#8a94a6">此前改动已刷盘</text>
+    <circle cx="500" cy="252" r="6" fill="#8a6d3b"/><text x="500" y="278" fill="#8a6d3b">已提交未刷脏</text><text x="500" y="292" fill="#8a94a6">redo 已落、页在内存</text>
+    <circle cx="760" cy="252" r="6" fill="#c0392b"/><text x="760" y="278" fill="#c0392b">崩溃点</text>
+  </g>
+  <rect x="200" y="246" width="560" height="12" fill="#d38236" opacity="0.15"/>
+  <text x="480" y="322" font-size="9.5" fill="#4a4a4f" text-anchor="middle">恢复只需重放 [checkpoint LSN, 崩溃点] 区间的 redo —— checkpoint 越新，恢复越快</text>
+</svg>

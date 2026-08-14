@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="560" viewBox="0 0 1080 560" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+  </defs>
+  <rect width="1080" height="560" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">RocksDB Compaction 三风格 · Leveled / Universal / FIFO</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">compaction_style 选一种;各自对应写/读/空间三放大的不同权衡点</text>
+
+  <!-- Leveled -->
+  <rect x="30" y="70" width="330" height="330" rx="13" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="46" y="92" font-size="11.5" font-weight="700" fill="#1b2a4a">Leveled（默认）</text>
+  <text x="46" y="110" font-size="8.5" fill="#5b7db1">kCompactionStyleLevel</text>
+  <g font-size="7.5" text-anchor="middle">
+    <rect x="46" y="120" width="298" height="20" rx="4" fill="#fef2e0" stroke="#e8cf9a"/><text x="195" y="134" fill="#5a3410">L0(重叠,少量)</text>
+    <rect x="46" y="146" width="298" height="20" rx="4" fill="#eef3fb" stroke="#bcd0ec"/><text x="195" y="160" fill="#1b2a4a">L1(非重叠有序,~256MB)</text>
+    <rect x="46" y="172" width="298" height="24" rx="4" fill="#eef3fb" stroke="#bcd0ec"/><text x="195" y="188" fill="#1b2a4a">L2(~2.5GB,10×)</text>
+    <rect x="46" y="202" width="298" height="30" rx="4" fill="#eef3fb" stroke="#bcd0ec"/><text x="195" y="221" fill="#1b2a4a">L3(~25GB) …每层非重叠</text>
+  </g>
+  <text x="46" y="252" font-size="8.5" fill="#5b7db1">· 每层容量约上层 10×,层内非重叠</text>
+  <text x="46" y="270" font-size="8.5" fill="#5b7db1">· L1+ 选一文件与下层重叠文件合并</text>
+  <rect x="46" y="284" width="298" height="106" rx="8" fill="#fff" stroke="#bcd0ec"/>
+  <text x="60" y="304" font-size="8.8" font-weight="600" fill="#12402a">读放大 低 · 空间放大 低</text>
+  <text x="60" y="322" font-size="8.8" font-weight="600" fill="#b1483a">写放大 高</text>
+  <text x="60" y="342" font-size="8.3" fill="#5b7db1">层内有序 → 读每层至多一文件</text>
+  <text x="60" y="358" font-size="8.3" fill="#5b7db1">旧版本及时回收 → 空间省</text>
+  <text x="60" y="376" font-size="8.3" fill="#93762e">通用首选(读多写中)</text>
+
+  <!-- Universal -->
+  <rect x="375" y="70" width="330" height="330" rx="13" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="391" y="92" font-size="11.5" font-weight="700" fill="#12402a">Universal</text>
+  <text x="391" y="110" font-size="8.5" fill="#2f6f4f">kCompactionStyleUniversal</text>
+  <g font-size="7.5" text-anchor="middle">
+    <rect x="391" y="120" width="298" height="24" rx="4" fill="#eafaf1" stroke="#bfe0cd"/><text x="540" y="136" fill="#12402a">新 SST(小)</text>
+    <rect x="391" y="150" width="298" height="26" rx="4" fill="#f5faf6" stroke="#cfe6d5"/><text x="540" y="167" fill="#2c5a3a">相邻按时间序整段合并</text>
+    <rect x="391" y="182" width="298" height="30" rx="4" fill="#f5faf6" stroke="#cfe6d5"/><text x="540" y="201" fill="#2c5a3a">老 SST(大,少合)</text>
+  </g>
+  <text x="391" y="232" font-size="8.5" fill="#2f6f4f">· 按时间序把相邻 SST 整段合并</text>
+  <text x="391" y="250" font-size="8.5" fill="#2f6f4f">· 尽量少合、层数少</text>
+  <rect x="391" y="264" width="298" height="126" rx="8" fill="#fff" stroke="#cfe6d5"/>
+  <text x="405" y="284" font-size="8.8" font-weight="600" fill="#12402a">写放大 低</text>
+  <text x="405" y="302" font-size="8.8" font-weight="600" fill="#b1483a">空间放大 高</text>
+  <text x="405" y="320" font-size="8.3" fill="#2f6f4f">少合并 → 一份数据少被重写</text>
+  <text x="405" y="336" font-size="8.3" fill="#b1483a">合并时临时占用可翻倍</text>
+  <text x="405" y="352" font-size="8.3" fill="#2f6f4f">读放大也可能偏大</text>
+  <text x="405" y="372" font-size="8.3" fill="#93762e">写密集、空间宽裕时用</text>
+
+  <!-- FIFO -->
+  <rect x="720" y="70" width="330" height="330" rx="13" fill="#fff7e6" stroke="#e8cf9a"/>
+  <text x="736" y="92" font-size="11.5" font-weight="700" fill="#5a3410">FIFO</text>
+  <text x="736" y="110" font-size="8.5" fill="#93762e">kCompactionStyleFIFO</text>
+  <g font-size="7.5" text-anchor="middle">
+    <rect x="736" y="120" width="298" height="24" rx="4" fill="#fef2e0" stroke="#e8cf9a"/><text x="885" y="136" fill="#5a3410">最新 SST(保留)</text>
+    <rect x="736" y="150" width="298" height="24" rx="4" fill="#fdf6ea" stroke="#efdcb4"/><text x="885" y="166" fill="#93762e">…</text>
+    <rect x="736" y="180" width="298" height="24" rx="4" fill="#ffecec" stroke="#e0a0a0"/><text x="885" y="196" fill="#b1483a">最老 SST(超 TTL/总量 → 删)</text>
+  </g>
+  <text x="736" y="228" font-size="8.5" fill="#93762e">· 几乎不合并,只按 TTL/总大小</text>
+  <text x="736" y="246" font-size="8.5" fill="#93762e">  删最老文件</text>
+  <rect x="736" y="264" width="298" height="126" rx="8" fill="#fff" stroke="#e8cf9a"/>
+  <text x="750" y="284" font-size="8.8" font-weight="600" fill="#12402a">写放大 极低</text>
+  <text x="750" y="302" font-size="8.8" fill="#4b4b50">读放大 中(不整理)</text>
+  <text x="750" y="322" font-size="8.3" fill="#93762e">基本不重写数据</text>
+  <text x="750" y="338" font-size="8.3" fill="#93762e">只留近期数据,老的直接丢</text>
+  <text x="750" y="358" font-size="8.3" fill="#93762e">时序/缓存类(日志、监控指标)</text>
+  <text x="750" y="376" font-size="8.3" fill="#b1483a">不适合需完整历史的场景</text>
+
+  <!-- summary -->
+  <rect x="30" y="416" width="1020" height="126" rx="13" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="46" y="438" font-size="11" font-weight="700" fill="#1d1d1f">选型速查</text>
+  <g font-size="8.8">
+    <rect x="46" y="450" width="330" height="24" rx="6" fill="#eef3fb" stroke="#bcd0ec"/><text x="60" y="467" fill="#1b2a4a">读多/需省空间/完整历史 → Leveled</text>
+    <rect x="386" y="450" width="330" height="24" rx="6" fill="#f5faf6" stroke="#cfe6d5"/><text x="400" y="467" fill="#2c5a3a">写密集/空间宽裕/怕写放大 → Universal</text>
+    <rect x="726" y="450" width="308" height="24" rx="6" fill="#fff7e6" stroke="#e8cf9a"/><text x="740" y="467" fill="#5a3410">时序/只留近期/极致写吞吐 → FIFO</text>
+  </g>
+  <text x="46" y="494" font-size="9" fill="#6e6e73">· 三放大互相制约(RUM 猜想:Read/Update/Memory 不可兼得),选风格 = 选权衡点,无银弹</text>
+  <text x="46" y="512" font-size="9" fill="#6e6e73">· Leveled 是 90% 场景的默认;不确定就用它,再据实测(写放大/空间/读延迟)微调参数或换风格</text>
+  <text x="46" y="530" font-size="8.5" fill="#a1a1a6">· 还有 Leveled+分层压缩、Tiered+Leveled 混合等变体,但三大风格是理解基础</text>
+</svg>

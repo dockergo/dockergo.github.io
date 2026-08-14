@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="440" viewBox="0 0 1000 440" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs><filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ac" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#7c5fe6"/></marker></defs>
+  <rect width="1000" height="440" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Parquet 原理 · 布隆裁剪：补 min/max 之短，等值查询判“绝不存在”</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">值落在 [min,max] 区间内但实际不存在时 min/max 无能为力;布隆过滤器对这一情形给出“肯定没有”的确定否定，跳过整个列块</text>
+
+  <!-- 场景条 -->
+  <rect x="30" y="72" width="940" height="46" rx="10" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+  <text x="46" y="92" font-size="10.5" font-weight="700" fill="#5a3410">查询：WHERE user_id = "user_8842"　　列块统计 min="user_0001"　max="user_9999"</text>
+  <text x="46" y="110" font-size="8.8" fill="#93762e">"user_8842" 落在 [min,max] 之间 → min/max 判不掉，必须靠布隆确认它到底在不在。</text>
+
+  <!-- 左：min/max 之短 -->
+  <rect x="30" y="132" width="300" height="196" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="46" y="156" font-size="11" font-weight="700" fill="#1b2a4a">min/max 之短（区间保守）</text>
+  <text x="46" y="180" font-size="9.2" fill="#5b7db1">· 只知“值域两端”，不知中间有哪些值</text>
+  <text x="46" y="200" font-size="9.2" fill="#5b7db1">· 值在区间内 → 无法判断存在与否</text>
+  <text x="46" y="220" font-size="9.2" fill="#5b7db1">· 高基数、乱序列尤其失灵</text>
+  <text x="46" y="248" font-size="9.2" fill="#5b7db1">→ 只能“可能有”，被迫读整块</text>
+  <rect x="46" y="266" width="268" height="48" rx="8" fill="#f3f9ff" stroke="#bcd8f5"/>
+  <text x="180" y="286" font-size="9" font-weight="700" text-anchor="middle" fill="#0a3d78">区间命中 = 无结论</text>
+  <text x="180" y="304" font-size="8.2" text-anchor="middle" fill="#5b7db1">min ≤ 目标值 ≤ max</text>
+
+  <path d="M336,230 L376,230" stroke="#7c5fe6" stroke-width="1.8" fill="none" marker-end="url(#ac)"/>
+  <text x="356" y="222" font-size="8" text-anchor="middle" fill="#7c5fe6">接力</text>
+
+  <!-- 右：布隆判定 -->
+  <rect x="382" y="132" width="588" height="196" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="398" y="156" font-size="11" font-weight="700" fill="#12402a">布隆判定（读列块前，先探布隆）</text>
+  <text x="398" y="178" font-size="9" fill="#2f6f5f">对目标值算 XxHash → 定位块 → 取 8 个位，逐一检查：</text>
+
+  <rect x="398" y="190" width="270" height="120" rx="10" fill="#fdeceb" stroke="#f2c4c0"/>
+  <text x="533" y="212" font-size="10" font-weight="700" text-anchor="middle" fill="#8a2a22">情形A：任一位 = 0</text>
+  <text x="533" y="234" font-size="9" text-anchor="middle" fill="#a8443b">→ 肯定不存在（确定否定）</text>
+  <text x="533" y="256" font-size="9" text-anchor="middle" fill="#a8443b">→ 整个列块直接跳过，不读</text>
+  <text x="533" y="284" font-size="8.4" text-anchor="middle" fill="#b76a62">无假阴：布隆说没有就一定没有</text>
+  <text x="533" y="300" font-size="8.4" text-anchor="middle" fill="#b76a62">这是 min/max 给不出的确定否定</text>
+
+  <rect x="684" y="190" width="270" height="120" rx="10" fill="#f7f7f9" stroke="#e3e3e8"/>
+  <text x="819" y="212" font-size="10" font-weight="700" text-anchor="middle" fill="#4a4a50">情形B：8 位全 = 1</text>
+  <text x="819" y="234" font-size="9" text-anchor="middle" fill="#6e6e73">→ 可能存在（可能假阳）</text>
+  <text x="819" y="256" font-size="9" text-anchor="middle" fill="#6e6e73">→ 读列块，逐值精确校验</text>
+  <text x="819" y="284" font-size="8.4" text-anchor="middle" fill="#8a8a90">有假阳：需真读一次核实</text>
+  <text x="819" y="300" font-size="8.4" text-anchor="middle" fill="#8a8a90">概率可由布隆大小调低</text>
+
+  <!-- 分层裁剪链 -->
+  <rect x="30" y="342" width="940" height="42" rx="10" fill="#e9f2ff" stroke="#a9ccf5" filter="url(#soft)"/>
+  <text x="46" y="362" font-size="10" font-weight="700" fill="#0a3d78">裁剪链：行组统计 min/max → 列块布隆（等值）→ PageIndex 页级 min/max，层层递进只对等值查询有奇效。</text>
+  <text x="46" y="378" font-size="8.6" fill="#5b7db1">布隆偏移记于 ColumnMetaData.bloom_filter_offset，读者按需单独载入;适用等值/IN，不支持范围查询。</text>
+
+  <rect x="30" y="396" width="940" height="34" rx="9" fill="#faf5ff" stroke="#e4d5f2" filter="url(#soft)"/>
+  <text x="46" y="417" font-size="9.2" fill="#3d2a5a">分工一句话：min/max 擅长范围裁剪、对区间内值无力;布隆专补等值场景的“确定否定”，二者互补而非替代。</text>
+</svg>

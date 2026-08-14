@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="400" viewBox="0 0 1000 400" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1000" height="400" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">上半部（关中断·极短）→ 下半部移交：按"能否睡眠"分三路</text>
+
+  <!-- 硬件中断 -->
+  <rect x="28" y="118" width="150" height="88" rx="12" fill="#fbeaea" stroke="#e7c3c3" filter="url(#soft)"/>
+  <text x="103" y="150" font-size="11.5" font-weight="600" fill="#4a1414" text-anchor="middle">硬件中断</text>
+  <text x="103" y="172" font-size="9.5" fill="#7a2a2a" text-anchor="middle">中断控制器</text>
+  <text x="103" y="188" font-size="9.5" fill="#7a2a2a" text-anchor="middle">打断当前 CPU</text>
+
+  <!-- 上半部 -->
+  <rect x="212" y="98" width="256" height="128" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="340" y="122" font-size="11.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">上半部 top half</text>
+  <text x="228" y="144" font-size="9.5" fill="#5b7db1">__handle_irq_event_percpu (handle.c:185)</text>
+  <text x="228" y="166" font-size="10" fill="#5b7db1">· 关中断 · 原子上下文 · 不可睡眠</text>
+  <text x="228" y="186" font-size="10" fill="#5b7db1">· 只做"确认硬件 + 取数据"</text>
+  <text x="228" y="206" font-size="10" fill="#5b7db1">· 登记待办 → 延后给下半部</text>
+
+  <!-- 下半部三路 -->
+  <rect x="560" y="72" width="412" height="82" rx="12" fill="#f3f7fc" stroke="#cfe0f2" filter="url(#soft)"/>
+  <text x="576" y="94" font-size="11.5" font-weight="600" fill="#274a78">softirq / tasklet</text>
+  <text x="576" y="114" font-size="9.5" fill="#5b7db1">原子上下文 · 不可睡眠 · 同 tasklet 串行</text>
+  <text x="576" y="134" font-size="9.5" fill="#5b7db1">raise_softirq 置 pending → 中断返回 / ksoftirqd 执行</text>
+
+  <rect x="560" y="168" width="412" height="82" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="576" y="190" font-size="11.5" font-weight="600" fill="#12402a">workqueue（kworker）</text>
+  <text x="576" y="210" font-size="9.5" fill="#2f6f4f">进程上下文 · 可睡眠 · 可持锁 / 等 IO</text>
+  <text x="576" y="230" font-size="9.5" fill="#2f6f4f">queue_work → worker_thread (workqueue.c:549)</text>
+
+  <rect x="560" y="264" width="412" height="82" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="576" y="286" font-size="11.5" font-weight="600" fill="#12402a">threaded irq（专属内核线程）</text>
+  <text x="576" y="306" font-size="9.5" fill="#2f6f4f">进程上下文 · 可睡眠 · 单线程串行</text>
+  <text x="576" y="326" font-size="9.5" fill="#2f6f4f">handler 返回 IRQ_WAKE_THREAD → irq_thread (manage.c:1244)</text>
+
+  <!-- 连线 -->
+  <g stroke="#c7c7cc" stroke-width="1.6" fill="none">
+    <line x1="178" y1="162" x2="212" y2="162" marker-end="url(#ar)"/>
+    <path d="M468,162 L514,162 L514,113 L560,113" marker-end="url(#ar)"/>
+    <path d="M514,162 L514,209 L560,209" marker-end="url(#ar)"/>
+    <path d="M514,162 L514,305 L560,305" marker-end="url(#ar)"/>
+  </g>
+  <text x="537" y="66" font-size="9" fill="#7a2a2a" text-anchor="middle">不可睡眠</text>
+  <text x="537" y="258" font-size="9" fill="#2f6f4f" text-anchor="middle">可睡眠</text>
+
+  <!-- 底部原则 -->
+  <rect x="28" y="356" width="944" height="34" rx="9" fill="#ffffff" stroke="#ececf1"/>
+  <text x="44" y="378" font-size="10" fill="#6e6e73">原则：上半部关中断、时间越短越好（否则丢中断、拖高延迟）；把"能不能睡眠"作为下半部选型第一判据 —— 不能睡走 softirq/tasklet，要睡走 workqueue / threaded irq。</text>
+</svg>

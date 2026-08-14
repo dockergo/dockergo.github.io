@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="580" viewBox="0 0 1040 580" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1040" height="580" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Trino 内存追踪层级 · 算子 → 查询 → 池</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">自底向上逐级上卷预留;每层可因超限抛 ExceededMemoryLimitException(子先问父)</text>
+
+  <!-- vertical stack -->
+  <rect x="290" y="72" width="460" height="60" rx="11" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="520" y="96" text-anchor="middle" font-size="10.5" font-weight="700" fill="#5a3410">① 算子：SimpleLocalMemoryContext</text>
+  <text x="520" y="116" text-anchor="middle" font-size="8.5" fill="#93762e">setBytes(delta) → parent.updateBytes；close 时 free(-usedBytes)</text>
+
+  <rect x="290" y="160" width="460" height="60" rx="11" fill="#f5faf6" stroke="#cfe6d5" filter="url(#soft)"/>
+  <text x="520" y="184" text-anchor="middle" font-size="10.5" font-weight="700" fill="#2c5a3a">② AggregatedMemoryContext（子 → 根）</text>
+  <text x="520" y="204" text-anchor="middle" font-size="8.5" fill="#2f6f4f">ChildAggregatedMemoryContext 先转发给父(父可先拒),再本地累加</text>
+
+  <rect x="290" y="248" width="460" height="70" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="520" y="272" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1b2a4a">③ QueryContext（每查询每 worker）</text>
+  <text x="520" y="292" text-anchor="middle" font-size="8.5" fill="#5b7db1">RootAggregatedMemoryContext + MemoryReservationHandler</text>
+  <text x="520" y="308" text-anchor="middle" font-size="8.5" fill="#5b7db1">enforceUserMemoryLimit：超单查询上限抛 exceededLocalUserMemoryLimit</text>
+
+  <rect x="290" y="346" width="460" height="70" rx="11" fill="#faf4fb" stroke="#e2d2ee" filter="url(#soft)"/>
+  <text x="520" y="370" text-anchor="middle" font-size="10.5" font-weight="700" fill="#5a3d78">④ MemoryPool（每 worker 一个,共享）</text>
+  <text x="520" y="390" text-anchor="middle" font-size="8.5" fill="#7a5a95">reserve(TaskId,tag,bytes)；满则返回阻塞 future</text>
+  <text x="520" y="406" text-anchor="middle" font-size="8.5" fill="#7a5a95">getFreeBytes = maxBytes − reservedBytes − reservedRevocableBytes</text>
+
+  <line x1="520" y1="132" x2="520" y2="160" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <line x1="520" y1="220" x2="520" y2="248" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <line x1="520" y1="318" x2="520" y2="346" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <text x="536" y="150" font-size="8" fill="#a1a1a6">updateBytes</text>
+  <text x="536" y="238" font-size="8" fill="#a1a1a6">reserveMemory</text>
+  <text x="536" y="336" font-size="8" fill="#a1a1a6">reserve/reserveRevocable</text>
+
+  <!-- left: user vs revocable -->
+  <rect x="30" y="248" width="230" height="168" rx="12" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="46" y="270" font-size="10" font-weight="700" fill="#1d1d1f">两类内存(QueryContext)</text>
+  <rect x="46" y="282" width="198" height="52" rx="8" fill="#eef3fb" stroke="#bcd0ec"/><text x="145" y="302" text-anchor="middle" font-size="9" font-weight="600" fill="#1b2a4a">user 内存</text><text x="145" y="320" text-anchor="middle" font-size="8" fill="#5b7db1">不可征用,受 max-memory 限</text>
+  <rect x="46" y="342" width="198" height="60" rx="8" fill="#eafaf1" stroke="#bfe0cd"/><text x="145" y="362" text-anchor="middle" font-size="9" font-weight="600" fill="#12402a">revocable 内存</text><text x="145" y="380" text-anchor="middle" font-size="8" fill="#2f6f4f">可征用→溢写</text><text x="145" y="394" text-anchor="middle" font-size="8" fill="#2f6f4f">框架 startMemoryRevoke 时落盘</text>
+
+  <!-- right: guaranteed + spill accounting -->
+  <rect x="780" y="248" width="230" height="168" rx="12" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="796" y="270" font-size="10" font-weight="700" fill="#1d1d1f">额外机制</text>
+  <text x="796" y="292" font-size="8.5" fill="#6e6e73">· GUARANTEED_MEMORY=1MB</text>
+  <text x="796" y="308" font-size="8.5" fill="#6e6e73">  微查询不因池满阻塞(有底)</text>
+  <text x="796" y="328" font-size="8.5" fill="#6e6e73">· 标签化预留 taggedMemory</text>
+  <text x="796" y="344" font-size="8.5" fill="#6e6e73">  按算子 tag 记账,便于诊断</text>
+  <text x="796" y="364" font-size="8.5" fill="#6e6e73">· spill 空间单独记账</text>
+  <text x="796" y="380" font-size="8.5" fill="#6e6e73">  QueryContext.reserveSpill</text>
+  <text x="796" y="396" font-size="8.5" fill="#6e6e73">  受 SpillSpaceTracker 限</text>
+
+  <!-- cluster view -->
+  <rect x="30" y="432" width="980" height="130" rx="13" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="46" y="454" font-size="11" font-weight="700" fill="#2c5a3a">集群视图上报</text>
+  <text x="46" y="476" font-size="9" fill="#2f6f4f">· 每 worker 把 MemoryPoolInfo（maxBytes/reservedBytes/每查询每 task 预留）序列化上报 coordinator</text>
+  <text x="46" y="494" font-size="9" fill="#2f6f4f">· ClusterMemoryManager 聚合成集群视图 → 判 isClusterOutOfMemory（有 blocked 节点）→ 驱动 OOM killer（见 04）</text>
+  <text x="46" y="512" font-size="9" fill="#2f6f4f">· 单查询全集群总内存 query.max-memory 也在此校验(超则失败)</text>
+  <text x="46" y="534" font-size="9" fill="#b1483a">· 483 关键：每 worker 只有一个池(下张图详解),此处的"池"不再分 general/reserved</text>
+  <text x="46" y="552" font-size="8.5" fill="#6e6e73">追踪链：SimpleLocalMemoryContext → Aggregated(子→根) → QueryContext.handler → MemoryPool.reserve</text>
+</svg>

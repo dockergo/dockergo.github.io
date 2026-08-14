@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="450" viewBox="0 0 1020 450"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1020" height="450" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">ART 自适应基数树索引 · 节点随容量自适应升级（node.hpp:21-30）</text>
+
+  <!-- 节点族 -->
+  <rect x="30" y="52" width="620" height="250" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="48" y="76" font-size="12.5" font-weight="600" fill="#1d1d1f">四种内部节点 + 叶子（按子节点数自适应）</text>
+
+  <rect x="48" y="92" width="130" height="90" rx="10" fill="#eef3fb" stroke="#bcd0ec"/><text x="113" y="116" font-size="11" font-weight="600" fill="#1b2a4a" text-anchor="middle">Node4</text><text x="113" y="138" font-size="9" fill="#5b7db1" text-anchor="middle">≤4 子</text><text x="113" y="156" font-size="8.5" fill="#5b7db1" text-anchor="middle">键数组+指针数组</text><text x="113" y="172" font-size="8" fill="#8fa9cf" text-anchor="middle">最省空间</text>
+  <rect x="190" y="92" width="130" height="90" rx="10" fill="#eef3fb" stroke="#bcd0ec"/><text x="255" y="116" font-size="11" font-weight="600" fill="#1b2a4a" text-anchor="middle">Node16</text><text x="255" y="138" font-size="9" fill="#5b7db1" text-anchor="middle">≤16 子</text><text x="255" y="156" font-size="8.5" fill="#5b7db1" text-anchor="middle">SIMD 可查</text>
+  <rect x="332" y="92" width="130" height="90" rx="10" fill="#eef3fb" stroke="#bcd0ec"/><text x="397" y="116" font-size="11" font-weight="600" fill="#1b2a4a" text-anchor="middle">Node48</text><text x="397" y="138" font-size="9" fill="#5b7db1" text-anchor="middle">≤48 子</text><text x="397" y="156" font-size="8.5" fill="#5b7db1" text-anchor="middle">256 索引→48 槽</text>
+  <rect x="474" y="92" width="150" height="90" rx="10" fill="#eef3fb" stroke="#bcd0ec"/><text x="549" y="116" font-size="11" font-weight="600" fill="#1b2a4a" text-anchor="middle">Node256</text><text x="549" y="138" font-size="9" fill="#5b7db1" text-anchor="middle">≤256 子</text><text x="549" y="156" font-size="8.5" fill="#5b7db1" text-anchor="middle">直接下标寻址</text><text x="549" y="172" font-size="8" fill="#8fa9cf" text-anchor="middle">最快</text>
+
+  <rect x="48" y="196" width="576" height="44" rx="9" fill="#eafaf1" stroke="#bce6cd"/><text x="336" y="223" font-size="10" fill="#0f5132" text-anchor="middle">叶子：Leaf / Node7_Leaf / Node15_Leaf / Node256_Leaf —— 存 row id（指向数据行）</text>
+  <rect x="48" y="252" width="576" height="40" rx="9" fill="#f4eefb" stroke="#d9c9ef"/><text x="336" y="277" font-size="10" fill="#3c1361" text-anchor="middle">Prefix 节点：路径压缩，把公共前缀折叠，减少树高</text>
+
+  <!-- 自适应升降级 -->
+  <rect x="668" y="52" width="322" height="250" rx="14" fill="#fff7e6" stroke="#f0dcae" filter="url(#soft)"/>
+  <text x="686" y="76" font-size="12" font-weight="600" fill="#7a4d00">自适应：随子节点数增减</text>
+  <rect x="686" y="90" width="286" height="40" rx="9" fill="#ffffff" stroke="#f0dcae"/><text x="829" y="115" font-size="9.5" fill="#7a4d00" text-anchor="middle">Node4 满 → 升 Node16 → 48 → 256</text>
+  <rect x="686" y="138" width="286" height="40" rx="9" fill="#ffffff" stroke="#f0dcae"/><text x="829" y="163" font-size="9.5" fill="#7a4d00" text-anchor="middle">删到很少 → 降级回小节点</text>
+  <text x="686" y="200" font-size="9.5" fill="#9a7328">只在需要时用大节点，稀疏处用小节点</text>
+  <text x="686" y="218" font-size="9.5" fill="#9a7328">—— 空间与查找速度兼得，故名"自适应"。</text>
+  <text x="686" y="244" font-size="9.5" fill="#9a7328">FixedSizeAllocator 按节点类型分配</text>
+  <text x="686" y="262" font-size="9.5" fill="#9a7328">（node.hpp:129），块可序列化进单文件。</text>
+  <line x1="829" y1="130" x2="829" y2="138" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+
+  <!-- 用途 -->
+  <rect x="30" y="320" width="960" height="110" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="48" y="344" font-size="12.5" font-weight="600" fill="#1d1d1f">ART 的定位（重要区分）</text>
+  <text x="48" y="368" font-size="10.5" fill="#494950">• 服务对象：<tspan font-weight="600">主键 / 唯一约束的强制</tspan>与<tspan font-weight="600">点查 / 小范围查找</tspan>——插入时查唯一、按键定位单行。</text>
+  <text x="48" y="392" font-size="10.5" fill="#494950">• <tspan font-weight="600">不是</tspan>分析型大扫描的常规加速手段：范围/聚合扫描主要靠 RowGroup 列统计（min/max）做段级裁剪。</text>
+  <text x="48" y="416" font-size="10.5" fill="#494950">• 键编码：art_key 把各类型规整成可字节比较的二进制键（binary-comparable），使基数树可统一处理。</text>
+</svg>

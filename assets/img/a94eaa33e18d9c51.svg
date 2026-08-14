@@ -1,0 +1,115 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="700" viewBox="0 0 1120 700" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="aB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#4a7fd0"/></marker>
+    <marker id="aG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+    <marker id="aR" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#d1544a"/></marker>
+  </defs>
+  <rect width="1120" height="700" fill="#fbfbfd"/>
+
+  <text x="30" y="34" font-size="17" font-weight="700" fill="#1d1d1f">贪心 · 对比：何时贪心失效（vs 动规）＋ 四例的策略与正确性依据</text>
+  <text x="30" y="56" font-size="11" fill="#6e6e73">贪心与动规同享「最优子结构」；贪心额外要求「贪心选择性质」——满足则一步锁定、更快，不满足就必须退回动规枚举全表</text>
+
+  <!-- 图例 -->
+  <rect x="30" y="72" width="12" height="12" rx="2" fill="#4a7fd0"/><text x="48" y="82" font-size="10.5" fill="#3a3a3c">贪心</text>
+  <rect x="110" y="72" width="12" height="12" rx="2" fill="#2f9e6e"/><text x="128" y="82" font-size="10.5" fill="#3a3a3c">动规 / 最优</text>
+  <rect x="240" y="72" width="12" height="12" rx="2" fill="#d1544a"/><text x="258" y="82" font-size="10.5" fill="#3a3a3c">贪心失败</text>
+
+  <!-- ===== ① 贪心 vs 动规（零钱 {1,3,4} 凑 6） ===== -->
+  <text x="30" y="118" font-size="12" font-weight="700" fill="#8a5a12">① 同一问题两种打法：coins {1,3,4} 凑 amt=6</text>
+
+  <!-- 贪心侧 -->
+  <rect x="40" y="132" width="510" height="150" rx="14" fill="#fff6f5" stroke="#e8a79f" filter="url(#soft)"/>
+  <text x="62" y="158" font-size="12.5" font-weight="700" fill="#8a4038">贪心：每步取最大面额，锁死不回头</text>
+  <g text-anchor="middle" font-size="12" font-weight="700">
+    <rect x="62" y="176" width="60" height="38" rx="8" fill="#eaf1fb" stroke="#4a7fd0" stroke-width="1.4"/><text x="92" y="200" fill="#20375e">4</text>
+    <rect x="162" y="176" width="60" height="38" rx="8" fill="#eaf1fb" stroke="#4a7fd0" stroke-width="1.4"/><text x="192" y="200" fill="#20375e">1</text>
+    <rect x="262" y="176" width="60" height="38" rx="8" fill="#eaf1fb" stroke="#4a7fd0" stroke-width="1.4"/><text x="292" y="200" fill="#20375e">1</text>
+  </g>
+  <line x1="122" y1="195" x2="162" y2="195" stroke="#d1544a" stroke-width="1.8" marker-end="url(#aR)"/>
+  <line x1="222" y1="195" x2="262" y2="195" stroke="#d1544a" stroke-width="1.8" marker-end="url(#aR)"/>
+  <rect x="342" y="176" width="188" height="38" rx="8" fill="#fbe6e3" stroke="#d1544a" stroke-width="1.3"/>
+  <text x="436" y="200" font-size="12" font-weight="700" fill="#8a4038" text-anchor="middle">3 枚 ✗ 次优</text>
+  <text x="62" y="240" font-size="10.5" fill="#8a4038">只保留一个候选、无回溯：吞下 4 后剩 2，被迫用两枚 1。</text>
+  <text x="62" y="262" font-size="10.5" fill="#8a4038">快 O(n)，但面额非整除链时不满足贪心选择性质 → 出错。</text>
+
+  <!-- 动规侧 -->
+  <rect x="570" y="132" width="510" height="150" rx="14" fill="#f2faf6" stroke="#a8ddc3" filter="url(#soft)"/>
+  <text x="592" y="158" font-size="12.5" font-weight="700" fill="#1f6b47">动规：dp[x] = min 面额枚举，填满全表</text>
+  <!-- dp 表 x=0..6 -->
+  <g text-anchor="middle" font-size="11">
+    <rect x="592" y="176" width="58" height="46" rx="7" fill="#e6f4ec" stroke="#2f9e6e"/><text x="621" y="194" font-size="9.5" fill="#6e6e73">x=0</text><text x="621" y="212" font-weight="700" fill="#1f6b47">0</text>
+    <rect x="654" y="176" width="58" height="46" rx="7" fill="#e6f4ec" stroke="#2f9e6e"/><text x="683" y="194" font-size="9.5" fill="#6e6e73">1</text><text x="683" y="212" font-weight="700" fill="#1f6b47">1</text>
+    <rect x="716" y="176" width="58" height="46" rx="7" fill="#e6f4ec" stroke="#2f9e6e"/><text x="745" y="194" font-size="9.5" fill="#6e6e73">2</text><text x="745" y="212" font-weight="700" fill="#1f6b47">2</text>
+    <rect x="778" y="176" width="58" height="46" rx="7" fill="#e6f4ec" stroke="#2f9e6e"/><text x="807" y="194" font-size="9.5" fill="#6e6e73">3</text><text x="807" y="212" font-weight="700" fill="#1f6b47">1</text>
+    <rect x="840" y="176" width="58" height="46" rx="7" fill="#e6f4ec" stroke="#2f9e6e"/><text x="869" y="194" font-size="9.5" fill="#6e6e73">4</text><text x="869" y="212" font-weight="700" fill="#1f6b47">1</text>
+    <rect x="902" y="176" width="58" height="46" rx="7" fill="#e6f4ec" stroke="#2f9e6e"/><text x="931" y="194" font-size="9.5" fill="#6e6e73">5</text><text x="931" y="212" font-weight="700" fill="#1f6b47">2</text>
+    <rect x="964" y="176" width="58" height="46" rx="7" fill="#d6efe1" stroke="#2f9e6e" stroke-width="1.6"/><text x="993" y="194" font-size="9.5" fill="#6e6e73">6</text><text x="993" y="212" font-weight="700" fill="#1f6b47">2 ★</text>
+  </g>
+  <text x="592" y="244" font-size="10.5" fill="#2a5a43">dp[6]=min(dp[6−1],dp[6−3],dp[6−4])+1 = min(2,1,2)+1 = 2（用 3+3）。</text>
+  <text x="592" y="266" font-size="10.5" fill="#2a5a43">枚举每个面额、缓存子问题，O(n·amt)，任何面额都得真正最优。</text>
+
+  <!-- ===== ② 四例对比矩阵 ===== -->
+  <text x="30" y="316" font-size="12" font-weight="700" fill="#8a5a12">② 本条目四例：贪心策略 / 正确性依据 / 复杂度 / 是否最优</text>
+
+  <rect x="40" y="330" width="1040" height="262" rx="12" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <!-- 表头 -->
+  <line x1="40" y1="364" x2="1080" y2="364" stroke="#e4e7ec"/>
+  <text x="60" y="354" font-size="11" font-weight="700" fill="#6e6e73">例</text>
+  <text x="220" y="354" font-size="11" font-weight="700" fill="#6e6e73">贪心策略</text>
+  <text x="500" y="354" font-size="11" font-weight="700" fill="#6e6e73">正确性依据</text>
+  <text x="840" y="354" font-size="11" font-weight="700" fill="#6e6e73">复杂度</text>
+  <text x="960" y="354" font-size="11" font-weight="700" fill="#6e6e73">是否最优</text>
+  <!-- 列分隔 -->
+  <line x1="205" y1="330" x2="205" y2="592" stroke="#eef0f3"/>
+  <line x1="485" y1="330" x2="485" y2="592" stroke="#eef0f3"/>
+  <line x1="825" y1="330" x2="825" y2="592" stroke="#eef0f3"/>
+  <line x1="945" y1="330" x2="945" y2="592" stroke="#eef0f3"/>
+
+  <!-- 行1 GD1 -->
+  <text x="60" y="392" font-size="11" font-weight="700" fill="#8a4038">GD1 零钱兑换</text>
+  <text x="60" y="410" font-size="9.5" fill="#6e6e73">反例型</text>
+  <text x="220" y="398" font-size="10.5" fill="#4a4a4f">每步取 ≤ 剩余额的最大面额</text>
+  <text x="500" y="398" font-size="10.5" fill="#8a4038">一般面额不满足贪心选择性质</text>
+  <text x="500" y="416" font-size="9.5" fill="#6e6e73">仅「整除链」面额时才成立</text>
+  <text x="840" y="398" font-size="10.5" fill="#4a4a4f">O(n)</text>
+  <rect x="958" y="384" width="104" height="24" rx="6" fill="#fbe6e3" stroke="#d1544a"/>
+  <text x="1010" y="400" font-size="10.5" font-weight="700" fill="#8a4038" text-anchor="middle">✗ 不总最优</text>
+  <line x1="40" y1="430" x2="1080" y2="430" stroke="#eef0f3"/>
+
+  <!-- 行2 GD2 -->
+  <text x="60" y="458" font-size="11" font-weight="700" fill="#8a5a12">GD2 分数背包</text>
+  <text x="60" y="476" font-size="9.5" fill="#6e6e73">排序型</text>
+  <text x="220" y="464" font-size="10.5" fill="#4a4a4f">按单位价值 v/w 降序装，可切分</text>
+  <text x="500" y="464" font-size="10.5" fill="#1f6b47">交换论证：低 v/w 换高 v/w 不减</text>
+  <text x="500" y="482" font-size="9.5" fill="#6e6e73">前提是物品可切分</text>
+  <text x="840" y="464" font-size="10.5" fill="#4a4a4f">O(n log n)</text>
+  <rect x="958" y="450" width="104" height="24" rx="6" fill="#e6f4ec" stroke="#2f9e6e"/>
+  <text x="1010" y="466" font-size="10.5" font-weight="700" fill="#1f6b47" text-anchor="middle">✓ 最优</text>
+  <line x1="40" y1="496" x2="1080" y2="496" stroke="#eef0f3"/>
+
+  <!-- 行3 GD3 -->
+  <text x="60" y="524" font-size="11" font-weight="700" fill="#8a5a12">GD3 最大容量</text>
+  <text x="60" y="542" font-size="9.5" fill="#6e6e73">双指针型</text>
+  <text x="220" y="530" font-size="10.5" fill="#4a4a4f">两端夹逼，每步移较短的一侧</text>
+  <text x="500" y="530" font-size="10.5" fill="#1f6b47">移长板宽减、高封顶，不可能更好</text>
+  <text x="500" y="548" font-size="9.5" fill="#6e6e73">短板对应窄组合可安全排除</text>
+  <text x="840" y="530" font-size="10.5" fill="#4a4a4f">O(n)</text>
+  <rect x="958" y="516" width="104" height="24" rx="6" fill="#e6f4ec" stroke="#2f9e6e"/>
+  <text x="1010" y="532" font-size="10.5" font-weight="700" fill="#1f6b47" text-anchor="middle">✓ 最优</text>
+  <line x1="40" y1="562" x2="1080" y2="562" stroke="#eef0f3"/>
+
+  <!-- 行4 GD4 -->
+  <text x="60" y="582" font-size="11" font-weight="700" fill="#8a5a12">GD4 切分乘积</text>
+  <text x="220" y="582" font-size="10.5" fill="#4a4a4f">尽量拆 3，余 1 退成 2×2</text>
+  <text x="500" y="582" font-size="10.5" fill="#1f6b47">因子 3 单位效率最高（近 e）</text>
+  <text x="840" y="582" font-size="10.5" fill="#4a4a4f">O(1)</text>
+  <rect x="958" y="570" width="104" height="20" rx="6" fill="#e6f4ec" stroke="#2f9e6e"/>
+  <text x="1010" y="585" font-size="10.5" font-weight="700" fill="#1f6b47" text-anchor="middle">✓ 最优</text>
+
+  <!-- ===== ③ 判定直觉 ===== -->
+  <rect x="40" y="606" width="1040" height="80" rx="12" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="58" y="630" font-size="11.5" font-weight="700" fill="#8a5a12">判定直觉：能不能用贪心？</text>
+  <text x="58" y="652" font-size="10.5" fill="#4a4a4f">① 先确认有「最优子结构」；② 猜一个贪心规则，试着<tspan font-weight="700" fill="#1f6b47">用交换论证证明「首步取局部最优不会变差」</tspan>——证得出就能用。</text>
+  <text x="58" y="672" font-size="10.5" fill="#4a4a4f">③ 证不出、或能<tspan font-weight="700" fill="#8a4038">举出反例（如零钱 {1,3,4} 凑 6）</tspan>，就退回动规枚举全表。贪心是「有条件的捷径」，不是万能钥匙。</text>
+</svg>

@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="430" viewBox="0 0 1020 430"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+    <marker id="arg" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#7fbf9c"/>
+    </marker>
+  </defs>
+  <rect width="1020" height="430" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">DataLoader · 一个 batch 的进程间旅程（多进程预取，取一个补一个）</text>
+  <!-- legend -->
+  <rect x="640" y="18" width="12" height="12" rx="3" fill="#eef3fb" stroke="#bcd0ec"/><text x="658" y="28" font-size="9.5" fill="#1b2a4a">主进程调度</text>
+  <rect x="742" y="18" width="12" height="12" rx="3" fill="#eafaf1" stroke="#bce6cd"/><text x="760" y="28" font-size="9.5" fill="#0f5132">样本/批数据</text>
+  <rect x="844" y="18" width="12" height="12" rx="3" fill="#fff7e6" stroke="#f0dcae"/><text x="862" y="28" font-size="9.5" fill="#7a4d00">锁页</text>
+
+  <!-- lane bands -->
+  <rect x="30" y="64" width="960" height="68" rx="10" fill="#f6f8fc"/>
+  <rect x="30" y="140" width="960" height="68" rx="10" fill="#f5faf6"/>
+  <rect x="30" y="216" width="960" height="68" rx="10" fill="#fbf7ef"/>
+  <rect x="30" y="292" width="960" height="68" rx="10" fill="#f6f8fc"/>
+  <text x="44" y="102" font-size="9.5" font-weight="600" fill="#5b5b63">主进程</text>
+  <text x="44" y="178" font-size="9.5" font-weight="600" fill="#5b5b63">worker 子进程池</text>
+  <text x="44" y="254" font-size="9.5" font-weight="600" fill="#5b5b63">pin_memory 线程</text>
+  <text x="44" y="330" font-size="9.5" font-weight="600" fill="#5b5b63">训练循环</text>
+
+  <!-- ① 派索引 -->
+  <rect x="150" y="74" width="180" height="48" rx="9" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="240" y="94" font-size="9.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">① 派索引</text>
+  <text x="240" y="111" font-size="8" fill="#5b7db1" text-anchor="middle">_try_put_index 轮流塞</text>
+  <!-- ② 取样组批 -->
+  <rect x="360" y="150" width="180" height="48" rx="9" fill="#eafaf1" stroke="#bce6cd" filter="url(#soft)"/>
+  <text x="450" y="170" font-size="9.5" font-weight="600" fill="#0f5132" text-anchor="middle">② 取样 + 组批</text>
+  <text x="450" y="187" font-size="8" fill="#3f8f66" text-anchor="middle">__getitem__×N → collate_fn</text>
+  <!-- ③ 回传 -->
+  <rect x="560" y="150" width="180" height="48" rx="9" fill="#eafaf1" stroke="#bce6cd" filter="url(#soft)"/>
+  <text x="650" y="170" font-size="9.5" font-weight="600" fill="#0f5132" text-anchor="middle">③ 回传 batch</text>
+  <text x="650" y="187" font-size="8" fill="#3f8f66" text-anchor="middle">放 _worker_result_queue</text>
+  <!-- ④ 锁页 -->
+  <rect x="560" y="226" width="180" height="48" rx="9" fill="#fff7e6" stroke="#f0dcae" filter="url(#soft)"/>
+  <text x="650" y="246" font-size="9.5" font-weight="600" fill="#7a4d00" text-anchor="middle">④ 锁页（可选）</text>
+  <text x="650" y="263" font-size="8" fill="#9a7328" text-anchor="middle">pin_memory 锁页</text>
+  <!-- ⑤ 交训练+补索引 -->
+  <rect x="770" y="74" width="200" height="48" rx="9" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="870" y="94" font-size="9.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">⑤ 交训练 + 补索引</text>
+  <text x="870" y="111" font-size="8" fill="#5b7db1" text-anchor="middle">_process_data 返回</text>
+  <!-- ⑥ 训练取 batch -->
+  <rect x="770" y="302" width="200" height="48" rx="9" fill="#eafaf1" stroke="#bce6cd" filter="url(#soft)"/>
+  <text x="870" y="322" font-size="9.5" font-weight="600" fill="#0f5132" text-anchor="middle">⑥ 训练取 batch</text>
+  <text x="870" y="339" font-size="8" fill="#3f8f66" text-anchor="middle">non_blocking H2D 搬 GPU</text>
+
+  <!-- arrows -->
+  <line x1="300" y1="122" x2="380" y2="150" stroke="#b8b8bf" marker-end="url(#ar)"/><text x="316" y="142" font-size="8" fill="#86868b">派 index</text>
+  <line x1="540" y1="174" x2="560" y2="174" stroke="#7fbf9c" marker-end="url(#arg)"/>
+  <line x1="650" y1="198" x2="650" y2="226" stroke="#b8b8bf" marker-end="url(#ar)"/><text x="660" y="219" font-size="8" fill="#86868b">锁页</text>
+  <line x1="740" y1="250" x2="800" y2="122" stroke="#b8b8bf" marker-end="url(#ar)"/><text x="748" y="200" font-size="8" fill="#86868b">交主进程</text>
+  <line x1="870" y1="122" x2="870" y2="302" stroke="#7fbf9c" marker-end="url(#arg)"/><text x="878" y="220" font-size="8" fill="#3f8f66">交训练</text>
+  <!-- loop back -->
+  <line x1="770" y1="98" x2="336" y2="98" stroke="#5b7db1" stroke-dasharray="4 3" marker-end="url(#ar)"/>
+  <text x="540" y="91" font-size="8" fill="#5b7db1" text-anchor="middle">补索引：取一个补一个</text>
+
+  <!-- note -->
+  <rect x="30" y="372" width="960" height="42" rx="10" fill="#f6f8fc" stroke="#dfe6f2"/>
+  <text x="48" y="397" font-size="9.5" fill="#3a5680">预取满载条件：outstanding 任务数维持在 prefetch_factor × num_workers——取一个补一个，GPU 到点即有下一批可用（worker 里不可用 CUDA，预处理留 CPU）。</text>
+</svg>

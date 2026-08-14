@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="540" viewBox="0 0 1080 540" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+    <marker id="arp" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#a07dc4"/></marker>
+  </defs>
+  <rect width="1080" height="540" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="700" fill="#1d1d1f">时间旅行与快照回溯 · 旧快照永不改,读任意历史版本</text>
+  <text x="30" y="49" font-size="9.5" fill="#a1a1a6">快照链靠 parentId 串成不可变版本链;读者 pin 一个快照即免锁隔离</text>
+
+  <!-- legend -->
+  <g font-size="9" fill="#6e6e73">
+    <rect x="700" y="20" width="12" height="12" rx="3" fill="#e7f0fb" stroke="#b9d2ef"/><text x="717" y="30">快照(不可变)</text>
+    <rect x="810" y="20" width="12" height="12" rx="3" fill="#f5faf6" stroke="#cfe6d5"/><text x="827" y="30">读入口</text>
+    <line x1="895" y1="26" x2="925" y2="26" stroke="#a07dc4" stroke-width="1.6" stroke-dasharray="6 4"/><text x="932" y="30">回溯换指针</text>
+  </g>
+
+  <!-- snapshot chain -->
+  <text x="30" y="82" font-size="11.5" font-weight="700" fill="#1b2a4a">快照链 · parentId 串起来的不可变版本(旧的永久保留)</text>
+  <g text-anchor="middle">
+    <rect x="40" y="98" width="200" height="72" rx="12" fill="#e7f0fb" stroke="#b9d2ef"/>
+    <text x="140" y="122" font-size="10.5" font-weight="700" fill="#1b2a4a">Snapshot S1</text>
+    <text x="140" y="141" font-size="8.6" fill="#5b7db1">seq=1 · 首次写入</text>
+    <text x="140" y="159" font-size="8.6" fill="#5b7db1">parentId = 空</text>
+
+    <rect x="290" y="98" width="200" height="72" rx="12" fill="#e7f0fb" stroke="#b9d2ef"/>
+    <text x="390" y="122" font-size="10.5" font-weight="700" fill="#1b2a4a">Snapshot S2</text>
+    <text x="390" y="141" font-size="8.6" fill="#5b7db1">seq=2 · append</text>
+    <text x="390" y="159" font-size="8.6" fill="#5b7db1">parentId = S1</text>
+
+    <rect x="540" y="98" width="200" height="72" rx="12" fill="#e7f0fb" stroke="#b9d2ef"/>
+    <text x="640" y="122" font-size="10.5" font-weight="700" fill="#1b2a4a">Snapshot S3</text>
+    <text x="640" y="141" font-size="8.6" fill="#5b7db1">seq=3 · overwrite</text>
+    <text x="640" y="159" font-size="8.6" fill="#5b7db1">parentId = S2</text>
+
+    <rect x="790" y="98" width="200" height="72" rx="12" fill="#f5faf6" stroke="#8fc79f" stroke-width="1.6"/>
+    <text x="890" y="122" font-size="10.5" font-weight="700" fill="#12402a">Snapshot S4</text>
+    <text x="890" y="141" font-size="8.6" fill="#2f6f4f">seq=4 · current</text>
+    <text x="890" y="159" font-size="8.6" fill="#2f6f4f">TableMetadata 指向它</text>
+  </g>
+  <line x1="240" y1="134" x2="290" y2="134" stroke="#b8b8bf" stroke-width="1.4" marker-end="url(#ar)"/>
+  <line x1="490" y1="134" x2="540" y2="134" stroke="#b8b8bf" stroke-width="1.4" marker-end="url(#ar)"/>
+  <line x1="740" y1="134" x2="790" y2="134" stroke="#b8b8bf" stroke-width="1.4" marker-end="url(#ar)"/>
+
+  <!-- read modes -->
+  <text x="30" y="210" font-size="11.5" font-weight="700" fill="#12402a">三种读入口 · 都不影响别人写(读一致的历史快照)</text>
+  <rect x="40" y="224" width="315" height="96" rx="12" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="56" y="246" font-size="10" font-weight="700" fill="#12402a">当前读(默认)</text>
+  <text x="56" y="266" font-size="8.8" fill="#2f6f4f">newScan 不指定快照</text>
+  <text x="56" y="284" font-size="8.8" fill="#2f6f4f">读 currentSnapshot(S4)</text>
+  <text x="56" y="302" font-size="8.8" fill="#2f6f4f">= 最新一致视图</text>
+
+  <rect x="380" y="224" width="315" height="96" rx="12" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="396" y="246" font-size="10" font-weight="700" fill="#12402a">按 ID 读历史</text>
+  <text x="396" y="266" font-size="8.8" fill="#2f6f4f">useSnapshot(snapshotId)</text>
+  <text x="396" y="284" font-size="8.8" fill="#2f6f4f">pin 任意历史快照(如 S2)</text>
+  <text x="396" y="302" font-size="8.8" fill="#2f6f4f">读它当时的一致视图</text>
+
+  <rect x="720" y="224" width="315" height="96" rx="12" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="736" y="246" font-size="10" font-weight="700" fill="#12402a">按时间读历史</text>
+  <text x="736" y="266" font-size="8.8" fill="#2f6f4f">asOfTime(timestampMillis)</text>
+  <text x="736" y="284" font-size="8.8" fill="#2f6f4f">选该时刻的有效快照</text>
+  <text x="736" y="302" font-size="8.8" fill="#2f6f4f">snapshotsById 索引全部快照</text>
+
+  <line x1="197" y1="224" x2="140" y2="172" stroke="#7fae7f" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="537" y1="224" x2="390" y2="172" stroke="#7fae7f" stroke-width="1.2" marker-end="url(#ar)"/>
+
+  <!-- rollback -->
+  <text x="30" y="360" font-size="11.5" font-weight="700" fill="#3d2a5a">回溯 · 只移动"current"指针,不删除任何快照</text>
+  <rect x="40" y="374" width="995" height="76" rx="12" fill="#f4eefb" stroke="#d9c7ec"/>
+  <text x="56" y="396" font-size="9.2" fill="#6a4d94">rollbackTo(snapshotId) / rollbackToTime(ms) / setCurrentSnapshot(id):把 current 指回某历史快照,提交新 metadata</text>
+  <text x="56" y="416" font-size="9.2" fill="#6a4d94">回溯后 current 指向 S2,但 S3/S4 仍在 —— 可再前滚;误操作可回退,数据永不丢</text>
+  <text x="56" y="436" font-size="8.6" fill="#a07dc4">与写入一样走 catalog 原子换指针 —— 回溯是一次普通的原子提交,不是破坏性删除</text>
+  <line x1="890" y1="170" x2="640" y2="374" stroke="#a07dc4" stroke-width="1.6" stroke-dasharray="6 4" marker-end="url(#arp)"/>
+
+  <!-- bottom -->
+  <rect x="30" y="464" width="1005" height="52" rx="12" fill="#f7f9fc" stroke="#e5ecf5"/>
+  <text x="46" y="488" font-size="10" font-weight="700" fill="#1b2a4a">为什么免费:快照本就不可变、旧快照默认保留</text>
+  <text x="46" y="507" font-size="9" fill="#5b7db1">时间旅行不需要额外备份/日志重放 —— 读历史 = pin 一个还在的旧快照;直到 expire snapshots 显式回收才消失</text>
+</svg>

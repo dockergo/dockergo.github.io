@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="480" viewBox="0 0 900 480" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="arP" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#a35bd6"/></marker>
+  </defs>
+  <rect width="900" height="480" fill="#fbfbfd"/>
+  <text x="30" y="32" font-size="15" font-weight="600" fill="#1d1d1f">ReadIndex 线性化读：不写日志，靠多数派确认领导权</text>
+  <text x="30" y="52" font-size="10.5" fill="#8a8a90">read_only.go:39 readOnly · :60 addRequest · :65 recvAck · :79 maybeAdvance · raft.go:1354</text>
+
+  <!-- 流程 -->
+  <rect x="40" y="76" width="500" height="368" rx="13" fill="#f3ecfb" stroke="#d8c6ee" filter="url(#soft)"/>
+  <text x="56" y="100" font-size="12.5" font-weight="700" fill="#6b3ba0">ReadIndex 流程（Leader）</text>
+  <g font-size="10.5" fill="#6b3ba0">
+    <rect x="56" y="112" width="468" height="36" rx="7" fill="#fff" stroke="#d8c6ee"/>
+    <text x="66" y="135">① 宿主 Node.ReadIndex(rctx) → MsgReadIndex（node.go:614）</text>
+    <rect x="56" y="156" width="468" height="36" rx="7" fill="#fff" stroke="#d8c6ee"/>
+    <text x="66" y="179">② 单节点集群：直接用当前 committed 回（raft.go:1356）</text>
+    <rect x="56" y="200" width="468" height="36" rx="7" fill="#fbeceb" stroke="#eccdc9"/>
+    <text x="66" y="223">③ 本任期尚未提交任何条目 → 暂存 pendingReadIndex（:1365）</text>
+    <rect x="56" y="244" width="468" height="36" rx="7" fill="#fff" stroke="#d8c6ee"/>
+    <text x="66" y="267">④ addRequest：记录"收到请求时的 committed"（read_only.go:60）</text>
+    <rect x="56" y="288" width="468" height="36" rx="7" fill="#fff" stroke="#d8c6ee"/>
+    <text x="66" y="311">⑤ 广播心跳带 ctx，收 MsgHeartbeatResp → recvAck（:65）</text>
+    <rect x="56" y="332" width="468" height="36" rx="7" fill="#fff" stroke="#d8c6ee"/>
+    <text x="66" y="355">⑥ 多数派确认 → maybeAdvance 放行（read_only.go:79）</text>
+    <rect x="56" y="376" width="468" height="52" rx="7" fill="#f5faf6" stroke="#c9e6cf"/>
+    <text x="66" y="396" fill="#1f5130">⑦ ReadState{Index, RequestCtx} → Ready.ReadStates</text>
+    <text x="66" y="414" fill="#1f5130">　宿主待 applied ≥ Index 后，安全执行该读</text>
+  </g>
+
+  <!-- 要点 -->
+  <rect x="560" y="76" width="300" height="368" rx="13" fill="#f7f7f9" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="576" y="100" font-size="12" font-weight="700" fill="#1d1d1f">为什么线性化</text>
+  <g font-size="10.5" fill="#6e6e73">
+    <text x="576" y="126">· 读不写日志 → 零磁盘写</text>
+    <text x="576" y="150">· 但要防"陈旧 Leader"读脏</text>
+    <text x="576" y="174">· 故先向多数派确认"我仍是</text>
+    <text x="576" y="192">  Leader"（心跳往返）</text>
+    <text x="576" y="216">· 确认时刻的 committed = readIndex</text>
+    <text x="576" y="240">· 宿主等 applied≥readIndex</text>
+    <text x="576" y="258">  才读，保证读到该点已提交态</text>
+  </g>
+  <rect x="576" y="278" width="268" height="150" rx="9" fill="#fff" stroke="#e2e2e7"/>
+  <text x="588" y="300" font-size="10.5" font-weight="700" fill="#6b3ba0">ReadState 结构</text>
+  <text x="588" y="322" font-size="10" fill="#814bbd">Index：确认时的 commit 位</text>
+  <text x="588" y="342" font-size="10" fill="#814bbd">RequestCtx：请求方给的唯一 id</text>
+  <text x="588" y="366" font-size="9.5" fill="#8a8a90">read_only.go:29-32</text>
+  <text x="588" y="392" font-size="10" fill="#814bbd">重试是宿主的活：请求可无声丢失</text>
+  <text x="588" y="410" font-size="9.5" fill="#8a8a90">node.go:222-223</text>
+</svg>

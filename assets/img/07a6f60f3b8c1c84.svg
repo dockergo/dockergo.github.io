@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="430" viewBox="0 0 1020 430"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1020" height="430" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">设备后端与 CUDA 缓存分配器（c10/cuda/CUDACachingAllocator.cpp）</text>
+
+  <!-- 后端 kernel -->
+  <rect x="30" y="56" width="470" height="150" rx="14" fill="#fbeaea" stroke="#f0cccc" filter="url(#soft)"/>
+  <text x="48" y="80" font-size="12.5" font-weight="600" fill="#7d1f1f">后端 kernel（真正算数值）</text>
+  <rect x="48" y="96" width="210" height="44" rx="9" fill="#ffffff" stroke="#f0cccc"/><text x="153" y="116" font-size="9" font-weight="600" fill="#7d1f1f" text-anchor="middle">CPU</text><text x="153" y="132" font-size="8" fill="#b06a6a" text-anchor="middle">向量化 + OpenMP · MKL/oneDNN</text>
+  <rect x="262" y="96" width="220" height="44" rx="9" fill="#ffffff" stroke="#f0cccc"/><text x="372" y="116" font-size="9" font-weight="600" fill="#7d1f1f" text-anchor="middle">CUDA</text><text x="372" y="132" font-size="8" fill="#b06a6a" text-anchor="middle">GPU 并行 · cuBLAS/cuDNN · 自写 kernel</text>
+  <text x="48" y="162" font-size="9.5" fill="#b06a6a">Dispatcher 按 Backend key 选到这里；扩展新设备 = 注册新 key 的 kernel</text>
+  <text x="48" y="182" font-size="9.5" fill="#b06a6a">大算子（matmul/conv）多委托厂商库；其余自写</text>
+
+  <!-- stream 异步 -->
+  <rect x="520" y="56" width="470" height="150" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="538" y="80" font-size="12.5" font-weight="600" fill="#1b2a4a">CUDA stream：异步执行</text>
+  <rect x="538" y="96" width="434" height="44" rx="9" fill="#ffffff" stroke="#bcd0ec"/><text x="755" y="116" font-size="9" fill="#1b2a4a" text-anchor="middle">CPU 提交 kernel 到 stream 队列即返回</text><text x="755" y="132" font-size="8" fill="#5b7db1" text-anchor="middle">GPU 按序异步执行，CPU 不阻塞</text>
+  <text x="538" y="162" font-size="9.5" fill="#5b7db1">CPU 与 GPU 重叠、多 kernel 排队流水——吞吐高</text>
+  <text x="538" y="182" font-size="9.5" fill="#5b7db1">后果：计时须 synchronize；报错可能"延迟"到下次同步</text>
+
+  <!-- caching allocator -->
+  <rect x="30" y="222" width="960" height="184" rx="14" fill="#fff7e6" stroke="#f0dcae" filter="url(#soft)"/>
+  <text x="48" y="246" font-size="12.5" font-weight="600" fill="#7a4d00">CUDA 缓存分配器 · 为什么不直接 cudaMalloc</text>
+  <text x="48" y="268" font-size="9.5" fill="#9a7328">问题：cudaMalloc/cudaFree 很慢且会同步 device；训练每步分配海量临时张量，直接调会卡死</text>
+  <rect x="48" y="284" width="290" height="104" rx="10" fill="#ffffff" stroke="#f0dcae"/><text x="193" y="306" font-size="10" font-weight="600" fill="#7a4d00" text-anchor="middle">① 池化复用</text><text x="193" y="328" font-size="8.5" fill="#9a7328" text-anchor="middle">向 CUDA 大块申请，切成小块给张量</text><text x="193" y="348" font-size="8.5" fill="#9a7328" text-anchor="middle">张量释放 → 块还回池，不还给 CUDA</text><text x="193" y="368" font-size="8.5" fill="#9a7328" text-anchor="middle">下次分配从池里秒取</text>
+  <rect x="354" y="284" width="290" height="104" rx="10" fill="#ffffff" stroke="#f0dcae"/><text x="499" y="306" font-size="10" font-weight="600" fill="#7a4d00" text-anchor="middle">② 分桶 + 流感知</text><text x="499" y="328" font-size="8.5" fill="#9a7328" text-anchor="middle">按大小分桶管理空闲块</text><text x="499" y="348" font-size="8.5" fill="#9a7328" text-anchor="middle">考虑 stream，避免复用未完成块</text><text x="499" y="368" font-size="8.5" fill="#9a7328" text-anchor="middle">碎片多时可整理/回收</text>
+  <rect x="660" y="284" width="310" height="104" rx="10" fill="#fbeaea" stroke="#f0cccc"/><text x="815" y="306" font-size="10" font-weight="600" fill="#7d1f1f" text-anchor="middle">③ 后果与调参</text><text x="815" y="328" font-size="8.5" fill="#b06a6a" text-anchor="middle">nvidia-smi 显存 = 池占用（含空闲块）</text><text x="815" y="348" font-size="8.5" fill="#b06a6a" text-anchor="middle">OOM 可能是碎片；empty_cache 还池</text><text x="815" y="368" font-size="8.5" fill="#b06a6a" text-anchor="middle">PYTORCH_CUDA_ALLOC_CONF 调策略</text>
+</svg>

@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="400" viewBox="0 0 1000 400" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="lk_s" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="lk_b" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#5b7db1"/></marker>
+  </defs>
+  <rect width="1000" height="400" fill="#fbfbfd"/>
+  <text x="24" y="30" font-size="14" font-weight="700" fill="#1d1d1f">链接三步 + 初始化 · 加载、链接、初始化是分离且可懒惰的三段</text>
+  <text x="24" y="49" font-size="10" fill="#6e6e73">链接由 link_class_impl 驱动、解析甚至可懒到字节码首次执行；首次主动使用才触发 initialize</text>
+
+  <!-- 图例 -->
+  <g font-size="9">
+    <rect x="600" y="20" width="12" height="12" rx="3" fill="#f6f8fc" stroke="#cfe0f2"/><text x="616" y="30" fill="#5b7db1">蓝 链接控制</text>
+    <rect x="708" y="20" width="12" height="12" rx="3" fill="#faf3ea" stroke="#ecdcbf"/><text x="724" y="30" fill="#8a5a1a">琥珀 字段存储</text>
+    <rect x="826" y="20" width="12" height="12" rx="3" fill="#f5faf6" stroke="#cfe6d2"/><text x="842" y="30" fill="#1d8f3f">绿 执行 clinit</text>
+    <rect x="932" y="20" width="12" height="12" rx="3" fill="#fbeeed" stroke="#f0cfca"/><text x="948" y="30" fill="#c0504d">红 异常</text>
+  </g>
+
+  <text x="500" y="70" font-size="8.5" fill="#5b7db1" text-anchor="middle">链接 link_class_impl（三段可懒惰）</text>
+
+  <!-- 入口 -->
+  <rect x="24" y="78" width="100" height="184" rx="12" fill="#fff" stroke="#e2e2e7" filter="url(#lk_s)"/>
+  <text x="74" y="158" font-size="10" font-weight="700" fill="#1d1d1f" text-anchor="middle">Instance</text>
+  <text x="74" y="174" font-size="10" font-weight="700" fill="#1d1d1f" text-anchor="middle">Klass</text>
+  <text x="74" y="194" font-size="8" fill="#9a9aa0" text-anchor="middle">已加载</text>
+
+  <g text-anchor="middle">
+    <!-- ① 验证 -->
+    <rect x="140" y="78" width="176" height="184" rx="12" fill="#f6f8fc" stroke="#cfe0f2" filter="url(#lk_s)"/>
+    <text x="228" y="102" font-size="10.5" font-weight="700" fill="#5b7db1">① 验证 verify_code</text>
+    <text x="228" y="130" font-size="9" fill="#3a3a3c">字节码类型校验</text>
+    <text x="228" y="150" font-size="9" fill="#3a3a3c">栈映射 / 结构合法性</text>
+    <text x="228" y="180" font-size="8.5" fill="#9a9aa0">安全模型核心：</text>
+    <text x="228" y="196" font-size="8.5" fill="#9a9aa0">不信任外来字节码</text>
+    <text x="228" y="212" font-size="8.5" fill="#9a9aa0">先校验再放行</text>
+
+    <!-- ② 准备 -->
+    <rect x="332" y="78" width="150" height="184" rx="12" fill="#faf3ea" stroke="#ecdcbf" filter="url(#lk_s)"/>
+    <text x="407" y="102" font-size="10.5" font-weight="700" fill="#8a5a1a">② 准备</text>
+    <text x="407" y="132" font-size="9" fill="#3a3a3c">静态字段分配空间</text>
+    <text x="407" y="158" font-size="9" fill="#3a3a3c">并置零值</text>
+    <text x="407" y="188" font-size="9" font-weight="700" fill="#c0504d">非用户初值！</text>
+    <text x="407" y="210" font-size="8" fill="#9a9aa0">初值留给 clinit</text>
+
+    <!-- ③ 解析 -->
+    <rect x="498" y="78" width="176" height="184" rx="12" fill="#f6f8fc" stroke="#cfe0f2" filter="url(#lk_s)"/>
+    <text x="586" y="102" font-size="10.5" font-weight="700" fill="#5b7db1">③ 解析 resolve</text>
+    <text x="586" y="130" font-size="9" fill="#3a3a3c">符号引用 → 直接引用</text>
+    <text x="586" y="150" font-size="9" fill="#3a3a3c">method/field/virtual</text>
+    <text x="586" y="166" font-size="9" fill="#3a3a3c">/interface 各一路</text>
+    <text x="586" y="192" font-size="8.5" fill="#9a9aa0">可懒到首次执行到</text>
+    <text x="586" y="208" font-size="8.5" fill="#9a9aa0">对应字节码才做</text>
+    <text x="586" y="228" font-size="8" fill="#9a9aa0">回填 cpCache·零重复</text>
+
+    <!-- ④ 初始化 -->
+    <rect x="690" y="78" width="286" height="184" rx="12" fill="#f5faf6" stroke="#cfe6d2" filter="url(#lk_s)"/>
+    <text x="833" y="102" font-size="10.5" font-weight="700" fill="#1d8f3f">④ 初始化 &lt;clinit&gt;</text>
+    <text x="833" y="126" font-size="9" fill="#3a3a3c">首次主动使用触发：</text>
+    <text x="833" y="142" font-size="8" fill="#6e6e73">new · 访问静态成员 · 反射 · 子类触发父类</text>
+    <text x="833" y="162" font-size="9" fill="#3a3a3c">此刻才执行用户静态初值 + 静态块</text>
+    <rect x="708" y="176" width="250" height="72" rx="9" fill="#fff" stroke="#cfe6d2"/>
+    <text x="833" y="196" font-size="9" font-weight="600" fill="#1c6b45">两条不变量</text>
+    <text x="833" y="216" font-size="8.5" fill="#3a3a3c">初始化锁保证只执行一次</text>
+    <text x="833" y="234" font-size="8.5" fill="#3a3a3c">父类先于子类初始化</text>
+  </g>
+
+  <!-- 连线 -->
+  <line x1="124" y1="170" x2="140" y2="170" stroke="#5b7db1" stroke-width="1.5" marker-end="url(#lk_b)"/>
+  <line x1="316" y1="170" x2="332" y2="170" stroke="#5b7db1" stroke-width="1.5" marker-end="url(#lk_b)"/>
+  <line x1="482" y1="170" x2="498" y2="170" stroke="#5b7db1" stroke-width="1.5" marker-end="url(#lk_b)"/>
+  <line x1="674" y1="170" x2="690" y2="170" stroke="#5b7db1" stroke-width="1.5" marker-end="url(#lk_b)"/>
+
+  <!-- 异常路径 -->
+  <rect x="24" y="278" width="952" height="46" rx="12" fill="#fbeeed" stroke="#f0cfca"/>
+  <text x="40" y="300" font-size="10" font-weight="600" fill="#b0413e">异常路径</text>
+  <text x="40" y="317" font-size="9" fill="#3a3a3c">&lt;clinit&gt; 抛异常 → 包装 ExceptionInInitializerError · Klass 标记 erroneous · 后续使用抛 NoClassDefFoundError。</text>
+
+  <!-- banner -->
+  <rect x="24" y="338" width="952" height="46" rx="12" fill="#faf3ea" stroke="#ecdcbf"/>
+  <text x="40" y="360" font-size="10" font-weight="600" fill="#8a5a1a">最大误区</text>
+  <text x="40" y="377" font-size="9" fill="#3a3a3c">「准备阶段就执行了静态初值赋值」——错。<tspan font-weight="600">准备只置零值</tspan>，用户初值要到初始化 &lt;clinit&gt; 才执行；三段分离且可懒惰。</text>
+</svg>

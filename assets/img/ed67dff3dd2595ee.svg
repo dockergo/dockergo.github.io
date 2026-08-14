@@ -1,0 +1,99 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="700" viewBox="0 0 1120 700" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+  </defs>
+  <rect width="1120" height="700" fill="#fbfbfd"/>
+
+  <text x="30" y="34" font-size="17" font-weight="700" fill="#1d1d1f">回溯 · 对比：全排列 / 子集和 / N 皇后 —— 同一骨架，差异只在「状态定义」与「剪枝策略」</text>
+  <text x="30" y="56" font-size="11" fill="#6e6e73">三者都是「尝试 → 递归 → 撤销」的 DFS 穷举；选对状态表示和剪枝，是把指数级搜索压到可接受范围的关键</text>
+
+  <!-- table -->
+  <!-- header -->
+  <rect x="40" y="76" width="190" height="44" rx="6" fill="#f6f7f9" stroke="#e4e7ec"/><text x="52" y="103" font-size="12" font-weight="700" fill="#3a3a3c">维度</text>
+  <rect x="230" y="76" width="280" height="44" rx="6" fill="#eaf1fb" stroke="#c6d9f2"/><text x="242" y="103" font-size="13" font-weight="700" fill="#20375e">全排列 II（BT2）</text>
+  <rect x="510" y="76" width="280" height="44" rx="6" fill="#fdf3e0" stroke="#e7c07a"/><text x="522" y="103" font-size="13" font-weight="700" fill="#8a5a12">子集和 II（BT3）</text>
+  <rect x="790" y="76" width="290" height="44" rx="6" fill="#e6f4ec" stroke="#a8ddc3"/><text x="802" y="103" font-size="13" font-weight="700" fill="#1f6b47">N 皇后（BT4）</text>
+
+  <!-- rows: 8 rows height 48 starting y=124 -->
+  <!-- r1 目标 -->
+  <rect x="40" y="124" width="1040" height="48" fill="#ffffff"/>
+  <rect x="40" y="124" width="190" height="48" fill="#fbf7ef"/>
+  <text x="52" y="153" font-size="11.5" font-weight="700" fill="#8a5a12">目标</text>
+  <text x="242" y="153" font-size="10.5" fill="#4a4a4f">枚举所有排列（顺序不同即不同）</text>
+  <text x="522" y="153" font-size="10.5" fill="#4a4a4f">枚举和 = target 的所有子集</text>
+  <text x="802" y="153" font-size="10.5" fill="#4a4a4f">枚举所有互不攻击的布局</text>
+
+  <!-- r2 状态 -->
+  <rect x="40" y="172" width="1040" height="48" fill="#f6f7f9"/>
+  <rect x="40" y="172" width="190" height="48" fill="#f4eee2"/>
+  <text x="52" y="201" font-size="11.5" font-weight="700" fill="#8a5a12">状态 state</text>
+  <text x="242" y="201" font-size="10.5" fill="#4a4a4f">selected[] + 已排前缀</text>
+  <text x="522" y="201" font-size="10.5" fill="#4a4a4f">start 起点 + 当前子集</text>
+  <text x="802" y="201" font-size="10.5" fill="#4a4a4f">逐行 row + 棋盘 + 三标记数组</text>
+
+  <!-- r3 选择列表 -->
+  <rect x="40" y="220" width="1040" height="48" fill="#ffffff"/>
+  <rect x="40" y="220" width="190" height="48" fill="#fbf7ef"/>
+  <text x="52" y="249" font-size="11.5" font-weight="700" fill="#8a5a12">选择列表</text>
+  <text x="242" y="249" font-size="10.5" fill="#4a4a4f">所有未被 selected 的下标</text>
+  <text x="522" y="249" font-size="10.5" fill="#4a4a4f">从 start 到末尾的元素</text>
+  <text x="802" y="249" font-size="10.5" fill="#4a4a4f">当前行的每一列 0..n−1</text>
+
+  <!-- r4 关键剪枝 -->
+  <rect x="40" y="268" width="1040" height="48" fill="#f6f7f9"/>
+  <rect x="40" y="268" width="190" height="48" fill="#f4eee2"/>
+  <text x="52" y="291" font-size="11.5" font-weight="700" fill="#8a5a12">关键剪枝</text>
+  <text x="242" y="291" font-size="10.5" fill="#8a4038">已用下标跳过</text>
+  <text x="242" y="308" font-size="10.5" fill="#8a4038">+ 同层同值只选一次</text>
+  <text x="522" y="291" font-size="10.5" fill="#8a4038">越界 break（已排序）</text>
+  <text x="522" y="308" font-size="10.5" fill="#8a4038">+ start 消序 + 同层去重</text>
+  <text x="802" y="291" font-size="10.5" fill="#8a4038">列 / 主对角线 / 副对角线</text>
+  <text x="802" y="308" font-size="10.5" fill="#8a4038">冲突（O(1) 判定）</text>
+
+  <!-- r5 排序前置 -->
+  <rect x="40" y="316" width="1040" height="48" fill="#ffffff"/>
+  <rect x="40" y="316" width="190" height="48" fill="#fbf7ef"/>
+  <text x="52" y="345" font-size="11.5" font-weight="700" fill="#8a5a12">排序前置</text>
+  <text x="242" y="345" font-size="10.5" fill="#4a4a4f">仅含重复元素时需要</text>
+  <text x="522" y="345" font-size="10.5" fill="#2f6b4e">需要（支撑 break 与去重）</text>
+  <text x="802" y="345" font-size="10.5" fill="#4a4a4f">不需要</text>
+
+  <!-- r6 解判定 -->
+  <rect x="40" y="364" width="1040" height="48" fill="#f6f7f9"/>
+  <rect x="40" y="364" width="190" height="48" fill="#f4eee2"/>
+  <text x="52" y="393" font-size="11.5" font-weight="700" fill="#8a5a12">解判定</text>
+  <text x="242" y="393" font-size="10.5" fill="#2f6b4e">len(state) = n</text>
+  <text x="522" y="393" font-size="10.5" fill="#2f6b4e">剩余 target = 0</text>
+  <text x="802" y="393" font-size="10.5" fill="#2f6b4e">row = n（棋盘填满）</text>
+
+  <!-- r7 时间 -->
+  <rect x="40" y="412" width="1040" height="48" fill="#ffffff"/>
+  <rect x="40" y="412" width="190" height="48" fill="#fbf7ef"/>
+  <text x="52" y="441" font-size="11.5" font-weight="700" fill="#8a5a12">时间复杂度</text>
+  <text x="242" y="441" font-size="10.5" fill="#4a4a4f">O(n · n!)</text>
+  <text x="522" y="441" font-size="10.5" fill="#4a4a4f">O(2ⁿ · n) 量级（受剪枝显著削减）</text>
+  <text x="802" y="441" font-size="10.5" fill="#4a4a4f">O(n!) 量级（对角线剪枝远小于此）</text>
+
+  <!-- r8 空间 -->
+  <rect x="40" y="460" width="1040" height="48" fill="#f6f7f9"/>
+  <rect x="40" y="460" width="190" height="48" fill="#f4eee2"/>
+  <text x="52" y="489" font-size="11.5" font-weight="700" fill="#8a5a12">空间复杂度</text>
+  <text x="242" y="489" font-size="10.5" fill="#4a4a4f">O(n)：selected + 递归深度</text>
+  <text x="522" y="489" font-size="10.5" fill="#4a4a4f">O(n)：子集 + 递归深度</text>
+  <text x="802" y="489" font-size="10.5" fill="#4a4a4f">O(n)：棋盘/标记 + 递归深度</text>
+
+  <!-- 竖向分隔 -->
+  <line x1="230" y1="124" x2="230" y2="508" stroke="#e4e7ec"/>
+  <line x1="510" y1="124" x2="510" y2="508" stroke="#e4e7ec"/>
+  <line x1="790" y1="124" x2="790" y2="508" stroke="#e4e7ec"/>
+  <rect x="40" y="124" width="1040" height="384" rx="6" fill="none" stroke="#e4e7ec"/>
+
+  <!-- 何时选谁 -->
+  <rect x="40" y="524" width="1040" height="160" rx="12" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="62" y="550" font-size="13" font-weight="700" fill="#8a5a12">何时选谁 · 一句话决策</text>
+  <text x="62" y="576" font-size="10.8" fill="#4a4a4f"><tspan font-weight="700" fill="#20375e">要「顺序」→ 排列：</tspan>逐位从未用下标里挑，selected 保证不复用；有重复元素就先排序、同层去重。</text>
+  <text x="62" y="600" font-size="10.8" fill="#4a4a4f"><tspan font-weight="700" fill="#8a5a12">要「取子集/组合，无序」→ 子集和：</tspan>用 start 只向后取来消除顺序；排序后靠 break 提前止损、同层跳过去重。</text>
+  <text x="62" y="624" font-size="10.8" fill="#4a4a4f"><tspan font-weight="700" fill="#1f6b47">要「满足约束的布局」→ N 皇后类：</tspan>状态是布局本身，剪枝靠问题特有的冲突判定（列/对角线），越早判越省。</text>
+  <text x="62" y="654" font-size="10.8" fill="#6e6e73">共性：三者共用「尝试-递归-撤销」骨架，makeChoice/undoChoice 严格对称；性能差异几乎全部来自剪枝设计得早不早、狠不狠。</text>
+  <text x="62" y="676" font-size="10.8" fill="#6e6e73">记录解一律存深拷贝，避免回退时把已保存的结果一起改掉 —— 这是三道题共同的正确性前提。</text>
+</svg>

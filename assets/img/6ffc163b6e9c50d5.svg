@@ -1,0 +1,192 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1300" height="760" viewBox="0 0 1300 760" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="aB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#4a7fd0"/></marker>
+    <marker id="aG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+    <marker id="aP" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#8a5cae"/></marker>
+    <marker id="aA" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#c99a3a"/></marker>
+  </defs>
+  <rect width="1300" height="760" fill="#fbfbfd"/>
+
+  <!-- 判型标题带 -->
+  <text x="30" y="32" font-size="15" font-weight="700" fill="#1d1d1f">复制把「一份数据」变成「多份副本」以换容错 · 主从 / 多主 / 无主三种拓扑，在「写去哪」「读多新」「丢多少」三轴上各有取舍</text>
+  <text x="30" y="53" font-size="10.5" fill="#6e6e73">拓扑决定写入路径与故障切换方式；三个真实项目分别落在三种拓扑的典型位置——Postgres 主从 WAL 流复制 / ClickHouse 多主异步复制 / Dynamo-Cassandra 无主 Quorum</text>
+
+  <!-- 图例 -->
+  <line x1="30" y1="80" x2="54" y2="80" stroke="#4a7fd0" stroke-width="2" marker-end="url(#aB)"/>
+  <text x="60" y="84" font-size="10" fill="#3a3a3c">① 主从 Primary-Standby · Postgres（R1）</text>
+  <line x1="330" y1="80" x2="354" y2="80" stroke="#2f9e6e" stroke-width="2" marker-end="url(#aG)"/>
+  <text x="360" y="84" font-size="10" fill="#3a3a3c">② 多主 Multi-Master · ClickHouse（R2）</text>
+  <line x1="630" y1="80" x2="654" y2="80" stroke="#8a5cae" stroke-width="2" stroke-dasharray="5 3" marker-end="url(#aP)"/>
+  <text x="660" y="84" font-size="10" fill="#3a3a3c">③ 无主 Leaderless · Dynamo/Cassandra（R3）</text>
+  <text x="1270" y="78" font-size="10" fill="#a1a1a6" text-anchor="end">R1/R2 源码·文档级核实</text>
+  <text x="1270" y="92" font-size="10" fill="#a1a1a6" text-anchor="end">R3 概念参考 · 未源码级核实</text>
+  <line x1="30" y1="100" x2="1270" y2="100" stroke="#e4e7ec" stroke-width="1"/>
+
+  <!-- ============ Panel A 主从 Primary-Standby（蓝）============ -->
+  <rect x="30" y="112" width="390" height="420" rx="14" fill="#eaf1fb" stroke="#c6d9f2" filter="url(#soft)"/>
+  <text x="225" y="138" font-size="13" font-weight="700" fill="#20375e" text-anchor="middle">① 主从 Primary-Standby</text>
+  <text x="225" y="156" font-size="9.5" fill="#3a4a63" text-anchor="middle">Postgres WAL 流复制</text>
+  <line x1="46" y1="166" x2="404" y2="166" stroke="#c6d9f2" stroke-width="1"/>
+
+  <rect x="140" y="184" width="170" height="56" rx="10" fill="#ffffff" stroke="#c6d9f2"/>
+  <text x="225" y="206" font-size="11.5" font-weight="700" fill="#20375e" text-anchor="middle">Primary</text>
+  <text x="225" y="223" font-size="8.5" fill="#5a7099" text-anchor="middle">接收写 · 生成 WAL</text>
+
+  <rect x="56" y="284" width="150" height="56" rx="10" fill="#ffffff" stroke="#c6d9f2"/>
+  <text x="131" y="306" font-size="11" font-weight="700" fill="#20375e" text-anchor="middle">Standby A</text>
+  <text x="131" y="322" font-size="8.5" fill="#5a7099" text-anchor="middle">回放 WAL · 只读</text>
+
+  <rect x="244" y="284" width="150" height="56" rx="10" fill="#ffffff" stroke="#c6d9f2"/>
+  <text x="319" y="306" font-size="11" font-weight="700" fill="#20375e" text-anchor="middle">Standby B</text>
+  <text x="319" y="322" font-size="8.5" fill="#5a7099" text-anchor="middle">回放 WAL · 只读</text>
+
+  <line x1="170" y1="240" x2="131" y2="282" stroke="#4a7fd0" stroke-width="1.8" marker-end="url(#aB)"/>
+  <line x1="280" y1="240" x2="319" y2="282" stroke="#4a7fd0" stroke-width="1.8" marker-end="url(#aB)"/>
+  <text x="225" y="264" font-size="8.5" fill="#2f5c98" text-anchor="middle">WAL 流复制（单向）</text>
+
+  <rect x="56" y="356" width="338" height="46" rx="8" fill="#ffffff" stroke="#c6d9f2"/>
+  <text x="70" y="374" font-size="9.5" font-weight="700" fill="#20375e">同步级别 synchronous_commit</text>
+  <text x="70" y="390" font-size="8.5" fill="#3a4a63">remote_apply &gt; on &gt; remote_write &gt; off</text>
+
+  <text x="46" y="420" font-size="9" fill="#3a4a63">写只能去 Primary；Standby 持续回放、可只读查询</text>
+  <text x="46" y="436" font-size="9" fill="#3a4a63">Primary 故障 → promote 一个 Standby 为新 Primary</text>
+  <text x="46" y="458" font-size="8.5" fill="#5a7099">→ 机制细节见 R1</text>
+
+  <!-- ============ Panel B 多主 Multi-Master（绿）============ -->
+  <rect x="455" y="112" width="390" height="420" rx="14" fill="#eaf6f0" stroke="#bfe3d1" filter="url(#soft)"/>
+  <text x="650" y="138" font-size="13" font-weight="700" fill="#2f6b4e" text-anchor="middle">② 多主 Multi-Master</text>
+  <text x="650" y="156" font-size="9.5" fill="#3f8a63" text-anchor="middle">ClickHouse 多主异步复制</text>
+  <line x1="471" y1="166" x2="829" y2="166" stroke="#bfe3d1" stroke-width="1"/>
+
+  <rect x="560" y="184" width="180" height="54" rx="10" fill="#ffffff" stroke="#bfe3d1"/>
+  <text x="650" y="205" font-size="11" font-weight="700" fill="#2f6b4e" text-anchor="middle">副本 A</text>
+  <text x="650" y="221" font-size="8.5" fill="#3f8a63" text-anchor="middle">可接受 INSERT/ALTER</text>
+
+  <rect x="471" y="300" width="160" height="54" rx="10" fill="#ffffff" stroke="#bfe3d1"/>
+  <text x="551" y="321" font-size="11" font-weight="700" fill="#2f6b4e" text-anchor="middle">副本 B</text>
+  <text x="551" y="337" font-size="8.5" fill="#3f8a63" text-anchor="middle">可接受 INSERT/ALTER</text>
+
+  <rect x="659" y="300" width="160" height="54" rx="10" fill="#ffffff" stroke="#bfe3d1"/>
+  <text x="739" y="321" font-size="11" font-weight="700" fill="#2f6b4e" text-anchor="middle">副本 C</text>
+  <text x="739" y="337" font-size="8.5" fill="#3f8a63" text-anchor="middle">可接受 INSERT/ALTER</text>
+
+  <line x1="600" y1="238" x2="580" y2="300" stroke="#2f9e6e" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#aG)" marker-start="url(#aG)"/>
+  <line x1="700" y1="238" x2="720" y2="300" stroke="#2f9e6e" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#aG)" marker-start="url(#aG)"/>
+  <line x1="631" y1="327" x2="659" y2="327" stroke="#2f9e6e" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#aG)" marker-start="url(#aG)"/>
+  <text x="650" y="274" font-size="8.5" fill="#2f6b4e" text-anchor="middle">任意方向 · 点对点异步传播（无 leader）</text>
+
+  <line x1="650" y1="238" x2="650" y2="362" stroke="#a1a1a6" stroke-width="1.2" stroke-dasharray="3 2"/>
+  <line x1="551" y1="354" x2="622" y2="368" stroke="#a1a1a6" stroke-width="1.2" stroke-dasharray="3 2"/>
+  <line x1="739" y1="354" x2="678" y2="368" stroke="#a1a1a6" stroke-width="1.2" stroke-dasharray="3 2"/>
+  <rect x="580" y="364" width="140" height="46" rx="8" fill="#f6f7f9" stroke="#d7d7dd"/>
+  <text x="650" y="383" font-size="9.5" font-weight="700" fill="#4a4a4f" text-anchor="middle">Keeper</text>
+  <text x="650" y="399" font-size="8" fill="#8a97ab" text-anchor="middle">仅协调元数据 · 不代理写/读</text>
+
+  <text x="471" y="432" font-size="9" fill="#2f6b4e">任意副本可写，本地处理后异步扩散给其余副本</text>
+  <text x="471" y="448" font-size="9" fill="#2f6b4e">无 leader 选举 / 无写转发；Keeper 只做协调簿记</text>
+  <text x="471" y="470" font-size="8.5" fill="#3f8a63">→ 机制细节见 R2</text>
+
+  <!-- ============ Panel C 无主 Leaderless（紫，概念参考）============ -->
+  <rect x="880" y="112" width="390" height="420" rx="14" fill="#f4eefb" stroke="#dcc9ef" stroke-width="1.4" stroke-dasharray="7 4" filter="url(#soft)"/>
+  <text x="1075" y="138" font-size="13" font-weight="700" fill="#6f3ea8" text-anchor="middle">③ 无主 Leaderless</text>
+  <text x="1075" y="156" font-size="9.5" fill="#5a3a7a" text-anchor="middle">Dynamo / Cassandra Quorum（N/R/W）</text>
+  <line x1="896" y1="166" x2="1254" y2="166" stroke="#dcc9ef" stroke-width="1"/>
+
+  <rect x="896" y="174" width="358" height="24" rx="8" fill="#f4f4f6" stroke="#c9c9cf" stroke-dasharray="3 2"/>
+  <text x="1075" y="190" font-size="9" font-weight="700" fill="#6e6e73" text-anchor="middle">⚠ 概念参考 · 本仓库/本会话未做源码级核实</text>
+
+  <text x="1075" y="220" font-size="9" fill="#5a3a7a" text-anchor="middle">示例：N=5 · W=3 · R=3</text>
+
+  <rect x="919" y="230" width="56" height="60" rx="8" fill="#dcc9ef" stroke="#8a5cae" stroke-width="1.5"/>
+  <text x="947" y="264" font-size="10.5" font-weight="700" fill="#5a3a7a" text-anchor="middle">N1</text>
+  <rect x="983" y="230" width="56" height="60" rx="8" fill="#dcc9ef" stroke="#8a5cae" stroke-width="1.5"/>
+  <text x="1011" y="264" font-size="10.5" font-weight="700" fill="#5a3a7a" text-anchor="middle">N2</text>
+  <rect x="1047" y="230" width="56" height="60" rx="8" fill="#dcc9ef" stroke="#c99a3a" stroke-width="3"/>
+  <text x="1075" y="264" font-size="10.5" font-weight="700" fill="#5a3a7a" text-anchor="middle">N3</text>
+  <rect x="1111" y="230" width="56" height="60" rx="8" fill="#fbf3e2" stroke="#ecd6a8" stroke-width="1.5"/>
+  <text x="1139" y="264" font-size="10.5" font-weight="700" fill="#8a6417" text-anchor="middle">N4</text>
+  <rect x="1175" y="230" width="56" height="60" rx="8" fill="#fbf3e2" stroke="#ecd6a8" stroke-width="1.5"/>
+  <text x="1203" y="264" font-size="10.5" font-weight="700" fill="#8a6417" text-anchor="middle">N5</text>
+
+  <path d="M919,222 L919,214 L1103,214 L1103,222" fill="none" stroke="#8a5cae" stroke-width="1.4"/>
+  <text x="1011" y="209" font-size="8.5" fill="#5a3a7a" text-anchor="middle">W=3 写确认覆盖 N1-N3</text>
+
+  <path d="M1047,298 L1047,306 L1231,306 L1231,298" fill="none" stroke="#c99a3a" stroke-width="1.4"/>
+  <text x="1139" y="318" font-size="8.5" fill="#8a6417" text-anchor="middle">R=3 读确认覆盖 N3-N5</text>
+
+  <text x="1075" y="336" font-size="8" fill="#6e6e73" text-anchor="middle">N3 落在重叠区 —— 读写副本集合必相交</text>
+
+  <rect x="896" y="344" width="358" height="40" rx="8" fill="#ffffff" stroke="#e4e7ec"/>
+  <text x="1075" y="368" font-size="10" font-weight="700" fill="#4a4a4f" text-anchor="middle">W + R &gt; N ⇒ 写副本集合与读副本集合必有交集</text>
+
+  <text x="896" y="404" font-size="9" fill="#5a3a7a">写发给多个副本，凑够 W 个确认即算成功</text>
+  <text x="896" y="420" font-size="9" fill="#5a3a7a">读联系多个副本，凑够 R 个响应取版本最新的</text>
+  <text x="896" y="442" font-size="8.5" fill="#8a97ab">→ 机制细节见 R3（概念参考，未源码级核实）</text>
+
+  <!-- ============ 三轴对比小网格 ============ -->
+  <rect x="30" y="552" width="140" height="40" rx="8" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="100" y="576" font-size="10.5" font-weight="700" fill="#1d1d1f" text-anchor="middle">对比轴</text>
+
+  <rect x="180" y="552" width="356" height="40" rx="8" fill="#eaf1fb" stroke="#c6d9f2"/>
+  <text x="358" y="568" font-size="10.5" font-weight="800" fill="#20375e" text-anchor="middle">主从 · Postgres</text>
+  <rect x="546" y="552" width="356" height="40" rx="8" fill="#eaf6f0" stroke="#bfe3d1"/>
+  <text x="724" y="568" font-size="10.5" font-weight="800" fill="#2f6b4e" text-anchor="middle">多主 · ClickHouse</text>
+  <text x="724" y="584" font-size="8.5" fill="#3f8a63" text-anchor="middle"></text>
+  <rect x="912" y="552" width="356" height="40" rx="8" fill="#f4eefb" stroke="#dcc9ef" stroke-dasharray="5 3"/>
+  <text x="1090" y="568" font-size="10.5" font-weight="800" fill="#6f3ea8" text-anchor="middle">无主 · Dynamo/Cassandra</text>
+  <text x="1090" y="584" font-size="8" fill="#8a97ab" text-anchor="middle">（概念参考）</text>
+
+  <!-- 行①写去哪 -->
+  <rect x="30" y="596" width="140" height="44" rx="8" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="46" y="614" font-size="9.5" font-weight="700" fill="#1d1d1f">① 写去哪</text>
+  <text x="46" y="630" font-size="8" fill="#8a97ab">写路径的目的地</text>
+
+  <rect x="180" y="596" width="356" height="44" rx="8" fill="#ffffff" stroke="#e4e7ec"/>
+  <text x="196" y="614" font-size="9.5" fill="#3a4a63">只能写 Primary；</text>
+  <text x="196" y="630" font-size="9.5" fill="#3a4a63">Standby 只读不接受写</text>
+
+  <rect x="546" y="596" width="356" height="44" rx="8" fill="#ffffff" stroke="#e4e7ec"/>
+  <text x="562" y="614" font-size="9.5" fill="#2f6b4e">任意副本都可写；</text>
+  <text x="562" y="630" font-size="9.5" fill="#2f6b4e">本地处理后异步扩散</text>
+
+  <rect x="912" y="596" width="356" height="44" rx="8" fill="#ffffff" stroke="#e4e7ec"/>
+  <text x="928" y="614" font-size="9.5" fill="#5a3a7a">写发给多副本；</text>
+  <text x="928" y="630" font-size="9.5" fill="#5a3a7a">凑够 W 个确认即成功</text>
+
+  <!-- 行②读多新 -->
+  <rect x="30" y="644" width="140" height="44" rx="8" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="46" y="662" font-size="9.5" font-weight="700" fill="#1d1d1f">② 读多新</text>
+  <text x="46" y="678" font-size="8" fill="#8a97ab">读到的数据多新鲜</text>
+
+  <rect x="180" y="644" width="356" height="44" rx="8" fill="#ffffff" stroke="#e4e7ec"/>
+  <text x="196" y="662" font-size="9.5" fill="#3a4a63">看 synchronous_commit 级别</text>
+  <text x="196" y="678" font-size="9.5" fill="#3a4a63">与是否直接读 Standby</text>
+
+  <rect x="546" y="644" width="356" height="44" rx="8" fill="#ffffff" stroke="#e4e7ec"/>
+  <text x="562" y="662" font-size="9.5" fill="#2f6b4e">副本间异步传播，</text>
+  <text x="562" y="678" font-size="9.5" fill="#2f6b4e">读到的可能是略旧版本</text>
+
+  <rect x="912" y="644" width="356" height="44" rx="8" fill="#ffffff" stroke="#e4e7ec"/>
+  <text x="928" y="662" font-size="9.5" fill="#5a3a7a">看 R 取值（概念层）；</text>
+  <text x="928" y="678" font-size="9.5" fill="#5a3a7a">R 越大读到的越新但越慢</text>
+
+  <!-- 行③丢多少 -->
+  <rect x="30" y="692" width="140" height="44" rx="8" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="46" y="710" font-size="9.5" font-weight="700" fill="#1d1d1f">③ 丢多少</text>
+  <text x="46" y="726" font-size="8" fill="#8a97ab">故障切换丢失窗口</text>
+
+  <rect x="180" y="692" width="356" height="44" rx="8" fill="#ffffff" stroke="#e4e7ec"/>
+  <text x="196" y="710" font-size="9.5" fill="#3a4a63">off/异步下可能丢已提交事务；</text>
+  <text x="196" y="726" font-size="9.5" fill="#3a4a63">remote_apply 级别可到 0 丢失</text>
+
+  <rect x="546" y="692" width="356" height="44" rx="8" fill="#ffffff" stroke="#e4e7ec"/>
+  <text x="562" y="710" font-size="9.5" fill="#2f6b4e">一致性/丢失窗口</text>
+  <text x="562" y="726" font-size="9.5" fill="#2f6b4e">= 副本间同步延迟</text>
+
+  <rect x="912" y="692" width="356" height="44" rx="8" fill="#ffffff" stroke="#e4e7ec"/>
+  <text x="928" y="710" font-size="9.5" fill="#5a3a7a">W+R&gt;N 只保证读写副本集合</text>
+  <text x="928" y="726" font-size="9.5" fill="#5a3a7a">相交，具体丢失取舍见配置（概念层）</text>
+
+  <text x="30" y="752" font-size="9" fill="#8a97ab">三种拓扑没有绝对优劣，只是在「写去哪 / 读多新 / 丢多少」三根轴上选择了不同的落点——选型即在这三轴上取舍。</text>
+</svg>

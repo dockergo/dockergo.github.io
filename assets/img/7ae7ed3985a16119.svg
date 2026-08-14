@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="520" viewBox="0 0 1080 520" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="520" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="700" fill="#1d1d1f">Compaction · 重写数据/manifest,把碎片和删除物化掉</text>
+  <text x="30" y="49" font-size="9.5" fill="#a1a1a6">后台维护:合并小文件、把 delete file 应用进 data file、合并 manifest —— 都产新快照,不影响读者</text>
+
+  <!-- rewrite data files -->
+  <rect x="30" y="72" width="1020" height="150" rx="13" fill="#f7f7f9" stroke="#e3e3e8"/>
+  <text x="46" y="96" font-size="11" font-weight="700" fill="#1d1d1f">rewrite data files（bin-pack / sort）· 合并小文件 + 物化删除</text>
+  <g text-anchor="middle" font-size="8.4">
+    <rect x="60" y="112" width="90" height="30" rx="7" fill="#fdf6ea" stroke="#efdcb4"/><text x="105" y="131" fill="#5a3410">小文件1</text>
+    <rect x="160" y="112" width="90" height="30" rx="7" fill="#fdf6ea" stroke="#efdcb4"/><text x="205" y="131" fill="#5a3410">小文件2</text>
+    <rect x="60" y="150" width="90" height="30" rx="7" fill="#fdf6ea" stroke="#efdcb4"/><text x="105" y="169" fill="#5a3410">小文件3</text>
+    <rect x="160" y="150" width="90" height="30" rx="7" fill="#f9ecec" stroke="#e8c9c9"/><text x="205" y="169" fill="#7a2230">delete file</text>
+  </g>
+  <line x1="270" y1="146" x2="380" y2="146" stroke="#b8b8bf" stroke-width="1.6" marker-end="url(#ar)"/>
+  <text x="325" y="138" font-size="8" text-anchor="middle" fill="#86868b">bin-pack</text>
+  <rect x="390" y="120" width="150" height="54" rx="10" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="465" y="143" font-size="9.5" font-weight="700" text-anchor="middle" fill="#12402a">大文件(合并)</text>
+  <text x="465" y="162" font-size="8" text-anchor="middle" fill="#2f6f4f">删除已物化</text>
+  <text x="580" y="120" font-size="9.3" fill="#6e6e73">BinPackRewriteFilePlanner / SizeBasedFileRewritePlanner:</text>
+  <text x="580" y="140" font-size="9.3" fill="#6e6e73">按 target size 装箱重写;sort/z-order 让 min/max 紧凑,剪枝更强。</text>
+  <text x="580" y="160" font-size="9.3" fill="#6e6e73">RewriteDataFilesCommitManager 分组提交;保留原 data_seq,</text>
+  <text x="580" y="180" font-size="9.3" fill="#6e6e73">故删除语义不乱(见序列号)。</text>
+  <text x="580" y="204" font-size="8.4" fill="#a1a1a6">读多写少/删除堆积场景把 MoR 物化成近似 CoW 读性能</text>
+
+  <!-- rewrite manifests -->
+  <rect x="30" y="238" width="500" height="130" rx="13" fill="#e7f0fb" stroke="#b9d2ef"/>
+  <text x="46" y="262" font-size="11" font-weight="700" fill="#1b2a4a">rewrite manifests · 合并 manifest</text>
+  <text x="46" y="286" font-size="9.3" fill="#5b7db1">大量小 manifest 拖慢第一级剪枝遍历</text>
+  <text x="46" y="306" font-size="9.3" fill="#5b7db1">BaseRewriteManifests 合并成少数大 manifest</text>
+  <text x="46" y="326" font-size="9.3" fill="#5b7db1">按分区聚簇,提升 manifest 级剪枝命中</text>
+  <text x="46" y="348" font-size="8.4" fill="#4a6fa0">只改元数据组织,不碰 data file</text>
+
+  <!-- as a snapshot -->
+  <rect x="550" y="238" width="500" height="130" rx="13" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="566" y="262" font-size="11" font-weight="700" fill="#12402a">维护 = 一种特殊提交</text>
+  <text x="566" y="286" font-size="9.3" fill="#2f6f4f">compaction 走 replace/rewrite 操作,产新快照</text>
+  <text x="566" y="306" font-size="9.3" fill="#2f6f4f">读者仍 pin 旧快照,读期间不受影响</text>
+  <text x="566" y="326" font-size="9.3" fill="#2f6f4f">同样有 OCC 冲突检测(与并发写竞争)</text>
+  <text x="566" y="348" font-size="8.4" fill="#5b8f6f">RewriteFileGroup 分组降低单次提交冲突面</text>
+
+  <rect x="30" y="384" width="1020" height="116" rx="12" fill="#f0f0f4" stroke="#d2d2d7"/>
+  <text x="46" y="408" font-size="10.5" font-weight="700" fill="#48484a">为什么要 compaction</text>
+  <text x="46" y="430" font-size="9.3" fill="#6e6e73">流式/频繁小批写 → 大量小 data file + 小 manifest + delete file 堆积 → 规划慢、读慢。</text>
+  <text x="46" y="450" font-size="9.3" fill="#6e6e73">compaction 定期把它们合并/物化,恢复读性能。这是 MoR 表长期健康的必需后台任务。</text>
+  <text x="46" y="472" font-size="9.3" fill="#6e6e73">触发:引擎存储过程(Spark rewrite_data_files / rewrite_manifests)、调度器周期跑;与 expire/orphan 清理配套。</text>
+  <text x="46" y="492" font-size="8.4" fill="#a1a1a6">调优:target-file-size · min-input-files · 分区级并行 · partial-progress 分批提交</text>
+</svg>

@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 860" width="860" height="860" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="ds" x="-6%" y="-6%" width="112%" height="112%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="2.6" flood-color="#0b1220" flood-opacity="0.14"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0L10 5L0 10z" fill="#5b6472"/>
+    </marker>
+  </defs>
+  <rect width="860" height="860" fill="#fbfbfd"/>
+  <text x="40" y="46" font-size="21" font-weight="700" fill="#141922">ShouldRetry · 六步有序短路</text>
+  <text x="40" y="72" font-size="13.5" fill="#5b6472">顺序即语义 · 任一步命中即停 · 扣令牌必排在状态码检查之后</text>
+
+  <g filter="url(#ds)">
+    <rect x="40" y="98"  width="470" height="60" rx="12" fill="#eef4ff" stroke="#c7dbff"/>
+    <rect x="40" y="196" width="470" height="60" rx="12" fill="#eef4ff" stroke="#c7dbff"/>
+    <rect x="40" y="294" width="470" height="60" rx="12" fill="#eef4ff" stroke="#c7dbff"/>
+    <rect x="40" y="392" width="470" height="60" rx="12" fill="#eef4ff" stroke="#c7dbff"/>
+    <rect x="40" y="490" width="470" height="60" rx="12" fill="#eef4ff" stroke="#c7dbff"/>
+    <rect x="40" y="588" width="470" height="60" rx="12" fill="#eef4ff" stroke="#c7dbff"/>
+    <rect x="40" y="686" width="470" height="70" rx="12" fill="#e9f9ef" stroke="#b6e6c8"/>
+  </g>
+  <g font-size="14.5" fill="#1e2530" font-weight="600">
+    <text x="60" y="125">① status == OK ?</text>
+    <text x="60" y="223">② status ∈ retryableStatusCodes ?</text>
+    <text x="60" y="321">③ RecordFailure 扣令牌 · 桶仍过半 ?</text>
+    <text x="60" y="419">④ 未 committed ?</text>
+    <text x="60" y="517">⑤ 尝试次数未用尽 ?</text>
+    <text x="60" y="615">⑥ server pushback ≥ 0 ?</text>
+    <text x="60" y="722" fill="#116b3a">全通过 → StartRetryTimer 排下一次尝试</text>
+  </g>
+  <g font-size="12" fill="#6b7480">
+    <text x="60" y="144">正常完成不占重试预算</text>
+    <text x="60" y="242">仅可恢复错误(如 UNAVAILABLE)才继续</text>
+    <text x="60" y="340">只有可重试失败才扣桶 · 防请求错误耗桶</text>
+    <text x="60" y="438">响应已回吐则不可再改写</text>
+    <text x="60" y="536">受 maxAttempts(上限 5)约束</text>
+    <text x="60" y="634">服务端可显式说"别重试了"</text>
+    <text x="60" y="741">指数退避 + jitter · pushback 则用其值并 Reset</text>
+  </g>
+
+  <g stroke="#e08a8a" stroke-width="1.6" fill="none" marker-end="url(#ar)">
+    <path d="M510 128 H600"/>
+    <path d="M510 226 H600"/>
+    <path d="M510 324 H600"/>
+    <path d="M510 422 H600"/>
+    <path d="M510 520 H600"/>
+    <path d="M510 618 H600"/>
+  </g>
+  <g font-size="12.5" fill="#a23a3a">
+    <text x="600" y="132">✗ 成功→补令牌，停</text>
+    <text x="600" y="230">✗ 不可重试码，停</text>
+    <text x="600" y="328">✗ 令牌见底 throttled，停</text>
+    <text x="600" y="426">✗ 已 commit，停</text>
+    <text x="600" y="524">✗ 次数用尽，停</text>
+    <text x="600" y="622">✗ 负 pushback，停</text>
+  </g>
+
+  <g stroke="#5b6472" stroke-width="1.6" fill="none" marker-end="url(#ar)">
+    <path d="M275 158 V196"/>
+    <path d="M275 256 V294"/>
+    <path d="M275 354 V392"/>
+    <path d="M275 452 V490"/>
+    <path d="M275 550 V588"/>
+    <path d="M275 648 V686"/>
+  </g>
+
+  <g filter="url(#ds)">
+    <rect x="600" y="660" width="220" height="150" rx="12" fill="#fff8ec" stroke="#f0dcae"/>
+  </g>
+  <text x="620" y="688" font-size="13.5" font-weight="700" fill="#8a6a12">RetryThrottle 令牌桶</text>
+  <rect x="770" y="700" width="34" height="96" rx="6" fill="#ffffff" stroke="#e2cf9a"/>
+  <rect x="770" y="748" width="34" height="48" rx="6" fill="#ffe9b8"/>
+  <line x1="758" y1="748" x2="816" y2="748" stroke="#c98f2a" stroke-width="1.6" stroke-dasharray="4 3"/>
+  <g font-size="11.5" fill="#8a6a12">
+    <text x="620" y="712">失败 −1</text>
+    <text x="620" y="732">成功 +ratio</text>
+    <text x="620" y="758">低于半满线</text>
+    <text x="620" y="776">→ 禁止重试</text>
+    <text x="620" y="794">扣得快补得慢</text>
+  </g>
+</svg>

@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="540" viewBox="0 0 1080 540" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="540" fill="#fbfbfd"/>
+
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">转码嵌套循环 —— 内层 while 取尽当前层输出再进下一层</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">每层 send/receive 是 1:N / N:1 ｜ 结束时 send NULL 触发 draining,取尽编码器缓冲的延迟帧/包</text>
+
+  <!-- 外层 while: av_read_frame -->
+  <rect x="30" y="76" width="1020" height="330" rx="14" fill="#f3f7fc" stroke="#cfe0f2" filter="url(#soft)"/>
+  <text x="50" y="102" font-size="12" font-weight="600" fill="#274a78">外层 while:av_read_frame 读到 packet</text>
+
+  <!-- send_packet -->
+  <rect x="50" y="116" width="200" height="60" rx="11" fill="#fff7e6" stroke="#e8cf9a"/>
+  <text x="150" y="142" font-size="10.5" font-weight="600" text-anchor="middle" fill="#5a3410">send_packet</text>
+  <text x="150" y="162" font-size="8.5" text-anchor="middle" fill="#93762e">送解码器 (AVPacket)</text>
+
+  <!-- 中层 while: receive_frame -->
+  <rect x="50" y="192" width="980" height="200" rx="12" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="70" y="216" font-size="11" font-weight="600" fill="#12402a">中层 while:receive_frame 收帧</text>
+
+  <rect x="70" y="230" width="176" height="56" rx="10" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="158" y="254" font-size="10" font-weight="600" text-anchor="middle" fill="#12402a">receive_frame</text>
+  <text x="158" y="273" font-size="8.5" text-anchor="middle" fill="#2f6f4f">收原始 AVFrame</text>
+
+  <rect x="262" y="230" width="176" height="56" rx="10" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="350" y="254" font-size="10" font-weight="600" text-anchor="middle" fill="#1b2a4a">(滤镜处理)</text>
+  <text x="350" y="273" font-size="8.5" text-anchor="middle" fill="#5b7db1">可选 · 一帧可产多帧</text>
+
+  <rect x="454" y="230" width="176" height="56" rx="10" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="542" y="254" font-size="10" font-weight="600" text-anchor="middle" fill="#12402a">send_frame</text>
+  <text x="542" y="273" font-size="8.5" text-anchor="middle" fill="#2f6f4f">送编码器 (AVFrame)</text>
+
+  <path d="M246,258 L262,258" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M438,258 L454,258" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <!-- 内层 while: receive_packet -->
+  <rect x="454" y="298" width="558" height="80" rx="11" fill="#fff7e6" stroke="#e8cf9a"/>
+  <text x="474" y="320" font-size="10.5" font-weight="600" fill="#5a3410">内层 while:receive_packet 收包</text>
+  <rect x="474" y="330" width="230" height="38" rx="9" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="589" y="354" font-size="9.5" text-anchor="middle" fill="#5a3410">receive_packet → 收压缩 AVPacket</text>
+  <rect x="722" y="330" width="272" height="38" rx="9" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="858" y="354" font-size="9.5" text-anchor="middle" fill="#5a3410">av_interleaved_write_frame 写出</text>
+  <path d="M704,349 L722,349" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <!-- send_frame 到内层 -->
+  <path d="M542,286 L542,298" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <!-- send_packet 到中层 -->
+  <path d="M150,176 L150,230" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <!-- 结束 draining -->
+  <rect x="30" y="420" width="1020" height="60" rx="12" fill="#fbeaea" stroke="#e6b8b8" filter="url(#soft)"/>
+  <text x="50" y="444" font-size="11" font-weight="600" fill="#7a2a2a">结束 · draining 冲刷</text>
+  <text x="50" y="465" font-size="9.5" fill="#a05a5a">读完输入后 <tspan font-weight="600">send NULL</tspan> 触发 draining——继续 receive 取尽编码器/解码器缓冲的延迟帧/包,否则丢尾部数据</text>
+
+  <text x="30" y="510" font-size="9" fill="#a1a1a6">源码基准 FFmpeg(git 1588bce) · 三层嵌套的原因:每层 send/receive 是 1:N/N:1,内层 while 取尽当前层输出再进下一层;冲刷保证延迟帧/包也输出</text>
+</svg>

@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="500" viewBox="0 0 1080 500"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1080" height="500" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Milvus collection DDL 与 schema</text>
+  <text x="30" y="50" font-size="11" fill="#a1a1a6">建 collection 定义字段与索引;经 Proxy → RootCoord 落 etcd,创建时分配 vchannel + 建数据同步 pipeline</text>
+
+  <!-- schema definition group -->
+  <rect x="40" y="72" width="640" height="288" rx="15" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="60" y="98" font-size="12" font-weight="600" fill="#2c5a3a">collection 定义(schema)</text>
+
+  <!-- 向量字段 -->
+  <rect x="60" y="112" width="290" height="112" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="205" y="136" font-size="11.5" font-weight="600" fill="#12402a" text-anchor="middle">向量字段</text>
+  <text x="205" y="158" font-size="9.5" fill="#2f6f4f" text-anchor="middle">维度 dim + 数据类型</text>
+  <text x="205" y="180" font-size="9" fill="#12402a" text-anchor="middle">float / float16 / bfloat16</text>
+  <text x="205" y="198" font-size="9" fill="#12402a" text-anchor="middle">binary / int8 / sparse</text>
+  <text x="205" y="216" font-size="8.5" fill="#a1a1a6" text-anchor="middle">被检索的目标字段</text>
+
+  <!-- 标量字段 -->
+  <rect x="370" y="112" width="290" height="112" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="515" y="136" font-size="11.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">标量字段</text>
+  <text x="515" y="158" font-size="9.5" fill="#274a78" text-anchor="middle">主键(primary key)</text>
+  <text x="515" y="180" font-size="9.5" fill="#274a78" text-anchor="middle">+ 其它标量字段</text>
+  <text x="515" y="200" font-size="9" fill="#5b7db1" text-anchor="middle">用于过滤 / query 谓词</text>
+  <text x="515" y="216" font-size="8.5" fill="#a1a1a6" text-anchor="middle">主键用于 delete/upsert 定位</text>
+
+  <!-- ShardsNum -->
+  <rect x="60" y="236" width="290" height="112" rx="12" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="205" y="260" font-size="11.5" font-weight="600" fill="#5a3410" text-anchor="middle">ShardsNum</text>
+  <text x="205" y="282" font-size="9.5" fill="#93762e" text-anchor="middle">vchannel 数(写入并行度)</text>
+  <text x="205" y="302" font-size="9.5" fill="#5a3410" text-anchor="middle">默认 1(common.go:77)</text>
+  <text x="205" y="322" font-size="9" fill="#93762e" text-anchor="middle">高吞吐写调大</text>
+  <text x="205" y="338" font-size="8.5" fill="#a1a1a6" text-anchor="middle">但增日志 / 调度开销</text>
+
+  <!-- 索引 -->
+  <rect x="370" y="236" width="290" height="112" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="515" y="260" font-size="11.5" font-weight="600" fill="#12402a" text-anchor="middle">索引(建表后建)</text>
+  <text x="515" y="282" font-size="9.5" fill="#2f6f4f" text-anchor="middle">向量字段:HNSW / IVF / DiskANN</text>
+  <text x="515" y="302" font-size="9.5" fill="#2f6f4f" text-anchor="middle">+ metric_type(L2/IP/COSINE)</text>
+  <text x="515" y="322" font-size="9" fill="#12402a" text-anchor="middle">标量字段:倒排 / bitmap</text>
+  <text x="515" y="338" font-size="8.5" fill="#a1a1a6" text-anchor="middle">metric 须与 embedding 训练一致</text>
+
+  <!-- DDL flow right -->
+  <rect x="710" y="72" width="330" height="288" rx="15" fill="#f3f7fc" stroke="#cfe0f2"/>
+  <text x="730" y="98" font-size="12" font-weight="600" fill="#274a78">DDL 落地流程</text>
+
+  <rect x="730" y="112" width="290" height="52" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="875" y="134" font-size="11" font-weight="600" fill="#1b2a4a" text-anchor="middle">Proxy(接入 DDL 请求)</text>
+  <text x="875" y="152" font-size="8.5" fill="#5b7db1" text-anchor="middle">校验 schema 合法性</text>
+
+  <rect x="730" y="184" width="290" height="52" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="875" y="206" font-size="11" font-weight="600" fill="#1b2a4a" text-anchor="middle">RootCoord(DDL / 元数据)</text>
+  <text x="875" y="224" font-size="8.5" fill="#5b7db1" text-anchor="middle">分配 vchannel · 领 TSO 定序</text>
+
+  <rect x="730" y="256" width="290" height="52" rx="11" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="875" y="278" font-size="11" font-weight="600" fill="#1d1d1f" text-anchor="middle">etcd(元数据持久化)</text>
+  <text x="875" y="296" font-size="8.5" fill="#6e6e73" text-anchor="middle">collection schema · 段信息 · 索引元</text>
+
+  <rect x="730" y="322" width="290" height="30" rx="9" fill="#fff7e6" stroke="#e8cf9a"/>
+  <text x="875" y="342" font-size="9.5" font-weight="600" fill="#5a3410" text-anchor="middle">建 per-vchannel 数据同步 pipeline</text>
+
+  <!-- flow connectors -->
+  <path d="M875,164 L875,184" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M875,236 L875,256" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M875,308 L875,322" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <!-- schema -> proxy -->
+  <path d="M680,140 L710,140" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="695" y="132" font-size="8" fill="#a1a1a6" text-anchor="middle">提交</text>
+
+  <!-- footer -->
+  <rect x="40" y="376" width="1000" height="104" rx="14" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="60" y="400" font-size="11" font-weight="600" fill="#1d1d1f">用户使用流程</text>
+  <text x="60" y="424" font-size="10" fill="#3f3f45">建 collection(定义向量字段维度 + 标量字段 + ShardsNum)→ insert 向量 → 建索引 → search(找 topK,可带标量过滤)</text>
+  <text x="60" y="446" font-size="9.5" fill="#6e6e73">与 SQL 库不同:主操作是"相似度检索"而非关系查询;所有请求先到 Proxy 路由/聚合</text>
+  <text x="60" y="466" font-size="9.5" fill="#a1a1a6">归属:写落 WAL 在写入路径;ANN 算法在向量索引与检索;schema 存 etcd(元数据篇)</text>
+</svg>

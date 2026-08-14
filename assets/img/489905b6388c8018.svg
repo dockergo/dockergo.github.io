@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="560" viewBox="0 0 1080 560" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect x="0" y="0" width="1080" height="560" fill="#fbfbfd"/>
+  <text x="40" y="38" font-size="16" font-weight="600" fill="#1d1d1f">元数据结构 · FE 持久化 &amp; 高可用</text>
+  <text x="40" y="58" font-size="11.5" fill="#86868b">内存对象 + BDB-JE 复制日志:先写日志再改内存;崩溃重放,选主靠 BDB-JE Election</text>
+
+  <!-- 四大支柱横排 -->
+  <g>
+    <!-- EditLog -->
+    <rect x="30" y="80" width="250" height="360" rx="14" fill="#f6f8fc" stroke="#e6ecf4"/>
+    <text x="50" y="104" font-size="13" font-weight="600" fill="#1d5fb8">EditLog · 变更日志</text>
+    <text x="50" y="121" font-size="9" fill="#7d93b5">EditLog.java · (op,Writable) 落 journal</text>
+    <rect x="46" y="132" width="218" height="60" rx="10" fill="#ffffff" stroke="#c4d5ee" filter="url(#soft)"/><text x="62" y="152" font-size="11" font-weight="600" fill="#1d1d1f">logEditDirectly / WithQueue</text><text x="62" y="170" font-size="9.5" fill="#7d93b5">同步直写 vs 异步批量</text><text x="62" y="184" font-size="9.5" fill="#7d93b5">logEditQueue</text>
+    <rect x="46" y="200" width="218" height="60" rx="10" fill="#ffffff" stroke="#c4d5ee" filter="url(#soft)"/><text x="62" y="220" font-size="11" font-weight="600" fill="#1d1d1f">loadJournal(重放分派)</text><text x="62" y="238" font-size="9.5" fill="#7d93b5">按 OperationType switch</text><text x="62" y="252" font-size="9.5" fill="#7d93b5">还原内存对象</text>
+    <text x="50" y="290" font-size="10" fill="#86868b">变更先落 EditLog,</text>
+    <text x="50" y="306" font-size="10" fill="#86868b">再改内存,保证可重放。</text>
+
+    <!-- BDBJEJournal -->
+    <rect x="296" y="80" width="250" height="360" rx="14" fill="#faf4fb" stroke="#ecd9ef"/>
+    <text x="316" y="104" font-size="13" font-weight="600" fill="#7a3fb0">BDBJEJournal · 复制状态机</text>
+    <text x="316" y="121" font-size="9" fill="#a06fc0">BDBJEJournal.java</text>
+    <rect x="312" y="132" width="218" height="72" rx="10" fill="#ffffff" stroke="#ecd9ef" filter="url(#soft)"/><text x="328" y="152" font-size="11" font-weight="600" fill="#1d1d1f">write 分配 journalId</text><text x="328" y="170" font-size="9.5" fill="#a06fc0">nextJournalId 单调递增</text><text x="328" y="186" font-size="9.5" fill="#a06fc0">多数派复制到 FOLLOWER</text><text x="328" y="200" font-size="9" fill="#c0a0d8">复制成功才算提交</text>
+    <text x="316" y="240" font-size="10" fill="#a06fc0">BDB-JE = 内嵌 KV,</text>
+    <text x="316" y="256" font-size="10" fill="#a06fc0">承载日志复制 + 选主。</text>
+
+    <!-- 角色 -->
+    <rect x="562" y="80" width="250" height="360" rx="14" fill="#f5faf6" stroke="#e2ece5"/>
+    <text x="582" y="104" font-size="13" font-weight="600" fill="#2c5a3a">FrontendNodeType · 角色</text>
+    <text x="582" y="121" font-size="9" fill="#4e7a5c">Env.java · MASTER/FOLLOWER/OBSERVER</text>
+    <rect x="578" y="132" width="218" height="60" rx="10" fill="#ffffff" stroke="#cfe6d5" filter="url(#soft)"/><text x="594" y="152" font-size="11" font-weight="600" fill="#1d1d1f">transferToMaster</text><text x="594" y="170" font-size="9.5" fill="#4e7a5c">选主后 replayJournal(-1)</text><text x="594" y="184" font-size="9.5" fill="#4e7a5c">追平 → 对外写</text>
+    <rect x="578" y="200" width="218" height="60" rx="10" fill="#ffffff" stroke="#cfe6d5" filter="url(#soft)"/><text x="594" y="220" font-size="11" font-weight="600" fill="#1d1d1f">replayer + canRead</text><text x="594" y="238" font-size="9.5" fill="#4e7a5c">Follower 重放;延迟大</text><text x="594" y="252" font-size="9.5" fill="#4e7a5c">canRead=false 拒陈旧读</text>
+    <text x="582" y="290" font-size="10" fill="#4e7a5c">单写(Master)多读</text>
+    <text x="582" y="306" font-size="10" fill="#4e7a5c">(Follower/Observer)。</text>
+
+    <!-- Checkpoint -->
+    <rect x="828" y="80" width="222" height="360" rx="14" fill="#fbf7ef" stroke="#efe4cf"/>
+    <text x="848" y="104" font-size="13" font-weight="600" fill="#8a5a12">Checkpoint · 镜像压缩</text>
+    <text x="848" y="121" font-size="9" fill="#a98b52">Checkpoint.java</text>
+    <rect x="844" y="132" width="190" height="128" rx="10" fill="#ffffff" stroke="#efe0c4" filter="url(#soft)"/><text x="860" y="152" font-size="11" font-weight="600" fill="#1d1d1f">doCheckpoint</text>
+    <text x="860" y="176" font-size="9.5" fill="#a98b52">① loadImage 载旧镜像</text>
+    <text x="860" y="196" font-size="9.5" fill="#a98b52">② replay 重放增量日志</text>
+    <text x="860" y="216" font-size="9.5" fill="#a98b52">③ saveImage 存新镜像</text>
+    <text x="860" y="236" font-size="9.5" fill="#a98b52">④ deleteJournals 截断</text>
+    <text x="848" y="290" font-size="10" fill="#a98b52">防日志无限增长;</text>
+    <text x="848" y="306" font-size="10" fill="#a98b52">恢复 = 镜像 + 增量重放。</text>
+  </g>
+
+  <!-- 底部:三位一体总结 -->
+  <rect x="30" y="456" width="1020" height="86" rx="14" fill="#ffffff" stroke="#ececef" filter="url(#soft)"/>
+  <text x="50" y="480" font-size="12.5" font-weight="600" fill="#1d1d1f">三位一体:In-memory 对象 + EditLog 增量 + Image 镜像</text>
+  <g font-size="10.5" fill="#4a4e57">
+    <text x="50" y="502">· 写:改内存前先 logEdit 落盘并复制多数派 → 崩溃可重放,不丢变更。</text>
+    <text x="50" y="522">· 读:Master 权威;Follower/Observer 重放追平后可读(延迟过大自动拒读)。恢复:loadImage + replay 增量。</text>
+  </g>
+</svg>

@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="500" viewBox="0 0 980 500" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <marker id="ip2a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#8a5cae"/></marker>
+    <filter id="ip2s" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+  </defs>
+  <rect width="980" height="500" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="700" fill="#1d1d1f">写侧数据流 · 把一个 RecordBatch 摊成一帧字节（ipc/writer.h · options.h）</text>
+  <text x="30" y="50" font-size="10.5" fill="#6e6e73">IpcPayload 是中转清单：先把元数据 + 各 buffer 收集，再由 writer 落到输出流；写选项决定字节流形态</text>
+
+  <!-- Stage 1: RecordBatch -->
+  <rect x="30" y="82" width="180" height="120" rx="12" fill="#f5faf6" stroke="#bfe6cd" filter="url(#ip2s)"/>
+  <text x="120" y="106" font-size="11" font-weight="700" fill="#1c6b45" text-anchor="middle">① RecordBatch</text>
+  <text x="120" y="128" font-size="9" fill="#2f7d57" text-anchor="middle">Schema + 等长列</text>
+  <text x="120" y="146" font-size="9" fill="#2f7d57" text-anchor="middle">各列 validity /</text>
+  <text x="120" y="160" font-size="9" fill="#2f7d57" text-anchor="middle">offset / value buffers</text>
+  <text x="120" y="184" font-size="8.5" fill="#8a9a8f" text-anchor="middle">内存中的一批列</text>
+
+  <!-- Stage 2: IpcPayload -->
+  <rect x="270" y="82" width="220" height="120" rx="12" fill="#f4eefb" stroke="#d9c9ef" filter="url(#ip2s)"/>
+  <text x="380" y="106" font-size="11" font-weight="700" fill="#3c1361" text-anchor="middle">② IpcPayload（writer.h:56）</text>
+  <text x="380" y="127" font-size="9" fill="#6f3ea8" text-anchor="middle">GetRecordBatchPayload（:386）</text>
+  <text x="380" y="141" font-size="9" fill="#6f3ea8" text-anchor="middle">GetSchemaPayload（:355）</text>
+  <rect x="286" y="150" width="90" height="40" rx="6" fill="#fff" stroke="#d9c9ef"/>
+  <text x="331" y="167" font-size="8.5" fill="#3c1361" text-anchor="middle">元数据</text>
+  <text x="331" y="181" font-size="8" fill="#9a86c0" text-anchor="middle">Flatbuffers</text>
+  <rect x="384" y="150" width="90" height="40" rx="6" fill="#fff" stroke="#d9c9ef"/>
+  <text x="429" y="167" font-size="8.5" fill="#3c1361" text-anchor="middle">buffer 清单</text>
+  <text x="429" y="181" font-size="8" fill="#9a86c0" text-anchor="middle">待写字节段</text>
+
+  <!-- Stage 3: writer -->
+  <rect x="550" y="82" width="180" height="120" rx="12" fill="#eef4fb" stroke="#cddcf0" filter="url(#ip2s)"/>
+  <text x="640" y="106" font-size="11" font-weight="700" fill="#1b2a4a" text-anchor="middle">③ RecordBatchWriter</text>
+  <text x="640" y="126" font-size="8.5" fill="#5b7db1" text-anchor="middle">（writer.h:90）</text>
+  <text x="640" y="146" font-size="9" fill="#5b7db1" text-anchor="middle">WriteRecordBatch（:98）</text>
+  <text x="640" y="162" font-size="9" fill="#5b7db1" text-anchor="middle">WriteTable（:112）逐批</text>
+  <text x="640" y="186" font-size="8.5" fill="#9aa8bd" text-anchor="middle">Stream / File 两种</text>
+
+  <!-- Stage 4: byte stream -->
+  <rect x="790" y="82" width="160" height="120" rx="12" fill="#fbf7ef" stroke="#ecdcbf" filter="url(#ip2s)"/>
+  <text x="870" y="106" font-size="11" font-weight="700" fill="#8a6d3b" text-anchor="middle">④ 字节流</text>
+  <text x="870" y="128" font-size="9" fill="#b08535" text-anchor="middle">续传令牌 + 长度</text>
+  <text x="870" y="144" font-size="9" fill="#b08535" text-anchor="middle">+ 元数据 + body</text>
+  <text x="870" y="168" font-size="8.5" fill="#b08535" text-anchor="middle">body 与内存同构</text>
+  <text x="870" y="184" font-size="8.5" fill="#c7a56a" text-anchor="middle">不压则读端可 mmap</text>
+
+  <line x1="210" y1="142" x2="270" y2="142" stroke="#8a5cae" stroke-width="1.8" marker-end="url(#ip2a)"/>
+  <text x="240" y="134" font-size="8" fill="#8a5cae" text-anchor="middle">收集</text>
+  <line x1="490" y1="142" x2="550" y2="142" stroke="#8a5cae" stroke-width="1.8" marker-end="url(#ip2a)"/>
+  <text x="520" y="134" font-size="8" fill="#8a5cae" text-anchor="middle">落流</text>
+  <line x1="730" y1="142" x2="790" y2="142" stroke="#8a5cae" stroke-width="1.8" marker-end="url(#ip2a)"/>
+  <text x="760" y="134" font-size="8" fill="#8a5cae" text-anchor="middle">组装</text>
+
+  <!-- 字典编码分支 -->
+  <rect x="30" y="230" width="450" height="110" rx="12" fill="#f4eefb" stroke="#d9c9ef" filter="url(#ip2s)"/>
+  <text x="46" y="252" font-size="11" font-weight="700" fill="#3c1361">字典编码列 · schema 后先发 DictionaryBatch</text>
+  <text x="46" y="273" font-size="9.5" fill="#6f3ea8">schema 帧 → 一个/多个 DictionaryBatch 定义字典内容</text>
+  <text x="46" y="290" font-size="9.5" fill="#6f3ea8">后续 RecordBatch 该列只存 index（低基数省体积）</text>
+  <text x="46" y="309" font-size="9.5" fill="#6f3ea8">emit_dictionary_deltas（options.h:103）：字典增长时</text>
+  <text x="46" y="325" font-size="9.5" fill="#6f3ea8">只追加增量，而非整表重发</text>
+
+  <!-- 压缩取舍 -->
+  <rect x="500" y="230" width="450" height="110" rx="12" fill="#fbf2ea" stroke="#e6cdae" filter="url(#ip2s)"/>
+  <text x="516" y="252" font-size="11" font-weight="700" fill="#b0651f">压缩取舍 · codec（options.h:70）逐 buffer 压</text>
+  <text x="516" y="273" font-size="9.5" fill="#5a4a3a">开 LZ4 / ZSTD：body 不再与内存同构，读端须</text>
+  <text x="516" y="290" font-size="9.5" fill="#5a4a3a">先解压才能映射 → 用解压成本换吞吐 / 体积</text>
+  <text x="516" y="309" font-size="9.5" fill="#5a4a3a">不压 + 64B 对齐写文件 → 读端可直接 mmap 成</text>
+  <text x="516" y="325" font-size="9.5" fill="#5a4a3a">buffers："打开文件即得列、零解析零拷贝"</text>
+
+  <!-- 写选项条 -->
+  <rect x="30" y="360" width="920" height="120" rx="12" fill="#f6f6f8" stroke="#e2e2e7"/>
+  <text x="46" y="382" font-size="11" font-weight="700" fill="#1d1d1f">IpcWriteOptions（options.h:44）· 几个字段直接决定"字节流长什么样"</text>
+  <g font-size="9">
+    <rect x="46" y="394" width="290" height="36" rx="7" fill="#fff" stroke="#e2e2e7"/>
+    <text x="58" y="410" font-weight="700" fill="#3c1361">alignment（:54）</text><text x="58" y="424" fill="#6e6e73">每 buffer 对齐边界（默认 8，可 64）</text>
+    <rect x="346" y="394" width="290" height="36" rx="7" fill="#fff" stroke="#e2e2e7"/>
+    <text x="358" y="410" font-weight="700" fill="#3c1361">codec（:70）</text><text x="358" y="424" fill="#6e6e73">可选 LZ4 / ZSTD 压缩，body 按 buffer 压</text>
+    <rect x="646" y="394" width="290" height="36" rx="7" fill="#fff" stroke="#e2e2e7"/>
+    <text x="658" y="410" font-weight="700" fill="#3c1361">allow_64bit（:48）</text><text x="658" y="424" fill="#6e6e73">是否允许超 2GB 的大 body</text>
+    <rect x="46" y="436" width="443" height="36" rx="7" fill="#fff" stroke="#e2e2e7"/>
+    <text x="58" y="452" font-weight="700" fill="#3c1361">emit_dictionary_deltas（:103）</text><text x="58" y="466" fill="#6e6e73">字典增量：只发新增字典项而非整表重发</text>
+    <rect x="499" y="436" width="437" height="36" rx="7" fill="#fff" stroke="#e2e2e7"/>
+    <text x="511" y="452" font-weight="700" fill="#3c1361">metadata_version（:127）</text><text x="511" y="466" fill="#6e6e73">元数据版本（默认 V5）</text>
+  </g>
+</svg>

@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="540" viewBox="0 0 1080 540"
+     font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1080" height="540" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Neo4j Schema 索引:找遍历起点</text>
+  <text x="30" y="50" font-size="11.5" fill="#a1a1a6">索引是"找起点"用的、不是"遍历"用的;按 label + property 定位起点节点,再展开关系链</text>
+
+  <!-- index types band -->
+  <text x="40" y="82" font-size="12" font-weight="600" fill="#6e6e73">① 索引类型(IndexType.java:27)—— 注意无 BTREE,已被 RANGE 取代</text>
+
+  <!-- native group -->
+  <rect x="40" y="94" width="480" height="150" rx="14" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="60" y="120" font-size="12.5" font-weight="700" fill="#12402a">native(GBP-tree · 页缓存支撑)</text>
+  <text x="60" y="140" font-size="9.5" fill="#2f6f4f">GBP-tree = B+ 树变体,由页缓存支撑</text>
+  <rect x="60" y="150" width="140" height="40" rx="9" fill="#ffffff" stroke="#bfe0cd"/>
+  <text x="130" y="168" font-size="11" font-weight="600" fill="#12402a" text-anchor="middle">RANGE(4)</text>
+  <text x="130" y="183" font-size="8.5" fill="#2f6f4f" text-anchor="middle">等值 / 范围</text>
+  <rect x="210" y="150" width="140" height="40" rx="9" fill="#ffffff" stroke="#bfe0cd"/>
+  <text x="280" y="168" font-size="11" font-weight="600" fill="#12402a" text-anchor="middle">POINT</text>
+  <text x="280" y="183" font-size="8.5" fill="#2f6f4f" text-anchor="middle">地理空间</text>
+  <rect x="360" y="150" width="140" height="40" rx="9" fill="#ffffff" stroke="#bfe0cd"/>
+  <text x="430" y="168" font-size="11" font-weight="600" fill="#12402a" text-anchor="middle">LOOKUP(2)</text>
+  <text x="430" y="183" font-size="8.5" fill="#2f6f4f" text-anchor="middle">token / label</text>
+  <text x="60" y="214" font-size="9.5" fill="#2f6f4f">在 kernel/.../index/schema/;RANGE 取代旧 BTREE</text>
+  <text x="60" y="233" font-size="8.5" fill="#a1a1a6">btree 只在底层 GBP-tree 页存层,不是 Cypher 索引类型</text>
+
+  <!-- lucene group -->
+  <rect x="560" y="94" width="480" height="150" rx="14" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="580" y="120" font-size="12.5" font-weight="700" fill="#5a3410">Lucene 支撑</text>
+  <text x="580" y="140" font-size="9.5" fill="#93762e">在 community/lucene-index/ —— community 就有</text>
+  <rect x="580" y="150" width="140" height="40" rx="9" fill="#ffffff" stroke="#e8cf9a"/>
+  <text x="650" y="168" font-size="11" font-weight="600" fill="#5a3410" text-anchor="middle">TEXT(3)</text>
+  <text x="650" y="183" font-size="8.5" fill="#93762e" text-anchor="middle">trigram / 模糊</text>
+  <rect x="730" y="150" width="140" height="40" rx="9" fill="#ffffff" stroke="#e8cf9a"/>
+  <text x="800" y="168" font-size="11" font-weight="600" fill="#5a3410" text-anchor="middle">FULLTEXT(1)</text>
+  <text x="800" y="183" font-size="8.5" fill="#93762e" text-anchor="middle">全文检索</text>
+  <rect x="880" y="150" width="140" height="40" rx="9" fill="#f4eefb" stroke="#d9c7ec"/>
+  <text x="950" y="168" font-size="11" font-weight="600" fill="#3d2a5a" text-anchor="middle">VECTOR</text>
+  <text x="950" y="183" font-size="8.5" fill="#8b7aa8" text-anchor="middle">向量相似度</text>
+  <text x="580" y="214" font-size="9.5" fill="#93762e">vector 与 fulltext 在 community 2026.06 就有</text>
+  <text x="580" y="233" font-size="8.5" fill="#a1a1a6">误区:vector/fulltext 是企业版 —— 不,community 已含</text>
+
+  <!-- usage flow -->
+  <text x="40" y="278" font-size="12" font-weight="600" fill="#6e6e73">② 用途:按 label + property 找起点(leaf planner 生成)</text>
+
+  <rect x="40" y="290" width="300" height="80" rx="13" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="190" y="318" font-size="12" font-weight="700" fill="#3d2a5a" text-anchor="middle">MATCH (p:Person {name:'Alice'})</text>
+  <text x="190" y="340" font-size="9.5" fill="#8b7aa8" text-anchor="middle">按 label + property 过滤</text>
+  <text x="190" y="357" font-size="9" fill="#8b7aa8" text-anchor="middle">需要找起点节点</text>
+
+  <rect x="400" y="290" width="300" height="80" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="550" y="318" font-size="12" font-weight="700" fill="#1b2a4a" text-anchor="middle">NodeIndexSeek / NodeIndexScan</text>
+  <text x="550" y="340" font-size="9.5" fill="#5b7db1" text-anchor="middle">leaf planner 生成的索引计划</text>
+  <text x="550" y="357" font-size="9" fill="#5b7db1" text-anchor="middle">快速定位起点节点</text>
+
+  <rect x="760" y="290" width="280" height="80" rx="13" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="900" y="318" font-size="12" font-weight="700" fill="#5a3410" text-anchor="middle">从起点展开关系链</text>
+  <text x="900" y="340" font-size="9.5" fill="#93762e" text-anchor="middle">免索引邻接(见记录存储篇)</text>
+  <text x="900" y="357" font-size="9" fill="#93762e" text-anchor="middle">跟指针走,不查关系索引</text>
+
+  <path d="M340,330 L400,330" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="345" y="323" font-size="8.5" fill="#a1a1a6">索引 seek</text>
+  <path d="M700,330 L760,330" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="705" y="323" font-size="8.5" fill="#a1a1a6">拿到起点</text>
+
+  <!-- division of labor -->
+  <rect x="40" y="392" width="1000" height="112" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="60" y="420" font-size="13" font-weight="700" fill="#1b2a4a">分工清晰:索引找起点(按 label/property/全文/向量),免索引邻接做遍历(跟指针)</text>
+  <rect x="60" y="434" width="460" height="30" rx="8" fill="#ffffff" stroke="#bcd0ec"/>
+  <text x="70" y="453" font-size="9.5" font-weight="600" fill="#1b2a4a">索引 = 找起点(第一道关):无起点索引则全 label 扫 / 全扫,大图上极慢</text>
+  <rect x="540" y="434" width="480" height="30" rx="8" fill="#ffffff" stroke="#bcd0ec"/>
+  <text x="550" y="453" font-size="9.5" font-weight="600" fill="#1b2a4a">免索引邻接 = 遍历:找到起点后顺关系链走,不用任何关系索引</text>
+  <text x="60" y="484" font-size="9.5" fill="#5b7db1">例:MATCH (p:Person {name:'Alice'})-[:KNOWS]-&gt;(friend) = 索引 seek 找 Alice(起点)+ expand 遍历 KNOWS 关系链(免索引)</text>
+  <text x="1024" y="420" font-size="8.5" fill="#5b7db1" text-anchor="end">IndexType.java:27 · lucene-index/.../vector/</text>
+</svg>

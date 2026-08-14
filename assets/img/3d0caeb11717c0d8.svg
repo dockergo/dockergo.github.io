@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="430" viewBox="0 0 900 430" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="900" height="430" fill="#fbfbfd"/>
+  <text x="30" y="32" font-size="14" font-weight="600" fill="#1d1d1f">声明式 API · 提交 spec 期望态，控制器驱动 status 收敛</text>
+
+  <!-- YAML object -->
+  <rect x="30" y="56" width="250" height="196" rx="12" fill="#ffffff" stroke="#ececef" filter="url(#soft)"/>
+  <text x="46" y="80" font-size="12.5" font-weight="600" fill="#1d1d1f">资源对象（YAML）</text>
+  <rect x="44" y="92" width="222" height="34" rx="7" fill="#f7f7f9"/>
+  <text x="54" y="114" font-size="11" fill="#6e6e73">apiVersion / kind / metadata</text>
+  <rect x="44" y="130" width="222" height="52" rx="7" fill="#eef3fb"/>
+  <text x="54" y="150" font-size="11.5" font-weight="600" fill="#1b2a4a">spec（用户写：期望）</text>
+  <text x="54" y="170" font-size="11" fill="#5b7db1">replicas: 3 · image: nginx</text>
+  <rect x="44" y="186" width="222" height="52" rx="7" fill="#f5faf6"/>
+  <text x="54" y="206" font-size="11.5" font-weight="600" fill="#1d8f3f">status（控制器写：实际）</text>
+  <text x="54" y="226" font-size="11" fill="#4a8a5c">readyReplicas: 3 · observedGeneration</text>
+
+  <!-- apiserver -->
+  <rect x="330" y="86" width="230" height="140" rx="12" fill="#e9f0fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="445" y="110" font-size="13" font-weight="600" fill="#1b2a4a" text-anchor="middle">API Server</text>
+  <text x="445" y="134" font-size="11" fill="#5b7db1" text-anchor="middle">apply 三方合并（幂等）</text>
+  <text x="445" y="156" font-size="11" fill="#5b7db1" text-anchor="middle">resourceVersion 乐观并发</text>
+  <text x="445" y="178" font-size="11" fill="#5b7db1" text-anchor="middle">POST/PUT/PATCH → 存储</text>
+  <text x="445" y="200" font-size="11" fill="#5b7db1" text-anchor="middle">冲突返回 409 Conflict</text>
+
+  <!-- controller -->
+  <rect x="620" y="86" width="250" height="140" rx="12" fill="#faf4fb" stroke="#e4cdea" filter="url(#soft)"/>
+  <text x="745" y="110" font-size="13" font-weight="600" fill="#8944ab" text-anchor="middle">控制器 reconcile</text>
+  <text x="745" y="136" font-size="11" fill="#8944ab" text-anchor="middle">watch 到 spec 变化</text>
+  <text x="745" y="158" font-size="11" fill="#8944ab" text-anchor="middle">对比实际、执行动作</text>
+  <text x="745" y="180" font-size="11" fill="#8944ab" text-anchor="middle">把 status 写回</text>
+  <text x="745" y="202" font-size="11" fill="#8944ab" text-anchor="middle">持续驱动 status → spec</text>
+
+  <path d="M280 150 L330 150" fill="none" stroke="#b8b8bf" stroke-width="1.5" marker-end="url(#ar)"/>
+  <text x="290" y="142" font-size="10" fill="#a1a1a6">提交 spec</text>
+  <path d="M560 140 L620 140" fill="none" stroke="#b8b8bf" stroke-width="1.5" marker-end="url(#ar)"/>
+  <text x="566" y="132" font-size="10" fill="#a1a1a6">watch</text>
+  <path d="M620 190 L560 190" fill="none" stroke="#b8b8bf" stroke-width="1.5" marker-end="url(#ar)"/>
+  <text x="566" y="182" font-size="10" fill="#a1a1a6">写 status</text>
+
+  <!-- bottom: 命令式 vs 声明式 -->
+  <rect x="30" y="278" width="840" height="120" rx="12" fill="#f7f7f9" stroke="#ececef"/>
+  <text x="46" y="302" font-size="12.5" font-weight="600" fill="#1d1d1f">声明式 vs 命令式</text>
+  <text x="46" y="328" font-size="11.5" fill="#6e6e73"><tspan font-weight="600" fill="#c4341c">命令式：</tspan>"启动第 3 个容器" —— 副作用叠加、需人工补偿、显式加锁</text>
+  <text x="46" y="354" font-size="11.5" fill="#6e6e73"><tspan font-weight="600" fill="#1d8f3f">声明式：</tspan>"我要 3 个副本" —— 反复 apply 幂等、控制器持续 reconcile 自愈、resourceVersion 乐观并发</text>
+  <text x="46" y="380" font-size="11.5" fill="#6e6e73">用户永远只写 spec，控制器只写 status —— 权限可分离，用户能改期望但不能伪造实际态</text>
+</svg>

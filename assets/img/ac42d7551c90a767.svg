@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="410" viewBox="0 0 1020 410"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1020" height="410" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">名称解析 · CatalogSearchPath 把不带前缀的名字定位到具体对象（catalog_search_path.hpp:55）</text>
+
+  <!-- 三段名 -->
+  <rect x="30" y="52" width="960" height="70" rx="12" fill="#f6f6f8" stroke="#e2e2e7"/>
+  <text x="48" y="76" font-size="11.5" font-weight="600" fill="#1d1d1f">完全限定名 = 库.schema.对象</text>
+  <rect x="360" y="86" width="90" height="26" rx="6" fill="#fff7e6" stroke="#f0dcae"/><text x="405" y="104" font-size="9.5" fill="#7a4d00" text-anchor="middle">analytics</text>
+  <text x="456" y="104" font-size="11" fill="#86868b">.</text>
+  <rect x="466" y="86" width="80" height="26" rx="6" fill="#eef3fb" stroke="#bcd0ec"/><text x="506" y="104" font-size="9.5" fill="#1b2a4a" text-anchor="middle">main</text>
+  <text x="552" y="104" font-size="11" fill="#86868b">.</text>
+  <rect x="562" y="86" width="90" height="26" rx="6" fill="#eafaf1" stroke="#bce6cd"/><text x="607" y="104" font-size="9.5" fill="#0f5132" text-anchor="middle">events</text>
+  <text x="670" y="104" font-size="9.5" fill="#86868b">← 三段都写全 = 精确定位，无需搜索</text>
+
+  <!-- 不带前缀的解析顺序 -->
+  <rect x="30" y="140" width="960" height="150" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="48" y="164" font-size="12.5" font-weight="600" fill="#1d1d1f">写 SELECT * FROM events（不带前缀）时，按 search_path 顺序找</text>
+
+  <rect x="48" y="182" width="210" height="88" rx="10" fill="#f4eefb" stroke="#d9c9ef"/>
+  <text x="153" y="206" font-size="10.5" font-weight="600" fill="#3c1361" text-anchor="middle">① temp schema</text>
+  <text x="153" y="228" font-size="9" fill="#7a5aa8" text-anchor="middle">临时表优先</text>
+  <text x="153" y="246" font-size="9" fill="#7a5aa8" text-anchor="middle">（会话内 CREATE TEMP）</text>
+
+  <rect x="278" y="182" width="210" height="88" rx="10" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="383" y="206" font-size="10.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">② 当前默认 schema</text>
+  <text x="383" y="228" font-size="9" fill="#5b7db1" text-anchor="middle">通常 main</text>
+  <text x="383" y="246" font-size="9" fill="#5b7db1" text-anchor="middle">SET search_path 可改</text>
+
+  <rect x="508" y="182" width="210" height="88" rx="10" fill="#eafaf1" stroke="#bce6cd"/>
+  <text x="613" y="206" font-size="10.5" font-weight="600" fill="#0f5132" text-anchor="middle">③ 其他 attached 库</text>
+  <text x="613" y="228" font-size="9" fill="#3f8f66" text-anchor="middle">按 search_path 列表</text>
+  <text x="613" y="246" font-size="9" fill="#3f8f66" text-anchor="middle">逐个查</text>
+
+  <rect x="738" y="182" width="230" height="88" rx="10" fill="#fbeaea" stroke="#f0cccc"/>
+  <text x="853" y="206" font-size="10.5" font-weight="600" fill="#7d1f1f" text-anchor="middle">④ 都没有</text>
+  <text x="853" y="228" font-size="9" fill="#b06a6a" text-anchor="middle">Catalog Error：</text>
+  <text x="853" y="246" font-size="9" fill="#b06a6a" text-anchor="middle">对象不存在</text>
+
+  <line x1="258" y1="226" x2="278" y2="226" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="488" y1="226" x2="508" y2="226" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="718" y1="226" x2="738" y2="226" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+
+  <rect x="30" y="308" width="960" height="82" rx="14" fill="#f6f6f8" stroke="#e2e2e7"/>
+  <text x="48" y="332" font-size="11.5" font-weight="600" fill="#1d1d1f">要点</text>
+  <text x="48" y="356" font-size="10.5" fill="#494950">• 多库共存时，不带前缀的名字靠 search_path 消歧；跨库 JOIN 建议写全三段名避免歧义。</text>
+  <text x="48" y="378" font-size="10.5" fill="#494950">• `SET search_path='db.schema,…'` 调整搜索顺序；`USE db.schema` 切默认。CatalogEntryRetriever 执行实际查找。</text>
+</svg>

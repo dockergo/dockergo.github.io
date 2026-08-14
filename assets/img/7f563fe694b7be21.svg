@@ -1,0 +1,153 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="608" viewBox="0 0 1080 608" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="aH" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+    <marker id="aF" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#e0742a"/></marker>
+    <marker id="aC" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#5b7db1"/></marker>
+    <marker id="aS" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#c99a3a"/></marker>
+    <marker id="aX" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#7c5cd6"/></marker>
+  </defs>
+  <rect width="1080" height="608" fill="#fbfbfd"/>
+
+  <!-- ===== 标题带（判型 verdict · 全景热区） ===== -->
+  <rect x="24" y="8" width="1032" height="46" rx="10" fill="none" data-tid="PyTorch原理_全景主线框架" data-lab="全景主线框架"/>
+  <text x="30" y="28" font-size="13.5" font-weight="600" fill="#1d1d1f">判型 · 命令式 define-by-run 张量框架：Python 前端 + C++ Dispatcher 分发内核 + autograd 反向图</text>
+  <text x="30" y="46" font-size="10" fill="#6e6e73">纵轴＝前向逐算子下沉穿分层栈 · 横切＝autograd 反向回灌ompile / 分布式　图随代码跑出来，无预编译　源码基准 v2.14</text>
+
+  <!-- ===== 核心张力铭牌带 ===== -->
+  <rect x="24" y="60" width="1032" height="34" rx="9" fill="#fbf3e6" stroke="#e7d3a8"/>
+  <rect x="34" y="68" width="74" height="18" rx="6" fill="#e0742a"/>
+  <text x="71" y="81" font-size="10.5" font-weight="600" fill="#ffffff" text-anchor="middle">核心张力</text>
+  <text x="120" y="81" font-size="10.5" fill="#6b4e16">动态图易用（eager 逐算子 · Python 随代码建图 · 可断点调试）　⚖　静态图性能（ompile 抓 FX 图 → Inductor 融合 kernel，抓不动则 graph break 回退 eager）</text>
+
+  <!-- ===== 图例：四型语义路径 ===== -->
+  <line x1="40" y1="110" x2="70" y2="110" stroke="#2f9e6e" stroke-width="1.8" marker-end="url(#aH)"/>
+  <text x="76" y="114" font-size="10.5" fill="#3a3a3c">前向 Hot（逐算子下沉）</text>
+  <line x1="238" y1="110" x2="268" y2="110" stroke="#e0742a" stroke-width="1.8" marker-end="url(#aF)"/>
+  <text x="274" y="114" font-size="10.5" fill="#3a3a3c">反向 autograd 回灌</text>
+  <line x1="412" y1="110" x2="442" y2="110" stroke="#5b7db1" stroke-width="1.8" marker-end="url(#aC)"/>
+  <text x="448" y="114" font-size="10.5" fill="#3a3a3c">Dispatcher 分发 Control</text>
+  <line x1="608" y1="110" x2="638" y2="110" stroke="#7c5cd6" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#aX)"/>
+  <text x="644" y="114" font-size="10.5" fill="#3a3a3c">编译 / 分布式 横切</text>
+  <text x="1056" y="114" font-size="10" fill="#a1a1a6" text-anchor="end">框=主线可下钻 · 灰字=源码锚点 · 琥珀=设备状态</text>
+
+  <!-- ================= 接口层 ================= -->
+  <rect x="24" y="126" width="1032" height="96" rx="14" fill="#f5f6f8" stroke="#e2e4e9"/>
+  <text x="40" y="146" font-size="12" font-weight="600" fill="#1d1d1f">接口层 · Python 前端</text>
+  <text x="188" y="146" font-size="10" fill="#86868b">torch / nn / optim —— 用户写张量算子，图随代码跑出来（eager 即时执行）</text>
+
+  <rect x="40" y="154" width="318" height="58" rx="11" fill="#eef7f0" stroke="#bfe0c8" filter="url(#soft)" data-tid="PyTorch原理_接口_张量编程" data-lab="张量编程"/>
+  <text x="56" y="177" font-size="12" font-weight="600" fill="#1d4a2b">张量编程</text>
+  <text x="56" y="194" font-size="9.5" fill="#4a8c60">Tensor 多维数组 · view 共享存储 · 广播/索引</text>
+  <text x="56" y="207" font-size="8" fill="#8fa596">torch</text>
+
+  <rect x="381" y="154" width="318" height="58" rx="11" fill="#f6f6f7" stroke="#e2e2e7" filter="url(#soft)" data-tid="PyTorch原理_接口_建模与训练" data-lab="建模与训练"/>
+  <text x="397" y="177" font-size="12" font-weight="600" fill="#1d1d1f">建模与训练</text>
+  <text x="397" y="194" font-size="9.5" fill="#6e6e73">nn.Module 组织参数 · optimizer 训练闭环</text>
+  <text x="397" y="207" font-size="8" fill="#a1a1a6">torch/optim</text>
+
+  <rect x="722" y="154" width="318" height="58" rx="11" fill="#fdf1e8" stroke="#f2cba6" filter="url(#soft)" data-tid="PyTorch原理_接口_自动微分" data-lab="自动微分"/>
+  <text x="738" y="177" font-size="12" font-weight="600" fill="#8a4a16">自动微分</text>
+  <text x="738" y="194" font-size="9.5" fill="#b5652a">requires_grad · loss.backward 求梯度</text>
+  <text x="738" y="207" font-size="8" fill="#c8a274"></text>
+
+  <!-- 前向下沉（绿 Hot） -->
+  <line x1="199" y1="214" x2="199" y2="234" stroke="#2f9e6e" stroke-width="1.8" fill="none" marker-end="url(#aH)"/>
+  <line x1="540" y1="214" x2="540" y2="234" stroke="#2f9e6e" stroke-width="1.8" fill="none" marker-end="url(#aH)"/>
+
+  <!-- ================= Dispatcher 分发核心 ================= -->
+  <rect x="24" y="236" width="1032" height="88" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)" data-tid="PyTorch原理_支撑_Dispatcher分发" data-lab="Dispatcher 分发"/>
+  <text x="40" y="256" font-size="12" font-weight="600" fill="#1b2a4a">Dispatcher · 分层分发核心（灵魂）</text>
+  <text x="238" y="256" font-size="10" fill="#5b7db1">每算子一张 kernel 表 · 按 DispatchKeySet 高→低优先级逐层 redispatch</text>
+  <text x="1040" y="256" font-size="8" fill="#8ba0c2" text-anchor="end"></text>
+
+  <rect x="40" y="268" width="300" height="44" rx="8" fill="#ffffff" stroke="#cfe0f2"/>
+  <text x="54" y="286" font-size="10.5" font-weight="600" fill="#1b2a4a">Autograd 键</text>
+  <text x="54" y="301" font-size="9" fill="#5b7db1">记 grad_fn 反向节点</text>
+
+  <rect x="390" y="268" width="300" height="44" rx="8" fill="#ffffff" stroke="#cfe0f2"/>
+  <text x="404" y="286" font-size="10.5" font-weight="600" fill="#1b2a4a">Autocast 键</text>
+  <text x="404" y="301" font-size="9" fill="#5b7db1">混合精度等切面逐层</text>
+
+  <rect x="740" y="268" width="300" height="44" rx="8" fill="#ffffff" stroke="#cfe0f2"/>
+  <text x="754" y="286" font-size="10.5" font-weight="600" fill="#1b2a4a">BackendSelect → Backend 键</text>
+  <text x="754" y="301" font-size="9" fill="#5b7db1">选 CPU / CUDA 最终 kernel</text>
+
+  <g stroke="#5b7db1" stroke-width="1.6" fill="none">
+    <line x1="342" y1="290" x2="388" y2="290" marker-end="url(#aC)"/>
+    <line x1="692" y1="290" x2="738" y2="290" marker-end="url(#aC)"/>
+  </g>
+
+  <!-- 落到算子（绿 Hot） -->
+  <line x1="411" y1="324" x2="411" y2="336" stroke="#2f9e6e" stroke-width="1.8" fill="none" marker-end="url(#aH)"/>
+
+  <!-- ================= 算子与执行 ================= -->
+  <rect x="24" y="338" width="1032" height="138" rx="14" fill="#f3faf5" stroke="#cfe6d6"/>
+  <text x="40" y="358" font-size="12" font-weight="600" fill="#1d4a2b">算子与执行 · C++ / 设备</text>
+  <text x="200" y="358" font-size="10" fill="#5fa07a">真正计算发生处 —— kernel 落到设备，显存池化、stream 异步、前向留反向节点</text>
+
+  <rect x="40" y="368" width="238" height="98" rx="11" fill="#fdf6ec" stroke="#f0dcaf" filter="url(#soft)" data-tid="PyTorch原理_支撑_张量与存储" data-lab="张量与存储"/>
+  <text x="54" y="392" font-size="11.5" font-weight="600" fill="#6b4e16">张量与存储</text>
+  <text x="54" y="412" font-size="9" fill="#a9822f">TensorImpl 元数据 + StorageImpl 字节</text>
+  <text x="54" y="428" font-size="9" fill="#a9822f">stride / view 共享 / dtype</text>
+  <text x="54" y="456" font-size="8" fill="#c2a76a"></text>
+
+  <rect x="292" y="368" width="238" height="98" rx="11" fill="#eef7f0" stroke="#bfe0c8" filter="url(#soft)" data-tid="PyTorch原理_支撑_ATen算子库" data-lab="ATen 算子库"/>
+  <text x="306" y="392" font-size="11.5" font-weight="600" fill="#1d4a2b">ATen 算子库</text>
+  <text x="306" y="412" font-size="9" fill="#4a8c60">~算子 schema 声明与注册</text>
+  <text x="306" y="428" font-size="9" fill="#4a8c60">structured kernel · CPU 向量化</text>
+  <text x="306" y="456" font-size="8" fill="#8fa596">aten/src/ATen/native/native_functions.yaml</text>
+
+  <rect x="544" y="368" width="238" height="98" rx="11" fill="#fdf6ec" stroke="#f0dcaf" filter="url(#soft)" data-tid="PyTorch原理_支撑_设备后端与内存" data-lab="设备后端与内存"/>
+  <text x="558" y="392" font-size="11.5" font-weight="600" fill="#6b4e16">设备后端与内存</text>
+  <text x="558" y="412" font-size="9" fill="#a9822f">CUDA kernel · stream 异步</text>
+  <text x="558" y="428" font-size="9" fill="#a9822f">CachingAllocator 块池化复用</text>
+  <text x="558" y="456" font-size="8" fill="#c2a76a">pp</text>
+
+  <rect x="796" y="368" width="244" height="98" rx="11" fill="#fdf1e8" stroke="#f2cba6" filter="url(#soft)" data-tid="PyTorch原理_支撑_自动微分引擎" data-lab="自动微分引擎"/>
+  <text x="810" y="392" font-size="11.5" font-weight="600" fill="#8a4a16">自动微分引擎</text>
+  <text x="810" y="412" font-size="9" fill="#b5652a">反向图 Node/Edge 逆序遍历</text>
+  <text x="810" y="428" font-size="9" fill="#b5652a">GraphTask 多线程累积 → .grad</text>
+  <text x="810" y="456" font-size="8" fill="#c8a274">pp</text>
+
+  <!-- 表示态：存储 → ATen（琥珀 State） -->
+  <line x1="278" y1="417" x2="290" y2="417" stroke="#c99a3a" stroke-width="1.6" fill="none" marker-end="url(#aS)"/>
+  <!-- 前向落设备（绿 Hot） -->
+  <line x1="530" y1="417" x2="542" y2="417" stroke="#2f9e6e" stroke-width="1.8" fill="none" marker-end="url(#aH)"/>
+  <!-- 前向留反向节点（绿→autograd 引擎） -->
+  <line x1="782" y1="417" x2="794" y2="417" stroke="#2f9e6e" stroke-width="1.6" fill="none" marker-end="url(#aH)"/>
+
+  <!-- ===== 反向回灌（橙 · 沿右侧上行至自动微分接口） ===== -->
+  <path d="M1046,368 L1046,196 L1042,196" fill="none" stroke="#e0742a" stroke-width="1.8" marker-end="url(#aF)"/>
+  <text x="1050" y="285" font-size="9" fill="#b5652a" transform="rotate(-90 1050 285)" text-anchor="middle">backward 逆序回灌梯度</text>
+
+  <!-- ================= 横切能力域 ================= -->
+  <text x="40" y="496" font-size="10.5" font-weight="600" fill="#4a2e78">横切能力域 · 编译进训练全程（旁路 / 横切，非主调用栈）</text>
+
+  <rect x="40" y="504" width="318" height="78" rx="11" fill="#f0ecfb" stroke="#d3c6ef" filter="url(#soft)" data-tid="PyTorch原理_支撑_编译栈" data-lab="编译栈"/>
+  <text x="56" y="526" font-size="11.5" font-weight="600" fill="#4a2e78">编译栈ompile</text>
+  <text x="56" y="544" font-size="9" fill="#6b52a3">Dynamo 抓 FX 图 → Inductor 融合</text>
+  <text x="56" y="559" font-size="9" fill="#6b52a3">guard 失效则重编译 · 抓不动则回退 eager</text>
+  <text x="56" y="575" font-size="8" fill="#a793d0">torch/_dynamo/ · torch/_inductor</text>
+
+  <rect x="381" y="504" width="318" height="78" rx="11" fill="#f0ecfb" stroke="#d3c6ef" filter="url(#soft)" data-tid="PyTorch原理_支撑_分布式训练" data-lab="分布式训练"/>
+  <text x="397" y="526" font-size="11.5" font-weight="600" fill="#4a2e78">分布式训练</text>
+  <text x="397" y="544" font-size="9" fill="#6b52a3">DDP / FSDP · ProcessGroup</text>
+  <text x="397" y="559" font-size="9" fill="#6b52a3">collective 通信与计算 overlap</text>
+  <text x="397" y="575" font-size="8" fill="#a793d0">torch/distributed/ (fsdp/)</text>
+
+  <rect x="722" y="504" width="318" height="78" rx="11" fill="#f0ecfb" stroke="#d3c6ef" filter="url(#soft)" data-tid="PyTorch原理_支撑_数据加载" data-lab="数据加载"/>
+  <text x="738" y="526" font-size="11.5" font-weight="600" fill="#4a2e78">数据加载</text>
+  <text x="738" y="544" font-size="9" fill="#6b52a3">DataLoader · Dataset</text>
+  <text x="738" y="559" font-size="9" fill="#6b52a3">多 worker 进程预取 · pin_memory</text>
+  <text x="738" y="575" font-size="8" fill="#a793d0"></text>
+
+  <!-- 横切虚线：从执行区下探到横切带 -->
+  <g stroke="#7c5cd6" stroke-width="1.4" stroke-dasharray="5 3" fill="none">
+    <line x1="199" y1="468" x2="199" y2="502" marker-end="url(#aX)"/>
+    <line x1="540" y1="468" x2="540" y2="502" marker-end="url(#aX)"/>
+    <line x1="881" y1="468" x2="881" y2="502" marker-end="url(#aX)"/>
+  </g>
+</svg>

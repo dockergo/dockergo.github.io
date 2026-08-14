@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="880" height="430" viewBox="0 0 880 430" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="880" height="430" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">COW vs MOR：写读代价的核心取舍（HoodieTableType）</text>
+  <text x="30" y="49" font-size="10" fill="#a1a1a6">同一次 upsert（更新 rec1），两种表类型走不同 handle、不同 IOType</text>
+
+  <!-- COW -->
+  <rect x="30" y="70" width="400" height="330" rx="14" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="46" y="94" font-size="12" font-weight="700" fill="#12402a">COPY_ON_WRITE（写时重写）</text>
+  <text x="46" y="113" font-size="9" fill="#2f6f4f">"版本化整个文件做 upsert，后版本含新值"</text>
+  <rect x="50" y="126" width="360" height="52" rx="9" fill="#fff" stroke="#bfe0cd"/><text x="230" y="147" font-size="9.3" text-anchor="middle" font-weight="600" fill="#12402a">base v1：rec1_1, rec2_1</text><text x="230" y="165" font-size="8.4" text-anchor="middle" fill="#2f6f4f">读直接读 base（无合并）</text>
+  <text x="230" y="196" font-size="9" text-anchor="middle" fill="#2f6f4f">upsert rec1_2 → HoodieWriteMergeHandle</text>
+  <line x1="230" y1="178" x2="230" y2="210" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+  <rect x="50" y="216" width="360" height="52" rx="9" fill="#e6f7ee" stroke="#bfe0cd"/><text x="230" y="237" font-size="9.3" text-anchor="middle" font-weight="600" fill="#12402a">base v2（新版本）：rec1_2, rec2_1</text><text x="230" y="255" font-size="8.4" text-anchor="middle" fill="#2f6f4f">逐行合并、重写整文件（IOType=MERGE）</text>
+  <rect x="50" y="286" width="360" height="96" rx="9" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="64" y="308" font-size="9.6" font-weight="600" fill="#12402a">代价</text>
+  <text x="64" y="328" font-size="9" fill="#2f6f4f">✓ 读快：直接读 base，无合并</text>
+  <text x="64" y="347" font-size="9" fill="#2f6f4f">✗ 写慢：每次更新重写整个文件</text>
+  <text x="64" y="366" font-size="9" fill="#2f6f4f">适合：读多写少 / 查询延迟敏感</text>
+
+  <!-- MOR -->
+  <rect x="450" y="70" width="400" height="330" rx="14" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+  <text x="466" y="94" font-size="12" font-weight="700" fill="#5a3410">MERGE_ON_READ（读时合并）</text>
+  <text x="466" y="113" font-size="9" fill="#93762e">"延迟合并到攒够工作量，加速 upsert"</text>
+  <rect x="470" y="126" width="360" height="52" rx="9" fill="#fff" stroke="#efdcb4"/><text x="650" y="147" font-size="9.3" text-anchor="middle" font-weight="600" fill="#5a3410">base：rec1_1, rec2_1</text><text x="650" y="165" font-size="8.4" text-anchor="middle" fill="#93762e">base 不动</text>
+  <text x="650" y="196" font-size="9" text-anchor="middle" fill="#93762e">upsert rec1_2 → HoodieAppendHandle</text>
+  <line x1="650" y1="178" x2="650" y2="210" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+  <rect x="470" y="216" width="360" height="52" rx="9" fill="#fdf3e2" stroke="#efdcb4"/><text x="650" y="237" font-size="9.3" text-anchor="middle" font-weight="600" fill="#5a3410">+ log 文件：rec1_2（追加）</text><text x="650" y="255" font-size="8.4" text-anchor="middle" fill="#93762e">只追加 log block（IOType=APPEND）</text>
+  <rect x="470" y="286" width="360" height="96" rx="9" fill="#fdf9f0" stroke="#efdcb4"/>
+  <text x="484" y="308" font-size="9.6" font-weight="600" fill="#5a3410">代价</text>
+  <text x="484" y="328" font-size="9" fill="#93762e">✓ 写快：只追加 log</text>
+  <text x="484" y="347" font-size="9" fill="#93762e">✗ 读慢：base + log 读时合并；需 compaction</text>
+  <text x="484" y="366" font-size="9" fill="#93762e">适合：写多读少 / 低延迟摄入</text>
+</svg>

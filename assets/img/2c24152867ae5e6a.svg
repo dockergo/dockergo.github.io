@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="560" viewBox="0 0 1080 560" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+    <marker id="arm" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#d9b96b"/></marker>
+  </defs>
+  <rect width="1080" height="560" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Milvus 段加载到 QueryNode · 目标-分布差驱动 + 从对象存储拉 binlog/索引</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">QueryCoord 比对目标与实际分布生成 LoadSegments 任务；QueryNode 从共享对象存储拉 binlog + 向量索引建 sealed 段（growing 段另经 WAL）</text>
+  <!-- legend -->
+  <g font-size="9" fill="#6e6e73">
+    <rect x="700" y="39" width="14" height="9" rx="2" fill="#eef3fb" stroke="#bcd0ec"/><text x="719" y="47">协调 / 调度</text>
+    <rect x="812" y="39" width="14" height="9" rx="2" fill="#eafaf1" stroke="#bfe0cd"/><text x="831" y="47">段 / 向量</text>
+    <rect x="908" y="39" width="14" height="9" rx="2" fill="#fff7e6" stroke="#e8cf9a"/><text x="927" y="47">对象存储</text>
+  </g>
+
+  <!-- ===== QueryCoord SegmentChecker ===== -->
+  <rect x="30" y="74" width="320" height="330" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <circle cx="50" cy="94" r="9" fill="#fff" stroke="#bcd0ec"/><text x="50" y="97" font-size="9" font-weight="700" text-anchor="middle" fill="#1b2a4a">1</text>
+  <text x="190" y="98" font-size="10.5" font-weight="700" text-anchor="middle" fill="#1b2a4a">QueryCoord · SegmentChecker 周期比对</text>
+  <!-- target -->
+  <rect x="46" y="116" width="140" height="72" rx="9" fill="#f3f7fc" stroke="#cfe0f2"/>
+  <text x="116" y="136" font-size="9.5" text-anchor="middle" fill="#274a78" font-weight="600">目标 target</text>
+  <text x="116" y="153" font-size="8" text-anchor="middle" fill="#5b7db1">应加载的 sealed 段集</text>
+  <text x="116" y="167" font-size="8" text-anchor="middle" fill="#5b7db1">(Next/Current Target)</text>
+  <text x="116" y="181" font-size="7.5" text-anchor="middle" fill="#8aa0c0">源自 DataCoord</text>
+  <!-- dist -->
+  <rect x="194" y="116" width="140" height="72" rx="9" fill="#f3f7fc" stroke="#cfe0f2"/>
+  <text x="264" y="136" font-size="9.5" text-anchor="middle" fill="#274a78" font-weight="600">分布 dist</text>
+  <text x="264" y="153" font-size="8" text-anchor="middle" fill="#5b7db1">已加载段集</text>
+  <text x="264" y="167" font-size="8" text-anchor="middle" fill="#5b7db1">SegmentDistManager</text>
+  <text x="264" y="181" font-size="7.5" text-anchor="middle" fill="#8aa0c0">各 QueryNode 上报</text>
+  <!-- diff -->
+  <path d="M116,188 L190,214" stroke="#c7c7cc" stroke-width="1.4" fill="none" marker-end="url(#ar)"/>
+  <path d="M264,188 L190,214" stroke="#c7c7cc" stroke-width="1.4" fill="none" marker-end="url(#ar)"/>
+  <rect x="46" y="218" width="288" height="60" rx="9" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="190" y="239" font-size="9.5" text-anchor="middle" fill="#1b2a4a" font-weight="600">getSealedSegmentDiff → lacks（缺的段）</text>
+  <text x="190" y="256" font-size="8" text-anchor="middle" fill="#5b7db1">缺→createSegmentLoadTasks · 冗余→release · 分配 loadPriority</text>
+  <text x="190" y="270" font-size="7.5" text-anchor="middle" fill="#8aa0c0">按副本/负载均衡挑目标 QueryNode</text>
+  <!-- task -->
+  <rect x="46" y="306" width="288" height="76" rx="9" fill="#f3f7fc" stroke="#cfe0f2"/>
+  <text x="190" y="327" font-size="9.5" text-anchor="middle" fill="#274a78" font-weight="600">task scheduler / executor</text>
+  <text x="190" y="345" font-size="8.5" text-anchor="middle" fill="#5b7db1">cluster.LoadSegments(node, req)</text>
+  <text x="190" y="362" font-size="8" text-anchor="middle" fill="#5b7db1">下发到被选中的 QueryNode</text>
+  <text x="190" y="376" font-size="7.5" text-anchor="middle" fill="#8aa0c0">收敛到目标态后停止</text>
+
+  <!-- LoadSegments RPC arrow -->
+  <line x1="350" y1="344" x2="410" y2="344" stroke="#c7c7cc" stroke-width="1.6" marker-end="url(#ar)"/>
+  <text x="380" y="336" font-size="8" text-anchor="middle" fill="#8aa0c0">RPC</text>
+
+  <!-- ===== QueryNode loader ===== -->
+  <rect x="410" y="74" width="330" height="330" rx="14" fill="#f5faf6" stroke="#cfe6d5" filter="url(#soft)"/>
+  <circle cx="430" cy="94" r="9" fill="#fff" stroke="#cfe6d5"/><text x="430" y="97" font-size="9" font-weight="700" text-anchor="middle" fill="#12402a">2</text>
+  <text x="575" y="98" font-size="10.5" font-weight="700" text-anchor="middle" fill="#12402a">QueryNode.LoadSegments → segmentLoader.Load</text>
+  <rect x="426" y="116" width="298" height="52" rx="9" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="575" y="137" font-size="9.5" text-anchor="middle" fill="#12402a" font-weight="600">requestResource：内存/磁盘配额校验</text>
+  <text x="575" y="154" font-size="8" text-anchor="middle" fill="#2f6f4f">不够则拒/等，防 OOM；lazy load 可延后</text>
+  <line x1="575" y1="168" x2="575" y2="184" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+  <rect x="426" y="186" width="298" height="90" rx="9" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="575" y="207" font-size="9.5" text-anchor="middle" fill="#12402a" font-weight="600">loadSealedSegment（并发拉取）</text>
+  <rect x="438" y="216" width="138" height="48" rx="7" fill="#d9f0e1" stroke="#a9d3ba"/><text x="507" y="235" font-size="8.5" text-anchor="middle" fill="#12402a">字段列 binlog</text><text x="507" y="251" font-size="7.5" text-anchor="middle" fill="#2f6f4f">按列组加载</text>
+  <rect x="582" y="216" width="130" height="48" rx="7" fill="#d9f0e1" stroke="#a9d3ba"/><text x="647" y="235" font-size="8.5" text-anchor="middle" fill="#12402a">向量索引文件</text><text x="647" y="251" font-size="7.5" text-anchor="middle" fill="#2f6f4f">LoadIndex</text>
+  <line x1="575" y1="276" x2="575" y2="292" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+  <rect x="426" y="294" width="298" height="88" rx="9" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="575" y="315" font-size="9.5" text-anchor="middle" fill="#12402a" font-weight="600">建 LocalSegment（cgo → C++ segcore）</text>
+  <text x="575" y="333" font-size="8" text-anchor="middle" fill="#2f6f4f">段就绪 → 注册进 SegmentDistManager</text>
+  <text x="575" y="349" font-size="8" text-anchor="middle" fill="#2f6f4f">delegator 纳入可读快照 → 可被检索</text>
+  <text x="575" y="366" font-size="7.5" text-anchor="middle" fill="#8aa596">有索引走 knowhere 快路径，否则暴力</text>
+
+  <!-- ===== Object storage ===== -->
+  <rect x="800" y="74" width="250" height="330" rx="14" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <circle cx="820" cy="94" r="9" fill="#fff" stroke="#e8cf9a"/><text x="820" y="97" font-size="9" font-weight="700" text-anchor="middle" fill="#5a3410">3</text>
+  <text x="925" y="98" font-size="10.5" font-weight="700" text-anchor="middle" fill="#5a3410">对象存储（S3/MinIO）</text>
+  <text x="925" y="118" font-size="8" text-anchor="middle" fill="#93762e">只读共享 · 多 QueryNode 拉同一份</text>
+  <rect x="816" y="132" width="218" height="46" rx="8" fill="#fef2e0" stroke="#e8cf9a"/><text x="925" y="153" font-size="8.8" text-anchor="middle" fill="#5a3410">insert binlog（列式字段）</text><text x="925" y="169" font-size="7.5" text-anchor="middle" fill="#93762e">写入路径 flush 落盘的产物</text>
+  <rect x="816" y="184" width="218" height="40" rx="8" fill="#fdf6ea" stroke="#efdcb4"/><text x="925" y="208" font-size="8.8" text-anchor="middle" fill="#5a3410">delta log（删除标记）</text>
+  <rect x="816" y="230" width="218" height="40" rx="8" fill="#fdf6ea" stroke="#efdcb4"/><text x="925" y="254" font-size="8.8" text-anchor="middle" fill="#5a3410">向量索引文件（knowhere 产物）</text>
+  <rect x="816" y="276" width="218" height="40" rx="8" fill="#fdf6ea" stroke="#efdcb4"/><text x="925" y="300" font-size="8.8" text-anchor="middle" fill="#5a3410">stats log（主键 min/max + bloom）</text>
+  <text x="925" y="342" font-size="8" text-anchor="middle" fill="#93762e">存算分离：段数据不绑节点</text>
+  <text x="925" y="358" font-size="8" text-anchor="middle" fill="#93762e">QueryNode 挂了换节点重拉即可</text>
+  <!-- download arrow storage -> loader -->
+  <path d="M800,240 L740,232" stroke="#d9b96b" stroke-width="1.8" fill="none" marker-end="url(#arm)"/>
+  <text x="770" y="222" font-size="8" text-anchor="middle" fill="#93762e">下载</text>
+
+  <!-- growing note band -->
+  <rect x="30" y="418" width="1020" height="52" rx="12" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="46" y="440" font-size="9.5" font-weight="700" fill="#5a3410">growing 段不走此加载路</text>
+  <text x="46" y="458" font-size="8.8" fill="#93762e">新写入的 growing 段在 delegator 端由订阅 vchannel WAL（streaming）消费得到，内存可变、无索引、检索时暴力扫；只有 flush 成 sealed 且建好索引的段才经上面这条"从对象存储加载"路进 QueryNode。</text>
+
+  <!-- bottom insight -->
+  <rect x="30" y="480" width="1020" height="66" rx="12" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="46" y="502" font-size="10" font-weight="700" fill="#1d1d1f">要点</text>
+  <text x="46" y="521" font-size="8.8" fill="#6e6e73">加载是"声明式收敛"：QueryCoord 只描述目标态（哪些段该在哪个 QueryNode），SegmentChecker 周期比对目标与实际分布、把差异编译成 LoadSegments/Release 任务下发，直到收敛。</text>
+  <text x="46" y="538" font-size="8.8" fill="#6e6e73">加载动作本身是"从共享对象存储拉 binlog + 索引、cgo 建段、注册进分布"——因存算分离，段与节点解耦，可弹性扩 QueryNode、故障换节点重拉；requestResource 做内存/磁盘配额守门防 OOM。</text>
+</svg>

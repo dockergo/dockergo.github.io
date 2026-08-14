@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="530" viewBox="0 0 1080 530" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="530" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">RocksDB 为什么共享 WAL · 跨 CF 写的原子性 vs Flush 的耦合代价</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">一份 WAL 让"同一 WriteBatch 里跨多个 CF 的写"要么全成要么全失;代价是 WAL 回收被最慢的 CF flush 拖住</text>
+
+  <!-- benefit: atomic write -->
+  <rect x="30" y="70" width="510" height="200" rx="13" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="46" y="92" font-size="11" font-weight="700" fill="#12402a">收益:跨 CF 写的原子性</text>
+  <rect x="46" y="104" width="478" height="46" rx="8" fill="#eafaf1" stroke="#bfe0cd"/><text x="60" y="124" font-size="8.8" font-weight="600" fill="#12402a">一个 WriteBatch 可含多个 CF 的写</text><text x="60" y="140" font-size="8.3" fill="#2f6f4f">Put(cf_a, …) + Put(cf_b, …) 在同一 batch</text>
+  <rect x="46" y="158" width="478" height="46" rx="8" fill="#f5faf6" stroke="#cfe6d5"/><text x="60" y="178" font-size="8.8" font-weight="600" fill="#2c5a3a">整批作为一条 WAL 记录落盘</text><text x="60" y="194" font-size="8.3" fill="#2f6f4f">共享 WAL → 一次写日志覆盖所有 CF</text>
+  <rect x="46" y="212" width="478" height="46" rx="8" fill="#e6f7ee" stroke="#bfe0cd"/><text x="60" y="232" font-size="8.8" font-weight="600" fill="#12402a">恢复时要么全重放、要么全不</text><text x="60" y="248" font-size="8.3" fill="#2f6f4f">→ 跨 CF 一致(若各 CF 独立 WAL 则无法保证)</text>
+
+  <!-- cost: coupled flush -->
+  <rect x="560" y="70" width="490" height="200" rx="13" fill="#fdf4f3" stroke="#ecc6c1"/>
+  <text x="576" y="92" font-size="11" font-weight="700" fill="#7a2016">代价:WAL 回收被 flush 耦合</text>
+  <rect x="576" y="104" width="458" height="46" rx="8" fill="#fdeeeb" stroke="#ecc6c1"/><text x="590" y="124" font-size="8.8" font-weight="600" fill="#7a2016">WAL 覆盖多个 CF 的写</text><text x="590" y="140" font-size="8.3" fill="#a5453a">→ 所有相关 CF 都 flush 后才可删</text>
+  <rect x="576" y="158" width="458" height="46" rx="8" fill="#fdf4f3" stroke="#ecc6c1"/><text x="590" y="178" font-size="8.8" font-weight="600" fill="#a5453a">某 CF 长期不写/不 flush</text><text x="590" y="194" font-size="8.3" fill="#a5453a">→ 它拖住老 WAL,WAL 堆积占空间</text>
+  <rect x="576" y="212" width="458" height="46" rx="8" fill="#fff7e6" stroke="#e8cf9a"/><text x="590" y="232" font-size="8.8" font-weight="600" fill="#5a3410">缓解:atomic_flush / 逼冷 CF flush</text><text x="590" y="248" font-size="8.3" fill="#93762e">max_total_wal_size 超限时触发 flush 释放</text>
+
+  <!-- illustration -->
+  <rect x="30" y="286" width="1020" height="150" rx="13" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="46" y="308" font-size="11" font-weight="700" fill="#1b2a4a">图解:一条 WAL 覆盖两个 CF,两者都 flush 才可回收</text>
+  <g font-size="8.5" text-anchor="middle">
+    <rect x="46" y="322" width="230" height="90" rx="9" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/><text x="161" y="346" font-weight="700" fill="#5a3410">WAL #7</text><text x="161" y="366" fill="#93762e">含 cf_a 的写(seq 20–30)</text><text x="161" y="384" fill="#93762e">含 cf_b 的写(seq 25–28)</text>
+    <rect x="360" y="322" width="300" height="42" rx="8" fill="#e6f7ee" stroke="#bfe0cd"/><text x="510" y="348" fill="#12402a">cf_a MemTable → flush 成 SST ✔</text>
+    <rect x="360" y="370" width="300" height="42" rx="8" fill="#fdeeeb" stroke="#ecc6c1"/><text x="510" y="396" fill="#7a2016">cf_b 冷,迟迟不 flush ✘</text>
+    <rect x="744" y="322" width="290" height="90" rx="9" fill="#fdf4f3" stroke="#ecc6c1"/><text x="889" y="352" font-weight="700" fill="#7a2016">WAL #7 不能删</text><text x="889" y="374" fill="#a5453a">因 cf_b 的数据还只在 WAL</text><text x="889" y="392" fill="#a5453a">→ 需保留以备恢复</text>
+  </g>
+  <line x1="276" y1="343" x2="360" y2="343" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="276" y1="391" x2="360" y2="391" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="660" y1="367" x2="744" y2="367" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+
+  <!-- notes -->
+  <rect x="30" y="452" width="1020" height="62" rx="13" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="46" y="474" font-size="11" font-weight="700" fill="#1d1d1f">要点</text>
+  <text x="46" y="496" font-size="9" fill="#6e6e73">· 共享 WAL 是"用回收耦合换跨 CF 原子性"的取舍:好处是多 CF 事务边界统一;坏处是一个冷 CF 能拖住整份日志 —— 冷热差异大时要主动 flush 冷 CF</text>
+  <text x="46" y="510" font-size="8.5" fill="#b1483a">· 归属:原子性依托【接触面】WriteBatch;回收时机见【WAL 生命周期】;flush 触发见【Flush】主线</text>
+</svg>

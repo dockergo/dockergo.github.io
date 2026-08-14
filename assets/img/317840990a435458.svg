@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="660" viewBox="0 0 1120 660" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="aA" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#d98a00"/></marker>
+    <marker id="aG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+    <marker id="aR" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#d1544a"/></marker>
+  </defs>
+  <rect width="1120" height="660" fill="#fbfbfd"/>
+
+  <text x="30" y="32" font-size="15" font-weight="700" fill="#1d1d1f">图解点 ① Join Reorder 自底向上动态规划 · 对表的子集做 DP，从单表代价起逐层拼大，选每个子集的代价最小连接顺序</text>
+  <text x="30" y="53" font-size="10.5" fill="#6e6e73">n 表连接顺序数随 n 阶乘爆炸；DP 用「最优子结构」：任一子集的最优连接计划，可由更小子集的最优计划拼出 —— 逐层填表、复用子结果，避免重复枚举</text>
+
+  <!-- 图例 -->
+  <line x1="30" y1="80" x2="54" y2="80" stroke="#d98a00" stroke-width="2" stroke-dasharray="5 3" marker-end="url(#aA)"/>
+  <text x="60" y="84" font-size="10" fill="#3a3a3c">自底向上拼接（小子集 → 大子集）</text>
+  <line x1="340" y1="80" x2="364" y2="80" stroke="#2f9e6e" stroke-width="2" marker-end="url(#aG)"/>
+  <text x="370" y="84" font-size="10" fill="#3a3a3c">保留每个子集的最优计划</text>
+  <line x1="620" y1="80" x2="644" y2="80" stroke="#d1544a" stroke-width="2" marker-end="url(#aR)"/>
+  <text x="650" y="84" font-size="10" fill="#3a3a3c">代价更高 → 剪掉不留</text>
+
+  <!-- 左：DP 分层填表 -->
+  <text x="40" y="122" font-size="11.5" font-weight="700" fill="#1d1d1f">DP 表：按子集大小分层，逐层由下层拼出（以 4 表 A B C D 为例）</text>
+
+  <!-- 第1层 单表 -->
+  <text x="40" y="152" font-size="10" font-weight="700" fill="#8a6417">size 1 · 单表访问代价（DP 基例）</text>
+  <g font-size="10" text-anchor="middle">
+    <rect x="40" y="162" width="72" height="40" rx="8" fill="#eaf6f0" stroke="#bfe3d1"/><text x="76" y="180" fill="#2f6b4e">{A}</text><text x="76" y="195" font-size="8" fill="#5f9c81">扫描代价</text>
+    <rect x="124" y="162" width="72" height="40" rx="8" fill="#eaf6f0" stroke="#bfe3d1"/><text x="160" y="180" fill="#2f6b4e">{B}</text><text x="160" y="195" font-size="8" fill="#5f9c81">扫描代价</text>
+    <rect x="208" y="162" width="72" height="40" rx="8" fill="#eaf6f0" stroke="#bfe3d1"/><text x="244" y="180" fill="#2f6b4e">{C}</text><text x="244" y="195" font-size="8" fill="#5f9c81">扫描代价</text>
+    <rect x="292" y="162" width="72" height="40" rx="8" fill="#eaf6f0" stroke="#bfe3d1"/><text x="328" y="180" fill="#2f6b4e">{D}</text><text x="328" y="195" font-size="8" fill="#5f9c81">扫描代价</text>
+  </g>
+
+  <!-- 第2层 两表 -->
+  <text x="40" y="234" font-size="10" font-weight="700" fill="#8a6417">size 2 · 两表连接（枚举拆分，取最优）</text>
+  <g font-size="9.5" text-anchor="middle">
+    <rect x="40" y="244" width="72" height="36" rx="8" fill="#fbf3e2" stroke="#e6ce9a"/><text x="76" y="266" fill="#8a6417">{A,B}</text>
+    <rect x="124" y="244" width="72" height="36" rx="8" fill="#fbf3e2" stroke="#e6ce9a"/><text x="160" y="266" fill="#8a6417">{A,C}</text>
+    <rect x="208" y="244" width="72" height="36" rx="8" fill="#fbf3e2" stroke="#e6ce9a"/><text x="244" y="266" fill="#8a6417">{B,C}</text>
+    <rect x="292" y="244" width="72" height="36" rx="8" fill="#fbf3e2" stroke="#e6ce9a"/><text x="328" y="266" fill="#8a6417">{C,D}…</text>
+  </g>
+
+  <!-- 第3层 三表 -->
+  <text x="40" y="312" font-size="10" font-weight="700" fill="#8a6417">size 3 · 三表（由 size2 + size1 拼）</text>
+  <g font-size="9.5" text-anchor="middle">
+    <rect x="40" y="322" width="90" height="36" rx="8" fill="#f7ead0" stroke="#ddc290"/><text x="85" y="344" fill="#8a6417">{A,B,C}</text>
+    <rect x="142" y="322" width="90" height="36" rx="8" fill="#f7ead0" stroke="#ddc290"/><text x="187" y="344" fill="#8a6417">{A,B,D}</text>
+    <rect x="244" y="322" width="90" height="36" rx="8" fill="#f7ead0" stroke="#ddc290"/><text x="289" y="344" fill="#8a6417">{B,C,D}…</text>
+  </g>
+
+  <!-- 第4层 全集 -->
+  <text x="40" y="390" font-size="10" font-weight="700" fill="#2f6b4e">size 4 · 全集 = 最终最优计划</text>
+  <rect x="40" y="400" width="294" height="46" rx="9" fill="#eaf6f0" stroke="#9ed3b8" stroke-width="1.5"/>
+  <text x="187" y="422" font-size="11" font-weight="700" fill="#2f6b4e" text-anchor="middle">{A,B,C,D} 最优连接顺序</text>
+  <text x="187" y="438" font-size="8.5" fill="#5f9c81" text-anchor="middle">= 所有「子集 + 补集」拆分里代价最小者</text>
+
+  <!-- 向上箭头 -->
+  <line x1="360" y1="182" x2="360" y2="262" stroke="#d98a00" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#aA)"/>
+  <line x1="360" y1="262" x2="360" y2="340" stroke="#d98a00" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#aA)"/>
+  <line x1="360" y1="340" x2="360" y2="418" stroke="#d98a00" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#aA)"/>
+  <text x="368" y="230" font-size="8.5" fill="#8a6417">拼</text>
+  <text x="368" y="308" font-size="8.5" fill="#8a6417">拼</text>
+  <text x="368" y="386" font-size="8.5" fill="#8a6417">拼</text>
+
+  <!-- 右：single subset 的最优选择 -->
+  <rect x="410" y="130" width="680" height="230" rx="14" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="432" y="156" font-size="12" font-weight="700" fill="#1d1d1f">放大一个子集 {A,B,C}：枚举「最后一步怎么拆」，取最小</text>
+  <text x="432" y="180" font-size="10" fill="#4a4a4f">最优子结构：{A,B,C} 的最优 = min over 拆法 ( 左子集最优 + 右子集最优 + 连接代价 )</text>
+
+  <!-- 三个候选拆分 -->
+  <rect x="432" y="196" width="200" height="130" rx="10" fill="#eaf6f0" stroke="#bfe3d1"/>
+  <text x="532" y="216" font-size="10" font-weight="700" fill="#2f6b4e" text-anchor="middle">拆法 ① ({A,B}) ⋈ {C}</text>
+  <text x="448" y="238" font-size="9" fill="#4a7a63">= cost*({A,B})</text>
+  <text x="448" y="256" font-size="9" fill="#4a7a63">+ cost*({C})</text>
+  <text x="448" y="274" font-size="9" fill="#4a7a63">+ join 代价（估行数×单价）</text>
+  <text x="532" y="300" font-size="11" font-weight="700" fill="#2f6b4e" text-anchor="middle">代价 = 100 ✓ 最小</text>
+  <text x="532" y="316" font-size="8.5" fill="#5f9c81" text-anchor="middle">→ 存入 DP[{A,B,C}]</text>
+
+  <rect x="644" y="196" width="200" height="130" rx="10" fill="#fbeceb" stroke="#e8b9b3"/>
+  <text x="744" y="216" font-size="10" font-weight="700" fill="#a5372c" text-anchor="middle">拆法 ② ({A,C}) ⋈ {B}</text>
+  <text x="660" y="238" font-size="9" fill="#8a4038">= cost*({A,C})</text>
+  <text x="660" y="256" font-size="9" fill="#8a4038">+ cost*({B})</text>
+  <text x="660" y="274" font-size="9" fill="#8a4038">+ join 代价</text>
+  <text x="744" y="300" font-size="11" font-weight="700" fill="#a5372c" text-anchor="middle">代价 = 180 ✗</text>
+  <text x="744" y="316" font-size="8.5" fill="#b06a60" text-anchor="middle">剪掉</text>
+
+  <rect x="856" y="196" width="212" height="130" rx="10" fill="#fbeceb" stroke="#e8b9b3"/>
+  <text x="962" y="216" font-size="10" font-weight="700" fill="#a5372c" text-anchor="middle">拆法 ③ ({B,C}) ⋈ {A}</text>
+  <text x="872" y="238" font-size="9" fill="#8a4038">= cost*({B,C})</text>
+  <text x="872" y="256" font-size="9" fill="#8a4038">+ cost*({A})</text>
+  <text x="872" y="274" font-size="9" fill="#8a4038">+ join 代价</text>
+  <text x="962" y="300" font-size="11" font-weight="700" fill="#a5372c" text-anchor="middle">代价 = 240 ✗</text>
+  <text x="962" y="316" font-size="8.5" fill="#b06a60" text-anchor="middle">剪掉</text>
+
+  <!-- 关键：复用 -->
+  <rect x="410" y="378" width="680" height="88" rx="12" fill="#fdf6e8" stroke="#ecd6a8"/>
+  <text x="432" y="404" font-size="11" font-weight="700" fill="#8a6417">为何是 DP 而非暴力枚举</text>
+  <text x="432" y="426" font-size="10" fill="#7a5a1a">cost*({A,B}) 只算一次并缓存；凡用到 {A,B} 的更大子集直接复用，不再展开其内部顺序。</text>
+  <text x="432" y="446" font-size="10" fill="#7a5a1a">复杂度从「阶乘级枚举所有顺序」降到「按子集数（2ⁿ 量级）填表」—— 子问题被共享。</text>
+
+  <!-- 底部：代价与统计 + 剪枝 -->
+  <rect x="40" y="486" width="1050" height="150" rx="13" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="58" y="512" font-size="11" font-weight="700" fill="#1d1d1f">连接顺序为何这么关键 + 工程约束</text>
+  <text x="58" y="534" font-size="10" fill="#4a4a4f"><tspan font-weight="700">中间结果大小主导代价：</tspan>先做「过滤性强、输出小」的连接，能让后续连接的输入锐减；顺序错则中间结果爆炸。</text>
+  <text x="58" y="556" font-size="10" fill="#4a4a4f"><tspan font-weight="700">代价 = 估行数 × 单位代价：</tspan>估行数来自统计信息（选择率、distinct 数）—— 估不准，DP 选出的「最优」也可能实际很差。</text>
+  <text x="58" y="578" font-size="10" fill="#4a4a4f"><tspan font-weight="700">空间仍会爆：</tspan>子集数 2ⁿ 随表数指数增；表多时退化为「只搜左深树 / 贪心 / 遗传」等启发式，牺牲最优性换可解。</text>
+  <text x="58" y="600" font-size="10" fill="#4a4a4f"><tspan font-weight="700">剪枝：</tspan>笛卡尔积（无连接谓词）通常延后或禁止；带 interesting order（有序性可复用给上层排序 / 归并连接）的计划另存。</text>
+  <text x="58" y="622" font-size="9" fill="#a1a1a6">不变式：DP 只在「等价（结果相同）」的计划间择优；改的是执行顺序与算法，绝不改查询语义。</text>
+</svg>

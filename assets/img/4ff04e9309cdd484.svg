@@ -1,0 +1,111 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="660" viewBox="0 0 1120 660" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="aB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#4a7fd0"/></marker>
+    <marker id="aR" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#d1544a"/></marker>
+    <marker id="aG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+  </defs>
+  <rect width="1120" height="660" fill="#fbfbfd"/>
+
+  <text x="30" y="32" font-size="15" font-weight="700" fill="#1d1d1f">两阶段锁(2PL) + 死锁检测 · 加锁只增不放的「增长期」→ 第一次解锁后进入「收缩期」只放不加，保证冲突可串行化</text>
+  <text x="30" y="53" font-size="10.5" fill="#6e6e73">悲观派：先加锁再访问，冲突事务互相阻塞等待。两阶段规则杜绝了「放了又拿」造成的不可串行化交错；代价是可能死锁</text>
+
+  <line x1="30" y1="80" x2="54" y2="80" stroke="#4a7fd0" stroke-width="2" marker-end="url(#aB)"/>
+  <text x="60" y="84" font-size="10" fill="#3a3a3c">增长期 · 只加锁（lock point 为峰）</text>
+  <line x1="300" y1="80" x2="324" y2="80" stroke="#2f9e6e" stroke-width="2" marker-end="url(#aG)"/>
+  <text x="330" y="84" font-size="10" fill="#3a3a3c">收缩期 · 只解锁（Strict 2PL 推迟到 commit）</text>
+  <line x1="640" y1="80" x2="664" y2="80" stroke="#d1544a" stroke-width="2" stroke-dasharray="5 3" marker-end="url(#aR)"/>
+  <text x="670" y="84" font-size="10" fill="#3a3a3c">阻塞等待 → 可能成环 = 死锁</text>
+
+  <!-- Panel A: 两阶段曲线 -->
+  <rect x="30" y="104" width="600" height="290" rx="14" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="52" y="130" font-size="13" font-weight="700" fill="#1d1d1f">① 持锁数量随时间的两阶段轮廓</text>
+
+  <!-- axes -->
+  <line x1="80" y1="360" x2="600" y2="360" stroke="#d7d7dd" stroke-width="1.2" marker-end="url(#aB)"/>
+  <text x="598" y="378" font-size="9" fill="#a1a1a6" text-anchor="end">时间 →</text>
+  <line x1="80" y1="360" x2="80" y2="150" stroke="#d7d7dd" stroke-width="1.2"/>
+  <text x="72" y="158" font-size="9" fill="#a1a1a6" text-anchor="end">持锁数</text>
+
+  <!-- growing slope (blue) -->
+  <polyline points="80,352 150,320 220,288 300,240" fill="none" stroke="#4a7fd0" stroke-width="2.5"/>
+  <!-- plateau at lock point -->
+  <line x1="300" y1="240" x2="360" y2="240" stroke="#8a5cae" stroke-width="2.5" stroke-dasharray="4 3"/>
+  <!-- shrinking slope (green) -->
+  <polyline points="360,240 440,290 520,336 560,352" fill="none" stroke="#2f9e6e" stroke-width="2.5"/>
+
+  <!-- lock point marker -->
+  <circle cx="330" cy="240" r="5" fill="#8a5cae"/>
+  <text x="330" y="228" font-size="10" font-weight="700" fill="#6f3ea8" text-anchor="middle">lock point（持锁峰值）</text>
+
+  <text x="180" y="330" font-size="10" font-weight="700" fill="#20375e" text-anchor="middle" transform="rotate(-22 180 330)">增长期 · 逐个加锁</text>
+  <text x="470" y="330" font-size="10" font-weight="700" fill="#2f6b4e" text-anchor="middle" transform="rotate(24 470 330)">收缩期 · 逐个解锁</text>
+
+  <rect x="360" y="150" width="256" height="72" rx="10" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="376" y="172" font-size="9.5" fill="#4a4a4f">规则：一旦释放任一锁（过 lock point），</text>
+  <text x="376" y="190" font-size="9.5" fill="#4a4a4f">此后不得再申请新锁。</text>
+  <text x="376" y="212" font-size="9.5" fill="#8a5cae">Strict 2PL：写锁保持到 commit/abort，防级联回滚。</text>
+
+  <!-- Panel B: 锁兼容 -->
+  <rect x="650" y="104" width="440" height="290" rx="14" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="672" y="130" font-size="13" font-weight="700" fill="#1d1d1f">② 共享/排他锁兼容矩阵</text>
+  <text x="672" y="150" font-size="9.5" fill="#8a97ab">读读相容，凡涉及写即互斥 → 写冲突被阻塞化</text>
+
+  <!-- matrix -->
+  <rect x="760" y="172" width="150" height="34" rx="7" fill="#eef0f3" stroke="#e4e7ec"/>
+  <text x="835" y="194" font-size="10.5" font-weight="700" fill="#4a4a4f" text-anchor="middle">持有 S（读）</text>
+  <rect x="920" y="172" width="150" height="34" rx="7" fill="#eef0f3" stroke="#e4e7ec"/>
+  <text x="995" y="194" font-size="10.5" font-weight="700" fill="#4a4a4f" text-anchor="middle">持有 X（写）</text>
+
+  <rect x="672" y="216" width="80" height="60" rx="7" fill="#eef0f3" stroke="#e4e7ec"/>
+  <text x="712" y="250" font-size="10.5" font-weight="700" fill="#4a4a4f" text-anchor="middle">申请 S</text>
+  <rect x="760" y="216" width="150" height="60" rx="7" fill="#eaf6f0" stroke="#bfe3d1"/>
+  <text x="835" y="243" font-size="12" font-weight="700" fill="#2f6b4e" text-anchor="middle">✓ 相容</text>
+  <text x="835" y="262" font-size="8.5" fill="#3f8a63" text-anchor="middle">多读者并行</text>
+  <rect x="920" y="216" width="150" height="60" rx="7" fill="#fbeceb" stroke="#e8b7b1"/>
+  <text x="995" y="243" font-size="12" font-weight="700" fill="#a83c30" text-anchor="middle">✗ 阻塞</text>
+  <text x="995" y="262" font-size="8.5" fill="#b06a60" text-anchor="middle">等写锁释放</text>
+
+  <rect x="672" y="286" width="80" height="60" rx="7" fill="#eef0f3" stroke="#e4e7ec"/>
+  <text x="712" y="320" font-size="10.5" font-weight="700" fill="#4a4a4f" text-anchor="middle">申请 X</text>
+  <rect x="760" y="286" width="150" height="60" rx="7" fill="#fbeceb" stroke="#e8b7b1"/>
+  <text x="835" y="313" font-size="12" font-weight="700" fill="#a83c30" text-anchor="middle">✗ 阻塞</text>
+  <text x="835" y="332" font-size="8.5" fill="#b06a60" text-anchor="middle">等读者全退</text>
+  <rect x="920" y="286" width="150" height="60" rx="7" fill="#fbeceb" stroke="#e8b7b1"/>
+  <text x="995" y="313" font-size="12" font-weight="700" fill="#a83c30" text-anchor="middle">✗ 阻塞</text>
+  <text x="995" y="332" font-size="8.5" fill="#b06a60" text-anchor="middle">写写互斥</text>
+
+  <text x="672" y="372" font-size="9" fill="#8a97ab">幻读需 next-key / 间隙锁锁住「不存在的行」，防区间插入</text>
+
+  <!-- Panel C: 死锁等待图检测 -->
+  <rect x="30" y="406" width="1060" height="240" rx="14" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="52" y="432" font-size="13" font-weight="700" fill="#1d1d1f">③ 死锁：等待图(wait-for graph)成环 → 检测到环即中止一方（victim）打破它</text>
+  <text x="52" y="452" font-size="9.5" fill="#8a97ab">T1 持 A 等 B，T2 持 B 等 A —— 谁都不肯放，互相死等</text>
+
+  <!-- scenario left -->
+  <rect x="60" y="470" width="470" height="150" rx="12" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="80" y="494" font-size="10.5" font-weight="700" fill="#4a4a4f">场景：交叉加锁顺序</text>
+  <rect x="80" y="506" width="200" height="30" rx="6" fill="#eaf1fb" stroke="#c6d9f2"/>
+  <text x="94" y="526" font-size="9.5" fill="#20375e">T1：锁住 A ✓ → 申请 B（等待）</text>
+  <rect x="80" y="544" width="200" height="30" rx="6" fill="#eaf1fb" stroke="#c6d9f2"/>
+  <text x="94" y="564" font-size="9.5" fill="#20375e">T2：锁住 B ✓ → 申请 A（等待）</text>
+  <text x="80" y="598" font-size="9" fill="#8a97ab">预防法：统一加锁顺序 / 超时中止 / wait-die 时间戳策略</text>
+
+  <!-- wait-for graph right -->
+  <text x="640" y="494" font-size="10.5" font-weight="700" fill="#4a4a4f">等待图（节点=事务，边=「等待对方持有的锁」）</text>
+
+  <circle cx="700" cy="560" r="34" fill="#eaf1fb" stroke="#c6d9f2" stroke-width="1.6"/>
+  <text x="700" y="565" font-size="13" font-weight="700" fill="#20375e" text-anchor="middle">T1</text>
+  <circle cx="920" cy="560" r="34" fill="#eaf1fb" stroke="#c6d9f2" stroke-width="1.6"/>
+  <text x="920" y="565" font-size="13" font-weight="700" fill="#20375e" text-anchor="middle">T2</text>
+
+  <path d="M732 548 C 800 522 820 522 888 548" fill="none" stroke="#d1544a" stroke-width="2" stroke-dasharray="5 3" marker-end="url(#aR)"/>
+  <text x="810" y="518" font-size="9" fill="#a83c30" text-anchor="middle">T1 等 T2 手里的 B</text>
+  <path d="M888 574 C 820 600 800 600 732 574" fill="none" stroke="#d1544a" stroke-width="2" stroke-dasharray="5 3" marker-end="url(#aR)"/>
+  <text x="810" y="618" font-size="9" fill="#a83c30" text-anchor="middle">T2 等 T1 手里的 A</text>
+
+  <rect x="980" y="530" width="90" height="60" rx="10" fill="#fbeceb" stroke="#e8b7b1"/>
+  <text x="1025" y="555" font-size="10.5" font-weight="700" fill="#a83c30" text-anchor="middle">环!</text>
+  <text x="1025" y="574" font-size="8.5" fill="#b06a60" text-anchor="middle">中止 victim</text>
+  <text x="1025" y="586" font-size="8.5" fill="#b06a60" text-anchor="middle">回滚重试</text>
+</svg>

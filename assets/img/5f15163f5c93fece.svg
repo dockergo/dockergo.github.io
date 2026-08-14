@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="540" viewBox="0 0 1080 540"
+     font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="540" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Rust 原理 · 双维模型（能力域 × 执行时机）</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">接触面（语法+所有权）+ 8 支撑域，纵看执行时机：编译期做全部安全检查，运行期极少机制、无 GC</text>
+
+  <!-- column containers -->
+  <rect x="248" y="68" width="558" height="396" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <rect x="816" y="68" width="234" height="396" rx="12" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <rect x="30" y="68" width="210" height="396" rx="12" fill="#ffffff" stroke="#ececf1"/>
+
+  <!-- headers -->
+  <text x="135" y="90" font-size="11" font-weight="700" text-anchor="middle" fill="#1d1d1f">能力域（9）</text>
+  <text x="527" y="90" font-size="11.5" font-weight="700" text-anchor="middle" fill="#1b2a4a">编译期（rustc · 全部安全检查在此）</text>
+  <text x="933" y="90" font-size="11.5" font-weight="700" text-anchor="middle" fill="#5a3410">运行期（library · 无 GC）</text>
+  <line x1="30" y1="100" x2="1050" y2="100" stroke="#e3e3e8" stroke-width="1"/>
+
+  <!-- row 1 接触面 -->
+  <circle cx="48" cy="122" r="4" fill="#c9a9e6"/><text x="60" y="126" font-size="10" fill="#1d1d1f">接触面 · 语法+所有权规则</text>
+  <text x="258" y="126" font-size="9.5" fill="#1b2a4a">所有权/借用/生命周期规则，编译期强制</text>
+  <text x="826" y="126" font-size="9.5" fill="#a1a1a6">—</text>
+  <line x1="30" y1="138" x2="1050" y2="138" stroke="#eff0f3" stroke-width="1"/>
+
+  <!-- row 2 编译管线 -->
+  <circle cx="48" cy="162" r="4" fill="#9db8dd"/><text x="60" y="166" font-size="10" fill="#1d1d1f">编译管线</text>
+  <text x="258" y="166" font-size="9.5" fill="#1b2a4a">lex→parse→HIR→THIR→MIR→codegen</text>
+  <text x="826" y="166" font-size="9.5" fill="#a1a1a6">—</text>
+  <line x1="30" y1="178" x2="1050" y2="178" stroke="#eff0f3" stroke-width="1"/>
+
+  <!-- row 3 借用检查器 -->
+  <circle cx="48" cy="202" r="4" fill="#7fc496"/><text x="60" y="206" font-size="10" fill="#1d1d1f">借用检查器（灵魂）</text>
+  <text x="258" y="206" font-size="9.5" fill="#1b2a4a">MIR 上验所有权/借用/生命周期，NLL 区域推断</text>
+  <text x="826" y="206" font-size="9.5" fill="#93762e">零开销（运行时不存在）</text>
+  <line x1="30" y1="218" x2="1050" y2="218" stroke="#eff0f3" stroke-width="1"/>
+
+  <!-- row 4 特质单态化 -->
+  <circle cx="48" cy="242" r="4" fill="#c9a9e6"/><text x="60" y="246" font-size="10" fill="#1d1d1f">特质与单态化</text>
+  <text x="258" y="246" font-size="9.5" fill="#1b2a4a">trait 求解 + 泛型→具体（单态化）</text>
+  <text x="826" y="246" font-size="9.5" fill="#93762e">无虚表（除非 dyn）</text>
+  <line x1="30" y1="258" x2="1050" y2="258" stroke="#eff0f3" stroke-width="1"/>
+
+  <!-- row 5 类型推断 -->
+  <circle cx="48" cy="282" r="4" fill="#9db8dd"/><text x="60" y="286" font-size="10" fill="#1d1d1f">类型推断</text>
+  <text x="258" y="286" font-size="9.5" fill="#1b2a4a">合一（unification）少标注推类型</text>
+  <text x="826" y="286" font-size="9.5" fill="#a1a1a6">—</text>
+  <line x1="30" y1="298" x2="1050" y2="298" stroke="#eff0f3" stroke-width="1"/>
+
+  <!-- row 6 内存与Drop -->
+  <circle cx="48" cy="322" r="4" fill="#d9b978"/><text x="60" y="326" font-size="10" fill="#1d1d1f">内存与 Drop（无 GC）</text>
+  <text x="258" y="326" font-size="9.5" fill="#1b2a4a">编译器插 Drop glue（RAII 落地）</text>
+  <text x="826" y="326" font-size="9.5" fill="#5a3410" font-weight="600">Drop 出作用域析构</text>
+  <line x1="30" y1="338" x2="1050" y2="338" stroke="#eff0f3" stroke-width="1"/>
+
+  <!-- row 7 并发 -->
+  <circle cx="48" cy="362" r="4" fill="#dd9b9b"/><text x="60" y="366" font-size="10" fill="#1d1d1f">并发 Send/Sync</text>
+  <text x="258" y="366" font-size="9.5" fill="#1b2a4a">marker trait 编译期保无数据竞争</text>
+  <text x="826" y="366" font-size="9.5" fill="#5a3410" font-weight="600">Arc 原子计数</text>
+  <line x1="30" y1="378" x2="1050" y2="378" stroke="#eff0f3" stroke-width="1"/>
+
+  <!-- row 8 智能指针 -->
+  <circle cx="48" cy="402" r="4" fill="#c0c0c8"/><text x="60" y="406" font-size="10" fill="#1d1d1f">智能指针与内部可变</text>
+  <text x="258" y="406" font-size="9.5" fill="#1b2a4a">类型检查 Box/Rc/Arc + UnsafeCell</text>
+  <text x="826" y="406" font-size="9.5" fill="#5a3410" font-weight="600">Rc 计数 / RefCell 借用</text>
+  <line x1="30" y1="418" x2="1050" y2="418" stroke="#eff0f3" stroke-width="1"/>
+
+  <!-- row 9 panic -->
+  <circle cx="48" cy="442" r="4" fill="#dd9b9b"/><text x="60" y="446" font-size="10" fill="#1d1d1f">panic 与展开</text>
+  <text x="258" y="446" font-size="9.5" fill="#a1a1a6">—</text>
+  <text x="826" y="446" font-size="9.5" fill="#5a3410" font-weight="600">展开 unwind / abort</text>
+
+  <!-- footer -->
+  <text x="30" y="492" font-size="9.5" fill="#6e6e73"><tspan font-weight="600" fill="#1b2a4a">编译期</tspan> 承载全部安全检查（借用检查/类型/单态化）——过不了不编译；<tspan font-weight="600" fill="#5a3410">运行期</tspan> 仅 Drop 析构 / 原子计数 / panic 展开，无 GC、无运行时类型、无虚表（除非 dyn）。</text>
+  <text x="30" y="512" font-size="9" fill="#a1a1a6">安全在编译期证明，运行时几乎零额外机制 —— 这是 Rust「零成本抽象」的双维根源。</text>
+</svg>

@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="558" viewBox="0 0 1040 558" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="aB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#0a84ff"/></marker>
+    <marker id="aG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#1f9e5f"/></marker>
+    <marker id="aA" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#c98a12"/></marker>
+  </defs>
+  <rect width="1040" height="558" fill="#fbfbfd"/>
+
+  <text x="30" y="32" font-size="15" font-weight="700" fill="#1d1d1f">规范驱动循环 · 宿主处理一个 Ready 的固定顺序</text>
+  <text x="30" y="52" font-size="10.5" fill="#6e6e73">库只交出只读 Ready，宿主 for{ select } 里按序做完真实 I/O 再 Advance —— 顺序铁律：待持久化项先落盘，才能发送出站消息</text>
+
+  <!-- 图例 -->
+  <line x1="30" y1="74" x2="54" y2="74" stroke="#c98a12" stroke-width="2.4" marker-end="url(#aA)"/><text x="60" y="78" font-size="10" fill="#5b6470">存储落盘</text>
+  <line x1="150" y1="74" x2="174" y2="74" stroke="#0a84ff" stroke-width="2" marker-end="url(#aB)"/><text x="180" y="78" font-size="10" fill="#5b6470">控制 / 网络</text>
+  <line x1="290" y1="74" x2="314" y2="74" stroke="#1f9e5f" stroke-width="2.4" marker-end="url(#aG)"/><text x="320" y="78" font-size="10" fill="#5b6470">应用到状态机</text>
+  <line x1="440" y1="74" x2="464" y2="74" stroke="#d1544a" stroke-width="2" stroke-dasharray="5 3"/><text x="470" y="78" font-size="10" fill="#5b6470">顺序屏障（不可越过）</text>
+
+  <!-- 库 Node -->
+  <rect x="40" y="100" width="176" height="88" rx="12" fill="#eef6f0" stroke="#b9e0c8" filter="url(#soft)"/>
+  <text x="128" y="128" font-size="12.5" font-weight="700" fill="#1f6b47" text-anchor="middle">库 · Node</text>
+  <text x="128" y="147" font-size="10" fill="#2f7a54" text-anchor="middle">纯内存状态机</text>
+  <text x="128" y="164" font-size="10.5" fill="#2f7a54" text-anchor="middle">Ready() 交出只读待办</text>
+  <text x="128" y="181" font-size="9.5" fill="#8a8a90" text-anchor="middle">Entries · Messages · Committed</text>
+
+  <!-- 交出 Ready 箭头 -->
+  <line x1="216" y1="144" x2="262" y2="144" stroke="#1f9e5f" stroke-width="2.4" marker-end="url(#aG)"/>
+  <text x="239" y="136" font-size="9" fill="#1f6b47" text-anchor="middle">Ready</text>
+
+  <!-- ① saveToStorage -->
+  <rect x="264" y="100" width="230" height="88" rx="12" fill="#fbf3e3" stroke="#ecd9b0" filter="url(#soft)"/>
+  <text x="284" y="124" font-size="12.5" font-weight="700" fill="#8a6013">① saveToStorage</text>
+  <text x="284" y="143" font-size="10" fill="#a1791f">HardState · Entries · Snapshot</text>
+  <text x="284" y="160" font-size="10" fill="#a1791f">写入持久化存储（WAL）</text>
+  <text x="284" y="179" font-size="9.5" fill="#8a8a90">崩溃可恢复的唯一前提</text>
+
+  <!-- 顺序屏障 -->
+  <line x1="512" y1="94" x2="512" y2="300" stroke="#d1544a" stroke-width="1.6" stroke-dasharray="5 3"/>
+  <text x="512" y="318" font-size="9.5" font-weight="700" fill="#8a4038" text-anchor="middle">先落盘 · 后发送</text>
+
+  <!-- ② send -->
+  <rect x="530" y="100" width="230" height="88" rx="12" fill="#e9f0fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="550" y="124" font-size="12.5" font-weight="700" fill="#274a78">② send(Messages)</text>
+  <text x="550" y="143" font-size="10" fill="#3d5a86">出站 MsgApp / MsgVote…</text>
+  <text x="550" y="160" font-size="10" fill="#3d5a86">走宿主网络投递到 To 节点</text>
+  <text x="550" y="179" font-size="9.5" fill="#8a8a90">落盘之后才发，保安全性</text>
+
+  <!-- ③ apply -->
+  <rect x="774" y="100" width="226" height="88" rx="12" fill="#eef6f0" stroke="#b9e0c8" filter="url(#soft)"/>
+  <text x="794" y="124" font-size="12.5" font-weight="700" fill="#1f6b47">③ apply(Committed)</text>
+  <text x="794" y="143" font-size="10" fill="#2f7a54">喂给业务状态机执行</text>
+  <text x="794" y="160" font-size="10" fill="#2f7a54">见 ConfChange 调 ApplyConfChange</text>
+  <text x="794" y="179" font-size="9.5" fill="#8a8a90">先处理 Snapshot 再处理条目</text>
+
+  <!-- 连线 ①→②→③ -->
+  <line x1="494" y1="144" x2="528" y2="144" stroke="#c98a12" stroke-width="2.4" marker-end="url(#aA)"/>
+  <line x1="760" y1="144" x2="772" y2="144" stroke="#0a84ff" stroke-width="2" marker-end="url(#aB)"/>
+
+  <!-- ④ Advance -->
+  <rect x="774" y="238" width="226" height="66" rx="12" fill="#e9f0fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="794" y="262" font-size="12.5" font-weight="700" fill="#274a78">④ Advance()</text>
+  <text x="794" y="281" font-size="10" fill="#3d5a86">确认这批做完，换下一批 Ready</text>
+  <text x="794" y="297" font-size="9.5" fill="#8a8a90">同步模式必调；不调则无下一批</text>
+
+  <!-- ③→④ -->
+  <line x1="887" y1="188" x2="887" y2="236" stroke="#0a84ff" stroke-width="2" marker-end="url(#aB)"/>
+
+  <!-- ④ → 库（回环）-->
+  <path d="M774,271 L128,271 L128,190" fill="none" stroke="#0a84ff" stroke-width="1.8" stroke-dasharray="6 4" marker-end="url(#aB)"/>
+  <text x="430" y="264" font-size="9.5" fill="#274a78">回环：库据 Advance 准备下一个 Ready</text>
+
+  <!-- Tick 旁路 -->
+  <rect x="40" y="238" width="176" height="66" rx="12" fill="#e9f0fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="128" y="262" font-size="11.5" font-weight="700" fill="#274a78" text-anchor="middle">Ticker → Tick()</text>
+  <text x="128" y="281" font-size="9.5" fill="#3d5a86" text-anchor="middle">另一 case：推逻辑时钟</text>
+  <text x="128" y="297" font-size="9.5" fill="#8a8a90" text-anchor="middle">选举 / 心跳超时计数</text>
+
+  <!-- 底部 变体框 -->
+  <rect x="40" y="352" width="960" height="88" rx="12" fill="#f3ecfb" stroke="#d8c6ee" filter="url(#soft)"/>
+  <text x="60" y="376" font-size="12" font-weight="700" fill="#6b3ba0">变体 · AsyncStorageWrites（可选）</text>
+  <text x="60" y="397" font-size="10.5" fill="#814bbd">把「落盘 / 应用」也做成 Ready.Messages 里指向 LocalAppendThread / LocalApplyThread 的消息，交独立线程并行处理。</text>
+  <text x="60" y="415" font-size="10.5" fill="#814bbd">此时宿主不再调 Advance（改由 storage 回执消息驱动推进），换来更高并发吞吐，代价是要自管两条 storage handler 线程。</text>
+  <text x="60" y="433" font-size="9.5" fill="#8a8a90">同步模式与异步模式二选一：前者简单可测，后者高吞吐。</text>
+
+  <!-- 底部性质 -->
+  <rect x="40" y="452" width="960" height="82" rx="12" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="58" y="476" font-size="10.5" font-weight="700" fill="#8a4038">为什么顺序不能乱</text>
+  <text x="58" y="496" font-size="10" fill="#4a4a4f">若先发 Messages 后落盘：本机崩溃会丢掉「已告诉别人存在、自己却没存」的条目 —— 违反 Raft 持久性与安全性。故 Entries/HardState 必须先入稳定存储。</text>
+  <text x="58" y="514" font-size="10" fill="#4a4a4f">CommittedEntries 的 apply 与 Advance 排在发送之后：应用只对已提交条目，且必须先让别人收到复制，多数派才可能形成。</text>
+  <text x="58" y="530" font-size="9.5" fill="#8a8a90">批量化：run() 倾向攒更大的 Ready 再交出，一次循环处理整批 Entries/Messages，减少交互次数。</text>
+</svg>

@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="560" viewBox="0 0 920 560" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="920" height="560" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">本地运行队列 · runq 环形数组 + runnext 快槽</text>
+
+  <!-- runqput entry -->
+  <rect x="40" y="52" width="300" height="62" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="56" y="76" font-size="13" font-weight="600" fill="#1b2a4a">runqput(pp, gp, next)</text>
+  <text x="56" y="95" font-size="10.5" fill="#5b7db1">把 G 放进 P 的本地队列（无锁）</text>
+  <text x="324" y="72" font-size="9.5" fill="#5b7db1" text-anchor="end">proc.go:7529</text>
+
+  <!-- branch labels -->
+  <line x1="190" y1="114" x2="150" y2="150" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <text x="118" y="140" font-size="10" fill="#4a8c60">next=true</text>
+  <line x1="230" y1="114" x2="470" y2="150" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <text x="392" y="138" font-size="10" fill="#a9822f">next=false</text>
+
+  <!-- P card container (blue) -->
+  <rect x="40" y="150" width="600" height="300" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="56" y="176" font-size="13" font-weight="600" fill="#1b2a4a">P · 本地资源（单消费者，无锁）</text>
+
+  <!-- runnext fast slot (green) -->
+  <rect x="56" y="190" width="230" height="66" rx="10" fill="#eef7f0" stroke="#bfe0c8"/>
+  <text x="70" y="213" font-size="11.5" font-weight="600" fill="#1d4a2b">runnext · 快槽（1 个 G）</text>
+  <text x="70" y="231" font-size="10" fill="#4a8c60">下一轮优先执行，保唤醒局部性</text>
+  <text x="70" y="247" font-size="9.5" fill="#4a8c60">channel 唤醒的接收者 / go 新建 G</text>
+
+  <!-- note: displaced runnext -->
+  <text x="70" y="278" font-size="9.5" fill="#5b7db1">原 runnext 被挤入 ↓ 环形队列尾部</text>
+
+  <!-- runq ring [256] (amber) -->
+  <rect x="56" y="288" width="568" height="146" rx="10" fill="#fdf6ec" stroke="#f0dcaf"/>
+  <text x="70" y="311" font-size="11.5" font-weight="600" fill="#6b4e16">runq [256] · 环形数组（定长）</text>
+  <text x="70" y="328" font-size="10" fill="#a9822f">runqhead / runqtail 原子索引 · 头尾并发安全</text>
+  <!-- ring cells -->
+  <rect x="72" y="344" width="26" height="20" rx="3" fill="#ffffff" stroke="#f0dcaf"/>
+  <rect x="104" y="344" width="26" height="20" rx="3" fill="#ffffff" stroke="#f0dcaf"/>
+  <rect x="136" y="344" width="26" height="20" rx="3" fill="#ffffff" stroke="#f0dcaf"/>
+  <rect x="168" y="344" width="26" height="20" rx="3" fill="#ffffff" stroke="#f0dcaf"/>
+  <rect x="200" y="344" width="26" height="20" rx="3" fill="#ffffff" stroke="#f0dcaf"/>
+  <rect x="232" y="344" width="26" height="20" rx="3" fill="#ffffff" stroke="#f0dcaf"/>
+  <text x="272" y="359" font-size="11" fill="#a9822f">· · ·</text>
+  <rect x="300" y="344" width="26" height="20" rx="3" fill="#ffffff" stroke="#f0dcaf"/>
+  <rect x="332" y="344" width="26" height="20" rx="3" fill="#ffffff" stroke="#f0dcaf"/>
+  <rect x="364" y="344" width="26" height="20" rx="3" fill="#ffffff" stroke="#f0dcaf"/>
+  <text x="76" y="386" font-size="9" fill="#a9822f">head</text>
+  <text x="352" y="386" font-size="9" fill="#a9822f">tail →</text>
+  <text x="70" y="416" font-size="10" fill="#a9822f">next=false 时入队尾；出队从 head（FIFO）</text>
+
+  <!-- overflow: runqputslow -->
+  <line x1="624" y1="360" x2="676" y2="360" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <text x="650" y="352" font-size="9" fill="#7a1f1f" text-anchor="middle">满 256</text>
+  <rect x="678" y="288" width="212" height="146" rx="12" fill="#fbeeee" stroke="#f0c4c4" filter="url(#soft)"/>
+  <text x="694" y="312" font-size="11.5" font-weight="600" fill="#7a1f1f">runqputslow</text>
+  <text x="890" y="310" font-size="9" fill="#b15b5b" text-anchor="end">proc.go:7575</text>
+  <text x="694" y="333" font-size="10" fill="#b15b5b">本地满则甩一半 G</text>
+  <text x="694" y="350" font-size="10" fill="#b15b5b">+ 新 G 打包入全局队列</text>
+  <text x="694" y="373" font-size="9.5" fill="#b15b5b">防止本地队列无限膨胀</text>
+  <line x1="784" y1="288" x2="784" y2="264" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- global runq (locked) -->
+  <rect x="678" y="150" width="212" height="98" rx="12" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="694" y="176" font-size="12.5" font-weight="600" fill="#1d1d1f">全局队列 runq</text>
+  <text x="694" y="197" font-size="10" fill="#6e6e73">schedt · 所有 P 共享</text>
+  <rect x="694" y="208" width="180" height="30" rx="7" fill="#fbeeee" stroke="#f0c4c4"/>
+  <text x="784" y="228" font-size="10.5" font-weight="600" fill="#7a1f1f" text-anchor="middle">sched.lock 加锁访问</text>
+
+  <!-- bottom contrast bar -->
+  <rect x="40" y="466" width="290" height="74" rx="12" fill="#eef7f0" stroke="#bfe0c8"/>
+  <text x="56" y="490" font-size="11.5" font-weight="600" fill="#1d4a2b">本地路径 · 无锁</text>
+  <text x="56" y="510" font-size="10" fill="#4a8c60">单 P 单消费者 + 头尾原子索引</text>
+  <text x="56" y="528" font-size="10" fill="#4a8c60">绝大多数入队/出队走此路径 → 可扩展</text>
+
+  <rect x="350" y="466" width="290" height="74" rx="12" fill="#fbeeee" stroke="#f0c4c4"/>
+  <text x="366" y="490" font-size="11.5" font-weight="600" fill="#7a1f1f">全局路径 · 有锁</text>
+  <text x="366" y="510" font-size="10" fill="#b15b5b">sched.lock 串行化，竞争成本高</text>
+  <text x="366" y="528" font-size="10" fill="#b15b5b">仅溢出 / 周期性防饥饿时才走</text>
+
+  <rect x="660" y="466" width="230" height="74" rx="12" fill="#f5f0fb" stroke="#ddcdf0"/>
+  <text x="676" y="490" font-size="11.5" font-weight="600" fill="#3d2a5a">要点</text>
+  <text x="676" y="510" font-size="10" fill="#7d5bb1">runnext 让生产者-消费者</text>
+  <text x="676" y="528" font-size="10" fill="#7d5bb1">局部性最大化，减少排队延迟</text>
+</svg>

@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="492" viewBox="0 0 1080 492"
+     font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1080" height="492" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Neo4j 事务提交:TxState &#8594; Command</text>
+  <text x="30" y="52" font-size="11.5" fill="#a1a1a6">事务本地变更攒在内存 TxState(diff-set),提交时经 visitor 转成记录级 Command;应用顺序 CREATE&#8594;UPDATE&#8594;DELETE(因不取读锁)</text>
+
+  <!-- 流水线:TxState -> TransactionRecordState -> Command -->
+  <rect x="40" y="88" width="290" height="124" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="56" y="116" font-size="12" font-weight="600" fill="#1b2a4a">TxState · 事务本地变更</text>
+  <text x="56" y="140" font-size="10.5" fill="#274a78">diff-set:added / removed 集</text>
+  <text x="56" y="161" font-size="10.5" fill="#274a78">节点 · 关系 · 属性 · label 的增删</text>
+  <text x="56" y="182" font-size="10.5" fill="#274a78">叠加在"已提交读"之上</text>
+  <text x="56" y="202" font-size="9" fill="#a1a1a6">api/state/TxState.java:99</text>
+
+  <rect x="395" y="88" width="290" height="124" rx="13" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="411" y="116" font-size="12" font-weight="600" fill="#12402a">TransactionRecordState</text>
+  <text x="411" y="140" font-size="10.5" fill="#2f6f4f">记录级 Command 累积器</text>
+  <text x="411" y="161" font-size="10.5" fill="#2f6f4f">visitor 遍历 TxState 产出命令</text>
+  <text x="411" y="182" font-size="10.5" fill="#2f6f4f">RecordStorageEngine 为存储入口</text>
+  <text x="411" y="202" font-size="9" fill="#a1a1a6">recordstorage/TransactionRecordState.java</text>
+
+  <rect x="750" y="88" width="290" height="124" rx="13" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="766" y="116" font-size="12" font-weight="600" fill="#3d2a5a">Command · 记录级操作</text>
+  <text x="766" y="140" font-size="10.5" fill="#6b5590">"所有能对 neo store 执行的命令"</text>
+  <text x="766" y="161" font-size="10.5" fill="#6b5590">带 Mode:CREATE / UPDATE / DELETE</text>
+  <text x="766" y="182" font-size="10.5" fill="#6b5590">物理命令,应用到 store</text>
+  <text x="766" y="202" font-size="9" fill="#a1a1a6">recordstorage/Command.java:59</text>
+
+  <path d="M330,150 L395,150" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="362" y="143" font-size="8.5" fill="#a1a1a6" text-anchor="middle">提交</text>
+  <path d="M685,150 L750,150" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="717" y="143" font-size="8.5" fill="#a1a1a6" text-anchor="middle">产出</text>
+
+  <!-- 下方左:应用顺序 -->
+  <text x="40" y="248" font-size="12" font-weight="600" fill="#1d1d1f">应用顺序:CREATE &#8594; UPDATE &#8594; DELETE</text>
+
+  <rect x="40" y="266" width="150" height="70" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="115" y="296" font-size="11" font-weight="600" fill="#12402a" text-anchor="middle">CREATE</text>
+  <text x="115" y="317" font-size="9" fill="#2f6f4f" text-anchor="middle">先建实体</text>
+
+  <rect x="240" y="266" width="150" height="70" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="315" y="296" font-size="11" font-weight="600" fill="#1b2a4a" text-anchor="middle">UPDATE</text>
+  <text x="315" y="317" font-size="9" fill="#5b7db1" text-anchor="middle">再改属性 / 连接</text>
+
+  <rect x="440" y="266" width="150" height="70" rx="12" fill="#fbeaea" stroke="#e7c3c3" filter="url(#soft)"/>
+  <text x="515" y="296" font-size="11" font-weight="600" fill="#4a1414" text-anchor="middle">DELETE</text>
+  <text x="515" y="317" font-size="9" fill="#7a2a2a" text-anchor="middle">最后删</text>
+
+  <path d="M190,301 L240,301" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M390,301 L440,301" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <rect x="40" y="356" width="550" height="68" rx="12" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="56" y="384" font-size="10.5" font-weight="600" fill="#5a3410">因不取读锁:MVCC / 读锁尚未实现(注释明确)</text>
+  <text x="56" y="407" font-size="10.5" fill="#93762e">按此序避免记录间依赖问题 · Command.java:74</text>
+
+  <!-- 下方右:事务隔离 -->
+  <rect x="630" y="266" width="410" height="158" rx="13" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="648" y="296" font-size="11.5" font-weight="600" fill="#1d1d1f">事务内隔离 · read-your-writes</text>
+  <text x="648" y="324" font-size="10.5" fill="#3f3f43">diff-set 叠加在"已提交读"之上</text>
+  <text x="648" y="348" font-size="10.5" fill="#3f3f43">· 事务内看到自己的改动</text>
+  <text x="648" y="372" font-size="10.5" fill="#3f3f43">· 别人看不到你未提交的变更</text>
+  <text x="648" y="400" font-size="9.5" fill="#6e6e73">community:锁基 + WAL,非 MVCC</text>
+
+  <text x="40" y="456" font-size="9.5" fill="#a1a1a6">经典 WAL 路径:变更先攒 TxState,提交转 Command,再写日志、应用 store — 不是 MVCC。</text>
+</svg>

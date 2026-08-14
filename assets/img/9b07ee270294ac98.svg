@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="452" viewBox="0 0 1000 452" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="cld_s" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="cld_a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#5b7db1"/></marker>
+    <marker id="cld_g" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+  </defs>
+  <rect width="1000" height="452" fill="#fbfbfd"/>
+  <text x="24" y="30" font-size="14" font-weight="700" fill="#1d1d1f">加载器层级 · CLD 归属 · 类唯一性 = (全限定名, 加载器)</text>
+  <text x="24" y="49" font-size="10" fill="#6e6e73">双亲委派保证核心类只由引导加载器加载（杜绝伪造）；每个加载器的类都挂在它的 ClassLoaderData 下，卸载加载器 = CLD 整体回收 = 卸载它加载的全部类</text>
+
+  <!-- 委派链 -->
+  <rect x="24" y="66" width="392" height="322" rx="12" fill="#f6f8fc" stroke="#cfe0f2"/>
+  <text x="40" y="86" font-size="11" font-weight="600" fill="#5b7db1">① 双亲委派链（parent-first）· register_loader 注册 CLD（systemDictionary.cpp:189）</text>
+  <g text-anchor="middle">
+    <rect x="120" y="98" width="200" height="46" rx="9" fill="#fff" stroke="#cfe0f2" filter="url(#cld_s)"/>
+    <text x="220" y="118" font-size="10.5" font-weight="600" fill="#1b2a4a">引导 bootstrap</text><text x="220" y="134" font-size="8" fill="#6e6e73">JDK 核心类 · C++ 实现 · 无 Java 对象</text>
+    <rect x="120" y="168" width="200" height="46" rx="9" fill="#fff" stroke="#cfe0f2" filter="url(#cld_s)"/>
+    <text x="220" y="188" font-size="10.5" font-weight="600" fill="#1b2a4a">平台 platform</text><text x="220" y="204" font-size="8" fill="#6e6e73">平台模块类 · 委派给引导</text>
+    <rect x="120" y="238" width="200" height="46" rx="9" fill="#fff" stroke="#cfe0f2" filter="url(#cld_s)"/>
+    <text x="220" y="258" font-size="10.5" font-weight="600" fill="#1b2a4a">应用 app / system</text><text x="220" y="274" font-size="8" fill="#6e6e73">classpath 应用类 · 默认加载器</text>
+    <rect x="120" y="308" width="200" height="46" rx="9" fill="#fff" stroke="#e2e2e7" filter="url(#cld_s)"/>
+    <text x="220" y="328" font-size="10.5" font-weight="600" fill="#8a5a1a">自定义 custom</text><text x="220" y="344" font-size="8" fill="#6e6e73">可打破双亲委派 · 决定可见性/相等性</text>
+  </g>
+  <line x1="220" y1="308" x2="220" y2="284" stroke="#5b7db1" stroke-width="1.5" stroke-dasharray="5 3" marker-end="url(#cld_a)"/>
+  <line x1="220" y1="238" x2="220" y2="214" stroke="#5b7db1" stroke-width="1.5" stroke-dasharray="5 3" marker-end="url(#cld_a)"/>
+  <line x1="220" y1="168" x2="220" y2="144" stroke="#5b7db1" stroke-width="1.5" stroke-dasharray="5 3" marker-end="url(#cld_a)"/>
+  <text x="330" y="300" font-size="8" fill="#5b7db1" text-anchor="middle">先请父</text>
+  <text x="330" y="130" font-size="8" fill="#9a9aa0" text-anchor="middle">父找不到</text>
+  <text x="330" y="142" font-size="8" fill="#9a9aa0" text-anchor="middle">才自己找 ↓</text>
+
+  <!-- CLD 归属 -->
+  <rect x="432" y="66" width="544" height="192" rx="12" fill="#f5faf6" stroke="#cfe6d2"/>
+  <text x="448" y="86" font-size="11" font-weight="600" fill="#1d8f3f">② 每个加载器 → 一个 ClassLoaderData（classLoaderData.hpp:66）· 挂它加载的全部 Klass</text>
+  <g text-anchor="middle">
+    <rect x="452" y="100" width="150" height="40" rx="9" fill="#fff" stroke="#cfe6d2" filter="url(#cld_s)"/>
+    <text x="527" y="124" font-size="9.5" font-weight="600" fill="#1c6b45">应用加载器</text>
+    <rect x="452" y="150" width="150" height="40" rx="9" fill="#fff" stroke="#e2e2e7" filter="url(#cld_s)"/>
+    <text x="527" y="174" font-size="9.5" font-weight="600" fill="#8a5a1a">自定义加载器</text>
+    <rect x="648" y="100" width="312" height="40" rx="9" fill="#eef7f1" stroke="#cfe6d2"/>
+    <text x="804" y="116" font-size="9" font-weight="600" fill="#1c6b45">CLD · InstanceKlass A / B / C …</text><text x="804" y="130" font-size="8" fill="#6e6e73">该加载器加载的类元数据都归此 CLD</text>
+    <rect x="648" y="150" width="312" height="40" rx="9" fill="#faf3ea" stroke="#ecdcbf"/>
+    <text x="804" y="166" font-size="9" font-weight="600" fill="#8a5a1a">CLD' · InstanceKlass X / Y …</text><text x="804" y="180" font-size="8" fill="#6e6e73">不同 CLD ⇒ 同名类互为不同类型</text>
+  </g>
+  <line x1="602" y1="120" x2="648" y2="120" stroke="#2f9e6e" stroke-width="1.6" marker-end="url(#cld_g)"/>
+  <line x1="602" y1="170" x2="648" y2="170" stroke="#2f9e6e" stroke-width="1.6" marker-end="url(#cld_g)"/>
+  <text x="704" y="212" font-size="9" fill="#3a3a3c" text-anchor="middle">卸载一个加载器 → 其 CLD 无引用 → 整块回收 → 它加载的所有类一起卸载（类卸载 = CLD 回收）</text>
+  <text x="704" y="230" font-size="8" fill="#9a9aa0" text-anchor="middle">is_parallelCapable（:218）声明并行能力：并行加载器对每个类名各用一把对象锁，互不阻塞</text>
+
+  <!-- 唯一性 / 风险 -->
+  <rect x="432" y="270" width="544" height="118" rx="12" fill="#fbf7ef" stroke="#ecdcbf"/>
+  <text x="448" y="290" font-size="11" font-weight="600" fill="#8a6d3b">③ 类唯一性 = (全限定名, 加载器)，不是仅看名字</text>
+  <text x="448" y="312" font-size="9" fill="#3a3a3c">同一个 .class 被两个加载器各加载一份 → 是两个互不相等的类型，赋值互抛 ClassCastException。</text>
+  <text x="448" y="332" font-size="9" fill="#3a3a3c">打破双亲委派（SPI/线程上下文加载器、OSGi 子优先）能实现插件/热部署，代价是这类可见性/相等性风险。</text>
+  <text x="448" y="356" font-size="8.5" fill="#b0413e">加载器泄漏 = 钉住其 CLD 及全部类 → 元空间 OutOfMemoryError: Metaspace（长跑应用常见根因）。</text>
+  <text x="448" y="374" font-size="8" fill="#9a9aa0">load_instance_class_impl（systemDictionary.cpp:1221 → :1313 调用户 loadClass）</text>
+</svg>

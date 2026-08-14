@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="680" viewBox="0 0 1120 680" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="aB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#4a7fd0"/></marker>
+    <marker id="aG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+    <marker id="aA" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#d99a2b"/></marker>
+  </defs>
+  <rect width="1120" height="680" fill="#fbfbfd"/>
+
+  <text x="30" y="34" font-size="17" font-weight="700" fill="#1d1d1f">编辑距离 · dp[i][j]：把 s 前 i 字符改成 t 前 j 字符的最少操作数（插入 / 删除 / 替换）</text>
+  <text x="30" y="56" font-size="11" fill="#6e6e73">字符相等则继承左上 dp[i-1][j-1]（无需操作）；否则取上 / 左 / 左上三个来源的最小值 + 1。示例 s="cat" → t="cut"</text>
+
+  <!-- 图例 -->
+  <rect x="30" y="72" width="12" height="12" rx="2" fill="#4a7fd0"/><text x="48" y="82" font-size="10.5" fill="#3a3a3c">三方向来源</text>
+  <rect x="150" y="72" width="12" height="12" rx="2" fill="#2f9e6e"/><text x="168" y="82" font-size="10.5" fill="#3a3a3c">相等·继承左上</text>
+  <rect x="290" y="72" width="12" height="12" rx="2" fill="#8a6fd0"/><text x="308" y="82" font-size="10.5" fill="#3a3a3c">首行 / 首列边界</text>
+  <rect x="430" y="72" width="12" height="12" rx="2" fill="#d99a2b"/><text x="448" y="82" font-size="10.5" fill="#3a3a3c">当前格 dp[i][j]</text>
+
+  <!-- ① 三方向来源 -->
+  <text x="30" y="112" font-size="12" font-weight="700" fill="#8a5a12">① 三个来源各对应一种操作（每次 +1）；相等时取左上且不 +1</text>
+  <rect x="40" y="126" width="280" height="34" rx="7" fill="#eaf1fb" stroke="#9dbdea"/><text x="58" y="148" font-size="10.5" fill="#20375e">左上 dp[i-1][j-1] · 替换 s[i]→t[j]</text>
+  <rect x="40" y="166" width="280" height="34" rx="7" fill="#eaf1fb" stroke="#9dbdea"/><text x="58" y="188" font-size="10.5" fill="#20375e">上　 dp[i-1][j]　 · 删除 s 的第 i 个字符</text>
+  <rect x="40" y="206" width="280" height="34" rx="7" fill="#eaf1fb" stroke="#9dbdea"/><text x="58" y="228" font-size="10.5" fill="#20375e">左　 dp[i][j-1]　 · 插入 t 的第 j 个字符</text>
+  <rect x="470" y="150" width="300" height="66" rx="10" fill="#fdf3e0" stroke="#d99a2b" stroke-width="1.4" filter="url(#soft)"/>
+  <text x="620" y="178" font-size="12" font-weight="700" fill="#8a5a12" text-anchor="middle">dp[i][j]</text>
+  <text x="620" y="200" font-size="9.5" fill="#5a4a2a" text-anchor="middle">相等：= dp[i-1][j-1]；否则 = min(三者)+1</text>
+  <line x1="320" y1="143" x2="466" y2="170" stroke="#4a7fd0" stroke-width="1.6" marker-end="url(#aB)"/>
+  <line x1="320" y1="183" x2="466" y2="183" stroke="#4a7fd0" stroke-width="1.6" marker-end="url(#aB)"/>
+  <line x1="320" y1="223" x2="466" y2="196" stroke="#4a7fd0" stroke-width="1.6" marker-end="url(#aB)"/>
+  <rect x="800" y="126" width="280" height="114" rx="10" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="818" y="148" font-size="11" font-weight="700" fill="#1f6b47">为什么是这三方向</text>
+  <text x="818" y="168" font-size="9.5" fill="#4a4a4f">把 s→t 的编辑逐字符对齐：每一步要么</text>
+  <text x="818" y="184" font-size="9.5" fill="#4a4a4f">对掉一个字符（左上），要么在 s 侧删一个</text>
+  <text x="818" y="200" font-size="9.5" fill="#4a4a4f">（上），要么补一个（左）。</text>
+  <text x="818" y="222" font-size="9.5" fill="#1f6b47">相等即「免费对齐」，直接沿对角继承。</text>
+
+  <!-- ② dp 表 -->
+  <text x="30" y="288" font-size="12" font-weight="700" fill="#8a5a12">② dp 表：行＝s 的前缀，列＝t 的前缀；首行首列为边界（空串互变＝长度）</text>
+  <!-- header -->
+  <g font-size="13" text-anchor="middle">
+    <rect x="90" y="304" width="70" height="40" fill="#eef1f5" stroke="#e4e7ec"/><text x="125" y="329" font-size="10" font-weight="700" fill="#3a3a3c">s \ t</text>
+    <rect x="160" y="304" width="66" height="40" fill="#eef1f5" stroke="#e4e7ec"/><text x="193" y="329" font-weight="700" fill="#6e6e73">""</text>
+    <rect x="226" y="304" width="66" height="40" fill="#eef1f5" stroke="#e4e7ec"/><text x="259" y="329" font-weight="700" fill="#3a3a3c">c</text>
+    <rect x="292" y="304" width="66" height="40" fill="#eef1f5" stroke="#e4e7ec"/><text x="325" y="329" font-weight="700" fill="#3a3a3c">u</text>
+    <rect x="358" y="304" width="66" height="40" fill="#eef1f5" stroke="#e4e7ec"/><text x="391" y="329" font-weight="700" fill="#3a3a3c">t</text>
+  </g>
+  <!-- rows -->
+  <g font-size="14" text-anchor="middle" font-weight="700">
+    <!-- i=0 "" -->
+    <rect x="90" y="344" width="70" height="46" fill="#eef1f5" stroke="#e4e7ec"/><text x="125" y="373" font-size="12" fill="#6e6e73">""</text>
+    <rect x="160" y="344" width="66" height="46" fill="#f0ebfb" stroke="#c9b8ec"/><text x="193" y="373" fill="#5b45a0">0</text>
+    <rect x="226" y="344" width="66" height="46" fill="#f0ebfb" stroke="#c9b8ec"/><text x="259" y="373" fill="#5b45a0">1</text>
+    <rect x="292" y="344" width="66" height="46" fill="#f0ebfb" stroke="#c9b8ec"/><text x="325" y="373" fill="#5b45a0">2</text>
+    <rect x="358" y="344" width="66" height="46" fill="#f0ebfb" stroke="#c9b8ec"/><text x="391" y="373" fill="#5b45a0">3</text>
+    <!-- i=1 c -->
+    <rect x="90" y="390" width="70" height="46" fill="#eef1f5" stroke="#e4e7ec"/><text x="125" y="419" font-size="12" fill="#3a3a3c">c</text>
+    <rect x="160" y="390" width="66" height="46" fill="#f0ebfb" stroke="#c9b8ec"/><text x="193" y="419" fill="#5b45a0">1</text>
+    <rect x="226" y="390" width="66" height="46" fill="#e6f4ec" stroke="#2f9e6e" stroke-width="1.5"/><text x="259" y="419" fill="#1f6b47">0</text>
+    <rect x="292" y="390" width="66" height="46" fill="#ffffff" stroke="#e4e7ec"/><text x="325" y="419" fill="#4a4a4f">1</text>
+    <rect x="358" y="390" width="66" height="46" fill="#ffffff" stroke="#e4e7ec"/><text x="391" y="419" fill="#4a4a4f">2</text>
+    <!-- i=2 a -->
+    <rect x="90" y="436" width="70" height="46" fill="#eef1f5" stroke="#e4e7ec"/><text x="125" y="465" font-size="12" fill="#3a3a3c">a</text>
+    <rect x="160" y="436" width="66" height="46" fill="#f0ebfb" stroke="#c9b8ec"/><text x="193" y="465" fill="#5b45a0">2</text>
+    <rect x="226" y="436" width="66" height="46" fill="#dbe8fa" stroke="#9dbdea"/><text x="259" y="465" fill="#20375e">1</text>
+    <rect x="292" y="436" width="66" height="46" fill="#fdf3e0" stroke="#d99a2b" stroke-width="1.8"/><text x="325" y="465" fill="#8a5a12">1</text>
+    <rect x="358" y="436" width="66" height="46" fill="#ffffff" stroke="#e4e7ec"/><text x="391" y="465" fill="#4a4a4f">2</text>
+    <!-- i=3 t -->
+    <rect x="90" y="482" width="70" height="46" fill="#eef1f5" stroke="#e4e7ec"/><text x="125" y="511" font-size="12" fill="#3a3a3c">t</text>
+    <rect x="160" y="482" width="66" height="46" fill="#f0ebfb" stroke="#c9b8ec"/><text x="193" y="511" fill="#5b45a0">3</text>
+    <rect x="226" y="482" width="66" height="46" fill="#ffffff" stroke="#e4e7ec"/><text x="259" y="511" fill="#4a4a4f">2</text>
+    <rect x="292" y="482" width="66" height="46" fill="#ffffff" stroke="#e4e7ec"/><text x="325" y="511" fill="#4a4a4f">2</text>
+    <rect x="358" y="482" width="66" height="46" fill="#d7efe1" stroke="#2f9e6e" stroke-width="2"/><text x="391" y="511" fill="#1f6b47">1</text>
+  </g>
+  <!-- focus cell arrows: sources of dp[2][2]=(a,u) at (325,459) -->
+  <text x="259" y="413" font-size="8" fill="#20375e" text-anchor="middle">↖0</text>
+  <line x1="325" y1="436" x2="325" y2="413" stroke="#4a7fd0" stroke-width="1.6" marker-end="url(#aB)"/>
+  <line x1="292" y1="459" x2="269" y2="459" stroke="#4a7fd0" stroke-width="1.6" marker-end="url(#aB)"/>
+  <line x1="303" y1="447" x2="270" y2="425" stroke="#4a7fd0" stroke-width="1.4" marker-end="url(#aB)"/>
+  <!-- final answer arrow -->
+  <line x1="391" y1="548" x2="391" y2="531" stroke="#2f9e6e" stroke-width="1.8" marker-end="url(#aG)"/>
+  <text x="90" y="556" font-size="10.5" font-weight="700" fill="#1f6b47">答案 dp[3][3]=1：cat → cut 只需 1 次替换（a→u）</text>
+
+  <!-- ③ 两个计算示例 -->
+  <text x="470" y="288" font-size="12" font-weight="700" fill="#8a5a12">③ 两类格子的算法</text>
+  <rect x="470" y="304" width="610" height="80" rx="12" fill="#ffffff" stroke="#d99a2b" stroke-width="1.3" filter="url(#soft)"/>
+  <text x="488" y="328" font-size="11.5" font-weight="700" fill="#8a5a12">不相等格 dp[2][2]（s='a' vs t='u'）</text>
+  <text x="488" y="350" font-size="10.5" fill="#4a4a4f">= min( 上 dp[1][2]=1，左 dp[2][1]=1，左上 dp[1][1]=0 ) + 1</text>
+  <text x="488" y="372" font-size="10.5" fill="#8a5a12">= 0 + 1 = <tspan font-weight="700">1</tspan>　（选左上＝把 a 替换成 u）</text>
+
+  <rect x="470" y="396" width="610" height="80" rx="12" fill="#ffffff" stroke="#2f9e6e" stroke-width="1.3" filter="url(#soft)"/>
+  <text x="488" y="420" font-size="11.5" font-weight="700" fill="#1f6b47">相等格 dp[1][1]（s='c' vs t='c'）与 dp[3][3]（'t' vs 't'）</text>
+  <text x="488" y="442" font-size="10.5" fill="#4a4a4f">字符相同 → 直接继承左上 dp[i-1][j-1]，<tspan font-weight="700" fill="#1f6b47">不 +1</tspan></text>
+  <text x="488" y="464" font-size="10.5" fill="#4a4a4f">dp[1][1]=dp[0][0]=0；dp[3][3]=dp[2][2]=1（末尾 t 天然对齐）</text>
+
+  <!-- ④ 边界 -->
+  <rect x="470" y="488" width="610" height="76" rx="12" fill="#f0ebfb" stroke="#8a6fd0" stroke-width="1.3"/>
+  <text x="488" y="512" font-size="11.5" font-weight="700" fill="#5b45a0">④ 边界（首行 / 首列）：与空串互变</text>
+  <text x="488" y="534" font-size="10.5" fill="#4a4258">dp[i][0]=i（删掉 s 的 i 个字符变空串）　dp[0][j]=j（向空串插入 t 的 j 个字符）</text>
+  <text x="488" y="554" font-size="10" fill="#6e6e73">边界就是递归的 base case；填表按 i、j 从小到大，每格 O(1)，总复杂度 O(n·m)。</text>
+
+  <text x="30" y="596" font-size="10.5" fill="#6e6e73">空间压缩：dp[i][j] 只依赖上一行与本行左邻，可降到一维 dp[m+1]；但需一个临时变量 leftUp 暂存被覆盖前的 dp[i-1][j-1]。</text>
+  <text x="30" y="618" font-size="10" fill="#8a5a12">编辑距离是「两串对齐」型二维 DP 的范式：最长公共子序列、最长公共子串等都可套同一「相等继承 / 不等取邻居极值」骨架。</text>
+</svg>

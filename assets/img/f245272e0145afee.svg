@@ -1,0 +1,97 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="580" viewBox="0 0 1080 580" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+    <marker id="arp" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#c9b6de"/></marker>
+  </defs>
+  <rect width="1080" height="580" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">RocksDB 能力域依赖关系 · 谁调用谁、谁约束谁</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">实线=调用/数据流   虚线=状态约束(seq/版本/回收下界)。贯穿层 SequenceNumber 横切读写与整理</text>
+
+  <!-- edges first (under nodes) -->
+  <g stroke="#c7c7cc" stroke-width="1.5" fill="none">
+    <!-- 接触面 -> 写入 -->
+    <path d="M300,120 L200,168" marker-end="url(#ar)"/>
+    <!-- 接触面 -> 读取 -->
+    <path d="M540,124 L540,168" marker-end="url(#ar)"/>
+    <!-- 接触面 -> 事务 -->
+    <path d="M660,118 L830,300" marker-end="url(#ar)"/>
+    <!-- 写入 -> WAL -->
+    <path d="M150,228 L150,300" marker-end="url(#ar)"/>
+    <!-- 写入 -> Flush -->
+    <path d="M210,200 L300,210" marker-end="url(#ar)"/>
+    <!-- Flush -> SST -->
+    <path d="M370,240 L440,300" marker-end="url(#ar)"/>
+    <!-- Flush -> Compaction -->
+    <path d="M410,212 L560,212" marker-end="url(#ar)"/>
+    <!-- Compaction -> SST -->
+    <path d="M600,240 L520,300" marker-end="url(#ar)"/>
+    <!-- 读取 -> SST -->
+    <path d="M520,240 L500,300" marker-end="url(#ar)"/>
+    <!-- 读取 -> 缓存 -->
+    <path d="M600,210 L700,300" marker-end="url(#ar)"/>
+    <!-- SST -> 缓存 -->
+    <path d="M560,330 L680,330" marker-end="url(#ar)"/>
+    <!-- WAL -> 恢复(版本) -->
+    <path d="M230,330 L830,120" stroke-dasharray="1 0" marker-end="url(#ar)"/>
+  </g>
+  <!-- constraint edges (dashed purple) -->
+  <g stroke="#c9b6de" stroke-width="1.4" fill="none" stroke-dasharray="5 4">
+    <!-- 版本 -> 读取 (SuperVersion 定位) -->
+    <path d="M900,300 L600,190" marker-end="url(#arp)"/>
+    <!-- 版本 -> Compaction (LogAndApply) -->
+    <path d="M880,300 L650,240" marker-end="url(#arp)"/>
+    <!-- 事务/快照 -> Compaction (回收下界) -->
+    <path d="M840,360 L660,360" marker-end="url(#arp)"/>
+    <!-- Flush -> WAL (可删) -->
+    <path d="M300,225 L210,315" marker-end="url(#arp)"/>
+  </g>
+
+  <!-- top: 接触面 -->
+  <rect x="300" y="74" width="480" height="46" rx="12" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+  <text x="540" y="102" font-size="11" font-weight="700" text-anchor="middle" fill="#8a5a1a">接触面 · KV API(Put / Get / Delete / Merge / Iterator / WriteBatch / Snapshot)</text>
+
+  <!-- write side -->
+  <rect x="80" y="170" width="140" height="60" rx="11" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="150" y="196" font-size="11" font-weight="700" text-anchor="middle" fill="#12402a">写入路径</text><text x="150" y="216" font-size="7.5" text-anchor="middle" fill="#2f6f4f">WriteThread分组</text>
+  <rect x="300" y="182" width="120" height="58" rx="11" fill="#e6f7ee" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="360" y="206" font-size="11" font-weight="700" text-anchor="middle" fill="#12402a">Flush</text><text x="360" y="224" font-size="7.5" text-anchor="middle" fill="#2f6f4f">immutable→L0</text>
+
+  <!-- read side -->
+  <rect x="470" y="170" width="140" height="60" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="540" y="196" font-size="11" font-weight="700" text-anchor="middle" fill="#1b2a4a">读取路径</text><text x="540" y="216" font-size="7.5" text-anchor="middle" fill="#5b7db1">MemTable→逐层SST</text>
+  <rect x="560" y="182" width="120" height="58" rx="11" fill="#fdf4f3" stroke="#ecc6c1" filter="url(#soft)"/>
+  <text x="620" y="206" font-size="11" font-weight="700" text-anchor="middle" fill="#7a2016">Compaction</text><text x="620" y="224" font-size="7.5" text-anchor="middle" fill="#a5453a">逐层归并</text>
+
+  <!-- middle storage row -->
+  <rect x="120" y="302" width="130" height="56" rx="11" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+  <text x="185" y="326" font-size="11" font-weight="700" text-anchor="middle" fill="#5a3410">WAL</text><text x="185" y="344" font-size="7.5" text-anchor="middle" fill="#93762e">顺序日志/恢复</text>
+  <rect x="440" y="302" width="130" height="56" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="505" y="326" font-size="11" font-weight="700" text-anchor="middle" fill="#1b2a4a">SST 存储</text><text x="505" y="344" font-size="7.5" text-anchor="middle" fill="#5b7db1">BlockBasedTable</text>
+  <rect x="680" y="302" width="130" height="56" rx="11" fill="#f5faf6" stroke="#cfe6d5" filter="url(#soft)"/>
+  <text x="745" y="326" font-size="11" font-weight="700" text-anchor="middle" fill="#12402a">缓存</text><text x="745" y="344" font-size="7.5" text-anchor="middle" fill="#2f6f4f">block/table cache</text>
+
+  <!-- state/consistency row -->
+  <rect x="830" y="302" width="140" height="56" rx="11" fill="#faf4fb" stroke="#e2d2ee" filter="url(#soft)"/>
+  <text x="900" y="326" font-size="11" font-weight="700" text-anchor="middle" fill="#5a3d78">版本 / MANIFEST</text><text x="900" y="344" font-size="7.5" text-anchor="middle" fill="#7a5a95">VersionSet/Edit</text>
+  <rect x="830" y="336" width="140" height="0" fill="none"/>
+
+  <!-- transaction node -->
+  <rect x="820" y="300" width="0" height="0"/>
+  <rect x="810" y="386" width="160" height="52" rx="11" fill="#faf4fb" stroke="#e2d2ee" filter="url(#soft)"/>
+  <text x="890" y="408" font-size="11" font-weight="700" text-anchor="middle" fill="#5a3d78">事务 / 快照</text><text x="890" y="426" font-size="7.5" text-anchor="middle" fill="#7a5a95">MVCC / 2PC / 锁</text>
+
+  <!-- CF organizing -->
+  <rect x="80" y="386" width="200" height="52" rx="11" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="180" y="408" font-size="11" font-weight="700" text-anchor="middle" fill="#5a3410">Column Family(组织)</text><text x="180" y="426" font-size="7.5" text-anchor="middle" fill="#93762e">各成树 · 共享 WAL</text>
+
+  <!-- pervasive layer -->
+  <rect x="30" y="458" width="1020" height="44" rx="12" fill="#f0f0f4" stroke="#d2d2d7"/>
+  <text x="540" y="485" font-size="10.5" font-weight="700" text-anchor="middle" fill="#48484a">贯穿层 · SequenceNumber + 内部键(user_key + seq + type)—— 横切写入/读取/Compaction/版本/事务的多版本基础</text>
+
+  <!-- legend + note -->
+  <rect x="30" y="514" width="1020" height="52" rx="12" fill="#f7f7f9" stroke="#ececf1"/>
+  <line x1="46" y1="532" x2="86" y2="532" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/><text x="94" y="535" font-size="8.5" fill="#6e6e73">实线:调用/数据流(写入→WAL→Flush→SST→Compaction;读取→SST→缓存)</text>
+  <line x1="530" y1="532" x2="570" y2="532" stroke="#c9b6de" stroke-width="1.4" stroke-dasharray="5 4" marker-end="url(#arp)"/><text x="578" y="535" font-size="8.5" fill="#6e6e73">虚线:状态约束(版本定位读取/记录 Compaction;快照约束回收下界;Flush 决定 WAL 可删)</text>
+  <text x="46" y="556" font-size="8.5" fill="#b1483a">· 三态张力:WAL+MemTable(新) ←Flush→ SST(旧,分层) ←Compaction→ 有序层级;版本记录活跃 SST 集合,快照与事务约束旧版本何时能被回收</text>
+</svg>

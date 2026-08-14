@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="360" viewBox="0 0 1000 360" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1000" height="360" fill="#fbfbfd"/>
+  <text x="30" y="28" font-size="14" font-weight="600" fill="#1d1d1f">用户指针安全访问：内核绝不直接解引用用户指针，一律经 copy_from/to_user 关卡</text>
+
+  <!-- legend -->
+  <g font-size="9.5">
+    <circle cx="36" cy="46" r="5" fill="#f4eefb" stroke="#d9c7ec"/><text x="46" y="49" fill="#6e6e73">用户态来源</text>
+    <circle cx="146" cy="46" r="5" fill="#eef3fb" stroke="#bcd0ec"/><text x="156" y="49" fill="#5b7db1">校验/拷贝关卡</text>
+    <circle cx="286" cy="46" r="5" fill="#eafaf1" stroke="#bfe0cd"/><text x="296" y="49" fill="#2f6f4f">内核安全使用</text>
+    <circle cx="426" cy="46" r="5" fill="#fdeeee" stroke="#e8b4b4"/><text x="436" y="49" fill="#7a1f1f">非法地址 → 拒绝</text>
+  </g>
+
+  <!-- 用户来源 -->
+  <rect x="40" y="118" width="150" height="88" rx="11" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="115" y="150" font-size="10.5" font-weight="600" fill="#3d2a5a" text-anchor="middle">用户传来指针</text>
+  <text x="115" y="172" font-size="9.5" fill="#6e6e73" text-anchor="middle">地址 + 长度</text>
+  <text x="115" y="192" font-size="9" fill="#6e6e73" text-anchor="middle">封装在 pt_regs</text>
+
+  <!-- 关卡链 -->
+  <rect x="230" y="92" width="470" height="140" rx="12" fill="#f6f9fe" stroke="#cfe0f5"/>
+  <text x="465" y="112" font-size="10" font-weight="600" fill="#1b2a4a" text-anchor="middle">copy_from_user / copy_to_user 的强制关卡</text>
+
+  <rect x="246" y="126" width="140" height="88" rx="10" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="316" y="150" font-size="10" font-weight="600" fill="#1b2a4a" text-anchor="middle">① access_ok</text>
+  <text x="316" y="171" font-size="9" fill="#5b7db1" text-anchor="middle">地址落在用户空间？</text>
+  <text x="316" y="189" font-size="9" fill="#5b7db1" text-anchor="middle">valid_user_address</text>
+  <text x="316" y="205" font-size="9" fill="#5b7db1" text-anchor="middle">防指向内核（提权）</text>
+
+  <rect x="398" y="126" width="140" height="88" rx="10" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="468" y="150" font-size="10" font-weight="600" fill="#1b2a4a" text-anchor="middle">② barrier_nospec</text>
+  <text x="468" y="171" font-size="9" fill="#5b7db1" text-anchor="middle">防投机执行</text>
+  <text x="468" y="189" font-size="9" fill="#5b7db1" text-anchor="middle">越界读泄漏</text>
+  <text x="468" y="205" font-size="9" fill="#5b7db1" text-anchor="middle">（Spectre 类）</text>
+
+  <rect x="550" y="126" width="140" height="88" rx="10" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="620" y="150" font-size="10" font-weight="600" fill="#1b2a4a" text-anchor="middle">③ 拷贝 + 清零</text>
+  <text x="620" y="171" font-size="9" fill="#5b7db1" text-anchor="middle">raw_copy 跨边界搬运</text>
+  <text x="620" y="189" font-size="9" fill="#5b7db1" text-anchor="middle">短拷贝：目标剩余</text>
+  <text x="620" y="205" font-size="9" fill="#5b7db1" text-anchor="middle">清零防信息泄漏</text>
+
+  <g stroke="#c7c7cc" stroke-width="1.5" fill="none">
+    <path d="M190,162 L246,170" marker-end="url(#ar)"/>
+    <path d="M386,170 L398,170" marker-end="url(#ar)"/>
+    <path d="M538,170 L550,170" marker-end="url(#ar)"/>
+  </g>
+
+  <!-- 成功 -->
+  <rect x="740" y="118" width="220" height="52" rx="11" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="850" y="140" font-size="10.5" font-weight="600" fill="#12402a" text-anchor="middle">内核安全使用该数据</text>
+  <text x="850" y="158" font-size="9" fill="#2f6f4f" text-anchor="middle">分派给对应能力域主线</text>
+
+  <!-- 失败 -->
+  <rect x="740" y="186" width="220" height="46" rx="11" fill="#fdeeee" stroke="#e8b4b4" filter="url(#soft)"/>
+  <text x="850" y="207" font-size="10.5" font-weight="600" fill="#7a1f1f" text-anchor="middle">access_ok 失败 → -EFAULT</text>
+  <text x="850" y="224" font-size="9" fill="#a85454" text-anchor="middle">不拷贝、直接拒绝</text>
+
+  <g stroke="#c7c7cc" stroke-width="1.5" fill="none">
+    <path d="M690,160 L740,144" marker-end="url(#ar)"/>
+  </g>
+  <g stroke="#e8b4b4" stroke-width="1.5" fill="none">
+    <path d="M316,214 L316,300 L740,300 L740,232" marker-end="url(#ar)"/>
+  </g>
+  <text x="360" y="294" font-size="9" fill="#a85454">① 校验不过</text>
+
+  <text x="465" y="338" font-size="9.5" fill="#86868b" text-anchor="middle">这是用户/内核地址空间隔离的强制关卡：先校验、再防投机、拷贝后清零，任何直接解引用用户指针都是提权或信息泄漏漏洞</text>
+</svg>

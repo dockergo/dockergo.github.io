@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="380" viewBox="0 0 920 380" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="arg" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#c99a3a"/></marker>
+    <marker id="arp" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#8944ab"/></marker>
+  </defs>
+  <rect width="920" height="380" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">diff 也是插件 · Applier（层tar→挂载点）与 Comparer（挂载点→层tar）双向对称</text>
+
+  <!-- content store 层 tar -->
+  <rect x="30" y="80" width="180" height="120" rx="12" fill="#fbf2ea" stroke="#e6cdae" filter="url(#soft)"/>
+  <text x="120" y="106" font-size="12" font-weight="600" fill="#b0651f" text-anchor="middle">content store</text>
+  <text x="120" y="130" font-size="10" fill="#b08535" text-anchor="middle">层 blob（压缩 tar）</text>
+  <text x="120" y="148" font-size="10" fill="#b08535" text-anchor="middle">gzip / zstd / 加密</text>
+  <text x="120" y="170" font-size="9.5" fill="#6e6e73" text-anchor="middle">按摘要读出</text>
+  <text x="120" y="188" font-size="8.5" fill="#a1a1a6" text-anchor="middle">内容寻址、不可变</text>
+
+  <!-- diff 插件 -->
+  <rect x="360" y="66" width="200" height="150" rx="12" fill="#faf4fb" stroke="#e4cdea" filter="url(#soft)"/>
+  <text x="460" y="90" font-size="12" font-weight="600" fill="#8944ab" text-anchor="middle">diff 插件（DiffPlugin）</text>
+  <rect x="376" y="102" width="168" height="44" rx="8" fill="#fff" stroke="#e4cdea"/>
+  <text x="460" y="121" font-size="10.5" font-weight="600" fill="#8944ab" text-anchor="middle">Applier（解包方向）</text>
+  <text x="460" y="137" font-size="8.5" fill="#9a76c0" text-anchor="middle">diff.go:80 · apply/apply.go:62</text>
+  <rect x="376" y="152" width="168" height="44" rx="8" fill="#fff" stroke="#e4cdea"/>
+  <text x="460" y="171" font-size="10.5" font-weight="600" fill="#8944ab" text-anchor="middle">Comparer（生成方向）</text>
+  <text x="460" y="187" font-size="8.5" fill="#9a76c0" text-anchor="middle">diff.go:57 · 算差异生成层</text>
+
+  <!-- snapshot 挂载点 -->
+  <rect x="710" y="80" width="180" height="120" rx="12" fill="#f5faf6" stroke="#cfe6d2" filter="url(#soft)"/>
+  <text x="800" y="106" font-size="12" font-weight="600" fill="#1d8f3f" text-anchor="middle">snapshot 挂载点</text>
+  <text x="800" y="130" font-size="10" fill="#4a8a5c" text-anchor="middle">Prepare 返回的 Mounts</text>
+  <text x="800" y="148" font-size="10" fill="#4a8a5c" text-anchor="middle">Active 快照的文件系统</text>
+  <text x="800" y="170" font-size="9.5" fill="#6e6e73" text-anchor="middle">写只落这一层</text>
+  <text x="800" y="188" font-size="8.5" fill="#a1a1a6" text-anchor="middle">apply 后 Commit 固化</text>
+
+  <!-- Applier 方向：content → mount -->
+  <path d="M210 118 L360 118" fill="none" stroke="#8944ab" stroke-width="1.8" marker-end="url(#arp)"/>
+  <path d="M560 124 L710 130" fill="none" stroke="#8944ab" stroke-width="1.8" marker-end="url(#arp)"/>
+  <text x="270" y="110" font-size="9" fill="#8944ab">读压缩 tar</text>
+  <text x="600" y="118" font-size="9" fill="#8944ab">解压写进挂载点（unpack）</text>
+
+  <!-- Comparer 方向：mount → content -->
+  <path d="M710 175 L560 180" fill="none" stroke="#c99a3a" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#arg)"/>
+  <path d="M360 186 L210 180" fill="none" stroke="#c99a3a" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#arg)"/>
+  <text x="590" y="200" font-size="9" fill="#c99a3a">读文件系统差异</text>
+  <text x="245" y="200" font-size="9" fill="#c99a3a">写成新层 tar（commit/diff）</text>
+
+  <text x="30" y="252" font-size="11.5" fill="#6e6e73"><tspan font-weight="600" fill="#1d1d1f">unpack 用 Applier：</tspan>在前一层快照上 Prepare 拿 Mounts → Applier 把层 tar 解压 apply 进挂载点 → Commit 成 Committed 快照，逐层链式</text>
+  <text x="30" y="278" font-size="11.5" fill="#6e6e73"><tspan font-weight="600" fill="#1d1d1f">可插拔：</tspan>DiffPlugin=io.containerd.differ.v1——压缩格式（gzip/zstd）、加密层由不同 differ 处理，解压逻辑不写死在核心</text>
+
+  <!-- 解耦提示 -->
+  <rect x="30" y="300" width="860" height="60" rx="11" fill="#f5faf6" stroke="#cfe6d2"/>
+  <text x="46" y="322" font-size="11" font-weight="600" fill="#1d8f3f">fetch 与 unpack 解耦、可流水线：拉取按内容寻址落盘、解包读盘 apply，两段并发（ConcurrentLayerFetchBuffer pull.go:82）</text>
+  <text x="46" y="344" font-size="9.5" fill="#4a8a5c">内容寻址使 unpack 幂等：已有摘要的层不重拉、已存在的快照层可跳过 · transfer 服务把"拉到 content + unpack 到 snapshot"封装成一次可插拔传输</text>
+</svg>

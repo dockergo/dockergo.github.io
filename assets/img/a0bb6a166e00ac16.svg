@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="520" viewBox="0 0 1080 520"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1080" height="520" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Milvus 向量索引类型 · knowhere 分发</text>
+  <text x="30" y="50" font-size="11" fill="#a1a1a6">IndexFactory::CreateVectorIndex 按 UseDiskLoad 分磁盘/内存两族;knowhere 是第三方 ANN 引擎,core 是集成/分发层</text>
+
+  <!-- Entry -->
+  <rect x="400" y="72" width="280" height="52" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="540" y="95" font-size="12" font-weight="600" fill="#12402a" text-anchor="middle">IndexFactory::CreateVectorIndex</text>
+  <text x="540" y="112" font-size="9" fill="#2f6f4f" text-anchor="middle">IndexFactory.cpp:1119 · 按 UseDiskLoad 分族</text>
+
+  <!-- branch to mem / disk -->
+  <path d="M540,124 L540,142 L270,142 L270,166" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M540,124 L540,142 L820,142 L820,166" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="360" y="158" font-size="9" fill="#a1a1a6" text-anchor="middle">UseDiskLoad=false</text>
+  <text x="720" y="158" font-size="9" fill="#a1a1a6" text-anchor="middle">UseDiskLoad=true</text>
+
+  <!-- 内存索引 group -->
+  <rect x="40" y="168" width="600" height="210" rx="14" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="60" y="192" font-size="12" font-weight="600" fill="#12402a">内存索引 VectorMemIndex</text>
+  <text x="60" y="209" font-size="9" fill="#2f6f4f">VectorMemIndex.cpp:190 · 经 knowhere::IndexFactory::Create · 索引主体在内存</text>
+
+  <!-- FLAT -->
+  <rect x="60" y="222" width="176" height="140" rx="11" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="148" y="246" font-size="12" font-weight="600" fill="#12402a" text-anchor="middle">FLAT</text>
+  <text x="148" y="264" font-size="9" fill="#2f6f4f" text-anchor="middle">INDEX_FAISS_IDMAP</text>
+  <text x="148" y="290" font-size="9.5" fill="#12402a" text-anchor="middle">暴力精确扫描</text>
+  <text x="148" y="308" font-size="9.5" fill="#12402a" text-anchor="middle">与全库逐一比距离</text>
+  <text x="148" y="334" font-size="9" fill="#2f6f4f" text-anchor="middle">小数据 / 高召回</text>
+  <text x="148" y="350" font-size="9" fill="#2f6f4f" text-anchor="middle">要精确用它但慢</text>
+
+  <!-- IVF -->
+  <rect x="248" y="222" width="176" height="140" rx="11" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="336" y="246" font-size="12" font-weight="600" fill="#12402a" text-anchor="middle">IVF 族</text>
+  <text x="336" y="264" font-size="9" fill="#2f6f4f" text-anchor="middle">IVFFLAT / IVF_PQ / IVF_SQ</text>
+  <text x="336" y="290" font-size="9.5" fill="#12402a" text-anchor="middle">倒排聚类</text>
+  <text x="336" y="308" font-size="9.5" fill="#12402a" text-anchor="middle">先粗筛簇再精搜</text>
+  <text x="336" y="334" font-size="9" fill="#2f6f4f" text-anchor="middle">nlist / nprobe 调</text>
+  <text x="336" y="350" font-size="9" fill="#2f6f4f" text-anchor="middle">PQ/SQ 省内存</text>
+
+  <!-- HNSW -->
+  <rect x="436" y="222" width="184" height="140" rx="11" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="528" y="246" font-size="12" font-weight="600" fill="#12402a" text-anchor="middle">HNSW</text>
+  <text x="528" y="264" font-size="9" fill="#2f6f4f" text-anchor="middle">分层小世界图</text>
+  <text x="528" y="290" font-size="9.5" fill="#12402a" text-anchor="middle">高召回高性能</text>
+  <text x="528" y="308" font-size="9.5" fill="#12402a" text-anchor="middle">(最常用)</text>
+  <text x="528" y="334" font-size="9" fill="#2f6f4f" text-anchor="middle">M / efConstruction</text>
+  <text x="528" y="350" font-size="9" fill="#2f6f4f" text-anchor="middle">内存够优先选</text>
+
+  <!-- 磁盘索引 group -->
+  <rect x="660" y="168" width="380" height="210" rx="14" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="680" y="192" font-size="12" font-weight="600" fill="#5a3410">磁盘索引 VectorDiskAnnIndex</text>
+  <text x="680" y="209" font-size="9" fill="#93762e">IndexFactory.cpp:1131 · UseDiskLoad 为真</text>
+
+  <rect x="680" y="222" width="340" height="140" rx="11" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="850" y="248" font-size="13" font-weight="600" fill="#5a3410" text-anchor="middle">DiskANN</text>
+  <text x="850" y="276" font-size="9.5" fill="#5a3410" text-anchor="middle">向量太大放不进内存时</text>
+  <text x="850" y="296" font-size="9.5" fill="#5a3410" text-anchor="middle">索引主体在 SSD</text>
+  <text x="850" y="322" font-size="9" fill="#93762e" text-anchor="middle">VectorDiskIndex.cpp</text>
+  <text x="850" y="340" font-size="9" fill="#93762e" text-anchor="middle">超大向量集的选择</text>
+
+  <!-- templates + scalar -->
+  <rect x="40" y="398" width="600" height="96" rx="13" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="60" y="422" font-size="11" font-weight="600" fill="#1d1d1f">模板数据类型覆盖(common/Types.h:93)</text>
+  <text x="60" y="446" font-size="10" fill="#3f3f45">float · float16 · bfloat16 · bin1 · int8 · sparse</text>
+  <text x="60" y="470" font-size="9.5" fill="#6e6e73">同一族索引对多种向量精度做模板实例化,覆盖稠密/半精度/二值/稀疏</text>
+  <text x="60" y="486" font-size="9.5" fill="#a1a1a6">metric_type 须与 embedding 训练一致</text>
+
+  <rect x="660" y="398" width="380" height="96" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="680" y="422" font-size="11" font-weight="600" fill="#1b2a4a">标量字段索引(独立于向量索引)</text>
+  <text x="680" y="446" font-size="10" fill="#274a78">倒排 inverted · bitmap · trie</text>
+  <text x="680" y="470" font-size="9.5" fill="#5b7db1">用于标量过滤/query 谓词,与 knowhere 向量索引</text>
+  <text x="680" y="486" font-size="9.5" fill="#5b7db1">分属不同索引体系,二者在检索时协作(见预过滤)</text>
+</svg>

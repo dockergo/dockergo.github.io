@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="430" viewBox="0 0 1000 430" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs><filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#0f9e8e"/></marker></defs>
+  <rect width="1000" height="430" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Parquet 原理 · null 编进定义级，数据区不存 null</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">空值的“空”信息被吸收进 definition levels;encoded values 区只存真实存在的值——大量 null 的列几乎不占值空间</text>
+
+  <!-- 逻辑列 -->
+  <text x="30" y="80" font-size="11" font-weight="700" fill="#1b2a4a">逻辑列（optional，max def = 1）：[10, null, null, 20, null, 30]</text>
+  <g text-anchor="middle" font-size="9.5">
+    <rect x="30" y="92" width="90" height="40" rx="8" fill="#e9f2ff" stroke="#a9ccf5"/><text x="75" y="117" fill="#0a3d78">10</text>
+    <rect x="126" y="92" width="90" height="40" rx="8" fill="#fbeaea" stroke="#e7c3c3"/><text x="171" y="117" fill="#7a2a2a">null</text>
+    <rect x="222" y="92" width="90" height="40" rx="8" fill="#fbeaea" stroke="#e7c3c3"/><text x="267" y="117" fill="#7a2a2a">null</text>
+    <rect x="318" y="92" width="90" height="40" rx="8" fill="#e9f2ff" stroke="#a9ccf5"/><text x="363" y="117" fill="#0a3d78">20</text>
+    <rect x="414" y="92" width="90" height="40" rx="8" fill="#fbeaea" stroke="#e7c3c3"/><text x="459" y="117" fill="#7a2a2a">null</text>
+    <rect x="510" y="92" width="90" height="40" rx="8" fill="#e9f2ff" stroke="#a9ccf5"/><text x="555" y="117" fill="#0a3d78">30</text>
+  </g>
+
+  <path d="M300,140 L300,166" stroke="#0f9e8e" stroke-width="1.8" fill="none" marker-end="url(#ar)"/>
+  <text x="310" y="160" font-size="8.4" fill="#0f9e8e">拆成两段存储</text>
+
+  <!-- definition levels -->
+  <text x="30" y="188" font-size="11" font-weight="700" fill="#0f6b5e">① definition levels（每个槽位一个，RLE 编码）</text>
+  <g text-anchor="middle" font-size="9.5">
+    <rect x="30" y="200" width="90" height="36" rx="8" fill="#e6f4f1" stroke="#b9dfd8"/><text x="75" y="223" fill="#0f6b5e">1</text>
+    <rect x="126" y="200" width="90" height="36" rx="8" fill="#e6f4f1" stroke="#b9dfd8"/><text x="171" y="223" fill="#0f6b5e">0</text>
+    <rect x="222" y="200" width="90" height="36" rx="8" fill="#e6f4f1" stroke="#b9dfd8"/><text x="267" y="223" fill="#0f6b5e">0</text>
+    <rect x="318" y="200" width="90" height="36" rx="8" fill="#e6f4f1" stroke="#b9dfd8"/><text x="363" y="223" fill="#0f6b5e">1</text>
+    <rect x="414" y="200" width="90" height="36" rx="8" fill="#e6f4f1" stroke="#b9dfd8"/><text x="459" y="223" fill="#0f6b5e">0</text>
+    <rect x="510" y="200" width="90" height="36" rx="8" fill="#e6f4f1" stroke="#b9dfd8"/><text x="555" y="223" fill="#0f6b5e">1</text>
+  </g>
+  <text x="616" y="223" font-size="8.6" fill="#2f6f5f">def=1 有值 / def=0 为 null（本例 max=1）</text>
+
+  <!-- encoded values -->
+  <text x="30" y="270" font-size="11" font-weight="700" fill="#0a3d78">② encoded values（只存 def=max 的槽位，null 不占位）</text>
+  <g text-anchor="middle" font-size="9.5">
+    <rect x="30" y="282" width="90" height="36" rx="8" fill="#e9f2ff" stroke="#a9ccf5"/><text x="75" y="305" fill="#0a3d78">10</text>
+    <rect x="126" y="282" width="90" height="36" rx="8" fill="#e9f2ff" stroke="#a9ccf5"/><text x="171" y="305" fill="#0a3d78">20</text>
+    <rect x="222" y="282" width="90" height="36" rx="8" fill="#e9f2ff" stroke="#a9ccf5"/><text x="267" y="305" fill="#0a3d78">30</text>
+  </g>
+  <text x="330" y="305" font-size="8.6" fill="#2a5a92">仅 3 个真实值 → 值区不为 null 预留任何字节</text>
+
+  <rect x="30" y="336" width="940" height="82" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="48" y="360" font-size="9.6" fill="#12402a">读回：逐槽看 def level——达到 max 就从值区取下一个值,否则输出 null。值区指针只在“有值”时前进。</text>
+  <text x="48" y="380" font-size="9.6" fill="#2f6f5f">收益：全 null 列 → def levels 全 0（RLE 压成一段 run）、值区为空,几乎零成本;稀疏列同理高度节省。</text>
+  <text x="48" y="400" font-size="8.6" fill="#4c8567">对比行存/含 null 位图：Parquet 不单独存 null 位图,复用 def level 同时表达“是否为 null + 在哪层为 null”。REQUIRED 列 max def=0,连 def level 都可省。</text>
+</svg>

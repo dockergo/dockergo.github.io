@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="540" viewBox="0 0 1080 540" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="540" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">RocksDB Flush 全景 · immutable MemTable → L0 SST（FlushJob::Run）</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">后台线程把只读 immutable(已有序)顺序写成不可变 L0 SST,登记进新 Version,释放内存与老 WAL</text>
+
+  <g font-size="8.8" text-anchor="middle">
+    <rect x="30" y="80" width="200" height="70" rx="10" fill="#eef3fb" stroke="#bcd0ec"/><text x="130" y="102" font-size="9.5" font-weight="700" fill="#1b2a4a">① FlushScheduler</text><text x="130" y="122" fill="#5b7db1">给出待 flush 的 CF</text><text x="130" y="138" fill="#5b7db1">(无锁栈记录)</text>
+    <rect x="250" y="80" width="200" height="70" rx="10" fill="#eef3fb" stroke="#bcd0ec"/><text x="350" y="102" font-size="9.5" font-weight="700" fill="#1b2a4a">② 取 immutable</text><text x="350" y="122" fill="#5b7db1">可多个一起 flush</text><text x="350" y="138" fill="#5b7db1">建有序迭代器</text>
+    <rect x="470" y="80" width="200" height="70" rx="10" fill="#fdf6ea" stroke="#efdcb4"/><text x="570" y="102" font-size="9.5" font-weight="700" fill="#5a3410">③ TableBuilder</text><text x="570" y="122" fill="#93762e">顺序写 BlockBasedTable</text><text x="570" y="138" fill="#93762e">建 filter/index(有序免排序)</text>
+    <rect x="690" y="80" width="180" height="70" rx="10" fill="#fdf6ea" stroke="#efdcb4"/><text x="780" y="102" font-size="9.5" font-weight="700" fill="#5a3410">④ FileMetaData</text><text x="780" y="122" fill="#93762e">smallest/largest key</text><text x="780" y="138" fill="#93762e">seq 范围、文件号</text>
+    <rect x="890" y="80" width="160" height="70" rx="10" fill="#eafaf1" stroke="#bfe0cd"/><text x="970" y="102" font-size="9.5" font-weight="700" fill="#12402a">⑤ VersionEdit</text><text x="970" y="122" fill="#2f6f4f">LogAndApply</text><text x="970" y="138" fill="#2f6f4f">L0 加文件,换版本</text>
+  </g>
+  <line x1="230" y1="115" x2="250" y2="115" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="450" y1="115" x2="470" y2="115" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="670" y1="115" x2="690" y2="115" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="870" y1="115" x2="890" y2="115" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+
+  <!-- before/after memory-disk -->
+  <rect x="30" y="176" width="500" height="180" rx="13" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="46" y="198" font-size="11" font-weight="700" fill="#1b2a4a">内存侧(flush 前)</text>
+  <rect x="46" y="210" width="470" height="40" rx="8" fill="#eafaf1" stroke="#bfe0cd"/><text x="281" y="230" text-anchor="middle" font-size="9" fill="#12402a">活跃 MemTable(可写)</text><text x="281" y="244" text-anchor="middle" font-size="8" fill="#2f6f4f">继续接新写,不受 flush 影响</text>
+  <rect x="46" y="258" width="470" height="40" rx="8" fill="#f3f7fc" stroke="#cfe0f2"/><text x="281" y="278" text-anchor="middle" font-size="9" fill="#1b2a4a">immutable MemTable(只读,被 flush)</text><text x="281" y="292" text-anchor="middle" font-size="8" fill="#5b7db1">已有序 → 顺序遍历写出</text>
+  <rect x="46" y="306" width="470" height="40" rx="8" fill="#fff" stroke="#bcd0ec"/><text x="60" y="326" font-size="8.5" fill="#1b2a4a">flush 完:immutable 释放内存,覆盖它的 WAL 段可删</text><text x="60" y="340" font-size="8" fill="#93762e">(需该 WAL 覆盖的所有 CF 都 flush)</text>
+
+  <rect x="550" y="176" width="500" height="180" rx="13" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="566" y="198" font-size="11" font-weight="700" fill="#5a3410">磁盘侧(flush 后)</text>
+  <rect x="566" y="210" width="470" height="50" rx="8" fill="#fef2e0" stroke="#e8cf9a"/><text x="801" y="230" text-anchor="middle" font-size="9" fill="#5a3410">L0 新增一个不可变 SST</text><text x="801" y="246" text-anchor="middle" font-size="8" fill="#93762e">L0 文件间可重叠(直接接 flush,未整理)</text>
+  <rect x="566" y="268" width="470" height="40" rx="8" fill="#fdf6ea" stroke="#efdcb4"/><text x="801" y="288" text-anchor="middle" font-size="9" fill="#93762e">L0 文件数增 → 可能触发 Compaction</text><text x="801" y="302" text-anchor="middle" font-size="8" fill="#93762e">level0_file_num_compaction_trigger</text>
+  <rect x="566" y="316" width="470" height="30" rx="8" fill="#fff" stroke="#efdcb4"/><text x="580" y="335" font-size="8.5" fill="#5a3410">数据已持久到 SST → 不再依赖 WAL(该段可删/归档)</text>
+
+  <line x1="530" y1="266" x2="550" y2="235" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <text x="540" y="256" font-size="7.5" fill="#a1a1a6">flush</text>
+
+  <!-- notes -->
+  <rect x="30" y="372" width="1020" height="150" rx="13" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="46" y="394" font-size="11" font-weight="700" fill="#1d1d1f">要点</text>
+  <text x="46" y="416" font-size="9" fill="#6e6e73">· Flush 是内存→磁盘的桥:MemTable 已有序,flush 只顺序写出(无需排序),这是"有序 MemTable"的红利</text>
+  <text x="46" y="434" font-size="9" fill="#6e6e73">· 可攒 min_write_buffer_number_to_merge 个 immutable 一起 flush → 减少 L0 小文件、降后续 Compaction 压力</text>
+  <text x="46" y="452" font-size="9" fill="#6e6e73">· 与后台线程池(max_background_jobs)共享:flush 和 compaction 抢同一批线程;flush 优先级通常高于 compaction</text>
+  <text x="46" y="470" font-size="9" fill="#6e6e73">· atomic_flush:多 CF 原子一起 flush,用于需跨 CF 一致恢复点的场景</text>
+  <text x="46" y="492" font-size="9" fill="#b1483a">· 归属:触发源 MemTable 轮转在【写入路径】;产物 SST 格式在【SST】;登记 Version 在【版本】;WAL 可删时机在【WAL】</text>
+  <text x="46" y="512" font-size="8.5" fill="#a1a1a6">· flush 失败(如磁盘满)会重试;持续失败会阻塞写(immutable 堆满 → 写停顿)</text>
+</svg>

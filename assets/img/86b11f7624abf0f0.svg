@@ -1,0 +1,140 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="548" viewBox="0 0 1080 548" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="548" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">ORC 原理 · 依赖矩阵（读写 × 能力域）</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">写路径与读路径各依赖哪些能力域：写=攒/编码/落盘，读=倒读/剪枝/解码；同一格式两条路径用到的能力域并不相同</text>
+
+  <!-- column headers (capability domains) -->
+  <rect x="118" y="86" width="150" height="46" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="193" y="110" font-size="10.5" font-weight="700" text-anchor="middle" fill="#1b2a4a">文件布局</text>
+  <text x="193" y="126" font-size="8.2" text-anchor="middle" fill="#5b7db1">布局域（核心）</text>
+
+  <rect x="273" y="86" width="150" height="46" rx="11" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="348" y="110" font-size="10.5" font-weight="700" text-anchor="middle" fill="#12402a">列编码</text>
+  <text x="348" y="126" font-size="8.2" text-anchor="middle" fill="#2f6f4f">编码域</text>
+
+  <rect x="428" y="86" width="150" height="46" rx="11" fill="#e7f0fb" stroke="#b9d2ef" filter="url(#soft)"/>
+  <text x="503" y="110" font-size="10.5" font-weight="700" text-anchor="middle" fill="#1b2a4a">行组与索引</text>
+  <text x="503" y="126" font-size="8.2" text-anchor="middle" fill="#5b7db1">索引域</text>
+
+  <rect x="583" y="86" width="150" height="46" rx="11" fill="#fbeaea" stroke="#e7c3c3" filter="url(#soft)"/>
+  <text x="658" y="110" font-size="10.5" font-weight="700" text-anchor="middle" fill="#4a1414">谓词下推</text>
+  <text x="658" y="126" font-size="8.2" text-anchor="middle" fill="#7a2a2a">剪枝域</text>
+
+  <rect x="738" y="86" width="150" height="46" rx="11" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="813" y="110" font-size="10.5" font-weight="700" text-anchor="middle" fill="#5a3410">列统计与布隆</text>
+  <text x="813" y="126" font-size="8.2" text-anchor="middle" fill="#93762e">统计域</text>
+
+  <rect x="893" y="86" width="150" height="46" rx="11" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="968" y="110" font-size="10.5" font-weight="700" text-anchor="middle" fill="#3d2a5a">类型系统</text>
+  <text x="968" y="126" font-size="8.2" text-anchor="middle" fill="#8a6db3">类型域</text>
+
+  <!-- row label: 写 -->
+  <rect x="30" y="146" width="80" height="120" rx="12" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="70" y="200" font-size="18" font-weight="700" text-anchor="middle" fill="#5a3410">写</text>
+  <text x="70" y="222" font-size="8" text-anchor="middle" fill="#93762e">WriterImpl</text>
+  <text x="70" y="236" font-size="8" text-anchor="middle" fill="#93762e">前台攒写</text>
+
+  <!-- 写 × 文件布局 -->
+  <rect x="118" y="146" width="150" height="120" rx="11" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="193" y="188" font-size="17" font-weight="700" text-anchor="middle" fill="#1b2a4a">✓</text>
+  <text x="193" y="216" font-size="8.6" text-anchor="middle" fill="#5b7db1">写 stripe 四段结构</text>
+  <text x="193" y="232" font-size="8.6" text-anchor="middle" fill="#5b7db1">index-then-data 落盘</text>
+  <text x="193" y="248" font-size="8.6" text-anchor="middle" fill="#5b7db1">收尾写 footer</text>
+
+  <!-- 写 × 列编码 -->
+  <rect x="273" y="146" width="150" height="120" rx="11" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="348" y="188" font-size="17" font-weight="700" text-anchor="middle" fill="#12402a">✓</text>
+  <text x="348" y="216" font-size="8.6" text-anchor="middle" fill="#2f6f4f">TreeWriter 填 stream</text>
+  <text x="348" y="232" font-size="8.6" text-anchor="middle" fill="#2f6f4f">整数 RLE / 字符串字典</text>
+  <text x="348" y="248" font-size="8.6" text-anchor="middle" fill="#2f6f4f">记 ColumnEncoding</text>
+
+  <!-- 写 × 行组与索引 -->
+  <rect x="428" y="146" width="150" height="120" rx="11" fill="#e7f0fb" stroke="#b9d2ef"/>
+  <text x="503" y="188" font-size="17" font-weight="700" text-anchor="middle" fill="#1b2a4a">✓</text>
+  <text x="503" y="216" font-size="8.6" text-anchor="middle" fill="#5b7db1">建 row-group 索引</text>
+  <text x="503" y="232" font-size="8.6" text-anchor="middle" fill="#5b7db1">positions + 组统计</text>
+  <text x="503" y="248" font-size="8.6" text-anchor="middle" fill="#5b7db1">stride 默认 10000 行</text>
+
+  <!-- 写 × 谓词下推 -->
+  <rect x="583" y="146" width="150" height="120" rx="11" fill="#f7f7f9" stroke="#e3e3e8"/>
+  <text x="658" y="188" font-size="17" font-weight="700" text-anchor="middle" fill="#c3c3c9">—</text>
+  <text x="658" y="216" font-size="8.6" text-anchor="middle" fill="#a1a1a6">写不构造 SARG</text>
+  <text x="658" y="232" font-size="8.6" text-anchor="middle" fill="#a1a1a6">下推是读时行为</text>
+  <text x="658" y="248" font-size="8.6" text-anchor="middle" fill="#a1a1a6">写侧只攒统计供其用</text>
+
+  <!-- 写 × 列统计与布隆 -->
+  <rect x="738" y="146" width="150" height="120" rx="11" fill="#fff7e6" stroke="#e8cf9a"/>
+  <text x="813" y="188" font-size="17" font-weight="700" text-anchor="middle" fill="#5a3410">✓</text>
+  <text x="813" y="216" font-size="8.6" text-anchor="middle" fill="#93762e">3 级统计边写边攒</text>
+  <text x="813" y="232" font-size="8.6" text-anchor="middle" fill="#93762e">min/max/count/sum</text>
+  <text x="813" y="248" font-size="8.6" text-anchor="middle" fill="#93762e">可选建布隆过滤器</text>
+
+  <!-- 写 × 类型系统 -->
+  <rect x="893" y="146" width="150" height="120" rx="11" fill="#f4eefb" stroke="#d9c7ec"/>
+  <text x="968" y="188" font-size="17" font-weight="700" text-anchor="middle" fill="#3d2a5a">✓</text>
+  <text x="968" y="216" font-size="8.6" text-anchor="middle" fill="#8a6db3">TypeDescription 定 schema</text>
+  <text x="968" y="232" font-size="8.6" text-anchor="middle" fill="#8a6db3">列 ID 前序编号</text>
+  <text x="968" y="248" font-size="8.6" text-anchor="middle" fill="#8a6db3">驱动 TreeWriter 树</text>
+
+  <!-- row label: 读 -->
+  <rect x="30" y="276" width="80" height="120" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="70" y="330" font-size="18" font-weight="700" text-anchor="middle" fill="#1b2a4a">读</text>
+  <text x="70" y="352" font-size="8" text-anchor="middle" fill="#5b7db1">ReaderImpl</text>
+  <text x="70" y="366" font-size="8" text-anchor="middle" fill="#5b7db1">前台倒读</text>
+
+  <!-- 读 × 文件布局 -->
+  <rect x="118" y="276" width="150" height="120" rx="11" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="193" y="318" font-size="17" font-weight="700" text-anchor="middle" fill="#1b2a4a">✓</text>
+  <text x="193" y="346" font-size="8.6" text-anchor="middle" fill="#5b7db1">从尾倒读 postscript</text>
+  <text x="193" y="362" font-size="8.6" text-anchor="middle" fill="#5b7db1">→ footer 拿全文件地图</text>
+  <text x="193" y="378" font-size="8.6" text-anchor="middle" fill="#5b7db1">一次 16KB 尾读</text>
+
+  <!-- 读 × 列编码 -->
+  <rect x="273" y="276" width="150" height="120" rx="11" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="348" y="318" font-size="17" font-weight="700" text-anchor="middle" fill="#12402a">✓</text>
+  <text x="348" y="346" font-size="8.6" text-anchor="middle" fill="#2f6f4f">按 ColumnEncoding</text>
+  <text x="348" y="362" font-size="8.6" text-anchor="middle" fill="#2f6f4f">TreeReader 解码 stream</text>
+  <text x="348" y="378" font-size="8.6" text-anchor="middle" fill="#2f6f4f">RLE / 字典还原值</text>
+
+  <!-- 读 × 行组与索引 (间接) -->
+  <rect x="428" y="276" width="150" height="120" rx="11" fill="#f3f7fc" stroke="#cfe0f2" stroke-dasharray="5 4"/>
+  <text x="503" y="318" font-size="17" font-weight="700" text-anchor="middle" fill="#5b7db1">△</text>
+  <text x="503" y="346" font-size="8.6" text-anchor="middle" fill="#5b7db1">经谓词下推间接用</text>
+  <text x="503" y="362" font-size="8.6" text-anchor="middle" fill="#5b7db1">positions seek 到组起点</text>
+  <text x="503" y="378" font-size="8.6" text-anchor="middle" fill="#5b7db1">跳不命中 row-group</text>
+
+  <!-- 读 × 谓词下推 -->
+  <rect x="583" y="276" width="150" height="120" rx="11" fill="#fbeaea" stroke="#e7c3c3"/>
+  <text x="658" y="318" font-size="17" font-weight="700" text-anchor="middle" fill="#4a1414">✓</text>
+  <text x="658" y="346" font-size="8.6" text-anchor="middle" fill="#7a2a2a">SARG 剪 stripe/RG</text>
+  <text x="658" y="362" font-size="8.6" text-anchor="middle" fill="#7a2a2a">三态 TruthValue 求值</text>
+  <text x="658" y="378" font-size="8.6" text-anchor="middle" fill="#7a2a2a">pickRowGroups 决定读否</text>
+
+  <!-- 读 × 列统计与布隆 -->
+  <rect x="738" y="276" width="150" height="120" rx="11" fill="#fff7e6" stroke="#e8cf9a"/>
+  <text x="813" y="318" font-size="17" font-weight="700" text-anchor="middle" fill="#5a3410">✓</text>
+  <text x="813" y="346" font-size="8.6" text-anchor="middle" fill="#93762e">min/max 判范围剪枝</text>
+  <text x="813" y="362" font-size="8.6" text-anchor="middle" fill="#93762e">布隆补等值查询</text>
+  <text x="813" y="378" font-size="8.6" text-anchor="middle" fill="#93762e">跳 stripe / row-group</text>
+
+  <!-- 读 × 类型系统 (间接) -->
+  <rect x="893" y="276" width="150" height="120" rx="11" fill="#faf6fe" stroke="#e3d3f2" stroke-dasharray="5 4"/>
+  <text x="968" y="318" font-size="17" font-weight="700" text-anchor="middle" fill="#8a6db3">△</text>
+  <text x="968" y="346" font-size="8.6" text-anchor="middle" fill="#8a6db3">经接触面 footer types[]</text>
+  <text x="968" y="362" font-size="8.6" text-anchor="middle" fill="#8a6db3">建 TreeReader 树</text>
+  <text x="968" y="378" font-size="8.6" text-anchor="middle" fill="#8a6db3">按列 ID 定位 stream</text>
+
+  <!-- legend + summary band -->
+  <rect x="30" y="410" width="1013" height="108" rx="14" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="46" y="432" font-size="11" font-weight="700" fill="#1d1d1f">图例</text>
+  <text x="120" y="432" font-size="9.4" fill="#2f6f4f"><tspan font-weight="700">✓</tspan> 直接依赖</text>
+  <text x="270" y="432" font-size="9.4" fill="#5b7db1"><tspan font-weight="700">△</tspan> 间接依赖（经他域 / 接触面）</text>
+  <text x="560" y="432" font-size="9.4" fill="#a1a1a6"><tspan font-weight="700">—</tspan> 不依赖</text>
+  <text x="46" y="462" font-size="9.4" fill="#6e6e73"><tspan font-weight="600" fill="#5a3410">写</tspan> 依赖：文件布局（stripe 结构）+ 列编码（stream/RLE/字典）+ 行组与索引（建组统计）+ 列统计与布隆（3 级统计）+ 类型系统 —— 全前台攒写落盘。</text>
+  <text x="46" y="484" font-size="9.4" fill="#6e6e73"><tspan font-weight="600" fill="#1b2a4a">读</tspan> 依赖：文件布局（倒读）+ 谓词下推（SARG 剪枝）+ 列统计与布隆（跳 stripe/row-group）+ 列编码（解码）—— 行组索引经下推间接用、类型经接触面建 reader 树。</text>
+  <text x="46" y="506" font-size="9" fill="#a1a1a6">要点：谓词下推只在读侧（写不构造 SARG）；写侧攒的 3 级统计 + 布隆，正是读侧下推剪枝的燃料 —— 一次写入，服务后续所有查询的跳读。</text>
+</svg>

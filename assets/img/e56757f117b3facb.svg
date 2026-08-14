@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="480" viewBox="0 0 920 480"
+     font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="920" height="480" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">块汇报对账:DataNode 实际持有块 校准 NameNode 内存 blocksMap</text>
+
+  <!-- 全量 -->
+  <rect x="30" y="56" width="430" height="200" rx="13" fill="#f3f7fc" stroke="#cfe0f2"/>
+  <text x="48" y="80" font-size="11.5" font-weight="600" fill="#1b2a4a">全量块汇报(Full Block Report)</text>
+  <rect x="48" y="94" width="394" height="44" rx="9" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="245" y="114" font-size="9.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">默认每 6 小时(DFSConfigKeys.java:1116)</text>
+  <text x="245" y="130" font-size="8.3" fill="#5b7db1" text-anchor="middle">blockReport(BPServiceActor.java:386) 发全部块列表</text>
+  <rect x="48" y="148" width="192" height="94" rx="9" fill="#ffffff" stroke="#bcd0ec"/>
+  <text x="144" y="170" font-size="9" font-weight="600" fill="#1b2a4a" text-anchor="middle">首次汇报</text>
+  <text x="144" y="190" font-size="8.2" fill="#5b7db1" text-anchor="middle">processFirstBlockReport</text>
+  <text x="144" y="206" font-size="8.2" fill="#5b7db1" text-anchor="middle">(BlockManager.java:3278)</text>
+  <text x="144" y="226" font-size="8.2" fill="#5b7db1" text-anchor="middle">直接建映射</text>
+  <rect x="250" y="148" width="192" height="94" rx="9" fill="#ffffff" stroke="#bcd0ec"/>
+  <text x="346" y="170" font-size="9" font-weight="600" fill="#1b2a4a" text-anchor="middle">后续汇报</text>
+  <text x="346" y="190" font-size="8.2" fill="#5b7db1" text-anchor="middle">reportDiff(:3349) 比对差异</text>
+  <text x="346" y="208" font-size="8.2" fill="#5b7db1" text-anchor="middle">内存有汇报无 → 待删/丢失</text>
+  <text x="346" y="226" font-size="8.2" fill="#5b7db1" text-anchor="middle">汇报有内存无 → 加入/多余</text>
+
+  <!-- 增量 -->
+  <rect x="480" y="56" width="410" height="200" rx="13" fill="#fff7e6" stroke="#f0dcae"/>
+  <text x="498" y="80" font-size="11.5" font-weight="600" fill="#7a4d00">增量块汇报(IBR)</text>
+  <rect x="498" y="94" width="374" height="44" rx="9" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="685" y="114" font-size="9.5" font-weight="600" fill="#7a4d00" text-anchor="middle">块新增/删除时即时上报(不等 6 小时)</text>
+  <text x="685" y="130" font-size="8.3" fill="#9a7328" text-anchor="middle">IncrementalBlockReportManager(BPServiceActor.java:125)</text>
+  <rect x="498" y="148" width="374" height="94" rx="9" fill="#ffffff" stroke="#efdcb4"/>
+  <text x="685" y="172" font-size="9" font-weight="600" fill="#7a4d00" text-anchor="middle">让映射快速收敛</text>
+  <text x="685" y="194" font-size="8.5" fill="#9a7328" text-anchor="middle">pipeline 写完一个块 → 立即 IBR</text>
+  <text x="685" y="214" font-size="8.5" fill="#9a7328" text-anchor="middle">删块 / 移块 → 立即 IBR</text>
+  <text x="685" y="234" font-size="8.5" fill="#9a7328" text-anchor="middle">全量汇报是兜底、IBR 保实时性</text>
+
+  <!-- blocksMap -->
+  <rect x="230" y="284" width="460" height="80" rx="13" fill="#eafaf1" stroke="#bce6cd" filter="url(#soft)"/>
+  <text x="460" y="310" font-size="11" font-weight="600" fill="#0f5132" text-anchor="middle">NameNode 内存 blocksMap(block ↔ DataNode)</text>
+  <text x="460" y="332" font-size="9" fill="#3f8f66" text-anchor="middle">不持久化 · 靠上面两种汇报重建与校准</text>
+  <text x="460" y="352" font-size="8.5" fill="#3f8f66" text-anchor="middle">BlockManager.java:340</text>
+  <path d="M245,256 L360,284" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M685,256 L560,284" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <!-- 安全模式 -->
+  <rect x="30" y="386" width="860" height="72" rx="13" fill="#f4eefb" stroke="#d9c9ef"/>
+  <text x="48" y="410" font-size="11" font-weight="600" fill="#3c1361">启动安全模式(Safe Mode)</text>
+  <text x="48" y="432" font-size="9" fill="#7c5aa6">· NameNode 重启后 blocksMap 为空,不知块在哪 → 进安全模式(只读),等块汇报累积到阈值(可用块占比达标)才退出、开放写</text>
+  <text x="48" y="452" font-size="9" fill="#7c5aa6">· 这是正常的「等汇报重建映射」阶段,达阈值自动退出 —— 不是故障</text>
+</svg>

@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="520" viewBox="0 0 1080 520" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="520" fill="#fbfbfd"/>
+
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">块布局与 reshape_and_cache · KV 缓存在显存里怎么组织</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">cache_kernels.cu · 每步把新 token 的 KV 精确写入对应块槽,无需搬动已有块</text>
+
+  <!-- 物理布局 (amber 存储) -->
+  <rect x="30" y="78" width="1020" height="130" rx="14" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="50" y="104" font-size="12.5" font-weight="600" fill="#5a3410">物理布局 · cache_kernels.cu:700 (注释)</text>
+  <rect x="50" y="118" width="600" height="44" rx="8" fill="#ffffff" stroke="#e8cf9a"/>
+  <text x="70" y="146" font-size="12" font-weight="600" fill="#5a3410" font-family="'SF Mono','Menlo',monospace">[num_blocks, num_heads, head_size/x, block_size, x]</text>
+  <text x="50" y="184" font-size="9.5" fill="#93762e">按「块 × 头 × 块内位置」组织 → 让 CUDA kernel 能合并访存(coalesced),注意力按「头 × 块内位置」高效读取。</text>
+
+  <!-- 写入 reshape_and_cache (green) -->
+  <rect x="30" y="232" width="330" height="256" rx="14" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="50" y="258" font-size="12" font-weight="600" fill="#12402a">写入 · reshape_and_cache_kernel</text>
+  <text x="50" y="278" font-size="9.5" fill="#2f6f4f">cache_kernels.cu:255 (flash 版 :315)</text>
+
+  <!-- 新 token → 块槽 图示 -->
+  <rect x="50" y="296" width="80" height="40" rx="6" fill="#ffffff" stroke="#bfe0cd"/>
+  <text x="90" y="320" font-size="9.5" text-anchor="middle" fill="#12402a">新 token</text>
+  <text x="90" y="333" font-size="8" text-anchor="middle" fill="#4a8a63">算出 K/V</text>
+
+  <rect x="196" y="290" width="146" height="52" rx="6" fill="#f5faf6" stroke="#cfe6d5"/>
+  <rect x="206" y="300" width="26" height="32" rx="3" fill="#c8ead6" stroke="#6cbf90"/>
+  <rect x="236" y="300" width="26" height="32" rx="3" fill="#c8ead6" stroke="#6cbf90"/>
+  <rect x="266" y="300" width="26" height="32" rx="3" fill="#8fd6ac" stroke="#6cbf90"/>
+  <rect x="296" y="300" width="26" height="32" rx="3" fill="#ffffff" stroke="#bfe0cd" stroke-dasharray="3 2"/>
+  <text x="269" y="358" font-size="8.5" text-anchor="middle" fill="#2f6f4f">所属块的对应槽位</text>
+
+  <path d="M130,316 L196,316" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <text x="50" y="392" font-size="9.5" fill="#2f6f4f">每生成一个 token,把该 token 的</text>
+  <text x="50" y="410" font-size="9.5" fill="#2f6f4f">K/V 写进它所属块的对应槽位。</text>
+  <text x="50" y="440" font-size="9.5" fill="#4a8a63">在每步前向后写入,已有块不动。</text>
+  <text x="50" y="466" font-size="9" fill="#4a8a63">reshape_and_cache 精确定位块槽。</text>
+
+  <!-- 块拷贝 copy_blocks (blue) -->
+  <rect x="384" y="232" width="330" height="256" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="404" y="258" font-size="12" font-weight="600" fill="#1b2a4a">块拷贝 · copy_blocks_kernel</text>
+  <text x="404" y="278" font-size="9.5" fill="#5b7db1">cache_kernels.cu:191</text>
+
+  <rect x="404" y="298" width="120" height="46" rx="6" fill="#ffffff" stroke="#bcd0ec"/>
+  <text x="464" y="320" font-size="9.5" text-anchor="middle" fill="#1b2a4a">源块</text>
+  <text x="464" y="335" font-size="8" text-anchor="middle" fill="#7a9dcb">共享 / 分叉</text>
+  <rect x="574" y="298" width="120" height="46" rx="6" fill="#ffffff" stroke="#bcd0ec"/>
+  <text x="634" y="320" font-size="9.5" text-anchor="middle" fill="#1b2a4a">目标块</text>
+  <text x="634" y="335" font-size="8" text-anchor="middle" fill="#7a9dcb">新副本</text>
+  <path d="M524,321 L574,321" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <text x="404" y="384" font-size="9.5" fill="#5b7db1">需要复制块时(如 copy-on-write</text>
+  <text x="404" y="402" font-size="9.5" fill="#5b7db1">分叉)搬块。</text>
+  <text x="404" y="440" font-size="9.5" fill="#7a9dcb">CoW:共享块被写前先复制,</text>
+  <text x="404" y="458" font-size="9.5" fill="#7a9dcb">保证互不干扰。</text>
+
+  <!-- 块表 (purple) -->
+  <rect x="738" y="232" width="312" height="256" rx="14" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="758" y="258" font-size="12" font-weight="600" fill="#3d2a5a">块表 · 每请求维护</text>
+  <text x="758" y="278" font-size="9.5" fill="#7a5aa0">逻辑位置 → 物理块号</text>
+
+  <rect x="758" y="298" width="272" height="150" rx="9" fill="#ffffff" stroke="#d9c7ec"/>
+  <text x="774" y="322" font-size="9.5" font-weight="600" fill="#3d2a5a">逻辑块</text>
+  <text x="960" y="322" font-size="9.5" font-weight="600" text-anchor="end" fill="#3d2a5a">物理块号</text>
+  <text x="774" y="350" font-size="9.5" fill="#6e6e73">L0</text>
+  <text x="960" y="350" font-size="9.5" text-anchor="end" fill="#6e6e73">→  #7</text>
+  <text x="774" y="376" font-size="9.5" fill="#6e6e73">L1</text>
+  <text x="960" y="376" font-size="9.5" text-anchor="end" fill="#6e6e73">→  #2</text>
+  <text x="774" y="402" font-size="9.5" fill="#6e6e73">L2</text>
+  <text x="960" y="402" font-size="9.5" text-anchor="end" fill="#6e6e73">→  #9</text>
+  <text x="774" y="428" font-size="9.5" fill="#6e6e73">L3</text>
+  <text x="960" y="428" font-size="9.5" text-anchor="end" fill="#6e6e73">→  #4</text>
+
+  <text x="758" y="474" font-size="9" fill="#7a5aa0">逻辑连续、物理分散,块表居中映射。</text>
+</svg>

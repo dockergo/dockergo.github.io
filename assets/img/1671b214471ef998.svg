@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="360" viewBox="0 0 900 360" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="b1" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="b1h" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+  </defs>
+  <rect width="900" height="360" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">B+树聚簇索引 · 主键即数据，叶子存整行</text>
+  <text x="30" y="48" font-size="10.5" fill="#6e6e73">从根逐层下探定位；范围扫描沿叶子链表；二级索引叶子只存主键 → 回表</text>
+
+  <!-- 聚簇索引树 -->
+  <text x="60" y="82" font-size="11" font-weight="700" fill="#8a6d3b">聚簇索引（主键 B+树）</text>
+  <g text-anchor="middle">
+    <rect x="230" y="90" width="120" height="34" rx="7" fill="#fbf7ef" stroke="#ecdcbf" filter="url(#b1)"/><text x="290" y="112" font-size="9.5" font-weight="600" fill="#8a6d3b">根页（索引键）</text>
+    <rect x="120" y="150" width="120" height="34" rx="7" fill="#fbf7ef" stroke="#ecdcbf"/><text x="180" y="172" font-size="9" fill="#8a6d3b">中间页</text>
+    <rect x="340" y="150" width="120" height="34" rx="7" fill="#fbf7ef" stroke="#ecdcbf"/><text x="400" y="172" font-size="9" fill="#8a6d3b">中间页</text>
+    <rect x="60" y="212" width="110" height="40" rx="7" fill="#fff" stroke="#8fcaa8"/><text x="115" y="230" font-size="8.5" font-weight="600" fill="#1c7a4d">叶子:整行</text><text x="115" y="245" font-size="7.5" fill="#3c7a58">id=1..50</text>
+    <rect x="180" y="212" width="110" height="40" rx="7" fill="#fff" stroke="#8fcaa8"/><text x="235" y="230" font-size="8.5" font-weight="600" fill="#1c7a4d">叶子:整行</text><text x="235" y="245" font-size="7.5" fill="#3c7a58">id=51..99</text>
+    <rect x="300" y="212" width="110" height="40" rx="7" fill="#fff" stroke="#8fcaa8"/><text x="355" y="230" font-size="8.5" font-weight="600" fill="#1c7a4d">叶子:整行</text><text x="355" y="245" font-size="7.5" fill="#3c7a58">id=100..</text>
+  </g>
+  <g stroke="#c99a3a" stroke-width="1.3">
+    <line x1="270" y1="124" x2="180" y2="150"/><line x1="310" y1="124" x2="400" y2="150"/>
+    <line x1="160" y1="184" x2="115" y2="212"/><line x1="200" y1="184" x2="235" y2="212"/><line x1="400" y1="184" x2="355" y2="212"/>
+  </g>
+  <!-- 叶子链表 -->
+  <line x1="170" y1="232" x2="180" y2="232" stroke="#2f9e6e" stroke-width="1.4" stroke-dasharray="3 2"/>
+  <line x1="290" y1="232" x2="300" y2="232" stroke="#2f9e6e" stroke-width="1.4" stroke-dasharray="3 2"/>
+  <text x="235" y="272" font-size="8" fill="#2f9e6e" text-anchor="middle">叶子双向链表（范围扫描）</text>
+  <text x="290" y="292" font-size="8.5" fill="#b08535" text-anchor="middle">树高仅 3~4 层 → 定位一行极少页访问</text>
+
+  <!-- 二级索引 + 回表 -->
+  <text x="520" y="82" font-size="11" font-weight="700" fill="#5b7db1">二级索引（另一棵 B+树）</text>
+  <rect x="520" y="94" width="340" height="70" rx="10" fill="#f4f7fc" stroke="#cfe0f2" filter="url(#b1)"/>
+  <text x="540" y="118" font-size="9.5" fill="#1d1d1f">叶子只存：索引列值 + 主键值</text>
+  <text x="540" y="138" font-size="9.5" fill="#6e6e73">查非索引列 → 拿主键回聚簇索引取整行</text>
+  <text x="540" y="156" font-size="8.5" fill="#5b7db1">覆盖索引例外：所需列都在索引里则免回表</text>
+
+  <path d="M690,164 C690,190 500,190 415,222" fill="none" stroke="#2f9e6e" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#b1h)"/>
+  <text x="600" y="205" font-size="8.5" fill="#2f9e6e">回表：主键 → 聚簇索引</text>
+
+  <text x="450" y="332" font-size="9" fill="#8a94a6" text-anchor="middle">锚点：btr_cur_search_to_nth_level `storage/innobase/btr/btr0cur.cc:745`（自根向叶逐层下探）</text>
+</svg>

@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="520" viewBox="0 0 1080 520" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="520" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Flink 原理 · 并行展开（JobVertex → ExecutionVertex）</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">JobVertex 按 parallelism 展开成 N 个子任务,产 IntermediateResult;物理单元 Execution 每次尝试一个</text>
+
+  <!-- JobGraph vertex -->
+  <text x="40" y="78" font-size="10" font-weight="700" fill="#1b2a4a">JobGraph 侧 · 一个 JobVertex（parallelism = 4）</text>
+  <rect x="380" y="86" width="320" height="52" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="540" y="108" font-size="10.5" font-weight="700" text-anchor="middle" fill="#1b2a4a">JobVertex A</text>
+  <text x="540" y="125" font-size="8" text-anchor="middle" fill="#5b7db1">ExecutionJobVertex 持 taskVertices = new ExecutionVertex[parallelism]</text>
+
+  <!-- expand arrows -->
+  <line x1="440" y1="138" x2="170" y2="176" stroke="#86868b" stroke-width="1.4" marker-end="url(#ar)"/>
+  <line x1="500" y1="138" x2="420" y2="176" stroke="#86868b" stroke-width="1.4" marker-end="url(#ar)"/>
+  <line x1="580" y1="138" x2="660" y2="176" stroke="#86868b" stroke-width="1.4" marker-end="url(#ar)"/>
+  <line x1="640" y1="138" x2="910" y2="176" stroke="#86868b" stroke-width="1.4" marker-end="url(#ar)"/>
+  <text x="540" y="160" font-size="8.2" text-anchor="middle" fill="#5b7db1">按并行度展开成 4 个 ExecutionVertex</text>
+
+  <!-- ExecutionVertex row -->
+  <text x="40" y="196" font-size="10" font-weight="700" fill="#5a3410">ExecutionGraph 侧 · N 个 ExecutionVertex（可调度子任务）</text>
+  <g text-anchor="middle" font-size="8.6">
+    <rect x="40" y="206" width="230" height="88" rx="12" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/><text x="155" y="228" font-weight="700" fill="#5a3410">ExecutionVertex #0</text>
+    <rect x="290" y="206" width="230" height="88" rx="12" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/><text x="405" y="228" font-weight="700" fill="#5a3410">ExecutionVertex #1</text>
+    <rect x="560" y="206" width="230" height="88" rx="12" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/><text x="675" y="228" font-weight="700" fill="#5a3410">ExecutionVertex #2</text>
+    <rect x="810" y="206" width="230" height="88" rx="12" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/><text x="925" y="228" font-weight="700" fill="#5a3410">ExecutionVertex #3</text>
+  </g>
+  <!-- Execution inside each -->
+  <g text-anchor="middle" font-size="7.8" fill="#5a3410">
+    <rect x="56" y="238" width="198" height="24" rx="6" fill="#fdf6ea" stroke="#efdcb4"/><text x="155" y="254">Execution(当前尝试)</text>
+    <rect x="306" y="238" width="198" height="24" rx="6" fill="#fdf6ea" stroke="#efdcb4"/><text x="405" y="254">Execution(当前尝试)</text>
+    <rect x="576" y="238" width="198" height="24" rx="6" fill="#fdf6ea" stroke="#efdcb4"/><text x="675" y="254">Execution(当前尝试)</text>
+    <rect x="826" y="238" width="198" height="24" rx="6" fill="#fdf6ea" stroke="#efdcb4"/><text x="925" y="254">Execution(当前尝试)</text>
+  </g>
+  <g text-anchor="middle" font-size="7.4" fill="#93762e">
+    <text x="155" y="280">失败重试→新建 Execution</text>
+    <text x="405" y="280">失败重试→新建 Execution</text>
+    <text x="675" y="280">失败重试→新建 Execution</text>
+    <text x="925" y="280">失败重试→新建 Execution</text>
+  </g>
+
+  <!-- produce IntermediateResult -->
+  <line x1="540" y1="294" x2="540" y2="314" stroke="#86868b" stroke-width="1.6" marker-end="url(#ar)"/>
+  <text x="556" y="308" font-size="8.4" fill="#93762e">每个子任务产 IntermediateResult[]（下游消费的数据分区）</text>
+
+  <rect x="40" y="316" width="1000" height="60" rx="13" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+  <text x="60" y="338" font-size="10" font-weight="700" fill="#5a3410">IntermediateResult · 中间结果分区（下游消费的数据来源）</text>
+  <g text-anchor="middle" font-size="8" fill="#5a3410">
+    <rect x="60" y="348" width="228" height="22" rx="6" fill="#fff" stroke="#efdcb4"/><text x="174" y="363">partition #0</text>
+    <rect x="308" y="348" width="228" height="22" rx="6" fill="#fff" stroke="#efdcb4"/><text x="422" y="363">partition #1</text>
+    <rect x="556" y="348" width="228" height="22" rx="6" fill="#fff" stroke="#efdcb4"/><text x="670" y="363">partition #2</text>
+    <rect x="804" y="348" width="220" height="22" rx="6" fill="#fff" stroke="#efdcb4"/><text x="914" y="363">partition #3</text>
+  </g>
+
+  <!-- handoff to JobManager -->
+  <line x1="540" y1="376" x2="540" y2="396" stroke="#86868b" stroke-width="1.6" marker-end="url(#ar)"/>
+  <rect x="40" y="398" width="1000" height="46" rx="12" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="60" y="420" font-size="10" font-weight="700" fill="#12402a">交给 JobManager 调度</text>
+  <text x="60" y="437" font-size="8.4" fill="#2f6f4f">逻辑图完全物化成"哪些子任务、跑在哪、数据往哪流"的可调度形态 · 客户端触发 StreamGraphTranslator.translateToJobGraph</text>
+
+  <!-- bottom banner -->
+  <rect x="40" y="454" width="1000" height="42" rx="12" fill="#f0f0f4" stroke="#d2d2d7"/>
+  <text x="540" y="480" font-size="9.5" font-weight="700" text-anchor="middle" fill="#48484a">误区破除:并行度是子任务数,不是机器数——多个子任务可共享一个 TaskManager 的多个 slot</text>
+</svg>

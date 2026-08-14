@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="520" viewBox="0 0 1080 520" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+  </defs>
+  <rect width="1080" height="520" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">RocksDB CF 独立调优 · 不同访问模式,各设 options</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">同一 DB 内按数据用途拆 CF,分别设 compaction/压缩/comparator/缓存;CF 的创建删除经 VersionEdit 记入 MANIFEST</text>
+
+  <!-- three tuning columns -->
+  <rect x="30" y="70" width="330" height="220" rx="13" fill="#fdf4f3" stroke="#ecc6c1"/>
+  <text x="46" y="92" font-size="11" font-weight="700" fill="#7a2016">热点小数据 CF</text>
+  <text x="46" y="110" font-size="8.5" fill="#a5453a">访问:高频随机读写,数据量小</text>
+  <rect x="46" y="120" width="300" height="36" rx="7" fill="#fdeeeb" stroke="#ecc6c1"/><text x="60" y="143" font-size="8.5" fill="#7a2016">大 block cache · 快压缩(LZ4/无)</text>
+  <rect x="46" y="164" width="300" height="36" rx="7" fill="#fdeeeb" stroke="#ecc6c1"/><text x="60" y="187" font-size="8.5" fill="#7a2016">Leveled compaction(低读放大)</text>
+  <rect x="46" y="208" width="300" height="36" rx="7" fill="#fff" stroke="#ecc6c1"/><text x="60" y="231" font-size="8.5" fill="#a5453a">较小 write_buffer,勤 flush</text>
+  <text x="46" y="266" font-size="8" fill="#a1a1a6">目标:读延迟低、命中率高</text>
+  <text x="46" y="282" font-size="8" fill="#a1a1a6">典型:主键索引 / 元数据</text>
+
+  <rect x="375" y="70" width="330" height="220" rx="13" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="391" y="92" font-size="11" font-weight="700" fill="#1b2a4a">写多日志型 CF</text>
+  <text x="391" y="110" font-size="8.5" fill="#5b7db1">访问:高吞吐追加写,少更新</text>
+  <rect x="391" y="120" width="300" height="36" rx="7" fill="#f3f7fc" stroke="#cfe0f2"/><text x="405" y="143" font-size="8.5" fill="#274a78">Universal compaction(低写放大)</text>
+  <rect x="391" y="164" width="300" height="36" rx="7" fill="#f3f7fc" stroke="#cfe0f2"/><text x="405" y="187" font-size="8.5" fill="#274a78">大 write_buffer_size,少 flush</text>
+  <rect x="391" y="208" width="300" height="36" rx="7" fill="#fff" stroke="#cfe0f2"/><text x="405" y="231" font-size="8.5" fill="#5b7db1">prefix_extractor 优化前缀扫描</text>
+  <text x="391" y="266" font-size="8" fill="#a1a1a6">目标:写吞吐高、写放大小</text>
+  <text x="391" y="282" font-size="8" fill="#a1a1a6">典型:事件流 / 时序</text>
+
+  <rect x="720" y="70" width="330" height="220" rx="13" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="736" y="92" font-size="11" font-weight="700" fill="#12402a">冷归档 CF</text>
+  <text x="736" y="110" font-size="8.5" fill="#2f6f4f">访问:极少读,重存储成本</text>
+  <rect x="736" y="120" width="300" height="36" rx="7" fill="#eafaf1" stroke="#bfe0cd"/><text x="750" y="143" font-size="8.5" fill="#12402a">ZSTD 高压缩比(省空间)</text>
+  <rect x="736" y="164" width="300" height="36" rx="7" fill="#eafaf1" stroke="#bfe0cd"/><text x="750" y="187" font-size="8.5" fill="#12402a">FIFO / Universal(少整理)</text>
+  <rect x="736" y="208" width="300" height="36" rx="7" fill="#fff" stroke="#cfe6d5"/><text x="750" y="231" font-size="8.5" fill="#2f6f4f">小 cache,fill_cache=false 读</text>
+  <text x="736" y="266" font-size="8" fill="#a1a1a6">目标:空间省、CPU/IO 低</text>
+  <text x="736" y="282" font-size="8" fill="#a1a1a6">典型:历史 / 备份数据</text>
+
+  <!-- metadata note -->
+  <rect x="30" y="306" width="1020" height="80" rx="13" fill="#faf4fb" stroke="#e2d2ee"/>
+  <text x="46" y="328" font-size="11" font-weight="700" fill="#5a3d78">CF 生命周期也是元数据操作</text>
+  <text x="46" y="350" font-size="9" fill="#7a5a95">· CreateColumnFamily / DropColumnFamily → 生成 VersionEdit → 写入 MANIFEST(与 SST 增删同一套元数据机制,见【版本】主线)</text>
+  <text x="46" y="368" font-size="9" fill="#7a5a95">· Drop 只是标记删除,其 SST 待引用清零后由后台回收;恢复时 MANIFEST 重放能重建全部 CF 及其配置</text>
+
+  <!-- notes -->
+  <rect x="30" y="402" width="1020" height="102" rx="13" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="46" y="424" font-size="11" font-weight="700" fill="#1d1d1f">要点</text>
+  <text x="46" y="446" font-size="9" fill="#6e6e73">· 一个 DB 里数据访问模式各异时,与其拿一套 options 折中,不如按用途拆 CF 各自最优——MyRocks 用不同 CF 存主键与二级索引,TiKV 用 CF 分 raft/write/lock</text>
+  <text x="46" y="464" font-size="9" fill="#6e6e73">· 但别滥用:每个 CF 有独立 MemTable(占内存)、独立后台任务,CF 过多会放大内存与调度开销(见常见误区)</text>
+  <text x="46" y="484" font-size="8.5" fill="#b1483a">· 归属:独立 options 作用于【写入】【Compaction】【SST】【缓存】;CF 增删元数据在【版本】MANIFEST;跨 CF 事务边界见【CF 共享 WAL】</text>
+</svg>

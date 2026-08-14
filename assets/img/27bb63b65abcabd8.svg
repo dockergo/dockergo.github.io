@@ -1,0 +1,156 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="864" viewBox="0 0 1080 864" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="aHot" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+    <marker id="aCtl" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2b6cb0"/></marker>
+    <marker id="aState" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#c99a3a"/></marker>
+    <marker id="aFail" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#e8730f"/></marker>
+    <marker id="aCross" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#8a5cae"/></marker>
+    <marker id="aNeut" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#86868b"/></marker>
+  </defs>
+
+  <rect width="1080" height="864" fill="#fbfbfd"/>
+
+  <!-- ===== 标题带（判型 + 源码基准） ===== -->
+  <rect x="0" y="0" width="1080" height="52" fill="#f4f5f7" stroke="#e6e6eb"/>
+  <text x="24" y="26" font-size="15" font-weight="700" fill="#1d1d1f">Apache Iceberg 总架构 · 不可变快照 + 三层元数据的乐观并发表抽象 · 计算引擎无关</text>
+  <text x="24" y="44" font-size="10.5" fill="#6e6e73">判型：数据文件之上一棵不可变元数据树 metadata.json→manifest list→manifest→data file，让文件集像有 ACID/时间旅行的表；引擎无关，自身不读写数据　·　<tspan font-weight="700" fill="#1d1d1f">源码基准 main@f2875fd</tspan>（1.11.0 基线 · 格式 v2/v4）</text>
+
+  <!-- ===== 图例：五型语义路径（彩色 marker） ===== -->
+  <line x1="40" y1="72" x2="66" y2="72" stroke="#2f9e6e" stroke-width="2.2" marker-end="url(#aHot)"/>
+  <text x="72" y="76" font-size="10" fill="#3a3a3c">Hot 读扫描 / 写提交</text>
+  <line x1="212" y1="72" x2="238" y2="72" stroke="#2b6cb0" stroke-width="2" marker-end="url(#aCtl)"/>
+  <text x="244" y="76" font-size="10" fill="#3a3a3c">Control 乐观并发提交(CAS)</text>
+  <line x1="436" y1="72" x2="462" y2="72" stroke="#c99a3a" stroke-width="2" marker-end="url(#aState)"/>
+  <text x="468" y="76" font-size="10" fill="#3a3a3c">State 三层不可变元数据</text>
+  <line x1="640" y1="72" x2="666" y2="72" stroke="#e8730f" stroke-width="1.8" stroke-dasharray="3 3" marker-end="url(#aFail)"/>
+  <text x="672" y="76" font-size="10" fill="#3a3a3c">失败 提交冲突重试</text>
+  <line x1="806" y1="72" x2="832" y2="72" stroke="#8a5cae" stroke-width="1.8" stroke-dasharray="5 3" marker-end="url(#aCross)"/>
+  <text x="838" y="76" font-size="10" fill="#3a3a3c">横切 schema/分区演进</text>
+  <text x="1056" y="76" font-size="10" fill="#a1a1a6" text-anchor="end">框 = 可下钻</text>
+
+  <!-- ===== powers 立身带 ===== -->
+  <rect x="24" y="88" width="1032" height="26" rx="8" fill="#f6f6f8" stroke="#e2e2e7" data-tid="Iceberg原理_全景主线框架" data-lab="全景主线框架"/>
+  <text x="40" y="105" font-size="10" fill="#4a4a4f">powers：开放表格式事实标准 —— 用不可变元数据把一堆文件组织成有 ACID / 时间旅行 / 演进的表；引擎无关，只管元数据，数据读写交给引擎</text>
+
+  <!-- ===== 计算引擎（外部） ===== -->
+  <rect x="24" y="124" width="1032" height="40" rx="13" fill="#f4f2ee" stroke="#e3ddd2" stroke-dasharray="6 4"/>
+  <text x="40" y="142" font-size="10.5" font-weight="600" fill="#6e6357">计算引擎（外部 · 链接 Iceberg 库）· Spark 读写维护 · Trino / Presto 查询 · Flink 流式读写</text>
+  <text x="40" y="157" font-size="8.5" fill="#93867a">负责真正读写数据 / 执行查询 —— Iceberg 自己不做</text>
+
+  <!-- ===== ① 接触面 表 API ===== -->
+  <rect x="24" y="174" width="1032" height="48" rx="13" fill="#f4eefb" stroke="#d9c7ec" data-tid="Iceberg原理_接触面_表API与快照读" data-lab="接触面·表API"/>
+  
+  <text x="44" y="195" font-size="11.5" font-weight="600" fill="#3d2a5a">① 接触面 · 表 API（给引擎链接的库，不面向终端 SQL）</text>
+  <text x="44" y="211" font-size="9" fill="#8a6db3">catalog 找表 · newScan 读(时间旅行/增量) · newAppend/newRewrite 写 · updateSchema/updateSpec 演进</text>
+
+  <!-- ===== ② Catalog 与并发 ===== -->
+  <rect x="24" y="232" width="1032" height="48" rx="12" fill="#e9f0fb" stroke="#b9d2ef" data-tid="Iceberg原理_支撑_catalog与并发" data-lab="catalog与并发"/>
+  
+  <text x="44" y="253" font-size="11" font-weight="600" fill="#1b3a66">② Catalog 与并发 · 表名 → 当前 metadata.json 位置（一个指针）</text>
+  <text x="44" y="269" font-size="9" fill="#2b6cb0">Hadoop / Hive / JDBC / REST / Glue · commit(base, metadata) 原子换指针 = ACID 落点（compare-and-swap）</text>
+
+  <!-- ===== ③ 不可变元数据树（核心 · 三层） ===== -->
+  <rect x="24" y="290" width="1032" height="166" rx="16" fill="#eef3fb" stroke="#bcd0ec" data-tid="Iceberg原理_支撑_元数据树" data-lab="元数据树"/>
+  <text x="40" y="309" font-size="12" font-weight="600" fill="#1b2a4a">③ 不可变元数据树（核心 · 自带文件清单 + 列统计，不 list 目录）— 三层：metadata.json → manifest list → manifest → data file</text>
+  <g font-size="9">
+    <rect x="40" y="316" width="1000" height="27" rx="8" fill="#f3f7fc" stroke="#cfe0f2"/><text x="54" y="333" font-weight="600" fill="#274a78">metadata.json（根：schemas / specs / sortOrders / snapshots[] / currentSnapshotId / refs）</text>    <rect x="40" y="347" width="1000" height="27" rx="8" fill="#e7f0fb" stroke="#b9d2ef"/><text x="54" y="364" fill="#1b2a4a">Snapshot（不可变，记 parentId + sequenceNumber）→ manifestListLocation 指向一个 manifest list</text>    <rect x="40" y="378" width="1000" height="27" rx="8" fill="#f3f7fc" stroke="#cfe0f2"/><text x="54" y="395" fill="#274a78">manifest list（avro）→ 多个 manifest file（带分区字段摘要 lower/upper · 第一级剪枝）</text>    <rect x="40" y="409" width="1000" height="27" rx="8" fill="#fdf6ea" stroke="#efdcb4"/><text x="54" y="426" fill="#5a3410">manifest → DataFile/DeleteFile 条目（路径 + content 0/1/2 + 列统计 min/max/null · 第二级剪枝）</text>  </g>
+  <line x1="540" y1="343" x2="540" y2="347" stroke="#c99a3a" stroke-width="1.2" marker-end="url(#aState)"/>
+  <line x1="540" y1="374" x2="540" y2="378" stroke="#c99a3a" stroke-width="1.2" marker-end="url(#aState)"/>
+  <line x1="540" y1="405" x2="540" y2="409" stroke="#c99a3a" stroke-width="1.2" marker-end="url(#aState)"/>
+
+  <!-- ===== 能力域 6 域 · 2 行 ===== -->
+  <!-- ④ 快照与提交 -->
+  <rect x="24" y="474" width="336" height="78" rx="13" fill="#eff8f3" stroke="#cfe6d5" data-tid="Iceberg原理_支撑_快照与提交" data-lab="快照与提交"/>
+  
+  <text x="42" y="494" font-size="10.5" font-weight="600" fill="#12633f">④ 快照与提交 · OCC 灵魂</text>
+  <text x="40" y="511" font-size="8.6" fill="#2f6f4f">每提交产不可变快照(记父/seq) → 新 manifest list</text>
+  <text x="40" y="527" font-size="8.6" fill="#2f6f4f">Tasks.retry + exponentialBackoff 乐观重试</text>
+
+  <!-- ⑤ schema 演进 -->
+  <rect x="372" y="474" width="336" height="78" rx="13" fill="#f4eefb" stroke="#d9c7ec" data-tid="Iceberg原理_支撑_schema演进" data-lab="schema演进"/>
+  
+  <text x="390" y="494" font-size="10.5" font-weight="600" fill="#4a2f6a">⑤ schema 演进</text>
+  <text x="388" y="511" font-size="8.6" fill="#8a6db3">列靠不可变字段 ID 追踪（非名字/位置）</text>
+  <text x="388" y="527" font-size="8.6" fill="#8a6db3">rename/加删列/类型提升都不重写数据</text>
+
+  <!-- ⑥ 分区演进 / 隐藏分区 -->
+  <rect x="720" y="474" width="336" height="78" rx="13" fill="#f4eefb" stroke="#d9c7ec" data-tid="Iceberg原理_支撑_分区演进与隐藏分区" data-lab="分区演进"/>
+  
+  <text x="738" y="494" font-size="10.5" font-weight="600" fill="#4a2f6a">⑥ 分区演进 / 隐藏分区</text>
+  <text x="736" y="511" font-size="8.6" fill="#8a6db3">分区值由源列经 transform 派生（隐藏）</text>
+  <text x="736" y="527" font-size="8.6" fill="#8a6db3">每 manifest 记 spec id，改规则不重写老数据</text>
+
+  <!-- ⑦ 扫描规划 -->
+  <rect x="24" y="562" width="336" height="78" rx="13" fill="#eff8f3" stroke="#cfe6d5" data-tid="Iceberg原理_支撑_扫描规划" data-lab="扫描规划"/>
+  
+  <text x="42" y="582" font-size="10.5" font-weight="600" fill="#12633f">⑦ 扫描规划（读）· 两级剪枝</text>
+  <text x="40" y="599" font-size="8.6" fill="#2f6f4f">①manifest 分区摘要剪 ②文件列统计(min/max/null)剪</text>
+  <text x="40" y="615" font-size="8.6" fill="#2f6f4f">planFiles 产 FileScanTask 交引擎读</text>
+
+  <!-- ⑧ 行级删除 -->
+  <rect x="372" y="562" width="336" height="78" rx="13" fill="#fdf6ea" stroke="#efdcb4" data-tid="Iceberg原理_支撑_行级删除" data-lab="行级删除"/>
+  
+  <text x="390" y="582" font-size="10.5" font-weight="600" fill="#5a3410">⑧ 行级删除（v2+ · MoR）</text>
+  <text x="388" y="599" font-size="8.6" fill="#8a5a12">position / equality delete file，不重写 data</text>
+  <text x="388" y="615" font-size="8.6" fill="#8a5a12">读时按 seq 叠加 merge-on-read</text>
+
+  <!-- ⑨ 表维护 -->
+  <rect x="720" y="562" width="336" height="78" rx="13" fill="#f4eefb" stroke="#e0d3ee" data-tid="Iceberg原理_支撑_表维护" data-lab="表维护"/>
+  
+  <text x="738" y="582" font-size="10.5" font-weight="600" fill="#4a2f6a">⑨ 表维护（后台）</text>
+  <text x="736" y="599" font-size="8.6" fill="#8a6db3">compaction 合并小文件 / 物化删除（newRewrite）</text>
+  <text x="736" y="615" font-size="8.6" fill="#8a6db3">expireSnapshots + 清孤儿文件</text>
+
+  <!-- ===== 数据文件（对象存储） ===== -->
+  <rect x="24" y="650" width="1032" height="42" rx="14" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="40" y="670" font-size="10.5" font-weight="600" fill="#5a3410">数据文件（对象存储 S3 / HDFS）· parquet / orc / avro + delete files</text>
+  <text x="40" y="685" font-size="8.5" fill="#93762e">元数据树引用这些 data file（按字段 ID 存列）· Iceberg 不读写数据，由引擎读；delete file 读时 MoR 叠加</text>
+
+  <!-- ===== 贯穿层 sequence number ===== -->
+  <rect x="24" y="700" width="1032" height="26" rx="8" fill="#f0f0f4" stroke="#d2d2d7"/>
+  <text x="540" y="717" font-size="9.5" font-weight="600" text-anchor="middle" fill="#48484a">贯穿层 · sequence number（每提交递增）—— 快照 / manifest 条目 / 行级删除都带 seq，删除靠 seq 比较决定作用范围 · 横切 快照/元数据/删除</text>
+
+  <!-- ===================== 连线 五路径 ===================== -->
+  <!-- 主脊（结构）：引擎 → 表API → catalog -->
+  <line x1="540" y1="164" x2="540" y2="174" stroke="#86868b" stroke-width="1.5" marker-end="url(#aNeut)"/>
+  <line x1="540" y1="222" x2="540" y2="232" stroke="#86868b" stroke-width="1.4" marker-end="url(#aNeut)"/>
+  <!-- Control：catalog CAS 设 current 指针 → 元数据树（下） -->
+  <line x1="534" y1="280" x2="534" y2="290" stroke="#2b6cb0" stroke-width="1.8" marker-end="url(#aCtl)"/>
+  <!-- 失败：base≠current → 冲突重试（上行 · 橙虚线，紧邻 CAS） -->
+  <line x1="552" y1="290" x2="552" y2="280" stroke="#e8730f" stroke-width="1.6" stroke-dasharray="3 3" marker-end="url(#aFail)"/>
+  <text x="560" y="288" font-size="8" fill="#e8730f">base≠current → CommitFailedException → 重放重试</text>
+  <!-- Hot 写：④快照与提交 → 元数据树（commit 新 snapshot/manifest list） -->
+  <line x1="120" y1="474" x2="120" y2="456" stroke="#2f9e6e" stroke-width="1.8" marker-end="url(#aHot)"/>
+  <text x="126" y="470" font-size="8" fill="#2f9e6e">commit 写新 snapshot</text>
+  <!-- 横切：⑤schema / ⑥分区演进 → 元数据树 -->
+  <line x1="468" y1="474" x2="468" y2="456" stroke="#8a5cae" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#aCross)"/>
+  <text x="474" y="470" font-size="8" fill="#8a5cae">改 schemasById（字段 ID）</text>
+  <line x1="816" y1="474" x2="816" y2="456" stroke="#8a5cae" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#aCross)"/>
+  <text x="822" y="470" font-size="8" fill="#8a5cae">改 specs（每 manifest 记 spec id）</text>
+  <!-- Hot 读：⑦扫描规划 → 数据文件（定位待读 data file） -->
+  <line x1="120" y1="640" x2="120" y2="650" stroke="#2f9e6e" stroke-width="1.8" marker-end="url(#aHot)"/>
+  <text x="126" y="648" font-size="8" fill="#2f9e6e">planFiles 定位 data file</text>
+  <!-- State：⑧行级删除 → 数据文件（写 delete file） -->
+  <line x1="468" y1="640" x2="468" y2="650" stroke="#c99a3a" stroke-width="1.6" marker-end="url(#aState)"/>
+  <text x="474" y="648" font-size="8" fill="#b08535">写 delete file（不重写 data）</text>
+  <!-- 横切/后台：⑨表维护 → 数据文件（compaction 重写 / 清孤儿） -->
+  <line x1="816" y1="640" x2="816" y2="650" stroke="#8a5cae" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#aCross)"/>
+  <text x="822" y="648" font-size="8" fill="#8a5cae">compaction 重写 / expire（后台）</text>
+  <!-- 行级删除 → 扫描规划：读时 MoR 叠加（横向虚线） -->
+  <line x1="371" y1="590" x2="360" y2="590" stroke="#2f9e6e" stroke-width="1.3" stroke-dasharray="5 4" marker-end="url(#aHot)"/>
+  <text x="365" y="558" font-size="8" text-anchor="middle" fill="#2f9e6e">delete 附 FileScanTask · MoR 叠加</text>
+  <!-- 扫描规划 → 元数据树：读存活快照 + 两级剪枝（左侧回路 · 主读流） -->
+  <path d="M24,595 L12,595 L12,430 L24,430" fill="none" stroke="#2f9e6e" stroke-width="1.6" marker-end="url(#aHot)"/>
+  <text x="8" y="512" font-size="8" fill="#2f9e6e" text-anchor="middle" transform="rotate(-90 8 512)">读存活 snapshot · 两级剪枝</text>
+  <!-- manifest 条目 → 物理 data file：层级末端（右侧回路 · State） -->
+  <path d="M1056,425 L1068,425 L1068,672 L1056,672" fill="none" stroke="#c99a3a" stroke-width="1.5" marker-end="url(#aState)"/>
+  <text x="1074" y="548" font-size="8" fill="#b08535" text-anchor="middle" transform="rotate(-90 1074 548)">manifest 条目 → 物理 data file</text>
+
+  <!-- ===== 底部铭牌：核心设计张力 ===== -->
+  <rect x="24" y="736" width="1032" height="102" rx="12" fill="#f4f5f7" stroke="#e6e6eb"/>
+  <text x="44" y="759" font-size="11" font-weight="700" fill="#1d1d1f">核心设计张力</text>
+  <text x="44" y="779" font-size="9.5" fill="#5b6470"><tspan font-weight="600" fill="#1d1d1f">张力①</tspan> 快照隔离 + 乐观并发（每次提交 = 一个新不可变快照，冲突则 refresh 重放重试）　vs　三层元数据的读放大 / 小文件与元数据膨胀（靠后台 compaction/expire 偿还）</text>
+  <text x="44" y="798" font-size="9.5" fill="#5b6470"><tspan font-weight="600" fill="#1d1d1f">张力②</tspan> 引擎无关的开放格式抽象（只改元数据）　vs　真实读写 / 向量化 / 谓词下推执行与存储·计算深度绑定（扫描规划只产 FileScanTask 交引擎）</text>
+  <text x="44" y="820" font-size="8.5" fill="#a1a1a6">不变量：快照一经写出不可变 · 提交 = metadata 指针的原子 compare-and-swap · 字段 ID 唯一且不复用 · seq number 每提交单调递增（删除按 seq 定作用范围）</text>
+</svg>

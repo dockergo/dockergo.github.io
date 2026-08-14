@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="510" viewBox="0 0 900 510" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="arP" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#a35bd6"/></marker>
+  </defs>
+  <rect width="900" height="510" fill="#fbfbfd"/>
+  <text x="30" y="32" font-size="15" font-weight="600" fill="#1d1d1f">成员变更：联合共识（joint consensus）+ 单步</text>
+  <text x="30" y="52" font-size="10.5" fill="#8a8a90">confchange.go:51 EnterJoint · :94 LeaveJoint · :128 Simple · node.go:153 ProposeConfChange</text>
+
+  <!-- joint 三态 -->
+  <rect x="40" y="80" width="220" height="90" rx="12" fill="#f5faf6" stroke="#c9e6cf" filter="url(#soft)"/>
+  <text x="150" y="112" text-anchor="middle" font-size="13" font-weight="700" fill="#1f5130">C(old)</text>
+  <text x="150" y="134" text-anchor="middle" font-size="10" fill="#4f9d69">(1 2 3) &amp;&amp; ()</text>
+  <text x="150" y="152" text-anchor="middle" font-size="9.5" fill="#8a8a90">单一多数派</text>
+
+  <rect x="340" y="80" width="220" height="90" rx="12" fill="#f3ecfb" stroke="#d8c6ee" filter="url(#soft)"/>
+  <text x="450" y="108" text-anchor="middle" font-size="13" font-weight="700" fill="#6b3ba0">C(new,old) 联合</text>
+  <text x="450" y="130" text-anchor="middle" font-size="10" fill="#814bbd">(1 2 3) &amp;&amp; (1 2 3)</text>
+  <text x="450" y="150" text-anchor="middle" font-size="9.5" fill="#8a8a90">新旧两多数派并存,均需过</text>
+
+  <rect x="640" y="80" width="220" height="90" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="750" y="112" text-anchor="middle" font-size="13" font-weight="700" fill="#1b2a4a">C(new)</text>
+  <text x="750" y="134" text-anchor="middle" font-size="10" fill="#5b7db1">新配置单一多数派</text>
+  <text x="750" y="152" text-anchor="middle" font-size="9.5" fill="#8a8a90">收敛完成</text>
+
+  <path d="M260,125 L338,125" stroke="#a35bd6" stroke-width="1.8" marker-end="url(#arP)"/>
+  <text x="299" y="116" text-anchor="middle" font-size="9" fill="#a35bd6">EnterJoint(:51)</text>
+  <path d="M560,125 L638,125" stroke="#a35bd6" stroke-width="1.8" marker-end="url(#arP)"/>
+  <text x="599" y="116" text-anchor="middle" font-size="9" fill="#a35bd6">LeaveJoint(:94)</text>
+
+  <!-- 两条路径 -->
+  <rect x="40" y="196" width="410" height="140" rx="13" fill="#f3ecfb" stroke="#d8c6ee" filter="url(#soft)"/>
+  <text x="56" y="220" font-size="12" font-weight="700" fill="#6b3ba0">联合共识（可一次换多个 voter）</text>
+  <g font-size="10.5" fill="#6b3ba0">
+    <text x="56" y="244">· EnterJoint：清空 outgoing、复制 incoming，</text>
+    <text x="56" y="262">  再对 incoming 施加变更 → C(new,old)（:66-77）</text>
+    <text x="56" y="286">· 联合期内提交/选举都需新旧两多数派同时过</text>
+    <text x="56" y="308">· LeaveJoint：outgoing 置空，incoming 独裁 → C(new)</text>
+    <text x="56" y="328">· AutoLeave 可自动追加离开（raft.go:742）</text>
+  </g>
+
+  <rect x="470" y="196" width="390" height="140" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="486" y="220" font-size="12" font-weight="700" fill="#1b2a4a">单步 Simple（一次 ±1 voter）</text>
+  <g font-size="10.5" fill="#2b3a5a">
+    <text x="486" y="244">· Simple：只改 incoming，且 voter 增删 ≤1</text>
+    <text x="486" y="266">· symdiff &gt; 1 → 报错"须先进联合"（:140-141）</text>
+    <text x="486" y="290">· 等价于 hashicorp/raft 的单步变更语义</text>
+    <text x="486" y="312">· 配置差 ≤1 → 新旧多数派必相交，安全</text>
+  </g>
+
+  <!-- 串行化门 + 驱动 -->
+  <rect x="40" y="356" width="820" height="130" rx="13" fill="#f7f7f9" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="56" y="380" font-size="12" font-weight="700" fill="#1d1d1f">串行化门 + 宿主驱动（node.go）</text>
+  <g font-size="10.5" fill="#6e6e73">
+    <text x="56" y="404">· 同一时刻至多一个未决 ConfChange：pendingConfIndex 门（raft.go:1326-1345）</text>
+    <text x="56" y="426">· 宿主 ProposeConfChange（node.go:153，支持 ConfChangeV2 联合共识）</text>
+    <text x="56" y="448">· Ready.CommittedEntries 里见到 ConfChange → 宿主必须 ApplyConfChange（node.go:187）</text>
+    <text x="56" y="470">· 对照 hashicorp/raft：只有单步；etcd/raft 额外支持 joint，可原子替换多个 voter</text>
+  </g>
+</svg>

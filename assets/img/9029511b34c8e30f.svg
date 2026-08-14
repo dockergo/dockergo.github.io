@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="486" viewBox="0 0 1020 486" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs><filter id="sp" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="3.5" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="ab" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#5b6470"/></marker>
+    <marker id="ag" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker></defs>
+  <rect width="1020" height="486" fill="#fbfbfd"/>
+  <text x="24" y="30" font-size="14" font-weight="700" fill="#1d1d1f">一次调用如何下沉到 core：Stub 看不到选路，"像本地函数"的代价在此吸收</text>
+  <text x="24" y="49" font-size="10" fill="#8a8a8e">两条建 call 路径收敛到同一 C 接口，为本次调用分配一块 Arena；普通 Channel 由 ClientChannel 承接解析与选路</text>
+
+  <g font-size="9">
+    <rect x="700" y="20" width="12" height="10" rx="2" fill="#f4eefb" stroke="#ddccef"/><text x="716" y="29" fill="#6e6e73">C++ 接触面</text>
+    <rect x="800" y="20" width="12" height="10" rx="2" fill="#f3f3f5" stroke="#dcdce0"/><text x="816" y="29" fill="#6e6e73">core C 接口</text>
+    <rect x="890" y="20" width="12" height="10" rx="2" fill="#eaf1fb" stroke="#cadcf2"/><text x="906" y="29" fill="#6e6e73">选路控制面</text>
+  </g>
+
+  <!-- main descent column (left ~620 wide) -->
+  <!-- L1 stub -->
+  <rect x="24" y="64" width="600" height="42" rx="10" fill="#f4eefb" stroke="#ddccef" filter="url(#sp)"/>
+  <text x="40" y="82" font-size="11" font-weight="700" fill="#6f3ea8">① Stub.method(req)  —  Protobuf 生成层</text>
+  <text x="40" y="98" font-size="8" fill="#9a76c0">不含网络逻辑：握 RpcMethod 薄描述符、序列化入参、把调用交给 Channel</text>
+  <line x1="324" y1="106" x2="324" y2="120" stroke="#5b6470" stroke-width="1.5" marker-end="url(#ab)"/>
+
+  <!-- L2 CreateCall + branch -->
+  <rect x="24" y="122" width="600" height="72" rx="10" fill="#f4eefb" stroke="#ddccef" filter="url(#sp)"/>
+  <text x="40" y="140" font-size="11" font-weight="700" fill="#6f3ea8">② Channel::CreateCall → CreateCallInternal</text>
+  <g text-anchor="middle" font-size="8">
+    <rect x="40" y="150" width="270" height="34" rx="7" fill="#fff" stroke="#ddccef"/><text x="175" y="165" font-weight="600" fill="#6f3ea8">已注册路径 kRegistered</text><text x="175" y="177" font-size="6.5" fill="#9a76c0">用缓存句柄的 path/authority</text>
+    <rect x="338" y="150" width="270" height="34" rx="7" fill="#fff" stroke="#ddccef"/><text x="473" y="165" font-weight="600" fill="#6f3ea8">未注册路径</text><text x="473" y="177" font-size="6.5" fill="#9a76c0">现场把 method.name() 转 slice</text>
+  </g>
+  <line x1="324" y1="194" x2="324" y2="208" stroke="#5b6470" stroke-width="1.5" marker-end="url(#ab)"/>
+  <text x="360" y="205" font-size="8" fill="#8a8a8e">两路收敛</text>
+
+  <!-- L3 unified C iface + arena -->
+  <rect x="24" y="210" width="600" height="52" rx="10" fill="#f3f3f5" stroke="#dcdce0" filter="url(#sp)"/>
+  <text x="40" y="230" font-size="11" font-weight="700" fill="#3a3a3f">③ grpc_channel_create_call_with_arena_init（统一 C 接口）</text>
+  <text x="40" y="248" font-size="8" fill="#6e6e73">为本次调用分配一块 Arena — 调用级内存竞技场，RPC 结束整块释放</text>
+  <line x1="324" y1="262" x2="324" y2="276" stroke="#5b6470" stroke-width="1.5" marker-end="url(#ab)"/>
+
+  <!-- L4 client channel select -->
+  <rect x="24" y="278" width="600" height="128" rx="10" fill="#eaf1fb" stroke="#cadcf2" filter="url(#sp)"/>
+  <text x="40" y="298" font-size="11" font-weight="700" fill="#2b5fa0">④ ClientChannel::CreateCall → StartCall（普通 dns:/// Channel）</text>
+  <g text-anchor="middle" font-size="8">
+    <rect x="40" y="308" width="130" height="40" rx="7" fill="#fff" stroke="#cadcf2"/><text x="105" y="325" fill="#2b5fa0">按需退出 IDLE</text><text x="105" y="338" font-size="6.5" fill="#6f93c4">触发连接</text>
+    <rect x="192" y="308" width="130" height="40" rx="7" fill="#fff" stroke="#cadcf2"/><text x="257" y="325" fill="#2b5fa0">等解析器结果</text><text x="257" y="338" font-size="6.5" fill="#6f93c4">resolver</text>
+    <rect x="344" y="308" width="130" height="40" rx="7" fill="#fff" stroke="#cadcf2"/><text x="409" y="325" fill="#2b5fa0">LB 挑子通道</text><text x="409" y="338" font-size="6.5" fill="#6f93c4">picker.Pick</text>
+    <rect x="496" y="308" width="112" height="40" rx="7" fill="#fff" stroke="#cadcf2"/><text x="552" y="325" fill="#2b5fa0">交选中通道</text><text x="552" y="338" font-size="6.5" fill="#6f93c4">subchannel</text>
+    <line x1="170" y1="328" x2="190" y2="328" stroke="#4b7bbf" stroke-width="1.3" marker-end="url(#ab)"/>
+    <line x1="322" y1="328" x2="342" y2="328" stroke="#4b7bbf" stroke-width="1.3" marker-end="url(#ab)"/>
+    <line x1="474" y1="328" x2="494" y2="328" stroke="#4b7bbf" stroke-width="1.3" marker-end="url(#ab)"/>
+  </g>
+  <text x="40" y="368" font-size="8" fill="#6f93c4">Stub 完全看不到这层选路 —— 复杂度全被 Channel 内部装配线吸收</text>
+  <line x1="324" y1="384" x2="324" y2="392" stroke="#2f9e6e" stroke-width="1.6" marker-end="url(#ag)"/>
+
+  <!-- side annotations panel -->
+  <rect x="644" y="122" width="352" height="140" rx="10" fill="#fbfbfd" stroke="#e6e6ea"/>
+  <text x="660" y="142" font-size="10.5" font-weight="700" fill="#3a3a3f">CreateCallInternal 建好 call 后还挂：</text>
+  <text x="660" y="164" font-size="8.5" fill="#5b6470">· ClientRpcInfo（拦截器上下文）</text>
+  <text x="660" y="182" font-size="8.5" fill="#5b6470">· census_context（可观测上下文）</text>
+  <text x="660" y="200" font-size="8.5" fill="#5b6470">· set_call() 把 grpc_call* 回填进 ClientContext</text>
+  <text x="660" y="218" font-size="8.5" fill="#5b6470">· 顺带把凭证 ApplyToCall</text>
+  <text x="676" y="234" font-size="8" fill="#b23a3a">凭证失败 → 当场取消调用</text>
+  <text x="660" y="252" font-size="8" fill="#8a8a8e">ClientContext 是 core call 回填与凭证生效的汇合点</text>
+
+  <rect x="644" y="278" width="352" height="128" rx="10" fill="#fbfbfd" stroke="#e6e6ea"/>
+  <text x="660" y="298" font-size="10.5" font-weight="700" fill="#3a3a3f">方法注册（预注册句柄）</text>
+  <text x="660" y="320" font-size="8.5" fill="#5b6470">Channel::RegisterMethod → core</text>
+  <text x="660" y="338" font-size="8.5" fill="#5b6470">grpc_channel_register_call</text>
+  <text x="660" y="360" font-size="8.5" fill="#5b6470">缓存 path / authority，走 kRegistered</text>
+  <text x="660" y="378" font-size="8" fill="#8a8a8e">省掉每次调用的 slice 拷贝与路径解析</text>
+  <text x="660" y="396" font-size="8" fill="#8a8a8e">未覆盖 authority 是走 kRegistered 的前提</text>
+
+  <!-- transport (green) -->
+  <rect x="24" y="414" width="600" height="40" rx="10" fill="#eafaf1" stroke="#b8e6cd" filter="url(#sp)"/>
+  <text x="40" y="431" font-size="11" font-weight="700" fill="#1c6b45">⑤ 选中 transport 承接 —— 落到 HTTP/2 数据面</text>
+  <text x="40" y="446" font-size="8" fill="#5aa07d">此后进入 CallSpine / filter 栈 / chttp2，见调用生命周期与传输主线</text>
+
+  <text x="24" y="474" font-size="9" fill="#4a4a4f">不变量：一次 RPC 一块 Arena，结束整块释放；C++ 两条建 call 路径最终收敛到同一 C 接口 grpc_channel_create_call_with_arena_init。</text>
+</svg>

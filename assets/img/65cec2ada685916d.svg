@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="520" viewBox="0 0 1080 520" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="520" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Milvus tSafe · 读快照的时间闸门（时间戳 MVCC）</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">QueryNode 怎么保证“读到 guaranteeTs 时刻的一致快照”?靠 tSafe:已消费 WAL 到的时间水位 —— 随日志消费推进,非墙上时钟</text>
+
+  <!-- waitTSafe decision (left) -->
+  <rect x="30" y="92" width="330" height="228" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="46" y="114" font-size="10.5" font-weight="700" fill="#1b2a4a">waitTSafe(ctx, ts)</text>
+  <text x="46" y="132" font-size="8" fill="#5b7db1">querynodev2/delegator/delegator.go</text>
+  <!-- decision diamond as rect -->
+  <rect x="66" y="146" width="258" height="46" rx="8" fill="#e7f0fb" stroke="#b9d2ef"/>
+  <text x="195" y="167" font-size="9" text-anchor="middle" fill="#1b2a4a" font-weight="600">latestTsafe ≥ ts ?</text>
+  <text x="195" y="184" font-size="8" text-anchor="middle" fill="#5b7db1">ts = guaranteeTs(由一致性级别定)</text>
+  <!-- yes branch -->
+  <rect x="66" y="204" width="124" height="58" rx="8" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="128" y="226" font-size="8.5" text-anchor="middle" fill="#12402a" font-weight="600">是 → 快路径</text>
+  <text x="128" y="243" font-size="8" text-anchor="middle" fill="#2f6f4f">立即返回</text>
+  <text x="128" y="257" font-size="7.5" text-anchor="middle" fill="#2f6f4f">数据已到齐</text>
+  <!-- no branch -->
+  <rect x="200" y="204" width="124" height="58" rx="8" fill="#fff7e6" stroke="#e8cf9a"/>
+  <text x="262" y="226" font-size="8.5" text-anchor="middle" fill="#5a3410" font-weight="600">否 → 阻塞等</text>
+  <text x="262" y="243" font-size="8" text-anchor="middle" fill="#93762e">等 tSafe 推进</text>
+  <text x="262" y="257" font-size="7.5" text-anchor="middle" fill="#93762e">随 WAL 消费追上</text>
+  <line x1="128" y1="192" x2="128" y2="204" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="262" y1="192" x2="262" y2="204" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <text x="195" y="286" font-size="8" text-anchor="middle" fill="#5b7db1">tSafe 追上 guaranteeTs 才返回</text>
+  <text x="195" y="304" font-size="8" text-anchor="middle" fill="#5b7db1">= “该看的数据都到了”</text>
+
+  <!-- MVCC gate timeline (middle-right top) -->
+  <rect x="390" y="92" width="660" height="150" rx="14" fill="#f5faf6" stroke="#cfe6d5" filter="url(#soft)"/>
+  <text x="406" y="114" font-size="10.5" font-weight="700" fill="#12402a">MVCC 闸门 · 只看 guaranteeTs ≤ ts ≤ tSafe 的数据</text>
+  <text x="406" y="132" font-size="8" fill="#2f6f4f">时间戳驱动的 MVCC 快照:两端夹逼出一致的可见区间</text>
+  <!-- timeline axis -->
+  <line x1="420" y1="200" x2="1020" y2="200" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <text x="1024" y="203" font-size="8" fill="#a1a1a6">ts</text>
+  <!-- guaranteeTs marker -->
+  <line x1="560" y1="186" x2="560" y2="214" stroke="#7a5a95" stroke-width="1.6"/>
+  <text x="560" y="180" font-size="8" text-anchor="middle" fill="#5a3d78" font-weight="600">guaranteeTs</text>
+  <text x="560" y="228" font-size="7.5" text-anchor="middle" fill="#5a3d78">下界(≥)</text>
+  <!-- tSafe marker -->
+  <line x1="860" y1="186" x2="860" y2="214" stroke="#2f6f4f" stroke-width="1.6"/>
+  <text x="860" y="180" font-size="8" text-anchor="middle" fill="#12402a" font-weight="600">tSafe</text>
+  <text x="860" y="228" font-size="7.5" text-anchor="middle" fill="#2f6f4f">上界(≤)· WAL 水位</text>
+  <!-- visible window -->
+  <rect x="560" y="192" width="300" height="16" fill="#bfe0cd" fill-opacity="0.5"/>
+  <text x="710" y="204" font-size="7.5" text-anchor="middle" fill="#12402a" font-weight="600">可见区间(一致快照)</text>
+  <text x="490" y="204" font-size="7.5" text-anchor="middle" fill="#a1a1a6">太旧(不看)</text>
+  <text x="945" y="204" font-size="7.5" text-anchor="middle" fill="#a1a1a6">未到(尚不可见)</text>
+
+  <!-- tSafe advance mechanism (middle-right bottom) -->
+  <rect x="390" y="256" width="315" height="120" rx="14" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="406" y="278" font-size="10" font-weight="700" fill="#5a3410">tSafe 如何推进</text>
+  <g font-size="8.5">
+    <rect x="406" y="290" width="283" height="34" rx="7" fill="#fef2e0" stroke="#e8cf9a"/><text x="418" y="311" fill="#5a3410">QueryNode 消费 WAL → 推进水位</text>
+    <rect x="406" y="330" width="283" height="34" rx="7" fill="#fdf6ea" stroke="#efdcb4"/><text x="418" y="351" fill="#93762e">tSafe = 已消费 WAL 到的 TSO,非墙钟</text>
+  </g>
+
+  <!-- lag protection (right bottom, red) -->
+  <rect x="721" y="256" width="329" height="120" rx="14" fill="#fbeaea" stroke="#e7c3c3" filter="url(#soft)"/>
+  <text x="737" y="278" font-size="10" font-weight="700" fill="#4a1414">滞后保护</text>
+  <g font-size="8.5">
+    <rect x="737" y="290" width="297" height="34" rx="7" fill="#fdeaea" stroke="#e7c3c3"/><text x="749" y="311" fill="#4a1414">guaranteeTs − tSafe &gt; MaxTimestampLag</text>
+    <rect x="737" y="330" width="297" height="34" rx="7" fill="#fff" stroke="#e7c3c3"/><text x="749" y="351" fill="#7a2a2a">→ 报 ErrTsLagTooLarge · stall 超时触发副本 failover</text>
+  </g>
+
+  <!-- insight -->
+  <rect x="30" y="392" width="1020" height="108" rx="12" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="46" y="416" font-size="10.5" font-weight="700" fill="#1d1d1f">为什么 tSafe（日志驱动系统实现读一致性的标准做法）</text>
+  <text x="46" y="436" font-size="8.8" fill="#6e6e73">写入经 WAL 异步落段,QueryNode 消费日志推进 tSafe;读等 tSafe 追上 guaranteeTs,才确保“该看的数据都到了”,给出一致快照</text>
+  <text x="46" y="454" font-size="8.8" fill="#6e6e73">误区:tSafe 是墙上时钟 —— 它是“已消费 WAL 到的 TSO 水位”,随日志消费推进,不是实时钟</text>
+  <text x="46" y="472" font-size="8.8" fill="#6e6e73">误区:写入即全局可见 —— 写进 WAL 后 QueryNode 要消费到才推进 tSafe、才对读可见;有传播延迟</text>
+  <text x="46" y="490" font-size="8.8" fill="#6e6e73">MaxTimestampLag:网络 / 消费慢时防查询无限等 —— 滞后过大直接报错并 failover,而非死等</text>
+</svg>

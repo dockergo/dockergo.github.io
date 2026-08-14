@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="410" viewBox="0 0 1020 410"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1020" height="410" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">替换扫描 Replacement Scan · 直接查文件/对象，绑定期改写成表函数（config.hpp:172）</text>
+
+  <!-- 流程 -->
+  <rect x="30" y="56" width="960" height="150" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <rect x="48" y="86" width="230" height="90" rx="10" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="163" y="112" font-size="10" font-weight="600" fill="#1b2a4a" text-anchor="middle">SELECT * FROM</text>
+  <text x="163" y="132" font-size="9.5" fill="#5b7db1" text-anchor="middle" font-family="monospace">'data.parquet'</text>
+  <text x="163" y="154" font-size="9" fill="#8fa9cf" text-anchor="middle">名字不是已知表</text>
+
+  <rect x="318" y="86" width="230" height="90" rx="10" fill="#fff7e6" stroke="#f0dcae"/>
+  <text x="433" y="108" font-size="10" font-weight="600" fill="#7a4d00" text-anchor="middle">Binder 找不到该表</text>
+  <text x="433" y="130" font-size="9" fill="#9a7328" text-anchor="middle">→ 触发 replacement_scans</text>
+  <text x="433" y="148" font-size="9" fill="#9a7328" text-anchor="middle">逐个 hook 试着"认领"</text>
+  <text x="433" y="166" font-size="8.5" fill="#b8912e" text-anchor="middle">replacement_scan.hpp</text>
+
+  <rect x="588" y="86" width="230" height="90" rx="10" fill="#eafaf1" stroke="#bce6cd"/>
+  <text x="703" y="108" font-size="10" font-weight="600" fill="#0f5132" text-anchor="middle">.parquet hook 认领</text>
+  <text x="703" y="130" font-size="9" fill="#3f8f66" text-anchor="middle">改写为表函数调用</text>
+  <text x="703" y="150" font-size="9" fill="#3f8f66" text-anchor="middle" font-family="monospace">read_parquet('data.parquet')</text>
+
+  <rect x="856" y="86" width="116" height="90" rx="10" fill="#f4eefb" stroke="#d9c9ef"/>
+  <text x="914" y="120" font-size="10" font-weight="600" fill="#3c1361" text-anchor="middle">正常执行</text>
+  <text x="914" y="142" font-size="9" fill="#7a5aa8" text-anchor="middle">当作表函数</text>
+  <text x="914" y="158" font-size="9" fill="#7a5aa8" text-anchor="middle">扫描</text>
+
+  <line x1="278" y1="131" x2="318" y2="131" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="548" y1="131" x2="588" y2="131" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="818" y1="131" x2="856" y2="131" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+
+  <!-- 价值 -->
+  <rect x="30" y="226" width="470" height="164" rx="14" fill="#eafaf1" stroke="#bce6cd" filter="url(#soft)"/>
+  <text x="48" y="250" font-size="12" font-weight="600" fill="#0f5132">为什么好用</text>
+  <text x="48" y="274" font-size="10" fill="#3f8f66">• 文件路径、DataFrame、外部表都能"当表查"，</text>
+  <text x="48" y="292" font-size="10" fill="#3f8f66">  无需先 CREATE TABLE 或显式写表函数。</text>
+  <text x="48" y="314" font-size="10" fill="#3f8f66">• Python：df 变量名可直接出现在 FROM 里</text>
+  <text x="48" y="332" font-size="10" fill="#3f8f66">  （replacement scan 认领本地 DataFrame）。</text>
+  <text x="48" y="356" font-size="10" fill="#3f8f66">• 扩展可注册自己的 replacement scan，</text>
+  <text x="48" y="374" font-size="10" fill="#3f8f66">  让新数据源也享受"直接 FROM"体验。</text>
+
+  <!-- 开关 -->
+  <rect x="520" y="226" width="470" height="164" rx="14" fill="#f6f6f8" stroke="#e2e2e7"/>
+  <text x="538" y="250" font-size="12" font-weight="600" fill="#1d1d1f">机制与开关</text>
+  <text x="538" y="274" font-size="10" fill="#494950">• 注册表：config.replacement_scans（config.hpp:172）</text>
+  <text x="538" y="296" font-size="10" fill="#494950">• 开关：use_replacement_scans（client_config.hpp:59，默认 true）</text>
+  <text x="538" y="318" font-size="10" fill="#494950">• 触发点：Binder 解析表名失败时（binder.hpp 引用）</text>
+  <text x="538" y="340" font-size="10" fill="#494950">• 顺序：逐个 hook 尝试，第一个认领的胜出</text>
+  <text x="538" y="366" font-size="9.5" fill="#86868b">本质是"表名解析的兜底扩展点"，把非表名翻译成表函数。</text>
+</svg>

@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="940" height="440" viewBox="0 0 940 440" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="arg" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#5aa06e"/></marker>
+    <marker id="arb" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#8fa0c0"/></marker>
+    <marker id="arm" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="940" height="440" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">写时复制层栈 · 镜像层只读共享（lowerdir 链）+ 容器可写层（upperdir）</text>
+
+  <!-- legend -->
+  <rect x="590" y="17" width="12" height="12" rx="3" fill="#fbf2ea" stroke="#e6cdae"/><text x="607" y="27" font-size="10" fill="#6e6e73">只读镜像层</text>
+  <rect x="686" y="17" width="12" height="12" rx="3" fill="#f5faf6" stroke="#cfe6d2"/><text x="703" y="27" font-size="10" fill="#6e6e73">容器可写层</text>
+  <rect x="786" y="17" width="12" height="12" rx="3" fill="#f6f8fc" stroke="#cfe0f2"/><text x="803" y="27" font-size="10" fill="#6e6e73">overlay 挂载</text>
+
+  <!-- 容器 A 栈 -->
+  <text x="60" y="62" font-size="11" font-weight="600" fill="#1d1d1f">容器 A</text>
+  <rect x="60" y="72" width="230" height="46" rx="9" fill="#f5faf6" stroke="#cfe6d2" filter="url(#soft)"/>
+  <text x="76" y="92" font-size="10.5" font-weight="600" fill="#1d8f3f">可写层（upperdir）· Active</text>
+  <text x="76" y="109" font-size="9.5" fill="#4a8a5c">Prepare 得到，改动只落这里</text>
+
+  <rect x="60" y="126" width="230" height="40" rx="9" fill="#fbf2ea" stroke="#e6cdae"/>
+  <text x="76" y="151" font-size="10" fill="#b0651f">镜像层 L2（Committed · 只读）</text>
+  <rect x="60" y="172" width="230" height="40" rx="9" fill="#fbf2ea" stroke="#e6cdae"/>
+  <text x="76" y="197" font-size="10" fill="#b0651f">镜像层 L1（Committed · 只读）</text>
+  <rect x="60" y="218" width="230" height="40" rx="9" fill="#fbf2ea" stroke="#e6cdae"/>
+  <text x="76" y="243" font-size="10" fill="#b0651f">镜像层 L0 base（Committed · 只读）</text>
+
+  <!-- 读写标注 -->
+  <path d="M310 95 L322 95 L322 300 L296 300" fill="none" stroke="#5aa06e" stroke-width="1.5" marker-end="url(#arg)"/>
+  <text x="330" y="88" font-size="10" fill="#1d8f3f">写：copy-up</text>
+  <text x="330" y="102" font-size="9.5" fill="#4a8a5c">只落 upperdir</text>
+  <path d="M40 90 L40 240" fill="none" stroke="#8fa0c0" stroke-width="1.5" marker-end="url(#arb)"/>
+  <text x="16" y="300" font-size="9.5" fill="#5b7db1" transform="rotate(-90 16 300)">读：自上而下逐层穿透</text>
+
+  <!-- overlay mount 组装 -->
+  <rect x="356" y="72" width="250" height="186" rx="12" fill="#f6f8fc" stroke="#cfe0f2" filter="url(#soft)"/>
+  <text x="481" y="96" font-size="11.5" font-weight="600" fill="#5b7db1" text-anchor="middle">overlay 联合挂载</text>
+  <text x="372" y="122" font-size="10" fill="#5b7db1">lowerdir = L2 : L1 : L0</text>
+  <text x="372" y="142" font-size="9" fill="#8fa0c0">（镜像层链，只读、冒号相连）</text>
+  <text x="372" y="166" font-size="10" fill="#5b7db1">upperdir = 容器可写层</text>
+  <text x="372" y="186" font-size="10" fill="#5b7db1">workdir = 中转目录</text>
+  <path d="M372 200 L590 200" fill="none" stroke="#cfe0f2" stroke-width="1"/>
+  <text x="372" y="222" font-size="10.5" font-weight="600" fill="#1d1d1f">merged = 容器 rootfs</text>
+  <text x="372" y="242" font-size="9.5" fill="#5b7db1">上层覆盖下层，呈现单一视图</text>
+  <path d="M290 165 L354 165" fill="none" stroke="#8fa0c0" stroke-width="1.6" marker-end="url(#arb)"/>
+
+  <!-- 跨容器共享 -->
+  <text x="672" y="62" font-size="11" font-weight="600" fill="#1d1d1f">容器 B（共享底层）</text>
+  <rect x="672" y="72" width="230" height="46" rx="9" fill="#f5faf6" stroke="#cfe6d2" filter="url(#soft)"/>
+  <text x="688" y="92" font-size="10.5" font-weight="600" fill="#1d8f3f">B 的可写层（独立 upperdir）</text>
+  <text x="688" y="109" font-size="9.5" fill="#4a8a5c">各容器一份，互不影响</text>
+  <rect x="672" y="126" width="230" height="132" rx="10" fill="#fdf9f2" stroke="#e6cdae" stroke-dasharray="5 3"/>
+  <text x="787" y="176" font-size="10.5" font-weight="600" fill="#b0651f" text-anchor="middle">复用同一条 L2:L1:L0</text>
+  <text x="787" y="198" font-size="9.5" fill="#b08535" text-anchor="middle">只读镜像层磁盘只存一份</text>
+  <text x="787" y="218" font-size="9.5" fill="#b08535" text-anchor="middle">= 内容寻址天然去重</text>
+  <path d="M606 200 L670 200" fill="none" stroke="#b8b8bf" stroke-width="1.5" stroke-dasharray="5 3" marker-end="url(#arm)"/>
+
+  <!-- caption -->
+  <rect x="26" y="284" width="876" height="0" fill="none"/>
+  <rect x="26" y="296" width="876" height="120" rx="10" fill="#f8f8fb" stroke="#eceaf0"/>
+  <text x="42" y="322" font-size="11" fill="#6e6e73"><tspan font-weight="600" fill="#1d1d1f">核心：</tspan>镜像的每层是一个只读 Committed 快照；容器启动时 Prepare 出一个 Active 快照作可写层，overlay 把它当 upperdir、把镜像层链当 lowerdir 联合挂载成 rootfs。</text>
+  <text x="42" y="346" font-size="10.5" fill="#6e6e73"><tspan font-weight="600" fill="#1d8f3f">写：</tspan>改动只落 upperdir（首次写触发 copy-up 拷上来），底层镜像层永不改动。</text>
+  <text x="42" y="368" font-size="10.5" fill="#6e6e73"><tspan font-weight="600" fill="#5b7db1">读：</tspan>自上而下逐层查找，命中即返回，上层遮蔽下层同名文件。</text>
+  <text x="42" y="390" font-size="10.5" fill="#6e6e73"><tspan font-weight="600" fill="#b0651f">共享：</tspan>N 个容器复用同一条只读镜像层链，磁盘只存一份——这正是内容寻址去重在文件系统层的体现。</text>
+  <text x="42" y="410" font-size="9.5" fill="#a1a1a6">同一 Snapshotter 接口下 overlayfs / native / btrfs / devmapper / 远程懒加载可互换，选型决定拉起延迟与磁盘占用。</text>
+</svg>

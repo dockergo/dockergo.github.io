@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="470" viewBox="0 0 920 470"
+     font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="920" height="470" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">块的物理布局:一个块 = 数据文件 blk_id + 校验和文件 .meta</text>
+
+  <!-- 逻辑块 -->
+  <rect x="40" y="64" width="300" height="80" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="190" y="90" font-size="11" font-weight="600" fill="#1b2a4a" text-anchor="middle">逻辑块 blk_1073741825</text>
+  <text x="190" y="112" font-size="8.5" fill="#5b7db1" text-anchor="middle">≤128MB 上限;50MB 文件只占 50MB</text>
+  <text x="190" y="130" font-size="8.5" fill="#5b7db1" text-anchor="middle">NameNode 只知它属于哪个文件</text>
+
+  <text x="480" y="108" font-size="11" fill="#86868b" text-anchor="middle">落到 DataNode 磁盘 =</text>
+  <path d="M340,104 L420,104" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <!-- 两个文件 -->
+  <rect x="580" y="64" width="300" height="38" rx="9" fill="#fff7e6" stroke="#f0dcae" filter="url(#soft)"/>
+  <text x="730" y="88" font-size="10" font-weight="600" fill="#7a4d00" text-anchor="middle">blk_1073741825(纯数据字节)</text>
+  <rect x="580" y="110" width="300" height="44" rx="9" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+  <text x="730" y="130" font-size="10" font-weight="600" fill="#7a4d00" text-anchor="middle">blk_1073741825_1001.meta</text>
+  <text x="730" y="146" font-size="8.3" fill="#9a7328" text-anchor="middle">校验和头 + 每 512B 一个 CRC</text>
+
+  <!-- 生命周期目录 -->
+  <rect x="40" y="180" width="840" height="120" rx="13" fill="#f5faf6" stroke="#e2ece5"/>
+  <text x="60" y="204" font-size="11.5" font-weight="600" fill="#2c5a3a">按生命周期分目录存放</text>
+  <rect x="70" y="218" width="240" height="66" rx="10" fill="#fff7e6" stroke="#f0dcae"/>
+  <text x="190" y="242" font-size="10" font-weight="600" fill="#7a4d00" text-anchor="middle">rbw/(replica being written)</text>
+  <text x="190" y="264" font-size="8.5" fill="#9a7328" text-anchor="middle">正在写入的临时副本</text>
+  <rect x="340" y="218" width="240" height="66" rx="10" fill="#eafaf1" stroke="#bce6cd"/>
+  <text x="460" y="242" font-size="10" font-weight="600" fill="#0f5132" text-anchor="middle">finalized/</text>
+  <text x="460" y="264" font-size="8.5" fill="#3f8f66" text-anchor="middle">写完封存的正式副本</text>
+  <rect x="610" y="218" width="240" height="66" rx="10" fill="#f4eefb" stroke="#d9c9ef"/>
+  <text x="730" y="242" font-size="10" font-weight="600" fill="#3c1361" text-anchor="middle">genStamp 代际戳</text>
+  <text x="730" y="264" font-size="8.5" fill="#7c5aa6" text-anchor="middle">pipeline 恢复递增,辨过期副本</text>
+  <path d="M310,251 L340,251" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="325" y="242" font-size="8" fill="#a1a1a6" text-anchor="middle">finalize</text>
+
+  <!-- 校验 -->
+  <rect x="40" y="326" width="840" height="118" rx="13" fill="#f7f7f9" stroke="#e2e2e7"/>
+  <text x="60" y="350" font-size="11.5" font-weight="600" fill="#1d1d1f">读时校验 + 后台巡检</text>
+  <text x="60" y="374" font-size="9.2" fill="#494950">· 读取时用 .meta 逐 chunk(512B) 校验 CRC;不匹配 → 上报 NameNode 坏块、client 切下一副本重读</text>
+  <text x="60" y="396" font-size="9.2" fill="#494950">· 后台块扫描线程(DataBlockScanner)周期校验所有块,检出静默损坏(bit rot),无需读触发</text>
+  <text x="60" y="418" font-size="9.2" fill="#494950">· 坏块上报后由 NameNode 从好副本自动重建补齐 —— 存储层自愈,不需人工介入</text>
+  <text x="60" y="436" font-size="8.5" fill="#86868b">dfs.bytes-per-checksum 默认 512(HdfsClientConfigKeys.java:135)</text>
+</svg>

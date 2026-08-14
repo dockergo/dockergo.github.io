@@ -1,0 +1,140 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1140" height="680" viewBox="0 0 1140 680" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="aG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+    <marker id="aB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#4a7fd0"/></marker>
+    <marker id="aA" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#c99a3a"/></marker>
+    <marker id="aP" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#8a5cae"/></marker>
+  </defs>
+  <rect width="1140" height="680" fill="#fbfbfd"/>
+
+  <!-- 判型标题带 -->
+  <text x="30" y="32" font-size="15" font-weight="700" fill="#1d1d1f">分布式共识与状态复制 · 复制状态机：把一次写变成一条只增日志，多数派确认即提交，各副本同序回放收敛到同一状态</text>
+  <text x="30" y="53" font-size="10.5" fill="#6e6e73">单一 Leader 序列化提案 → 日志复制到多数派 → 提交点单调推进 → 状态机 apply；Leader 失效则任期 +1 重新选举，始终保持唯一序列化点</text>
+
+  <!-- 语义图例（≥4 路径） -->
+  <line x1="30" y1="82" x2="54" y2="82" stroke="#2f9e6e" stroke-width="2" marker-end="url(#aG)"/>
+  <text x="60" y="86" font-size="10" fill="#3a3a3c">提案追加 · 已提交 apply</text>
+  <line x1="228" y1="82" x2="252" y2="82" stroke="#4a7fd0" stroke-width="2" marker-end="url(#aB)"/>
+  <text x="258" y="86" font-size="10" fill="#3a3a3c">日志复制 · 提交点推进</text>
+  <line x1="426" y1="82" x2="450" y2="82" stroke="#c99a3a" stroke-width="2" stroke-dasharray="5 3" marker-end="url(#aA)"/>
+  <text x="456" y="86" font-size="10" fill="#3a3a3c">选举 · 任期递增（liveness）</text>
+  <line x1="648" y1="82" x2="672" y2="82" stroke="#8a5cae" stroke-width="2" stroke-dasharray="5 3" marker-end="url(#aP)"/>
+  <text x="678" y="86" font-size="10" fill="#3a3a3c">线性一致读（绕日志）</text>
+  <text x="1110" y="86" font-size="10" fill="#a1a1a6" text-anchor="end">概念层机理</text>
+  <line x1="30" y1="98" x2="1110" y2="98" stroke="#e4e7ec" stroke-width="1"/>
+
+  <!-- 客户端 -->
+  <rect x="28" y="250" width="148" height="92" rx="12" fill="#ffffff" stroke="#d9dde4" filter="url(#soft)"/>
+  <text x="102" y="284" font-size="12" font-weight="600" fill="#1d1d1f" text-anchor="middle">客户端 · 提案源</text>
+  <text x="102" y="304" font-size="9" fill="#6e6e73" text-anchor="middle">只提交命令（what）</text>
+  <text x="102" y="320" font-size="9" fill="#6e6e73" text-anchor="middle">不关心复制细节</text>
+
+  <!-- 线性一致读入口 -->
+  <rect x="28" y="386" width="148" height="92" rx="12" fill="#f4eefb" stroke="#dcc9ef" filter="url(#soft)"/>
+  <text x="102" y="420" font-size="12" font-weight="600" fill="#6f3ea8" text-anchor="middle">线性一致读</text>
+  <text x="102" y="440" font-size="9" fill="#8a5cae" text-anchor="middle">读不写日志</text>
+  <text x="102" y="456" font-size="9" fill="#8a5cae" text-anchor="middle">见 图解点 ③</text>
+
+  <!-- Leader -->
+  <rect x="200" y="230" width="232" height="176" rx="13" fill="#eaf1fb" stroke="#c6d9f2" filter="url(#soft)"/>
+  <text x="316" y="256" font-size="12.5" font-weight="700" fill="#20375e" text-anchor="middle">Leader · 唯一序列化点</text>
+  <line x1="216" y1="266" x2="416" y2="266" stroke="#c6d9f2" stroke-width="1"/>
+  <text x="220" y="290" font-size="9.5" fill="#3a4a63">接收提案 → 追加本地日志 ⟨term, idx⟩</text>
+  <text x="220" y="316" font-size="9.5" fill="#3a4a63">广播 AppendEntries 给所有副本</text>
+  <text x="220" y="342" font-size="9.5" fill="#3a4a63">过半 ack → 推进 commit index</text>
+  <text x="220" y="368" font-size="9.5" fill="#3a4a63">已提交条目 → 交状态机 apply</text>
+  <text x="220" y="392" font-size="8.5" fill="#8a97ab">同一时刻同一任期内至多一个 Leader</text>
+
+  <!-- 选举带 -->
+  <rect x="200" y="430" width="232" height="116" rx="13" fill="#fbf3e2" stroke="#ecd6a8" filter="url(#soft)"/>
+  <text x="316" y="456" font-size="12" font-weight="700" fill="#8a6417" text-anchor="middle">选举 · 任期 · 成员变更</text>
+  <text x="216" y="480" font-size="9.5" fill="#7a5a1a">Leader 失效 → 心跳超时</text>
+  <text x="216" y="502" font-size="9.5" fill="#7a5a1a">任期 term+1，多数派投票选新 Leader</text>
+  <text x="216" y="524" font-size="9.5" fill="#7a5a1a">成员变更走联合共识，保证仍唯一</text>
+
+  <!-- 副本集容器 -->
+  <rect x="460" y="150" width="360" height="396" rx="14" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="476" y="176" font-size="12" font-weight="700" fill="#2f6b4e">副本集 · 日志按序复制到多数派</text>
+
+  <!-- follower 1 -->
+  <rect x="480" y="196" width="320" height="86" rx="10" fill="#eaf6f0" stroke="#bfe3d1"/>
+  <text x="494" y="218" font-size="10.5" font-weight="600" fill="#2f6b4e">副本 1</text>
+  <g font-size="10" text-anchor="middle" fill="#2f6b4e">
+    <rect x="494" y="230" width="38" height="26" rx="4" fill="#d7efe2" stroke="#9ed3b8"/><text x="513" y="247">1</text>
+    <rect x="536" y="230" width="38" height="26" rx="4" fill="#d7efe2" stroke="#9ed3b8"/><text x="555" y="247">2</text>
+    <rect x="578" y="230" width="38" height="26" rx="4" fill="#d7efe2" stroke="#9ed3b8"/><text x="597" y="247">3</text>
+    <rect x="620" y="230" width="38" height="26" rx="4" fill="#d7efe2" stroke="#9ed3b8"/><text x="639" y="247">4</text>
+    <rect x="662" y="230" width="38" height="26" rx="4" fill="#d7efe2" stroke="#9ed3b8"/><text x="681" y="247">5</text>
+    <rect x="704" y="230" width="38" height="26" rx="4" fill="#fff" stroke="#9ed3b8" stroke-dasharray="3 2"/><text x="723" y="247" fill="#8fb9a4">6</text>
+  </g>
+
+  <!-- follower 2 (leader 自身副本视角) -->
+  <rect x="480" y="298" width="320" height="86" rx="10" fill="#eaf6f0" stroke="#bfe3d1"/>
+  <text x="494" y="320" font-size="10.5" font-weight="600" fill="#2f6b4e">副本 2</text>
+  <g font-size="10" text-anchor="middle" fill="#2f6b4e">
+    <rect x="494" y="332" width="38" height="26" rx="4" fill="#d7efe2" stroke="#9ed3b8"/><text x="513" y="349">1</text>
+    <rect x="536" y="332" width="38" height="26" rx="4" fill="#d7efe2" stroke="#9ed3b8"/><text x="555" y="349">2</text>
+    <rect x="578" y="332" width="38" height="26" rx="4" fill="#d7efe2" stroke="#9ed3b8"/><text x="597" y="349">3</text>
+    <rect x="620" y="332" width="38" height="26" rx="4" fill="#d7efe2" stroke="#9ed3b8"/><text x="639" y="349">4</text>
+    <rect x="662" y="332" width="38" height="26" rx="4" fill="#d7efe2" stroke="#9ed3b8"/><text x="681" y="349">5</text>
+    <rect x="704" y="332" width="38" height="26" rx="4" fill="#fff" stroke="#9ed3b8" stroke-dasharray="3 2"/><text x="723" y="349" fill="#8fb9a4">6</text>
+  </g>
+
+  <!-- follower 3 (落后) -->
+  <rect x="480" y="400" width="320" height="86" rx="10" fill="#eaf6f0" stroke="#bfe3d1"/>
+  <text x="494" y="422" font-size="10.5" font-weight="600" fill="#2f6b4e">副本 3 · 稍落后</text>
+  <g font-size="10" text-anchor="middle" fill="#2f6b4e">
+    <rect x="494" y="434" width="38" height="26" rx="4" fill="#d7efe2" stroke="#9ed3b8"/><text x="513" y="451">1</text>
+    <rect x="536" y="434" width="38" height="26" rx="4" fill="#d7efe2" stroke="#9ed3b8"/><text x="555" y="451">2</text>
+    <rect x="578" y="434" width="38" height="26" rx="4" fill="#d7efe2" stroke="#9ed3b8"/><text x="597" y="451">3</text>
+    <rect x="620" y="434" width="38" height="26" rx="4" fill="#d7efe2" stroke="#9ed3b8"/><text x="639" y="451">4</text>
+    <rect x="662" y="434" width="38" height="26" rx="4" fill="#fff" stroke="#9ed3b8" stroke-dasharray="3 2"/><text x="681" y="451" fill="#8fb9a4">5</text>
+  </g>
+  <text x="476" y="516" font-size="9" fill="#8a97ab">同一 index 被多数派持有的条目 = 已提交（实心）；虚线格 = 尚未达成多数派</text>
+
+  <!-- 多数派仲裁 -->
+  <rect x="848" y="196" width="264" height="110" rx="13" fill="#eaf6f0" stroke="#bfe3d1" filter="url(#soft)"/>
+  <text x="980" y="222" font-size="12" font-weight="700" fill="#2f6b4e" text-anchor="middle">多数派仲裁 · quorum</text>
+  <text x="864" y="246" font-size="9.5" fill="#2f6b4e">quorum = ⌊N/2⌋ + 1，任意两多数派必相交</text>
+  <text x="864" y="268" font-size="9.5" fill="#2f6b4e">同一 index 收到过半 ack</text>
+  <text x="864" y="290" font-size="9.5" fill="#2f6b4e">⇒ 该条目已提交，永不回滚</text>
+
+  <!-- 提交点 -->
+  <rect x="848" y="330" width="264" height="76" rx="13" fill="#eaf1fb" stroke="#c6d9f2" filter="url(#soft)"/>
+  <text x="980" y="356" font-size="12" font-weight="700" fill="#20375e" text-anchor="middle">提交点 · commit index</text>
+  <text x="864" y="378" font-size="9.5" fill="#3a4a63">多数派已确认的最高连续 index</text>
+  <text x="864" y="396" font-size="9.5" fill="#3a4a63">随 ack 单调推进，不回退</text>
+
+  <!-- 状态机 -->
+  <rect x="848" y="430" width="264" height="116" rx="13" fill="#ffffff" stroke="#d9dde4" filter="url(#soft)"/>
+  <text x="980" y="456" font-size="12" font-weight="700" fill="#1d1d1f" text-anchor="middle">状态机复制 · apply</text>
+  <text x="864" y="480" font-size="9.5" fill="#4a4a4f">各副本按同一日志顺序回放</text>
+  <text x="864" y="502" font-size="9.5" fill="#4a4a4f">→ 确定性收敛到同一状态</text>
+  <text x="864" y="524" font-size="9.5" fill="#4a4a4f">对外只暴露已提交前缀</text>
+
+  <!-- 连线 -->
+  <!-- client → leader -->
+  <line x1="176" y1="290" x2="198" y2="286" stroke="#2f9e6e" stroke-width="2" marker-end="url(#aG)"/>
+  <text x="180" y="278" font-size="8.5" fill="#2f6b4e">提案</text>
+  <!-- read → leader -->
+  <line x1="176" y1="416" x2="198" y2="382" stroke="#8a5cae" stroke-width="1.8" stroke-dasharray="5 3" marker-end="url(#aP)"/>
+  <!-- election → leader -->
+  <line x1="316" y1="428" x2="316" y2="408" stroke="#c99a3a" stroke-width="1.8" stroke-dasharray="5 3" marker-end="url(#aA)"/>
+  <text x="322" y="422" font-size="8.5" fill="#8a6417">term+1</text>
+  <!-- leader → followers (replicate) -->
+  <line x1="432" y1="270" x2="478" y2="238" stroke="#4a7fd0" stroke-width="1.8" marker-end="url(#aB)"/>
+  <line x1="432" y1="318" x2="478" y2="340" stroke="#4a7fd0" stroke-width="1.8" marker-end="url(#aB)"/>
+  <line x1="432" y1="352" x2="478" y2="440" stroke="#4a7fd0" stroke-width="1.8" marker-end="url(#aB)"/>
+  <text x="436" y="262" font-size="8.5" fill="#2f5c98">复制</text>
+  <!-- followers → quorum (ack) -->
+  <line x1="800" y1="238" x2="846" y2="230" stroke="#2f9e6e" stroke-width="1.8" marker-end="url(#aG)"/>
+  <line x1="800" y1="340" x2="846" y2="262" stroke="#2f9e6e" stroke-width="1.8" marker-end="url(#aG)"/>
+  <line x1="800" y1="440" x2="846" y2="292" stroke="#2f9e6e" stroke-width="1.8" marker-end="url(#aG)"/>
+  <text x="806" y="224" font-size="8.5" fill="#2f6b4e">ack</text>
+  <!-- quorum → commit -->
+  <line x1="980" y1="306" x2="980" y2="328" stroke="#4a7fd0" stroke-width="2" marker-end="url(#aB)"/>
+  <!-- commit → state machine -->
+  <line x1="980" y1="406" x2="980" y2="428" stroke="#2f9e6e" stroke-width="2" marker-end="url(#aG)"/>
+  <text x="986" y="422" font-size="8.5" fill="#2f6b4e">apply</text>
+</svg>

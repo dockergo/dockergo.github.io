@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="460" viewBox="0 0 980 460" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <marker id="ac2a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#8a5cae"/></marker>
+    <marker id="ac2r" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#c0392b"/></marker>
+    <filter id="ac2s" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+  </defs>
+  <rect width="980" height="460" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="700" fill="#1d1d1f">背压 pause/resume · 让引擎处理"远大于内存"的数据（exec_plan.h）</text>
+  <text x="30" y="50" font-size="10.5" fill="#6e6e73">push 模型下下游若消费不过来会积压；pause/resume 带单调计数 counter，并发乱序下正确收敛</text>
+
+  <!-- 三个节点 -->
+  <rect x="60" y="120" width="200" height="96" rx="12" fill="#f5faf6" stroke="#bfe6cd" filter="url(#ac2s)"/>
+  <text x="160" y="148" font-size="12" font-weight="700" fill="#1c6b45" text-anchor="middle">source（上游）</text>
+  <text x="160" y="170" font-size="9" fill="#2f7d57" text-anchor="middle">产出 ExecBatch</text>
+  <text x="160" y="186" font-size="9" fill="#2f7d57" text-anchor="middle">只认"见过的最高 counter"</text>
+  <text x="160" y="204" font-size="8.5" fill="#8a9a8f" text-anchor="middle">决定最终该不该产批</text>
+
+  <rect x="390" y="120" width="200" height="96" rx="12" fill="#eef4fb" stroke="#cddcf0" filter="url(#ac2s)"/>
+  <text x="490" y="148" font-size="12" font-weight="700" fill="#1b2a4a" text-anchor="middle">filter / project（中游）</text>
+  <text x="490" y="170" font-size="9" fill="#5b7db1" text-anchor="middle">处理并转发批</text>
+  <text x="490" y="186" font-size="9" fill="#5b7db1" text-anchor="middle">队列积压 → 发起 pause</text>
+
+  <rect x="720" y="120" width="200" height="96" rx="12" fill="#f4eefb" stroke="#d9c9ef" filter="url(#ac2s)"/>
+  <text x="820" y="148" font-size="12" font-weight="700" fill="#3c1361" text-anchor="middle">sink（下游）</text>
+  <text x="820" y="170" font-size="9" fill="#6f3ea8" text-anchor="middle">消费结果</text>
+  <text x="820" y="186" font-size="9" fill="#6f3ea8" text-anchor="middle">消费不过来 = 慢消费者</text>
+
+  <!-- push 正向 -->
+  <line x1="260" y1="150" x2="390" y2="150" stroke="#8a5cae" stroke-width="2" marker-end="url(#ac2a)"/>
+  <text x="325" y="142" font-size="8.5" fill="#8a5cae" text-anchor="middle">InputReceived 推批（:225）</text>
+  <line x1="590" y1="150" x2="720" y2="150" stroke="#8a5cae" stroke-width="2" marker-end="url(#ac2a)"/>
+  <text x="655" y="142" font-size="8.5" fill="#8a5cae" text-anchor="middle">InputReceived 推批</text>
+
+  <!-- pause 反向 -->
+  <path d="M720,196 q-165,54 -460,0" fill="none" stroke="#c0392b" stroke-width="1.8" marker-end="url(#ac2r)"/>
+  <text x="490" y="256" font-size="9" fill="#c0392b" text-anchor="middle">积压 → PauseProducing(output, counter)（:300）令上游停产</text>
+
+  <!-- resume 反向 -->
+  <path d="M720,214 q-165,96 -460,0" fill="none" stroke="#1c6b45" stroke-width="1.8" stroke-dasharray="5 3" marker-end="url(#ac2a)"/>
+  <text x="490" y="300" font-size="9" fill="#1c6b45" text-anchor="middle">缓解 → ResumeProducing(output, counter)（:310）恢复产批</text>
+
+  <!-- counter 说明 -->
+  <rect x="60" y="326" width="420" height="110" rx="12" fill="#fbf2ea" stroke="#e6cdae"/>
+  <text x="76" y="348" font-size="11" font-weight="700" fill="#b0651f">counter：并发乱序下的收敛关键（:271-280）</text>
+  <text x="76" y="369" font-size="9.5" fill="#5a4a3a">pause/resume 可能乱序到达，故每次调用带</text>
+  <text x="76" y="385" font-size="9.5" fill="#5a4a3a">单调递增计数；源节点只认"见过的最高</text>
+  <text x="76" y="401" font-size="9.5" fill="#5a4a3a">counter"，据此决定最终状态，避免竞态。</text>
+  <text x="76" y="421" font-size="8.5" fill="#8a7a5a">始终只保留在途少量批次，不物化全表</text>
+
+  <!-- 终止路径 -->
+  <rect x="500" y="326" width="420" height="110" rx="12" fill="#f6f6f8" stroke="#e2e2e7"/>
+  <text x="516" y="348" font-size="11" font-weight="700" fill="#1d1d1f">终止路径</text>
+  <text x="516" y="369" font-size="9.5" fill="#4a4a4f">StopProducing()（:328）须幂等、须转发给 inputs</text>
+  <text x="516" y="385" font-size="9.5" fill="#4a4a4f">节点自实现 StopProducingImpl()（:336）</text>
+  <text x="516" y="405" font-size="9" fill="#6e6e73">这是数据流的流量控制，非 level-triggered 控制</text>
+  <text x="516" y="423" font-size="8.5" fill="#8a8a90">故 Acero 能吞"远大于内存"的数据集</text>
+</svg>

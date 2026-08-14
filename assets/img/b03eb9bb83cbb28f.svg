@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="520" viewBox="0 0 1080 520" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+  </defs>
+  <rect width="1080" height="520" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">RocksDB 缓存实现 · LRUCache vs HyperClockCache（均分片）</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">两种 block cache 实现;都分片(sharded)降多核锁竞争;满则按 LRU/clock 淘汰</text>
+
+  <!-- LRU -->
+  <rect x="30" y="70" width="500" height="220" rx="13" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="46" y="92" font-size="11.5" font-weight="700" fill="#1b2a4a">LRUCache(默认)</text>
+  <text x="46" y="110" font-size="8.5" fill="#5b7db1">cache/lru_cache.cc</text>
+  <rect x="46" y="120" width="470" height="44" rx="8" fill="#f3f7fc" stroke="#cfe0f2"/><text x="60" y="140" font-size="9" font-weight="600" fill="#274a78">分片 LRU 链表 + 哈希表</text><text x="60" y="156" font-size="8.3" fill="#5b7db1">每片一把锁;访问移到链头,淘汰从链尾</text>
+  <rect x="46" y="172" width="470" height="44" rx="8" fill="#f3f7fc" stroke="#cfe0f2"/><text x="60" y="192" font-size="9" font-weight="600" fill="#274a78">优先级(high/low)</text><text x="60" y="208" font-size="8.3" fill="#5b7db1">index/filter 可设高优先级,不易被淘汰</text>
+  <rect x="46" y="224" width="470" height="56" rx="8" fill="#fff" stroke="#bcd0ec"/><text x="60" y="244" font-size="8.8" font-weight="600" fill="#1b2a4a">特点</text><text x="60" y="262" font-size="8.3" fill="#5b7db1">· 通用、精确 LRU、支持优先级</text><text x="60" y="278" font-size="8.3" fill="#5b7db1">· 高并发下每片锁仍可能竞争</text>
+
+  <!-- HyperClock -->
+  <rect x="550" y="70" width="500" height="220" rx="13" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="566" y="92" font-size="11.5" font-weight="700" fill="#12402a">HyperClockCache(HCC)</text>
+  <text x="566" y="110" font-size="8.5" fill="#2f6f4f">cache/clock_cache.cc</text>
+  <rect x="566" y="120" width="470" height="44" rx="8" fill="#f5faf6" stroke="#cfe6d5"/><text x="580" y="140" font-size="9" font-weight="600" fill="#2c5a3a">无锁 clock 近似 LRU</text><text x="580" y="156" font-size="8.3" fill="#2f6f4f">clock 算法近似"最久未用",避免全局锁</text>
+  <rect x="566" y="172" width="470" height="44" rx="8" fill="#f5faf6" stroke="#cfe6d5"/><text x="580" y="192" font-size="9" font-weight="600" fill="#2c5a3a">要求可估 key 大小</text><text x="580" y="208" font-size="8.3" fill="#2f6f4f">HyperClockCacheOptions 配置;不适合通用 cache</text>
+  <rect x="566" y="224" width="470" height="56" rx="8" fill="#fff" stroke="#cfe6d5"/><text x="580" y="244" font-size="8.8" font-weight="600" fill="#12402a">特点</text><text x="580" y="262" font-size="8.3" fill="#2f6f4f">· 高并发吞吐更好(无锁/低竞争)</text><text x="580" y="278" font-size="8.3" fill="#2f6f4f">· 多核大缓存场景收益明显</text>
+
+  <!-- sharding -->
+  <rect x="30" y="306" width="1020" height="110" rx="13" fill="#fff7e6" stroke="#e8cf9a"/>
+  <text x="46" y="328" font-size="11" font-weight="700" fill="#5a3410">分片(sharding):两者共有</text>
+  <g font-size="8" text-anchor="middle">
+    <rect x="46" y="340" width="180" height="30" rx="6" fill="#fdf6ea" stroke="#efdcb4"/><text x="136" y="359" fill="#5a3410">key hash → shard 0</text>
+    <rect x="236" y="340" width="180" height="30" rx="6" fill="#fdf6ea" stroke="#efdcb4"/><text x="326" y="359" fill="#5a3410">shard 1</text>
+    <rect x="426" y="340" width="180" height="30" rx="6" fill="#fdf6ea" stroke="#efdcb4"/><text x="516" y="359" fill="#5a3410">shard 2 …</text>
+    <rect x="616" y="340" width="418" height="30" rx="6" fill="#fff" stroke="#e8cf9a"/><text x="825" y="359" fill="#93762e">各片独立锁/淘汰 → 多核并发访问不同片互不阻塞</text>
+  </g>
+  <text x="46" y="392" font-size="8.5" fill="#93762e">· 片数 = 2^num_shard_bits;缓存容量均分到各片;片越多锁竞争越小但每片容量越小(边界效应)</text>
+  <text x="46" y="408" font-size="8.5" fill="#93762e">· 分片是所有高并发缓存的通用手法(降锁粒度)</text>
+
+  <!-- notes -->
+  <rect x="30" y="432" width="1020" height="72" rx="13" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="46" y="454" font-size="11" font-weight="700" fill="#1d1d1f">选型</text>
+  <text x="46" y="476" font-size="9" fill="#6e6e73">· 通用/需精确优先级 → LRUCache(默认);高并发多核 + 可估 key 大小 → HyperClockCache(吞吐更高)</text>
+  <text x="46" y="494" font-size="8.5" fill="#b1483a">· 归属:缓存实现是本主线;缓存的内容(块)在【SST】;命中在【读取路径】</text>
+</svg>

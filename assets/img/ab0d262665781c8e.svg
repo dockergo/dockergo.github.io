@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="450" viewBox="0 0 920 450"
+     font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="920" height="450" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">Pipeline 故障恢复:剔除坏 DN、升 genStamp 重建管道,继续写不中断</text>
+
+  <!-- 正常 -->
+  <rect x="30" y="56" width="860" height="90" rx="13" fill="#f5faf6" stroke="#e2ece5"/>
+  <text x="48" y="78" font-size="11" font-weight="600" fill="#0f5132">正常管道</text>
+  <rect x="120" y="92" width="120" height="40" rx="9" fill="#eafaf1" stroke="#bce6cd"/><text x="180" y="117" font-size="9.5" font-weight="600" fill="#0f5132" text-anchor="middle">DN1</text>
+  <rect x="340" y="92" width="120" height="40" rx="9" fill="#eafaf1" stroke="#bce6cd"/><text x="400" y="117" font-size="9.5" font-weight="600" fill="#0f5132" text-anchor="middle">DN2</text>
+  <rect x="560" y="92" width="120" height="40" rx="9" fill="#eafaf1" stroke="#bce6cd"/><text x="620" y="117" font-size="9.5" font-weight="600" fill="#0f5132" text-anchor="middle">DN3</text>
+  <path d="M240,112 L340,112" stroke="#3f8f66" stroke-width="2" fill="none" marker-end="url(#ar)"/>
+  <path d="M460,112 L560,112" stroke="#3f8f66" stroke-width="2" fill="none" marker-end="url(#ar)"/>
+  <text x="760" y="117" font-size="9" fill="#3f8f66">packet 流水正常</text>
+
+  <!-- 故障 -->
+  <rect x="30" y="164" width="860" height="90" rx="13" fill="#fdf3f2" stroke="#f0c9c2"/>
+  <text x="48" y="186" font-size="11" font-weight="600" fill="#c4341c">DN2 宕机 → processDatanodeOrExternalError(DataStreamer.java:1373) 检测</text>
+  <rect x="120" y="200" width="120" height="40" rx="9" fill="#eafaf1" stroke="#bce6cd"/><text x="180" y="225" font-size="9.5" font-weight="600" fill="#0f5132" text-anchor="middle">DN1</text>
+  <rect x="340" y="200" width="120" height="40" rx="9" fill="#fdeceb" stroke="#f0c9c2" stroke-dasharray="4 3"/><text x="400" y="219" font-size="9.5" font-weight="600" fill="#c4341c" text-anchor="middle">DN2 ✗</text><text x="400" y="233" font-size="7.5" fill="#c4341c" text-anchor="middle">剔除</text>
+  <rect x="560" y="200" width="120" height="40" rx="9" fill="#eafaf1" stroke="#bce6cd"/><text x="620" y="225" font-size="9.5" font-weight="600" fill="#0f5132" text-anchor="middle">DN3</text>
+  <path d="M240,220 L340,220" stroke="#c4341c" stroke-width="1.8" stroke-dasharray="4 3" fill="none"/>
+  <text x="740" y="216" font-size="8.5" fill="#c4341c">ackQueue 未确认</text>
+  <text x="740" y="232" font-size="8.5" fill="#c4341c">packet 移回 dataQueue</text>
+
+  <!-- 恢复 -->
+  <rect x="30" y="272" width="860" height="90" rx="13" fill="#f3f7fc" stroke="#cfe0f2"/>
+  <text x="48" y="294" font-size="11" font-weight="600" fill="#1b2a4a">重建管道 → genStamp 递增区分过期副本 → 继续写</text>
+  <rect x="120" y="308" width="120" height="40" rx="9" fill="#eef3fb" stroke="#bcd0ec"/><text x="180" y="333" font-size="9.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">DN1</text>
+  <rect x="340" y="308" width="120" height="40" rx="9" fill="#eef3fb" stroke="#bcd0ec"/><text x="400" y="333" font-size="9.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">DN3</text>
+  <rect x="560" y="308" width="150" height="40" rx="9" fill="#fff7e6" stroke="#f0dcae"/><text x="635" y="326" font-size="9" font-weight="600" fill="#7a4d00" text-anchor="middle">新 DN(可选补)</text><text x="635" y="340" font-size="7.5" fill="#9a7328" text-anchor="middle">addDatanode2ExistingPipeline:1474</text>
+  <path d="M240,328 L340,328" stroke="#1b2a4a" stroke-width="2" fill="none" marker-end="url(#ar)"/>
+  <path d="M460,328 L560,328" stroke="#1b2a4a" stroke-width="2" fill="none" marker-end="url(#ar)"/>
+
+  <rect x="30" y="380" width="860" height="56" rx="12" fill="#f7f7f9" stroke="#e2e2e7"/>
+  <text x="48" y="404" font-size="9.2" fill="#494950">· 只要满足最小副本数(默认 1)即写成功,欠副本由后台 RedundancyMonitor 复制补齐 —— 一个 DN 挂不会导致写失败</text>
+  <text x="48" y="424" font-size="9.2" fill="#494950">· 是否补新节点由 dfs.client.block.write.replace-datanode-on-failure.policy 控制;小集群设 NEVER 避免频繁失败</text>
+</svg>

@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="540" viewBox="0 0 1060 540" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1060" height="540" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Merge 的三放大权衡：merge 频率是写/读/空间放大的平衡杆</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">后台视角（合并细节见「存储引擎·Merge」）：merge 太勤费 IO，太懒查询慢</text>
+
+  <!-- three amplifications -->
+  <g text-anchor="middle">
+    <rect x="40" y="80" width="310" height="150" rx="13" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+    <text x="195" y="104" font-size="11.5" font-weight="700" fill="#5a3410">写放大 Write Amp</text>
+    <text x="195" y="126" font-size="9" fill="#93762e">同一数据被 merge 反复重写</text>
+    <text x="195" y="146" font-size="9" fill="#93762e">merge 越勤 → 重写次数越多</text>
+    <text x="195" y="168" font-size="9" fill="#5a3410">→ 磁盘写量 ↑</text>
+    <text x="195" y="190" font-size="8.5" fill="#b08843">选取相近大小 Part 可压低</text>
+    <text x="195" y="212" font-size="8" fill="#b08843">避免频繁 OPTIMIZE FINAL</text>
+
+    <rect x="375" y="80" width="310" height="150" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+    <text x="530" y="104" font-size="11.5" font-weight="700" fill="#1b2a4a">读放大 Read Amp</text>
+    <text x="530" y="126" font-size="9" fill="#5b7db1">Part 越多，查询归并路数越多</text>
+    <text x="530" y="146" font-size="9" fill="#5b7db1">merge 越懒 → Part 越多</text>
+    <text x="530" y="168" font-size="9" fill="#1b2a4a">→ 查询越慢</text>
+    <text x="530" y="190" font-size="8.5" fill="#8aa6cf">merge 减少 Part 数即降读放大</text>
+    <text x="530" y="212" font-size="8" fill="#8aa6cf">active parts 数是关键健康指标</text>
+
+    <rect x="710" y="80" width="310" height="150" rx="13" fill="#f6f2fb" stroke="#d9c9ec" filter="url(#soft)"/>
+    <text x="865" y="104" font-size="11.5" font-weight="700" fill="#3d2a5a">空间放大 Space Amp</text>
+    <text x="865" y="126" font-size="9" fill="#7a5da5">outdated Part 未 GC 前</text>
+    <text x="865" y="146" font-size="9" fill="#7a5da5">新旧并存 → 临时占空间</text>
+    <text x="865" y="168" font-size="9" fill="#3d2a5a">→ merge 峰值需预留磁盘</text>
+    <text x="865" y="190" font-size="8.5" fill="#9a7cc4">清理任务及时 GC 旧 Part</text>
+    <text x="865" y="212" font-size="8" fill="#9a7cc4">大 merge 前确保磁盘余量</text>
+  </g>
+
+  <!-- balance -->
+  <rect x="40" y="252" width="980" height="130" rx="14" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="530" y="278" font-size="12" font-weight="700" fill="#12402a" text-anchor="middle">merge 频率 = 平衡杆（此消彼长）</text>
+  <g text-anchor="middle" font-size="8.5">
+    <rect x="80" y="294" width="380" height="70" rx="10" fill="#fbeef0" stroke="#f0cdd4"/>
+    <text x="270" y="314" font-size="9.5" font-weight="600" fill="#7a2230">merge 太勤</text>
+    <text x="270" y="332" fill="#a44">写放大高、CPU/IO 被 merge 占满</text>
+    <text x="270" y="348" fill="#a44">前台查询被抢资源</text>
+    <rect x="600" y="294" width="380" height="70" rx="10" fill="#fdf9f0" stroke="#efdcb4"/>
+    <text x="790" y="314" font-size="9.5" font-weight="600" fill="#5a3410">merge 太懒</text>
+    <text x="790" y="332" fill="#93762e">Part 堆积、读放大高</text>
+    <text x="790" y="348" fill="#93762e">查询变慢、可能 too many parts</text>
+  </g>
+
+  <rect x="40" y="398" width="980" height="124" rx="12" fill="#f7f7f9" stroke="#e6e6ea"/>
+  <text x="60" y="422" font-size="11" font-weight="700" fill="#1d1d1f">一句话</text>
+  <text x="60" y="444" font-size="10" fill="#4b4b50">merge 频率是三放大的平衡杆：太勤则写放大高、抢前台资源；太懒则 Part 堆积、读放大高、查询变慢。</text>
+  <text x="60" y="462" font-size="10" fill="#4b4b50">MergeSelector 选相近大小 Part 压低写放大，后台执行器控制并发不抢前台，清理任务及时 GC 控空间放大。</text>
+  <text x="60" y="484" font-size="10" fill="#4b4b50" font-weight="600">工程要点：监控 active parts 数（system.parts）——它是 merge 是否跟得上写入的核心信号。</text>
+  <text x="60" y="506" font-size="9" fill="#8a8a8f">合并算法与选取策略细节见「存储引擎 · Merge 合并」篇；这里是后台调度视角的权衡。</text>
+</svg>

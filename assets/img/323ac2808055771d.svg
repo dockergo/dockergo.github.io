@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="560" viewBox="0 0 1060 560" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1060" height="560" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">物理规划与 CBO：逻辑算子 → 物理算子，代价选最优</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">SparkPlanner (execution/SparkPlanner.scala:31) 用 Strategy 转物理算子 · CostBasedJoinReorder(:36) 按统计重排（默认关）</text>
+
+  <!-- one logical -> multiple physical -->
+  <rect x="40" y="76" width="220" height="90" rx="12" fill="#e9f1fb" stroke="#c4d8f0" filter="url(#soft)"/>
+  <text x="150" y="104" font-size="11" font-weight="700" fill="#1b2a4a" text-anchor="middle">逻辑 Join</text>
+  <text x="150" y="126" font-size="8.5" fill="#5b7db1" text-anchor="middle">只说"两表按 key 连接"</text>
+  <text x="150" y="146" font-size="8" fill="#8aa6cf" text-anchor="middle">不指定实现方式</text>
+
+  <text x="290" y="122" font-size="16" fill="#c7c7cc" text-anchor="middle">→</text>
+  <text x="290" y="140" font-size="8" fill="#a1a1a6" text-anchor="middle">JoinSelection</text>
+  <text x="290" y="152" font-size="8" fill="#a1a1a6" text-anchor="middle">策略(:181)</text>
+
+  <g text-anchor="middle" font-size="8.5">
+    <rect x="330" y="76" width="220" height="52" rx="9" fill="#eafaf1" stroke="#bfe0cd"/><text x="440" y="96" font-weight="600" fill="#12402a">BroadcastHashJoin</text><text x="440" y="114" fill="#2f6f4f">小表广播（无 shuffle）</text>
+    <rect x="330" y="134" width="220" height="52" rx="9" fill="#eafaf1" stroke="#bfe0cd"/><text x="440" y="154" font-weight="600" fill="#12402a">SortMergeJoin</text><text x="440" y="172" fill="#2f6f4f">两侧排序归并（大表）</text>
+    <rect x="330" y="192" width="220" height="52" rx="9" fill="#eafaf1" stroke="#bfe0cd"/><text x="440" y="212" font-weight="600" fill="#12402a">ShuffleHashJoin</text><text x="440" y="230" fill="#2f6f4f">shuffle 后哈希</text>
+  </g>
+  <g stroke="#c7c7cc" stroke-width="1.2" fill="none">
+    <path d="M260,121 L330,102" marker-end="url(#ar)"/>
+    <path d="M260,121 L330,160" marker-end="url(#ar)"/>
+    <path d="M260,121 L330,218" marker-end="url(#ar)"/>
+  </g>
+
+  <!-- selection basis -->
+  <rect x="600" y="76" width="420" height="168" rx="13" fill="#fdf9f0" stroke="#efe3cd"/>
+  <text x="810" y="100" font-size="11" font-weight="700" fill="#7a5a1e" text-anchor="middle">选哪个物理算子？</text>
+  <text x="620" y="124" font-size="9" fill="#93762e">· 小表 &lt; autoBroadcastJoinThreshold → BroadcastHashJoin</text>
+  <text x="620" y="144" font-size="9" fill="#93762e">· 否则大表 join → SortMergeJoin（默认稳）</text>
+  <text x="620" y="164" font-size="9" fill="#93762e">· CBO 开 + 有统计 → 按代价选 + Join 重排</text>
+  <text x="620" y="186" font-size="9" fill="#93762e">· AQE 运行期还能改（见 Shuffle 主线）</text>
+  <text x="620" y="212" font-size="8.5" fill="#b08843">物理策略：SparkStrategies.scala（JoinSelection:181, Aggregation:690）</text>
+  <text x="620" y="230" font-size="8.5" fill="#b08843">SparkPlanner.strategies（:38）逐算子匹配</text>
+
+  <!-- CBO -->
+  <rect x="40" y="266" width="980" height="90" rx="13" fill="#f6f2fb" stroke="#d9c9ec"/>
+  <text x="60" y="290" font-size="11" font-weight="700" fill="#3d2a5a">CBO（代价优化，默认关）</text>
+  <text x="60" y="312" font-size="9.5" fill="#7a5da5">· CostBasedJoinReorder（optimizer/CostBasedJoinReorder.scala:36）在 cboEnabled 时用统计信息重排多表 Join 顺序</text>
+  <text x="60" y="330" font-size="9.5" fill="#7a5da5">· 开关 spark.sql.cbo.enabled（默认 false）+ spark.sql.cbo.joinReorder.enabled；依赖 ANALYZE TABLE 收集的统计</text>
+  <text x="60" y="348" font-size="9" fill="#9a7cc4">· 没收集统计就开 CBO 形同虚设——CBO 依赖数据分布估算代价</text>
+
+  <rect x="40" y="372" width="980" height="90" rx="12" fill="#f7f7f9" stroke="#e6e6ea"/>
+  <text x="60" y="396" font-size="11" font-weight="700" fill="#1d1d1f">一句话</text>
+  <text x="60" y="418" font-size="10" fill="#4b4b50">物理规划把每个逻辑算子转成具体物理实现（一个逻辑 Join 可选 Broadcast/SortMerge/ShuffleHash），由 SparkPlanner 的</text>
+  <text x="60" y="436" font-size="10" fill="#4b4b50">Strategy 按表大小/统计/阈值选择；CBO（默认关，需 ANALYZE 统计）进一步按代价重排 Join。产物 SparkPlan 交 Tungsten。</text>
+  <text x="60" y="454" font-size="9" fill="#8a8a8f">运行期 AQE 还能据实际数据改物理计划（见 Shuffle 主线）。</text>
+</svg>

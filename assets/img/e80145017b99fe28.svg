@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="430" viewBox="0 0 920 430" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="920" height="430" fill="#fbfbfd"/>
+  <text x="30" y="32" font-size="14" font-weight="600" fill="#1d1d1f">kubelet syncLoop · 多源事件 → SyncPod 重算差异 → CRI 拉起容器</text>
+
+  <!-- sources -->
+  <g font-size="10.5">
+    <rect x="30" y="70" width="200" height="42" rx="9" fill="#eef3fb" stroke="#bcd0ec"/>
+    <text x="46" y="96" fill="#1b2a4a"><tspan font-weight="600">configCh</tspan> · API Server 来的 Pod 增删改</text>
+    <rect x="30" y="120" width="200" height="42" rx="9" fill="#f5faf6" stroke="#cfe6d2"/>
+    <text x="46" y="146" fill="#1d8f3f"><tspan font-weight="600">plegCh</tspan> · 容器实际状态变化</text>
+    <rect x="30" y="170" width="200" height="42" rx="9" fill="#fbf7ef" stroke="#ecdcbf"/>
+    <text x="46" y="196" fill="#8a6d3b"><tspan font-weight="600">syncCh</tspan> · 周期全量同步 tick</text>
+    <rect x="30" y="220" width="200" height="42" rx="9" fill="#f7f7f9" stroke="#ececef"/>
+    <text x="46" y="246" fill="#6e6e73"><tspan font-weight="600">housekeeping</tspan> · 清理 + 探针</text>
+  </g>
+
+  <!-- syncLoop select -->
+  <rect x="280" y="90" width="200" height="150" rx="12" fill="#faf4fb" stroke="#e4cdea" filter="url(#soft)"/>
+  <text x="380" y="118" font-size="13" font-weight="600" fill="#8944ab" text-anchor="middle">syncLoopIteration</text>
+  <text x="380" y="142" font-size="11" fill="#8944ab" text-anchor="middle">select 汇聚多源</text>
+  <text x="380" y="164" font-size="11" fill="#8944ab" text-anchor="middle">任一触发 → 定位 Pod</text>
+  <text x="380" y="186" font-size="11" fill="#6e6e73" text-anchor="middle">kubelet.go:2461</text>
+  <text x="380" y="212" font-size="11" fill="#6e6e73" text-anchor="middle">plegChannelCapacity</text>
+  <text x="380" y="230" font-size="11" fill="#6e6e73" text-anchor="middle">=1000（:183）</text>
+
+  <!-- SyncPod -->
+  <rect x="530" y="90" width="200" height="150" rx="12" fill="#ffffff" stroke="#ececef" filter="url(#soft)"/>
+  <text x="630" y="118" font-size="13" font-weight="600" fill="#1d1d1f" text-anchor="middle">SyncPod（reconcile）</text>
+  <text x="630" y="142" font-size="11" fill="#6e6e73" text-anchor="middle">重算期望容器集</text>
+  <text x="630" y="164" font-size="11" fill="#6e6e73" text-anchor="middle">vs 当前实际容器集</text>
+  <text x="630" y="186" font-size="11" fill="#6e6e73" text-anchor="middle">补齐差异（起/杀/重启）</text>
+  <text x="630" y="212" font-size="11" fill="#a1a1a6" text-anchor="middle">kubelet.go:1845</text>
+  <text x="630" y="230" font-size="11" fill="#a1a1a6" text-anchor="middle">restartPolicy 决定重启</text>
+
+  <!-- CRI / runtime -->
+  <rect x="780" y="70" width="120" height="190" rx="12" fill="#e9f0fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="840" y="96" font-size="12.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">CRI</text>
+  <text x="840" y="120" font-size="10.5" fill="#5b7db1" text-anchor="middle">RunPodSandbox</text>
+  <text x="840" y="140" font-size="10.5" fill="#5b7db1" text-anchor="middle">（pause+CNI 配网）</text>
+  <text x="840" y="162" font-size="10.5" fill="#5b7db1" text-anchor="middle">拉镜像</text>
+  <text x="840" y="184" font-size="10.5" fill="#5b7db1" text-anchor="middle">CreateContainer</text>
+  <text x="840" y="204" font-size="10.5" fill="#5b7db1" text-anchor="middle">StartContainer</text>
+  <text x="840" y="230" font-size="10.5" fill="#6e6e73" text-anchor="middle">→ containerd</text>
+  <text x="840" y="250" font-size="10.5" fill="#6e6e73" text-anchor="middle">:2029</text>
+
+  <path d="M230 91 L280 130" fill="none" stroke="#b8b8bf" stroke-width="1.4" marker-end="url(#ar)"/>
+  <path d="M230 141 L280 155" fill="none" stroke="#b8b8bf" stroke-width="1.4" marker-end="url(#ar)"/>
+  <path d="M230 191 L280 180" fill="none" stroke="#b8b8bf" stroke-width="1.4" marker-end="url(#ar)"/>
+  <path d="M230 241 L280 205" fill="none" stroke="#b8b8bf" stroke-width="1.4" marker-end="url(#ar)"/>
+  <path d="M480 165 L530 165" fill="none" stroke="#b8b8bf" stroke-width="1.5" marker-end="url(#ar)"/>
+  <path d="M730 165 L780 165" fill="none" stroke="#b8b8bf" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- feedback -->
+  <path d="M780 200 Q470 300 380 240" fill="none" stroke="#cfe6d2" stroke-width="1.4" stroke-dasharray="4 3" marker-end="url(#ar)"/>
+  <text x="470" y="290" font-size="10.5" fill="#4a8a5c">PLEG relist 发现容器状态变化 → 回灌 plegCh（节点级 level-triggered）</text>
+
+  <text x="30" y="340" font-size="11.5" fill="#6e6e73"><tspan font-weight="600" fill="#1d1d1f">节点级 reconcile：</tspan>不管收到什么事件，SyncPod 都重算"这个 Pod 该有哪些容器、实际有哪些"，补齐差异</text>
+  <text x="30" y="366" font-size="11.5" fill="#6e6e73"><tspan font-weight="600" fill="#1d1d1f">最后一公里：</tspan>把集群的"期望 Pod"落成机器上真实运行的进程；kubelet 经 API Server watch 拿本节点 Pod，不碰 etcd</text>
+  <text x="30" y="392" font-size="11.5" fill="#a1a1a6">kubelet 周期把 Pod / Node status（实际态 + 心跳）写回 API Server，供调度器与控制器决策</text>
+</svg>

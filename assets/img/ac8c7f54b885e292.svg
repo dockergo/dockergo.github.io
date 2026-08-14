@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="440" viewBox="0 0 1020 440"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1020" height="440" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">事务生命周期 · 三个时间戳定可见性（duck_transaction.hpp:43-47）</text>
+
+  <!-- BEGIN -->
+  <rect x="30" y="56" width="220" height="150" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="48" y="80" font-size="12" font-weight="600" fill="#1b2a4a">① BEGIN</text>
+  <rect x="48" y="94" width="184" height="44" rx="9" fill="#ffffff" stroke="#bcd0ec"/><text x="140" y="116" font-size="9.5" fill="#1b2a4a" text-anchor="middle">分配 start_time（快照点）</text><text x="140" y="131" font-size="8.5" fill="#5b7db1" text-anchor="middle">决定"我能看到谁"</text>
+  <rect x="48" y="146" width="184" height="44" rx="9" fill="#ffffff" stroke="#bcd0ec"/><text x="140" y="168" font-size="9.5" fill="#1b2a4a" text-anchor="middle">分配 transaction_id</text><text x="140" y="183" font-size="8.5" fill="#5b7db1" text-anchor="middle">标记"我的未提交写"</text>
+
+  <!-- 工作 -->
+  <rect x="290" y="56" width="240" height="150" rx="14" fill="#fff7e6" stroke="#f0dcae" filter="url(#soft)"/>
+  <text x="308" y="80" font-size="12" font-weight="600" fill="#7a4d00">② 执行 DML/DDL</text>
+  <rect x="308" y="94" width="204" height="44" rx="9" fill="#ffffff" stroke="#f0dcae"/><text x="410" y="116" font-size="9.5" fill="#7a4d00" text-anchor="middle">改动记入 UndoBuffer</text><text x="410" y="131" font-size="8.5" fill="#9a7328" text-anchor="middle">旧值/删除标记/目录旧版本</text>
+  <rect x="308" y="146" width="204" height="44" rx="9" fill="#ffffff" stroke="#f0dcae"/><text x="410" y="168" font-size="9.5" fill="#7a4d00" text-anchor="middle">写就地 + 版本挂 transaction_id</text><text x="410" y="183" font-size="8.5" fill="#9a7328" text-anchor="middle">仅自己可见</text>
+
+  <!-- COMMIT / ROLLBACK -->
+  <rect x="570" y="56" width="200" height="150" rx="14" fill="#eafaf1" stroke="#bce6cd" filter="url(#soft)"/>
+  <text x="588" y="80" font-size="12" font-weight="600" fill="#0f5132">③a COMMIT</text>
+  <rect x="588" y="94" width="164" height="44" rx="9" fill="#ffffff" stroke="#bce6cd"/><text x="670" y="116" font-size="9.5" fill="#0f5132" text-anchor="middle">分配 commit_id</text><text x="670" y="131" font-size="8.5" fill="#3f8f66" text-anchor="middle">版本时间戳改为它</text>
+  <rect x="588" y="146" width="164" height="44" rx="9" fill="#ffffff" stroke="#bce6cd"/><text x="670" y="164" font-size="9" fill="#0f5132" text-anchor="middle">UndoBuffer.WriteToWAL</text><text x="670" y="180" font-size="8.5" fill="#3f8f66" text-anchor="middle">undo_buffer.hpp:59</text>
+
+  <rect x="790" y="56" width="200" height="150" rx="14" fill="#fbeaea" stroke="#f0cccc" filter="url(#soft)"/>
+  <text x="808" y="80" font-size="12" font-weight="600" fill="#7d1f1f">③b ROLLBACK</text>
+  <rect x="808" y="94" width="164" height="44" rx="9" fill="#ffffff" stroke="#f0cccc"/><text x="890" y="116" font-size="9.5" fill="#7d1f1f" text-anchor="middle">按 UndoBuffer 逆序回滚</text><text x="890" y="131" font-size="8.5" fill="#b06a6a" text-anchor="middle">RevertCommit（:64）</text>
+  <rect x="808" y="146" width="164" height="44" rx="9" fill="#ffffff" stroke="#f0cccc"/><text x="890" y="168" font-size="9.5" fill="#7d1f1f" text-anchor="middle">数据/目录恢复原状</text><text x="890" y="183" font-size="8.5" fill="#b06a6a" text-anchor="middle">不留痕迹</text>
+
+  <line x1="250" y1="131" x2="290" y2="131" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="530" y1="115" x2="570" y2="115" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="530" y1="150" x2="790" y2="150" stroke="#e0a0a0" stroke-width="1.2" marker-end="url(#ar)"/>
+
+  <!-- 三时间戳含义 -->
+  <rect x="30" y="228" width="960" height="196" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="48" y="252" font-size="12.5" font-weight="600" fill="#1d1d1f">三个时间戳（DuckTransaction）</text>
+  <rect x="48" y="268" width="300" height="140" rx="10" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="198" y="292" font-size="11" font-weight="600" fill="#1b2a4a" text-anchor="middle">start_time</text>
+  <text x="198" y="316" font-size="9.5" fill="#5b7db1" text-anchor="middle">开始时的快照点</text>
+  <text x="198" y="336" font-size="9.5" fill="#5b7db1" text-anchor="middle">看得到"提交早于它"的版本</text>
+  <text x="198" y="356" font-size="9.5" fill="#5b7db1" text-anchor="middle">→ 快照隔离的基准</text>
+  <text x="198" y="386" font-size="9" fill="#8fa9cf" text-anchor="middle">duck_transaction.hpp:43</text>
+  <rect x="360" y="268" width="300" height="140" rx="10" fill="#fff7e6" stroke="#f0dcae"/>
+  <text x="510" y="292" font-size="11" font-weight="600" fill="#7a4d00" text-anchor="middle">transaction_id</text>
+  <text x="510" y="316" font-size="9.5" fill="#9a7328" text-anchor="middle">未提交写的标记值</text>
+  <text x="510" y="336" font-size="9.5" fill="#9a7328" text-anchor="middle">很大，只有本事务认得</text>
+  <text x="510" y="356" font-size="9.5" fill="#9a7328" text-anchor="middle">→ 自己看得到自己的改动</text>
+  <text x="510" y="386" font-size="9" fill="#b8912e" text-anchor="middle">duck_transaction.hpp:45</text>
+  <rect x="672" y="268" width="300" height="140" rx="10" fill="#eafaf1" stroke="#bce6cd"/>
+  <text x="822" y="292" font-size="11" font-weight="600" fill="#0f5132" text-anchor="middle">commit_id</text>
+  <text x="822" y="316" font-size="9.5" fill="#3f8f66" text-anchor="middle">提交时分配的最终时间戳</text>
+  <text x="822" y="336" font-size="9.5" fill="#3f8f66" text-anchor="middle">替换版本的 transaction_id</text>
+  <text x="822" y="356" font-size="9.5" fill="#3f8f66" text-anchor="middle">→ 决定对后续事务可见</text>
+  <text x="822" y="386" font-size="9" fill="#5aa06f" text-anchor="middle">duck_transaction.hpp:47</text>
+</svg>

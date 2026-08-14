@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="540" viewBox="0 0 1080 540"
+     font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="540" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Rust 原理 · 能力域依赖关系图</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">实线=数据流/编译阶段，虚线=约束。贯穿层 MIR 横切借用检查 / 单态化 / 优化 / Drop</text>
+
+  <!-- top: 接触面 -->
+  <rect x="360" y="70" width="360" height="46" rx="12" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="540" y="90" font-size="11.5" font-weight="700" text-anchor="middle" fill="#3d2a5a">接触面 · 语法 + 所有权规则</text>
+  <text x="540" y="107" font-size="8.8" text-anchor="middle" fill="#8a6db3">开发者写代码，遵守所有权/借用/生命周期</text>
+
+  <!-- pipeline row -->
+  <rect x="60" y="146" width="220" height="52" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="170" y="168" font-size="11" font-weight="600" text-anchor="middle" fill="#1b2a4a">类型推断</text>
+  <text x="170" y="185" font-size="8.6" text-anchor="middle" fill="#5b7db1">合一推类型 → 喂 THIR</text>
+
+  <rect x="430" y="146" width="220" height="52" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="540" y="168" font-size="11" font-weight="600" text-anchor="middle" fill="#1b2a4a">编译管线</text>
+  <text x="540" y="185" font-size="8.6" text-anchor="middle" fill="#5b7db1">AST→HIR→THIR→MIR→codegen</text>
+
+  <rect x="800" y="146" width="220" height="52" rx="11" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="910" y="168" font-size="11" font-weight="600" text-anchor="middle" fill="#3d2a5a">特质与单态化</text>
+  <text x="910" y="185" font-size="8.6" text-anchor="middle" fill="#8a6db3">trait 求解 + 泛型→具体</text>
+
+  <!-- MIR cross-cutting band -->
+  <rect x="60" y="228" width="960" height="118" rx="14" fill="#eef3fb" stroke="#9db8dd" stroke-dasharray="6 4" filter="url(#soft)"/>
+  <text x="80" y="252" font-size="12" font-weight="700" fill="#1b2a4a">贯穿层 · MIR（中层 IR · 控制流图）</text>
+  <text x="330" y="252" font-size="9" fill="#5b7db1">borrow / move / drop 全部显式 —— 安全检查与优化的公共舞台</text>
+  <g font-size="9.5" text-anchor="middle">
+    <rect x="80" y="266" width="210" height="62" rx="9" fill="#eafaf1" stroke="#bfe0cd"/>
+    <text x="185" y="292" font-weight="600" fill="#12402a">借用检查</text><text x="185" y="310" font-size="8.4" fill="#2f6f4f">在 MIR 上跑</text>
+    <rect x="302" y="266" width="210" height="62" rx="9" fill="#f4eefb" stroke="#d9c7ec"/>
+    <text x="407" y="292" font-weight="600" fill="#3d2a5a">单态化</text><text x="407" y="310" font-size="8.4" fill="#8a6db3">产 MIR 实例</text>
+    <rect x="524" y="266" width="210" height="62" rx="9" fill="#eef3fb" stroke="#bcd0ec"/>
+    <text x="629" y="292" font-weight="600" fill="#1b2a4a">MIR 优化</text><text x="629" y="310" font-size="8.4" fill="#5b7db1">内联 / 常量传播</text>
+    <rect x="746" y="266" width="256" height="62" rx="9" fill="#fff7e6" stroke="#e8cf9a"/>
+    <text x="874" y="292" font-weight="600" fill="#5a3410">Drop 精化</text><text x="874" y="310" font-size="8.4" fill="#93762e">插入 Drop（RAII）</text>
+  </g>
+
+  <!-- runtime row -->
+  <rect x="60" y="376" width="290" height="52" rx="11" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="205" y="398" font-size="11" font-weight="600" text-anchor="middle" fill="#5a3410">内存与 Drop（无 GC）</text>
+  <text x="205" y="415" font-size="8.6" text-anchor="middle" fill="#93762e">RAII 出作用域析构、move 语义</text>
+
+  <rect x="395" y="376" width="290" height="52" rx="11" fill="#fbeaea" stroke="#e7c3c3" filter="url(#soft)"/>
+  <text x="540" y="398" font-size="11" font-weight="600" text-anchor="middle" fill="#7a2a2a">并发 Send/Sync</text>
+  <text x="540" y="415" font-size="8.6" text-anchor="middle" fill="#a85560">marker trait 编译期保无数据竞争</text>
+
+  <rect x="730" y="376" width="290" height="52" rx="11" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="875" y="398" font-size="11" font-weight="600" text-anchor="middle" fill="#3d2a5a">智能指针与内部可变</text>
+  <text x="875" y="415" font-size="8.6" text-anchor="middle" fill="#8a6db3">Box/Rc/Arc + UnsafeCell</text>
+
+  <!-- connectors: 接触面 -> pipeline -->
+  <path d="M470,116 L470,132 L170,132 L170,146" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M540,116 L540,146" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M610,116 L610,132 L910,132 L910,146" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <!-- pipeline -> MIR band -->
+  <path d="M170,198 L170,228" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M540,198 L540,228" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M910,198 L910,228" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <!-- MIR band -> runtime -->
+  <path d="M874,346 L874,362 L205,362 L205,376" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M540,346 L540,376" stroke="#c7c7cc" stroke-width="1.2" stroke-dasharray="5 3" fill="none" marker-end="url(#ar)"/>
+  <path d="M629,346 L629,362 L875,362 L875,376" stroke="#c7c7cc" stroke-width="1.2" stroke-dasharray="5 3" fill="none" marker-end="url(#ar)"/>
+
+  <text x="30" y="470" font-size="9.5" fill="#6e6e73">借用检查在 MIR 跑、Drop 在 MIR 精化、优化在 MIR 做、单态化产 MIR 实例 —— MIR 是安全检查与优化的公共舞台。</text>
+  <text x="30" y="490" font-size="9" fill="#a1a1a6">虚线约束：Send/Sync 约束跨线程移动，内部可变把编译期借用转运行时（RefCell）。</text>
+</svg>

@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="520" viewBox="0 0 1080 520" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="520" fill="#fbfbfd"/>
+
+  <!-- 标题 -->
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">vLLM 引用计数 —— touch 增 / free_blocks 减,多请求安全共享块,归零才回收</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">块被新请求引用则计数++(如前缀共享)、请求结束则计数--;共享前缀块计数&gt;1,全部结束才回空闲队列 · 与 GC/智能指针同理</text>
+
+  <!-- 左:touch 增 (green) -->
+  <rect x="30" y="70" width="500" height="86" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="50" y="94" font-size="12" font-weight="600" fill="#12402a">touch (:702) · 增引用计数 ++</text>
+  <text x="50" y="116" font-size="9.5" fill="#2f6f4f">一个块被(新)请求引用时计数 ++</text>
+  <text x="50" y="134" font-size="9.5" fill="#2f6f4f">典型:前缀共享——后来的请求复用已算好的块</text>
+  <text x="50" y="150" font-size="9" fill="#4a8a63">ref_cnt: 0 → 1 → 2 …</text>
+
+  <!-- 右:free_blocks 减 (amber) -->
+  <rect x="550" y="70" width="500" height="86" rx="12" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="570" y="94" font-size="12" font-weight="600" fill="#5a3410">free_blocks (:719) · 减引用计数 --</text>
+  <text x="570" y="116" font-size="9.5" fill="#93762e">请求结束,释放它引用的块,计数 --</text>
+  <text x="570" y="134" font-size="9.5" fill="#93762e">计数归零的块 → 回空闲队列可被复用</text>
+  <text x="570" y="150" font-size="9" fill="#b1974e">ref_cnt: … 2 → 1 → 0 → 回收</text>
+
+  <!-- 中部示例:三请求共享一前缀块 -->
+  <rect x="30" y="176" width="1020" height="238" rx="12" fill="#ffffff" stroke="#e4e4ea" filter="url(#soft)"/>
+  <text x="50" y="200" font-size="11.5" font-weight="600" fill="#1d1d1f">示例 · 三个请求共享同一前缀块 → 引用计数 &gt; 1,只有全部结束才真正回收</text>
+
+  <!-- 三个请求 (blue) -->
+  <rect x="70" y="220" width="240" height="52" rx="9" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="190" y="242" font-size="10.5" font-weight="600" text-anchor="middle" fill="#1b2a4a">请求 A</text>
+  <text x="190" y="260" font-size="9" text-anchor="middle" fill="#5b7db1">touch → 前缀块 ++</text>
+  <rect x="420" y="220" width="240" height="52" rx="9" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="540" y="242" font-size="10.5" font-weight="600" text-anchor="middle" fill="#1b2a4a">请求 B</text>
+  <text x="540" y="260" font-size="9" text-anchor="middle" fill="#5b7db1">touch → 前缀块 ++</text>
+  <rect x="770" y="220" width="240" height="52" rx="9" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="890" y="242" font-size="10.5" font-weight="600" text-anchor="middle" fill="#1b2a4a">请求 C</text>
+  <text x="890" y="260" font-size="9" text-anchor="middle" fill="#5b7db1">touch → 前缀块 ++</text>
+
+  <!-- 三条连线汇聚到共享块 -->
+  <path d="M190,272 L190,300 L540,300 L540,320" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M540,272 L540,320" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M890,272 L890,300 L540,300" stroke="#c7c7cc" stroke-width="1.5" fill="none"/>
+
+  <!-- 共享前缀块 (green, 高亮) -->
+  <rect x="390" y="320" width="300" height="72" rx="10" fill="#eafaf1" stroke="#7fc79e" stroke-width="1.6"/>
+  <text x="540" y="346" font-size="11.5" font-weight="600" text-anchor="middle" fill="#12402a">共享前缀块</text>
+  <text x="540" y="368" font-size="12" font-weight="700" text-anchor="middle" fill="#12402a">ref_cnt = 3</text>
+  <text x="540" y="385" font-size="9" text-anchor="middle" fill="#4a8a63">A、B 结束 → 3→2→1,仍在用不回收;C 也结束 →0 才回队列</text>
+
+  <!-- 底注 -->
+  <text x="30" y="446" font-size="9.5" fill="#6e6e73">为什么引用计数:前缀缓存让多请求共享块,不能某请求结束就删了别人还在用的块;精确追踪"还有几个请求用这块",归零才回收——安全共享的基础。</text>
+  <text x="30" y="500" font-size="9" fill="#a1a1a6">误区:块结束立即删。实为引用计数归零才回收,共享块要等所有引用者结束 · vLLM(git 7aab6e2, v1) · block_pool.py</text>
+</svg>

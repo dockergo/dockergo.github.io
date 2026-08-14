@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="420" viewBox="0 0 1020 420"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1020" height="420" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">数据加载 · 多 worker 后台预取，喂满 GPU（torch/utils/data/）</text>
+
+  <!-- pipeline -->
+  <rect x="30" y="56" width="960" height="150" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="48" y="80" font-size="12.5" font-weight="600" fill="#1d1d1f">DataLoader 流水线</text>
+  <rect x="48" y="96" width="170" height="90" rx="10" fill="#fff7e6" stroke="#f0dcae"/><text x="133" y="118" font-size="9.5" font-weight="600" fill="#7a4d00" text-anchor="middle">Dataset</text><text x="133" y="138" font-size="8.5" fill="#9a7328" text-anchor="middle">__getitem__(i)→一条样本</text><text x="133" y="156" font-size="8.5" fill="#9a7328" text-anchor="middle">map 式 / iterable 式</text><text x="133" y="174" font-size="8" fill="#b8912e" text-anchor="middle">读盘/解码/变换</text>
+  <rect x="234" y="96" width="170" height="90" rx="10" fill="#eef3fb" stroke="#bcd0ec"/><text x="319" y="118" font-size="9.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">Sampler</text><text x="319" y="138" font-size="8.5" fill="#5b7db1" text-anchor="middle">决定取样顺序</text><text x="319" y="156" font-size="8.5" fill="#5b7db1" text-anchor="middle">shuffle / 分布式分片</text>
+  <rect x="420" y="96" width="170" height="90" rx="10" fill="#eafaf1" stroke="#bce6cd"/><text x="505" y="118" font-size="9.5" font-weight="600" fill="#0f5132" text-anchor="middle">worker 进程池</text><text x="505" y="138" font-size="8.5" fill="#3f8f66" text-anchor="middle">num_workers 个子进程</text><text x="505" y="156" font-size="8.5" fill="#3f8f66" text-anchor="middle">并行取样本、后台预取</text><text x="505" y="174" font-size="8" fill="#5aa06f" text-anchor="middle">绕开 Python GIL</text>
+  <rect x="606" y="96" width="170" height="90" rx="10" fill="#f4eefb" stroke="#d9c9ef"/><text x="691" y="118" font-size="9.5" font-weight="600" fill="#3c1361" text-anchor="middle">collate_fn</text><text x="691" y="138" font-size="8.5" fill="#7a5aa8" text-anchor="middle">多条样本拼成一个 batch</text><text x="691" y="156" font-size="8.5" fill="#7a5aa8" text-anchor="middle">stack 成张量</text>
+  <rect x="792" y="96" width="178" height="90" rx="10" fill="#fbeaea" stroke="#f0cccc"/><text x="881" y="118" font-size="9.5" font-weight="600" fill="#7d1f1f" text-anchor="middle">交训练循环</text><text x="881" y="138" font-size="8.5" fill="#b06a6a" text-anchor="middle">pin_memory 锁页</text><text x="881" y="156" font-size="8.5" fill="#b06a6a" text-anchor="middle">→ 异步搬 GPU 更快</text>
+  <line x1="218" y1="141" x2="234" y2="141" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="404" y1="141" x2="420" y2="141" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="590" y1="141" x2="606" y2="141" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="776" y1="141" x2="792" y2="141" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+
+  <!-- 为什么多进程 -->
+  <rect x="30" y="222" width="470" height="184" rx="14" fill="#eafaf1" stroke="#bce6cd" filter="url(#soft)"/>
+  <text x="48" y="246" font-size="12" font-weight="600" fill="#0f5132">为什么用多进程 worker</text>
+  <text x="48" y="270" font-size="9.5" fill="#3f8f66">· 数据预处理是 CPU 活（解码/增广），Python GIL 限单线程</text>
+  <text x="48" y="290" font-size="9.5" fill="#3f8f66">· 多进程绕开 GIL，并行准备下一批</text>
+  <text x="48" y="310" font-size="9.5" fill="#3f8f66">· 训练用 batch N 时，worker 已在备 batch N+1</text>
+  <text x="48" y="330" font-size="9.5" fill="#3f8f66">· 目标：GPU 永不等数据（避免数据饥饿）</text>
+  <rect x="48" y="346" width="434" height="46" rx="9" fill="#ffffff" stroke="#bce6cd"/><text x="265" y="368" font-size="8.5" fill="#0f5132" text-anchor="middle">worker 通过共享内存/管道把 batch 传回主进程</text><text x="265" y="384" font-size="8" fill="#3f8f66" text-anchor="middle">prefetch_factor 控预取深度</text>
+
+  <!-- 易错 -->
+  <rect x="520" y="222" width="470" height="184" rx="14" fill="#fff7e6" stroke="#f0dcae" filter="url(#soft)"/>
+  <text x="538" y="246" font-size="12" font-weight="600" fill="#7a4d00">易错与调优</text>
+  <text x="538" y="270" font-size="9.5" fill="#9a7328">· num_workers 太少 → GPU 饿；太多 → 内存/上下文开销</text>
+  <text x="538" y="290" font-size="9.5" fill="#9a7328">· pin_memory=True + non_blocking 搬 GPU 重叠传输</text>
+  <text x="538" y="310" font-size="9.5" fill="#9a7328">· worker 里别用不可 fork 的资源（CUDA 句柄等）</text>
+  <text x="538" y="330" font-size="9.5" fill="#9a7328">· 大数据集用 IterableDataset 流式，别全load 进内存</text>
+  <text x="538" y="350" font-size="9.5" fill="#9a7328">· 分布式训练配 DistributedSampler 保证各 rank 不重叠</text>
+  <text x="538" y="384" font-size="9" fill="#b8912e">数据管道常是训练吞吐的隐形瓶颈</text>
+</svg>

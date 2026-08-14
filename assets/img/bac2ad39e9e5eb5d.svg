@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="350" viewBox="0 0 1020 350" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs><filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter><marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker></defs>
+  <rect width="1020" height="350" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">Detect 的真相来源：FE 不扫 BE 磁盘，靠"心跳存活 + Tablet Report 对账"</text>
+
+  <rect x="30" y="70" width="150" height="180" rx="13" fill="#f5faf6" stroke="#e2ece5" filter="url(#soft)"/>
+  <text x="105" y="94" font-size="12.5" font-weight="600" fill="#2c5a3a" text-anchor="middle">BE-1 / 2 / 3</text>
+  <text x="105" y="150" font-size="10.5" fill="#4e7a5c" text-anchor="middle">持有 Tablet</text>
+  <text x="105" y="170" font-size="10.5" fill="#4e7a5c" text-anchor="middle">/ Replica / 版本</text>
+
+  <rect x="270" y="72" width="230" height="70" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/><text x="385" y="98" font-size="12" font-weight="600" fill="#1b2a4a" text-anchor="middle">HeartbeatMgr</text><text x="385" y="118" font-size="10" fill="#5b7db1" text-anchor="middle">周期心跳 → 判 BE 存活/负载</text><text x="385" y="134" font-size="10" fill="#5b7db1" text-anchor="middle">（并借 Topic 下发配置）</text>
+  <rect x="270" y="176" width="230" height="74" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/><text x="385" y="202" font-size="12" font-weight="600" fill="#1b2a4a" text-anchor="middle">ReportHandler</text><text x="385" y="222" font-size="10" fill="#5b7db1" text-anchor="middle">BE 周期上报 tablet/disk/task</text><text x="385" y="238" font-size="10" fill="#5b7db1" text-anchor="middle">（版本 · 副本状态 · 磁盘）</text>
+
+  <rect x="580" y="90" width="210" height="140" rx="13" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="685" y="116" font-size="12.5" font-weight="600" fill="#5a3410" text-anchor="middle">FE 对账</text>
+  <text x="685" y="140" font-size="10.5" fill="#93762e" text-anchor="middle">上报态 vs 元数据期望</text>
+  <text x="685" y="160" font-size="10.5" fill="#93762e" text-anchor="middle">逐 Tablet 比对</text>
+  <text x="685" y="184" font-size="10.5" fill="#93762e" text-anchor="middle">→ 判 12 态健康度</text>
+  <text x="685" y="208" font-size="10.5" fill="#93762e" text-anchor="middle">（缺失/落后/多余/损坏…）</text>
+
+  <rect x="850" y="112" width="150" height="96" rx="13" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/><text x="925" y="150" font-size="12" font-weight="600" fill="#12402a" text-anchor="middle">调度队列</text><text x="925" y="172" font-size="10" fill="#2f6f4f" text-anchor="middle">= Detect 输出</text><text x="925" y="190" font-size="10" fill="#2f6f4f" text-anchor="middle">交 Scheduler</text>
+
+  <g stroke="#c7c7cc" stroke-width="1.5" fill="none">
+    <path d="M180,120 L230,120 L230,107 L270,107" marker-end="url(#ar)"/>
+    <path d="M180,200 L230,200 L230,213 L270,213" marker-end="url(#ar)"/>
+    <path d="M500,107 L540,107 L540,140 L580,140" marker-end="url(#ar)"/>
+    <path d="M500,213 L540,213 L540,180 L580,180" marker-end="url(#ar)"/>
+    <line x1="790" y1="160" x2="850" y2="160" marker-end="url(#ar)"/>
+  </g>
+  <g font-size="9.5" fill="#a1a1a6"><text x="200" y="100">心跳</text><text x="188" y="235">Tablet Report</text></g>
+  <rect x="30" y="286" width="970" height="48" rx="12" fill="#fafafb" stroke="#ececf1"/>
+  <text x="515" y="310" font-size="11" fill="#6e6e73" text-anchor="middle">纠正常见误解：FE 的"检测"不是主动扫盘，而是**被动收报 + 与元数据对账**——心跳判存活、Tablet Report 判版本/副本，</text>
+  <text x="515" y="326" font-size="11" fill="#6e6e73" text-anchor="middle">对账差异即 Detect 的输入；这也是 Detect→Decide→Act 闭环真正的起点。</text>
+</svg>

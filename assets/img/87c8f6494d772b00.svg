@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="640" viewBox="0 0 1120 640" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="aG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+    <marker id="aO" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#c4562f"/></marker>
+    <marker id="aB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#4a7fd0"/></marker>
+  </defs>
+  <rect width="1120" height="640" fill="#fbfbfd"/>
+
+  <text x="30" y="32" font-size="15" font-weight="700" fill="#1d1d1f">图解点 ② 伙伴系统（大块）+ Slab（小对象）分配链路 · 两层分工：buddy 按 2^order 拆 / 合整页，slab 在其上做同尺寸对象池</text>
+  <text x="30" y="53" font-size="10.5" fill="#6e6e73">大粒度页由伙伴系统按 2 的幂管理，拆半分配、相邻合并回收；内核频繁的小对象由 slab 从整页里切出对象池，减内部碎片与初始化开销</text>
+
+  <line x1="30" y1="80" x2="54" y2="80" stroke="#c4562f" stroke-width="2" marker-end="url(#aO)"/>
+  <text x="60" y="84" font-size="10" fill="#3a3a3c">buddy：拆分大块满足请求</text>
+  <line x1="300" y1="80" x2="324" y2="80" stroke="#2f9e6e" stroke-width="2" marker-end="url(#aG)"/>
+  <text x="330" y="84" font-size="10" fill="#3a3a3c">slab：整页切成对象池</text>
+  <line x1="560" y1="80" x2="584" y2="80" stroke="#4a7fd0" stroke-width="2" stroke-dasharray="5 3" marker-end="url(#aB)"/>
+  <text x="590" y="84" font-size="10" fill="#3a3a3c">回收：相邻空闲合并 / 对象归池</text>
+
+  <!-- ===== 上：伙伴系统 ===== -->
+  <rect x="30" y="104" width="1060" height="264" rx="14" fill="#fbeee9" stroke="#eccabb"/>
+  <text x="50" y="130" font-size="13" font-weight="700" fill="#a5401f">一、伙伴系统 · 大块页（以 2^order 个连续页为单位）</text>
+  <text x="50" y="150" font-size="9" fill="#b07a5e">每个 order 维护一条空闲块链表；请求向上取整到最近的 order，块不够就从更大 order 逐级拆半</text>
+
+  <!-- order 阶梯 -->
+  <text x="50" y="178" font-size="10" font-weight="600" fill="#a5401f">空闲块按 order 分级</text>
+  <g font-size="9">
+    <rect x="50" y="186" width="70" height="34" rx="6" fill="#ffffff" stroke="#eccabb"/><text x="85" y="207" fill="#8a3a1c" text-anchor="middle">order0 · 1页</text>
+    <rect x="126" y="186" width="90" height="34" rx="6" fill="#ffffff" stroke="#eccabb"/><text x="171" y="207" fill="#8a3a1c" text-anchor="middle">order1 · 2页</text>
+    <rect x="222" y="186" width="110" height="34" rx="6" fill="#ffffff" stroke="#eccabb"/><text x="277" y="207" fill="#8a3a1c" text-anchor="middle">order2 · 4页</text>
+    <rect x="338" y="186" width="150" height="34" rx="6" fill="#f6ddd0" stroke="#dDA98a"/><text x="413" y="207" fill="#8a3a1c" text-anchor="middle">order3 · 8页（有空闲）</text>
+  </g>
+
+  <!-- 拆分示意 -->
+  <text x="50" y="248" font-size="10" font-weight="600" fill="#a5401f">请求 2 页（order1）：从 order3 逐级拆半，剩余块留在各级链表</text>
+  <!-- 8页块 -->
+  <rect x="50" y="258" width="440" height="34" rx="6" fill="#f6ddd0" stroke="#dDA98a"/><text x="270" y="279" font-size="9" fill="#8a3a1c" text-anchor="middle">order3：一整块 8 页</text>
+  <text x="500" y="279" font-size="12" fill="#a5401f">→</text>
+  <!-- 拆成 4+4 -->
+  <rect x="520" y="258" width="120" height="34" rx="6" fill="#c4562f"/><text x="580" y="279" font-size="9" fill="#fff" text-anchor="middle">拆:4页(留)</text>
+  <rect x="646" y="258" width="60" height="34" rx="6" fill="#f6ddd0" stroke="#dDA98a"/><text x="676" y="279" font-size="8.5" fill="#8a3a1c" text-anchor="middle">2页留</text>
+  <rect x="712" y="258" width="60" height="34" rx="6" fill="#c4562f"/><text x="742" y="279" font-size="8.5" fill="#fff" text-anchor="middle">2页给</text>
+  <text x="784" y="279" font-size="9" fill="#a5401f">← 最终交付这 2 页</text>
+
+  <text x="820" y="200" font-size="10" font-weight="600" fill="#a5401f">回收：合并伙伴</text>
+  <text x="820" y="222" font-size="9" fill="#8a3a1c">释放时看「伙伴块」是否也空闲</text>
+  <text x="820" y="242" font-size="9" fill="#8a3a1c">都空 → 合并成上一级大块</text>
+  <text x="820" y="262" font-size="9" fill="#8a3a1c">逐级向上合并，回收外部碎片</text>
+  <text x="820" y="284" font-size="8.5" fill="#b07a5e">「伙伴」= 由同一块拆出的那一半</text>
+  <line x1="792" y1="230" x2="814" y2="230" stroke="#4a7fd0" stroke-width="1.8" stroke-dasharray="5 3" marker-end="url(#aB)"/>
+
+  <!-- ===== 下：Slab ===== -->
+  <rect x="30" y="384" width="1060" height="234" rx="14" fill="#eef7f2" stroke="#c9e6d7"/>
+  <text x="50" y="410" font-size="13" font-weight="700" fill="#2f6b4e">二、Slab / Slub · 小对象（在伙伴给的整页之上做对象池）</text>
+  <text x="50" y="430" font-size="9" fill="#5a9078">内核有大量同类型小结构体（如 inode / task）；直接用页浪费又慢，slab 把整页切成定长对象槽，按 cache 分类管理</text>
+
+  <!-- 从 buddy 取页 -->
+  <rect x="50" y="448" width="170" height="150" rx="11" fill="#ffffff" stroke="#c9e6d7" filter="url(#soft)"/>
+  <text x="135" y="472" font-size="11" font-weight="700" fill="#2f6b4e" text-anchor="middle">向伙伴系统取整页</text>
+  <text x="66" y="496" font-size="9" fill="#2f6b4e">slab 缺对象时</text>
+  <text x="66" y="516" font-size="9" fill="#2f6b4e">向 buddy 申请一块页</text>
+  <text x="66" y="536" font-size="9" fill="#2f6b4e">作为新的 slab</text>
+  <text x="66" y="558" font-size="9" fill="#2f6b4e">再切成同尺寸对象</text>
+  <text x="66" y="580" font-size="8.5" fill="#5a9078">两层在此衔接</text>
+
+  <!-- slab cache -->
+  <rect x="248" y="448" width="470" height="150" rx="11" fill="#ffffff" stroke="#c9e6d7" filter="url(#soft)"/>
+  <text x="264" y="472" font-size="11" font-weight="700" fill="#2f6b4e">对象缓存 cache（每种尺寸一个）</text>
+  <text x="264" y="492" font-size="8.5" fill="#5a9078">一个 slab（整页）= 若干等长对象槽</text>
+  <g font-size="8.5" text-anchor="middle">
+    <rect x="264" y="502" width="52" height="30" rx="5" fill="#2f9e6e"/><text x="290" y="521" fill="#fff">已用</text>
+    <rect x="320" y="502" width="52" height="30" rx="5" fill="#2f9e6e"/><text x="346" y="521" fill="#fff">已用</text>
+    <rect x="376" y="502" width="52" height="30" rx="5" fill="#dff2e8" stroke="#9ed3b8"/><text x="402" y="521" fill="#2f6b4e">空闲</text>
+    <rect x="432" y="502" width="52" height="30" rx="5" fill="#2f9e6e"/><text x="458" y="521" fill="#fff">已用</text>
+    <rect x="488" y="502" width="52" height="30" rx="5" fill="#dff2e8" stroke="#9ed3b8"/><text x="514" y="521" fill="#2f6b4e">空闲</text>
+    <rect x="544" y="502" width="52" height="30" rx="5" fill="#dff2e8" stroke="#9ed3b8"/><text x="570" y="521" fill="#2f6b4e">空闲</text>
+    <rect x="600" y="502" width="52" height="30" rx="5" fill="#2f9e6e"/><text x="626" y="521" fill="#fff">已用</text>
+    <rect x="656" y="502" width="52" height="30" rx="5" fill="#dff2e8" stroke="#9ed3b8"/><text x="682" y="521" fill="#2f6b4e">空闲</text>
+  </g>
+  <text x="264" y="552" font-size="9" fill="#2f6b4e">分配：从空闲槽拿一个 → O(1) 出池；释放：还回空闲槽 → O(1) 入池</text>
+  <text x="264" y="572" font-size="9" fill="#2f6b4e">对象保留已初始化状态，复用免重复构造</text>
+  <text x="264" y="590" font-size="8.5" fill="#5a9078">slab 按满 / 半满 / 空三态管理，空 slab 可整页还给 buddy</text>
+
+  <!-- 收益 -->
+  <rect x="746" y="448" width="330" height="150" rx="11" fill="#ffffff" stroke="#c9e6d7" filter="url(#soft)"/>
+  <text x="762" y="472" font-size="11" font-weight="700" fill="#2f6b4e">分层的意义</text>
+  <text x="762" y="496" font-size="9.5" fill="#2f6b4e">✓ buddy 管大块，解决<tspan font-weight="700">外部碎片</tspan></text>
+  <text x="762" y="518" font-size="9.5" fill="#2f6b4e">✓ slab 管小对象，解决<tspan font-weight="700">内部碎片</tspan></text>
+  <text x="762" y="540" font-size="9.5" fill="#2f6b4e">✓ 对象池化 → 分配 / 释放 O(1)、缓存热</text>
+  <text x="762" y="562" font-size="9.5" fill="#2f6b4e">✓ 每 CPU 本地缓存 → 减锁竞争（slub）</text>
+  <text x="762" y="584" font-size="8.5" fill="#5a9078">「粗粒度靠 buddy，细粒度靠 slab」是内核内存分配的骨架</text>
+
+  <!-- 连线：buddy → slab -->
+  <line x1="220" y1="523" x2="246" y2="523" stroke="#2f9e6e" stroke-width="2" marker-end="url(#aG)"/>
+  <!-- 上层 → 下层 衔接指示 -->
+  <line x1="135" y1="446" x2="135" y2="300" stroke="#2f9e6e" stroke-width="1.6" stroke-dasharray="4 3" marker-end="url(#aG)"/>
+  <text x="142" y="330" font-size="8.5" fill="#2f6b4e">slab 的页来自 buddy</text>
+</svg>

@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="500" viewBox="0 0 900 500" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="arA" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#c98a12"/></marker>
+  </defs>
+  <rect width="900" height="500" fill="#fbfbfd"/>
+  <text x="30" y="32" font-size="15" font-weight="600" fill="#1d1d1f">raftLog + unstable：内存日志与三条水位</text>
+  <text x="30" y="52" font-size="10.5" fill="#8a8a90">log.go:25 raftLog · log_unstable.go:37 unstable · :198 nextUnstableEnts · :367 stableTo</text>
+
+  <!-- 日志条带 -->
+  <text x="40" y="90" font-size="11" font-weight="700" fill="#33373e">日志序（index →）</text>
+  <g font-size="9.5" text-anchor="middle">
+    <rect x="40" y="100" width="360" height="46" rx="6" fill="#eef6f0" stroke="#c3e2ce"/>
+    <text x="220" y="120" font-weight="700" fill="#1f6b47">Storage（宿主实现，已落盘）</text>
+    <text x="220" y="136" fill="#2f7a54">snapshot 之后的稳定条目 · storage.go:48</text>
+    <rect x="410" y="100" width="450" height="46" rx="6" fill="#fbf3e3" stroke="#ecd9b0"/>
+    <text x="635" y="120" font-weight="700" fill="#8a6013">unstable（内存，未落盘）</text>
+    <text x="635" y="136" fill="#a1791f">entries[i] 位于 i+offset · 待交 Ready.Entries</text>
+  </g>
+
+  <!-- 三水位 -->
+  <text x="40" y="186" font-size="11" font-weight="700" fill="#33373e">三条水位（log.go:33-49）· 不变式 applied ≤ applying ≤ committed</text>
+  <g font-size="10.5">
+    <rect x="40" y="198" width="266" height="70" rx="9" fill="#eaf6ef" stroke="#b9e0c8"/>
+    <text x="56" y="220" font-weight="700" fill="#1f6b47">committed</text>
+    <text x="56" y="240" font-size="9.5" fill="#2f7a54">多数派已复制、可提交的最高位</text>
+    <text x="56" y="258" font-size="9" fill="#8a8a90">commitTo 只增不减 · log.go:322</text>
+
+    <rect x="318" y="198" width="266" height="70" rx="9" fill="#eef3fb" stroke="#bcd0ec"/>
+    <text x="334" y="220" font-weight="700" fill="#1b2a4a">applying</text>
+    <text x="334" y="240" font-size="9.5" fill="#5b7db1">已交给宿主 apply、尚未回执的最高位</text>
+    <text x="334" y="258" font-size="9" fill="#8a8a90">acceptReady 时前进 · log.go:347</text>
+
+    <rect x="596" y="198" width="264" height="70" rx="9" fill="#f3ecfb" stroke="#d8c6ee"/>
+    <text x="612" y="220" font-weight="700" fill="#6b3ba0">applied</text>
+    <text x="612" y="240" font-size="9.5" fill="#814bbd">宿主确认已应用的最高位</text>
+    <text x="612" y="258" font-size="9" fill="#8a8a90">Advance 后 appliedTo · log.go:332</text>
+  </g>
+
+  <!-- 生命周期 -->
+  <rect x="40" y="290" width="820" height="180" rx="13" fill="#fbf3e3" stroke="#ecd9b0" filter="url(#soft)"/>
+  <text x="56" y="314" font-size="12" font-weight="700" fill="#8a6013">一条日志的生命周期（与 Ready I/O 环耦合）</text>
+  <g font-size="10.5" fill="#a1791f">
+    <text x="56" y="340">① append：新条目先进 unstable.entries（内存）</text>
+    <text x="56" y="364">② nextUnstableEnts → Ready.Entries（log.go:198）→ 宿主落盘</text>
+    <text x="56" y="388">③ 落盘回执 → stableTo（log.go:367）→ 从 unstable 清出，此后可从 Storage 读到</text>
+    <text x="56" y="412">④ 多数派复制 → commitTo 抬 committed（log.go:322）</text>
+    <text x="56" y="436">⑤ nextCommittedEnts → Ready.CommittedEntries（log.go:220）→ 宿主 apply</text>
+    <text x="56" y="460">⑥ Advance → appliedTo 抬 applied（log.go:332）；快照后 Storage 可 Compact 掉旧段</text>
+  </g>
+</svg>

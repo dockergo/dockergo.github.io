@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="560" viewBox="0 0 1080 560" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="1080" height="560" fill="#fbfbfd"/>
+  <text x="40" y="40" font-size="16" font-weight="600" fill="#1d1d1f">jemalloc 分配器 · 劫持 malloc/free + 后台维护 + 多层内存交互</text>
+  <text x="40" y="60" font-size="11.5" fill="#86868b">BE 用 jemalloc 接管内存分配;50ms 周期维护回收脏页与 tcache,按衰减曲线归还 OS</text>
+
+  <!-- 上:内存交互三层 -->
+  <rect x="30" y="78" width="1020" height="150" rx="16" fill="#f6f8fc" stroke="#e6ecf4"/>
+  <text x="50" y="102" font-size="13" font-weight="600" fill="#1d5fb8">多层内存交互 · 应用 ↔ jemalloc ↔ OS,旁挂 JVM/JNI</text>
+  <g text-anchor="middle" font-size="11" fill="#4a4e57">
+    <rect x="60" y="116" width="300" height="46" rx="11" fill="#ffffff" stroke="#c4d5ee" filter="url(#soft)"/><text x="210" y="138" font-weight="600" fill="#1d1d1f">应用层 · BE C++ 算子</text><text x="210" y="154" font-size="9">MemTracker consume/release 计量</text>
+    <rect x="390" y="116" width="300" height="46" rx="11" fill="#fdf1e7" stroke="#f2d9c2" filter="url(#soft)"/><text x="540" y="138" font-weight="600" fill="#8a3a12">jemalloc · arena/bin/tcache</text><text x="540" y="154" font-size="9">per-thread cache 无锁快分配</text>
+    <rect x="720" y="116" width="300" height="46" rx="11" fill="#ffffff" stroke="#c4d5ee" filter="url(#soft)"/><text x="870" y="138" font-weight="600" fill="#1d1d1f">操作系统 · mmap/brk</text><text x="870" y="154" font-size="9">物理页 · RSS</text>
+    <rect x="390" y="176" width="300" height="40" rx="11" fill="#faf4fb" stroke="#ecd9ef"/><text x="540" y="200" font-size="10.5" fill="#7a3fb0">旁路:JVM/JNI(FE 交互 · Broker · Hudi Reader)独立堆,需单独限额</text>
+  </g>
+  <g stroke="#c7c7cc" stroke-width="1.5" fill="none">
+    <line x1="360" y1="139" x2="389" y2="139" marker-start="url(#ar)" marker-end="url(#ar)"/>
+    <line x1="690" y1="139" x2="719" y2="139" marker-start="url(#ar)" marker-end="url(#ar)"/>
+    <line x1="540" y1="162" x2="540" y2="175" marker-end="url(#ar)"/>
+  </g>
+
+  <!-- 下:50ms 维护循环 -->
+  <rect x="30" y="242" width="1020" height="298" rx="16" fill="#fbf7ef" stroke="#efe4cf"/>
+  <text x="50" y="266" font-size="13" font-weight="600" fill="#8a5a12">后台维护循环 · 每 50ms 一次</text>
+  <g text-anchor="middle" font-size="11" fill="#8a5a12">
+    <rect x="60" y="284" width="220" height="56" rx="11" fill="#ffffff" stroke="#efe0c4" filter="url(#soft)"/><text x="170" y="308" font-weight="600" fill="#1d1d1f">① 读脏页比例</text><text x="170" y="325" font-size="9">dirty/active 统计</text>
+    <rect x="300" y="284" width="220" height="56" rx="11" fill="#ffffff" stroke="#efe0c4" filter="url(#soft)"/><text x="410" y="308" font-weight="600" fill="#1d1d1f">② tcache 回收</text><text x="410" y="325" font-size="9">空闲 per-thread cache 归还 arena</text>
+    <rect x="540" y="284" width="220" height="56" rx="11" fill="#ffffff" stroke="#efe0c4" filter="url(#soft)"/><text x="650" y="308" font-weight="600" fill="#1d1d1f">③ 脏页 purge</text><text x="650" y="325" font-size="9">madvise 归还 OS</text>
+    <rect x="780" y="284" width="240" height="56" rx="11" fill="#ffffff" stroke="#efe0c4" filter="url(#soft)"/><text x="900" y="308" font-weight="600" fill="#1d1d1f">④ 衰减调控</text><text x="900" y="325" font-size="9">dirty_decay_ms 曲线控节奏</text>
+  </g>
+  <g stroke="#c7c7cc" stroke-width="1.5" fill="none">
+    <line x1="280" y1="312" x2="299" y2="312" marker-end="url(#ar)"/>
+    <line x1="520" y1="312" x2="539" y2="312" marker-end="url(#ar)"/>
+    <line x1="760" y1="312" x2="779" y2="312" marker-end="url(#ar)"/>
+    <path d="M900,340 L900,368 L170,368 L170,340" marker-end="url(#ar)"/>
+  </g>
+  <text x="540" y="386" font-size="10" fill="#a1a1a6" text-anchor="middle">循环:50ms 后重新采样</text>
+
+  <rect x="60" y="404" width="960" height="116" rx="12" fill="#ffffff" stroke="#efe0c4"/>
+  <text x="80" y="428" font-size="12" font-weight="600" fill="#1d1d1f">权衡与调优</text>
+  <g font-size="10.5" fill="#4a4e57">
+    <text x="80" y="452">· dirty_decay_ms / muzzy_decay_ms:小 = 及时还 OS(RSS 低但可能反复 mmap);大 = 复用快(RSS 高)。</text>
+    <text x="80" y="474">· 归还太慢 → RSS 虚高被误判 OOM;归还太快 → 频繁系统调用抖动。默认值对 OLAP 已调优,一般勿动。</text>
+    <text x="80" y="496">· 观测:jemalloc stats(allocated/active/resident/mapped)对齐 MemTracker,定位"计量正常但 RSS 高"= 未 purge。</text>
+  </g>
+</svg>

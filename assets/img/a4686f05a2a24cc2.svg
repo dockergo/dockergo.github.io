@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="420" viewBox="0 0 1000 420" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs><filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ac" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#7c5fe6"/></marker></defs>
+  <rect width="1000" height="420" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Parquet 原理 · 模块化加密：footer 密钥 vs 列密钥</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">加密到“模块”粒度:不同列可用不同密钥;有权限的读者只解自己能解的列,footer 用独立密钥控制元数据可见性</text>
+
+  <!-- 密钥层级 -->
+  <rect x="30" y="76" width="300" height="200" rx="12" fill="#e9f2ff" stroke="#a9ccf5" filter="url(#soft)"/>
+  <text x="46" y="100" font-size="11" font-weight="700" fill="#0a3d78">两类密钥</text>
+  <rect x="46" y="112" width="268" height="52" rx="7" fill="#f3f9ff" stroke="#bcd8f5"/>
+  <text x="60" y="132" font-size="9.4" font-weight="700" fill="#0a3d78">Footer 密钥</text>
+  <text x="60" y="150" font-size="8.4" fill="#2a5a92">加密 FileMetaData / PageIndex 等元数据</text>
+  <rect x="46" y="172" width="268" height="90" rx="7" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="60" y="192" font-size="9.4" font-weight="700" fill="#12402a">列密钥（每列可不同）</text>
+  <text x="60" y="210" font-size="8.4" fill="#2f6f5f">加密该列的页数据 + 列级元数据</text>
+  <text x="60" y="228" font-size="8.4" fill="#2f6f5f">未指定列密钥的列 → 用 footer 密钥</text>
+  <text x="60" y="246" font-size="8.4" fill="#4c8567">敏感列单独密钥 → 细粒度授权</text>
+
+  <!-- 文件中的加密模块 -->
+  <rect x="350" y="76" width="320" height="200" rx="12" fill="#f7f7f9" stroke="#e3e3e8" filter="url(#soft)"/>
+  <text x="366" y="100" font-size="11" font-weight="700" fill="#5a3410">哪些“模块”被独立加密</text>
+  <g font-size="8.8">
+    <rect x="366" y="112" width="288" height="26" rx="6" fill="#eafaf1" stroke="#bfe0cd"/><text x="378" y="129" fill="#12402a">每个 DataPage（页头 + 页体）</text>
+    <rect x="366" y="144" width="288" height="26" rx="6" fill="#eafaf1" stroke="#bfe0cd"/><text x="378" y="161" fill="#12402a">DictionaryPage</text>
+    <rect x="366" y="176" width="288" height="26" rx="6" fill="#eef3fb" stroke="#bcd0ec"/><text x="378" y="193" fill="#1b2a4a">ColumnIndex / OffsetIndex</text>
+    <rect x="366" y="208" width="288" height="26" rx="6" fill="#eef3fb" stroke="#bcd0ec"/><text x="378" y="225" fill="#1b2a4a">ColumnMetaData / 布隆过滤器</text>
+  </g>
+  <text x="366" y="252" font-size="8.2" fill="#8a8a90">每个模块独立加密 → 可按需只解需要的模块。</text>
+
+  <!-- 授权读者视角 -->
+  <rect x="690" y="76" width="280" height="200" rx="12" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+  <text x="706" y="100" font-size="11" font-weight="700" fill="#5a3410">读者按持有密钥解密</text>
+  <rect x="706" y="112" width="248" height="44" rx="7" fill="#fbf6ef" stroke="#e6d8c4"/>
+  <text x="718" y="130" font-size="8.6" fill="#5a3410">持 footer + 列A 密钥</text>
+  <text x="718" y="146" font-size="8.2" fill="#93762e">→ 读元数据 + 解列A,列B 密文跳过</text>
+  <rect x="706" y="164" width="248" height="44" rx="7" fill="#fbf6ef" stroke="#e6d8c4"/>
+  <text x="718" y="182" font-size="8.6" fill="#5a3410">只持 footer 密钥</text>
+  <text x="718" y="198" font-size="8.2" fill="#93762e">→ 看结构/统计,加密列无法解</text>
+  <text x="706" y="230" font-size="8.4" fill="#93762e">缺 footer 密钥 → 见下一“双 footer”图,</text>
+  <text x="706" y="246" font-size="8.4" fill="#93762e">明文 footer 模式下仍可读非敏感列。</text>
+
+  <rect x="30" y="288" width="940" height="118" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="48" y="312" font-size="11" font-weight="700" fill="#1b2a4a">为什么“模块化 + 双层密钥”</text>
+  <text x="48" y="334" font-size="9.4" fill="#5b7db1">· 列级密钥让“一张表里不同敏感度的列”共存:分析师读普通列,只有合规角色能解 PII 列。</text>
+  <text x="48" y="354" font-size="9.4" fill="#5b7db1">· footer 密钥单独管元数据可见性:控制“能否看到 schema/统计/结构”,与“能否看到数据”解耦。</text>
+  <text x="48" y="374" font-size="9.4" fill="#5b7db1">· 加密算法 AES-GCM（默认，带完整性）或 AES-GCM-CTR（元数据 GCM、大页体 CTR，省校验开销）。</text>
+  <text x="48" y="394" font-size="8.4" fill="#7fa0c4">密钥本身不入文件,由 KMS/密钥管理外部提供;文件只存被包裹的密钥元数据与算法标识。</text>
+</svg>

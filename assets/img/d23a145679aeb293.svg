@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="440" viewBox="0 0 1020 440"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1020" height="440" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">Checkpoint · 后台核心动作：把 WAL 合并进单文件（checkpoint_manager.cpp）</text>
+
+  <!-- 触发 -->
+  <rect x="30" y="52" width="300" height="330" rx="14" fill="#fff7e6" stroke="#f0dcae" filter="url(#soft)"/>
+  <text x="48" y="76" font-size="12" font-weight="600" fill="#7a4d00">触发时机</text>
+  <rect x="48" y="90" width="264" height="60" rx="9" fill="#ffffff" stroke="#f0dcae"/><text x="180" y="112" font-size="10" font-weight="600" fill="#7a4d00" text-anchor="middle">① WAL 超阈值（自动）</text><text x="180" y="132" font-size="8.5" fill="#9a7328" text-anchor="middle">checkpoint_wal_size=16MB</text><text x="180" y="146" font-size="8" fill="#b8912e" text-anchor="middle">config.hpp:82</text>
+  <rect x="48" y="160" width="264" height="56" rx="9" fill="#ffffff" stroke="#f0dcae"/><text x="180" y="182" font-size="10" font-weight="600" fill="#7a4d00" text-anchor="middle">② 显式 CHECKPOINT</text><text x="180" y="202" font-size="8.5" fill="#9a7328" text-anchor="middle">导入后手动整理</text>
+  <rect x="48" y="226" width="264" height="56" rx="9" fill="#ffffff" stroke="#f0dcae"/><text x="180" y="248" font-size="10" font-weight="600" fill="#7a4d00" text-anchor="middle">③ 关库时（默认）</text><text x="180" y="268" font-size="8.5" fill="#9a7328" text-anchor="middle">checkpoint_on_shutdown=true</text>
+  <text x="48" y="306" font-size="9.5" fill="#9a7328">目标：缩短 WAL、让单文件进入紧致态、</text>
+  <text x="48" y="324" font-size="9.5" fill="#9a7328">加快下次打开的回放。</text>
+  <text x="48" y="348" font-size="9" fill="#b8912e">config.hpp:105</text>
+
+  <!-- 做什么 -->
+  <rect x="360" y="52" width="630" height="330" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="378" y="76" font-size="12.5" font-weight="600" fill="#1d1d1f">Checkpoint 期间做的事</text>
+
+  <rect x="378" y="92" width="594" height="60" rx="10" fill="#eef3fb" stroke="#bcd0ec"/><text x="675" y="114" font-size="10.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">① WAL 变更写入列存块</text><text x="675" y="134" font-size="9" fill="#5b7db1" text-anchor="middle">把日志里的 INSERT/UPDATE/DELETE 落成正式 RowGroup/Segment</text>
+
+  <rect x="378" y="162" width="594" height="60" rx="10" fill="#eafaf1" stroke="#bce6cd"/><text x="675" y="184" font-size="10.5" font-weight="600" fill="#0f5132" text-anchor="middle">② 列压缩分析（见 存储·压缩）</text><text x="675" y="204" font-size="9" fill="#3f8f66" text-anchor="middle">对每个 Segment 选最省编码后写盘（DetectBestCompressionMethod）</text>
+
+  <rect x="378" y="232" width="594" height="60" rx="10" fill="#f4eefb" stroke="#d9c9ef"/><text x="675" y="254" font-size="10.5" font-weight="600" fill="#3c1361" text-anchor="middle">③ Catalog 序列化进 Metadata 块（见 Catalog）</text><text x="675" y="274" font-size="9" fill="#7a5aa8" text-anchor="middle">WriteEntry/WriteSchema/… 把目录持久化</text>
+
+  <rect x="378" y="302" width="594" height="66" rx="10" fill="#fff7e6" stroke="#f0dcae"/><text x="675" y="324" font-size="10.5" font-weight="600" fill="#7a4d00" text-anchor="middle">④ 更新 Header + 截断 WAL + 旧块进 free list</text><text x="675" y="344" font-size="9" fill="#9a7328" text-anchor="middle">双写 Header 保一致；释放的块进 free_list 供复用（见 存储·块管理）</text><text x="675" y="360" font-size="8.5" fill="#b8912e" text-anchor="middle">checkpoint 是多个能力域动作的汇合点</text>
+
+  <line x1="330" y1="120" x2="360" y2="120" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+</svg>

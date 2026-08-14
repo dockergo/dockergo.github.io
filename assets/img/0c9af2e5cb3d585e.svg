@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="600" viewBox="0 0 1080 600" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="1080" height="600" fill="#fbfbfd"/>
+
+  <!-- 客户端 -->
+  <rect x="470" y="24" width="140" height="40" rx="12" fill="#ffffff" stroke="#ececef" filter="url(#soft)"/>
+  <text x="540" y="49" font-size="13" fill="#1d1d1f" text-anchor="middle">客户端 / BI</text>
+  <line x1="540" y1="64" x2="540" y2="128" stroke="#c7c7cc" stroke-width="1.5" marker-start="url(#ar)" marker-end="url(#ar)"/>
+  <text x="576" y="100" font-size="10" fill="#a1a1a6">SQL / 结果</text>
+
+  <!-- FE 集群 -->
+  <rect x="40" y="92" width="1000" height="124" rx="16" fill="#f6f8fc" stroke="#e6ecf4"/>
+  <text x="60" y="116" font-size="13" font-weight="600" fill="#1d1d1f">FE 集群 · Java（元数据 + 协调 + 缓存）</text>
+  <g text-anchor="middle">
+    <rect x="70" y="130" width="290" height="72" rx="13" fill="#ffffff" stroke="#ececef" filter="url(#soft)"/>
+    <text x="215" y="162" font-size="13" font-weight="600" fill="#1d1d1f">FE · Follower</text>
+    <text x="215" y="182" font-size="11" fill="#86868b">元数据副本 · 参与选主 · 只读</text>
+    <rect x="385" y="130" width="290" height="72" rx="13" fill="#ffffff" stroke="#ececef" filter="url(#soft)"/>
+    <text x="530" y="162" font-size="13" font-weight="600" fill="#1d1d1f">FE · Master</text>
+    <text x="530" y="182" font-size="11" fill="#86868b">Coordinator · 元数据主 · SQL/Plan Cache</text>
+    <rect x="700" y="130" width="290" height="72" rx="13" fill="#ffffff" stroke="#ececef" filter="url(#soft)"/>
+    <text x="845" y="162" font-size="13" font-weight="600" fill="#1d1d1f">FE · Observer</text>
+    <text x="845" y="182" font-size="11" fill="#86868b">元数据只读 · 扩展读</text>
+  </g>
+
+  <!-- Master → BE 下发 -->
+  <g stroke="#c7c7cc" stroke-width="1.4" stroke-dasharray="4 4" fill="none">
+    <path d="M500,202 L215,282" marker-end="url(#ar)"/>
+    <path d="M530,204 L530,282" marker-end="url(#ar)"/>
+    <path d="M560,202 L845,282" marker-end="url(#ar)"/>
+  </g>
+  <text x="530" y="240" font-size="10" fill="#a1a1a6" text-anchor="middle">Fragment 下发 / 结果汇聚（BRPC）</text>
+
+  <!-- BE 集群 -->
+  <rect x="40" y="248" width="1000" height="190" rx="16" fill="#f5faf6" stroke="#e2ece5"/>
+  <text x="60" y="272" font-size="13" font-weight="600" fill="#1d1d1f">BE 集群 · C++（share-nothing · MPP 并行）</text>
+  <g>
+    <!-- BE-1 -->
+    <rect x="70" y="286" width="290" height="134" rx="13" fill="#ffffff" stroke="#ececef" filter="url(#soft)"/>
+    <text x="215" y="312" font-size="13" font-weight="600" fill="#1d1d1f" text-anchor="middle">BE-1</text>
+    <g font-size="11" fill="#4a4e57" text-anchor="middle">
+      <rect x="90" y="322" width="250" height="26" rx="8" fill="#f4f5f7" stroke="#e6e7ea"/><text x="215" y="339">执行 · Pipeline / 向量化</text>
+      <rect x="90" y="354" width="250" height="26" rx="8" fill="#f4f5f7" stroke="#e6e7ea"/><text x="215" y="371">本地存储 · Tablet / Rowset</text>
+      <rect x="90" y="386" width="250" height="26" rx="8" fill="#f4f5f7" stroke="#e6e7ea"/><text x="215" y="403">本地缓存 · File Cache（LRU）</text>
+    </g>
+    <!-- BE-2 -->
+    <rect x="385" y="286" width="290" height="134" rx="13" fill="#ffffff" stroke="#ececef" filter="url(#soft)"/>
+    <text x="530" y="312" font-size="13" font-weight="600" fill="#1d1d1f" text-anchor="middle">BE-2</text>
+    <g font-size="11" fill="#4a4e57" text-anchor="middle">
+      <rect x="405" y="322" width="250" height="26" rx="8" fill="#f4f5f7" stroke="#e6e7ea"/><text x="530" y="339">执行 · Pipeline / 向量化</text>
+      <rect x="405" y="354" width="250" height="26" rx="8" fill="#f4f5f7" stroke="#e6e7ea"/><text x="530" y="371">本地存储 · Tablet / Rowset</text>
+      <rect x="405" y="386" width="250" height="26" rx="8" fill="#f4f5f7" stroke="#e6e7ea"/><text x="530" y="403">本地缓存 · File Cache（LRU）</text>
+    </g>
+    <!-- BE-3 -->
+    <rect x="700" y="286" width="290" height="134" rx="13" fill="#ffffff" stroke="#ececef" filter="url(#soft)"/>
+    <text x="845" y="312" font-size="13" font-weight="600" fill="#1d1d1f" text-anchor="middle">BE-3　…×N</text>
+    <g font-size="11" fill="#4a4e57" text-anchor="middle">
+      <rect x="720" y="322" width="250" height="26" rx="8" fill="#f4f5f7" stroke="#e6e7ea"/><text x="845" y="339">执行 · Pipeline / 向量化</text>
+      <rect x="720" y="354" width="250" height="26" rx="8" fill="#f4f5f7" stroke="#e6e7ea"/><text x="845" y="371">本地存储 · Tablet / Rowset</text>
+      <rect x="720" y="386" width="250" height="26" rx="8" fill="#f4f5f7" stroke="#e6e7ea"/><text x="845" y="403">本地缓存 · File Cache（LRU）</text>
+    </g>
+  </g>
+  <!-- Exchange 横向 -->
+  <line x1="361" y1="353" x2="384" y2="353" stroke="#c7c7cc" stroke-width="1.5" marker-start="url(#ar)" marker-end="url(#ar)"/>
+  <text x="372" y="345" font-size="9" fill="#a1a1a6" text-anchor="middle">Exchange</text>
+  <line x1="676" y1="353" x2="699" y2="353" stroke="#c7c7cc" stroke-width="1.5" marker-start="url(#ar)" marker-end="url(#ar)"/>
+  <text x="687" y="345" font-size="9" fill="#a1a1a6" text-anchor="middle">Exchange</text>
+
+  <!-- 外部存储 → BE 缓存 -->
+  <line x1="540" y1="468" x2="540" y2="440" stroke="#c7c7cc" stroke-width="1.4" stroke-dasharray="4 4" marker-end="url(#ar)"/>
+  <text x="700" y="457" font-size="10" fill="#a1a1a6" text-anchor="middle">远端读 + 本地缓存（存算分离 / 湖仓）</text>
+
+  <!-- 外部存储 -->
+  <rect x="40" y="470" width="1000" height="100" rx="16" fill="#f7f7f9" stroke="#ececef"/>
+  <text x="60" y="494" font-size="13" font-weight="600" fill="#1d1d1f">外部存储（存算分离 / 湖仓 · 数据不在 BE 本地盘）</text>
+  <g text-anchor="middle">
+    <rect x="70" y="506" width="455" height="50" rx="13" fill="#ffffff" stroke="#ececef" filter="url(#soft)"/>
+    <text x="297" y="536" font-size="13" fill="#2c5a3a">Storage Vault · 对象存储/HDFS（存算分离）</text>
+    <rect x="525" y="506" width="455" height="50" rx="13" fill="#ffffff" stroke="#ececef" filter="url(#soft)"/>
+    <text x="752" y="536" font-size="13" fill="#2f4a7c">外部表格式 · Iceberg / Hive（湖仓）</text>
+  </g>
+</svg>

@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="600" viewBox="0 0 1080 600" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="600" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">RocksDB 写入全景 · 从 API 到内存（DBImpl::WriteImpl）</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">永不原地更新:并发写攒组 → 分配 seq → 追加 WAL → 插 MemTable → 满转 immutable → 交后台 Flush</text>
+
+  <g font-size="8.8" text-anchor="middle">
+    <rect x="30" y="80" width="150" height="70" rx="10" fill="#f4eefb" stroke="#d9c7ec"/><text x="105" y="102" font-size="9.5" font-weight="700" fill="#3d2a5a">① API</text><text x="105" y="122" fill="#5a3d78">Put/Write(batch)</text><text x="105" y="138" fill="#5a3d78">→ WriteBatch</text>
+    <rect x="200" y="80" width="160" height="70" rx="10" fill="#eef3fb" stroke="#bcd0ec"/><text x="280" y="102" font-size="9.5" font-weight="700" fill="#1b2a4a">② JoinBatchGroup</text><text x="280" y="122" fill="#5b7db1">并发写攒成写组</text><text x="280" y="138" fill="#5b7db1">选出 leader</text>
+    <rect x="380" y="80" width="160" height="70" rx="10" fill="#eef3fb" stroke="#bcd0ec"/><text x="460" y="102" font-size="9.5" font-weight="700" fill="#1b2a4a">③ 分配 seq</text><text x="460" y="122" fill="#5b7db1">整组连续 SequenceNumber</text><text x="460" y="138" fill="#5b7db1">seq = base + i</text>
+    <rect x="560" y="80" width="160" height="70" rx="10" fill="#fdf6ea" stroke="#efdcb4"/><text x="640" y="102" font-size="9.5" font-weight="700" fill="#5a3410">④ 写 WAL</text><text x="640" y="122" fill="#93762e">log::Writer 顺序追加</text><text x="640" y="138" fill="#93762e">可 fsync(WriteOptions.sync)</text>
+    <rect x="740" y="80" width="160" height="70" rx="10" fill="#f5faf6" stroke="#cfe6d5"/><text x="820" y="102" font-size="9.5" font-weight="700" fill="#2c5a3a">⑤ 插 MemTable</text><text x="820" y="122" fill="#2f6f4f">MemTable::Add(跳表)</text><text x="820" y="138" fill="#2f6f4f">按内部键有序</text>
+    <rect x="920" y="80" width="130" height="70" rx="10" fill="#eef3fb" stroke="#bcd0ec"/><text x="985" y="102" font-size="9.5" font-weight="700" fill="#1b2a4a">⑥ 唤醒 follower</text><text x="985" y="122" fill="#5b7db1">整组完成</text><text x="985" y="138" fill="#5b7db1">返回各 writer</text>
+  </g>
+  <line x1="180" y1="115" x2="200" y2="115" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="360" y1="115" x2="380" y2="115" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="540" y1="115" x2="560" y2="115" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="720" y1="115" x2="740" y2="115" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="900" y1="115" x2="920" y2="115" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+
+  <!-- memtable rotation -->
+  <rect x="30" y="176" width="1020" height="170" rx="13" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="46" y="198" font-size="11.5" font-weight="700" fill="#12402a">MemTable 轮转:满则转 immutable</text>
+  <g font-size="8.8" text-anchor="middle">
+    <rect x="46" y="212" width="300" height="110" rx="10" fill="#eafaf1" stroke="#bfe0cd"/><text x="196" y="234" font-size="9.5" font-weight="700" fill="#12402a">活跃 MemTable(可写)</text><text x="196" y="254" fill="#2f6f4f">InlineSkipList 跳表</text><text x="196" y="272" fill="#2f6f4f">MemTable::Add 持续插入</text><text x="196" y="294" fill="#2f6f4f">写满 write_buffer_size(默认 64MB)</text><text x="196" y="312" fill="#b1483a">→ 转 immutable,新建活跃</text>
+    <rect x="378" y="212" width="300" height="110" rx="10" fill="#eef3fb" stroke="#bcd0ec"/><text x="528" y="234" font-size="9.5" font-weight="700" fill="#1b2a4a">immutable MemTable(只读)</text><text x="528" y="254" fill="#5b7db1">最多 max_write_buffer_number 个</text><text x="528" y="272" fill="#5b7db1">进 FlushScheduler 队列</text><text x="528" y="294" fill="#5b7db1">等后台线程落盘</text><text x="528" y="312" fill="#5b7db1">仍可被读(读路径查它)</text>
+    <rect x="710" y="212" width="324" height="110" rx="10" fill="#fdf6ea" stroke="#efdcb4"/><text x="872" y="234" font-size="9.5" font-weight="700" fill="#5a3410">后台 Flush → L0 SST</text><text x="872" y="254" fill="#93762e">FlushJob:迭代 immutable → TableBuilder</text><text x="872" y="272" fill="#93762e">写成不可变 BlockBasedTable 文件</text><text x="872" y="294" fill="#93762e">经 VersionEdit 装进新 Version</text><text x="872" y="312" fill="#93762e">(见 Flush 主线)</text>
+  </g>
+  <line x1="346" y1="267" x2="378" y2="267" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/><text x="362" y="260" font-size="7.5" fill="#b1483a">满</text>
+  <line x1="678" y1="267" x2="710" y2="267" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/><text x="694" y="260" font-size="7.5" fill="#93762e">flush</text>
+
+  <!-- durability + ordering notes -->
+  <rect x="30" y="362" width="500" height="100" rx="13" fill="#fff7e6" stroke="#e8cf9a"/>
+  <text x="46" y="384" font-size="11" font-weight="700" fill="#5a3410">为什么先 WAL 再 MemTable</text>
+  <text x="46" y="406" font-size="9" fill="#93762e">· WAL 先落 → 崩溃时能重放,MemTable 是易失内存</text>
+  <text x="46" y="424" font-size="9" fill="#93762e">· 顺序 fsync WAL 比随机写磁盘快几个数量级</text>
+  <text x="46" y="442" font-size="9" fill="#93762e">· disableWAL 跳过 WAL:更快但崩溃丢未 flush 数据</text>
+
+  <rect x="550" y="362" width="500" height="100" rx="13" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="566" y="384" font-size="11" font-weight="700" fill="#1b2a4a">组提交的威力</text>
+  <text x="566" y="406" font-size="9" fill="#5b7db1">· N 个并发写只付一次 WAL fsync 的固定开销</text>
+  <text x="566" y="424" font-size="9" fill="#5b7db1">· 吞吐随并发线性上升(直到 fsync/CPU 饱和)</text>
+  <text x="566" y="442" font-size="9" fill="#5b7db1">· enable_pipelined_write:WAL 与 MemTable 写流水线化</text>
+
+  <!-- takeaway -->
+  <rect x="30" y="478" width="1020" height="96" rx="13" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="46" y="500" font-size="11" font-weight="700" fill="#1d1d1f">要点</text>
+  <text x="46" y="522" font-size="9" fill="#6e6e73">· 全程无磁盘读:写 = 追加 WAL(顺序 IO)+ 插内存跳表,这是 LSM 写吞吐远超 B-tree 的根源</text>
+  <text x="46" y="540" font-size="9" fill="#6e6e73">· 多个 immutable 缓冲突发写:活跃满了立刻换新的接着写,后台慢慢 flush,不阻塞前台(除非积压触发写停顿)</text>
+  <text x="46" y="560" font-size="9" fill="#b1483a">· 归属:seq 的多版本语义在【事务与快照】;WAL 格式/恢复在【WAL 与恢复】;immutable→L0 在【Flush】</text>
+</svg>

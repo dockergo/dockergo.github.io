@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="560" viewBox="0 0 960 560" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <marker id="zc" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#8a5cae"/></marker>
+    <marker id="hot" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+    <filter id="s2" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+  </defs>
+  <rect width="960" height="560" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="700" fill="#1d1d1f">零拷贝贯穿线 · 同一份列式内存，如何从内存走到磁盘 / 另一语言 / 网络对端都不复制</text>
+  <text x="30" y="50" font-size="10.5" fill="#6e6e73">核心不变量：validity bitmap + offset + value buffers 的字节布局在“内存 / IPC / C-Data / Flight”四态中完全一致 → 交换只递指针或原样落字节，不做行↔列/结构转换</text>
+
+  <!-- 中心：一份 buffers -->
+  <rect x="360" y="90" width="240" height="96" rx="12" fill="#eafaf1" stroke="#b8e6cd" filter="url(#s2)"/>
+  <text x="480" y="114" font-size="12" font-weight="700" fill="#1c6b45" text-anchor="middle">一份列式 buffers（内存中）</text>
+  <text x="480" y="134" font-size="9" fill="#2f7d57" text-anchor="middle">validity | offset | values（+child/dict）</text>
+  <text x="480" y="150" font-size="9" fill="#2f7d57" text-anchor="middle">shared_ptr&lt;Buffer&gt; 引用计数持有</text>
+  <text x="480" y="168" font-size="8.5" fill="#8a9a8f" text-anchor="middle">MemoryPool 64B 对齐分配</text>
+
+  <!-- 四个出口 -->
+  <rect x="40" y="270" width="200" height="120" rx="12" fill="#f4eefb" stroke="#d9c9ef" filter="url(#s2)"/>
+  <text x="140" y="294" font-size="11.5" font-weight="600" fill="#3c1361" text-anchor="middle">切片 / 计算（本进程）</text>
+  <text x="140" y="315" font-size="9" fill="#6f3ea8" text-anchor="middle">Array::Slice 只改 offset+length</text>
+  <text x="140" y="331" font-size="9" fill="#6f3ea8" text-anchor="middle">compute kernel 就地读 buffer</text>
+  <text x="140" y="347" font-size="9" fill="#6f3ea8" text-anchor="middle">输出可复用输入 validity</text>
+  <text x="140" y="370" font-size="8.5" fill="#9a86c0" text-anchor="middle">零复制：共享同一 Buffer</text>
+
+  <rect x="266" y="270" width="200" height="120" rx="12" fill="#f4eefb" stroke="#d9c9ef" filter="url(#s2)"/>
+  <text x="366" y="294" font-size="11.5" font-weight="600" fill="#3c1361" text-anchor="middle">IPC（进程 / 文件）</text>
+  <text x="366" y="315" font-size="9" fill="#6f3ea8" text-anchor="middle">Flatbuffers 元数据 + 帧</text>
+  <text x="366" y="331" font-size="9" fill="#6f3ea8" text-anchor="middle">body = 原样 buffer 字节</text>
+  <text x="366" y="347" font-size="9" fill="#6f3ea8" text-anchor="middle">mmap 文件可直接映射读</text>
+  <text x="366" y="370" font-size="8.5" fill="#9a86c0" text-anchor="middle">落字节即内存布局</text>
+
+  <rect x="492" y="270" width="200" height="120" rx="12" fill="#f1e8fb" stroke="#d3bef0" filter="url(#s2)"/>
+  <text x="592" y="294" font-size="11.5" font-weight="700" fill="#3c1361" text-anchor="middle">C Data Interface（跨语言）</text>
+  <text x="592" y="315" font-size="9" fill="#6f3ea8" text-anchor="middle">ArrowArray.buffers = 指针数组</text>
+  <text x="592" y="331" font-size="9" fill="#6f3ea8" text-anchor="middle">递结构体，不拷贝字节</text>
+  <text x="592" y="347" font-size="9" fill="#6f3ea8" text-anchor="middle">release 回调转移所有权</text>
+  <text x="592" y="370" font-size="8.5" fill="#9a86c0" text-anchor="middle">pyarrow↔DuckDB↔Polars</text>
+
+  <rect x="718" y="270" width="202" height="120" rx="12" fill="#faf4fb" stroke="#e4cdea" filter="url(#s2)"/>
+  <text x="819" y="294" font-size="11.5" font-weight="600" fill="#6f3ea8" text-anchor="middle">Flight（跨网络）</text>
+  <text x="819" y="315" font-size="9" fill="#8944ab" text-anchor="middle">gRPC 传 FlightData</text>
+  <text x="819" y="331" font-size="9" fill="#8944ab" text-anchor="middle">payload = IPC 编码批</text>
+  <text x="819" y="347" font-size="9" fill="#8944ab" text-anchor="middle">DoGet/DoPut/DoExchange</text>
+  <text x="819" y="370" font-size="8.5" fill="#a97fb8" text-anchor="middle">省行式序列化往返</text>
+
+  <line x1="420" y1="186" x2="150" y2="270" stroke="#8a5cae" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#zc)"/>
+  <line x1="460" y1="186" x2="380" y2="270" stroke="#8a5cae" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#zc)"/>
+  <line x1="500" y1="186" x2="580" y2="270" stroke="#8a5cae" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#zc)"/>
+  <line x1="540" y1="186" x2="810" y2="270" stroke="#8a5cae" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#zc)"/>
+
+  <rect x="120" y="440" width="720" height="70" rx="12" fill="#f6f8fc" stroke="#cfe0f2"/>
+  <text x="480" y="465" font-size="11" font-weight="600" fill="#1b2a4a" text-anchor="middle">对端拿到的还是“同一套 buffers 布局” → 直接构造 Array/ArrayData，无需反序列化</text>
+  <text x="480" y="486" font-size="9.5" fill="#5b7db1" text-anchor="middle">这就是 Arrow 的立身之本：把“数据交换”的成本从 O(数据量) 的复制 / 转换，降到 O(1) 的指针传递或字节直搬</text>
+  <text x="480" y="502" font-size="8.5" fill="#9aa8bd" text-anchor="middle">代价：布局对随机行访问、逐行更新不友好——Arrow 是分析 / 交换层，不是事务存储</text>
+</svg>

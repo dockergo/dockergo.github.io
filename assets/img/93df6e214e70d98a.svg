@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="420" viewBox="0 0 920 420" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+    <marker id="arb" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#5b7db1"/></marker>
+    <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#c4341c"/></marker>
+  </defs>
+  <rect width="920" height="420" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">Graph 拓扑排序 · DFS 先装被依赖者，环依赖即 panic</text>
+
+  <!-- 依赖图 -->
+  <text x="30" y="60" font-size="12" font-weight="600" fill="#1d1d1f">Requires 声明的依赖图（只声明类型，不绑实现）</text>
+
+  <rect x="40" y="76" width="150" height="52" rx="10" fill="#f4eefb" stroke="#d9c9ef" filter="url(#soft)"/>
+  <text x="115" y="98" font-size="11" font-weight="600" fill="#6f3ea8" text-anchor="middle">CRI (GRPCPlugin)</text>
+  <text x="115" y="116" font-size="9" fill="#9a76c0" text-anchor="middle">Requires: Service/Runtime…</text>
+
+  <rect x="250" y="76" width="150" height="52" rx="10" fill="#f6f8fc" stroke="#cfe0f2" filter="url(#soft)"/>
+  <text x="325" y="98" font-size="11" font-weight="600" fill="#5b7db1" text-anchor="middle">ServicePlugin</text>
+  <text x="325" y="116" font-size="9" fill="#5b7db1" text-anchor="middle">Requires: Runtime/Content</text>
+
+  <rect x="250" y="158" width="150" height="52" rx="10" fill="#f5faf6" stroke="#cfe6d2" filter="url(#soft)"/>
+  <text x="325" y="180" font-size="11" font-weight="600" fill="#1d8f3f" text-anchor="middle">RuntimePluginV2</text>
+  <text x="325" y="198" font-size="9" fill="#4a8a5c" text-anchor="middle">Requires: Metadata</text>
+
+  <rect x="460" y="158" width="150" height="52" rx="10" fill="#fbf7ef" stroke="#ecdcbf" filter="url(#soft)"/>
+  <text x="535" y="180" font-size="11" font-weight="600" fill="#8a6d3b" text-anchor="middle">MetadataPlugin</text>
+  <text x="535" y="198" font-size="9" fill="#b08535" text-anchor="middle">Requires: Content（叶）</text>
+
+  <rect x="460" y="76" width="150" height="52" rx="10" fill="#fbf7ef" stroke="#ecdcbf" filter="url(#soft)"/>
+  <text x="535" y="98" font-size="11" font-weight="600" fill="#8a6d3b" text-anchor="middle">ContentPlugin</text>
+  <text x="535" y="116" font-size="9" fill="#b08535" text-anchor="middle">无依赖（根）</text>
+
+  <path d="M190 102 L250 102" fill="none" stroke="#b8b8bf" stroke-width="1.4" marker-end="url(#ar)"/>
+  <path d="M190 110 Q220 150 250 178" fill="none" stroke="#b8b8bf" stroke-width="1.4" marker-end="url(#ar)"/>
+  <path d="M400 102 L460 102" fill="none" stroke="#b8b8bf" stroke-width="1.4" marker-end="url(#ar)"/>
+  <path d="M400 184 L460 184" fill="none" stroke="#b8b8bf" stroke-width="1.4" marker-end="url(#ar)"/>
+  <path d="M325 158 L325 128" fill="none" stroke="#b8b8bf" stroke-width="1.4" marker-end="url(#ar)"/>
+  <path d="M535 158 L535 128" fill="none" stroke="#b8b8bf" stroke-width="1.4" marker-end="url(#ar)"/>
+  <text x="655" y="150" font-size="9" fill="#8a8a8f">箭头 = "依赖于"</text>
+  <text x="655" y="166" font-size="9" fill="#8a8a8f">plugin.go:139</text>
+  <text x="655" y="182" font-size="9" fill="#8a8a8f">for _, t := range Requires</text>
+
+  <!-- DFS 产出的初始化顺序 -->
+  <rect x="30" y="238" width="560" height="86" rx="12" fill="#f5faf6" stroke="#cfe6d2" filter="url(#soft)"/>
+  <text x="46" y="260" font-size="11.5" font-weight="600" fill="#1d8f3f">DFS children 递归 → 被依赖者先入 ordered（plugin.go:114 Graph · :151）</text>
+  <g font-size="10">
+    <rect x="46" y="274" width="92" height="34" rx="7" fill="#fff" stroke="#cfe6d2"/><text x="92" y="295" fill="#1d8f3f" text-anchor="middle">① Content</text>
+    <rect x="150" y="274" width="92" height="34" rx="7" fill="#fff" stroke="#cfe6d2"/><text x="196" y="295" fill="#1d8f3f" text-anchor="middle">② Metadata</text>
+    <rect x="254" y="274" width="92" height="34" rx="7" fill="#fff" stroke="#cfe6d2"/><text x="300" y="295" fill="#1d8f3f" text-anchor="middle">③ Runtime</text>
+    <rect x="358" y="274" width="92" height="34" rx="7" fill="#fff" stroke="#cfe6d2"/><text x="404" y="295" fill="#1d8f3f" text-anchor="middle">④ Service</text>
+    <rect x="462" y="274" width="112" height="34" rx="7" fill="#f4eefb" stroke="#d9c9ef"/><text x="518" y="295" fill="#6f3ea8" text-anchor="middle">⑤ CRI</text>
+  </g>
+  <path d="M138 291 L150 291" fill="none" stroke="#b8b8bf" stroke-width="1.4" marker-end="url(#ar)"/>
+  <path d="M242 291 L254 291" fill="none" stroke="#b8b8bf" stroke-width="1.4" marker-end="url(#ar)"/>
+  <path d="M346 291 L358 291" fill="none" stroke="#b8b8bf" stroke-width="1.4" marker-end="url(#ar)"/>
+  <path d="M450 291 L462 291" fill="none" stroke="#b8b8bf" stroke-width="1.4" marker-end="url(#ar)"/>
+
+  <!-- 环依赖 panic -->
+  <rect x="610" y="238" width="280" height="86" rx="12" fill="#fdf1ef" stroke="#f0c4bc" filter="url(#soft)"/>
+  <text x="626" y="260" font-size="11.5" font-weight="600" fill="#c4341c">环依赖 → 启动期 panic</text>
+  <text x="626" y="282" font-size="9.5" fill="#c4341c">children 用 stack 记递归路径</text>
+  <text x="626" y="300" font-size="9.5" fill="#c4341c">依赖已在栈中 → ErrPluginCircular</text>
+  <text x="626" y="317" font-size="8.5" fill="#a1a1a6">plugin.go:144-147 · 错误配置早暴露</text>
+  <path d="M700 224 Q720 232 715 238" fill="none" stroke="#c4341c" stroke-width="1.4" marker-end="url(#arr)"/>
+
+  <text x="30" y="356" font-size="11.5" fill="#6e6e73"><tspan font-weight="600" fill="#1d1d1f">注册期校验：</tspan>Register（plugin.go:160）拒"依赖自己类型 / * 与其它并列"（ErrInvalidRequires），checkUnique 拒重复 ID</text>
+  <text x="30" y="380" font-size="11.5" fill="#6e6e73"><tspan font-weight="600" fill="#1d1d1f">禁用即裁剪：</tspan>Graph(filter) 的 filter 来自 config.DisabledPlugins（server.go:386），被禁插件从 ordered 剔除</text>
+  <text x="30" y="404" font-size="11" fill="#a1a1a6">t == "*" 表示依赖某类型的全部实例；只声明类型让 overlayfs / native 等同类型实现可互换</text>
+</svg>

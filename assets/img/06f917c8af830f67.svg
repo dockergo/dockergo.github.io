@@ -1,0 +1,117 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="636" viewBox="0 0 1180 636" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+  </defs>
+  <rect width="1180" height="636" fill="#fbfbfd"/>
+
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">工程实现差异 · 用户态运行时如何在内核内存之上分层</text>
+  <text x="30" y="50" font-size="10.5" fill="#6e6e73">Linux 内核给出物理页与隔离底座；Go / JVM 各自在 OS 之上再叠一层「每线程 / 每 P 本地缓存 + 全局慢路径 + 分级回收」——同构而取舍不同（Rust 见底部旁注）</text>
+
+  <!-- 列头行 -->
+  <rect x="30" y="64" width="220" height="44" rx="9" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="140" y="83" font-size="11.5" font-weight="700" fill="#4a4a4f" text-anchor="middle">工程取舍维度</text>
+  <text x="140" y="99" font-size="8.5" fill="#8a97ab" text-anchor="middle">同一分层思想，不同落地</text>
+
+  <rect x="254" y="64" width="290" height="44" rx="9" fill="#fbeee5" stroke="#f0cbb0"/>
+  <text x="399" y="85" font-size="12.5" font-weight="800" fill="#b3542a" text-anchor="middle">Linux 内核</text>
+  <text x="399" y="100" font-size="8.5" fill="#c07a52" text-anchor="middle">物理内存底座 · 内核态</text>
+
+  <rect x="548" y="64" width="290" height="44" rx="9" fill="#e0f2f5" stroke="#b6dfe6"/>
+  <text x="693" y="85" font-size="12.5" font-weight="800" fill="#12707e" text-anchor="middle">Go 运行时</text>
+  <text x="693" y="100" font-size="8.5" fill="#3a8b96" text-anchor="middle">用户态运行时 · 源自 tcmalloc</text>
+
+  <rect x="842" y="64" width="308" height="44" rx="9" fill="#f0eaf6" stroke="#dcc9ec"/>
+  <text x="996" y="85" font-size="12.5" font-weight="800" fill="#6b4a8f" text-anchor="middle">JVM（OpenJDK / HotSpot）</text>
+  <text x="996" y="100" font-size="8.5" fill="#8a6bab" text-anchor="middle">用户态运行时 · 托管堆</text>
+
+  <!-- ============ 行1：分配层级 ============ -->
+  <rect x="30" y="112" width="220" height="72" rx="9" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="44" y="142" font-size="11" font-weight="700" fill="#1d1d1f">① 分配层级</text>
+  <text x="44" y="160" font-size="8.5" fill="#8a97ab">从大到小如何分层</text>
+  <rect x="254" y="112" width="290" height="72" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="268" y="139" font-size="10" font-weight="700" fill="#b3542a">buddy → slab</text>
+  <text x="268" y="158" font-size="8.5" fill="#4a4a4f">2^order 页 → 上层对象池</text>
+  <rect x="548" y="112" width="290" height="72" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="562" y="139" font-size="10" font-weight="700" fill="#12707e">mheap→mcentral→mcache</text>
+  <text x="562" y="158" font-size="8.5" fill="#4a4a4f">全局堆 → 每 class → 每 P 的 mspan</text>
+  <rect x="842" y="112" width="308" height="72" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="856" y="139" font-size="10" font-weight="700" fill="#6b4a8f">托管堆 → TLAB</text>
+  <text x="856" y="158" font-size="8.5" fill="#4a4a4f">分代 / 分区堆 → 每线程本地缓冲</text>
+
+  <!-- ============ 行2：小对象快路径 ============ -->
+  <rect x="30" y="184" width="220" height="72" rx="9" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="44" y="214" font-size="11" font-weight="700" fill="#1d1d1f">② 小对象快路径</text>
+  <text x="44" y="232" font-size="8.5" fill="#8a97ab">热路径怎样无锁</text>
+  <rect x="254" y="184" width="290" height="72" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="268" y="211" font-size="10" font-weight="700" fill="#b3542a">slab 等长对象槽</text>
+  <text x="268" y="230" font-size="8.5" fill="#4a4a4f">O(1) 出入池 · per-CPU 缓存</text>
+  <rect x="548" y="184" width="290" height="72" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="562" y="211" font-size="10" font-weight="700" fill="#12707e">mcache 无锁</text>
+  <text x="562" y="230" font-size="8.5" fill="#4a4a4f">size class 68 档 + tiny 分配器</text>
+  <rect x="842" y="184" width="308" height="72" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="856" y="211" font-size="10" font-weight="700" fill="#6b4a8f">TLAB 指针 bump</text>
+  <text x="856" y="230" font-size="8.5" fill="#4a4a4f">每线程独占一段 · 无锁递增</text>
+
+  <!-- ============ 行3：回收方式 ============ -->
+  <rect x="30" y="256" width="220" height="72" rx="9" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="44" y="286" font-size="11" font-weight="700" fill="#1d1d1f">③ 回收方式</text>
+  <text x="44" y="304" font-size="8.5" fill="#8a97ab">手动还是自动 GC</text>
+  <rect x="254" y="256" width="290" height="72" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="268" y="283" font-size="10" font-weight="700" fill="#b3542a">手动 free / kfree</text>
+  <text x="268" y="302" font-size="8.5" fill="#4a4a4f">内核自管 + 页回收 kswapd</text>
+  <rect x="548" y="256" width="290" height="72" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="562" y="283" font-size="10" font-weight="700" fill="#12707e">并发三色标记清除</text>
+  <text x="562" y="302" font-size="8.5" fill="#4a4a4f">非分代 · 非压缩 · 混合写屏障</text>
+  <rect x="842" y="256" width="308" height="72" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="856" y="283" font-size="10" font-weight="700" fill="#6b4a8f">可插拔 GC</text>
+  <text x="856" y="302" font-size="8.5" fill="#4a4a4f">分代 G1 / 并发重定位 ZGC，可换</text>
+
+  <!-- ============ 行4：碎片处理 ============ -->
+  <rect x="30" y="328" width="220" height="72" rx="9" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="44" y="358" font-size="11" font-weight="700" fill="#1d1d1f">④ 碎片处理</text>
+  <text x="44" y="376" font-size="8.5" fill="#8a97ab">内 / 外碎片怎么消</text>
+  <rect x="254" y="328" width="290" height="72" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="268" y="355" font-size="10" font-weight="700" fill="#b3542a">合并伙伴块</text>
+  <text x="268" y="374" font-size="8.5" fill="#4a4a4f">buddy 解外碎片 · slab 解内碎片</text>
+  <rect x="548" y="328" width="290" height="72" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="562" y="355" font-size="10" font-weight="700" fill="#12707e">size class 取整</text>
+  <text x="562" y="374" font-size="8.5" fill="#4a4a4f">内碎片可控 · 不移动对象（非压缩）</text>
+  <rect x="842" y="328" width="308" height="72" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="856" y="355" font-size="10" font-weight="700" fill="#6b4a8f">压缩 / 疏散消碎片</text>
+  <text x="856" y="374" font-size="8.5" fill="#4a4a4f">G1 疏散、ZGC 重定位搬活对象</text>
+
+  <!-- ============ 行5：隔离 / 限额 ============ -->
+  <rect x="30" y="400" width="220" height="72" rx="9" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="44" y="430" font-size="11" font-weight="700" fill="#1d1d1f">⑤ 隔离 / 限额</text>
+  <text x="44" y="448" font-size="8.5" fill="#8a97ab">上限与超限动作</text>
+  <rect x="254" y="400" width="290" height="72" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="268" y="427" font-size="10" font-weight="700" fill="#b3542a">cgroup 水位线</text>
+  <text x="268" y="446" font-size="8.5" fill="#4a4a4f">high / max 两道 → OOM killer</text>
+  <rect x="548" y="400" width="290" height="72" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="562" y="427" font-size="10" font-weight="700" fill="#12707e">GOMEMLIMIT 软限</text>
+  <text x="562" y="446" font-size="8.5" fill="#4a4a4f">GOGC 步调 · 逼近上限即加紧 GC</text>
+  <rect x="842" y="400" width="308" height="72" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="856" y="427" font-size="10" font-weight="700" fill="#6b4a8f">-Xmx 堆硬上限</text>
+  <text x="856" y="446" font-size="8.5" fill="#4a4a4f">超限即 OutOfMemoryError</text>
+
+  <!-- ============ 行6：与内核的关系 ============ -->
+  <rect x="30" y="472" width="220" height="72" rx="9" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="44" y="502" font-size="11" font-weight="700" fill="#1d1d1f">⑥ 与内核的关系</text>
+  <text x="44" y="520" font-size="8.5" fill="#8a97ab">向下如何要内存</text>
+  <rect x="254" y="472" width="290" height="72" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="268" y="499" font-size="10" font-weight="700" fill="#b3542a">就是内核本身</text>
+  <text x="268" y="518" font-size="8.5" fill="#4a4a4f">直接管物理页 + 页表</text>
+  <rect x="548" y="472" width="290" height="72" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="562" y="499" font-size="10" font-weight="700" fill="#12707e">mmap 要 arena</text>
+  <text x="562" y="518" font-size="8.5" fill="#4a4a4f">向 OS 批发大块 · 内部自管</text>
+  <rect x="842" y="472" width="308" height="72" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="856" y="499" font-size="10" font-weight="700" fill="#6b4a8f">mmap / reserve 堆</text>
+  <text x="856" y="518" font-size="8.5" fill="#4a4a4f">启动预留 · 内部自管托管堆</text>
+
+  <!-- 底部本质差异总纲 -->
+  <rect x="30" y="558" width="1120" height="64" rx="12" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="48" y="582" font-size="10.5" font-weight="700" fill="#1d1d1f">本质差异</text>
+  <text x="120" y="582" font-size="10" fill="#4a4a4f">三者同构——都是「<tspan font-weight="700" fill="#1d1d1f">每线程 / 每 P 本地缓存做无锁快路径 + 全局慢路径 + 分级供给</tspan>」；差异全落在<tspan font-weight="700">回收</tspan>与<tspan font-weight="700">隔离</tspan>：</text>
+  <text x="120" y="602" font-size="10" fill="#4a4a4f"><tspan font-weight="700" fill="#b3542a">Linux</tspan> 手动 free、cgroup 关笼子；<tspan font-weight="700" fill="#12707e">Go</tspan> 并发 GC + GOMEMLIMIT 软限、非压缩省停顿；<tspan font-weight="700" fill="#6b4a8f">JVM</tspan> 可插拔 GC + 压缩消碎片、-Xmx 硬限。</text>
+  <text x="120" y="617" font-size="9" fill="#8a97ab">旁注 · Rust：无 GC、无运行时堆管理器，靠所有权 + Drop 在编译期定回收点，默认用系统 malloc（可换 jemalloc）——把「何时回收」从运行期挪到编译期。</text>
+</svg>

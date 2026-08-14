@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="470" viewBox="0 0 960 470" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="a3s" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="a3g" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#6aa17f"/></marker>
+    <marker id="a3b" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#5b7db1"/></marker>
+  </defs>
+  <rect width="960" height="470" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">InnoDB 存储引擎架构总览 · 内存 × 磁盘 × 后台线程</text>
+  <text x="30" y="48" font-size="10.5" fill="#6e6e73">读写先命中内存结构，后台线程异步落盘；redo/undo/doublewrite 保证崩溃安全</text>
+  <!-- legend -->
+  <g font-size="9">
+    <rect x="700" y="20" width="12" height="12" rx="3" fill="#eef3fb" stroke="#5b7db1"/><text x="716" y="30" fill="#6e6e73">内存/线程</text>
+    <rect x="800" y="20" width="12" height="12" rx="3" fill="#fbf5ec" stroke="#d9b98a"/><text x="816" y="30" fill="#6e6e73">磁盘持久</text>
+  </g>
+
+  <!-- 内存结构 -->
+  <rect x="30" y="66" width="470" height="188" rx="13" fill="#f7faff" stroke="#cfe0f2" filter="url(#a3s)"/>
+  <text x="48" y="88" font-size="11.5" font-weight="700" fill="#3a5a8a">内存结构（In-Memory）</text>
+  <rect x="48" y="100" width="215" height="86" rx="9" fill="#eef3fb" stroke="#5b7db1"/>
+  <text x="155" y="120" font-size="10.5" font-weight="700" fill="#3a5a8a" text-anchor="middle">Buffer Pool 页缓存</text>
+  <text x="60" y="140" font-size="9" fill="#1d1d1f">LRU（young/old）+ flush_list</text>
+  <text x="60" y="158" font-size="9" fill="#6e6e73">缓存 16KB 数据/索引页</text>
+  <text x="60" y="176" font-size="9" fill="#6e6e73">命中即内存操作，不碰盘</text>
+  <rect x="278" y="100" width="205" height="40" rx="9" fill="#eef3fb" stroke="#5b7db1"/>
+  <text x="380" y="118" font-size="10" font-weight="700" fill="#3a5a8a" text-anchor="middle">Change Buffer</text>
+  <text x="380" y="133" font-size="8.5" fill="#6e6e73" text-anchor="middle">缓非唯一二级索引改动</text>
+  <rect x="278" y="146" width="205" height="40" rx="9" fill="#eef3fb" stroke="#5b7db1"/>
+  <text x="380" y="164" font-size="10" font-weight="700" fill="#3a5a8a" text-anchor="middle">Log Buffer</text>
+  <text x="380" y="179" font-size="8.5" fill="#6e6e73" text-anchor="middle">redo 记录先入此缓冲</text>
+  <rect x="48" y="196" width="435" height="42" rx="9" fill="#eef3fb" stroke="#5b7db1"/>
+  <text x="60" y="214" font-size="10" font-weight="700" fill="#3a5a8a">Adaptive Hash Index 自适应哈希</text>
+  <text x="60" y="230" font-size="8.5" fill="#6e6e73">对热点页建哈希，热查询略过 B+树逐层下探</text>
+
+  <!-- 后台线程 -->
+  <rect x="520" y="66" width="410" height="188" rx="13" fill="#f7faff" stroke="#cfe0f2" filter="url(#a3s)"/>
+  <text x="538" y="88" font-size="11.5" font-weight="700" fill="#3a5a8a">后台线程（Background）</text>
+  <rect x="538" y="100" width="188" height="40" rx="9" fill="#eef3fb" stroke="#5b7db1"/>
+  <text x="632" y="117" font-size="10" font-weight="700" fill="#3a5a8a" text-anchor="middle">Page Cleaner</text>
+  <text x="632" y="132" font-size="8.5" fill="#6e6e73" text-anchor="middle">异步刷脏页，不阻塞事务</text>
+  <rect x="738" y="100" width="176" height="40" rx="9" fill="#eef3fb" stroke="#5b7db1"/>
+  <text x="826" y="117" font-size="10" font-weight="700" fill="#3a5a8a" text-anchor="middle">Purge 协调/工作</text>
+  <text x="826" y="132" font-size="8.5" fill="#6e6e73" text-anchor="middle">回收无人可见旧版本</text>
+  <rect x="538" y="148" width="188" height="40" rx="9" fill="#eef3fb" stroke="#5b7db1"/>
+  <text x="632" y="165" font-size="10" font-weight="700" fill="#3a5a8a" text-anchor="middle">Master Thread</text>
+  <text x="632" y="180" font-size="8.5" fill="#6e6e73" text-anchor="middle">周期性刷盘/合并/检查点</text>
+  <rect x="738" y="148" width="176" height="40" rx="9" fill="#eef3fb" stroke="#5b7db1"/>
+  <text x="826" y="165" font-size="10" font-weight="700" fill="#3a5a8a" text-anchor="middle">IO Threads</text>
+  <text x="826" y="180" font-size="8.5" fill="#6e6e73" text-anchor="middle">异步读/写页 I/O</text>
+  <rect x="538" y="196" width="376" height="42" rx="9" fill="#f6f6f8" stroke="#e2e2e7"/>
+  <text x="548" y="214" font-size="9" fill="#1d1d1f">纪律：事务线程只改内存 + 顺序写 redo；</text>
+  <text x="548" y="230" font-size="9" fill="#6e6e73">随机落盘全部甩给后台线程，把慢 I/O 与提交解耦</text>
+
+  <!-- 磁盘结构 -->
+  <rect x="30" y="298" width="900" height="150" rx="13" fill="#fbf6ee" stroke="#ecdcbf" filter="url(#a3s)"/>
+  <text x="48" y="320" font-size="11.5" font-weight="700" fill="#9a6a1f">磁盘结构（On-Disk · 持久化底盘）</text>
+  <rect x="48" y="332" width="165" height="96" rx="9" fill="#fbf5ec" stroke="#d9b98a"/>
+  <text x="130" y="352" font-size="10" font-weight="700" fill="#9a6a1f" text-anchor="middle">独立表空间 .ibd</text>
+  <text x="60" y="372" font-size="8.6" fill="#1d1d1f">聚簇索引 B+树页</text>
+  <text x="60" y="389" font-size="8.6" fill="#6e6e73">主键即数据，叶子存整行</text>
+  <text x="60" y="406" font-size="8.6" fill="#6e6e73">二级索引另存一棵树</text>
+  <rect x="225" y="332" width="165" height="96" rx="9" fill="#fbf5ec" stroke="#d9b98a"/>
+  <text x="307" y="352" font-size="10" font-weight="700" fill="#9a6a1f" text-anchor="middle">系统表空间 ibdata</text>
+  <text x="237" y="372" font-size="8.6" fill="#1d1d1f">数据字典 + 双写区</text>
+  <text x="237" y="389" font-size="8.6" fill="#6e6e73">默认含 undo 回滚段</text>
+  <rect x="402" y="332" width="165" height="96" rx="9" fill="#fbf5ec" stroke="#d9b98a"/>
+  <text x="484" y="352" font-size="10" font-weight="700" fill="#9a6a1f" text-anchor="middle">redo log 文件</text>
+  <text x="414" y="372" font-size="8.6" fill="#1d1d1f">WAL 顺序日志（环形）</text>
+  <text x="414" y="389" font-size="8.6" fill="#6e6e73">崩溃恢复重放来源</text>
+  <text x="414" y="406" font-size="8.6" fill="#6e6e73">LSN 标记进度</text>
+  <rect x="579" y="332" width="165" height="96" rx="9" fill="#fbf5ec" stroke="#d9b98a"/>
+  <text x="661" y="352" font-size="10" font-weight="700" fill="#9a6a1f" text-anchor="middle">undo 回滚段</text>
+  <text x="591" y="372" font-size="8.6" fill="#1d1d1f">旧版本 + 回滚数据</text>
+  <text x="591" y="389" font-size="8.6" fill="#6e6e73">支撑 MVCC 与事务回滚</text>
+  <text x="591" y="406" font-size="8.6" fill="#6e6e73">purge 回收</text>
+  <rect x="756" y="332" width="158" height="96" rx="9" fill="#fbf5ec" stroke="#d9b98a"/>
+  <text x="835" y="352" font-size="10" font-weight="700" fill="#9a6a1f" text-anchor="middle">doublewrite</text>
+  <text x="766" y="372" font-size="8.6" fill="#1d1d1f">刷脏前写整页副本</text>
+  <text x="766" y="389" font-size="8.6" fill="#6e6e73">防断电"撕页"损坏</text>
+
+  <!-- arrows memory<->disk -->
+  <path d="M130,186 L130,332" fill="none" stroke="#6aa17f" stroke-width="1.6" marker-end="url(#a3g)" marker-start="url(#a3g)"/>
+  <text x="138" y="270" font-size="8.5" fill="#2f7a4f">缺页读入 / 刷脏落盘</text>
+  <path d="M410,186 L470,332" fill="none" stroke="#5b7db1" stroke-width="1.5" marker-end="url(#a3b)"/>
+  <text x="430" y="270" font-size="8.5" fill="#3a5a8a">log buffer → redo</text>
+  <text x="480" y="462" font-size="9" fill="#8a94a6" text-anchor="middle">锚点见正文：buf_pool_ptr / page cleaner / purge_sys / doublewrite / redo WAL —— 一句话：内存吸收随机写，磁盘只承接顺序写与副本</text>
+</svg>

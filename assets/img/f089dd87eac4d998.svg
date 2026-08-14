@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="590" viewBox="0 0 1080 590" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="590" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="700" fill="#1d1d1f">主线分层归位 · 一个接触面 + 八条支撑主线,按能力域堆叠</text>
+  <text x="30" y="49" font-size="9.5" fill="#a1a1a6">计算引擎从顶部接触面进入,顺元数据树向下;序列号横切事务/删除层</text>
+
+  <!-- legend -->
+  <g font-size="9" fill="#6e6e73">
+    <rect x="700" y="20" width="12" height="12" rx="3" fill="#f4eefb" stroke="#d9c7ec"/><text x="717" y="30">接触面</text>
+    <rect x="775" y="20" width="12" height="12" rx="3" fill="#e7f0fb" stroke="#b9d2ef"/><text x="792" y="30">事务/提交</text>
+    <rect x="865" y="20" width="12" height="12" rx="3" fill="#f5faf6" stroke="#cfe6d5"/><text x="882" y="30">数据/演进</text>
+    <rect x="955" y="20" width="12" height="12" rx="3" fill="#fdf6ea" stroke="#efdcb4"/><text x="972" y="30">元数据/存储</text>
+  </g>
+
+  <!-- L1 接触面 -->
+  <rect x="30" y="66" width="820" height="58" rx="12" fill="#f4eefb" stroke="#d9c7ec"/>
+  <text x="46" y="90" font-size="11.5" font-weight="700" fill="#3d2a5a">接触面 · 表 API + 快照读</text>
+  <text x="46" y="111" font-size="9" fill="#8a6db3">计算引擎(Spark/Trino/Flink)经库读写表、时间旅行 —— 不面向终端 SQL</text>
+  <rect x="866" y="66" width="184" height="58" rx="12" fill="#f7f7f9" stroke="#e5ecf5"/>
+  <text x="958" y="90" font-size="9.5" font-weight="700" fill="#48484a" text-anchor="middle">贯穿 · sequence number</text>
+  <text x="958" y="109" font-size="8.2" fill="#6e6e73" text-anchor="middle">每提交递增,横切下三层</text>
+  <line x1="440" y1="124" x2="440" y2="140" stroke="#b8b8bf" stroke-width="1.4" marker-end="url(#ar)"/>
+
+  <!-- L2 元数据 -->
+  <rect x="30" y="140" width="820" height="58" rx="12" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="46" y="164" font-size="11.5" font-weight="700" fill="#5a3410">元数据层 · 元数据树(核心)</text>
+  <text x="46" y="185" font-size="9" fill="#93762e">metadata.json → manifest list → manifest → data file,自带清单 + 列统计</text>
+  <line x1="440" y1="198" x2="440" y2="214" stroke="#b8b8bf" stroke-width="1.4" marker-end="url(#ar)"/>
+
+  <!-- L3 事务 -->
+  <rect x="30" y="214" width="820" height="66" rx="12" fill="#e7f0fb" stroke="#b9d2ef"/>
+  <text x="46" y="238" font-size="11.5" font-weight="700" fill="#1b2a4a">事务层 · 快照与提交(灵魂) + catalog 与并发</text>
+  <text x="46" y="258" font-size="9" fill="#5b7db1">每提交产不可变快照;catalog 原子 CAS 换 metadata 指针 + OCC 乐观重试</text>
+  <text x="46" y="275" font-size="8.4" fill="#7d9bc4">catalog 类型(Hadoop/Hive/JDBC/REST)决定并发可靠性</text>
+  <line x1="440" y1="280" x2="440" y2="296" stroke="#b8b8bf" stroke-width="1.4" marker-end="url(#ar)"/>
+
+  <!-- L4 演进 -->
+  <rect x="30" y="296" width="404" height="66" rx="12" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="46" y="320" font-size="11" font-weight="700" fill="#12402a">演进层 · schema 演进</text>
+  <text x="46" y="340" font-size="8.8" fill="#2f6f4f">列靠不可变字段 ID 追踪</text>
+  <text x="46" y="356" font-size="8.8" fill="#2f6f4f">rename/加删列/类型提升不重写数据</text>
+  <rect x="446" y="296" width="404" height="66" rx="12" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="462" y="320" font-size="11" font-weight="700" fill="#12402a">演进层 · 分区演进 + 隐藏分区</text>
+  <text x="462" y="340" font-size="8.8" fill="#2f6f4f">分区值从源列 transform 派生</text>
+  <text x="462" y="356" font-size="8.8" fill="#2f6f4f">每 manifest 记 spec id,改规则不重写</text>
+  <line x1="440" y1="362" x2="440" y2="378" stroke="#b8b8bf" stroke-width="1.4" marker-end="url(#ar)"/>
+
+  <!-- L5 规划 + 删除 -->
+  <rect x="30" y="378" width="404" height="66" rx="12" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="46" y="402" font-size="11" font-weight="700" fill="#5a3410">规划层 · 扫描规划</text>
+  <text x="46" y="422" font-size="8.8" fill="#93762e">两级剪枝:manifest 分区剪</text>
+  <text x="46" y="438" font-size="8.8" fill="#93762e">+ data file 列统计剪</text>
+  <rect x="446" y="378" width="404" height="66" rx="12" fill="#e7f0fb" stroke="#b9d2ef"/>
+  <text x="462" y="402" font-size="11" font-weight="700" fill="#1b2a4a">删除层 · 行级删除(v2)</text>
+  <text x="462" y="422" font-size="8.8" fill="#5b7db1">position/equality delete file</text>
+  <text x="462" y="438" font-size="8.8" fill="#5b7db1">读时 merge-on-read 叠加过滤</text>
+  <line x1="440" y1="444" x2="440" y2="460" stroke="#b8b8bf" stroke-width="1.4" marker-end="url(#ar)"/>
+
+  <!-- L6 维护 -->
+  <rect x="30" y="460" width="820" height="58" rx="12" fill="#f0f0f4" stroke="#d2d2d7"/>
+  <text x="46" y="484" font-size="11.5" font-weight="700" fill="#48484a">维护层 · 表维护(后台)</text>
+  <text x="46" y="505" font-size="9" fill="#6e6e73">compaction 合并小文件/物化删除 + expire snapshots + 清孤儿文件,都走原子提交</text>
+
+  <!-- 贯穿竖条 -->
+  <rect x="866" y="140" width="184" height="378" rx="12" fill="#f7f9fc" stroke="#e5ecf5"/>
+  <text x="958" y="168" font-size="9.5" font-weight="700" fill="#1b2a4a" text-anchor="middle">序列号贯穿</text>
+  <text x="958" y="192" font-size="8.4" fill="#5b7db1" text-anchor="middle">快照:每提交 +1</text>
+  <text x="958" y="212" font-size="8.4" fill="#5b7db1" text-anchor="middle">manifest 条目:带 seq</text>
+  <text x="958" y="232" font-size="8.4" fill="#5b7db1" text-anchor="middle">删除:按 seq 比较</text>
+  <text x="958" y="252" font-size="8.4" fill="#5b7db1" text-anchor="middle">决定作用范围</text>
+  <text x="958" y="300" font-size="9" font-weight="700" fill="#12402a" text-anchor="middle">Iceberg = 库/规范</text>
+  <text x="958" y="322" font-size="8.4" fill="#2f6f4f" text-anchor="middle">不读写数据</text>
+  <text x="958" y="340" font-size="8.4" fill="#2f6f4f" text-anchor="middle">不执行查询</text>
+  <text x="958" y="358" font-size="8.4" fill="#2f6f4f" text-anchor="middle">链接进计算引擎</text>
+  <text x="958" y="410" font-size="8.2" fill="#a1a1a6" text-anchor="middle">数据/元数据树</text>
+  <text x="958" y="428" font-size="8.2" fill="#a1a1a6" text-anchor="middle">都在对象存储</text>
+  <text x="958" y="446" font-size="8.2" fill="#a1a1a6" text-anchor="middle">catalog 只存一个指针</text>
+</svg>

@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="520" viewBox="0 0 1080 520" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="520" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Rust 智能指针 · Box 堆 / Rc 单线程共享 / Arc 跨线程共享</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">所有权/借用太死时的受控逃生舱:共享所有权要引用计数,按线程场景选 —— 编译器用 Send/Sync 强制(Rc 跨线程编译错)</text>
+
+  <!-- Box (amber = 堆/存储) -->
+  <rect x="40" y="80" width="320" height="200" rx="14" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="60" y="106" font-size="12.5" font-weight="600" fill="#5a3410">Box&lt;T&gt; · 堆分配</text>
+  <text x="60" y="126" font-size="9" fill="#93762e">library/alloc/src/boxed.rs:236</text>
+  <text x="60" y="146" font-size="9" fill="#93762e">#[lang="owned_box"]</text>
+  <rect x="60" y="158" width="280" height="34" rx="8" fill="#ffffff" stroke="#efdcb4"/>
+  <text x="200" y="179" font-size="10" font-weight="600" text-anchor="middle" fill="#5a3410">单一所有权</text>
+  <text x="60" y="214" font-size="10" fill="#5a3410">· 把值放堆上（递归类型/大对象）</text>
+  <text x="60" y="234" font-size="10" fill="#5a3410">· 唯一 owner</text>
+  <text x="60" y="254" font-size="10" fill="#5a3410">· 出作用域 Drop 释放堆内存</text>
+  <text x="60" y="274" font-size="9" fill="#a1a1a6">trait 对象 Box&lt;dyn Trait&gt; 也用它</text>
+
+  <!-- Rc (blue = 单线程逻辑) -->
+  <rect x="380" y="80" width="320" height="200" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="400" y="106" font-size="12.5" font-weight="600" fill="#1b2a4a">Rc&lt;T&gt; · 单线程共享</text>
+  <text x="400" y="126" font-size="9" fill="#5b7db1">library/alloc/src/rc.rs:320 · 非原子计数</text>
+  <rect x="400" y="138" width="280" height="46" rx="8" fill="#ffffff" stroke="#cfe0f2"/>
+  <text x="540" y="158" font-size="9.5" font-weight="600" text-anchor="middle" fill="#1b2a4a">RcInner: strong/weak = Cell&lt;usize&gt;</text>
+  <text x="540" y="174" font-size="9" text-anchor="middle" fill="#5b7db1">计数是 Cell（非原子）· :285</text>
+  <text x="400" y="206" font-size="10" fill="#1b2a4a">· 多个 Rc 指同一值,计数归零才 Drop</text>
+  <rect x="400" y="218" width="280" height="30" rx="8" fill="#fbeaea" stroke="#e7c3c3"/>
+  <text x="540" y="237" font-size="9.5" font-weight="600" text-anchor="middle" fill="#4a1414">显式 !Send / !Sync（:330,338）</text>
+  <text x="400" y="270" font-size="9" fill="#a1a1a6">非原子计数,快 —— 只单线程</text>
+
+  <!-- Arc (green = 跨线程) -->
+  <rect x="720" y="80" width="320" height="200" rx="14" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="740" y="106" font-size="12.5" font-weight="600" fill="#12402a">Arc&lt;T&gt; · 跨线程共享</text>
+  <text x="740" y="126" font-size="9" fill="#2f6f4f">library/alloc/src/sync.rs:269 · 原子计数</text>
+  <rect x="740" y="138" width="280" height="46" rx="8" fill="#ffffff" stroke="#bfe0cd"/>
+  <text x="880" y="158" font-size="9.5" font-weight="600" text-anchor="middle" fill="#12402a">ArcInner: strong = Atomic&lt;usize&gt;</text>
+  <text x="880" y="174" font-size="9" text-anchor="middle" fill="#2f6f4f">原子计数 · :388</text>
+  <text x="740" y="206" font-size="10" fill="#12402a">· 多线程共享同一值的所有权</text>
+  <rect x="740" y="218" width="280" height="30" rx="8" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="880" y="237" font-size="9.5" font-weight="600" text-anchor="middle" fill="#12402a">Send/Sync where T: Sync+Send（:279）</text>
+  <text x="740" y="270" font-size="9" fill="#a1a1a6">比 Rc 慢（原子操作）但线程安全</text>
+
+  <!-- summary strip (neutral) -->
+  <rect x="40" y="300" width="1000" height="110" rx="14" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="60" y="326" font-size="12" font-weight="600" fill="#1d1d1f">怎么选 · 按需求一维匹配</text>
+  <g text-anchor="middle">
+    <rect x="60" y="342" width="306" height="52" rx="8" fill="#fff7e6" stroke="#efdcb4"/>
+    <text x="213" y="364" font-size="10" font-weight="600" fill="#5a3410">要堆分配 → Box</text>
+    <text x="213" y="382" font-size="9" fill="#93762e">递归类型 / trait 对象 / 大对象</text>
+    <rect x="386" y="342" width="306" height="52" rx="8" fill="#eef3fb" stroke="#cfe0f2"/>
+    <text x="539" y="364" font-size="10" font-weight="600" fill="#1b2a4a">单线程共享 → Rc</text>
+    <text x="539" y="382" font-size="9" fill="#5b7db1">Cell 计数,快;别在单线程用 Arc</text>
+    <rect x="712" y="342" width="306" height="52" rx="8" fill="#eafaf1" stroke="#bfe0cd"/>
+    <text x="865" y="364" font-size="10" font-weight="600" fill="#12402a">跨线程共享 → Arc</text>
+    <text x="865" y="382" font-size="9" fill="#2f6f4f">原子计数,慢但线程安全</text>
+  </g>
+
+  <text x="30" y="440" font-size="9.5" fill="#a1a1a6">为什么分 Rc/Arc:共享所有权要引用计数;单线程用 Rc(Cell 计数,快)、跨线程用 Arc(原子计数,慢但安全)—— Rc 跨线程编译错</text>
+  <text x="30" y="464" font-size="9" fill="#a1a1a6">能用普通所有权就不用智能指针(零开销);需堆/共享才用 · 源码基准 Rust 1.99.0</text>
+</svg>

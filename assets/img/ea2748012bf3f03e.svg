@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="560" viewBox="0 0 1080 560" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="560" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">RocksDB MemTable · 内存中的有序写缓冲（跳表）</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">默认 InlineSkipList,按内部键有序;满 write_buffer_size 转 immutable;flush 时天然有序省排序</text>
+
+  <!-- skiplist structure -->
+  <rect x="30" y="70" width="540" height="250" rx="13" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="46" y="92" font-size="11" font-weight="700" fill="#1b2a4a">InlineSkipList（跳表）· 按内部键排序</text>
+  <g font-size="8" text-anchor="middle">
+    <!-- level 2 -->
+    <text x="46" y="126" text-anchor="start" font-size="8" fill="#6e6e73">L2</text>
+    <rect x="70" y="114" width="60" height="22" rx="4" fill="#f3f7fc" stroke="#cfe0f2"/><text x="100" y="129" fill="#274a78">head</text>
+    <rect x="360" y="114" width="60" height="22" rx="4" fill="#f3f7fc" stroke="#cfe0f2"/><text x="390" y="129" fill="#274a78">k5</text>
+    <line x1="130" y1="125" x2="360" y2="125" stroke="#c7c7cc" stroke-width="1" marker-end="url(#ar)"/>
+    <!-- level 1 -->
+    <text x="46" y="166" text-anchor="start" font-size="8" fill="#6e6e73">L1</text>
+    <rect x="70" y="154" width="60" height="22" rx="4" fill="#f3f7fc" stroke="#cfe0f2"/><text x="100" y="169" fill="#274a78">head</text>
+    <rect x="215" y="154" width="60" height="22" rx="4" fill="#eef3fb" stroke="#bcd0ec"/><text x="245" y="169" fill="#1b2a4a">k3</text>
+    <rect x="360" y="154" width="60" height="22" rx="4" fill="#eef3fb" stroke="#bcd0ec"/><text x="390" y="169" fill="#1b2a4a">k5</text>
+    <line x1="130" y1="165" x2="215" y2="165" stroke="#c7c7cc" stroke-width="1" marker-end="url(#ar)"/>
+    <line x1="275" y1="165" x2="360" y2="165" stroke="#c7c7cc" stroke-width="1" marker-end="url(#ar)"/>
+    <!-- level 0 -->
+    <text x="46" y="206" text-anchor="start" font-size="8" fill="#6e6e73">L0</text>
+    <rect x="70" y="194" width="60" height="22" rx="4" fill="#f3f7fc" stroke="#cfe0f2"/><text x="100" y="209" fill="#274a78">head</text>
+    <rect x="142" y="194" width="60" height="22" rx="4" fill="#eef3fb" stroke="#bcd0ec"/><text x="172" y="209" fill="#1b2a4a">k1</text>
+    <rect x="215" y="194" width="60" height="22" rx="4" fill="#eef3fb" stroke="#bcd0ec"/><text x="245" y="209" fill="#1b2a4a">k3</text>
+    <rect x="288" y="194" width="60" height="22" rx="4" fill="#eef3fb" stroke="#bcd0ec"/><text x="318" y="209" fill="#1b2a4a">k4</text>
+    <rect x="360" y="194" width="60" height="22" rx="4" fill="#eef3fb" stroke="#bcd0ec"/><text x="390" y="209" fill="#1b2a4a">k5</text>
+    <rect x="433" y="194" width="60" height="22" rx="4" fill="#eef3fb" stroke="#bcd0ec"/><text x="463" y="209" fill="#1b2a4a">k7</text>
+    <line x1="130" y1="205" x2="142" y2="205" stroke="#c7c7cc" stroke-width="1" marker-end="url(#ar)"/>
+    <line x1="202" y1="205" x2="215" y2="205" stroke="#c7c7cc" stroke-width="1" marker-end="url(#ar)"/>
+    <line x1="275" y1="205" x2="288" y2="205" stroke="#c7c7cc" stroke-width="1" marker-end="url(#ar)"/>
+    <line x1="348" y1="205" x2="360" y2="205" stroke="#c7c7cc" stroke-width="1" marker-end="url(#ar)"/>
+    <line x1="420" y1="205" x2="433" y2="205" stroke="#c7c7cc" stroke-width="1" marker-end="url(#ar)"/>
+  </g>
+  <text x="46" y="248" font-size="8.5" fill="#5b7db1">多层链表:高层跳跃找,底层全序链;查找/插入 O(log n),读并发无锁友好</text>
+  <rect x="46" y="258" width="508" height="52" rx="8" fill="#fff" stroke="#bcd0ec"/><text x="60" y="278" font-size="8.5" font-weight="600" fill="#1b2a4a">内部键排序:同用户键按 seq 降序</text><text x="60" y="296" font-size="8" fill="#5b7db1">k4:seq9=Put "v2"  排前于  k4:seq5=Put "v1"  →  读取时先命中最新版本</text>
+
+  <!-- rotation -->
+  <rect x="588" y="70" width="462" height="250" rx="13" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="604" y="92" font-size="11" font-weight="700" fill="#12402a">轮转与多缓冲</text>
+  <g font-size="8.8" text-anchor="middle">
+    <rect x="604" y="104" width="430" height="44" rx="8" fill="#eafaf1" stroke="#bfe0cd"/><text x="819" y="124" font-weight="600" fill="#12402a">活跃 MemTable(可写,1 个)</text><text x="819" y="140" fill="#2f6f4f">MemTable::Add 插入,占用达 write_buffer_size(默认 64MB)</text>
+    <rect x="604" y="156" width="430" height="44" rx="8" fill="#eef3fb" stroke="#bcd0ec"/><text x="819" y="176" font-weight="600" fill="#1b2a4a">immutable MemTable(只读,0~N-1 个)</text><text x="819" y="192" fill="#5b7db1">max_write_buffer_number 上限;缓冲突发写</text>
+    <rect x="604" y="208" width="430" height="44" rx="8" fill="#fdf6ea" stroke="#efdcb4"/><text x="819" y="228" font-weight="600" fill="#5a3410">→ 后台 Flush 逐个落成 L0 SST</text><text x="819" y="244" fill="#93762e">flush 完该 immutable 释放,对应 WAL 可删</text>
+  </g>
+  <line x1="819" y1="148" x2="819" y2="156" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/><text x="855" y="153" font-size="7.5" fill="#b1483a">满→转</text>
+  <line x1="819" y1="200" x2="819" y2="208" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/><text x="855" y="205" font-size="7.5" fill="#93762e">flush</text>
+  <rect x="604" y="260" width="430" height="50" rx="8" fill="#fff" stroke="#cfe6d5"/><text x="618" y="280" font-size="8.5" fill="#2c5a3a">为什么有序:flush 成 SST 时无需再排序(顺序写出),</text><text x="618" y="296" font-size="8.5" fill="#2c5a3a">读时 SST 内可二分、迭代器可归并——有序是 LSM 全链路的前提</text>
+
+  <!-- alt reps + notes -->
+  <rect x="30" y="336" width="500" height="90" rx="13" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="46" y="358" font-size="10.5" font-weight="700" fill="#1d1d1f">可替换的 MemTable 实现</text>
+  <text x="46" y="378" font-size="8.8" fill="#6e6e73">· SkipList(默认):通用、并发读友好</text>
+  <text x="46" y="396" font-size="8.8" fill="#6e6e73">· HashSkipList / HashLinkList:前缀查询场景更快</text>
+  <text x="46" y="414" font-size="8.8" fill="#6e6e73">· Vector:批量装载。经 memtable_factory(CF Options)选</text>
+
+  <rect x="550" y="336" width="500" height="90" rx="13" fill="#fff7e6" stroke="#e8cf9a"/>
+  <text x="566" y="358" font-size="10.5" font-weight="700" fill="#5a3410">与 WAL 的配对</text>
+  <text x="566" y="378" font-size="8.8" fill="#93762e">· 每条写同时进 WAL(持久)与 MemTable(易失)</text>
+  <text x="566" y="396" font-size="8.8" fill="#93762e">· MemTable flush 成 SST 后,它覆盖的 WAL 段才可删</text>
+  <text x="566" y="414" font-size="8.8" fill="#93762e">· 崩溃恢复:重放 WAL 重建 MemTable(见 WAL 主线)</text>
+
+  <rect x="30" y="442" width="1020" height="100" rx="13" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="46" y="464" font-size="11" font-weight="700" fill="#2c5a3a">要点</text>
+  <text x="46" y="486" font-size="9" fill="#2f6f4f">· MemTable 是 LSM 的"写缓冲 + 读第一站":最新数据在这,读先查它,再查 immutable、再查 SST</text>
+  <text x="46" y="504" font-size="9" fill="#2f6f4f">· write_buffer_size 调大:flush 更少、L0 文件更大更少、写放大更低,但占内存更多、单次 flush 更久</text>
+  <text x="46" y="522" font-size="9" fill="#b1483a">· 归属:MemTable 是写入路径的内存结构;读它在【读取路径】,落盘它在【Flush】,恢复它在【WAL 与恢复】</text>
+</svg>

@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="520" viewBox="0 0 1040 520" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1040" height="520" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Trino RetryPolicy · 三档容错与调度器映射</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">SqlQueryExecution.createQueryScheduler 按 RetryPolicy 选调度器;RetryPolicy 在 io.trino.operator 包</text>
+
+  <!-- NONE -->
+  <rect x="30" y="72" width="315" height="360" rx="13" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="46" y="94" font-size="12" font-weight="700" fill="#6e6e73">NONE（默认）</text>
+  <rect x="46" y="108" width="283" height="50" rx="9" fill="#fff" stroke="#ececf1"/><text x="60" y="128" font-size="9" font-weight="600" fill="#4b4b50">调度器</text><text x="60" y="145" font-size="8.5" fill="#6e6e73">PipelinedQueryScheduler</text>
+  <rect x="46" y="166" width="283" height="50" rx="9" fill="#fff" stroke="#ececf1"/><text x="60" y="186" font-size="9" font-weight="600" fill="#4b4b50">exchange</text><text x="60" y="203" font-size="8.5" fill="#6e6e73">流式直连(DirectExchange)</text>
+  <rect x="46" y="224" width="283" height="60" rx="9" fill="#ffecec" stroke="#e0a0a0"/><text x="60" y="244" font-size="9" font-weight="600" fill="#b1483a">失败行为</text><text x="60" y="262" font-size="8.5" fill="#b1483a">任一 worker/task 挂</text><text x="60" y="278" font-size="8.5" fill="#b1483a">→ 整查询失败,不重试</text>
+  <rect x="46" y="292" width="283" height="128" rx="9" fill="#fff" stroke="#ececf1"/><text x="60" y="312" font-size="9" font-weight="600" fill="#4b4b50">适用</text><text x="60" y="332" font-size="8.5" fill="#6e6e73">交互式查询、短查询</text><text x="60" y="350" font-size="8.5" fill="#6e6e73">失败重跑成本可接受</text><text x="60" y="370" font-size="8.5" fill="#6e6e73">无额外配置</text><text x="60" y="392" font-size="8" fill="#93762e">默认策略——多数场景够用</text><text x="60" y="408" font-size="8" fill="#93762e">开销最低</text>
+
+  <!-- QUERY -->
+  <rect x="360" y="72" width="315" height="360" rx="13" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="376" y="94" font-size="12" font-weight="700" fill="#1b2a4a">QUERY（整查询重试）</text>
+  <rect x="376" y="108" width="283" height="50" rx="9" fill="#f3f7fc" stroke="#cfe0f2"/><text x="390" y="128" font-size="9" font-weight="600" fill="#274a78">调度器</text><text x="390" y="145" font-size="8.5" fill="#5b7db1">PipelinedQueryScheduler(同 NONE)</text>
+  <rect x="376" y="166" width="283" height="50" rx="9" fill="#f3f7fc" stroke="#cfe0f2"/><text x="390" y="186" font-size="9" font-weight="600" fill="#274a78">exchange</text><text x="390" y="203" font-size="8.5" fill="#5b7db1">流式直连(无需 exchange-manager)</text>
+  <rect x="376" y="224" width="283" height="60" rx="9" fill="#eafaf1" stroke="#bfe0cd"/><text x="390" y="244" font-size="9" font-weight="600" fill="#12402a">失败行为</text><text x="390" y="262" font-size="8.5" fill="#2f6f4f">shouldRetry：可重试错误码</text><text x="390" y="278" font-size="8.5" fill="#2f6f4f">且 &lt; query-retry-attempts → 整查询重跑</text>
+  <rect x="376" y="292" width="283" height="128" rx="9" fill="#fff" stroke="#bcd0ec"/><text x="390" y="312" font-size="9" font-weight="600" fill="#274a78">适用</text><text x="390" y="332" font-size="8.5" fill="#5b7db1">中短查询、瞬时故障多</text><text x="390" y="350" font-size="8.5" fill="#5b7db1">query-retry-attempts 默认 4</text><text x="390" y="370" font-size="8.5" fill="#5b7db1">排除 fatal / USER_ERROR</text><text x="390" y="392" font-size="8" fill="#93762e">代价：失败则全部重算</text><text x="390" y="408" font-size="8" fill="#93762e">实现简单(调度器内部)</text>
+
+  <!-- TASK -->
+  <rect x="690" y="72" width="320" height="360" rx="13" fill="#faf4fb" stroke="#e2d2ee"/>
+  <text x="706" y="94" font-size="12" font-weight="700" fill="#5a3d78">TASK（任务级重试）</text>
+  <rect x="706" y="108" width="288" height="50" rx="9" fill="#fff" stroke="#e2d2ee"/><text x="720" y="128" font-size="9" font-weight="600" fill="#5a3d78">调度器</text><text x="720" y="145" font-size="8.5" fill="#7a5a95">EventDrivenFaultTolerant…</text>
+  <rect x="706" y="166" width="288" height="50" rx="9" fill="#fff" stroke="#e2d2ee"/><text x="720" y="186" font-size="9" font-weight="600" fill="#5a3d78">exchange</text><text x="720" y="203" font-size="8.5" fill="#7a5a95">spooling(需 exchange-manager!)</text>
+  <rect x="706" y="224" width="288" height="60" rx="9" fill="#eafaf1" stroke="#bfe0cd"/><text x="720" y="244" font-size="9" font-weight="600" fill="#12402a">失败行为</text><text x="720" y="262" font-size="8.5" fill="#2f6f4f">单 task 失败只重跑该 task</text><text x="720" y="278" font-size="8.5" fill="#2f6f4f">每分区独立重试 + 内存增长</text>
+  <rect x="706" y="292" width="288" height="128" rx="9" fill="#fff" stroke="#e2d2ee"/><text x="720" y="312" font-size="9" font-weight="600" fill="#5a3d78">适用</text><text x="720" y="332" font-size="8.5" fill="#7a5a95">长 ETL、大查询</text><text x="720" y="350" font-size="8.5" fill="#7a5a95">task-retry-attempts-per-task 默认 4</text><text x="720" y="370" font-size="8.5" fill="#7a5a95">中间结果落外部存储</text><text x="720" y="392" font-size="8" fill="#93762e">代价：中间结果落盘持续开销</text><text x="720" y="408" font-size="8" fill="#93762e">收益：失败只赔一个 task</text>
+
+  <rect x="30" y="444" width="980" height="60" rx="12" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="46" y="466" font-size="10" font-weight="700" fill="#1d1d1f">要点</text>
+  <text x="46" y="486" font-size="9" fill="#6e6e73">retry-policy.allowed 限制允许集(483 新增)。三者都不重试 USER_ERROR/fatal。483 只有 EventDrivenFaultTolerantQueryScheduler(旧类已移除,在 faulttolerant/ 子包)。</text>
+</svg>

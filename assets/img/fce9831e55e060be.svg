@@ -1,0 +1,121 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="764" viewBox="0 0 1120 764" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+  </defs>
+  <rect width="1120" height="764" fill="#fbfbfd"/>
+
+  <text x="30" y="32" font-size="15" font-weight="700" fill="#1d1d1f">机制核心差异对比 · 异步 I/O 模型（epoll vs io_uring）与序列化格式（Protobuf vs FlatBuffers）—— 都在「谁做搬运/解析、何时做」上取舍</text>
+  <text x="30" y="53" font-size="10.5" fill="#6e6e73">两组各按 3 个维度横向对照；蓝＝就绪/流式解析一派，青＝完成/偏移就地一派，红字标出各自主要代价</text>
+
+  <!-- ================= 组一：异步 I/O 模型 ================= -->
+  <rect x="30" y="70" width="1060" height="30" rx="8" fill="#eef0f3" stroke="#e4e7ec"/>
+  <text x="46" y="90" font-size="12" font-weight="800" fill="#4a4a4f">一、异步 I/O 模型 · epoll 就绪通知 vs io_uring 完成通知</text>
+
+  <!-- 列头 -->
+  <rect x="30" y="106" width="196" height="40" rx="9" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="128" y="131" font-size="11.5" font-weight="700" fill="#4a4a4f" text-anchor="middle">对比维度</text>
+  <rect x="236" y="106" width="418" height="40" rx="9" fill="#eaf1fb" stroke="#c6d9f2"/>
+  <text x="445" y="126" font-size="12.5" font-weight="800" fill="#20375e" text-anchor="middle">epoll</text>
+  <text x="445" y="140" font-size="8.5" fill="#5a7099" text-anchor="middle">就绪通知 readiness · 先问就绪，再自己做</text>
+  <rect x="664" y="106" width="426" height="40" rx="9" fill="#e3f4f4" stroke="#bfe3e4"/>
+  <text x="877" y="126" font-size="12.5" font-weight="800" fill="#1a6d70" text-anchor="middle">io_uring</text>
+  <text x="877" y="140" font-size="8.5" fill="#4a8d8f" text-anchor="middle">完成通知 completion · 交出去，等回执</text>
+
+  <!-- 行1：通知语义 -->
+  <rect x="30" y="150" width="196" height="70" rx="9" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="46" y="180" font-size="11" font-weight="700" fill="#1d1d1f">① 通知语义</text>
+  <text x="46" y="199" font-size="8.5" fill="#8a97ab">内核告诉你什么</text>
+  <rect x="236" y="150" width="418" height="70" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="252" y="176" font-size="10" font-weight="700" fill="#20375e">只报「fd 可读 / 可写了」</text>
+  <text x="252" y="196" font-size="9.5" fill="#4a4a4f">真正的 read / write 仍是独立系统调用，</text>
+  <text x="252" y="212" font-size="9.5" fill="#4a4a4f">由应用自己动手。</text>
+  <rect x="664" y="150" width="426" height="70" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="680" y="176" font-size="10" font-weight="700" fill="#1a6d70">直接报「这个 IO 做完了，结果如何」</text>
+  <text x="680" y="196" font-size="9.5" fill="#4a4a4f">请求先写进提交队列 SQ，内核完成后</text>
+  <text x="680" y="212" font-size="9.5" fill="#4a4a4f">把结果写回完成队列 CQ。</text>
+
+  <!-- 行2：syscall 次数 -->
+  <rect x="30" y="224" width="196" height="70" rx="9" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="46" y="254" font-size="11" font-weight="700" fill="#1d1d1f">② syscall 次数</text>
+  <text x="46" y="273" font-size="8.5" fill="#8a97ab">N 个就绪 IO 一轮</text>
+  <rect x="236" y="224" width="418" height="70" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="252" y="250" font-size="10" font-weight="700" fill="#20375e">1×epoll_wait + N×read</text>
+  <text x="252" y="270" font-size="9.5" fill="#b23b30">随并发线性增长：每个 fd 都要单独陷入</text>
+  <text x="252" y="286" font-size="9" fill="#8a97ab">就绪越多，syscall 越多</text>
+  <rect x="664" y="224" width="426" height="70" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="680" y="250" font-size="10" font-weight="700" fill="#1a6d70">SQ 批量提交，1 次 io_uring_enter</text>
+  <text x="680" y="270" font-size="9.5" fill="#3a5a48">整批 N 个请求一次提交、一次收割 CQ</text>
+  <text x="680" y="286" font-size="9" fill="#8a97ab">SQPOLL 模式下内核线程自拉 → 0 次 syscall</text>
+
+  <!-- 行3：数据搬运 -->
+  <rect x="30" y="298" width="196" height="70" rx="9" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="46" y="328" font-size="11" font-weight="700" fill="#1d1d1f">③ 数据搬运</text>
+  <text x="46" y="347" font-size="8.5" fill="#8a97ab">字节怎么过界</text>
+  <rect x="236" y="298" width="418" height="70" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="252" y="324" font-size="10" font-weight="700" fill="#20375e">逐次 read，每次一趟陷入 + 一次拷贝</text>
+  <text x="252" y="344" font-size="9.5" fill="#b23b30">每个 IO 至少两趟陷入内核（wait + read）</text>
+  <text x="252" y="360" font-size="9" fill="#8a97ab">内核→用户拷贝无法批量摊薄</text>
+  <rect x="664" y="298" width="426" height="70" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="680" y="324" font-size="10" font-weight="700" fill="#1a6d70">SQ / CQ 双环共享内存，批量、回写</text>
+  <text x="680" y="344" font-size="9.5" fill="#3a5a48">请求与结果都走共享环，无 per-IO 陷入</text>
+  <text x="680" y="360" font-size="9" fill="#8a97ab">代价：接口与内存序更复杂，门槛更高</text>
+
+  <!-- ================= 组二：序列化格式 ================= -->
+  <rect x="30" y="382" width="1060" height="30" rx="8" fill="#eef0f3" stroke="#e4e7ec"/>
+  <text x="46" y="402" font-size="12" font-weight="800" fill="#4a4a4f">二、序列化格式 · Protobuf 标签号(tag-varint) vs FlatBuffers 偏移表(vtable-offset)</text>
+
+  <!-- 列头 -->
+  <rect x="30" y="418" width="196" height="40" rx="9" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="128" y="443" font-size="11.5" font-weight="700" fill="#4a4a4f" text-anchor="middle">对比维度</text>
+  <rect x="236" y="418" width="418" height="40" rx="9" fill="#eaf1fb" stroke="#c6d9f2"/>
+  <text x="445" y="438" font-size="12.5" font-weight="800" fill="#20375e" text-anchor="middle">Protobuf</text>
+  <text x="445" y="452" font-size="8.5" fill="#5a7099" text-anchor="middle">⟨tag, wire-type, value⟩ + varint 流式</text>
+  <rect x="664" y="418" width="426" height="40" rx="9" fill="#e3f4f4" stroke="#bfe3e4"/>
+  <text x="877" y="438" font-size="12.5" font-weight="800" fill="#1a6d70" text-anchor="middle">FlatBuffers</text>
+  <text x="877" y="452" font-size="8.5" fill="#4a8d8f" text-anchor="middle">vtable 偏移表 · 就地随机寻址</text>
+
+  <!-- 行1：字段定位 -->
+  <rect x="30" y="462" width="196" height="70" rx="9" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="46" y="492" font-size="11" font-weight="700" fill="#1d1d1f">① 字段定位</text>
+  <text x="46" y="511" font-size="8.5" fill="#8a97ab">怎么找到第 i 个字段</text>
+  <rect x="236" y="462" width="418" height="70" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="252" y="488" font-size="10" font-weight="700" fill="#20375e">靠标签号 tag 自描述定位</text>
+  <text x="252" y="508" font-size="9.5" fill="#4a4a4f">字段名不入流，编成 ⟨tag,wire-type,value⟩，</text>
+  <text x="252" y="524" font-size="9.5" fill="#4a4a4f">整数用 varint 变长编码。</text>
+  <rect x="664" y="462" width="426" height="70" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="680" y="488" font-size="10" font-weight="700" fill="#1a6d70">靠 vtable 偏移表直取</text>
+  <text x="680" y="508" font-size="9.5" fill="#4a4a4f">vtable 记录「第 i 个字段在哪个偏移」，</text>
+  <text x="680" y="524" font-size="9.5" fill="#4a4a4f">数据按固定布局就地存放。</text>
+
+  <!-- 行2：读取代价 -->
+  <rect x="30" y="536" width="196" height="70" rx="9" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="46" y="566" font-size="11" font-weight="700" fill="#1d1d1f">② 读取代价</text>
+  <text x="46" y="585" font-size="8.5" fill="#8a97ab">取一个字段多贵</text>
+  <rect x="236" y="536" width="418" height="70" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="252" y="562" font-size="10" font-weight="700" fill="#20375e">须从头流式解析 · O(n)</text>
+  <text x="252" y="582" font-size="9.5" fill="#b23b30">取任一字段都要解码在前的字节</text>
+  <text x="252" y="598" font-size="9" fill="#8a97ab">CPU 开销随消息增大而上升</text>
+  <rect x="664" y="536" width="426" height="70" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="680" y="562" font-size="10" font-weight="700" fill="#1a6d70">零解析 · O(1) 随机访问</text>
+  <text x="680" y="582" font-size="9.5" fill="#3a5a48">查 vtable 得偏移 → 直接跳到字节取值</text>
+  <text x="680" y="598" font-size="9" fill="#8a97ab">收到即用，适合大消息 / 低时延</text>
+
+  <!-- 行3：兼容规则 / 体积 -->
+  <rect x="30" y="610" width="196" height="70" rx="9" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="46" y="640" font-size="11" font-weight="700" fill="#1d1d1f">③ 兼容 / 体积</text>
+  <text x="46" y="659" font-size="8.5" fill="#8a97ab">如何演进、占多大</text>
+  <rect x="236" y="610" width="418" height="70" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="252" y="636" font-size="10" font-weight="700" fill="#20375e">tag 只增不复用、类型不改</text>
+  <text x="252" y="656" font-size="9.5" fill="#4a4a4f">遇未知 tag 按 wire-type 跳过；编码紧凑</text>
+  <text x="252" y="672" font-size="9" fill="#8a97ab">用解析换紧凑，省带宽</text>
+  <rect x="664" y="610" width="426" height="70" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="680" y="636" font-size="10" font-weight="700" fill="#1a6d70">新字段只追加 vtable 末尾、偏移不改</text>
+  <text x="680" y="656" font-size="9.5" fill="#4a4a4f">老对象槽 = 0 判缺省；既有偏移永不动</text>
+  <text x="680" y="672" font-size="9" fill="#8a97ab">用空间换零解析，buffer 偏大</text>
+
+  <!-- 底部一句话总括 -->
+  <rect x="30" y="694" width="1060" height="56" rx="12" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="48" y="718" font-size="10.5" font-weight="700" fill="#1d1d1f">一句话</text>
+  <text x="110" y="718" font-size="10" fill="#4a4a4f"><tspan font-weight="700" fill="#20375e">epoll</tspan> 报就绪、读写与拷贝甩回应用、syscall 随并发涨；<tspan font-weight="700" fill="#1a6d70">io_uring</tspan> 报完成、共享环批量、syscall 摊薄到近零。<tspan font-weight="700" fill="#20375e">Protobuf</tspan> 用解析换紧凑；<tspan font-weight="700" fill="#1a6d70">FlatBuffers</tspan> 用空间换零解析。</text>
+  <text x="110" y="738" font-size="9" fill="#8a97ab">两组同构：分歧都落在「谁来做搬运 / 解析、何时做」——是当场自己动手（就绪 / 流式），还是预置结构、按需直取（完成 / 偏移）。</text>
+</svg>

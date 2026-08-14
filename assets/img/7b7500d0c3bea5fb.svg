@@ -1,0 +1,128 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="556" viewBox="0 0 1080 556" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+  </defs>
+  <rect width="1080" height="556" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Parquet 原理 · 依赖矩阵（读写 × 能力域）</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">写=编码/压缩/组装/落盘,读=尾读/裁剪/解码;同一格式两条路径用到的能力域侧重不同——写建索引统计,读用它们裁剪</text>
+
+  <!-- column headers -->
+  <rect x="118" y="86" width="150" height="46" rx="11" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+  <text x="193" y="108" font-size="10.2" font-weight="700" text-anchor="middle" fill="#5a3410">文件布局</text>
+  <text x="193" y="124" font-size="8" text-anchor="middle" fill="#93762e">布局域（核心）</text>
+
+  <rect x="273" y="86" width="150" height="46" rx="11" fill="#e9f2ff" stroke="#a9ccf5" filter="url(#soft)"/>
+  <text x="348" y="108" font-size="10.2" font-weight="700" text-anchor="middle" fill="#0a3d78">Dremel + 列编码</text>
+  <text x="348" y="124" font-size="8" text-anchor="middle" fill="#2a5a92">编码域</text>
+
+  <rect x="428" y="86" width="150" height="46" rx="11" fill="#e9f2ff" stroke="#a9ccf5" filter="url(#soft)"/>
+  <text x="503" y="108" font-size="10.2" font-weight="700" text-anchor="middle" fill="#0a3d78">列块与页 + 压缩</text>
+  <text x="503" y="124" font-size="8" text-anchor="middle" fill="#2a5a92">组装域</text>
+
+  <rect x="583" y="86" width="150" height="46" rx="11" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+  <text x="658" y="108" font-size="10.2" font-weight="700" text-anchor="middle" fill="#5a3410">统计与排序</text>
+  <text x="658" y="124" font-size="8" text-anchor="middle" fill="#93762e">统计域</text>
+
+  <rect x="738" y="86" width="150" height="46" rx="11" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="813" y="108" font-size="10.2" font-weight="700" text-anchor="middle" fill="#12402a">PageIndex + 布隆</text>
+  <text x="813" y="124" font-size="8" text-anchor="middle" fill="#2f6f5f">跳读域</text>
+
+  <rect x="893" y="86" width="150" height="46" rx="11" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="968" y="108" font-size="10.2" font-weight="700" text-anchor="middle" fill="#3d2a5a">类型系统</text>
+  <text x="968" y="124" font-size="8" text-anchor="middle" fill="#8a6db3">类型域</text>
+
+  <!-- 写 row -->
+  <rect x="30" y="146" width="80" height="180" rx="12" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+  <text x="70" y="228" font-size="18" font-weight="700" text-anchor="middle" fill="#5a3410">写</text>
+  <text x="70" y="252" font-size="8" text-anchor="middle" fill="#93762e">缓冲行组</text>
+  <text x="70" y="266" font-size="8" text-anchor="middle" fill="#93762e">编码落盘</text>
+
+  <rect x="118" y="146" width="150" height="180" rx="11" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="193" y="186" font-size="16" font-weight="700" text-anchor="middle" fill="#5a3410">✓</text>
+  <text x="193" y="212" font-size="8.4" text-anchor="middle" fill="#93762e">数据先写</text>
+  <text x="193" y="228" font-size="8.4" text-anchor="middle" fill="#93762e">FileMetaData</text>
+  <text x="193" y="244" font-size="8.4" text-anchor="middle" fill="#93762e">尾置 + PAR1</text>
+  <text x="193" y="260" font-size="8.4" text-anchor="middle" fill="#93762e">单遍写</text>
+
+  <rect x="273" y="146" width="150" height="180" rx="11" fill="#e9f2ff" stroke="#a9ccf5"/>
+  <text x="348" y="186" font-size="16" font-weight="700" text-anchor="middle" fill="#0a3d78">✓</text>
+  <text x="348" y="212" font-size="8.4" text-anchor="middle" fill="#2a5a92">算 def/rep 级</text>
+  <text x="348" y="228" font-size="8.4" text-anchor="middle" fill="#2a5a92">选编码</text>
+  <text x="348" y="244" font-size="8.4" text-anchor="middle" fill="#2a5a92">字典/RLE/DELTA</text>
+  <text x="348" y="260" font-size="8.4" text-anchor="middle" fill="#2a5a92">记 encodings</text>
+
+  <rect x="428" y="146" width="150" height="180" rx="11" fill="#e9f2ff" stroke="#a9ccf5"/>
+  <text x="503" y="186" font-size="16" font-weight="700" text-anchor="middle" fill="#0a3d78">✓</text>
+  <text x="503" y="212" font-size="8.4" text-anchor="middle" fill="#2a5a92">页背靠背</text>
+  <text x="503" y="228" font-size="8.4" text-anchor="middle" fill="#2a5a92">压缩每页</text>
+  <text x="503" y="244" font-size="8.4" text-anchor="middle" fill="#2a5a92">写 PageHeader</text>
+  <text x="503" y="260" font-size="8.4" text-anchor="middle" fill="#2a5a92">+ CRC</text>
+
+  <rect x="583" y="146" width="150" height="180" rx="11" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="658" y="186" font-size="16" font-weight="700" text-anchor="middle" fill="#5a3410">✓</text>
+  <text x="658" y="212" font-size="8.4" text-anchor="middle" fill="#93762e">累计 min/max</text>
+  <text x="658" y="228" font-size="8.4" text-anchor="middle" fill="#93762e">null_count</text>
+  <text x="658" y="244" font-size="8.4" text-anchor="middle" fill="#93762e">写 column_orders</text>
+  <text x="658" y="260" font-size="8.4" text-anchor="middle" fill="#93762e">记 SortingColumn</text>
+
+  <rect x="738" y="146" width="150" height="180" rx="11" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="813" y="186" font-size="16" font-weight="700" text-anchor="middle" fill="#12402a">✓</text>
+  <text x="813" y="212" font-size="8.4" text-anchor="middle" fill="#2f6f5f">收尾写</text>
+  <text x="813" y="228" font-size="8.4" text-anchor="middle" fill="#2f6f5f">ColumnIndex</text>
+  <text x="813" y="244" font-size="8.4" text-anchor="middle" fill="#2f6f5f">OffsetIndex</text>
+  <text x="813" y="260" font-size="8.4" text-anchor="middle" fill="#2f6f5f">建布隆(可选)</text>
+
+  <rect x="893" y="146" width="150" height="180" rx="11" fill="#f4eefb" stroke="#d9c7ec"/>
+  <text x="968" y="186" font-size="16" font-weight="700" text-anchor="middle" fill="#3d2a5a">✓</text>
+  <text x="968" y="212" font-size="8.4" text-anchor="middle" fill="#8a6db3">扁平 schema</text>
+  <text x="968" y="228" font-size="8.4" text-anchor="middle" fill="#8a6db3">深度优先</text>
+  <text x="968" y="244" font-size="8.4" text-anchor="middle" fill="#8a6db3">写 num_children</text>
+
+  <!-- 读 row -->
+  <rect x="30" y="340" width="80" height="180" rx="12" fill="#e9f2ff" stroke="#a9ccf5" filter="url(#soft)"/>
+  <text x="70" y="422" font-size="18" font-weight="700" text-anchor="middle" fill="#0a3d78">读</text>
+  <text x="70" y="446" font-size="8" text-anchor="middle" fill="#2a5a92">尾读元数据</text>
+  <text x="70" y="460" font-size="8" text-anchor="middle" fill="#2a5a92">裁剪解码</text>
+
+  <rect x="118" y="340" width="150" height="180" rx="11" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="193" y="380" font-size="16" font-weight="700" text-anchor="middle" fill="#5a3410">✓</text>
+  <text x="193" y="406" font-size="8.4" text-anchor="middle" fill="#93762e">尾读 8 字节</text>
+  <text x="193" y="422" font-size="8.4" text-anchor="middle" fill="#93762e">得长度+PAR1</text>
+  <text x="193" y="438" font-size="8.4" text-anchor="middle" fill="#93762e">解 FileMetaData</text>
+  <text x="193" y="454" font-size="8.4" text-anchor="middle" fill="#93762e">拿列块偏移</text>
+
+  <rect x="273" y="340" width="150" height="180" rx="11" fill="#e9f2ff" stroke="#a9ccf5"/>
+  <text x="348" y="380" font-size="16" font-weight="700" text-anchor="middle" fill="#0a3d78">✓</text>
+  <text x="348" y="406" font-size="8.4" text-anchor="middle" fill="#2a5a92">按 encodings</text>
+  <text x="348" y="422" font-size="8.4" text-anchor="middle" fill="#2a5a92">解字典/DELTA</text>
+  <text x="348" y="438" font-size="8.4" text-anchor="middle" fill="#2a5a92">解 def/rep 级</text>
+  <text x="348" y="454" font-size="8.4" text-anchor="middle" fill="#2a5a92">还原嵌套</text>
+
+  <rect x="428" y="340" width="150" height="180" rx="11" fill="#e9f2ff" stroke="#a9ccf5"/>
+  <text x="503" y="380" font-size="16" font-weight="700" text-anchor="middle" fill="#0a3d78">✓</text>
+  <text x="503" y="406" font-size="8.4" text-anchor="middle" fill="#2a5a92">跳无关页</text>
+  <text x="503" y="422" font-size="8.4" text-anchor="middle" fill="#2a5a92">解压所需页</text>
+  <text x="503" y="438" font-size="8.4" text-anchor="middle" fill="#2a5a92">校验 CRC</text>
+  <text x="503" y="454" font-size="8.4" text-anchor="middle" fill="#2a5a92">V2 可免解压读级</text>
+
+  <rect x="583" y="340" width="150" height="180" rx="11" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="658" y="380" font-size="16" font-weight="700" text-anchor="middle" fill="#5a3410">✓</text>
+  <text x="658" y="406" font-size="8.4" text-anchor="middle" fill="#93762e">用 min/max</text>
+  <text x="658" y="422" font-size="8.4" text-anchor="middle" fill="#93762e">跳整行组/列块</text>
+  <text x="658" y="438" font-size="8.4" text-anchor="middle" fill="#93762e">按 order 比较</text>
+
+  <rect x="738" y="340" width="150" height="180" rx="11" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="813" y="380" font-size="16" font-weight="700" text-anchor="middle" fill="#12402a">✓</text>
+  <text x="813" y="406" font-size="8.4" text-anchor="middle" fill="#2f6f5f">读 ColumnIndex</text>
+  <text x="813" y="422" font-size="8.4" text-anchor="middle" fill="#2f6f5f">选中页</text>
+  <text x="813" y="438" font-size="8.4" text-anchor="middle" fill="#2f6f5f">OffsetIndex 定位</text>
+  <text x="813" y="454" font-size="8.4" text-anchor="middle" fill="#2f6f5f">布隆判等值</text>
+
+  <rect x="893" y="340" width="150" height="180" rx="11" fill="#f4eefb" stroke="#d9c7ec"/>
+  <text x="968" y="380" font-size="16" font-weight="700" text-anchor="middle" fill="#3d2a5a">✓</text>
+  <text x="968" y="406" font-size="8.4" text-anchor="middle" fill="#8a6db3">按 num_children</text>
+  <text x="968" y="422" font-size="8.4" text-anchor="middle" fill="#8a6db3">还原 schema 树</text>
+  <text x="968" y="438" font-size="8.4" text-anchor="middle" fill="#8a6db3">path 选列</text>
+
+  <text x="30" y="546" font-size="9" fill="#8a8a90">读写不对称：写侧“构建”统计/PageIndex/布隆并尾置元数据;读侧“消费”它们做三级裁剪。所有格子都靠 path_in_schema（类型域）串起。</text>
+</svg>

@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="434" viewBox="0 0 1000 434" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1000" height="434" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">多核负载均衡：沿 sched_domain 层级（SMT→MC→NUMA）由 SCHED_SOFTIRQ 驱动，从最忙 rq 迁任务</text>
+
+  <!-- 左：sched_domain 层级 -->
+  <rect x="28" y="62" width="456" height="356" rx="13" fill="#fbfbfd" stroke="#ececf1"/>
+  <text x="256" y="86" font-size="11" font-weight="600" fill="#1d1d1f" text-anchor="middle">sched_domain 层级（自底向上，域越大迁移代价越高）</text>
+
+  <rect x="52" y="104" width="408" height="46" rx="10" fill="#fff7e6" stroke="#e8cf9a"/>
+  <text x="256" y="124" font-size="11" font-weight="600" fill="#5a3410" text-anchor="middle">NUMA 域 · 跨结点</text>
+  <text x="256" y="140" font-size="9" fill="#93762e" text-anchor="middle">迁移代价最高，尽量避免</text>
+
+  <rect x="92" y="162" width="328" height="46" rx="10" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="256" y="182" font-size="11" font-weight="600" fill="#1b2a4a" text-anchor="middle">MC 域 · 同结点共享 LLC 多核</text>
+  <text x="256" y="198" font-size="9" fill="#5b7db1" text-anchor="middle">迁移代价中等</text>
+
+  <rect x="132" y="220" width="248" height="46" rx="10" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="256" y="240" font-size="11" font-weight="600" fill="#12402a" text-anchor="middle">SMT 域 · 同核超线程兄弟</text>
+  <text x="256" y="256" font-size="9" fill="#2f6f4f" text-anchor="middle">迁移代价最低</text>
+
+  <rect x="60" y="284" width="92" height="40" rx="9" fill="#ffffff" stroke="#d9d9de"/><text x="106" y="308" font-size="10" fill="#3a3a3c" text-anchor="middle">CPU0 rq</text>
+  <rect x="164" y="284" width="92" height="40" rx="9" fill="#ffffff" stroke="#d9d9de"/><text x="210" y="308" font-size="10" fill="#3a3a3c" text-anchor="middle">CPU1 rq</text>
+  <rect x="268" y="284" width="92" height="40" rx="9" fill="#ffffff" stroke="#d9d9de"/><text x="314" y="308" font-size="10" fill="#3a3a3c" text-anchor="middle">CPU2 rq</text>
+  <rect x="372" y="284" width="92" height="40" rx="9" fill="#ffffff" stroke="#d9d9de"/><text x="418" y="308" font-size="10" fill="#3a3a3c" text-anchor="middle">CPU3 rq</text>
+
+  <text x="256" y="350" font-size="10" fill="#6e6e73" text-anchor="middle">每 CPU 一个 rq；均衡按域逐层，从最忙组向本 CPU 迁移任务</text>
+  <text x="256" y="374" font-size="9.5" fill="#a05411" text-anchor="middle">↑ 越往上 = 域越大 = 迁移代价越高（越破坏缓存局部性）</text>
+  <text x="256" y="398" font-size="9.5" fill="#2f6f4f" text-anchor="middle">↓ 越往下 = 越亲和 = 优先在小域内均衡</text>
+
+  <!-- 右：触发链 -->
+  <rect x="508" y="78" width="464" height="54" rx="12" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="524" y="100" font-size="11.5" font-weight="600" fill="#5a3410">sched_tick · 周期时钟节拍</text>
+  <text x="524" y="120" font-size="10" fill="#93762e">每次节拍检查，到期则 raise SCHED_SOFTIRQ</text>
+
+  <rect x="508" y="150" width="464" height="64" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="524" y="172" font-size="11.5" font-weight="600" fill="#1b2a4a">sched_balance_softirq（软中断上下文）</text>
+  <text x="524" y="191" font-size="10" fill="#5b7db1">fair.c:13333 · 注册于 open_softirq(SCHED_SOFTIRQ,…) fair.c:14305</text>
+  <text x="524" y="207" font-size="10" fill="#5b7db1">先做 NOHZ idle 均衡，再做普通域均衡</text>
+
+  <rect x="508" y="232" width="464" height="104" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="524" y="254" font-size="11.5" font-weight="600" fill="#1b2a4a">sched_balance_rq（逐 sched_domain 自底向上）</text>
+  <text x="524" y="273" font-size="9.5" fill="#5b7db1">fair.c:12101</text>
+  <text x="524" y="295" font-size="10" fill="#5b7db1">① find_busiest_group / find_busiest_queue 找最忙</text>
+  <text x="524" y="313" font-size="10" fill="#5b7db1">② detach_tasks 从最忙 rq 摘下若干任务</text>
+  <text x="524" y="331" font-size="10" fill="#5b7db1">③ attach_tasks 挂到本 CPU 的 rq</text>
+
+  <rect x="508" y="354" width="464" height="60" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="524" y="376" font-size="11.5" font-weight="600" fill="#12402a">newidle 均衡 · sched_balance_newidle（fair.c:13181）</text>
+  <text x="524" y="396" font-size="10" fill="#2f6f4f">CPU 将转 idle 时，在 __schedule 内即时从他核拉活，避免空转</text>
+
+  <g stroke="#c7c7cc" stroke-width="1.6" fill="none">
+    <line x1="740" y1="132" x2="740" y2="150" marker-end="url(#ar)"/>
+    <line x1="740" y1="214" x2="740" y2="232" marker-end="url(#ar)"/>
+    <line x1="740" y1="336" x2="740" y2="354" marker-end="url(#ar)"/>
+  </g>
+</svg>

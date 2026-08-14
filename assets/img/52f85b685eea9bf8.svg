@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="560" viewBox="0 0 1060 560" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1060" height="560" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">资源管理全景：准入 → 配额 → 内存追踪 → 调度 → 溢写（多层设防）</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">目标：一个大查询/一个租户拖不垮集群 · DCL 定义"谁受什么限"，本主线执行"运行时怎么限"</text>
+
+  <!-- funnel stages -->
+  <g text-anchor="middle">
+    <rect x="40" y="80" width="180" height="90" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/><text x="130" y="106" font-size="11" font-weight="700" fill="#1b2a4a">① 准入</text><text x="130" y="126" font-size="8.5" fill="#5b7db1">ConcurrencyControl</text><text x="130" y="142" font-size="8.5" fill="#5b7db1">max_concurrent_queries</text><text x="130" y="160" font-size="8" fill="#8aa6cf">超限排队</text>
+    <rect x="240" y="80" width="180" height="90" rx="12" fill="#f6f2fb" stroke="#d9c9ec" filter="url(#soft)"/><text x="330" y="106" font-size="11" font-weight="700" fill="#3d2a5a">② 配额</text><text x="330" y="126" font-size="8.5" fill="#7a5da5">Quota 按周期限流</text><text x="330" y="142" font-size="8.5" fill="#7a5da5">read_rows/时长/次数</text><text x="330" y="160" font-size="8" fill="#9a7cc4">DCL 实体</text>
+    <rect x="440" y="80" width="180" height="90" rx="12" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/><text x="530" y="106" font-size="11" font-weight="700" fill="#5a3410">③ 内存追踪</text><text x="530" y="126" font-size="8.5" fill="#93762e">MemoryTracker</text><text x="530" y="142" font-size="8.5" fill="#93762e">单查询/用户/服务器</text><text x="530" y="160" font-size="8" fill="#b08843">超限抛异常</text>
+    <rect x="640" y="80" width="180" height="90" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/><text x="730" y="106" font-size="11" font-weight="700" fill="#12402a">④ 调度</text><text x="730" y="126" font-size="8.5" fill="#2f6f4f">Scheduler CPU/IO</text><text x="730" y="142" font-size="8.5" fill="#2f6f4f">Fair/Priority</text><text x="730" y="160" font-size="8" fill="#4c8567">workload 隔离</text>
+    <rect x="840" y="80" width="180" height="90" rx="12" fill="#f3f7fc" stroke="#cfe0f2" filter="url(#soft)"/><text x="930" y="106" font-size="11" font-weight="700" fill="#274a78">⑤ 溢写</text><text x="930" y="126" font-size="8.5" fill="#5b7db1">spill to disk</text><text x="930" y="142" font-size="8.5" fill="#5b7db1">聚合/排序/join</text><text x="930" y="160" font-size="8" fill="#8aa6cf">超内存续命</text>
+  </g>
+  <g stroke="#c7c7cc" stroke-width="1.4" fill="none">
+    <line x1="220" y1="125" x2="240" y2="125" marker-end="url(#ar)"/>
+    <line x1="420" y1="125" x2="440" y2="125" marker-end="url(#ar)"/>
+    <line x1="620" y1="125" x2="640" y2="125" marker-end="url(#ar)"/>
+    <line x1="820" y1="125" x2="840" y2="125" marker-end="url(#ar)"/>
+  </g>
+
+  <!-- where each acts -->
+  <rect x="40" y="196" width="480" height="150" rx="13" fill="#f3f7fc" stroke="#cfe0f2"/>
+  <text x="280" y="220" font-size="11" font-weight="700" fill="#274a78" text-anchor="middle">入口拦截（查询开始前/周期）</text>
+  <text x="60" y="244" font-size="9.5" fill="#5b7db1">· ConcurrencyControl：并发数满 → 新查询排队</text>
+  <text x="60" y="264" font-size="9.5" fill="#5b7db1">· Quota：周期配额用尽 → 拒绝该用户查询</text>
+  <text x="60" y="284" font-size="9" fill="#8aa6cf">从"入口"限住：不让过多/过重的查询涌入</text>
+  <text x="60" y="308" font-size="9" fill="#8aa6cf">保护：突发流量不会瞬间挤爆资源</text>
+  <text x="60" y="330" font-size="8.5" fill="#8aa6cf">配置：max_concurrent_queries + Quota</text>
+
+  <rect x="540" y="196" width="480" height="150" rx="13" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="780" y="220" font-size="11" font-weight="700" fill="#12402a" text-anchor="middle">执行中拦截（查询运行时）</text>
+  <text x="560" y="244" font-size="9.5" fill="#2f6f4f">· MemoryTracker：分配累加，超单查询/服务器限 → 抛异常</text>
+  <text x="560" y="264" font-size="9.5" fill="#2f6f4f">· Scheduler：按 workload 公平/优先分配 CPU/IO</text>
+  <text x="560" y="284" font-size="9" fill="#4c8567">· spill：单查询超内存 → 落盘续命（不 OOM）</text>
+  <text x="560" y="308" font-size="9" fill="#4c8567">从"执行中"救：已进来的查询也受控</text>
+  <text x="560" y="330" font-size="8.5" fill="#4c8567">配置：max_memory_usage + spill 阈值 + Workload</text>
+
+  <rect x="40" y="362" width="980" height="90" rx="13" fill="#fdf9f0" stroke="#efe3cd"/>
+  <text x="60" y="386" font-size="11" font-weight="700" fill="#7a5a1e">DCL 与本主线的分工</text>
+  <text x="60" y="408" font-size="9.5" fill="#93762e">· DCL：定义 Quota/SettingsProfile 实体，挂到 User/Role（"谁受什么限"）</text>
+  <text x="60" y="426" font-size="9.5" fill="#93762e">· 本主线：MemoryTracker/ConcurrencyControl/Scheduler 在运行时实际拦截（"运行时怎么限"）+ system.* 事后审计</text>
+
+  <rect x="40" y="468" width="980" height="72" rx="12" fill="#f7f7f9" stroke="#e6e6ea"/>
+  <text x="60" y="492" font-size="11" font-weight="700" fill="#1d1d1f">一句话</text>
+  <text x="60" y="514" font-size="10" fill="#4b4b50">资源管理多层设防：入口用 ConcurrencyControl+Quota 限并发/配额，执行中用 MemoryTracker 限内存（超限 spill 续命）、</text>
+  <text x="60" y="531" font-size="10" fill="#4b4b50">Scheduler 按 workload 分配 CPU/IO。DCL 定义"谁受什么限"，本主线运行时执行，system.* 事后审计——共保集群稳定。</text>
+</svg>

@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="430" viewBox="0 0 1020 430"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1020" height="430" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">Engine 执行反向 · 按依赖拓扑跑（engine.cpp:1294 / 1064）</text>
+
+  <!-- 流程 -->
+  <rect x="30" y="56" width="960" height="150" rx="14" fill="#fbeaea" stroke="#f0cccc" filter="url(#soft)"/>
+  <text x="48" y="80" font-size="12.5" font-weight="600" fill="#7d1f1f">Engine::execute（:1294）</text>
+  <rect x="48" y="96" width="210" height="90" rx="10" fill="#ffffff" stroke="#f0cccc"/><text x="153" y="118" font-size="9.5" font-weight="600" fill="#7d1f1f" text-anchor="middle">① 算依赖计数</text><text x="153" y="138" font-size="8.5" fill="#b06a6a" text-anchor="middle">从 loss 起遍历图</text><text x="153" y="154" font-size="8.5" fill="#b06a6a" text-anchor="middle">数每个 Node 有几个</text><text x="153" y="170" font-size="8.5" fill="#b06a6a" text-anchor="middle">下游还没算完</text>
+  <rect x="274" y="96" width="210" height="90" rx="10" fill="#ffffff" stroke="#f0cccc"/><text x="379" y="118" font-size="9.5" font-weight="600" fill="#7d1f1f" text-anchor="middle">② ready queue</text><text x="379" y="138" font-size="8.5" fill="#b06a6a" text-anchor="middle">依赖=0 的 Node 入队</text><text x="379" y="154" font-size="8.5" fill="#b06a6a" text-anchor="middle">保证拓扑序</text><text x="379" y="170" font-size="8.5" fill="#b06a6a" text-anchor="middle">（先算完下游才算上游）</text>
+  <rect x="500" y="96" width="230" height="90" rx="10" fill="#ffffff" stroke="#f0cccc"/><text x="615" y="118" font-size="9.5" font-weight="600" fill="#7d1f1f" text-anchor="middle">③ evaluate_function（:1064）</text><text x="615" y="138" font-size="8.5" fill="#b06a6a" text-anchor="middle">调 Node 的反向算子</text><text x="615" y="154" font-size="8.5" fill="#b06a6a" text-anchor="middle">得输入梯度</text><text x="615" y="170" font-size="8.5" fill="#b06a6a" text-anchor="middle">累加到输入 Node 的输入槽</text>
+  <rect x="746" y="96" width="224" height="90" rx="10" fill="#eafaf1" stroke="#bce6cd"/><text x="858" y="118" font-size="9.5" font-weight="600" fill="#0f5132" text-anchor="middle">④ 依赖减一</text><text x="858" y="138" font-size="8.5" fill="#3f8f66" text-anchor="middle">下游算完，上游依赖-1</text><text x="858" y="154" font-size="8.5" fill="#3f8f66" text-anchor="middle">降到 0 就入队</text><text x="858" y="170" font-size="8.5" fill="#3f8f66" text-anchor="middle">直到叶子 AccumulateGrad</text>
+  <line x1="258" y1="141" x2="274" y2="141" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="484" y1="141" x2="500" y2="141" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="730" y1="141" x2="746" y2="141" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <path d="M858,186 L858,200 L379,200 L379,186" fill="none" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <text x="600" y="198" font-size="8" fill="#86868b">循环到图跑完</text>
+
+  <!-- 多线程 -->
+  <rect x="30" y="222" width="470" height="184" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="48" y="246" font-size="12" font-weight="600" fill="#1b2a4a">并行：每设备一个 worker 线程</text>
+  <text x="48" y="270" font-size="9.5" fill="#5b7db1">· Engine 为每个设备开一条 worker 线程</text>
+  <text x="48" y="290" font-size="9.5" fill="#5b7db1">· 各自从 ready queue 取 Node 执行</text>
+  <text x="48" y="310" font-size="9.5" fill="#5b7db1">· 图里无依赖的分支可并行反向</text>
+  <text x="48" y="330" font-size="9.5" fill="#5b7db1">· CPU 主线程 execute 后阻塞等结果</text>
+  <rect x="48" y="344" width="434" height="46" rx="9" fill="#ffffff" stroke="#bcd0ec"/><text x="265" y="366" font-size="8.5" fill="#1b2a4a" text-anchor="middle">依赖计数 + ready queue = 经典拓扑排序并行执行</text><text x="265" y="382" font-size="8" fill="#5b7db1" text-anchor="middle">同一张量多路径的梯度自动求和</text>
+
+  <!-- 要点 -->
+  <rect x="520" y="222" width="470" height="184" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="538" y="246" font-size="12" font-weight="600" fill="#1d1d1f">要点</text>
+  <text x="538" y="270" font-size="9.5" fill="#494950">· backward 是<tspan font-weight="600"> 图上的反向传播</tspan>，非重跑前向</text>
+  <text x="538" y="290" font-size="9.5" fill="#494950">· 一个张量被多处用 → 多路径梯度<tspan font-weight="600">求和</tspan></text>
+  <text x="538" y="310" font-size="9.5" fill="#494950">· 默认只对叶子（requires_grad 的参数）留 .grad</text>
+  <text x="538" y="330" font-size="9.5" fill="#494950">· retain_graph=True 才能二次 backward</text>
+  <text x="538" y="350" font-size="9.5" fill="#494950">· create_graph=True 建高阶导数的图</text>
+  <text x="538" y="378" font-size="9" fill="#86868b">这套引擎让任意动态图都能正确、并行地反向</text>
+</svg>

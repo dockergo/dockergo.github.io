@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="540" viewBox="0 0 1080 540"
+     font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1080" height="540" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Flink 状态 · key-group：rescale 的分片单位</text>
+  <text x="30" y="50" font-size="11" fill="#a1a1a6">keyspace 按 maxParallelism 切成固定数量 key-group;rescale 按 key-group 区间重分配,而非单 key</text>
+
+  <!-- 步骤1: key -> keygroup -->
+  <rect x="40" y="74" width="230" height="150" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="60" y="101" font-size="12" font-weight="600" fill="#1b2a4a">① 每条记录的 key</text>
+  <text x="60" y="124" font-size="10.5" fill="#5b7db1">keyBy 得到 key</text>
+  <rect x="60" y="138" width="86" height="34" rx="8" fill="#ffffff" stroke="#ececf1"/>
+  <text x="103" y="160" font-size="11" fill="#1b2a4a" text-anchor="middle">key = "u42"</text>
+  <rect x="156" y="138" width="94" height="34" rx="8" fill="#ffffff" stroke="#ececf1"/>
+  <text x="203" y="160" font-size="11" fill="#1b2a4a" text-anchor="middle">key = "order9"</text>
+  <text x="60" y="196" font-size="9.5" fill="#5b7db1">murmurHash(keyHash)</text>
+  <text x="60" y="213" font-size="9.5" fill="#5b7db1">% maxParallelism</text>
+
+  <path d="M 270,149 L 300,149" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <!-- 步骤2: key-group 空间 -->
+  <rect x="300" y="74" width="430" height="150" rx="14" fill="#f5faf6" stroke="#cfe6d5" filter="url(#soft)"/>
+  <text x="320" y="101" font-size="12" font-weight="600" fill="#2c5a3a">② 固定数量的 key-group(=maxParallelism)</text>
+  <text x="320" y="122" font-size="10" fill="#2f6f4f">computeKeyGroupForKeyHash = murmurHash(keyHash) % maxParallelism</text>
+  <rect x="320" y="136" width="60" height="40" rx="7" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="350" y="161" font-size="10" fill="#12402a" text-anchor="middle">KG 0</text>
+  <rect x="386" y="136" width="60" height="40" rx="7" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="416" y="161" font-size="10" fill="#12402a" text-anchor="middle">KG 1</text>
+  <rect x="452" y="136" width="60" height="40" rx="7" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="482" y="161" font-size="10" fill="#12402a" text-anchor="middle">KG 2</text>
+  <rect x="518" y="136" width="60" height="40" rx="7" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="548" y="161" font-size="10" fill="#12402a" text-anchor="middle">KG 3</text>
+  <rect x="584" y="136" width="60" height="40" rx="7" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="614" y="161" font-size="10" fill="#12402a" text-anchor="middle">…</text>
+  <rect x="650" y="136" width="60" height="40" rx="7" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="680" y="161" font-size="10" fill="#12402a" text-anchor="middle">KG N</text>
+  <text x="320" y="205" font-size="9.5" fill="#2f6f4f">maxParallelism 默认下界 128,上限 32768 · 建表即定不可改</text>
+
+  <path d="M 760,149 L 790,149" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <!-- 步骤3: KeyGroupRange -->
+  <rect x="790" y="74" width="250" height="150" rx="14" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="810" y="101" font-size="12" font-weight="600" fill="#3d2a5a">③ 每子任务负责一段</text>
+  <text x="810" y="121" font-size="12" font-weight="600" fill="#3d2a5a">KeyGroupRange[start,end]</text>
+  <text x="810" y="146" font-size="10.5" fill="#7a5c9e">连续 key-group 区间</text>
+  <text x="810" y="169" font-size="10.5" fill="#7a5c9e">状态跟着 key-group 走</text>
+  <text x="810" y="192" font-size="10" fill="#7a5c9e">computeKeyGroupRange-</text>
+  <text x="810" y="208" font-size="10" fill="#7a5c9e">ForOperatorIndex</text>
+
+  <!-- rescale 演示 -->
+  <text x="40" y="264" font-size="12" font-weight="700" fill="#1d1d1f">rescale：改并行度时,key-group 按区间在新旧子任务间重分配(粒度 = key-group,非单 key)</text>
+
+  <!-- 并行度 2 -->
+  <rect x="40" y="284" width="480" height="230" rx="14" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="60" y="311" font-size="12" font-weight="600" fill="#1d1d1f">并行度 = 2</text>
+  <rect x="60" y="326" width="200" height="82" rx="10" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="160" y="351" font-size="11" font-weight="600" fill="#1b2a4a" text-anchor="middle">子任务 0</text>
+  <text x="160" y="374" font-size="10" fill="#5b7db1" text-anchor="middle">KeyGroupRange[0, N/2]</text>
+  <text x="160" y="394" font-size="9.5" fill="#5b7db1" text-anchor="middle">KG 0 … KG N/2</text>
+  <rect x="300" y="326" width="200" height="82" rx="10" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="400" y="351" font-size="11" font-weight="600" fill="#1b2a4a" text-anchor="middle">子任务 1</text>
+  <text x="400" y="374" font-size="10" fill="#5b7db1" text-anchor="middle">KeyGroupRange[N/2+1, N]</text>
+  <text x="400" y="394" font-size="9.5" fill="#5b7db1" text-anchor="middle">KG N/2+1 … KG N</text>
+  <text x="60" y="440" font-size="10.5" fill="#6e6e73">2 个子任务平分全部 key-group 区间</text>
+  <text x="60" y="462" font-size="10.5" fill="#6e6e73">只要并行度 ≤ maxParallelism 即可弹性调整</text>
+  <text x="60" y="490" font-size="10" fill="#a1a1a6">RocksDB 用 key-group 前缀入复合键,恢复按前缀高效切片</text>
+
+  <path d="M 520,399 L 560,399" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="530" y="390" font-size="9.5" fill="#a1a1a6">rescale</text>
+
+  <!-- 并行度 3 -->
+  <rect x="560" y="284" width="480" height="230" rx="14" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="580" y="311" font-size="12" font-weight="600" fill="#1d1d1f">并行度 = 3(≤ maxParallelism)</text>
+  <rect x="580" y="326" width="140" height="82" rx="10" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="650" y="351" font-size="11" font-weight="600" fill="#1b2a4a" text-anchor="middle">子任务 0</text>
+  <text x="650" y="374" font-size="9.5" fill="#5b7db1" text-anchor="middle">KG 区间 a</text>
+  <rect x="730" y="326" width="140" height="82" rx="10" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="800" y="351" font-size="11" font-weight="600" fill="#1b2a4a" text-anchor="middle">子任务 1</text>
+  <text x="800" y="374" font-size="9.5" fill="#5b7db1" text-anchor="middle">KG 区间 b</text>
+  <rect x="880" y="326" width="140" height="82" rx="10" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="950" y="351" font-size="11" font-weight="600" fill="#1b2a4a" text-anchor="middle">子任务 2</text>
+  <text x="950" y="374" font-size="9.5" fill="#5b7db1" text-anchor="middle">KG 区间 c</text>
+  <text x="580" y="440" font-size="10.5" fill="#6e6e73">同样的 key-group 集合,重新划成 3 段区间</text>
+  <text x="580" y="462" font-size="10.5" fill="#6e6e73">同 key 仍落同一 key-group → 状态整块搬迁,不重算</text>
+  <text x="580" y="490" font-size="10" fill="#a1a1a6">maxParallelism = 并行度可调的天花板</text>
+</svg>

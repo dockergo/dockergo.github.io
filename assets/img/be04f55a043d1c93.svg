@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="540" viewBox="0 0 1080 540" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="540" fill="#fbfbfd"/>
+
+  <!-- 标题 -->
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">vLLM 前缀缓存 —— 按块 token 序列 hash 复用已算的物理块,公共前缀只算一次</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">hash_block_tokens 算内容指纹 → get_computed_blocks 用 hash 查命中则复用物理块(touch 增引用)跳过重复前向 · cache_salt 隔离租户</text>
+
+  <!-- ① hash_block_tokens (purple) -->
+  <rect x="30" y="70" width="1020" height="88" rx="12" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="50" y="94" font-size="12.5" font-weight="600" fill="#3d2a5a">hash_block_tokens (kv_cache_utils.py:596) · 对一个块的 token 序列算 hash,作块的内容指纹</text>
+  <text x="50" y="118" font-size="9.5" fill="#7a5aa0">BlockHash 类型(:44) · NONE_HASH 种子(:112) · cache_salt(request.py:169) 可折进 hash(:579) 隔离不同租户/上下文,避免误共享</text>
+  <text x="50" y="140" font-size="9.5" fill="#7a5aa0">按块粒度、按 token 内容(非字符串匹配)——前缀 token 完全相同的块,hash 相同</text>
+
+  <!-- 连线 -->
+  <path d="M540,158 L540,182" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <!-- ② 两请求共享 system prompt 场景 -->
+  <rect x="30" y="182" width="1020" height="238" rx="12" fill="#ffffff" stroke="#e4e4ea" filter="url(#soft)"/>
+  <text x="50" y="206" font-size="11.5" font-weight="600" fill="#1d1d1f">场景 · 请求共享公共前缀(同一 system prompt / few-shot / 对话历史)</text>
+
+  <!-- 请求1 首算 -->
+  <text x="70" y="232" font-size="10" font-weight="600" fill="#1b2a4a">请求 1(首次)· hash 未命中 → 算出并存块</text>
+  <rect x="70" y="242" width="130" height="40" rx="7" fill="#f4eefb" stroke="#d9c7ec"/>
+  <text x="135" y="266" font-size="9.5" text-anchor="middle" fill="#3d2a5a">前缀块 h1</text>
+  <rect x="210" y="242" width="130" height="40" rx="7" fill="#f4eefb" stroke="#d9c7ec"/>
+  <text x="275" y="266" font-size="9.5" text-anchor="middle" fill="#3d2a5a">前缀块 h2</text>
+  <rect x="350" y="242" width="130" height="40" rx="7" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="415" y="266" font-size="9.5" text-anchor="middle" fill="#12402a">私有 token</text>
+  <text x="500" y="266" font-size="9" fill="#93762e">← 前缀部分做完整前向计算,块写入池</text>
+
+  <!-- 请求2 命中 -->
+  <text x="70" y="316" font-size="10" font-weight="600" fill="#1b2a4a">请求 2(后到)· get_computed_blocks 用 hash 查 → 命中 h1/h2</text>
+  <rect x="70" y="326" width="130" height="40" rx="7" fill="#eafaf1" stroke="#7fc79e" stroke-width="1.6"/>
+  <text x="135" y="350" font-size="9.5" text-anchor="middle" fill="#12402a">复用 h1</text>
+  <rect x="210" y="326" width="130" height="40" rx="7" fill="#eafaf1" stroke="#7fc79e" stroke-width="1.6"/>
+  <text x="275" y="350" font-size="9.5" text-anchor="middle" fill="#12402a">复用 h2</text>
+  <rect x="350" y="326" width="130" height="40" rx="7" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="415" y="350" font-size="9.5" text-anchor="middle" fill="#12402a">私有 token</text>
+  <text x="500" y="350" font-size="9" fill="#2f6f4f">← 直接复用物理块(touch 增引用),跳过前缀的重复前向</text>
+
+  <!-- 命中箭头:请求2 的 h1/h2 指向请求1 的块 -->
+  <path d="M135,326 L135,282" stroke="#7fc79e" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M275,326 L275,282" stroke="#7fc79e" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <!-- 收益条 (green) -->
+  <rect x="70" y="380" width="940" height="30" rx="8" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="540" y="400" font-size="9.5" text-anchor="middle" fill="#2c5a3a">前缀 KV 每请求算出完全一样 → 按 hash 复用第一次算好的块,后续请求命中省下前缀部分全部计算与显存;长公共前缀收益巨大</text>
+
+  <!-- 底注 -->
+  <text x="30" y="452" font-size="9.5" fill="#6e6e73">误区:前缀缓存靠字符串匹配。实为靠 token 序列 hash(hash_block_tokens),按块粒度命中。误区:总是安全共享——需 cache_salt 隔离租户/上下文。</text>
+  <text x="30" y="518" font-size="9" fill="#a1a1a6">开启 enable_prefix_caching:多请求共享 system prompt/few-shot 时大幅省算力/显存;命中的旧块靠空闲队列 LRU 尽量留存 · vLLM(git 7aab6e2, v1)</text>
+</svg>

@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="880" height="410" viewBox="0 0 880 410" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="880" height="410" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">catalog 同步与表自描述</text>
+  <text x="30" y="49" font-size="10" fill="#a1a1a6">Hudi 表自描述（.hoodie）；catalog 只是让外部引擎"发现"表的可选入口</text>
+
+  <!-- self-describing -->
+  <rect x="30" y="70" width="360" height="160" rx="12" fill="#f5faf6" stroke="#cfe6d5" filter="url(#soft)"/>
+  <text x="46" y="92" font-size="10.5" font-weight="700" fill="#12402a">表自描述（真相在 .hoodie）</text>
+  <rect x="46" y="104" width="328" height="46" rx="8" fill="#e6f7ee" stroke="#bfe0cd"/><text x="210" y="124" font-size="9" text-anchor="middle" font-weight="600" fill="#12402a">.hoodie/hoodie.properties（HoodieTableConfig）</text><text x="210" y="140" font-size="8.2" text-anchor="middle" fill="#2f6f4f">表类型 COW/MOR · 表版本 · payload 类 · 分区字段</text>
+  <rect x="46" y="158" width="328" height="30" rx="8" fill="#eef3fb" stroke="#bcd0ec"/><text x="210" y="177" font-size="8.4" text-anchor="middle" fill="#274a78">HoodieTableMetaClient 加载 .hoodie 即还原表</text>
+  <text x="46" y="208" font-size="8.6" fill="#2f6f4f">→ 不强依赖外部 catalog 定位表状态</text>
+  <text x="46" y="224" font-size="8.4" fill="#6e9a7c">（与 Iceberg "catalog 持当前 metadata 指针" 不同）</text>
+
+  <!-- catalog role -->
+  <rect x="410" y="70" width="440" height="160" rx="12" fill="#f6f8fc" stroke="#dbe6f4" filter="url(#soft)"/>
+  <text x="426" y="92" font-size="10.5" font-weight="700" fill="#1b2a4a">catalog 的角色 = 让引擎"发现"表</text>
+  <g font-size="8.8" text-anchor="middle">
+    <rect x="426" y="104" width="130" height="50" rx="8" fill="#eef3fb" stroke="#bcd0ec"/><text x="491" y="124" fill="#274a78">Hudi 表</text><text x="491" y="140" font-size="8" fill="#5b7db1">.hoodie 时间线</text>
+    <rect x="576" y="104" width="130" height="50" rx="8" fill="#f4eefb" stroke="#d9c7ec"/><text x="641" y="124" fill="#3d2a5a">HiveSyncTool</text><text x="641" y="140" font-size="8" fill="#7a5a95">hudi-sync</text>
+    <rect x="726" y="104" width="108" height="50" rx="8" fill="#fdf6ea" stroke="#efdcb4"/><text x="780" y="124" fill="#5a3410">HMS / Glue</text><text x="780" y="140" font-size="8" fill="#93762e">目录发现</text>
+  </g>
+  <line x1="556" y1="129" x2="576" y2="129" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+  <line x1="706" y1="129" x2="726" y2="129" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+  <text x="426" y="176" font-size="8.6" fill="#274a78">同步表/分区/schema → Spark/Trino/Presto 按库表名查到并读</text>
+  <text x="426" y="194" font-size="8.6" fill="#274a78">引擎侧 catalog：Spark HoodieCatalog / Flink Hudi catalog</text>
+  <text x="426" y="214" font-size="8.4" fill="#5b7db1">底层仍是 HoodieTableMetaClient + 时间线；同步的是"目录信息"</text>
+
+  <!-- schema + tradeoff -->
+  <rect x="30" y="244" width="400" height="150" rx="12" fill="#faf4fb" stroke="#e2d2ee"/>
+  <text x="46" y="266" font-size="10.5" font-weight="700" fill="#3d2a5a">schema 演进</text>
+  <text x="46" y="288" font-size="9" fill="#7a5a95">schema 存于 commit 元数据 / 表配置；</text>
+  <text x="46" y="308" font-size="9" fill="#7a5a95">写入按 avro schema 演进（加列等）；</text>
+  <text x="46" y="328" font-size="9" fill="#7a5a95">读端按最新 schema 读历史文件。</text>
+
+  <rect x="450" y="244" width="400" height="150" rx="12" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="466" y="266" font-size="10.5" font-weight="700" fill="#1d1d1f">取舍：自描述 vs catalog</text>
+  <text x="466" y="288" font-size="9" fill="#6e6e73">✓ 自描述 → Hudi 表"搬到哪都能独立读"</text>
+  <text x="466" y="308" font-size="9" fill="#6e6e73">　（不丢 .hoodie 就不丢表）</text>
+  <text x="466" y="330" font-size="9" fill="#6e6e73">catalog 同步只是外部引擎的发现入口，</text>
+  <text x="466" y="350" font-size="9" fill="#6e6e73">是可选便利层，不是正确性的一部分。</text>
+  <text x="466" y="374" font-size="8.4" fill="#a1a1a6">这是 Hudi 区别于 "catalog 持指针" 的 Iceberg 之处</text>
+</svg>

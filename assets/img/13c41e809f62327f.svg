@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="500" viewBox="0 0 1080 500" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="500" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">RocksDB Flush 联动 · MemTable / WAL / Version 三方交汇</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">Flush 完成同时影响三处:释放 MemTable 内存、解锁 WAL 可删、经 VersionEdit 换新 Version</text>
+
+  <!-- center flush -->
+  <rect x="420" y="200" width="240" height="80" rx="12" fill="#fdf6ea" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="540" y="234" text-anchor="middle" font-size="12" font-weight="700" fill="#5a3410">FlushJob 完成</text>
+  <text x="540" y="256" text-anchor="middle" font-size="8.5" fill="#93762e">immutable → L0 SST 落定</text>
+
+  <!-- three arms -->
+  <rect x="30" y="90" width="320" height="120" rx="12" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="46" y="112" font-size="10.5" font-weight="700" fill="#12402a">① 与 MemTable</text>
+  <text x="46" y="134" font-size="8.8" fill="#2f6f4f">· 消费掉该 immutable MemTable</text>
+  <text x="46" y="152" font-size="8.8" fill="#2f6f4f">· 释放其占用的内存</text>
+  <text x="46" y="170" font-size="8.8" fill="#2f6f4f">· num-immutable 计数下降</text>
+  <text x="46" y="192" font-size="8.5" fill="#2c5a3a">→ 缓解内存压力、解除写停顿</text>
+
+  <rect x="730" y="90" width="320" height="120" rx="12" fill="#fff7e6" stroke="#e8cf9a"/>
+  <text x="746" y="112" font-size="10.5" font-weight="700" fill="#5a3410">② 与 WAL</text>
+  <text x="746" y="134" font-size="8.8" fill="#93762e">· 该 immutable 覆盖的 WAL 段</text>
+  <text x="746" y="152" font-size="8.8" fill="#93762e">· 若该 WAL 覆盖的所有 CF 都 flush</text>
+  <text x="746" y="170" font-size="8.8" fill="#93762e">  → 该 WAL 可删/归档</text>
+  <text x="746" y="192" font-size="8.5" fill="#b1483a">→ 数据已在 SST,不再依赖 WAL</text>
+
+  <rect x="380" y="330" width="320" height="120" rx="12" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="396" y="352" font-size="10.5" font-weight="700" fill="#2c5a3a">③ 与 Version</text>
+  <text x="396" y="374" font-size="8.8" fill="#2f6f4f">· 产物经 VersionEdit 记录</text>
+  <text x="396" y="392" font-size="8.8" fill="#2f6f4f">· LogAndApply 写进 MANIFEST</text>
+  <text x="396" y="410" font-size="8.8" fill="#2f6f4f">· 原子换出新 SuperVersion</text>
+  <text x="396" y="432" font-size="8.5" fill="#12402a">→ 新 SST 对读可见(L0 加一个文件)</text>
+
+  <line x1="350" y1="150" x2="440" y2="210" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+  <line x1="730" y1="150" x2="640" y2="210" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+  <line x1="540" y1="280" x2="540" y2="330" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+
+  <!-- notes -->
+  <rect x="30" y="90" width="0" height="0"/>
+  <rect x="30" y="330" width="330" height="120" rx="12" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="46" y="352" font-size="10.5" font-weight="700" fill="#1d1d1f">"flush 完成"的语义</text>
+  <text x="46" y="374" font-size="8.5" fill="#6e6e73">= 这批数据已从易失内存</text>
+  <text x="46" y="392" font-size="8.5" fill="#6e6e73">  持久化到不可变 SST 文件</text>
+  <text x="46" y="410" font-size="8.5" fill="#6e6e73">= 崩溃后无需再靠 WAL 恢复它</text>
+  <text x="46" y="428" font-size="8.5" fill="#6e6e73">= 一个"检查点"式的持久边界</text>
+
+  <rect x="720" y="330" width="330" height="120" rx="12" fill="#faf4fb" stroke="#e2d2ee"/>
+  <text x="736" y="352" font-size="10.5" font-weight="700" fill="#5a3d78">为什么 WAL 删除要等所有 CF</text>
+  <text x="736" y="374" font-size="8.5" fill="#7a5a95">· 一个 WAL 段被多个 CF 共享</text>
+  <text x="736" y="392" font-size="8.5" fill="#7a5a95">  (共享 WAL,见 Column Family)</text>
+  <text x="736" y="410" font-size="8.5" fill="#7a5a95">· 只要有一个 CF 的相关 MemTable</text>
+  <text x="736" y="428" font-size="8.5" fill="#7a5a95">  没 flush,该 WAL 仍不能删</text>
+
+  <text x="46" y="474" font-size="8.5" fill="#a1a1a6">归属:Flush 是写侧后台产物,是【写入路径】【WAL】【版本】三主线的交汇点——理解它就理解了 LSM 内存到磁盘的持久化边界。</text>
+</svg>

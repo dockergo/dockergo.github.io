@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="420" viewBox="0 0 1020 420"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1020" height="420" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">TOAST 与辅助图 · 大值外存 + 空闲/可见性加速（heaptoast.h / FSM / VM）</text>
+
+  <!-- TOAST -->
+  <rect x="30" y="56" width="470" height="200" rx="14" fill="#f4eefb" stroke="#d9c9ef" filter="url(#soft)"/>
+  <text x="48" y="80" font-size="12.5" font-weight="600" fill="#3c1361">TOAST：超长字段搬出主表</text>
+  <text x="48" y="102" font-size="9.5" fill="#7a5aa8">tuple 不能跨页；超过 TOAST_TUPLE_THRESHOLD（约 2KB）触发</text>
+  <rect x="48" y="114" width="210" height="56" rx="9" fill="#ffffff" stroke="#d9c9ef"/><text x="153" y="136" font-size="9.5" font-weight="600" fill="#3c1361" text-anchor="middle">压缩</text><text x="153" y="154" font-size="8.5" fill="#7a5aa8" text-anchor="middle">先尝试行内压缩</text>
+  <rect x="270" y="114" width="212" height="56" rx="9" fill="#ffffff" stroke="#d9c9ef"/><text x="376" y="136" font-size="9.5" font-weight="600" fill="#3c1361" text-anchor="middle">切块外存</text><text x="376" y="154" font-size="8.5" fill="#7a5aa8" text-anchor="middle">存到该表的 TOAST 附表</text>
+  <line x1="258" y1="142" x2="270" y2="142" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <text x="48" y="192" font-size="9.5" fill="#7a5aa8">主表 tuple 只留一个指针，读时按需取回——</text>
+  <text x="48" y="210" font-size="9.5" fill="#7a5aa8">让宽表主页保持紧凑、扫描快（不碰大字段就不读它）。</text>
+  <text x="48" y="234" font-size="9" fill="#a58fc9">"The Oversized-Attribute Storage Technique"</text>
+
+  <!-- FSM + VM -->
+  <rect x="520" y="56" width="470" height="200" rx="14" fill="#eafaf1" stroke="#bce6cd" filter="url(#soft)"/>
+  <text x="538" y="80" font-size="12.5" font-weight="600" fill="#0f5132">两张辅助图（每表附带）</text>
+  <rect x="538" y="96" width="434" height="70" rx="9" fill="#ffffff" stroke="#bce6cd"/><text x="554" y="118" font-size="10" font-weight="600" fill="#0f5132">FSM · Free Space Map</text><text x="554" y="138" font-size="9" fill="#3f8f66">记录每页剩多少空闲空间</text><text x="554" y="156" font-size="8.5" fill="#3f8f66">INSERT/UPDATE 快速找"能放下新行"的页，免全扫</text>
+  <rect x="538" y="174" width="434" height="70" rx="9" fill="#ffffff" stroke="#bce6cd"/><text x="554" y="196" font-size="10" font-weight="600" fill="#0f5132">VM · Visibility Map</text><text x="554" y="216" font-size="9" fill="#3f8f66">标记"整页对所有事务都可见/全冻结"</text><text x="554" y="234" font-size="8.5" fill="#3f8f66">支撑 Index-Only Scan 免回表；加速 VACUUM 跳过干净页</text>
+
+  <!-- 关系 -->
+  <rect x="30" y="276" width="960" height="128" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="48" y="300" font-size="12.5" font-weight="600" fill="#1d1d1f">一张表在磁盘上的组成（relation forks）</text>
+  <rect x="48" y="316" width="220" height="56" rx="9" fill="#fff7e6" stroke="#f0dcae"/><text x="158" y="338" font-size="9.5" font-weight="600" fill="#7a4d00" text-anchor="middle">主数据文件（heap）</text><text x="158" y="356" font-size="8.5" fill="#9a7328" text-anchor="middle">8KB page × N</text>
+  <rect x="284" y="316" width="220" height="56" rx="9" fill="#eafaf1" stroke="#bce6cd"/><text x="394" y="338" font-size="9.5" font-weight="600" fill="#0f5132" text-anchor="middle">_fsm（空闲空间图）</text>
+  <rect x="520" y="316" width="220" height="56" rx="9" fill="#eafaf1" stroke="#bce6cd"/><text x="630" y="338" font-size="9.5" font-weight="600" fill="#0f5132" text-anchor="middle">_vm（可见性图）</text>
+  <rect x="756" y="316" width="216" height="56" rx="9" fill="#f4eefb" stroke="#d9c9ef"/><text x="864" y="338" font-size="9.5" font-weight="600" fill="#3c1361" text-anchor="middle">TOAST 附表（如有大值）</text>
+  <text x="48" y="394" font-size="9" fill="#86868b">加上各索引的独立文件，构成一张表的完整物理存储</text>
+</svg>

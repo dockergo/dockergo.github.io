@@ -1,0 +1,118 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="560" viewBox="0 0 1080 560" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#8fbf9f"/></marker>
+    <marker id="arb" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#5b7db1"/></marker>
+  </defs>
+  <rect width="1080" height="560" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Milvus 向量索引结构 · HNSW 分层图 与 IVF 倒排聚类（knowhere 第三方 ANN 库）</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">两族主流 ANN 索引的内部结构：HNSW 靠分层小世界图逐层贪心下降，IVF 靠粗量化把向量分簇、查询只扫 nprobe 个最近簇——都是"少比距离、近对数级"换速度</text>
+  <!-- legend -->
+  <g font-size="9" fill="#6e6e73">
+    <circle cx="720" cy="44" r="5" fill="#eafaf1" stroke="#7bbf96"/><text x="730" y="47">向量 / 图节点</text>
+    <circle cx="838" cy="44" r="5" fill="#d9ecf8" stroke="#5b7db1"/><text x="848" y="47">查询向量</text>
+    <line x1="928" y1="44" x2="950" y2="44" stroke="#2f9e63" stroke-width="2"/><text x="956" y="47">贪心检索路径</text>
+  </g>
+
+  <!-- ============ HNSW panel ============ -->
+  <rect x="30" y="70" width="500" height="410" rx="14" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="50" y="94" font-size="12" font-weight="700" fill="#12402a">HNSW · 分层小世界图（Hierarchical NSW）</text>
+  <text x="50" y="111" font-size="8.5" fill="#2f6f4f">入口在顶层，每层贪心走到局部最近点后下沉，L0 全量层做 ef 邻域精搜 → topK</text>
+
+  <!-- Layer 2 (top, sparse) -->
+  <rect x="46" y="124" width="468" height="86" rx="9" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="58" y="141" font-size="9" font-weight="600" fill="#12402a">Layer 2（稀疏 · 长跳）</text>
+  <line x1="120" y1="178" x2="250" y2="170" stroke="#a9d3ba" stroke-width="1.2"/>
+  <line x1="250" y1="170" x2="410" y2="182" stroke="#a9d3ba" stroke-width="1.2"/>
+  <circle cx="120" cy="178" r="8" fill="#eafaf1" stroke="#2f9e63" stroke-width="2"/>
+  <text x="120" y="181" font-size="7.5" text-anchor="middle" fill="#12402a">入口</text>
+  <circle cx="250" cy="170" r="7" fill="#eafaf1" stroke="#7bbf96"/>
+  <circle cx="410" cy="182" r="7" fill="#eafaf1" stroke="#7bbf96"/>
+
+  <!-- Layer 1 (medium) -->
+  <rect x="46" y="218" width="468" height="94" rx="9" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="58" y="235" font-size="9" font-weight="600" fill="#12402a">Layer 1（中密）</text>
+  <line x1="140" y1="278" x2="250" y2="270" stroke="#a9d3ba" stroke-width="1.1"/>
+  <line x1="250" y1="270" x2="360" y2="288" stroke="#a9d3ba" stroke-width="1.1"/>
+  <line x1="360" y1="288" x2="450" y2="272" stroke="#a9d3ba" stroke-width="1.1"/>
+  <line x1="140" y1="278" x2="200" y2="292" stroke="#a9d3ba" stroke-width="1.1"/>
+  <circle cx="140" cy="278" r="7" fill="#eafaf1" stroke="#7bbf96"/>
+  <circle cx="250" cy="270" r="8" fill="#eafaf1" stroke="#2f9e63" stroke-width="2"/>
+  <circle cx="360" cy="288" r="7" fill="#eafaf1" stroke="#7bbf96"/>
+  <circle cx="450" cy="272" r="7" fill="#eafaf1" stroke="#7bbf96"/>
+  <circle cx="200" cy="292" r="7" fill="#eafaf1" stroke="#7bbf96"/>
+
+  <!-- Layer 0 (dense, all points) -->
+  <rect x="46" y="320" width="468" height="106" rx="9" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="58" y="337" font-size="9" font-weight="600" fill="#12402a">Layer 0（全量 · ef 邻域精搜 → topK）</text>
+  <line x1="110" y1="392" x2="180" y2="376" stroke="#a9d3ba" stroke-width="1"/>
+  <line x1="180" y1="376" x2="250" y2="398" stroke="#a9d3ba" stroke-width="1"/>
+  <line x1="250" y1="398" x2="330" y2="378" stroke="#a9d3ba" stroke-width="1"/>
+  <line x1="330" y1="378" x2="400" y2="400" stroke="#a9d3ba" stroke-width="1"/>
+  <line x1="400" y1="400" x2="470" y2="380" stroke="#a9d3ba" stroke-width="1"/>
+  <line x1="180" y1="376" x2="250" y2="360" stroke="#a9d3ba" stroke-width="1"/>
+  <line x1="330" y1="378" x2="290" y2="360" stroke="#a9d3ba" stroke-width="1"/>
+  <circle cx="110" cy="392" r="6" fill="#eafaf1" stroke="#7bbf96"/>
+  <circle cx="180" cy="376" r="6" fill="#eafaf1" stroke="#7bbf96"/>
+  <circle cx="250" cy="398" r="6" fill="#eafaf1" stroke="#7bbf96"/>
+  <circle cx="250" cy="360" r="6" fill="#eafaf1" stroke="#7bbf96"/>
+  <circle cx="290" cy="360" r="6" fill="#eafaf1" stroke="#7bbf96"/>
+  <circle cx="330" cy="378" r="8" fill="#d9f0e1" stroke="#2f9e63" stroke-width="2"/>
+  <text x="330" y="381" font-size="7" text-anchor="middle" fill="#12402a">近</text>
+  <circle cx="400" cy="400" r="6" fill="#eafaf1" stroke="#7bbf96"/>
+  <circle cx="470" cy="380" r="6" fill="#eafaf1" stroke="#7bbf96"/>
+
+  <!-- descent path (greedy) -->
+  <path d="M120,178 L250,270" stroke="#2f9e63" stroke-width="2" fill="none" marker-end="url(#ar)"/>
+  <path d="M250,270 L330,378" stroke="#2f9e63" stroke-width="2" fill="none" marker-end="url(#ar)"/>
+  <text x="58" y="448" font-size="8" fill="#2f6f4f">调优：M（每点连边数）· efConstruction / ef（候选宽度）越大越准越慢</text>
+
+  <!-- ============ IVF panel ============ -->
+  <rect x="548" y="70" width="502" height="410" rx="14" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="568" y="94" font-size="12" font-weight="700" fill="#12402a">IVF · 倒排聚类（Inverted File）</text>
+  <text x="568" y="111" font-size="8.5" fill="#2f6f4f">建索引时 k-means 把向量分成 nlist 个簇（各有质心）；查询只找 nprobe 个最近质心、只扫这些簇的倒排链</text>
+
+  <!-- query vector -->
+  <rect x="568" y="126" width="150" height="44" rx="9" fill="#d9ecf8" stroke="#5b7db1"/>
+  <text x="643" y="146" font-size="10" font-weight="600" fill="#1b3a63" text-anchor="middle">查询向量 q</text>
+  <text x="643" y="161" font-size="8" fill="#3d6091" text-anchor="middle">先比 nlist 个质心</text>
+
+  <!-- centroids grid: 6 clusters, 2 selected -->
+  <!-- selected cluster A -->
+  <circle cx="800" cy="210" r="34" fill="#d9f0e1" stroke="#2f9e63" stroke-width="2"/>
+  <circle cx="800" cy="210" r="4" fill="#2f9e63"/>
+  <circle cx="788" cy="200" r="3" fill="#7bbf96"/><circle cx="812" cy="204" r="3" fill="#7bbf96"/><circle cx="796" cy="222" r="3" fill="#7bbf96"/><circle cx="814" cy="220" r="3" fill="#7bbf96"/>
+  <text x="800" y="258" font-size="8" text-anchor="middle" fill="#12402a">簇①(命中)</text>
+  <!-- selected cluster B -->
+  <circle cx="930" cy="230" r="30" fill="#d9f0e1" stroke="#2f9e63" stroke-width="2"/>
+  <circle cx="930" cy="230" r="4" fill="#2f9e63"/>
+  <circle cx="920" cy="222" r="3" fill="#7bbf96"/><circle cx="940" cy="224" r="3" fill="#7bbf96"/><circle cx="926" cy="242" r="3" fill="#7bbf96"/>
+  <text x="930" y="272" font-size="8" text-anchor="middle" fill="#12402a">簇②(命中)</text>
+  <!-- unselected clusters (dimmed) -->
+  <circle cx="640" cy="250" r="28" fill="#eafaf1" stroke="#cfe0d4"/><circle cx="640" cy="250" r="3.5" fill="#a9d3ba"/>
+  <circle cx="630" cy="243" r="2.6" fill="#cfe0d4"/><circle cx="650" cy="245" r="2.6" fill="#cfe0d4"/><circle cx="644" cy="262" r="2.6" fill="#cfe0d4"/>
+  <text x="640" y="290" font-size="8" text-anchor="middle" fill="#8aa596">跳过</text>
+  <circle cx="700" cy="340" r="26" fill="#eafaf1" stroke="#cfe0d4"/><circle cx="700" cy="340" r="3.5" fill="#a9d3ba"/>
+  <circle cx="690" cy="334" r="2.6" fill="#cfe0d4"/><circle cx="710" cy="336" r="2.6" fill="#cfe0d4"/>
+  <text x="700" y="378" font-size="8" text-anchor="middle" fill="#8aa596">跳过</text>
+  <circle cx="850" cy="350" r="27" fill="#eafaf1" stroke="#cfe0d4"/><circle cx="850" cy="350" r="3.5" fill="#a9d3ba"/>
+  <circle cx="840" cy="344" r="2.6" fill="#cfe0d4"/><circle cx="862" cy="346" r="2.6" fill="#cfe0d4"/>
+  <text x="850" y="390" font-size="8" text-anchor="middle" fill="#8aa596">跳过</text>
+  <circle cx="970" cy="340" r="24" fill="#eafaf1" stroke="#cfe0d4"/><circle cx="970" cy="340" r="3.5" fill="#a9d3ba"/>
+  <text x="970" y="376" font-size="8" text-anchor="middle" fill="#8aa596">跳过</text>
+
+  <!-- q → nprobe selected -->
+  <path d="M700,158 C760,175 775,190 790,196" stroke="#5b7db1" stroke-width="1.8" fill="none" marker-end="url(#arb)"/>
+  <path d="M710,160 C820,175 890,200 918,214" stroke="#5b7db1" stroke-width="1.8" fill="none" marker-end="url(#arb)"/>
+  <text x="720" y="188" font-size="8" fill="#3d6091">nprobe=2 → 只扫命中簇</text>
+
+  <!-- result band -->
+  <rect x="568" y="408" width="466" height="56" rx="10" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="582" y="430" font-size="9.5" font-weight="700" fill="#12402a">在 nprobe 个命中簇内逐一比距离 → 合并取 topK</text>
+  <text x="582" y="448" font-size="8" fill="#2f6f4f">调优：nlist 越大簇越细、nprobe 越大越准越慢；PQ/SQ 量化压向量省内存（略损精度）</text>
+
+  <!-- bottom insight -->
+  <rect x="30" y="492" width="1020" height="56" rx="12" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="46" y="514" font-size="10" font-weight="700" fill="#1d1d1f">要点</text>
+  <text x="46" y="533" font-size="8.8" fill="#6e6e73">两族都把"和全库逐一比距离"降成"只比一小部分"：HNSW 靠图的长跳+贪心把跳数降到近对数级；IVF 靠粗量化把候选缩到 nprobe/nlist。度量 L2/IP/COSINE 须与 embedding 训练一致，否则召回全乱。索引在 knowhere（第三方库），Milvus core 只做集成/分发。</text>
+</svg>

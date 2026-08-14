@@ -1,0 +1,121 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="600" viewBox="0 0 1040 600" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="s2" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="ap" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#8a5cae"/></marker>
+    <marker id="ab" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#5b7db1"/></marker>
+    <marker id="ag" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+    <marker id="ao" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#d38236"/></marker>
+  </defs>
+  <rect width="1040" height="600" fill="#fbfbfd"/>
+  <text x="24" y="30" font-size="14" font-weight="700" fill="#1d1d1f">全局 safepoint · 状态机与到点—停顿—释放时间线</text>
+  <text x="24" y="49" font-size="10" fill="#6e6e73">VMThread 武装每线程 poll → 各 Java 线程在轮询点自愿 block 到 _wait_barrier → 全体到达进入 STW 执行 VM 操作 → 统一 disarm 唤醒。native 线程天然安全、被跳过。</text>
+
+  <!-- 状态机 -->
+  <rect x="24" y="64" width="992" height="92" rx="12" fill="#f4eefb" stroke="#d9c9ef"/>
+  <text x="40" y="84" font-size="11" font-weight="600" fill="#6f3ea8">SynchronizeState 三态机 · SafepointSynchronize::_state（safepoint.hpp:64）</text>
+  <g text-anchor="middle">
+    <rect x="64" y="98" width="230" height="46" rx="9" fill="#fff" stroke="#d9c9ef" filter="url(#s2)"/>
+    <text x="179" y="118" font-size="10.5" font-weight="600" fill="#5b3a86">_not_synchronized = 0</text><text x="179" y="135" font-size="8" fill="#6e6e73">世界运转 · counter 为偶数</text>
+    <rect x="404" y="98" width="230" height="46" rx="9" fill="#fbf7ef" stroke="#ecdcbf" filter="url(#s2)"/>
+    <text x="519" y="118" font-size="10.5" font-weight="600" fill="#8a5a1a">_synchronizing = 1</text><text x="519" y="135" font-size="8" fill="#6e6e73">收拢中 · 等最慢线程到点</text>
+    <rect x="744" y="98" width="230" height="46" rx="9" fill="#f5faf6" stroke="#cfe6d2" filter="url(#s2)"/>
+    <text x="859" y="118" font-size="10.5" font-weight="600" fill="#1c6b45">_synchronized = 2</text><text x="859" y="135" font-size="8" fill="#6e6e73">STW · VM 独占 · counter 为奇数</text>
+  </g>
+  <line x1="294" y1="121" x2="404" y2="121" stroke="#8a5cae" stroke-width="1.6" marker-end="url(#ap)"/>
+  <text x="349" y="114" font-size="8" fill="#8a5cae" text-anchor="middle">arm_safepoint</text>
+  <line x1="634" y1="121" x2="744" y2="121" stroke="#2f9e6e" stroke-width="1.6" marker-end="url(#ag)"/>
+  <text x="689" y="114" font-size="8" fill="#2f9e6e" text-anchor="middle">全体 block 后</text>
+  <path d="M859,144 L859,150 L179,150 L179,144" fill="none" stroke="#2f9e6e" stroke-width="1.4" stroke-dasharray="5 3" marker-end="url(#ag)"/>
+  <text x="519" y="150" font-size="8" fill="#2f9e6e" text-anchor="middle">disarm_safepoint / end → 回到运转</text>
+
+  <!-- 时间线 -->
+  <text x="24" y="180" font-size="11" font-weight="600" fill="#1d1d1f">到点时间线（横轴 = 时间；纵轴 = 线程泳道）</text>
+
+  <!-- 阶段列底纹 -->
+  <rect x="150" y="190" width="173" height="352" fill="#f7f2fb"/>
+  <rect x="496" y="190" width="346" height="352" fill="#fdf6ee"/>
+  <rect x="150" y="190" width="866" height="26" fill="#eef0f4"/>
+  <g text-anchor="middle" font-size="9" font-weight="600" fill="#3a3a3c">
+    <text x="236" y="207">① arm 武装 poll</text>
+    <text x="409" y="207">② synchronize 等到点</text>
+    <text x="582" y="207">③ 全体到达 STW</text>
+    <text x="755" y="207">④ 执行 VM 操作</text>
+    <text x="928" y="207">⑤ disarm 释放</text>
+  </g>
+  <!-- 阶段分隔竖线 -->
+  <g stroke="#dcdce2" stroke-width="1">
+    <line x1="323" y1="216" x2="323" y2="542"/><line x1="496" y1="216" x2="496" y2="542"/><line x1="669" y1="216" x2="669" y2="542"/><line x1="842" y1="216" x2="842" y2="542"/>
+  </g>
+  <text x="669" y="230" font-size="8.5" font-weight="600" fill="#d38236" text-anchor="middle">◄──────  STW 停顿窗口 = TTSP + VM 操作耗时  ──────►</text>
+
+  <!-- 泳道标签 -->
+  <g font-size="9.5" font-weight="600" fill="#1d1d1f">
+    <text x="30" y="262">VMThread</text><text x="30" y="273" font-size="7.5" font-weight="400" fill="#9a9aa0">唯一驱动者</text>
+    <text x="30" y="322">T1 解释线程</text><text x="30" y="333" font-size="7.5" font-weight="400" fill="#9a9aa0">_thread_in_Java</text>
+    <text x="30" y="382">T2 编译线程</text><text x="30" y="393" font-size="7.5" font-weight="400" fill="#9a9aa0">JIT 轮询页</text>
+    <text x="30" y="442">T3 native 线程</text><text x="30" y="453" font-size="7.5" font-weight="400" fill="#9a9aa0">_thread_in_native</text>
+  </g>
+  <g stroke="#e2e2e7" stroke-width="1">
+    <line x1="150" y1="288" x2="1016" y2="288"/><line x1="150" y1="348" x2="1016" y2="348"/><line x1="150" y1="408" x2="1016" y2="408"/><line x1="150" y1="468" x2="1016" y2="468"/>
+  </g>
+
+  <!-- VMThread 泳道 -->
+  <g text-anchor="middle">
+    <rect x="158" y="240" width="156" height="40" rx="8" fill="#f4eefb" stroke="#d9c9ef" filter="url(#s2)"/>
+    <text x="236" y="257" font-size="9" font-weight="600" fill="#6f3ea8">arm_safepoint()</text><text x="236" y="271" font-size="7.5" fill="#6e6e73">arm 各线程本地 poll</text>
+    <rect x="331" y="240" width="156" height="40" rx="8" fill="#f4eefb" stroke="#d9c9ef" filter="url(#s2)"/>
+    <text x="409" y="257" font-size="9" font-weight="600" fill="#6f3ea8">synchronize_threads()</text><text x="409" y="271" font-size="7.5" fill="#6e6e73">自旋等待未到点线程</text>
+    <rect x="504" y="240" width="156" height="40" rx="8" fill="#f5faf6" stroke="#cfe6d2" filter="url(#s2)"/>
+    <text x="582" y="257" font-size="9" font-weight="600" fill="#1c6b45">_state=_synchronized</text><text x="582" y="271" font-size="7.5" fill="#6e6e73">记录 safepoint_id</text>
+    <rect x="677" y="240" width="156" height="40" rx="8" fill="#f4eefb" stroke="#d9c9ef" filter="url(#s2)"/>
+    <text x="755" y="257" font-size="9" font-weight="600" fill="#6f3ea8">VM 操作</text><text x="755" y="271" font-size="7.5" fill="#6e6e73">GC 扫描 / 去优化 / 撤锁</text>
+    <rect x="850" y="240" width="158" height="40" rx="8" fill="#f5faf6" stroke="#cfe6d2" filter="url(#s2)"/>
+    <text x="929" y="257" font-size="9" font-weight="600" fill="#1c6b45">disarm_safepoint()</text><text x="929" y="271" font-size="7.5" fill="#6e6e73">_wait_barrier-&gt;disarm</text>
+  </g>
+  <line x1="314" y1="260" x2="331" y2="260" stroke="#8a5cae" stroke-width="1.4" marker-end="url(#ap)"/>
+  <line x1="487" y1="260" x2="504" y2="260" stroke="#2f9e6e" stroke-width="1.4" marker-end="url(#ag)"/>
+  <line x1="660" y1="260" x2="677" y2="260" stroke="#8a5cae" stroke-width="1.4" marker-end="url(#ap)"/>
+  <line x1="833" y1="260" x2="850" y2="260" stroke="#2f9e6e" stroke-width="1.4" marker-end="url(#ag)"/>
+
+  <!-- T1 解释线程 -->
+  <g text-anchor="middle">
+    <rect x="158" y="300" width="156" height="38" rx="8" fill="#fff" stroke="#e2e2e7" filter="url(#s2)"/>
+    <text x="236" y="316" font-size="9" font-weight="600" fill="#3a3a3c">执行字节码</text><text x="236" y="330" font-size="7.5" fill="#9a9aa0">分支/返回边界查 poll</text>
+    <rect x="331" y="300" width="156" height="38" rx="8" fill="#fbf7ef" stroke="#ecdcbf" filter="url(#s2)"/>
+    <text x="409" y="316" font-size="9" font-weight="600" fill="#8a5a1a">命中 poll → block()</text><text x="409" y="330" font-size="7.5" fill="#6e6e73">make_walkable</text>
+    <rect x="504" y="300" width="329" height="38" rx="8" fill="#fbf7ef" stroke="#ecdcbf" filter="url(#s2)"/>
+    <text x="668" y="316" font-size="9" font-weight="600" fill="#8a5a1a">_thread_blocked · wait on _wait_barrier</text><text x="668" y="330" font-size="7.5" fill="#6e6e73">set_thread_state_fence(_thread_blocked)</text>
+    <rect x="850" y="300" width="158" height="38" rx="8" fill="#f5faf6" stroke="#cfe6d2" filter="url(#s2)"/>
+    <text x="929" y="316" font-size="9" font-weight="600" fill="#1c6b45">被唤醒 · 恢复</text><text x="929" y="330" font-size="7.5" fill="#6e6e73">回原状态继续跑</text>
+  </g>
+  <line x1="314" y1="319" x2="331" y2="319" stroke="#d38236" stroke-width="1.4" marker-end="url(#ao)"/>
+  <line x1="842" y1="319" x2="850" y2="319" stroke="#2f9e6e" stroke-width="1.4" marker-end="url(#ag)"/>
+
+  <!-- T2 编译线程 -->
+  <g text-anchor="middle">
+    <rect x="158" y="360" width="156" height="38" rx="8" fill="#fff" stroke="#e2e2e7" filter="url(#s2)"/>
+    <text x="236" y="376" font-size="9" font-weight="600" fill="#3a3a3c">执行编译码</text><text x="236" y="390" font-size="7.5" fill="#9a9aa0">返回/回边读轮询页</text>
+    <rect x="331" y="360" width="156" height="38" rx="8" fill="#fbf7ef" stroke="#ecdcbf" filter="url(#s2)"/>
+    <text x="409" y="376" font-size="9" font-weight="600" fill="#8a5a1a">读页缺页陷阱</text><text x="409" y="390" font-size="7.5" fill="#6e6e73">信号 → 导入 block()</text>
+    <rect x="504" y="360" width="329" height="38" rx="8" fill="#fbf7ef" stroke="#ecdcbf" filter="url(#s2)"/>
+    <text x="668" y="376" font-size="9" font-weight="600" fill="#8a5a1a">_thread_blocked · wait on _wait_barrier</text><text x="668" y="390" font-size="7.5" fill="#6e6e73">正常路径零开销，需停时才陷入</text>
+    <rect x="850" y="360" width="158" height="38" rx="8" fill="#f5faf6" stroke="#cfe6d2" filter="url(#s2)"/>
+    <text x="929" y="376" font-size="9" font-weight="600" fill="#1c6b45">被唤醒 · 恢复</text><text x="929" y="390" font-size="7.5" fill="#6e6e73">disarm 后 wait 返回</text>
+  </g>
+  <line x1="314" y1="379" x2="331" y2="379" stroke="#d38236" stroke-width="1.4" marker-end="url(#ao)"/>
+  <line x1="842" y1="379" x2="850" y2="379" stroke="#2f9e6e" stroke-width="1.4" marker-end="url(#ag)"/>
+
+  <!-- T3 native 线程 -->
+  <g text-anchor="middle">
+    <rect x="158" y="420" width="675" height="38" rx="8" fill="#f6f8fc" stroke="#cfe0f2" filter="url(#s2)"/>
+    <text x="495" y="436" font-size="9" font-weight="600" fill="#3a5a8a">跑在 native · VMThread 直接跳过，全程不停（栈已"安全"，只持句柄不碰裸 oop）</text><text x="495" y="450" font-size="7.5" fill="#6e6e73">VMThread 见 _thread_in_native 即不等它</text>
+    <rect x="850" y="420" width="158" height="38" rx="8" fill="#fbf7ef" stroke="#ecdcbf" filter="url(#s2)"/>
+    <text x="929" y="436" font-size="9" font-weight="600" fill="#8a5a1a">返回 Java 时受检</text><text x="929" y="450" font-size="7.5" fill="#6e6e73">若仍 STW 则就地 block</text>
+  </g>
+  <line x1="833" y1="439" x2="850" y2="439" stroke="#d38236" stroke-width="1.4" marker-end="url(#ao)"/>
+
+  <!-- 底部注释 -->
+  <rect x="24" y="552" width="992" height="40" rx="10" fill="#f6f8fc" stroke="#cfe0f2"/>
+  <text x="40" y="569" font-size="8.5" fill="#3a3a3c"><tspan font-weight="600">TTSP（time-to-safepoint）</tspan> = 从武装 poll 到最后一个线程 block 的墙钟时间；若存在无回边 poll 的超长循环，TTSP 会拖长——表现为"GC 很快、停顿却久"。</text>
+  <text x="40" y="584" font-size="8.5" fill="#3a3a3c"><tspan font-weight="600">counter 奇偶</tspan>：偶=无操作、奇=进行中，jni 快路径据此判断；诊断用 -Xlog:safepoint 与 -XX:+SafepointTimeout。</text>
+</svg>

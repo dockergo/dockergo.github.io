@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="500" viewBox="0 0 1000 500" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1000" height="500" fill="#fbfbfd"/>
+
+  <!-- ① Physical Plan -->
+  <rect x="24" y="24" width="952" height="86" rx="14" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="42" y="46" font-size="13" font-weight="600" fill="#1d1d1f">① Physical Plan · 算子树</text>
+  <g text-anchor="middle" font-size="11.5" fill="#1b2a4a">
+    <rect x="120" y="58" width="130" height="34" rx="9" fill="#eef3fb" stroke="#bcd0ec"/><text x="185" y="79">OlapScan</text>
+    <rect x="290" y="58" width="130" height="34" rx="9" fill="#eef3fb" stroke="#bcd0ec"/><text x="355" y="79">HashJoin</text>
+    <rect x="460" y="58" width="130" height="34" rx="9" fill="#eef3fb" stroke="#bcd0ec"/><text x="525" y="79">Aggregate</text>
+    <rect x="630" y="58" width="130" height="34" rx="9" fill="#eef3fb" stroke="#bcd0ec"/><text x="695" y="79">Sort</text>
+    <rect x="800" y="58" width="130" height="34" rx="9" fill="#eef3fb" stroke="#bcd0ec"/><text x="865" y="79">ResultSink</text>
+  </g>
+  <g stroke="#c7c7cc" stroke-width="1.3" fill="none">
+    <line x1="250" y1="75" x2="290" y2="75" marker-end="url(#ar)"/><line x1="420" y1="75" x2="460" y2="75" marker-end="url(#ar)"/><line x1="590" y1="75" x2="630" y2="75" marker-end="url(#ar)"/><line x1="760" y1="75" x2="800" y2="75" marker-end="url(#ar)"/>
+  </g>
+  <line x1="500" y1="110" x2="500" y2="128" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/><text x="512" y="124" font-size="10" fill="#a1a1a6">在 Exchange 处切</text>
+
+  <!-- ② Fragment -->
+  <rect x="24" y="130" width="952" height="92" rx="14" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="42" y="152" font-size="13" font-weight="600" fill="#1d1d1f">② Fragment（在 Exchange 处切 · 跨节点分发单位）</text>
+  <g text-anchor="middle">
+    <rect x="70" y="164" width="230" height="46" rx="11" fill="#f5faf6" stroke="#e2ece5"/><text x="185" y="184" font-size="12" font-weight="600" fill="#2c5a3a">F0</text><text x="185" y="201" font-size="10" fill="#86868b">OlapScan（叶子·读 Tablet）</text>
+    <rect x="385" y="164" width="230" height="46" rx="11" fill="#f5faf6" stroke="#e2ece5"/><text x="500" y="184" font-size="12" font-weight="600" fill="#2c5a3a">F1</text><text x="500" y="201" font-size="10" fill="#86868b">HashJoin + Aggregate</text>
+    <rect x="700" y="164" width="230" height="46" rx="11" fill="#f5faf6" stroke="#e2ece5"/><text x="815" y="184" font-size="12" font-weight="600" fill="#2c5a3a">F2</text><text x="815" y="201" font-size="10" fill="#86868b">Sort + ResultSink（顶层汇聚）</text>
+  </g>
+  <g stroke="#c7c7cc" stroke-width="1.4" fill="none">
+    <line x1="300" y1="187" x2="385" y2="187" marker-end="url(#ar)"/><line x1="615" y1="187" x2="700" y2="187" marker-end="url(#ar)"/>
+  </g>
+  <text x="342" y="180" font-size="9" fill="#a1a1a6" text-anchor="middle">Exchange</text><text x="657" y="180" font-size="9" fill="#a1a1a6" text-anchor="middle">Exchange</text>
+  <line x1="500" y1="222" x2="500" y2="240" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/><text x="512" y="236" font-size="10" fill="#a1a1a6">F1 在 Breaker 处切</text>
+
+  <!-- ③ Pipeline -->
+  <rect x="24" y="242" width="952" height="98" rx="14" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="42" y="264" font-size="13" font-weight="600" fill="#1d1d1f">③ Pipeline（在 Breaker 处切 · 节点内调度单位）— 以 F1 为例</text>
+  <g text-anchor="middle">
+    <rect x="70" y="278" width="360" height="52" rx="11" fill="#eef3fb" stroke="#bcd0ec"/><text x="250" y="298" font-size="11.5" font-weight="600" fill="#274a78">Pipeline A</text><text x="250" y="316" font-size="10" fill="#5b7db1">Exchange Source ▸ Join Build（Breaker ★）</text>
+    <rect x="560" y="278" width="360" height="52" rx="11" fill="#eef3fb" stroke="#bcd0ec"/><text x="740" y="298" font-size="11.5" font-weight="600" fill="#274a78">Pipeline B</text><text x="740" y="316" font-size="10" fill="#5b7db1">Join Probe ▸ Agg ▸ Exchange Sink</text>
+  </g>
+  <path d="M430,304 L560,304" stroke="#c7c7cc" stroke-width="1.4" fill="none" stroke-dasharray="4 3" marker-end="url(#ar)"/>
+  <text x="495" y="297" font-size="9" fill="#a1a1a6" text-anchor="middle">依赖：Build 收齐才启动</text>
+  <line x1="500" y1="340" x2="500" y2="358" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/><text x="512" y="354" font-size="10" fill="#a1a1a6">实例化 ×DOP</text>
+
+  <!-- ④ Operator + DOP -->
+  <rect x="24" y="360" width="952" height="118" rx="14" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="42" y="382" font-size="13" font-weight="600" fill="#1d1d1f">④ Operator + 并行实例（每 Pipeline 实例化为 ×DOP 个 PipelineTask，算子间传向量化 Block）</text>
+  <g font-size="10.5" text-anchor="middle">
+    <rect x="70" y="396" width="820" height="24" rx="7" fill="#f0f4f9" stroke="#dfe6ef"/><text x="480" y="412" fill="#5a6472">实例 #1： Source ▸ 中间算子(Join/Agg) ▸ Sink</text>
+    <rect x="70" y="424" width="820" height="24" rx="7" fill="#f4f6fa" stroke="#e6ebf1"/><text x="480" y="440" fill="#8a93a1">实例 #2 … 同构并行</text>
+    <rect x="70" y="452" width="820" height="18" rx="6" fill="#f7f8fb" stroke="#eceef2"/><text x="480" y="465" fill="#a6adb8">实例 #DOP …（受并行度控制）</text>
+  </g>
+</svg>

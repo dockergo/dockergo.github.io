@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1140" height="660" viewBox="0 0 1140 660" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+  </defs>
+  <rect width="1140" height="660" fill="#fbfbfd"/>
+
+  <text x="30" y="32" font-size="15" font-weight="700" fill="#1d1d1f">缓存实现取舍对比 · nginx proxy_cache vs InnoDB Buffer Pool —— 都叫缓存，但一个挡在系统前面，一个活在系统内部</text>
+  <text x="30" y="53" font-size="10.5" fill="#6e6e73">同一个「缓存」词，两种完全不同的角色定位；下表按 4 个维度横向对照</text>
+
+  <!-- 列头 -->
+  <rect x="30" y="72" width="220" height="40" rx="9" fill="#eef0f3" stroke="#e4e7ec"/>
+  <text x="140" y="97" font-size="12" font-weight="700" fill="#4a4a4f" text-anchor="middle">对比维度</text>
+  <rect x="262" y="72" width="410" height="40" rx="9" fill="#e4f4f4" stroke="#bfe1e1"/>
+  <text x="467" y="97" font-size="12.5" font-weight="800" fill="#1d6b6e" text-anchor="middle">nginx proxy_cache</text>
+  <rect x="684" y="72" width="426" height="40" rx="9" fill="#fbeee2" stroke="#ecc6a8"/>
+  <text x="897" y="97" font-size="12.5" font-weight="800" fill="#9a5f1c" text-anchor="middle">InnoDB Buffer Pool</text>
+
+  <!-- 行1 读路径命中/未命中处理 -->
+  <rect x="30" y="120" width="220" height="112" rx="9" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="46" y="150" font-size="11.5" font-weight="700" fill="#1d1d1f">① 读路径命中/</text>
+  <text x="46" y="168" font-size="11.5" font-weight="700" fill="#1d1d1f">未命中处理</text>
+  <text x="46" y="190" font-size="9" fill="#8a97ab">未命中时怎么办、</text>
+  <text x="46" y="204" font-size="9" fill="#8a97ab">数据从哪来</text>
+  <rect x="262" y="120" width="410" height="112" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="278" y="146" font-size="10" font-weight="700" fill="#1d6b6e">MISS → 回源 → 落盘填充</text>
+  <text x="278" y="166" font-size="9.5" fill="#4a4a4f">未命中转发给 upstream 源站，拿到响应后用</text>
+  <text x="278" y="182" font-size="9.5" fill="#4a4a4f"><tspan font-family="'SF Mono',ui-monospace,Menlo,monospace">ngx_http_file_cache_new/_update</tspan> 落盘填充。</text>
+  <text x="278" y="202" font-size="9" fill="#4a8a8c">这就是 cache-aside 读路径（deepwiki 官方口径）。</text>
+  <rect x="684" y="120" width="426" height="112" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="700" y="146" font-size="10" font-weight="700" fill="#9a5f1c">没有「回源」概念，只有「读入」</text>
+  <text x="700" y="166" font-size="9.5" fill="#4a4a4f">页不在内存不是「过期」而是「还没读入」；读入后按</text>
+  <text x="700" y="182" font-size="9.5" fill="#4a4a4f">midpoint insertion 插入 LRU 链表中点，观察后决定去留。</text>
+  <text x="700" y="202" font-size="9" fill="#b0854a">源头是自己管理的表空间，不是外部系统。</text>
+
+  <!-- 行2 写后何时可见新值 -->
+  <rect x="30" y="236" width="220" height="112" rx="9" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="46" y="266" font-size="11.5" font-weight="700" fill="#1d1d1f">② 写后何时</text>
+  <text x="46" y="284" font-size="11.5" font-weight="700" fill="#1d1d1f">可见新值</text>
+  <text x="46" y="306" font-size="9" fill="#8a97ab">源头数据变了，</text>
+  <text x="46" y="320" font-size="9" fill="#8a97ab">缓存多久才跟上</text>
+  <rect x="262" y="236" width="410" height="112" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="278" y="262" font-size="10" font-weight="700" fill="#1d6b6e">对 upstream 内部写入完全不可见</text>
+  <text x="278" y="282" font-size="9.5" fill="#4a4a4f">源站数据变了，旧响应仍会被命中返回，直到该项</text>
+  <text x="278" y="298" font-size="9.5" fill="#4a4a4f">因淘汰失效、下次 MISS 重新回源才刷新——纯被动。</text>
+  <text x="278" y="318" font-size="9" fill="#4a8a8c">新鲜度窗口完全由淘汰节奏决定。</text>
+  <rect x="684" y="236" width="426" height="112" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="700" y="262" font-size="10" font-weight="700" fill="#9a5f1c">写入瞬间即体现在内存页</text>
+  <text x="700" y="282" font-size="9.5" fill="#4a4a4f">「新值可见」≈「事务提交」同一时刻；真正滞后的是</text>
+  <text x="700" y="298" font-size="9.5" fill="#4a4a4f">磁盘落地，只受 redo log 先落盘的 WAL 铁律约束。</text>
+  <text x="700" y="318" font-size="9" fill="#b0854a">脏页写回异步、与提交时机解耦。</text>
+
+  <!-- 行3 淘汰策略 -->
+  <rect x="30" y="352" width="220" height="112" rx="9" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="46" y="382" font-size="11.5" font-weight="700" fill="#1d1d1f">③ 淘汰策略</text>
+  <text x="46" y="404" font-size="9" fill="#8a97ab">谁来判断该清、</text>
+  <text x="46" y="418" font-size="9" fill="#8a97ab">按什么顺序清</text>
+  <rect x="262" y="352" width="410" height="112" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="278" y="378" font-size="10" font-weight="700" fill="#1d6b6e">独立 cache-manager 进程 · 两条路径</text>
+  <text x="278" y="398" font-size="9.5" fill="#4a4a4f"><tspan font-family="'SF Mono',ui-monospace,Menlo,monospace">_expire</tspan>：inactive 超时未访问；<tspan font-family="'SF Mono',ui-monospace,Menlo,monospace">_forced_expire</tspan>：</text>
+  <text x="278" y="414" font-size="9.5" fill="#4a4a4f">max_size/watermark 超限时 LRU 式强制淘汰。</text>
+  <text x="278" y="434" font-size="9" fill="#4a8a8c">后台巡检，完全不占用请求路径。</text>
+  <rect x="684" y="352" width="426" height="112" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="700" y="378" font-size="10" font-weight="700" fill="#9a5f1c">midpoint insertion strategy（官方术语）</text>
+  <text x="700" y="398" font-size="9.5" fill="#4a4a4f">新页先入 old sublist 观察，被再访问才晋升 young</text>
+  <text x="700" y="414" font-size="9.5" fill="#4a4a4f">sublist；否则随链表滑向尾部淘汰。</text>
+  <text x="700" y="434" font-size="9" fill="#b0854a">专门防一次性全表扫描把热数据冲刷出缓存。</text>
+
+  <!-- 行4 典型场景 -->
+  <rect x="30" y="468" width="220" height="96" rx="9" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="46" y="498" font-size="11.5" font-weight="700" fill="#1d1d1f">④ 典型场景</text>
+  <text x="46" y="520" font-size="9" fill="#8a97ab">缓存站在系统的</text>
+  <text x="46" y="534" font-size="9" fill="#8a97ab">哪个位置</text>
+  <rect x="262" y="468" width="410" height="96" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="278" y="494" font-size="10" font-weight="700" fill="#1d6b6e">反向代理 / CDN 边缘</text>
+  <text x="278" y="514" font-size="9.5" fill="#4a4a4f">给一个自己不控制内部实现的源站做外部只读</text>
+  <text x="278" y="530" font-size="9.5" fill="#4a4a4f">加速层，站在系统<tspan font-weight="700">前面</tspan>。</text>
+  <rect x="684" y="468" width="426" height="96" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="700" y="494" font-size="10" font-weight="700" fill="#9a5f1c">存储引擎内部读写缓冲</text>
+  <text x="700" y="514" font-size="9.5" fill="#4a4a4f">给自己管理的表空间做内部缓冲，生命周期与</text>
+  <text x="700" y="530" font-size="9.5" fill="#4a4a4f">事务、存储引擎强绑定，活在系统<tspan font-weight="700">内部</tspan>。</text>
+
+  <!-- 底部一句话横幅 -->
+  <rect x="30" y="580" width="1080" height="64" rx="12" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="48" y="604" font-size="10.5" font-weight="700" fill="#1d1d1f">一句话</text>
+  <text x="110" y="604" font-size="10" fill="#4a4a4f"><tspan font-weight="700" fill="#1d6b6e">nginx proxy_cache</tspan> 是挡在一个系统<tspan font-weight="700">前面</tspan>的缓存——外部、只读、对写入被动，新鲜度靠淘汰节奏兜底；</text>
+  <text x="110" y="624" font-size="10" fill="#4a4a4f"><tspan font-weight="700" fill="#9a5f1c">InnoDB Buffer Pool</tspan> 是系统自己存储引擎<tspan font-weight="700">内部</tspan>的缓存——读写合一、写入即生效，只受 WAL 铁律约束落盘时机。同样叫缓存，角色截然不同。</text>
+</svg>

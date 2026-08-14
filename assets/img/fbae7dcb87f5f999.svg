@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="640" viewBox="0 0 1120 640" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="aG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+    <marker id="aA" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#c99a3a"/></marker>
+    <marker id="aB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#4a7fd0"/></marker>
+  </defs>
+  <rect width="1120" height="640" fill="#fbfbfd"/>
+
+  <text x="30" y="32" font-size="15" font-weight="700" fill="#1d1d1f">图解点 ② 序列化兼容性：标签号 vs 偏移表 · 两种前后兼容策略如何各自「让老代码读新数据、新代码读老数据」</text>
+  <text x="30" y="53" font-size="10.5" fill="#6e6e73">共同目标：字段增删后收发双方版本不一致也不崩。Protobuf 靠字段标签号（tag）自描述定位；FlatBuffers 靠 vtable 偏移表实现零解析就地读取</text>
+
+  <line x1="30" y1="80" x2="54" y2="80" stroke="#4a7fd0" stroke-width="2" marker-end="url(#aB)"/>
+  <text x="60" y="84" font-size="10" fill="#3a3a3c">Protobuf：按 tag 顺序流式解析</text>
+  <line x1="330" y1="80" x2="354" y2="80" stroke="#2f9e6e" stroke-width="2" marker-end="url(#aG)"/>
+  <text x="360" y="84" font-size="10" fill="#3a3a3c">FlatBuffers：按 vtable 偏移随机寻址</text>
+  <line x1="656" y1="80" x2="680" y2="80" stroke="#c99a3a" stroke-width="2" stroke-dasharray="5 3" marker-end="url(#aA)"/>
+  <text x="686" y="84" font-size="10" fill="#3a3a3c">遇未知字段 → 跳过 / 忽略（兼容点）</text>
+
+  <!-- ===== 左：Protobuf 标签号 ===== -->
+  <rect x="30" y="104" width="520" height="466" rx="14" fill="#eaf1fb" stroke="#c6d9f2"/>
+  <text x="50" y="130" font-size="13" font-weight="700" fill="#20375e">Protobuf · 字段标签号（tag）</text>
+  <text x="50" y="150" font-size="9" fill="#5a7099">编码为一串 ⟨tag, wire-type, value⟩，字段名不入流，靠 tag 编号识别</text>
+
+  <!-- 编码字节流 -->
+  <text x="50" y="178" font-size="10" font-weight="600" fill="#20375e">编码后的字节（新版写入，含新增字段 tag=3）</text>
+  <g font-size="9" text-anchor="middle">
+    <rect x="50" y="188" width="90" height="40" rx="6" fill="#ffffff" stroke="#c6d9f2"/><text x="95" y="205" fill="#20375e">tag=1</text><text x="95" y="220" fill="#5a7099">id=42</text>
+    <rect x="146" y="188" width="90" height="40" rx="6" fill="#ffffff" stroke="#c6d9f2"/><text x="191" y="205" fill="#20375e">tag=2</text><text x="191" y="220" fill="#5a7099">name</text>
+    <rect x="242" y="188" width="110" height="40" rx="6" fill="#dcedff" stroke="#4a7fd0"/><text x="297" y="205" fill="#20375e">tag=3(新)</text><text x="297" y="220" fill="#5a7099">email</text>
+    <rect x="358" y="188" width="90" height="40" rx="6" fill="#ffffff" stroke="#c6d9f2"/><text x="403" y="205" fill="#20375e">tag=7</text><text x="403" y="220" fill="#5a7099">flag</text>
+  </g>
+
+  <!-- 老代码读新数据 -->
+  <rect x="50" y="248" width="480" height="120" rx="10" fill="#ffffff" stroke="#c6d9f2"/>
+  <text x="66" y="272" font-size="11" font-weight="700" fill="#20375e">老代码读新数据（向后兼容）</text>
+  <text x="66" y="294" font-size="9.5" fill="#3a4a63">按 tag 逐个解析：1→id、2→name、7→flag 都认识</text>
+  <text x="66" y="316" font-size="9.5" fill="#c99a3a">遇 tag=3 不在自己的 schema → 按 wire-type 跳过该字段</text>
+  <text x="66" y="338" font-size="9.5" fill="#3a4a63">解析继续，不报错；未知字段可原样透传</text>
+  <text x="66" y="358" font-size="8.5" fill="#8a97ab">tag 顺序无关：字段可乱序、可缺省（取默认值）</text>
+
+  <!-- 新代码读老数据 -->
+  <rect x="50" y="384" width="480" height="98" rx="10" fill="#ffffff" stroke="#c6d9f2"/>
+  <text x="66" y="408" font-size="11" font-weight="700" fill="#20375e">新代码读老数据（向前兼容）</text>
+  <text x="66" y="430" font-size="9.5" fill="#3a4a63">老数据里没有 tag=3 → 新代码 email 取默认值 / 缺省</text>
+  <text x="66" y="452" font-size="9.5" fill="#3a4a63">已有 tag 语义不变，字段仍能对上</text>
+  <text x="66" y="472" font-size="8.5" fill="#8a97ab">铁律：tag 编号只增不复用、类型不改，删字段要保留其编号</text>
+
+  <!-- 代价 -->
+  <rect x="50" y="498" width="480" height="56" rx="10" fill="#f4f7fc" stroke="#d8e4f5"/>
+  <text x="66" y="520" font-size="10" font-weight="600" fill="#20375e">代价 · 取值必须先解析</text>
+  <text x="66" y="540" font-size="9" fill="#5a7099">读任一字段都要从头流式扫描解码 → CPU 开销，随消息变大而增</text>
+
+  <!-- ===== 右：FlatBuffers 偏移表 ===== -->
+  <rect x="570" y="104" width="520" height="466" rx="14" fill="#eaf6f0" stroke="#bfe3d1"/>
+  <text x="590" y="130" font-size="13" font-weight="700" fill="#2f6b4e">FlatBuffers · vtable 偏移表</text>
+  <text x="590" y="150" font-size="9" fill="#5a9078">数据按固定布局存放，vtable 记录「第 i 个字段在哪个偏移」，读时直接跳过去</text>
+
+  <!-- vtable + data 布局 -->
+  <text x="590" y="178" font-size="10" font-weight="600" fill="#2f6b4e">内存布局（就地，不解析）</text>
+  <!-- vtable -->
+  <rect x="590" y="188" width="200" height="150" rx="8" fill="#ffffff" stroke="#bfe3d1"/>
+  <text x="690" y="208" font-size="9.5" font-weight="700" fill="#2f6b4e" text-anchor="middle">vtable（偏移表）</text>
+  <g font-size="8.5">
+    <text x="606" y="230" fill="#3a5a48">槽0 → 偏移 +4  (id)</text>
+    <text x="606" y="250" fill="#3a5a48">槽1 → 偏移 +8  (name)</text>
+    <text x="606" y="270" fill="#2f9e6e">槽2 → 偏移 +16 (email 新)</text>
+    <text x="606" y="290" fill="#3a5a48">槽3 → 偏移 +24 (flag)</text>
+    <text x="606" y="316" fill="#8a97ab">老对象 vtable 里</text>
+    <text x="606" y="331" fill="#8a97ab">槽2 = 0 → 字段不存在</text>
+  </g>
+  <!-- data buffer -->
+  <rect x="810" y="188" width="260" height="150" rx="8" fill="#ffffff" stroke="#bfe3d1"/>
+  <text x="940" y="208" font-size="9.5" font-weight="700" fill="#2f6b4e" text-anchor="middle">data buffer（连续字节）</text>
+  <g font-size="8.5" text-anchor="middle">
+    <rect x="824" y="222" width="52" height="34" rx="5" fill="#dff2e8" stroke="#9ed3b8"/><text x="850" y="238" fill="#2f6b4e">+4</text><text x="850" y="250" fill="#5a9078">id</text>
+    <rect x="882" y="222" width="52" height="34" rx="5" fill="#dff2e8" stroke="#9ed3b8"/><text x="908" y="238" fill="#2f6b4e">+8</text><text x="908" y="250" fill="#5a9078">name</text>
+    <rect x="940" y="222" width="52" height="34" rx="5" fill="#d7f0e0" stroke="#2f9e6e"/><text x="966" y="238" fill="#2f6b4e">+16</text><text x="966" y="250" fill="#5a9078">email</text>
+    <rect x="998" y="222" width="52" height="34" rx="5" fill="#dff2e8" stroke="#9ed3b8"/><text x="1024" y="238" fill="#2f6b4e">+24</text><text x="1024" y="250" fill="#5a9078">flag</text>
+  </g>
+  <text x="826" y="290" font-size="8.5" fill="#5a9078">读 email：查 vtable 槽2 → 得偏移 +16</text>
+  <text x="826" y="308" font-size="8.5" fill="#5a9078">→ 直接跳到 buffer 那个位置取值</text>
+  <text x="826" y="326" font-size="8.5" fill="#8a97ab">无需解码整条消息，O(1) 随机访问</text>
+
+  <!-- 兼容规则 -->
+  <rect x="590" y="352" width="480" height="130" rx="10" fill="#ffffff" stroke="#bfe3d1"/>
+  <text x="606" y="376" font-size="11" font-weight="700" fill="#2f6b4e">兼容怎么来（前后双向）</text>
+  <text x="606" y="398" font-size="9.5" fill="#3a5a48">向后：老代码读新数据 → 只查自己认识的槽，新槽视而不见</text>
+  <text x="606" y="420" font-size="9.5" fill="#c99a3a">向前：新代码读老数据 → 查槽2 得 0 偏移 → 判定字段缺省</text>
+  <text x="606" y="442" font-size="9.5" fill="#3a5a48">新字段一律追加到 vtable 末尾、只增不移既有槽</text>
+  <text x="606" y="464" font-size="8.5" fill="#8a97ab">偏移不变是关键：既有槽位的偏移永不改，才保证老 buffer 仍可读</text>
+
+  <!-- 收益 -->
+  <rect x="590" y="498" width="480" height="56" rx="10" fill="#f2faf5" stroke="#cdeadb"/>
+  <text x="606" y="520" font-size="10" font-weight="600" fill="#2f6b4e">收益 · 零解析、零拷贝读取</text>
+  <text x="606" y="540" font-size="9" fill="#5a9078">收到即用，适合大消息 / 低时延；代价是编码更死板、buffer 偏大</text>
+
+  <!-- 连线：读取路径 -->
+  <line x1="790" y1="262" x2="808" y2="240" stroke="#2f9e6e" stroke-width="1.8" marker-end="url(#aG)"/>
+</svg>

@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="580" viewBox="0 0 980 580" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','PingFang SC','Microsoft YaHei',sans-serif">
+  <rect width="980" height="580" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="700" fill="#1d1d1f">列式 Array 剖面 · 一列数据 = 元数据 + 若干对齐 Buffer（data.h:85 ArrayData）</text>
+  <text x="30" y="50" font-size="10.5" fill="#6e6e73">例：Int32 数组 [1, null, 3, 4]（length=4, null_count=1）　与　String 数组 ["arrow", null, "db"]</text>
+
+  <!-- 元数据 -->
+  <rect x="30" y="70" width="920" height="60" rx="11" fill="#f6f8fc" stroke="#cfe0f2"/>
+  <text x="44" y="90" font-size="11" font-weight="600" fill="#1b2a4a">ArrayData 元数据（与数据分离）</text>
+  <text x="44" y="110" font-size="9.5" fill="#5b7db1">type=int32（data.h:507）· length=4（:508）· offset=0（:512，切片时只改它 → 零拷贝）· null_count=1（:509，惰性 = -1 时首次访问才算，kUnknownNullCount data.h:57）</text>
+  <text x="44" y="124" font-size="9" fill="#8a9ab5">child_data（:514，嵌套类型）· dictionary（:517，字典编码）</text>
+
+  <!-- Int32 array buffers -->
+  <text x="30" y="158" font-size="11.5" font-weight="700" fill="#1c6b45">① 定长类型 Int32 [1, null, 3, 4] —— 2 个 buffer</text>
+  <rect x="30" y="168" width="300" height="96" rx="10" fill="#fbf7ef" stroke="#ecdcbf"/>
+  <text x="44" y="188" font-size="10" font-weight="600" fill="#8a6d3b">buffers[0] validity bitmap（BITMAP）</text>
+  <g font-size="12" font-weight="700" text-anchor="middle">
+    <rect x="44" y="198" width="34" height="30" fill="#d9f2e4" stroke="#9ed9ba"/><text x="61" y="218" fill="#1c6b45">1</text>
+    <rect x="80" y="198" width="34" height="30" fill="#fbe3e0" stroke="#e8b3ab"/><text x="97" y="218" fill="#c0392b">0</text>
+    <rect x="116" y="198" width="34" height="30" fill="#d9f2e4" stroke="#9ed9ba"/><text x="133" y="218" fill="#1c6b45">1</text>
+    <rect x="152" y="198" width="34" height="30" fill="#d9f2e4" stroke="#9ed9ba"/><text x="169" y="218" fill="#1c6b45">1</text>
+  </g>
+  <text x="44" y="248" font-size="8.5" fill="#b08535">1 bit/值：1=valid 0=null（HasValidityBitmap=buffers[0]!=null，data.h:430）</text>
+  <text x="44" y="260" font-size="8.5" fill="#b08535">缺失该 buffer ⇒ 全非空；IsValid=GetBit(bitmap, i+offset)（array_base.h:62）</text>
+
+  <rect x="346" y="168" width="300" height="96" rx="10" fill="#f5faf6" stroke="#bfe6cd"/>
+  <text x="360" y="188" font-size="10" font-weight="600" fill="#1c6b45">buffers[1] value buffer（FIXED_WIDTH=4）</text>
+  <g font-size="12" font-weight="700" text-anchor="middle">
+    <rect x="360" y="198" width="60" height="30" fill="#d9f2e4" stroke="#9ed9ba"/><text x="390" y="218" fill="#1c6b45">1</text>
+    <rect x="422" y="198" width="60" height="30" fill="#eee" stroke="#ccc"/><text x="452" y="218" fill="#9a9aa0">?</text>
+    <rect x="484" y="198" width="60" height="30" fill="#d9f2e4" stroke="#9ed9ba"/><text x="514" y="218" fill="#1c6b45">3</text>
+    <rect x="546" y="198" width="60" height="30" fill="#d9f2e4" stroke="#9ed9ba"/><text x="576" y="218" fill="#1c6b45">4</text>
+  </g>
+  <text x="360" y="248" font-size="8.5" fill="#2f7d57">连续定长值紧排（利于 SIMD / 缓存 / 压缩）</text>
+  <text x="360" y="260" font-size="8.5" fill="#2f7d57">null 槽仍占位（值任意）—— 非行式省略、非哨兵值</text>
+
+  <rect x="662" y="168" width="288" height="96" rx="10" fill="#f4eefb" stroke="#d9c9ef"/>
+  <text x="676" y="188" font-size="10" font-weight="600" fill="#3c1361">读取（data.h:252/309）</text>
+  <text x="676" y="207" font-size="9" fill="#6f3ea8">GetValues&lt;int32_t&gt;(1) 直接拿 int32*</text>
+  <text x="676" y="222" font-size="9" fill="#6f3ea8">GetSpan&lt;T&gt;(i,len)（data.h:268）</text>
+  <text x="676" y="240" font-size="8.5" fill="#9a86c0">buffer 号 i 对应 DataTypeLayout</text>
+  <text x="676" y="253" font-size="8.5" fill="#9a86c0">规定的 BufferKind 序列</text>
+
+  <!-- String array buffers -->
+  <text x="30" y="298" font-size="11.5" font-weight="700" fill="#1c6b45">② 变长类型 String ["arrow", null, "db"] —— 3 个 buffer（多一个 offset）</text>
+  <rect x="30" y="308" width="240" height="88" rx="10" fill="#fbf7ef" stroke="#ecdcbf"/>
+  <text x="44" y="328" font-size="10" font-weight="600" fill="#8a6d3b">buffers[0] validity</text>
+  <g font-size="11" font-weight="700" text-anchor="middle">
+    <rect x="44" y="338" width="40" height="26" fill="#d9f2e4" stroke="#9ed9ba"/><text x="64" y="356" fill="#1c6b45">1</text>
+    <rect x="86" y="338" width="40" height="26" fill="#fbe3e0" stroke="#e8b3ab"/><text x="106" y="356" fill="#c0392b">0</text>
+    <rect x="128" y="338" width="40" height="26" fill="#d9f2e4" stroke="#9ed9ba"/><text x="148" y="356" fill="#1c6b45">1</text>
+  </g>
+  <text x="44" y="384" font-size="8.5" fill="#b08535">标记第 2 个为 null</text>
+
+  <rect x="286" y="308" width="330" height="88" rx="10" fill="#eef4fb" stroke="#cddcf0"/>
+  <text x="300" y="328" font-size="10" font-weight="600" fill="#1b2a4a">buffers[1] offset（VARIABLE_WIDTH，N+1 个）</text>
+  <g font-size="11" font-weight="700" text-anchor="middle">
+    <rect x="300" y="338" width="46" height="26" fill="#dfeafb" stroke="#b7cdec"/><text x="323" y="356" fill="#1b2a4a">0</text>
+    <rect x="348" y="338" width="46" height="26" fill="#dfeafb" stroke="#b7cdec"/><text x="371" y="356" fill="#1b2a4a">5</text>
+    <rect x="396" y="338" width="46" height="26" fill="#dfeafb" stroke="#b7cdec"/><text x="419" y="356" fill="#1b2a4a">5</text>
+    <rect x="444" y="338" width="46" height="26" fill="#dfeafb" stroke="#b7cdec"/><text x="467" y="356" fill="#1b2a4a">7</text>
+  </g>
+  <text x="300" y="384" font-size="8.5" fill="#5b7db1">第 i 值 = data[off[i] : off[i+1]]；null 处 off 不前进（5→5）</text>
+
+  <rect x="632" y="308" width="318" height="88" rx="10" fill="#f5faf6" stroke="#bfe6cd"/>
+  <text x="646" y="328" font-size="10" font-weight="600" fill="#1c6b45">buffers[2] value（连续字节）</text>
+  <g font-size="11" font-weight="700" text-anchor="middle">
+    <rect x="646" y="338" width="140" height="26" fill="#d9f2e4" stroke="#9ed9ba"/><text x="716" y="356" fill="#1c6b45">a r r o w</text>
+    <rect x="788" y="338" width="60" height="26" fill="#d9f2e4" stroke="#9ed9ba"/><text x="818" y="356" fill="#1c6b45">d b</text>
+  </g>
+  <text x="646" y="384" font-size="8.5" fill="#2f7d57">所有字符串拼成一段；无 null 占位字节</text>
+
+  <!-- 零拷贝切片 -->
+  <rect x="30" y="414" width="920" height="58" rx="11" fill="#eafaf1" stroke="#b8e6cd"/>
+  <text x="44" y="435" font-size="11" font-weight="700" fill="#1c6b45">零拷贝切片：Slice(offset=2, length=2) 不复制任何 buffer</text>
+  <text x="44" y="454" font-size="9.5" fill="#2f7d57">只造一个新 ArrayData：共享同一批 buffers（shared_ptr）＋ 把 offset 改成 2、length 改成 2；validity 用 i+offset 定位 → 天然正确</text>
+  <text x="44" y="467" font-size="8.5" fill="#8a9a8f">正因如此，切片 / 拼接 / compute 输出都能廉价复用底层内存，这是 Arrow "零拷贝" 的微观来源</text>
+
+  <rect x="30" y="484" width="920" height="72" rx="11" fill="#fbf2ea" stroke="#e6cdae"/>
+  <text x="44" y="505" font-size="10.5" font-weight="700" fill="#b0651f">设计张力落点</text>
+  <text x="44" y="524" font-size="9.5" fill="#5a4a3a">列式紧排 + validity 分离 ⇒ 扫描 / 向量化 / 压缩极快、空值零分支开销　⟷ vs ⟷　随机取第 i 行需跨多个 buffer 各取一段并组装</text>
+  <text x="44" y="542" font-size="9.5" fill="#5a4a3a">逐行写入 / 更新代价高（变长值要重排 offset 与 data）⇒ Arrow 适合"批量读 + 就地算 + 零拷贝传"，不适合行级事务</text>
+</svg>

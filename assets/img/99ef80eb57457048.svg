@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="600" viewBox="0 0 900 600" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect x="0" y="0" width="900" height="600" fill="#fbfbfd"/>
+  <text x="40" y="38" font-size="15" font-weight="600" fill="#1d1d1f">③ REWRITTEN PLAN · RBO 规则改写</text>
+  <text x="40" y="58" font-size="11" fill="#86868b">谓词下推 / 列裁剪 / Filter 下沉进 Scan —— Filter 节点消失,扫描只取必要列</text>
+  <rect x="40" y="74" width="820" height="26" rx="8" fill="#fbf7ef" stroke="#efe0c4"/><text x="54" y="91" font-size="10.5" fill="#8a5a12">RBO:等价变换,把过滤/裁剪尽量推到最靠近数据的地方,减少中间数据量</text>
+  <g text-anchor="middle" font-size="12">
+    <rect x="350" y="114" width="200" height="38" rx="10" fill="#f4eefb" stroke="#dcccf0" filter="url(#soft)"/><text x="450" y="138" fill="#4a2e78">Limit 10</text>
+    <rect x="350" y="170" width="200" height="38" rx="10" fill="#f4eefb" stroke="#dcccf0" filter="url(#soft)"/><text x="450" y="194" fill="#4a2e78">Sort</text>
+    <rect x="330" y="226" width="240" height="38" rx="10" fill="#f4eefb" stroke="#dcccf0" filter="url(#soft)"/><text x="450" y="250" fill="#4a2e78">Aggregate</text>
+    <rect x="325" y="282" width="250" height="44" rx="10" fill="#ecf2fb" stroke="#c4d5ee" filter="url(#soft)"/><text x="450" y="308" fill="#274a78" font-weight="600">LogicalJoin INNER</text>
+    <rect x="130" y="366" width="290" height="70" rx="10" fill="#f5faf6" stroke="#cfe6d5" filter="url(#soft)"/><text x="275" y="388" fill="#2c5a3a" font-weight="600">OlapScan orders</text><text x="275" y="406" font-size="9.5" fill="#4e7a5c">↓ 下推 dt 分区谓词</text><text x="275" y="422" font-size="9.5" fill="#4e7a5c">列裁剪:只取 uid/amount/region/dt</text>
+    <rect x="480" y="366" width="290" height="70" rx="10" fill="#f5faf6" stroke="#cfe6d5" filter="url(#soft)"/><text x="625" y="388" fill="#2c5a3a" font-weight="600">OlapScan users</text><text x="625" y="406" font-size="9.5" fill="#4e7a5c">↓ 下推 age&gt;30</text><text x="625" y="422" font-size="9.5" fill="#4e7a5c">列裁剪:只取 uid/age</text>
+  </g>
+  <g stroke="#c7c7cc" stroke-width="1.5" fill="none">
+    <line x1="450" y1="152" x2="450" y2="169" marker-end="url(#ar)"/>
+    <line x1="450" y1="208" x2="450" y2="225" marker-end="url(#ar)"/>
+    <line x1="450" y1="264" x2="450" y2="281" marker-end="url(#ar)"/>
+    <line x1="410" y1="326" x2="275" y2="365" marker-end="url(#ar)"/>
+    <line x1="490" y1="326" x2="625" y2="365" marker-end="url(#ar)"/>
+  </g>
+  <text x="40" y="484" font-size="10.5" fill="#86868b">对比②:Filter 节点被消去,过滤条件下推进两个 OlapScan;列裁剪让扫描只读用到的列。</text>
+</svg>

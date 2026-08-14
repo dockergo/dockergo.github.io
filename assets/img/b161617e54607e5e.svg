@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="520" viewBox="0 0 1060 520" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs><filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+  <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker></defs>
+  <rect width="1060" height="520" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">lineage 重算：丢分区沿血缘只重建那一份</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">computeOrReadCheckpoint(RDD.scala:369) · compute(:116) · getOrCompute(:381) · dependencies(:260)</text>
+  <!-- lineage chain -->
+  <g text-anchor="middle">
+    <rect x="60" y="90" width="150" height="80" rx="11" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/><text x="135" y="120" font-size="10" font-weight="700" fill="#5a3410">HDFS 源</text><text x="135" y="140" font-size="8" fill="#93762e">textFile</text><text x="135" y="156" font-size="7.5" fill="#b08843">RDD-0</text>
+    <rect x="290" y="90" width="150" height="80" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/><text x="365" y="120" font-size="10" font-weight="700" fill="#1b2a4a">map</text><text x="365" y="140" font-size="8" fill="#5b7db1">窄依赖</text><text x="365" y="156" font-size="7.5" fill="#8aa6cf">RDD-1</text>
+    <rect x="520" y="90" width="150" height="80" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/><text x="595" y="120" font-size="10" font-weight="700" fill="#1b2a4a">filter</text><text x="595" y="140" font-size="8" fill="#5b7db1">窄依赖</text><text x="595" y="156" font-size="7.5" fill="#8aa6cf">RDD-2</text>
+    <rect x="750" y="90" width="150" height="80" rx="11" fill="#fbeef0" stroke="#f0cdd4" filter="url(#soft)"/><text x="825" y="116" font-size="10" font-weight="700" fill="#7a2230">分区丢失!</text><text x="825" y="136" font-size="8" fill="#a44">executor 挂 /</text><text x="825" y="150" font-size="8" fill="#a44">cache 被驱逐</text><text x="825" y="164" font-size="7.5" fill="#7a2230">RDD-3 的 P2</text>
+  </g>
+  <g stroke="#c7c7cc" stroke-width="1.4" fill="none"><line x1="210" y1="130" x2="290" y2="130" marker-end="url(#ar)"/><line x1="440" y1="130" x2="520" y2="130" marker-end="url(#ar)"/><line x1="670" y1="130" x2="750" y2="130" marker-end="url(#ar)"/></g>
+  <!-- recompute arrow back -->
+  <path d="M750,200 Q450,240 210,200" stroke="#34c759" stroke-width="1.6" fill="none" marker-end="url(#ar)" stroke-dasharray="5 3"/>
+  <text x="480" y="238" font-size="9" fill="#2f6f4f" text-anchor="middle">只重算这一条血缘链（窄依赖：各自算对应父分区，无需 shuffle）</text>
+  <rect x="40" y="256" width="480" height="150" rx="13" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="60" y="280" font-size="11" font-weight="700" fill="#12402a">重算机制</text>
+  <text x="60" y="304" font-size="9.5" fill="#2f6f4f">· RDD 不可变 + 持有父依赖引用（dependencies:260）</text>
+  <text x="60" y="324" font-size="9.5" fill="#2f6f4f">· 取分区：computeOrReadCheckpoint(:369)——有 checkpoint 读它，否则 compute(:116)</text>
+  <text x="60" y="344" font-size="9.5" fill="#2f6f4f">· getOrCompute(:381)：先查 BlockManager 缓存，miss 再算</text>
+  <text x="60" y="366" font-size="9" fill="#4c8567">· 丢的是 P2 就只重算 P2，其他分区不动</text>
+  <text x="60" y="386" font-size="9" fill="#4c8567">· 窄依赖重算便宜；宽依赖需父 shuffle 输出在（否则 FetchFailed）</text>
+  <rect x="540" y="256" width="480" height="150" rx="13" fill="#fdf9f0" stroke="#efe3cd"/>
+  <text x="560" y="280" font-size="11" font-weight="700" fill="#7a5a1e">为什么这样设计</text>
+  <text x="560" y="304" font-size="9.5" fill="#93762e">· 大数据下复制所有中间结果太贵——不如记"怎么算的"，需要时重算</text>
+  <text x="560" y="324" font-size="9.5" fill="#93762e">· 不可变是前提：RDD 不会被改，所以任何时候重算结果一致</text>
+  <text x="560" y="344" font-size="9.5" fill="#93762e">· 窄依赖重算局部化——map/filter 链丢一个分区，重算成本 = 一条链</text>
+  <text x="560" y="366" font-size="9" fill="#b08843">· 血缘太长时用 checkpoint 截断（下一张），否则重算回溯到源头</text>
+  <text x="560" y="386" font-size="9" fill="#b08843">· cache 只是加速：血缘仍在，cache 丢了照样能重算</text>
+  <rect x="40" y="418" width="980" height="56" rx="12" fill="#f7f7f9" stroke="#e6e6ea"/>
+  <text x="60" y="442" font-size="11" font-weight="700" fill="#1d1d1f">一句话</text>
+  <text x="60" y="464" font-size="10" fill="#4b4b50">RDD 不可变且记录父依赖，分区丢失时沿血缘只重算那一份（窄依赖局部化、宽依赖需父 shuffle 在）——省副本、换重算。</text>
+</svg>

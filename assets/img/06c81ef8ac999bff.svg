@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="880" height="440" viewBox="0 0 880 440" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="880" height="440" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">写操作族（WriteOperationType）· 每次都开时间线 instant</text>
+  <text x="30" y="49" font-size="10" fill="#a1a1a6">BaseHoodieWriteClient 的写入口；操作类型 + 表类型共同决定用哪个 handle</text>
+
+  <!-- lifecycle band -->
+  <rect x="30" y="66" width="820" height="52" rx="12" fill="#f6f8fc" stroke="#dbe6f4"/>
+  <g text-anchor="middle" font-size="9.5">
+    <rect x="44" y="78" width="150" height="28" rx="8" fill="#eef3fb" stroke="#bcd0ec"/><text x="119" y="96" font-weight="600" fill="#274a78">startCommit 开 instant</text>
+    <rect x="230" y="78" width="150" height="28" rx="8" fill="#eef3fb" stroke="#bcd0ec"/><text x="305" y="96" font-weight="600" fill="#274a78">执行（tag/路由/写）</text>
+    <rect x="416" y="78" width="180" height="28" rx="8" fill="#e7f0fb" stroke="#b9d2ef"/><text x="506" y="96" font-weight="600" fill="#1b2a4a">提交 → 时间线转 COMPLETED</text>
+    <text x="690" y="97" font-size="9" fill="#5b7db1">生命周期对所有写操作一致</text>
+  </g>
+  <line x1="194" y1="92" x2="230" y2="92" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+  <line x1="380" y1="92" x2="416" y2="92" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+
+  <!-- operations grid -->
+  <g font-size="10.5">
+    <rect x="30" y="140" width="264" height="80" rx="12" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/><text x="46" y="162" font-weight="700" fill="#5a3410">upsert（招牌）</text><text x="46" y="182" font-size="9" fill="#93762e">索引 tag 后：命中键→更新，未命中→插入。</text><text x="46" y="198" font-size="9" fill="#93762e">去重更新，Hudi 的核心能力，略慢于 insert。</text><text x="46" y="213" font-size="8.6" fill="#a1a1a6">upsert_prepped：已预标位置，跳过 tag</text>
+
+    <rect x="308" y="140" width="264" height="80" rx="12" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/><text x="324" y="162" font-weight="700" fill="#3d2a5a">insert</text><text x="324" y="182" font-size="9" fill="#7a5a95">不查索引直接插（允许重复键），比</text><text x="324" y="198" font-size="9" fill="#7a5a95">upsert 快，适合无更新的追加场景。</text>
+
+    <rect x="586" y="140" width="264" height="80" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/><text x="602" y="162" font-weight="700" fill="#12402a">bulk_insert</text><text x="602" y="182" font-size="9" fill="#2f6f4f">大批量初始导入，优化文件大小分布，</text><text x="602" y="198" font-size="9" fill="#2f6f4f">不走 upsert 的小文件塞入逻辑。</text>
+
+    <rect x="30" y="234" width="264" height="72" rx="12" fill="#fbeaea" stroke="#e7c3c3" filter="url(#soft)"/><text x="46" y="256" font-weight="700" fill="#4a1414">delete</text><text x="46" y="276" font-size="9" fill="#7a2a2a">按记录键删除（写删除标记）。</text><text x="46" y="292" font-size="9" fill="#7a2a2a">MOR 写 delete block，读时应用。</text>
+
+    <rect x="308" y="234" width="264" height="72" rx="12" fill="#f7f7f9" stroke="#e2e2e7" filter="url(#soft)"/><text x="324" y="256" font-weight="700" fill="#1d1d1f">compact / cluster</text><text x="324" y="276" font-size="9" fill="#6e6e73">表服务也经写操作类型分派</text><text x="324" y="292" font-size="9" fill="#6e6e73">（LOG_COMPACT / CLUSTER，见表服务）</text>
+
+    <rect x="586" y="234" width="264" height="72" rx="12" fill="#f6f8fc" stroke="#cfe0f2" filter="url(#soft)"/><text x="602" y="256" font-weight="700" fill="#274a78">insert_overwrite</text><text x="602" y="276" font-size="9" fill="#5b7db1">用 replacecommit 覆盖分区/表，</text><text x="602" y="292" font-size="9" fill="#5b7db1">原子替换旧 file group。</text>
+  </g>
+
+  <rect x="30" y="326" width="820" height="82" rx="12" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="46" y="348" font-size="10.5" font-weight="600" fill="#12402a">选型速记</text>
+  <text x="46" y="370" font-size="9.3" fill="#2f6f4f">· 有更新 → upsert（查索引去重）　· 纯追加无更新 → insert（不查索引，快）</text>
+  <text x="46" y="390" font-size="9.3" fill="#2f6f4f">· 初始大批导入 → bulk_insert（优化文件分布）　· 覆盖分区 → insert_overwrite（replacecommit）</text>
+</svg>

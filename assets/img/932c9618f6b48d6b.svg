@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="410" viewBox="0 0 1020 410"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1020" height="410" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">日志 · access 在 LOG 阶段、error 分级，缓冲写省 IO</text>
+
+  <!-- access -->
+  <rect x="30" y="56" width="470" height="200" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="48" y="80" font-size="12.5" font-weight="600" fill="#1b2a4a">access log（LOG 阶段，响应发完后）</text>
+  <rect x="48" y="96" width="434" height="44" rx="9" fill="#ffffff" stroke="#bcd0ec"/><text x="64" y="116" font-size="9.5" font-weight="600" fill="#1b2a4a">log_format：变量模板</text><text x="64" y="132" font-size="8.5" fill="#5b7db1">$remote_addr $request $status $body_bytes_sent $request_time…</text>
+  <rect x="48" y="148" width="434" height="44" rx="9" fill="#ffffff" stroke="#bcd0ec"/><text x="64" y="168" font-size="9.5" font-weight="600" fill="#1b2a4a">变量请求期求值</text><text x="64" y="184" font-size="8.5" fill="#5b7db1">按每请求真实值填模板，写一行</text>
+  <rect x="48" y="200" width="434" height="44" rx="9" fill="#eafaf1" stroke="#bce6cd"/><text x="64" y="220" font-size="9.5" font-weight="600" fill="#0f5132">缓冲写 + gzip</text><text x="64" y="236" font-size="8.5" fill="#3f8f66">buffer=/gzip= 攒批写盘，降 IO 频率</text>
+
+  <!-- error -->
+  <rect x="520" y="56" width="470" height="200" rx="14" fill="#fbeaea" stroke="#f0cccc" filter="url(#soft)"/>
+  <text x="538" y="80" font-size="12.5" font-weight="600" fill="#7d1f1f">error log（分级，随时可写）</text>
+  <rect x="538" y="96" width="434" height="44" rx="9" fill="#ffffff" stroke="#f0cccc"/><text x="554" y="116" font-size="9.5" font-weight="600" fill="#7d1f1f">级别：debug→info→notice→warn→error→crit</text><text x="554" y="132" font-size="8.5" fill="#b06a6a">error_log path level; 只记 ≥ 该级</text>
+  <rect x="538" y="148" width="434" height="44" rx="9" fill="#ffffff" stroke="#f0cccc"/><text x="554" y="168" font-size="9.5" font-weight="600" fill="#7d1f1f">诊断第一现场</text><text x="554" y="184" font-size="8.5" fill="#b06a6a">upstream 错误、超时、配置告警都在此</text>
+  <rect x="538" y="200" width="434" height="44" rx="9" fill="#fdf2f2" stroke="#f0cccc"/><text x="554" y="220" font-size="9.5" font-weight="600" fill="#7d1f1f">debug 需编译/配置开启</text><text x="554" y="236" font-size="8.5" fill="#b06a6a">生产用 warn/error，排障临时提级</text>
+
+  <!-- reopen 关系 -->
+  <rect x="30" y="272" width="960" height="120" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="48" y="296" font-size="12.5" font-weight="600" fill="#1d1d1f">日志切割与信号的配合</text>
+  <rect x="48" y="312" width="270" height="60" rx="10" fill="#f6f6f8" stroke="#e2e2e7"/><text x="183" y="336" font-size="9.5" font-weight="600" fill="#494950" text-anchor="middle">① mv access.log access.log.1</text><text x="183" y="356" font-size="8.5" fill="#6a6a70" text-anchor="middle">nginx 仍持旧 inode 写</text>
+  <rect x="330" y="312" width="270" height="60" rx="10" fill="#eafaf1" stroke="#bce6cd"/><text x="465" y="336" font-size="9.5" font-weight="600" fill="#0f5132" text-anchor="middle">② nginx -s reopen</text><text x="465" y="356" font-size="8.5" fill="#3f8f66" text-anchor="middle">worker 重开日志文件（新 inode）</text>
+  <rect x="612" y="312" width="358" height="60" rx="10" fill="#eef3fb" stroke="#bcd0ec"/><text x="791" y="336" font-size="9.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">③ 压缩归档 access.log.1</text><text x="791" y="356" font-size="8.5" fill="#5b7db1" text-anchor="middle">不丢日志、不停服（见"信号控制"篇）</text>
+  <line x1="318" y1="342" x2="330" y2="342" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="600" y1="342" x2="612" y2="342" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+</svg>

@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="300" viewBox="0 0 900 300" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs><filter id="s" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter><marker id="a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker></defs>
+  <rect width="900" height="300" fill="#fbfbfd"/>
+  <text x="30" y="28" font-size="14" font-weight="600" fill="#1d1d1f">Compaction：小 Rowset 分层合并，降读放大</text>
+
+  <text x="40" y="60" font-size="11" fill="#86868b">① 持续写入 → 大量小 Rowset（版本多，读放大高）</text>
+  <g text-anchor="middle" font-size="10" fill="#4a1414">
+    <rect x="60" y="68" width="58" height="30" rx="7" fill="#fbeaea" stroke="#e7c3c3"/><text x="89" y="87">r1</text>
+    <rect x="126" y="68" width="58" height="30" rx="7" fill="#fbeaea" stroke="#e7c3c3"/><text x="155" y="87">r2</text>
+    <rect x="192" y="68" width="58" height="30" rx="7" fill="#fbeaea" stroke="#e7c3c3"/><text x="221" y="87">r3</text>
+    <rect x="268" y="68" width="58" height="30" rx="7" fill="#fbeaea" stroke="#e7c3c3"/><text x="297" y="87">r4</text>
+    <rect x="334" y="68" width="58" height="30" rx="7" fill="#fbeaea" stroke="#e7c3c3"/><text x="363" y="87">r5</text>
+    <rect x="400" y="68" width="58" height="30" rx="7" fill="#fbeaea" stroke="#e7c3c3"/><text x="429" y="87">r6</text>
+  </g>
+
+  <text x="40" y="138" font-size="11" fill="#86868b">② Cumulative（高频轻量）：合并近期小 Rowset</text>
+  <g text-anchor="middle" font-size="11" fill="#1b2a4a">
+    <rect x="90" y="146" width="150" height="34" rx="9" fill="#eef3fb" stroke="#bcd0ec"/><text x="165" y="168">Cumulative C1</text>
+    <rect x="300" y="146" width="150" height="34" rx="9" fill="#eef3fb" stroke="#bcd0ec"/><text x="375" y="168">Cumulative C2</text>
+  </g>
+  <g stroke="#c7c7cc" stroke-width="1.3" fill="none">
+    <path d="M89,98 L120,146" marker-end="url(#a)"/><path d="M155,98 L160,146" marker-end="url(#a)"/><path d="M221,98 L200,146" marker-end="url(#a)"/>
+    <path d="M297,98 L330,146" marker-end="url(#a)"/><path d="M363,98 L370,146" marker-end="url(#a)"/><path d="M429,98 L410,146" marker-end="url(#a)"/>
+  </g>
+
+  <text x="40" y="216" font-size="11" fill="#86868b">③ Base（低频重量）：并入基线大 Rowset + 清理过期 Delete Bitmap</text>
+  <rect x="150" y="224" width="240" height="40" rx="10" fill="#eafaf1" stroke="#bfe0cd"/><text x="270" y="249" font-size="12" font-weight="600" fill="#12402a" text-anchor="middle">Base Rowset（大）</text>
+  <g stroke="#c7c7cc" stroke-width="1.3" fill="none"><path d="M165,180 L230,224" marker-end="url(#a)"/><path d="M375,180 L310,224" marker-end="url(#a)"/></g>
+
+  <!-- read amplification panel -->
+  <rect x="540" y="120" width="330" height="150" rx="13" fill="#ffffff" stroke="#ececf1" filter="url(#s)"/>
+  <text x="705" y="144" font-size="12.5" font-weight="600" fill="#1d1d1f" text-anchor="middle">读放大对比</text>
+  <text x="560" y="172" font-size="10.5" fill="#a05252">合并前：查询需归并 6+ 个 Rowset</text>
+  <g><rect x="560" y="180" width="290" height="14" rx="4" fill="#fbeaea" stroke="#e7c3c3"/></g>
+  <text x="560" y="224" font-size="10.5" fill="#2f6f4f">合并后：仅需归并 1~2 个 Rowset</text>
+  <g><rect x="560" y="232" width="80" height="14" rx="4" fill="#eafaf1" stroke="#bfe0cd"/></g>
+  <text x="705" y="262" font-size="9.5" fill="#86868b" text-anchor="middle">滞后 → 版本堆积 → 查询变慢 / 写入拒绝</text>
+</svg>

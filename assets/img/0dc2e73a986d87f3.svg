@@ -1,0 +1,163 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1160" height="750" viewBox="0 0 1160 750" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="aHot" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#1f9d57"/></marker>
+    <marker id="aCtrl" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f6fd6"/></marker>
+    <marker id="aState" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#c8860a"/></marker>
+    <marker id="aFail" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#e0742a"/></marker>
+    <marker id="aMono" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#8a5cae"/></marker>
+  </defs>
+  <rect width="1160" height="750" fill="#fbfbfd"/>
+
+  <!-- ===== 标题带：判型 ===== -->
+  <text x="24" y="28" font-size="13" font-weight="700" fill="#1d1d1f">Rust 总架构 · 判型：所有权驱动的系统级语言 —— 编译期借用检查(无 GC 内存安全) + 单态化零成本抽象 + MIR 借用检查器为灵魂</text>
+  <text x="24" y="47" font-size="10.5" fill="#6e6e73">剖面：接触面(所有权三规则) → 编译期(管线降级 + 借用检查横切 MIR) → 运行期(无 GC · 仅 Drop / Arc 计数 / panic)　　源码基准 rustc 1.99.0</text>
+
+  <!-- ===== 图例：五型语义路径 ===== -->
+  <line x1="34" y1="66" x2="64" y2="66" stroke="#1f9d57" stroke-width="1.8" marker-end="url(#aHot)"/>
+  <text x="70" y="70" font-size="10" fill="#3a3a3c">编译主链 Hot(parse→codegen)</text>
+  <line x1="278" y1="66" x2="308" y2="66" stroke="#2f6fd6" stroke-width="1.8" marker-end="url(#aCtrl)"/>
+  <text x="314" y="70" font-size="10" fill="#3a3a3c">借用裁决 Control(横切 MIR)</text>
+  <line x1="514" y1="66" x2="544" y2="66" stroke="#c8860a" stroke-width="1.8" marker-end="url(#aState)"/>
+  <text x="550" y="70" font-size="10" fill="#3a3a3c">所有权 State(Box/Rc/Drop)</text>
+  <line x1="740" y1="66" x2="770" y2="66" stroke="#e0742a" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#aFail)"/>
+  <text x="776" y="70" font-size="10" fill="#3a3a3c">失败 borrow-error / panic</text>
+  <line x1="952" y1="66" x2="982" y2="66" stroke="#8a5cae" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#aMono)"/>
+  <text x="988" y="70" font-size="10" fill="#3a3a3c">trait 单态化(横切)</text>
+
+  <!-- ===== 设计张力铭牌带 ===== -->
+  <rect x="24" y="84" width="1112" height="42" rx="10" fill="#f7f5ee" stroke="#e7ddc4"/>
+  
+  <text x="42" y="102" font-size="11" font-weight="700" fill="#8a5a08">设计张力</text>
+  <text x="42" y="118" font-size="9" fill="#9a7a2a">编译期 vs 运行期</text>
+  <text x="150" y="102" font-size="10" fill="#4a4a4f"><tspan font-weight="600" fill="#a8541e">编译期严格</tspan>：借用检查 / 生命周期 / 单态化　→　学习陡峭 · 编译较慢 · 泛型代码膨胀</text>
+  <text x="150" y="118" font-size="10" fill="#4a4a4f"><tspan font-weight="600" fill="#0f6b41">⟷　运行期零成本</tspan>：无 GC · 无运行时开销 · 内存安全 · 无畏并发(Send/Sync 编译期证明)</text>
+
+  <!-- ===== 接触面：语法与所有权 ===== -->
+  <rect x="24" y="134" width="1112" height="48" rx="12" fill="#f2f4f8" stroke="#d4dae6" filter="url(#soft)" data-tid="Rust原理_接触面_语法与所有权" data-lab="语法与所有权"/>
+  <text x="40" y="155" font-size="12" font-weight="600" fill="#2a3550">接触面 · 所有权三规则（开发者心智模型，编译器强制）</text>
+  <text x="40" y="173" font-size="9.5" fill="#6e6e73">所有权：每值一主 + move　·　借用：&amp;T 多读 / &amp;mut T 唯一写　·　生命周期：防悬垂引用（region 推断）</text>
+
+  <!-- ===== COMPILE-TIME 大层 ===== -->
+  <rect x="24" y="192" width="1112" height="366" rx="14" fill="#eef3fb" stroke="#c9d8ef" filter="url(#soft)"/>
+  <text x="40" y="214" font-size="12" font-weight="600" fill="#1b5fb0">COMPILE-TIME · 编译期（所有安全检查在此完成，过不了借用检查就不编译）</text>
+
+  <!-- 编译管线 outer -->
+  <rect x="40" y="224" width="1080" height="100" rx="10" fill="#ffffff" stroke="#c9d8ef" data-tid="Rust原理_支撑_编译管线" data-lab="编译管线"/>
+  <text x="56" y="243" font-size="11" font-weight="600" fill="#1b2a4a">编译管线 rustc · query 系统按需求值 + 增量编译</text>
+  <text x="360" y="243" font-size="8.5" fill="#a1a1a6">analysis run_compiler</text>
+
+  <!-- 7 chips -->
+  <g text-anchor="middle">
+    <rect x="48" y="256" width="143" height="58" rx="8" fill="#f5f7fb" stroke="#d4dae6"/>
+    <text x="119" y="277" font-size="9.5" font-weight="600" fill="#1d1d1f">源码 → lex/parse</text>
+    <text x="119" y="291" font-size="8" fill="#8e8e93">AST · rustc_parse</text>
+    <text x="119" y="304" font-size="7.5" fill="#a1a1a6">new_parser</text>
+
+    <rect x="202" y="256" width="143" height="58" rx="8" fill="#f5f7fb" stroke="#d4dae6"/>
+    <text x="273" y="277" font-size="9.5" font-weight="600" fill="#1d1d1f">AST → HIR</text>
+    <text x="273" y="291" font-size="8" fill="#8e8e93">降级 · rustc_ast_lowering</text>
+    <text x="273" y="304" font-size="7.5" fill="#a1a1a6">lower_to_hir</text>
+
+    <rect x="356" y="256" width="143" height="58" rx="8" fill="#eafaf1" stroke="#bce6cd" data-tid="Rust原理_支撑_类型推断" data-lab="类型推断"/>
+    <text x="427" y="277" font-size="9.5" font-weight="600" fill="#0f6b41">类型 · trait 检查</text>
+    <text x="427" y="291" font-size="8" fill="#4f9e74">合一推断 · hir_typeck</text>
+    <text x="427" y="304" font-size="7.5" fill="#8fbfa4">typeck_root</text>
+
+    <rect x="510" y="256" width="143" height="58" rx="8" fill="#e3edfb" stroke="#a9ccf5"/>
+    <text x="581" y="277" font-size="9.5" font-weight="700" fill="#0a3d78">THIR → MIR</text>
+    <text x="581" y="291" font-size="8" fill="#3f6ba0">中层 IR · 中心舞台</text>
+    <text x="581" y="304" font-size="7.5" fill="#7ea0c8">mir_build</text>
+
+    <rect x="664" y="256" width="143" height="58" rx="8" fill="#e3edfb" stroke="#a9ccf5" data-tid="Rust原理_支撑_借用检查器" data-lab="借用检查"/>
+    <text x="735" y="277" font-size="9.5" font-weight="700" fill="#0a3d78">借用检查</text>
+    <text x="735" y="291" font-size="8" fill="#3f6ba0">在 MIR 上 · borrowck</text>
+    <text x="735" y="304" font-size="7.5" fill="#7ea0c8">mir_borrowck</text>
+
+    <rect x="818" y="256" width="143" height="58" rx="8" fill="#f6f0fb" stroke="#dcc6ee" data-tid="Rust原理_支撑_特质与单态化" data-lab="特质与单态化"/>
+    <text x="889" y="277" font-size="9.5" font-weight="600" fill="#5a2a82">单态化 + 优化</text>
+    <text x="889" y="291" font-size="8" fill="#8a5cae">泛型→具体 · 内联</text>
+    <text x="889" y="304" font-size="7.5" fill="#b199c9">monomorphize</text>
+
+    <rect x="972" y="256" width="143" height="58" rx="8" fill="#f5f7fb" stroke="#d4dae6"/>
+    <text x="1043" y="277" font-size="9.5" font-weight="600" fill="#1d1d1f">codegen → LLVM</text>
+    <text x="1043" y="291" font-size="8" fill="#8e8e93">机器码 · codegen_ssa</text>
+    <text x="1043" y="304" font-size="7.5" fill="#a1a1a6">codegen_crate</text>
+  </g>
+
+  <!-- 借用检查器 横切 strip（灵魂，Control）+ borrow-error 失败节点 -->
+  <rect x="40" y="334" width="812" height="36" rx="9" fill="#e3edfb" stroke="#a9ccf5" data-tid="Rust原理_支撑_借用检查器" data-lab="借用检查器"/>
+  
+  <text x="60" y="350" font-size="10" font-weight="600" fill="#0a3d78">借用检查器 = 灵魂（横切 MIR）：验所有权 / 借用别名 / 生命周期</text>
+  <text x="60" y="364" font-size="8.5" fill="#5a7fb0">NLL 非词法 + Polonius 区域推断(polonius/)</text>
+  <rect x="864" y="334" width="256" height="36" rx="9" fill="#fdf0e8" stroke="#f0d3bd"/>
+  
+  <text x="880" y="350" font-size="10" font-weight="600" fill="#a8541e">✗ 过不了 → borrow-error 编译中止</text>
+  <text x="880" y="364" font-size="8" fill="#c07a4a"></text>
+
+  <!-- 三个能力域 box -->
+  <g>
+    <rect x="40" y="380" width="350" height="94" rx="10" fill="#ffffff" stroke="#f0d9a8" filter="url(#soft)" data-tid="Rust原理_支撑_内存与Drop" data-lab="内存与 Drop"/>
+    
+    <text x="60" y="402" font-size="10.5" font-weight="600" fill="#8a5a08">内存与 Drop · 无 GC（State 所有权）</text>
+    <text x="60" y="421" font-size="9" fill="#6e6e73">RAII：出作用域自动析构 · move 语义</text>
+    <text x="60" y="437" font-size="9" fill="#6e6e73">编译器插 Drop glue，运行期零额外开销</text>
+    <text x="60" y="462" font-size="7.5" fill="#a1a1a6">drop_in_place</text>
+
+    <rect x="405" y="380" width="350" height="94" rx="10" fill="#ffffff" stroke="#dcc6ee" filter="url(#soft)" data-tid="Rust原理_支撑_并发SendSync" data-lab="并发 Send/Sync"/>
+    
+    <text x="425" y="402" font-size="10.5" font-weight="600" fill="#5a2a82">并发 Send / Sync（横切 marker trait）</text>
+    <text x="425" y="421" font-size="9" fill="#6e6e73">auto trait 编译期保无数据竞争</text>
+    <text x="425" y="437" font-size="9" fill="#6e6e73">跨线程共享走 Arc / Mutex</text>
+    <text x="425" y="462" font-size="7.5" fill="#a1a1a6">Send Sync</text>
+
+    <rect x="770" y="380" width="350" height="94" rx="10" fill="#ffffff" stroke="#f0d9a8" filter="url(#soft)" data-tid="Rust原理_支撑_智能指针与内部可变" data-lab="智能指针与内部可变"/>
+    
+    <text x="790" y="402" font-size="10.5" font-weight="600" fill="#8a5a08">智能指针与内部可变（State 逃生舱）</text>
+    <text x="790" y="421" font-size="9" fill="#6e6e73">Box / Rc / Arc + Cell / RefCell</text>
+    <text x="790" y="437" font-size="9" fill="#6e6e73">所有权太死时的受控逃生舱</text>
+    <text x="790" y="462" font-size="7.5" fill="#a1a1a6">alloc</text>
+  </g>
+
+  <!-- 三条贯穿声明 -->
+  <rect x="40" y="484" width="1080" height="64" rx="10" fill="#f5f7fb" stroke="#d4dae6"/>
+  <text x="56" y="503" font-size="10" font-weight="600" fill="#1b2a4a">三条贯穿声明</text>
+  <text x="56" y="521" font-size="9" fill="#6e6e73">① 所有权 + 编译期借用检查 = 无 GC 内存安全，运行时零开销　②&#160;借用检查在 MIR 上（灵魂）：mir_borrowck + NLL + Polonius</text>
+  <text x="56" y="538" font-size="9" fill="#6e6e73">③ 零成本抽象：泛型 / trait 单态化成具体代码，静态分发默认，迭代器链 = 手写循环，dyn 才虚表</text>
+
+  <!-- ===== RUNTIME 薄层 ===== -->
+  <rect x="24" y="570" width="1112" height="108" rx="14" fill="#fdf4ee" stroke="#f0d3bd" filter="url(#soft)"/>
+  <text x="40" y="592" font-size="12" font-weight="600" fill="#a8541e">RUNTIME · 运行期（library/ · 几乎零机制）</text>
+  <text x="40" y="610" font-size="9.5" fill="#94571f">无 GC · 无运行时类型 · 无虚表（除非 dyn）—— 安全已在编译期证明，仅剩 Drop 析构 / Arc 计数 / panic</text>
+  <rect x="40" y="620" width="1080" height="50" rx="10" fill="#ffffff" stroke="#f0d3bd" data-tid="Rust原理_支撑_panic与展开" data-lab="panic 与展开"/>
+  
+  <text x="60" y="641" font-size="10.5" font-weight="600" fill="#a8541e">panic 与展开 · 不可恢复错误路径（区别可恢复的 Result）</text>
+  <text x="60" y="659" font-size="8.5" fill="#94571f">unwind：逐层析构栈值可 catch_unwind　·　abort：直接终止不析构(panic_abort/)</text>
+
+  <!-- ===== 语义分型连线 ===== -->
+  <!-- Hot：接触面 → 编译管线 -->
+  <line x1="119" y1="182" x2="119" y2="254" stroke="#1f9d57" stroke-width="1.8" marker-end="url(#aHot)"/>
+  <!-- Hot：管线内横向 6 段 -->
+  <g stroke="#1f9d57" stroke-width="1.6">
+    <line x1="191" y1="285" x2="201" y2="285" marker-end="url(#aHot)"/>
+    <line x1="345" y1="285" x2="355" y2="285" marker-end="url(#aHot)"/>
+    <line x1="499" y1="285" x2="509" y2="285" marker-end="url(#aHot)"/>
+    <line x1="653" y1="285" x2="663" y2="285" marker-end="url(#aHot)"/>
+    <line x1="807" y1="285" x2="817" y2="285" marker-end="url(#aHot)"/>
+    <line x1="961" y1="285" x2="971" y2="285" marker-end="url(#aHot)"/>
+  </g>
+  <!-- Control：借用横切 strip 向上作用于 MIR / 借用检查 chip -->
+  <line x1="581" y1="334" x2="581" y2="316" stroke="#2f6fd6" stroke-width="1.6" marker-end="url(#aCtrl)"/>
+  <line x1="735" y1="334" x2="735" y2="316" stroke="#2f6fd6" stroke-width="1.6" marker-end="url(#aCtrl)"/>
+  <!-- 失败：借用检查 strip → borrow-error -->
+  <line x1="852" y1="352" x2="863" y2="352" stroke="#e0742a" stroke-width="1.6" stroke-dasharray="4 3" marker-end="url(#aFail)"/>
+  <!-- 失败：运行期 → panic -->
+  <line x1="580" y1="610" x2="580" y2="620" stroke="#e0742a" stroke-width="1.6" stroke-dasharray="4 3" marker-end="url(#aFail)"/>
+
+  <!-- ===== 读法 ===== -->
+  <rect x="24" y="690" width="1112" height="32" rx="8" fill="#f7f7f9" stroke="#ececef"/>
+  <text x="580" y="710" font-size="9.5" fill="#4a4a4f" text-anchor="middle">读法：代码守所有权三规则 → 管线把源码降到 MIR，借用检查器(蓝)横切 MIR 裁决，过不了(橙)不编译 → 单态化(紫)+codegen 出机器码，运行期(琥珀)只剩 Drop / Arc / panic</text>
+
+  <!-- 标题带热区（全景可下钻） -->
+  <rect x="0" y="0" width="1160" height="58" fill="none" stroke="none" data-tid="Rust原理_全景主线框架" data-lab="全景主线框架"/>
+</svg>

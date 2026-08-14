@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="940" height="580" viewBox="0 0 940 580" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="940" height="580" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">系统调用 P 移交 · entersyscall / exitsyscall / handoffp</text>
+
+  <!-- Row 1: running -->
+  <rect x="40" y="52" width="300" height="66" rx="12" fill="#eef7f0" stroke="#bfe0c8" filter="url(#soft)"/>
+  <text x="56" y="77" font-size="12.5" font-weight="600" fill="#1d4a2b">G 运行中 · _Grunning</text>
+  <text x="56" y="97" font-size="10" fill="#4a8c60">M 持有 P 执行用户代码</text>
+  <text x="56" y="112" font-size="9.5" fill="#4a8c60">P: _Prunning</text>
+
+  <line x1="190" y1="118" x2="190" y2="134" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <text x="202" y="130" font-size="9.5" fill="#8e8e93">发起 syscall</text>
+
+  <!-- entersyscall -->
+  <rect x="40" y="136" width="300" height="94" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="56" y="161" font-size="12.5" font-weight="600" fill="#1b2a4a">entersyscall → reentersyscall</text>
+  <text x="324" y="159" font-size="9" fill="#5b7db1" text-anchor="end">proc.go:4642</text>
+  <text x="56" y="182" font-size="10" fill="#5b7db1">G 置 _Gsyscall</text>
+  <text x="56" y="200" font-size="10" fill="#5b7db1">M 与 P 解除强绑，但保留关联</text>
+  <text x="56" y="218" font-size="10" fill="#5b7db1">P 置 _Psyscall · M 带 G 陷入内核</text>
+
+  <line x1="190" y1="230" x2="190" y2="246" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <text x="202" y="242" font-size="9.5" fill="#8e8e93">syscall 返回</text>
+
+  <!-- exitsyscall -->
+  <rect x="40" y="248" width="300" height="72" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="56" y="273" font-size="12.5" font-weight="600" fill="#1b2a4a">exitsyscall</text>
+  <text x="324" y="271" font-size="9" fill="#5b7db1" text-anchor="end">proc.go:4922</text>
+  <text x="56" y="294" font-size="10" fill="#5b7db1">先试 exitsyscallfast 抢回原 P</text>
+  <text x="56" y="311" font-size="10" fill="#5b7db1">失败则走慢速路径</text>
+
+  <!-- two branches from exitsyscall -->
+  <line x1="340" y1="272" x2="470" y2="272" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <text x="405" y="264" font-size="9.5" fill="#4a8c60" text-anchor="middle">快速</text>
+  <line x1="340" y1="300" x2="470" y2="410" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <text x="392" y="368" font-size="9.5" fill="#7a1f1f">慢速</text>
+
+  <!-- FAST branch (green) -->
+  <rect x="472" y="234" width="428" height="86" rx="12" fill="#eef7f0" stroke="#bfe0c8" filter="url(#soft)"/>
+  <text x="490" y="259" font-size="12.5" font-weight="600" fill="#1d4a2b">exitsyscallfast · 最快路径</text>
+  <text x="490" y="281" font-size="10.5" fill="#4a8c60">原 P 还空着（_Psyscall 未被回收）→ 直接抢回</text>
+  <text x="490" y="300" font-size="10.5" fill="#4a8c60">G 恢复 _Grunning 继续跑，无调度开销</text>
+
+  <!-- SLOW branch (red) -->
+  <rect x="472" y="376" width="428" height="86" rx="12" fill="#fbeeee" stroke="#f0c4c4" filter="url(#soft)"/>
+  <text x="490" y="401" font-size="12.5" font-weight="600" fill="#7a1f1f">慢速 · 原 P 已被拿走</text>
+  <text x="490" y="423" font-size="10.5" fill="#b15b5b">P 已被 sysmon retake 或 handoff 移交给别的 M</text>
+  <text x="490" y="442" font-size="10.5" fill="#b15b5b">G 置 _Grunnable 入全局队列；M 找不到 P → 休眠</text>
+
+  <!-- active handoff (amber) -->
+  <rect x="40" y="360" width="360" height="118" rx="12" fill="#fdf6ec" stroke="#f0dcaf" filter="url(#soft)"/>
+  <text x="56" y="385" font-size="12.5" font-weight="600" fill="#6b4e16">主动移交 · handoffp</text>
+  <text x="384" y="383" font-size="9" fill="#a9822f" text-anchor="end">proc.go:3146</text>
+  <text x="56" y="406" font-size="10" fill="#a9822f">entersyscallblock：已知会长阻塞</text>
+  <text x="56" y="424" font-size="10" fill="#a9822f">不等 sysmon，立刻把 P 交给新/空闲 M</text>
+  <text x="56" y="442" font-size="10" fill="#a9822f">让 P 上其他 G 继续被调度，不空转</text>
+  <text x="56" y="463" font-size="9.5" fill="#a9822f">阻塞返回后 M 需重新找 P（同慢速）</text>
+
+  <!-- key distinction (purple) -->
+  <rect x="40" y="496" width="860" height="66" rx="12" fill="#f5f0fb" stroke="#ddcdf0"/>
+  <text x="58" y="520" font-size="12" font-weight="600" fill="#3d2a5a">关键区分</text>
+  <text x="58" y="542" font-size="10.5" fill="#7d5bb1">_Psyscall 的 P 不算"真闲"——sysmon 的 retake 只在其超时后才回收，为 exitsyscallfast 抢回留出窗口；</text>
+  <text x="58" y="558" font-size="10.5" fill="#7d5bb1">陷入 syscall 的 M 不占 P，因此 M（线程）数量可远超 GOMAXPROCS（默认上限 10000）。</text>
+</svg>

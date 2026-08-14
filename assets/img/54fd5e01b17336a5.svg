@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="440" viewBox="0 0 1020 440"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1020" height="440" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">DataChunk 与统一格式 · 数据货币 + 通吃各种布局的处理约定</text>
+
+  <!-- DataChunk 结构 -->
+  <rect x="30" y="52" width="470" height="200" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="48" y="76" font-size="12.5" font-weight="600" fill="#1d1d1f">DataChunk = 一批行的列切片（data_chunk.hpp:44）</text>
+  <rect x="48" y="90" width="110" height="120" rx="9" fill="#eef3fb" stroke="#bcd0ec"/><text x="103" y="112" font-size="9.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">Vector 0</text><text x="103" y="130" font-size="8.5" fill="#5b7db1" text-anchor="middle">region</text><text x="103" y="150" font-size="8" fill="#8fa9cf" text-anchor="middle">(dict)</text>
+  <rect x="166" y="90" width="110" height="120" rx="9" fill="#eef3fb" stroke="#bcd0ec"/><text x="221" y="112" font-size="9.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">Vector 1</text><text x="221" y="130" font-size="8.5" fill="#5b7db1" text-anchor="middle">amount</text><text x="221" y="150" font-size="8" fill="#8fa9cf" text-anchor="middle">(flat)</text>
+  <rect x="284" y="90" width="110" height="120" rx="9" fill="#eef3fb" stroke="#bcd0ec"/><text x="339" y="112" font-size="9.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">Vector 2</text><text x="339" y="130" font-size="8.5" fill="#5b7db1" text-anchor="middle">year</text><text x="339" y="150" font-size="8" fill="#8fa9cf" text-anchor="middle">(const)</text>
+  <rect x="402" y="90" width="82" height="120" rx="9" fill="#f6f6f8" stroke="#e2e2e7"/><text x="443" y="140" font-size="9" fill="#6a6a70" text-anchor="middle">…列</text>
+  <text x="48" y="234" font-size="10" fill="#494950">vector&lt;Vector&gt; data + cardinality（size ≤ 2048）；各列可用不同布局。</text>
+
+  <!-- 统一格式 -->
+  <rect x="520" y="52" width="470" height="200" rx="14" fill="#eafaf1" stroke="#bce6cd" filter="url(#soft)"/>
+  <text x="538" y="76" font-size="12.5" font-weight="600" fill="#0f5132">ToUnifiedFormat（原名 Orrify，vector.hpp:127）</text>
+  <text x="538" y="98" font-size="10" fill="#3f8f66">难题：算子若为每种布局写一套逻辑 → 组合爆炸。</text>
+  <rect x="538" y="110" width="434" height="60" rx="10" fill="#ffffff" stroke="#bce6cd"/>
+  <text x="755" y="132" font-size="10" font-weight="600" fill="#0f5132" text-anchor="middle">规整成统一三件套：</text>
+  <text x="755" y="152" font-size="9.5" fill="#3f8f66" text-anchor="middle">数据指针 + SelectionVector（下标映射） + ValidityMask</text>
+  <rect x="538" y="180" width="434" height="58" rx="10" fill="#fdfdf5" stroke="#bce6cd"/>
+  <text x="755" y="202" font-size="9.5" fill="#0f5132" text-anchor="middle">算子只按"统一格式"写一次通用逻辑，</text>
+  <text x="755" y="220" font-size="9.5" fill="#3f8f66" text-anchor="middle">flat/const/dict/sequence 都能吃 —— 布局无关</text>
+
+  <!-- 选择向量 -->
+  <rect x="30" y="272" width="960" height="88" rx="14" fill="#f4eefb" stroke="#d9c9ef" filter="url(#soft)"/>
+  <text x="48" y="296" font-size="12" font-weight="600" fill="#3c1361">SelectionVector · 过滤不搬数据</text>
+  <text x="48" y="320" font-size="10.5" fill="#7a5aa8">过滤时不物理删除/复制行，而是产生一个"选中下标"数组（如 [0,3,4,7]）覆盖在原向量上——</text>
+  <text x="48" y="342" font-size="10.5" fill="#7a5aa8">下游按选择向量只处理选中行。零拷贝、可级联，是向量化过滤/Join 的关键机制。</text>
+
+  <!-- 流动 -->
+  <rect x="30" y="378" width="960" height="46" rx="12" fill="#f6f6f8" stroke="#e2e2e7"/>
+  <text x="510" y="405" font-size="10.5" fill="#494950" text-anchor="middle">DataChunk 是全引擎的数据货币：扫描产出它、算子间传递它、结果按它返回——始终以列批为粒度。</text>
+
+  <line x1="500" y1="150" x2="520" y2="150" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+</svg>

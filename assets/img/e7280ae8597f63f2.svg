@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="500" viewBox="0 0 920 500" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="920" height="500" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">itab 查找与缓存 · getitab → itabTable 开放寻址哈希去重</text>
+
+  <!-- static path (green = fast) -->
+  <rect x="30" y="52" width="860" height="60" rx="12" fill="#eef7f0" stroke="#bfe0c8" filter="url(#soft)"/>
+  <text x="46" y="77" font-size="12.5" font-weight="600" fill="#1d4a2b">多数情况：编译器静态生成 itab</text>
+  <text x="46" y="96" font-size="10.5" fill="#4a8c60">类型和接口都已知时（var r io.Reader = f），itab 直接嵌进二进制——无运行期查找</text>
+
+  <!-- dynamic path header (blue) -->
+  <rect x="30" y="126" width="860" height="46" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="46" y="145" font-size="12.5" font-weight="600" fill="#1b2a4a">动态情况（类型断言到接口、反射）→ getitab · iface.go:44</text>
+  <text x="46" y="162" font-size="10" fill="#5b7db1">运行期按 (接口 + 类型) 求 itab</text>
+
+  <line x1="130" y1="172" x2="130" y2="196" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- step 1: query itabTable (amber = storage) -->
+  <rect x="30" y="200" width="300" height="120" rx="12" fill="#fdf6ec" stroke="#f0dcaf" filter="url(#soft)"/>
+  <text x="46" y="225" font-size="12" font-weight="600" fill="#6b4e16">① 查全局 itabTable</text>
+  <text x="46" y="243" font-size="10" fill="#a9822f">iface.go:19</text>
+  <rect x="46" y="252" width="268" height="26" rx="7" fill="#ffffff" stroke="#f0dcaf"/>
+  <text x="56" y="270" font-size="10" fill="#6b4e16">开放寻址哈希表</text>
+  <rect x="46" y="284" width="268" height="26" rx="7" fill="#ffffff" stroke="#f0dcaf"/>
+  <text x="56" y="302" font-size="10" fill="#6b4e16">键 = hash(接口, 类型)</text>
+
+  <!-- decision: hit? (purple = rule) -->
+  <rect x="360" y="200" width="230" height="120" rx="12" fill="#f5f0fb" stroke="#ddcdf0" filter="url(#soft)"/>
+  <text x="475" y="245" font-size="12" font-weight="600" fill="#3d2a5a" text-anchor="middle">命中？</text>
+  <text x="475" y="268" font-size="10.5" fill="#7d5bb1" text-anchor="middle">表中已有该 (接口,类型)</text>
+  <text x="475" y="286" font-size="10.5" fill="#7d5bb1" text-anchor="middle">的 itab？</text>
+
+  <line x1="330" y1="260" x2="358" y2="260" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- hit → use (green) -->
+  <rect x="620" y="200" width="270" height="56" rx="12" fill="#eef7f0" stroke="#bfe0c8" filter="url(#soft)"/>
+  <text x="636" y="225" font-size="11.5" font-weight="600" fill="#1d4a2b">命中 → 直接用（O(1)）</text>
+  <text x="636" y="244" font-size="10" fill="#4a8c60">后续同对查表即返回</text>
+  <line x1="590" y1="228" x2="618" y2="228" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <text x="604" y="220" font-size="9.5" fill="#4a8c60" text-anchor="middle">是</text>
+
+  <!-- miss → build (down) -->
+  <line x1="475" y1="320" x2="475" y2="346" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <text x="490" y="338" font-size="9.5" fill="#b15b5b">否（未命中）</text>
+
+  <!-- step 2: check method set (purple) -->
+  <rect x="30" y="350" width="410" height="120" rx="12" fill="#f5f0fb" stroke="#ddcdf0" filter="url(#soft)"/>
+  <text x="46" y="375" font-size="12" font-weight="600" fill="#3d2a5a">② 检查方法集是否满足接口</text>
+  <text x="46" y="394" font-size="10.5" fill="#7d5bb1">遍历接口每个方法，在具体类型方法集中查找</text>
+  <rect x="46" y="404" width="378" height="26" rx="7" fill="#eff9f2" stroke="#bfe0c8"/>
+  <text x="56" y="422" font-size="10" fill="#1d4a2b">全满足 → 填 Fun[]（各方法地址）</text>
+  <rect x="46" y="436" width="378" height="26" rx="7" fill="#fbeeee" stroke="#f0c4c4"/>
+  <text x="56" y="454" font-size="10" fill="#7a1f1f">缺方法 → Fun[0]=0（断言失败 / panic）</text>
+
+  <line x1="440" y1="410" x2="486" y2="410" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- step 3: itabAdd publish (blue) -->
+  <rect x="490" y="350" width="400" height="120" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="506" y="375" font-size="12" font-weight="600" fill="#1b2a4a">③ 构建新 itab → itabAdd · iface.go:132</text>
+  <text x="506" y="394" font-size="10.5" fill="#5b7db1">原子发布入 itabTable 缓存</text>
+  <rect x="506" y="404" width="368" height="26" rx="7" fill="#ffffff" stroke="#bcd0ec"/>
+  <text x="516" y="422" font-size="10" fill="#1b2a4a">必要时扩容表（grown）后再插入</text>
+  <rect x="506" y="436" width="368" height="26" rx="7" fill="#eff9f2" stroke="#bfe0c8"/>
+  <text x="516" y="454" font-size="10" fill="#1d4a2b">于是同对全程只构建一次，后续 O(1) 查表</text>
+</svg>

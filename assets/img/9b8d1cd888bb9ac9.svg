@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="620" viewBox="0 0 1120 620" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="aB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#4a7fd0"/></marker>
+    <marker id="aG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+    <marker id="aR" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#d1544a"/></marker>
+  </defs>
+  <rect width="1120" height="620" fill="#fbfbfd"/>
+
+  <text x="30" y="32" font-size="15" font-weight="700" fill="#1d1d1f">崩溃恢复同步 · Leader 崩溃后，选 zxid 最大的副本当新 Leader，用 DIFF / TRUNC / SNAP 把各 follower 同步到统一起点再开新 epoch</text>
+  <text x="30" y="53" font-size="10.5" fill="#6e6e73">恢复要保证两点：① 已在旧任期被 COMMIT 的提案不丢；② 未提交、只在少数副本上的「悬挂提案」被丢弃 —— 否则不同副本前缀会分叉</text>
+
+  <!-- 图例 -->
+  <line x1="30" y1="80" x2="54" y2="80" stroke="#2f9e6e" stroke-width="2" marker-end="url(#aG)"/>
+  <text x="60" y="84" font-size="10" fill="#3a3a3c">DIFF：补发缺失提案</text>
+  <line x1="230" y1="80" x2="254" y2="80" stroke="#d1544a" stroke-width="2" marker-end="url(#aR)"/>
+  <text x="260" y="84" font-size="10" fill="#3a3a3c">TRUNC：截断多余悬挂提案</text>
+  <line x1="470" y1="80" x2="494" y2="80" stroke="#4a7fd0" stroke-width="2" marker-end="url(#aB)"/>
+  <text x="500" y="84" font-size="10" fill="#3a3a3c">SNAP：差距过大直接传快照</text>
+
+  <!-- 阶段1：选主 -->
+  <rect x="30" y="100" width="1060" height="70" rx="12" fill="#f4eefb" stroke="#dcc9ef"/>
+  <text x="48" y="122" font-size="11.5" font-weight="700" fill="#6f3ea8">① 选主 (Leader Election)：选出「最新」副本 —— zxid 最大者胜出</text>
+  <text x="48" y="144" font-size="10" fill="#5a3a7a">依据：zxid 最大的副本必然包含所有已 COMMIT 的提案（COMMIT 需过半，而任两个过半集合相交）。</text>
+  <text x="48" y="160" font-size="10" fill="#5a3a7a">当选后 Leader 递增 epoch：new_epoch = max(seen epoch)+1，新 zxid 的 counter 从 0 起 —— 旧届提案永不会被新 zxid 覆盖混淆。</text>
+
+  <!-- 阶段2：同步（核心） -->
+  <text x="48" y="196" font-size="11.5" font-weight="700" fill="#1d1d1f">② 同步 (Synchronization)：新 Leader 逐个把 follower 拉到与自己一致的前缀</text>
+
+  <!-- 新 Leader 日志 -->
+  <text x="40" y="228" font-size="10.5" font-weight="700" fill="#2f6b4e">新 Leader（zxid 最大，真源）</text>
+  <g font-size="9" text-anchor="middle">
+    <rect x="40" y="238" width="58" height="34" rx="6" fill="#eaf6f0" stroke="#bfe3d1"/><text x="69" y="259" fill="#2f6b4e">e1·1</text>
+    <rect x="100" y="238" width="58" height="34" rx="6" fill="#eaf6f0" stroke="#bfe3d1"/><text x="129" y="259" fill="#2f6b4e">e1·2</text>
+    <rect x="160" y="238" width="58" height="34" rx="6" fill="#eaf6f0" stroke="#bfe3d1"/><text x="189" y="259" fill="#2f6b4e">e1·3</text>
+    <rect x="220" y="238" width="58" height="34" rx="6" fill="#eaf6f0" stroke="#bfe3d1"/><text x="249" y="259" fill="#2f6b4e">e1·4</text>
+  </g>
+  <text x="289" y="259" font-size="9" fill="#3f8a63">← 全部已 COMMIT（committed 前缀）</text>
+
+  <!-- 三种 follower 场景 -->
+  <!-- F_a: 落后 -> DIFF -->
+  <text x="40" y="316" font-size="10" font-weight="700" fill="#2f6b4e">Fa · 落后（缺 e1·3,e1·4）→ DIFF</text>
+  <g font-size="9" text-anchor="middle">
+    <rect x="40" y="326" width="58" height="34" rx="6" fill="#eaf6f0" stroke="#bfe3d1"/><text x="69" y="347" fill="#2f6b4e">e1·1</text>
+    <rect x="100" y="326" width="58" height="34" rx="6" fill="#eaf6f0" stroke="#bfe3d1"/><text x="129" y="347" fill="#2f6b4e">e1·2</text>
+    <rect x="160" y="326" width="58" height="34" rx="6" fill="#f4f4f6" stroke="#d7d7dd" stroke-dasharray="3 2"/><text x="189" y="347" fill="#a1a1a6">缺</text>
+    <rect x="220" y="326" width="58" height="34" rx="6" fill="#f4f4f6" stroke="#d7d7dd" stroke-dasharray="3 2"/><text x="249" y="347" fill="#a1a1a6">缺</text>
+  </g>
+  <path d="M320 343 L470 343" stroke="#2f9e6e" stroke-width="1.8" marker-end="url(#aG)"/>
+  <text x="484" y="340" font-size="9.5" fill="#2f6b4e">DIFF：补发 e1·3, e1·4</text>
+  <text x="484" y="355" font-size="9" fill="#3f8a63">→ 追平到 e1·4</text>
+
+  <!-- F_b: 悬挂 -> TRUNC -->
+  <text x="40" y="392" font-size="10" font-weight="700" fill="#8a4038">Fb · 有未提交悬挂提案 e1·5' → TRUNC</text>
+  <g font-size="9" text-anchor="middle">
+    <rect x="40" y="402" width="58" height="34" rx="6" fill="#eaf6f0" stroke="#bfe3d1"/><text x="69" y="423" fill="#2f6b4e">e1·1</text>
+    <rect x="100" y="402" width="58" height="34" rx="6" fill="#eaf6f0" stroke="#bfe3d1"/><text x="129" y="423" fill="#2f6b4e">e1·2</text>
+    <rect x="160" y="402" width="58" height="34" rx="6" fill="#eaf6f0" stroke="#bfe3d1"/><text x="189" y="423" fill="#2f6b4e">e1·3</text>
+    <rect x="220" y="402" width="58" height="34" rx="6" fill="#eaf6f0" stroke="#bfe3d1"/><text x="249" y="423" fill="#2f6b4e">e1·4</text>
+    <rect x="280" y="402" width="58" height="34" rx="6" fill="#fbe6e3" stroke="#e8a79f"/><text x="309" y="420" fill="#8a4038">e1·5'</text><text x="309" y="431" font-size="7.5" fill="#b06a60">未提交</text>
+  </g>
+  <path d="M360 419 L470 419" stroke="#d1544a" stroke-width="1.8" marker-end="url(#aR)"/>
+  <text x="484" y="416" font-size="9.5" fill="#8a4038">TRUNC：丢弃 e1·5'</text>
+  <text x="484" y="431" font-size="9" fill="#b06a60">该提案未过半 → 从未 COMMIT，安全截断</text>
+
+  <!-- F_c: 差距过大 -> SNAP -->
+  <text x="40" y="468" font-size="10" font-weight="700" fill="#20375e">Fc · 落后过多 / 日志已被清 → SNAP</text>
+  <g font-size="9" text-anchor="middle">
+    <rect x="40" y="478" width="58" height="34" rx="6" fill="#f4f4f6" stroke="#d7d7dd" stroke-dasharray="3 2"/><text x="69" y="499" fill="#a1a1a6">陈旧</text>
+  </g>
+  <path d="M110 495 L470 495" stroke="#4a7fd0" stroke-width="1.8" marker-end="url(#aB)"/>
+  <text x="484" y="492" font-size="9.5" fill="#20375e">SNAP：直接传整份状态快照</text>
+  <text x="484" y="507" font-size="9" fill="#5a7099">→ 重建数据树后接续 e1·4 之后</text>
+
+  <!-- 阶段3：广播 -->
+  <rect x="720" y="300" width="370" height="140" rx="12" fill="#eaf6f0" stroke="#bfe3d1" filter="url(#soft)"/>
+  <text x="740" y="324" font-size="11" font-weight="700" fill="#2f6b4e">③ 同步完成 → 进入广播阶段</text>
+  <text x="740" y="348" font-size="9.5" fill="#3f8a63">所有 follower 前缀与 Leader 一致后，</text>
+  <text x="740" y="364" font-size="9.5" fill="#3f8a63">Leader 发 NEWLEADER / UPTODATE 确认，</text>
+  <text x="740" y="380" font-size="9.5" fill="#3f8a63">获过半 ACK 即宣告新 epoch 生效，</text>
+  <text x="740" y="396" font-size="9.5" fill="#3f8a63">恢复对外服务，回到 Z1 原子广播稳态。</text>
+  <text x="740" y="420" font-size="9" fill="#8a97ab">此后新写入用 new_epoch 的 zxid，counter 续增。</text>
+
+  <!-- 底部不变式 -->
+  <rect x="30" y="536" width="1060" height="68" rx="12" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="48" y="560" font-size="10.5" font-weight="700" fill="#2f6b4e">恢复不变式</text>
+  <text x="130" y="560" font-size="10" fill="#4a4a4f">已 COMMIT 的提案在恢复后必然保留（选 zxid 最大者 + 过半相交保证其含全部已提交前缀）。</text>
+  <text x="48" y="584" font-size="10.5" font-weight="700" fill="#8a4038">分叉消除</text>
+  <text x="130" y="584" font-size="10" fill="#4a4a4f">未提交悬挂提案一律 TRUNC 丢弃；epoch 递增使旧届残留提案无法与新提案的 zxid 混淆 → 所有副本收敛到同一前缀。</text>
+</svg>

@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="560" viewBox="0 0 1060 560" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs><filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+  <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker></defs>
+  <rect width="1060" height="560" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">调度两层：DAGScheduler（stage 级）→ TaskScheduler（task 级）</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">解耦：逻辑依赖 vs 物理放置 · 交接点 submitTasks(TaskSchedulerImpl.scala:243)</text>
+  <rect x="40" y="80" width="460" height="200" rx="14" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="270" y="104" font-size="12" font-weight="700" fill="#12402a" text-anchor="middle">DAGScheduler（stage 级 · 逻辑）</text>
+  <text x="60" y="128" font-size="9" fill="#2f6f4f">· 沿血缘切 stage（宽依赖边界）</text>
+  <text x="60" y="148" font-size="9" fill="#2f6f4f">· 管 stage 依赖与提交顺序（先父后子）</text>
+  <text x="60" y="168" font-size="9" fill="#2f6f4f">· 每 stage 按分区拆 task → 打包 TaskSet</text>
+  <text x="60" y="188" font-size="9" fill="#2f6f4f">· stage 级失败处理（FetchFailed 重跑）</text>
+  <text x="270" y="216" font-size="9" fill="#4c8567" text-anchor="middle">关心："job 怎么拆成 stage、哪个先跑"</text>
+  <text x="270" y="256" font-size="8.5" fill="#8aa6cf" text-anchor="middle">属"执行模型"主线，调度只承接其 TaskSet</text>
+  <rect x="560" y="80" width="460" height="200" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="790" y="104" font-size="12" font-weight="700" fill="#1b2a4a" text-anchor="middle">TaskScheduler（task 级 · 物理）</text>
+  <text x="580" y="128" font-size="9" fill="#5b7db1">· TaskSetManager 管每个 TaskSet（:56）</text>
+  <text x="580" y="148" font-size="9" fill="#5b7db1">· locality 延迟调度（就近执行）</text>
+  <text x="580" y="168" font-size="9" fill="#5b7db1">· task 级重试、推测执行</text>
+  <text x="580" y="188" font-size="9" fill="#5b7db1">· resourceOffers：executor 空闲时挑 task</text>
+  <text x="790" y="216" font-size="9" fill="#8aa6cf" text-anchor="middle">关心："每个 task 派到哪个 executor"</text>
+  <text x="790" y="256" font-size="8.5" fill="#8aa6cf" text-anchor="middle">TaskSchedulerImpl.scala:83</text>
+  <g text-anchor="middle"><rect x="410" y="298" width="240" height="50" rx="12" fill="#fff7e6" stroke="#e8cf9a"/><text x="530" y="320" font-size="10.5" font-weight="700" fill="#5a3410">交接：submitTasks(TaskSet)</text><text x="530" y="338" font-size="8.5" fill="#93762e">DAGScheduler.scala:2021 → TaskSchedulerImpl:243</text></g>
+  <g stroke="#c7c7cc" stroke-width="1.5" fill="none"><line x1="410" y1="323" x2="270" y2="280" marker-end="url(#ar)"/><line x1="650" y1="323" x2="790" y2="280" marker-end="url(#ar)"/></g>
+  <rect x="40" y="366" width="980" height="90" rx="13" fill="#fdf9f0" stroke="#efe3cd"/>
+  <text x="60" y="390" font-size="11" font-weight="700" fill="#7a5a1e">为什么分两层</text>
+  <text x="60" y="412" font-size="9.5" fill="#93762e">· DAG 级只关心"逻辑依赖/顺序"，与物理集群无关——可复用于任意 cluster manager</text>
+  <text x="60" y="430" font-size="9.5" fill="#93762e">· Task 级只关心"物理放置/资源"，不关心 stage 语义——locality/重试/推测都在此</text>
+  <text x="60" y="448" font-size="9" fill="#b08843">· 解耦让两层各自演进：加新 cluster manager 只动 backend，不动 DAG 逻辑</text>
+  <rect x="40" y="466" width="980" height="76" rx="12" fill="#f7f7f9" stroke="#e6e6ea"/>
+  <text x="60" y="490" font-size="11" font-weight="700" fill="#1d1d1f">一句话</text>
+  <text x="60" y="512" font-size="10" fill="#4b4b50">调度分两层：DAGScheduler 管 stage 级（切 stage、依赖顺序，属执行模型），TaskScheduler/TaskSetManager 管 task 级</text>
+  <text x="60" y="530" font-size="10" fill="#4b4b50">（locality、重试、放置）。DAG 把 TaskSet 交给 TaskScheduler——逻辑依赖与物理放置解耦，各自演进。</text>
+</svg>

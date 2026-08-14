@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="540" viewBox="0 0 1080 540" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="540" fill="#fbfbfd"/>
+
+  <!-- 标题 -->
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">vLLM token 预算与 chunked prefill —— 每步 token 总数受约束,长 prompt 切块与 decode 混批</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">max_num_batched_tokens 约束每步 token 总数;prefill(处理 prompt 多 token) vs decode(生成 1 token/请求),混批避免长 prompt 阻塞 decode</text>
+
+  <!-- ① token 预算 (blue) -->
+  <rect x="30" y="70" width="1020" height="96" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="50" y="94" font-size="12.5" font-weight="600" fill="#1b2a4a">max_num_batched_tokens (:113) · 每步最多处理的 token 总数(预算)</text>
+  <text x="50" y="116" font-size="9.5" fill="#5b7db1">调度时(:437)累加候选请求的 token,不超预算才纳入 → 一步计算量可控(显存/时延)</text>
+  <!-- 预算条 -->
+  <rect x="50" y="128" width="900" height="24" rx="6" fill="#ffffff" stroke="#bcd0ec"/>
+  <rect x="52" y="130" width="360" height="20" rx="5" fill="#e8cf9a" opacity="0.7"/>
+  <rect x="414" y="130" width="120" height="20" rx="5" fill="#7fc79e"/>
+  <rect x="536" y="130" width="140" height="20" rx="5" fill="#7fc79e"/>
+  <text x="232" y="145" font-size="8.5" text-anchor="middle" fill="#5a3410">prefill 分块(多 token)</text>
+  <text x="605" y="145" font-size="8.5" text-anchor="middle" fill="#12402a">若干 decode</text>
+  <text x="812" y="145" font-size="8.5" text-anchor="middle" fill="#5b7db1">剩余预算(不再纳入)</text>
+  <text x="968" y="145" font-size="9" fill="#1b2a4a">= 预算上限</text>
+
+  <!-- ② 两类工作 prefill vs decode -->
+  <!-- prefill (amber) -->
+  <rect x="30" y="182" width="500" height="96" rx="12" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="50" y="206" font-size="12" font-weight="600" fill="#5a3410">prefill · 处理 prompt</text>
+  <text x="50" y="228" font-size="9.5" fill="#93762e">一次多 token(整段 prompt)——吃 token 多</text>
+  <text x="50" y="246" font-size="9.5" fill="#93762e">长 prompt 若一次全 prefill → 占满一步</text>
+  <text x="50" y="266" font-size="9" fill="#b1974e">会让正在解码的请求卡顿</text>
+
+  <!-- decode (green) -->
+  <rect x="550" y="182" width="500" height="96" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="570" y="206" font-size="12" font-weight="600" fill="#12402a">decode · 生成</text>
+  <text x="570" y="228" font-size="9.5" fill="#2f6f4f">一次 1 token / 请求——吃 token 少</text>
+  <text x="570" y="246" font-size="9.5" fill="#2f6f4f">每个活跃请求每步各出 1 个新 token</text>
+  <text x="570" y="266" font-size="9" fill="#4a8a63">时延敏感(TPOT),不应被长 prefill 阻塞</text>
+
+  <!-- ③ chunked prefill -->
+  <rect x="30" y="294" width="1020" height="164" rx="12" fill="#ffffff" stroke="#e4e4ea" filter="url(#soft)"/>
+  <text x="50" y="318" font-size="11.5" font-weight="600" fill="#1d1d1f">chunked prefill · 长 prompt 的 prefill 切成块,分几步做,与其他请求的 decode 混在同一批</text>
+
+  <!-- 一个长 prompt 被切成 3 块,分布在 3 步 -->
+  <text x="50" y="344" font-size="9.5" fill="#6e6e73">长 prompt(切 3 块)</text>
+  <!-- step1 -->
+  <rect x="50" y="354" width="300" height="86" rx="9" fill="#f9fafb" stroke="#e4e4ea"/>
+  <text x="200" y="374" font-size="9.5" font-weight="600" text-anchor="middle" fill="#1d1d1f">step N</text>
+  <rect x="66" y="384" width="120" height="20" rx="4" fill="#e8cf9a" opacity="0.75"/>
+  <text x="126" y="398" font-size="8" text-anchor="middle" fill="#5a3410">prefill chunk 1</text>
+  <rect x="196" y="384" width="40" height="20" rx="4" fill="#7fc79e"/>
+  <rect x="242" y="384" width="40" height="20" rx="4" fill="#7fc79e"/>
+  <rect x="288" y="384" width="40" height="20" rx="4" fill="#7fc79e"/>
+  <text x="200" y="424" font-size="8" text-anchor="middle" fill="#4a8a63">+ 其他请求 decode</text>
+  <!-- step2 -->
+  <rect x="390" y="354" width="300" height="86" rx="9" fill="#f9fafb" stroke="#e4e4ea"/>
+  <text x="540" y="374" font-size="9.5" font-weight="600" text-anchor="middle" fill="#1d1d1f">step N+1</text>
+  <rect x="406" y="384" width="120" height="20" rx="4" fill="#e8cf9a" opacity="0.75"/>
+  <text x="466" y="398" font-size="8" text-anchor="middle" fill="#5a3410">prefill chunk 2</text>
+  <rect x="536" y="384" width="40" height="20" rx="4" fill="#7fc79e"/>
+  <rect x="582" y="384" width="40" height="20" rx="4" fill="#7fc79e"/>
+  <rect x="628" y="384" width="40" height="20" rx="4" fill="#7fc79e"/>
+  <text x="540" y="424" font-size="8" text-anchor="middle" fill="#4a8a63">decode 不被阻塞,继续出 token</text>
+  <!-- step3 -->
+  <rect x="730" y="354" width="300" height="86" rx="9" fill="#f9fafb" stroke="#e4e4ea"/>
+  <text x="880" y="374" font-size="9.5" font-weight="600" text-anchor="middle" fill="#1d1d1f">step N+2</text>
+  <rect x="746" y="384" width="120" height="20" rx="4" fill="#e8cf9a" opacity="0.75"/>
+  <text x="806" y="398" font-size="8" text-anchor="middle" fill="#5a3410">prefill chunk 3</text>
+  <rect x="876" y="384" width="40" height="20" rx="4" fill="#7fc79e"/>
+  <rect x="922" y="384" width="40" height="20" rx="4" fill="#7fc79e"/>
+  <rect x="968" y="384" width="40" height="20" rx="4" fill="#7fc79e"/>
+  <text x="880" y="424" font-size="8" text-anchor="middle" fill="#4a8a63">prefill 完成,请求转入 decode</text>
+
+  <path d="M350,397 L390,397" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M690,397 L730,397" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <!-- 底注 -->
+  <text x="30" y="488" font-size="9.5" fill="#6e6e73">为什么切块混批:切块让 prefill 和 decode 平滑共存,兼顾吞吐和单请求时延(TTFT/TPOT);避免长 prompt 独占一步、阻塞 decode。</text>
+  <text x="30" y="522" font-size="9" fill="#a1a1a6">误区:调大 batch tokens 总是更好——太大单步时延高、可能触发更多抢占,按 SLA 平衡 · vLLM(git 7aab6e2, v1) · sched/scheduler.py</text>
+</svg>

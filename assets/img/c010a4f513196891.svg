@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="500" viewBox="0 0 1080 500" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs><filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+  <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker></defs>
+  <rect width="1080" height="500" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Txn：If-Then-Else 单次往返原子事务（CAS 基础）</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">Txn(compare[], success[], failure[]) · 整体作为一个 Raft 条目 apply → 原子 · 乐观并发控制</text>
+  <!-- structure -->
+  <rect x="40" y="76" width="300" height="150" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="190" y="100" font-size="11" font-weight="700" fill="#1b2a4a" text-anchor="middle">IF：compare[]</text>
+  <text x="60" y="124" font-size="9" fill="#5b7db1">比较 key 的：</text>
+  <text x="60" y="144" font-size="9" fill="#5b7db1">· value（值）</text>
+  <text x="60" y="164" font-size="9" fill="#5b7db1">· version（改动次数）</text>
+  <text x="60" y="184" font-size="9" fill="#5b7db1">· create_revision / mod_revision</text>
+  <text x="60" y="206" font-size="8.5" fill="#8aa6cf">全部为真 → success；否则 failure</text>
+  <rect x="380" y="76" width="300" height="150" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="530" y="100" font-size="11" font-weight="700" fill="#12402a" text-anchor="middle">THEN：success_ops[]</text>
+  <text x="400" y="124" font-size="9" fill="#2f6f4f">条件全真时执行：</text>
+  <text x="400" y="144" font-size="9" fill="#2f6f4f">· Put / DeleteRange / Range</text>
+  <text x="400" y="164" font-size="9" fill="#2f6f4f">· 可多个操作</text>
+  <text x="400" y="186" font-size="8.5" fill="#4c8567">如："若没被改过 → 更新"</text>
+  <text x="400" y="206" font-size="8.5" fill="#4c8567">CAS 的核心</text>
+  <rect x="720" y="76" width="320" height="150" rx="12" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+  <text x="880" y="100" font-size="11" font-weight="700" fill="#5a3410" text-anchor="middle">ELSE：failure_ops[]</text>
+  <text x="740" y="124" font-size="9" fill="#93762e">条件不满足时执行：</text>
+  <text x="740" y="144" font-size="9" fill="#93762e">· 通常是 Range（读回当前值）</text>
+  <text x="740" y="164" font-size="9" fill="#93762e">· 或其他补偿操作</text>
+  <text x="740" y="186" font-size="8.5" fill="#b08843">如："被改过 → 读回最新重试"</text>
+  <text x="740" y="206" font-size="8.5" fill="#b08843">乐观并发的失败分支</text>
+  <rect x="40" y="246" width="490" height="150" rx="12" fill="#f3f7fc" stroke="#cfe0f2"/>
+  <text x="60" y="270" font-size="11" font-weight="700" fill="#274a78">原子性 + CAS 用途</text>
+  <text x="60" y="294" font-size="9.5" fill="#5b7db1">· 整个 Txn 作为一个 Raft 条目 apply → 要么全成、要么全不成</text>
+  <text x="60" y="314" font-size="9.5" fill="#5b7db1">· 例（CAS）：若 mod_revision==X 则 Put v2</text>
+  <text x="75" y="332" font-size="8.5" fill="#8aa6cf">→ 保证"我读到 X 后没人改过才写"，无竞态</text>
+  <text x="60" y="352" font-size="9.5" fill="#5b7db1">· 分布式锁：Txn(若锁 key 不存在 → 创建并挂 lease)</text>
+  <text x="60" y="372" font-size="9.5" fill="#5b7db1">· 选主：多节点 Txn 抢同一 key，只有一个成功</text>
+  <text x="60" y="390" font-size="8.5" fill="#8aa6cf">Election/Lock 高层 API 就是 Txn+Lease 的封装</text>
+  <rect x="550" y="246" width="490" height="150" rx="12" fill="#fdf9f0" stroke="#efe3cd"/>
+  <text x="570" y="270" font-size="11" font-weight="700" fill="#7a5a1e">对比 SQL 事务</text>
+  <text x="570" y="294" font-size="9.5" fill="#93762e">· etcd Txn = 单次往返的 mini 事务</text>
+  <text x="570" y="314" font-size="9.5" fill="#93762e">· 无 BEGIN/COMMIT 交互式事务（无多次往返）</text>
+  <text x="570" y="334" font-size="9.5" fill="#93762e">· 一次请求带齐条件 + 操作</text>
+  <text x="570" y="354" font-size="9" fill="#b08843">· 为什么：交互式事务在强一致+高并发下代价太高</text>
+  <text x="570" y="374" font-size="9" fill="#b08843">· 复杂多步逻辑 → 拆成多个 Txn 或用 STM 库（客户端封装）</text>
+  <text x="570" y="390" font-size="8.5" fill="#a98a4a">误区：别用"读-改-写"三次往返代替 Txn（有竞态）</text>
+  <rect x="40" y="416" width="1000" height="56" rx="12" fill="#f7f7f9" stroke="#e6e6ea"/>
+  <text x="60" y="440" font-size="11" font-weight="700" fill="#1d1d1f">一句话</text>
+  <text x="60" y="462" font-size="10" fill="#4b4b50">Txn 是 If(compare)-Then(success)-Else(failure) 的单次往返原子事务（整体一个 Raft 条目），是乐观并发（CAS）的基础——分布式锁、选主、compare-and-swap 全靠它；无交互式 BEGIN/COMMIT。</text>
+</svg>

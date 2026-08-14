@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="680" viewBox="0 0 1080 680" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+  </defs>
+  <rect x="0" y="0" width="1080" height="680" fill="#fbfbfd"/>
+  <text x="40" y="38" font-size="16" font-weight="600" fill="#1d1d1f">常见问题 · 读写两类的失败恢复与瓶颈</text>
+  <text x="40" y="58" font-size="11.5" fill="#86868b">写侧看失败点/重试/幂等/可见性;读侧看链路最易慢点与调优方向。排障先按"读/写 + 环节"定位。</text>
+
+  <!-- 写侧 -->
+  <rect x="30" y="78" width="1020" height="286" rx="16" fill="#fdf1e7" stroke="#f2d9c2"/>
+  <text x="50" y="102" font-size="14" font-weight="600" fill="#8a3a12">写侧 · 失败恢复与一致性(失败点 → 重试/恢复 → 幂等 → 可见时刻)</text>
+  <g font-size="10" fill="#4a4e57">
+    <!-- header -->
+    <text x="60" y="128" font-size="10" font-weight="600" fill="#a86a3a">流程</text>
+    <text x="205" y="128" font-size="10" font-weight="600" fill="#a86a3a">失败点</text>
+    <text x="430" y="128" font-size="10" font-weight="600" fill="#a86a3a">重试 / 恢复 · 幂等</text>
+    <text x="800" y="128" font-size="10" font-weight="600" fill="#a86a3a">可见时刻</text>
+    <line x1="50" y1="134" x2="1030" y2="134" stroke="#f2d9c2"/>
+  </g>
+  <g font-size="10" fill="#4a4e57">
+    <text x="60" y="154" font-weight="600" fill="#1d1d1f">事务/MVCC</text><text x="205" y="154">commit 后 publish 前 BE 宕</text><text x="430" y="154">FE 重发 publish;version 未定则不可见(幂等)</text><text x="800" y="154">publish 定 version 后,读 ≥该 version 可见</text>
+    <text x="60" y="178" font-weight="600" fill="#1d1d1f">Stream Load</text><text x="205" y="178">导入中 BE 挂 / 超时</text><text x="430" y="178">整批回滚,按 label 重试;label 唯一拒重复</text><text x="800" y="178">事务 publish 后整批一次性可见</text>
+    <text x="60" y="202" font-weight="600" fill="#1d1d1f">Group Commit</text><text x="205" y="202">攒批 flush 前 BE 宕</text><text x="430" y="202">WAL 重放恢复;wal_id=txn_id 去重</text><text x="800" y="202">publish 后可见(ASYNC 有窗口)</text>
+    <text x="60" y="226" font-weight="600" fill="#1d1d1f">Routine Load</text><text x="205" y="226">消费/offset 提交失败</text><text x="430" y="226">从上次 offset 重消费;offset+事务原子提交</text><text x="800" y="226">子事务 publish 后可见;exactly-once</text>
+    <text x="60" y="250" font-weight="600" fill="#1d1d1f">Schema Change</text><text x="205" y="250">转换中 BE 挂 / 追不上</text><text x="430" y="250">状态机可重入;失败 CANCELLED 清影子</text><text x="800" y="250">onFinished 原子切换后走新 schema</text>
+    <text x="60" y="274" font-weight="600" fill="#1d1d1f">Compaction</text><text x="205" y="274">归并中崩溃 / 输出未提交</text><text x="430" y="274">丢弃输出,输入不变(安全);未 commit 无副作用</text><text x="800" y="274">modify_rowsets 提交后读走新 rowset</text>
+    <text x="60" y="298" font-weight="600" fill="#1d1d1f">Tablet 修复</text><text x="205" y="298">clone 中源/目标 BE 挂</text><text x="430" y="298">超时回收重选源;clone 幂等(版本追平即完成)</text><text x="800" y="298">副本追平后计入多数派、可读</text>
+    <text x="60" y="322" font-weight="600" fill="#1d1d1f">存算分离写</text><text x="205" y="322">上传/commit MetaService 失败</text><text x="430" y="322">重试;ALREADY_EXISTED 幂等;rowset_id 幂等</text><text x="800" y="322">MetaService commit 后其他 CN 可见</text>
+    <text x="60" y="348" font-size="9.5" fill="#a86a3a">一句话:写入"数据落盘 ≠ 可见";publish 定 version 才可见,失败均可按 label/txn/offset 幂等重试,不脏读。</text>
+  </g>
+
+  <!-- 读侧 -->
+  <rect x="30" y="380" width="1020" height="266" rx="16" fill="#eef2fb" stroke="#c9d6ef"/>
+  <text x="50" y="404" font-size="14" font-weight="600" fill="#2f4a7c">读侧 · 瓶颈模型(环节 → 最易慢点 → 症状 → 调优方向)</text>
+  <g font-size="10" fill="#4a4e57">
+    <text x="60" y="430" font-size="10" font-weight="600" fill="#5a6a8c">环节</text>
+    <text x="230" y="430" font-size="10" font-weight="600" fill="#5a6a8c">最易慢点</text>
+    <text x="530" y="430" font-size="10" font-weight="600" fill="#5a6a8c">症状 / 观测</text>
+    <text x="800" y="430" font-size="10" font-weight="600" fill="#5a6a8c">调优方向</text>
+    <line x1="50" y1="436" x2="1030" y2="436" stroke="#c9d6ef"/>
+  </g>
+  <g font-size="10" fill="#4a4e57">
+    <text x="60" y="456" font-weight="600" fill="#1d1d1f">FE · CBO</text><text x="230" y="456">大 join reorder 枚举爆炸</text><text x="530" y="456">plan 时间长;FE CPU 高</text><text x="800" y="456">控 join 数;统计准;必要时 hint</text>
+    <text x="60" y="478" font-weight="600" fill="#1d1d1f">FE · Split</text><text x="230" y="478">外表文件数巨大,getSplits 慢</text><text x="530" y="478">FE 卡规划;Split 数百万</text><text x="800" y="478">分区裁剪;合并小文件;并行 listing</text>
+    <text x="60" y="500" font-weight="600" fill="#1d1d1f">FE→BE RPC</text><text x="230" y="500">fragment 扇出多,序列化/RPC 重</text><text x="530" y="500">下发延迟高;小查询也慢</text><text x="800" y="500">控并行度;复用连接;减 fragment</text>
+    <text x="60" y="522" font-weight="600" fill="#1d1d1f">BE · Scan IO</text><text x="230" y="522">冷数据/外表/缓存未命中</text><text x="530" y="522">scan 占比高;IO 打满</text><text x="800" y="522">FileCache 预热;谓词下推;列裁剪</text>
+    <text x="60" y="544" font-weight="600" fill="#1d1d1f">BE · 谓词</text><text x="230" y="544">谓词没下推,全量读再过滤</text><text x="530" y="544">扫描行≫返回行;ZoneMap 未命中</text><text x="800" y="544">建索引/分区;避免函数包裹列</text>
+    <text x="60" y="566" font-weight="600" fill="#1d1d1f">BE · Exchange</text><text x="230" y="566">shuffle 量大 / 数据倾斜</text><text x="530" y="566">某 lane 慢拖累整体;网络满</text><text x="800" y="566">bucket shuffle/colocate;打散热点 key</text>
+    <text x="60" y="588" font-weight="600" fill="#1d1d1f">BE · 聚合排序</text><text x="230" y="588">高基数 HashTable 大;spill</text><text x="530" y="588">内存高;触发 spill;变慢</text><text x="800" y="588">提并行;预聚合 MV;增内存/接受 spill</text>
+    <text x="60" y="610" font-weight="600" fill="#1d1d1f">内存 · Tracker</text><text x="230" y="610">查询超 limit 被 cancel</text><text x="530" y="610">MEM_LIMIT_EXCEEDED / -238</text><text x="800" y="610">调 WG 配额;开 spill;优化计划降内存</text>
+    <text x="60" y="632" font-size="9.5" fill="#5a6a8c">一句话:慢查询先按"FE 规划 → RPC 下发 → BE 扫描 → 交换 → 聚合 → 内存"链路逐段看 Profile,定位到最慢环节再对症调优。</text>
+  </g>
+</svg>

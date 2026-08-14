@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="660" viewBox="0 0 1120 660" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="aP" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#8a5cae"/></marker>
+    <marker id="aG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+    <marker id="aA" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#c99a3a"/></marker>
+  </defs>
+  <rect width="1120" height="660" fill="#fbfbfd"/>
+
+  <text x="30" y="32" font-size="15" font-weight="700" fill="#1d1d1f">图解点 ② Percolator 两阶段提交 · Primary 锁作为唯一原子仲裁点：Prewrite 上锁写数据 → Commit 先提交 Primary，Secondary 异步跟进</text>
+  <text x="30" y="53" font-size="10.5" fill="#6e6e73">分布式事务无全局锁：选一个 key 的锁为 Primary，其余 Secondary 锁都指向它；「事务是否提交」= 「Primary 锁是否被换成 commit 记录」这一个原子事实</text>
+
+  <line x1="30" y1="80" x2="54" y2="80" stroke="#c99a3a" stroke-width="2" stroke-dasharray="5 3" marker-end="url(#aA)"/>
+  <text x="60" y="84" font-size="10" fill="#3a3a3c">Phase-1 Prewrite（上锁 + 写数据）</text>
+  <line x1="320" y1="80" x2="344" y2="80" stroke="#8a5cae" stroke-width="2" marker-end="url(#aP)"/>
+  <text x="350" y="84" font-size="10" fill="#3a3a3c">Phase-2 Commit Primary（原子判定点）</text>
+  <line x1="640" y1="80" x2="664" y2="80" stroke="#2f9e6e" stroke-width="2" marker-end="url(#aG)"/>
+  <text x="670" y="84" font-size="10" fill="#3a3a3c">Commit Secondary（异步，可后台补）</text>
+
+  <!-- Phase 1 -->
+  <rect x="30" y="104" width="1060" height="192" rx="14" fill="#fbf6ea" stroke="#ecdcb4"/>
+  <text x="48" y="130" font-size="12.5" font-weight="700" fill="#8a6417">Phase 1 · Prewrite（取 start-ts；给每个写 key 上锁并写入新版本数据）</text>
+
+  <!-- Primary -->
+  <rect x="48" y="146" width="320" height="132" rx="12" fill="#ffffff" stroke="#e6c98a" stroke-width="1.5" filter="url(#soft)"/>
+  <text x="208" y="170" font-size="11.5" font-weight="700" fill="#8a6417" text-anchor="middle">Primary key（选定的仲裁点）</text>
+  <rect x="64" y="182" width="288" height="34" rx="7" fill="#fbf3e2" stroke="#ecd6a8"/>
+  <text x="78" y="204" font-size="10" fill="#7a5a1a">Lock{primary=self, start-ts=100}</text>
+  <rect x="64" y="222" width="288" height="34" rx="7" fill="#f4eefb" stroke="#dcc9ef"/>
+  <text x="78" y="244" font-size="10" fill="#6f3ea8">Data@start-ts=100（新版本，未提交可见）</text>
+  <text x="64" y="272" font-size="8.5" fill="#a98a3a">同 key 已有锁 / 有更新提交 → 冲突，整事务回滚</text>
+
+  <!-- Secondary 1 -->
+  <rect x="392" y="146" width="330" height="132" rx="12" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="557" y="170" font-size="11" font-weight="700" fill="#4a4a4f" text-anchor="middle">Secondary key #1</text>
+  <rect x="408" y="182" width="298" height="34" rx="7" fill="#fbf3e2" stroke="#ecd6a8"/>
+  <text x="422" y="204" font-size="10" fill="#7a5a1a">Lock{primary→Primary, start-ts=100}</text>
+  <rect x="408" y="222" width="298" height="34" rx="7" fill="#f4eefb" stroke="#dcc9ef"/>
+  <text x="422" y="244" font-size="10" fill="#6f3ea8">Data@start-ts=100</text>
+  <text x="408" y="272" font-size="8.5" fill="#8a97ab">锁里存「指向 Primary」的引用，自己不做判定</text>
+
+  <!-- Secondary 2 -->
+  <rect x="746" y="146" width="330" height="132" rx="12" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="911" y="170" font-size="11" font-weight="700" fill="#4a4a4f" text-anchor="middle">Secondary key #2</text>
+  <rect x="762" y="182" width="298" height="34" rx="7" fill="#fbf3e2" stroke="#ecd6a8"/>
+  <text x="776" y="204" font-size="10" fill="#7a5a1a">Lock{primary→Primary, start-ts=100}</text>
+  <rect x="762" y="222" width="298" height="34" rx="7" fill="#f4eefb" stroke="#dcc9ef"/>
+  <text x="776" y="244" font-size="10" fill="#6f3ea8">Data@start-ts=100</text>
+  <text x="762" y="272" font-size="8.5" fill="#8a97ab">所有 Secondary 都指向同一 Primary</text>
+
+  <line x1="557" y1="200" x2="370" y2="200" stroke="#c99a3a" stroke-width="1.6" stroke-dasharray="4 3" marker-end="url(#aA)"/>
+  <line x1="895" y1="216" x2="370" y2="212" stroke="#c99a3a" stroke-width="1.6" stroke-dasharray="4 3" marker-end="url(#aA)"/>
+
+  <!-- Phase 2 -->
+  <rect x="30" y="312" width="1060" height="176" rx="14" fill="#f2f0fa" stroke="#d3c6ee"/>
+  <text x="48" y="338" font-size="12.5" font-weight="700" fill="#6f3ea8">Phase 2 · Commit（取 commit-ts；先原子提交 Primary，再异步提交各 Secondary）</text>
+
+  <rect x="48" y="354" width="320" height="118" rx="12" fill="#ffffff" stroke="#b98fd6" stroke-width="1.5" filter="url(#soft)"/>
+  <text x="208" y="378" font-size="11.5" font-weight="700" fill="#6f3ea8" text-anchor="middle">① 提交 Primary（原子瞬间）</text>
+  <rect x="64" y="390" width="288" height="30" rx="6" fill="#eaf6f0" stroke="#bfe3d1"/>
+  <text x="78" y="410" font-size="9.5" fill="#2f6b4e">Write{commit-ts=120 → start-ts=100}</text>
+  <rect x="64" y="426" width="288" height="30" rx="6" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="78" y="446" font-size="9.5" fill="#8a4038">删除 Primary Lock</text>
+  <text x="208" y="468" font-size="8.5" fill="#8a5cae" text-anchor="middle">此步成功 = 事务提交；失败 = 事务未提交</text>
+
+  <rect x="392" y="354" width="330" height="118" rx="12" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="557" y="378" font-size="11" font-weight="700" fill="#2f6b4e" text-anchor="middle">② 异步提交 Secondary #1</text>
+  <text x="408" y="404" font-size="9.5" fill="#2f6b4e">写 Write 记录 + 删锁</text>
+  <text x="408" y="426" font-size="9.5" fill="#8a97ab">可延后 / 后台批量，不影响已定的结果</text>
+  <text x="408" y="452" font-size="9" fill="#8a97ab">崩溃也没关系：由 ③ 的 lazy 清理兜底</text>
+
+  <rect x="746" y="354" width="330" height="118" rx="12" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="911" y="378" font-size="11" font-weight="700" fill="#2f6b4e" text-anchor="middle">③ 读者 lazy 清锁（兜底）</text>
+  <text x="762" y="404" font-size="9.5" fill="#4a4a4f">读到 Secondary 残留锁 → 去查 Primary</text>
+  <text x="762" y="426" font-size="9.5" fill="#4a4a4f">Primary 已提交 → 顺手补提交此 Secondary</text>
+  <text x="762" y="448" font-size="9.5" fill="#4a4a4f">Primary 仍有锁且超时 → 回滚该锁</text>
+
+  <line x1="368" y1="413" x2="392" y2="413" stroke="#2f9e6e" stroke-width="2" marker-end="url(#aG)"/>
+  <line x1="722" y1="413" x2="746" y2="413" stroke="#2f9e6e" stroke-width="2" marker-end="url(#aG)"/>
+
+  <!-- 关键性质 -->
+  <rect x="30" y="504" width="1060" height="132" rx="13" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="48" y="530" font-size="12" font-weight="700" fill="#1d1d1f">为什么单点 Primary 能保证原子</text>
+  <text x="48" y="556" font-size="10" fill="#4a4a4f"><tspan font-weight="700" fill="#6f3ea8">全局真相收敛到一个 key</tspan>：整个事务「提交 / 未提交」只看 Primary 锁是否已被 commit 记录替换 —— 这是一次单 key 原子操作（由底层强一致存储保证）。</text>
+  <text x="48" y="580" font-size="10" fill="#4a4a4f"><tspan font-weight="700" fill="#2f6b4e">Secondary 可异步</tspan>：Primary 一旦提交，所有 Secondary 的命运已定；即便 Coordinator 此刻崩溃，任何后续读者都能通过 Primary 推断真相并补齐。</text>
+  <text x="48" y="604" font-size="10" fill="#4a4a4f"><tspan font-weight="700" fill="#c4562f">故障恢复无需协调者日志</tspan>：清理逻辑「顺着 Secondary→Primary 引用查一次」即可，把 2PC 的阻塞点从「协调者」下放为「一个可被任何人探查的 key」。</text>
+  <text x="48" y="626" font-size="9" fill="#8a97ab">代价：读可能遇到残留锁需额外一跳去 resolve；锁超时设置影响故障恢复时延。</text>
+</svg>

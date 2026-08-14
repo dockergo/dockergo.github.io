@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="448" viewBox="0 0 1020 448"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1020" height="448" fill="#fbfbfd"/>
+  <text x="30" y="28" font-size="14" font-weight="600" fill="#1d1d1f">编译四段 · 计划形态演变（同一条 SELECT 的算子树在编译期逐段变形）</text>
+
+  <!-- 图例 -->
+  <rect x="702" y="16" width="14" height="10" rx="2" fill="#eef3fb" stroke="#bcd0ec"/><text x="720" y="25" font-size="9" fill="#5b7db1">逻辑/规划</text>
+  <rect x="790" y="16" width="14" height="10" rx="2" fill="#eafaf1" stroke="#bce6cd"/><text x="808" y="25" font-size="9" fill="#3f8f66">物理/执行</text>
+  <rect x="880" y="16" width="14" height="10" rx="2" fill="#fff7e6" stroke="#f0dcae"/><text x="898" y="25" font-size="9" fill="#9a7328">存储/扫描</text>
+
+  <!-- 贯穿示例 -->
+  <rect x="30" y="40" width="960" height="40" rx="10" fill="#f6f6f8" stroke="#e2e2e7"/>
+  <text x="46" y="58" font-size="10.5" font-weight="600" fill="#1d1d1f">贯穿示例</text>
+  <text x="46" y="73" font-size="10" fill="#494950" font-family="monospace">SELECT region, SUM(amount) FROM sales JOIN customers USING(cust_id) WHERE year=2025 GROUP BY region ORDER BY 2 DESC LIMIT 10;</text>
+
+  <!-- 顶部：Parser/Binder 前段 -->
+  <text x="30" y="102" font-size="10.5" fill="#86868b">SQL 文本 —(Parser：Postgres 派生，SQL→AST)→ AST —(Binder：名称/类型绑定、展开 *)→ 逻辑算子树 ↓</text>
+
+  <!-- 面板 1：逻辑算子树 -->
+  <rect x="30" y="112" width="306" height="326" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="48" y="134" font-size="12" font-weight="600" fill="#1b2a4a">① 逻辑算子树（Binder 产出）</text>
+  <text x="48" y="150" font-size="9" fill="#5b7db1">语义等价、未优化的初始树</text>
+
+  <rect x="58" y="160" width="250" height="20" rx="6" fill="#ffffff" stroke="#bcd0ec"/><text x="183" y="174" font-size="9.5" fill="#1b2a4a" text-anchor="middle">LIMIT 10</text>
+  <rect x="58" y="194" width="250" height="20" rx="6" fill="#ffffff" stroke="#bcd0ec"/><text x="183" y="208" font-size="9.5" fill="#1b2a4a" text-anchor="middle">ORDER BY 金额↓</text>
+  <rect x="58" y="228" width="250" height="20" rx="6" fill="#ffffff" stroke="#bcd0ec"/><text x="183" y="242" font-size="9.5" fill="#1b2a4a" text-anchor="middle">AGGREGATE region,SUM</text>
+  <rect x="58" y="262" width="250" height="20" rx="6" fill="#ffffff" stroke="#bcd0ec"/><text x="183" y="276" font-size="9.5" fill="#1b2a4a" text-anchor="middle">FILTER year=2025</text>
+  <rect x="58" y="296" width="250" height="20" rx="6" fill="#ffffff" stroke="#bcd0ec"/><text x="183" y="310" font-size="9.5" fill="#1b2a4a" text-anchor="middle">JOIN cust_id</text>
+  <rect x="48" y="332" width="118" height="30" rx="6" fill="#ffffff" stroke="#bcd0ec"/><text x="107" y="351" font-size="9.5" fill="#1b2a4a" text-anchor="middle">GET sales</text>
+  <rect x="200" y="332" width="118" height="30" rx="6" fill="#ffffff" stroke="#bcd0ec"/><text x="259" y="351" font-size="9.5" fill="#1b2a4a" text-anchor="middle">GET customers</text>
+  <line x1="183" y1="180" x2="183" y2="194" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="183" y1="214" x2="183" y2="228" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="183" y1="248" x2="183" y2="262" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="183" y1="282" x2="183" y2="296" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="150" y1="316" x2="107" y2="332" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="216" y1="316" x2="259" y2="332" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <text x="48" y="384" font-size="9" fill="#86868b">全表扫描 + 上层过滤，中间结果大</text>
+
+  <!-- 面板 2：优化后逻辑树 -->
+  <rect x="366" y="112" width="306" height="326" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="384" y="134" font-size="12" font-weight="600" fill="#1b2a4a">② 优化后逻辑树（~30 pass）</text>
+  <text x="384" y="150" font-size="9" fill="#5b7db1">谓词下推 · 列裁剪 · Join 定序 · Top-N 合并</text>
+
+  <rect x="394" y="182" width="250" height="20" rx="6" fill="#ffffff" stroke="#bcd0ec"/><text x="519" y="196" font-size="9.5" fill="#1b2a4a" text-anchor="middle">TOP-N 10（ORDER+LIMIT）</text>
+  <rect x="394" y="228" width="250" height="20" rx="6" fill="#ffffff" stroke="#bcd0ec"/><text x="519" y="242" font-size="9.5" fill="#1b2a4a" text-anchor="middle">AGGREGATE region,SUM</text>
+  <rect x="394" y="274" width="250" height="20" rx="6" fill="#ffffff" stroke="#bcd0ec"/><text x="519" y="288" font-size="9.5" fill="#1b2a4a" text-anchor="middle">JOIN cust_id</text>
+  <rect x="384" y="316" width="130" height="34" rx="6" fill="#fff7e6" stroke="#f0dcae"/><text x="449" y="332" font-size="9" fill="#7a4d00" text-anchor="middle">SCAN sales</text><text x="449" y="345" font-size="8" fill="#9a7328" text-anchor="middle">σ year=2025 下推</text>
+  <rect x="524" y="316" width="130" height="34" rx="6" fill="#ffffff" stroke="#bcd0ec"/><text x="589" y="332" font-size="9" fill="#1b2a4a" text-anchor="middle">SCAN customers</text><text x="589" y="345" font-size="8" fill="#5b7db1" text-anchor="middle">仅取所需列</text>
+  <line x1="519" y1="202" x2="519" y2="228" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="519" y1="248" x2="519" y2="274" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="486" y1="294" x2="449" y2="316" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="552" y1="294" x2="589" y2="316" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <text x="384" y="376" font-size="9" fill="#86868b">过滤/裁剪压到扫描处，树更矮、数据更少</text>
+
+  <!-- 面板 3：物理算子树 -->
+  <rect x="702" y="112" width="288" height="326" rx="14" fill="#eafaf1" stroke="#bce6cd" filter="url(#soft)"/>
+  <text x="720" y="134" font-size="12" font-weight="600" fill="#0f5132">③ 物理算子树（选算法）</text>
+  <text x="720" y="150" font-size="9" fill="#3f8f66">PhysicalPlanGenerator 为每个逻辑算子选实现</text>
+
+  <rect x="730" y="182" width="232" height="20" rx="6" fill="#ffffff" stroke="#bce6cd"/><text x="846" y="196" font-size="9.5" fill="#0f5132" text-anchor="middle">PHYSICAL_TOP_N</text>
+  <rect x="730" y="228" width="232" height="20" rx="6" fill="#ffffff" stroke="#bce6cd"/><text x="846" y="242" font-size="9.5" fill="#0f5132" text-anchor="middle">RADIX_HASH_GROUP_BY</text>
+  <rect x="730" y="274" width="232" height="20" rx="6" fill="#ffffff" stroke="#bce6cd"/><text x="846" y="288" font-size="9.5" fill="#0f5132" text-anchor="middle">HASH_JOIN（build/probe）</text>
+  <rect x="720" y="316" width="121" height="34" rx="6" fill="#fff7e6" stroke="#f0dcae"/><text x="780" y="332" font-size="9" fill="#7a4d00" text-anchor="middle">SEQ_SCAN sales</text><text x="780" y="345" font-size="8" fill="#9a7328" text-anchor="middle">RowGroup 裁剪</text>
+  <rect x="851" y="316" width="121" height="34" rx="6" fill="#fff7e6" stroke="#f0dcae"/><text x="911" y="332" font-size="9" fill="#7a4d00" text-anchor="middle">SEQ_SCAN cust</text><text x="911" y="345" font-size="8" fill="#9a7328" text-anchor="middle">列存扫描</text>
+  <line x1="846" y1="202" x2="846" y2="228" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="846" y1="248" x2="846" y2="274" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="813" y1="294" x2="780" y2="316" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="879" y1="294" x2="911" y2="316" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <text x="720" y="376" font-size="9" fill="#3f8f66">→ 交 Executor 建 Pipeline，morsel 并行执行</text>
+
+  <!-- 面板间箭头 -->
+  <line x1="336" y1="250" x2="366" y2="250" stroke="#c7c7cc" stroke-width="1.6" marker-end="url(#ar)"/>
+  <text x="351" y="243" font-size="8" fill="#86868b" text-anchor="middle">Optimizer</text>
+  <line x1="672" y1="250" x2="702" y2="250" stroke="#c7c7cc" stroke-width="1.6" marker-end="url(#ar)"/>
+  <text x="687" y="243" font-size="8" fill="#86868b" text-anchor="middle">物理化</text>
+
+  <text x="30" y="424" font-size="10" fill="#494950">编译期是纯 CPU 单线程工作；只有物理树交给 Executor 之后才进入线程池并行执行（是否优化由 EnableOptimizer 开关控制）。</text>
+</svg>

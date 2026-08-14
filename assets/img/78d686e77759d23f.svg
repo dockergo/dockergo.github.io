@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="430" viewBox="0 0 1040 430" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="sp_s" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+  </defs>
+  <rect width="1040" height="430" fill="#fbfbfd"/>
+  <text x="24" y="30" font-size="14" font-weight="700" fill="#1d1d1f">oop 的三种特化布局 · 对象只存数据，布局元数据全在 Klass 一侧</text>
+  <text x="24" y="49" font-size="10" fill="#6e6e73">oopDesc 有三种落地形态；共同点是对象体只是一段裸内存，"哪些偏移是引用、对象多大"都不写进对象，而由类一级的 Klass 描述</text>
+
+  <!-- legend -->
+  <g font-size="9.5">
+    <rect x="24" y="60" width="12" height="12" rx="3" fill="#faf3ea" stroke="#ecdcbf"/><text x="41" y="70" fill="#3a3a3c">对象头 markWord</text>
+    <rect x="176" y="60" width="12" height="12" rx="3" fill="#f4eefb" stroke="#d9c9ef"/><text x="193" y="70" fill="#3a3a3c">压缩类指针→Klass</text>
+    <rect x="328" y="60" width="12" height="12" rx="3" fill="#f5faf6" stroke="#cfe6d2"/><text x="345" y="70" fill="#3a3a3c">数据区（字段/元素）</text>
+    <rect x="480" y="60" width="12" height="12" rx="3" fill="#f6f8fc" stroke="#cfe0f2"/><text x="497" y="70" fill="#3a3a3c">数组独有 length</text>
+  </g>
+
+  <!-- 列1 instanceOop -->
+  <rect x="24" y="88" width="300" height="230" rx="12" fill="#fbfbfd" stroke="#e2e2e7"/>
+  <text x="174" y="110" font-size="11" font-weight="700" fill="#1d8f3f" text-anchor="middle">普通实例 instanceOopDesc</text>
+  <g text-anchor="middle">
+    <rect x="44" y="122" width="260" height="26" rx="5" fill="#faf3ea" stroke="#ecdcbf"/><text x="174" y="139" font-size="9" fill="#8a5a1a">markWord（锁/哈希/年龄）</text>
+    <rect x="44" y="150" width="260" height="26" rx="5" fill="#f4eefb" stroke="#d9c9ef"/><text x="174" y="167" font-size="9" fill="#6f3ea8">压缩类指针 → InstanceKlass</text>
+    <rect x="44" y="178" width="260" height="90" rx="5" fill="#f5faf6" stroke="#cfe6d2"/><text x="174" y="200" font-size="9.5" font-weight="600" fill="#1d8f3f">实例字段区</text><text x="174" y="220" font-size="8.5" fill="#1c6b45">不加任何额外字段</text><text x="174" y="238" font-size="8.5" fill="#3a3a3c">哪些偏移是引用</text><text x="174" y="254" font-size="8.5" fill="#3a3a3c">→ 查 Klass 的 oop-map</text>
+  </g>
+  <text x="174" y="288" font-size="8.5" fill="#9a9aa0" text-anchor="middle">大小：size_helper 定长</text>
+  <text x="174" y="304" font-size="8.5" fill="#9a9aa0" text-anchor="middle">（可编译期常量化）</text>
+
+  <!-- 列2 arrayOop -->
+  <rect x="358" y="88" width="300" height="230" rx="12" fill="#fbfbfd" stroke="#e2e2e7"/>
+  <text x="508" y="110" font-size="11" font-weight="700" fill="#5b7db1" text-anchor="middle">数组 arrayOopDesc</text>
+  <g text-anchor="middle">
+    <rect x="378" y="122" width="260" height="24" rx="5" fill="#faf3ea" stroke="#ecdcbf"/><text x="508" y="138" font-size="9" fill="#8a5a1a">markWord</text>
+    <rect x="378" y="148" width="260" height="24" rx="5" fill="#f4eefb" stroke="#d9c9ef"/><text x="508" y="164" font-size="9" fill="#6f3ea8">压缩类指针 → ArrayKlass</text>
+    <rect x="378" y="174" width="260" height="24" rx="5" fill="#f6f8fc" stroke="#cfe0f2"/><text x="508" y="190" font-size="9" fill="#5b7db1">int length（独有）</text>
+    <rect x="378" y="200" width="260" height="68" rx="5" fill="#f5faf6" stroke="#cfe6d2"/><text x="508" y="222" font-size="9.5" font-weight="600" fill="#1d8f3f">元素区</text><text x="508" y="242" font-size="8.5" fill="#1c6b45">定宽 × length 连续排布</text><text x="508" y="258" font-size="8.5" fill="#3a3a3c">按元素类型批量扫</text>
+  </g>
+  <text x="508" y="288" font-size="8.5" fill="#9a9aa0" text-anchor="middle">大小：头 + length×元素宽</text>
+  <text x="508" y="304" font-size="8.5" fill="#9a9aa0" text-anchor="middle">（长度运行期才知 → 现算）</text>
+
+  <!-- 列3 mirror -->
+  <rect x="692" y="88" width="300" height="230" rx="12" fill="#fbfbfd" stroke="#e2e2e7"/>
+  <text x="842" y="110" font-size="11" font-weight="700" fill="#6f3ea8" text-anchor="middle">类镜像 java.lang.Class</text>
+  <g text-anchor="middle">
+    <rect x="712" y="122" width="260" height="24" rx="5" fill="#faf3ea" stroke="#ecdcbf"/><text x="842" y="138" font-size="9" fill="#8a5a1a">markWord</text>
+    <rect x="712" y="148" width="260" height="24" rx="5" fill="#f4eefb" stroke="#d9c9ef"/><text x="842" y="164" font-size="9" fill="#6f3ea8">压缩类指针（本身也是实例）</text>
+    <rect x="712" y="174" width="260" height="40" rx="5" fill="#f5faf6" stroke="#cfe6d2"/><text x="842" y="190" font-size="9" fill="#1d8f3f">镜像实例字段</text><text x="842" y="206" font-size="8.5" fill="#3a3a3c">Class 对象自身的字段</text>
+    <rect x="712" y="216" width="260" height="52" rx="5" fill="#eef6f0" stroke="#cfe6d2" stroke-dasharray="4 3"/><text x="842" y="236" font-size="9" fill="#1d8f3f">静态字段（拼在尾部）</text><text x="842" y="252" font-size="8.5" fill="#3a3a3c">该类的 static 变量存这里</text>
+  </g>
+  <text x="842" y="288" font-size="8.5" fill="#9a9aa0" text-anchor="middle">_java_mirror 从 Klass 指来</text>
+  <text x="842" y="304" font-size="8.5" fill="#9a9aa0" text-anchor="middle">（类型 ↔ 镜像双向勾连）</text>
+
+  <!-- 底部要点 -->
+  <rect x="24" y="332" width="968" height="86" rx="12" fill="#f4eefb" stroke="#d9c9ef"/>
+  <text x="40" y="353" font-size="10.5" font-weight="600" fill="#6f3ea8">共同点与分歧</text>
+  <text x="40" y="374" font-size="9" fill="#3a3a3c">① 共同：对象体不存"自己多大、哪里是引用"——这些布局元数据只在 Klass 存一份，全类共享，这正是 oop/Klass 分离的空间收益。</text>
+  <text x="40" y="392" font-size="9" fill="#3a3a3c">② 分歧：数组因长度运行期才知，必须把 length 落进对象头后区；实例定长可省。GC 扫引用：实例走 oop-map，数组按元素类型批量扫。</text>
+  <text x="40" y="410" font-size="9" fill="#3a3a3c">③ 镜像特殊：它是 instanceOop，但把类的 static 字段拼在自身尾部——所以"类的静态变量"物理上就住在这个 Class 对象里。</text>
+</svg>

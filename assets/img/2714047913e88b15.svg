@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="500" viewBox="0 0 1060 500" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs><filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter></defs>
+  <rect width="1060" height="500" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">堆内 vs 堆外：off-heap 绕 GC、精确管字节（Tungsten 支柱）</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">MemoryMode ON_HEAP/OFF_HEAP（MemoryMode.java:23-26）· offHeap.enabled 默认 false（package.scala:466）· offHeap.size 默认 0</text>
+  <g text-anchor="middle">
+    <rect x="40" y="80" width="480" height="240" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+    <text x="280" y="106" font-size="12" font-weight="700" fill="#1b2a4a">堆内 on-heap（默认）</text>
+    <rect x="70" y="122" width="420" height="40" rx="8" fill="#fff" stroke="#bcd0ec"/><text x="280" y="147" font-size="9" fill="#5b7db1">在 JVM 堆里分配，受 GC 管理</text>
+    <rect x="70" y="170" width="420" height="40" rx="8" fill="#fff" stroke="#bcd0ec"/><text x="280" y="195" font-size="9" fill="#5b7db1">memory.fraction 切分堆空间</text>
+    <rect x="70" y="218" width="420" height="40" rx="8" fill="#e9f1fb" stroke="#c4d8f0"/><text x="280" y="238" font-size="9" font-weight="600" fill="#1b2a4a">✓ 简单，对象可直接引用</text><text x="280" y="252" font-size="7.5" fill="#8aa6cf">— 缺点：GC 停顿、对象头开销</text>
+    <text x="280" y="284" font-size="9" fill="#5b7db1">大堆时 GC 停顿明显、cache 多则 GC 压力大</text>
+    <text x="280" y="304" font-size="8.5" fill="#8aa6cf">适合：一般负载、无极致内存/延迟要求</text>
+    <rect x="540" y="80" width="480" height="240" rx="14" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+    <text x="780" y="106" font-size="12" font-weight="700" fill="#5a3410">堆外 off-heap（Tungsten）</text>
+    <rect x="570" y="122" width="420" height="40" rx="8" fill="#fff" stroke="#efdcb4"/><text x="780" y="147" font-size="9" fill="#93762e">TaskMemoryManager 直接管原始字节</text>
+    <rect x="570" y="170" width="420" height="40" rx="8" fill="#fff" stroke="#efdcb4"/><text x="780" y="195" font-size="9" fill="#93762e">须显式 offHeap.enabled=true + offHeap.size</text>
+    <rect x="570" y="218" width="420" height="40" rx="8" fill="#fdf0dc" stroke="#efdcb4"/><text x="780" y="238" font-size="9" font-weight="600" fill="#5a3410">✓ 无 GC 停顿、内存精确可控</text><text x="780" y="252" font-size="7.5" fill="#b08843">UnsafeRow 紧凑二进制存这里</text>
+    <text x="780" y="284" font-size="9" fill="#93762e">Tungsten 三支柱之一（见 Tungsten 篇）</text>
+    <text x="780" y="304" font-size="8.5" fill="#b08843">适合：大内存、低延迟、GC 敏感场景</text>
+  </g>
+  <rect x="40" y="336" width="980" height="90" rx="13" fill="#f4eefb" stroke="#d9c7ec"/>
+  <text x="60" y="360" font-size="11" font-weight="700" fill="#3d2a5a">与 Tungsten/UnsafeRow 的关系</text>
+  <text x="60" y="382" font-size="9.5" fill="#7a5da5">· DataFrame/SQL 的 UnsafeRow（紧凑二进制行）可存堆外——免对象头、免 GC，缓存友好</text>
+  <text x="60" y="402" font-size="9.5" fill="#7a5da5">· codegen 代码直接操作这些字节；三支柱（codegen + UnsafeRow + 堆外）合力逼近手写代码效率</text>
+  <text x="60" y="420" font-size="9" fill="#9a7cc4">· RDD 走普通 JVM 对象（堆内），不享受这套——结构化 API 的执行期优势来源之一</text>
+  <rect x="40" y="438" width="980" height="48" rx="12" fill="#f7f7f9" stroke="#e6e6ea"/>
+  <text x="60" y="466" font-size="10" fill="#4b4b50"><tspan font-weight="700" fill="#1d1d1f">一句话：</tspan>堆内简单但受 GC；堆外（默认关，须配 size）由 TaskMemoryManager 精确管字节、绕 GC，是 Tungsten 存 UnsafeRow 的地方。</text>
+</svg>

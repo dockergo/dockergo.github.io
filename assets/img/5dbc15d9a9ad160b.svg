@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="430" viewBox="0 0 1020 430"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1020" height="430" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">认证与角色 · pg_hba.conf 逐行匹配 + 角色成员关系（hba.c / user.c）</text>
+
+  <!-- pg_hba -->
+  <rect x="30" y="56" width="600" height="220" rx="14" fill="#fbeaea" stroke="#f0cccc" filter="url(#soft)"/>
+  <text x="48" y="80" font-size="12.5" font-weight="600" fill="#7d1f1f">pg_hba.conf：自上而下第一条匹配生效</text>
+  <text x="48" y="102" font-size="9" fill="#b06a6a" font-family="monospace">TYPE   DATABASE  USER   ADDRESS        METHOD</text>
+  <rect x="48" y="112" width="564" height="26" rx="6" fill="#ffffff" stroke="#f0cccc"/><text x="60" y="130" font-size="9" fill="#7d1f1f" font-family="monospace">local  all       all                   peer</text>
+  <rect x="48" y="144" width="564" height="26" rx="6" fill="#ffffff" stroke="#f0cccc"/><text x="60" y="162" font-size="9" fill="#7d1f1f" font-family="monospace">host   app       app    10.0.0.0/8     scram-sha-256</text>
+  <rect x="48" y="176" width="564" height="26" rx="6" fill="#ffffff" stroke="#f0cccc"/><text x="60" y="194" font-size="9" fill="#7d1f1f" font-family="monospace">host   all       all    0.0.0.0/0      reject</text>
+  <text x="48" y="226" font-size="9.5" fill="#b06a6a">连接进来时按 连接类型 + 目标库 + 用户 + 来源 IP 逐行匹配，</text>
+  <text x="48" y="244" font-size="9.5" fill="#b06a6a">命中第一条即用其 METHOD 认证（peer/scram/md5/ldap/cert…）。</text>
+  <text x="48" y="264" font-size="9" fill="#c99">匹配不到或 reject → 拒绝连接</text>
+
+  <!-- 认证方法 -->
+  <rect x="650" y="56" width="340" height="220" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="668" y="80" font-size="12" font-weight="600" fill="#1b2a4a">常见认证方法</text>
+  <rect x="668" y="94" width="304" height="30" rx="7" fill="#ffffff" stroke="#bcd0ec"/><text x="820" y="113" font-size="9" fill="#1b2a4a" text-anchor="middle">scram-sha-256（推荐，密码挑战）</text>
+  <rect x="668" y="130" width="304" height="30" rx="7" fill="#ffffff" stroke="#bcd0ec"/><text x="820" y="149" font-size="9" fill="#1b2a4a" text-anchor="middle">peer（本机 OS 用户名匹配）</text>
+  <rect x="668" y="166" width="304" height="30" rx="7" fill="#ffffff" stroke="#bcd0ec"/><text x="820" y="185" font-size="9" fill="#1b2a4a" text-anchor="middle">cert（TLS 客户端证书）</text>
+  <rect x="668" y="202" width="304" height="30" rx="7" fill="#ffffff" stroke="#bcd0ec"/><text x="820" y="221" font-size="9" fill="#1b2a4a" text-anchor="middle">ldap / gss / trust（勿在生产用 trust）</text>
+  <text x="668" y="256" font-size="9" fill="#8fa9cf">认证发生在 backend 启动早期，早于任何 SQL</text>
+
+  <!-- 角色 -->
+  <rect x="30" y="296" width="960" height="118" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="48" y="320" font-size="12.5" font-weight="600" fill="#1d1d1f">角色（role）：用户与组统一为一个概念（pg_authid）</text>
+  <rect x="48" y="336" width="290" height="60" rx="10" fill="#eef3fb" stroke="#bcd0ec"/><text x="193" y="358" font-size="9.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">角色 = 用户 or 组</text><text x="193" y="378" font-size="8.5" fill="#5b7db1" text-anchor="middle">有 LOGIN 属性才能登录</text>
+  <rect x="354" y="336" width="290" height="60" rx="10" fill="#eafaf1" stroke="#bce6cd"/><text x="499" y="358" font-size="9.5" font-weight="600" fill="#0f5132" text-anchor="middle">GRANT role_b TO role_a</text><text x="499" y="378" font-size="8.5" fill="#3f8f66" text-anchor="middle">成员关系；权限可经组继承</text>
+  <rect x="660" y="336" width="310" height="60" rx="10" fill="#fff7e6" stroke="#f0dcae"/><text x="815" y="358" font-size="9.5" font-weight="600" fill="#7a4d00" text-anchor="middle">SET ROLE / SUPERUSER</text><text x="815" y="378" font-size="8.5" fill="#9a7328" text-anchor="middle">切换当前角色；超级用户绕过权限检查</text>
+</svg>

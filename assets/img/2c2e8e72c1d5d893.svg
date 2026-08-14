@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="410" viewBox="0 0 1020 410"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1020" height="410" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">统计传播与下推 · 让"要处理的数据"在规划期就变少（STATISTICS_PROPAGATION:387）</text>
+
+  <!-- 传播链 -->
+  <rect x="30" y="52" width="960" height="160" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="48" y="76" font-size="12.5" font-weight="600" fill="#1d1d1f">统计沿逻辑计划自底向上传播</text>
+
+  <rect x="48" y="94" width="200" height="96" rx="10" fill="#fff7e6" stroke="#f0dcae"/>
+  <text x="148" y="118" font-size="10.5" font-weight="600" fill="#7a4d00" text-anchor="middle">叶子：表列统计</text>
+  <text x="148" y="140" font-size="9" fill="#9a7328" text-anchor="middle">RowGroup min/max</text>
+  <text x="148" y="156" font-size="9" fill="#9a7328" text-anchor="middle">distinct 估计 / NULL 数</text>
+  <text x="148" y="176" font-size="9" fill="#9a7328" text-anchor="middle">来自存储元数据</text>
+
+  <rect x="288" y="94" width="200" height="96" rx="10" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="388" y="118" font-size="10.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">过滤后：收窄范围</text>
+  <text x="388" y="140" font-size="9" fill="#5b7db1" text-anchor="middle">WHERE year=2025</text>
+  <text x="388" y="156" font-size="9" fill="#5b7db1" text-anchor="middle">→ 估计选择率</text>
+  <text x="388" y="176" font-size="9" fill="#5b7db1" text-anchor="middle">→ 更小的基数</text>
+
+  <rect x="528" y="94" width="200" height="96" rx="10" fill="#eafaf1" stroke="#bce6cd"/>
+  <text x="628" y="118" font-size="10.5" font-weight="600" fill="#0f5132" text-anchor="middle">Join 后：传播基数</text>
+  <text x="628" y="140" font-size="9" fill="#3f8f66" text-anchor="middle">估计结果行数</text>
+  <text x="628" y="156" font-size="9" fill="#3f8f66" text-anchor="middle">喂给 Join 定序</text>
+  <text x="628" y="176" font-size="9" fill="#3f8f66" text-anchor="middle">与 build 端选择</text>
+
+  <rect x="768" y="94" width="204" height="96" rx="10" fill="#f4eefb" stroke="#d9c9ef"/>
+  <text x="870" y="118" font-size="10.5" font-weight="600" fill="#3c1361" text-anchor="middle">聚合 / 顶层</text>
+  <text x="870" y="140" font-size="9" fill="#7a5aa8" text-anchor="middle">分组数估计</text>
+  <text x="870" y="156" font-size="9" fill="#7a5aa8" text-anchor="middle">决定哈希表初始大小</text>
+  <text x="870" y="176" font-size="9" fill="#7a5aa8" text-anchor="middle">等资源预算</text>
+
+  <line x1="248" y1="142" x2="288" y2="142" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="488" y1="142" x2="528" y2="142" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="728" y1="142" x2="768" y2="142" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+
+  <!-- 反哺 -->
+  <rect x="30" y="232" width="960" height="160" rx="14" fill="#f6f6f8" stroke="#e2e2e7"/>
+  <text x="48" y="256" font-size="12.5" font-weight="600" fill="#1d1d1f">统计反哺三类优化</text>
+  <rect x="48" y="272" width="300" height="100" rx="10" fill="#ffffff" stroke="#e2e2e7"/>
+  <text x="198" y="296" font-size="10.5" font-weight="600" fill="#1d1d1f" text-anchor="middle">RowGroup 裁剪</text>
+  <text x="198" y="318" font-size="9.5" fill="#494950" text-anchor="middle">常量过滤 vs 段 min/max</text>
+  <text x="198" y="336" font-size="9.5" fill="#494950" text-anchor="middle">整段跳过（ROW_GROUP_PRUNER）</text>
+  <text x="198" y="356" font-size="9" fill="#86868b" text-anchor="middle">见 DQL·扫描裁剪</text>
+  <rect x="360" y="272" width="300" height="100" rx="10" fill="#ffffff" stroke="#e2e2e7"/>
+  <text x="510" y="296" font-size="10.5" font-weight="600" fill="#1d1d1f" text-anchor="middle">Join 定序 + build 端</text>
+  <text x="510" y="318" font-size="9.5" fill="#494950" text-anchor="middle">基数估计选最小中间结果顺序</text>
+  <text x="510" y="336" font-size="9.5" fill="#494950" text-anchor="middle">把较小表放 build 端</text>
+  <text x="510" y="356" font-size="9" fill="#86868b" text-anchor="middle">见 DQL·Hash Join</text>
+  <rect x="672" y="272" width="300" height="100" rx="10" fill="#ffffff" stroke="#e2e2e7"/>
+  <text x="822" y="296" font-size="10.5" font-weight="600" fill="#1d1d1f" text-anchor="middle">谓词化简 / 短路</text>
+  <text x="822" y="318" font-size="9.5" fill="#494950" text-anchor="middle">恒真/恒假过滤直接消除</text>
+  <text x="822" y="336" font-size="9.5" fill="#494950" text-anchor="middle">EMPTY_RESULT_PULLUP 等</text>
+  <text x="822" y="356" font-size="9" fill="#86868b" text-anchor="middle">空结果整枝剪掉</text>
+</svg>

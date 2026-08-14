@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="420" viewBox="0 0 1020 420"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+  </defs>
+  <rect width="1020" height="420" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">后台任务是"执行时机"维度 · 分散在各能力域，非独立大域</text>
+
+  <rect x="30" y="52" width="960" height="60" rx="12" fill="#f6f6f8" stroke="#e2e2e7"/>
+  <text x="510" y="78" font-size="11.5" font-weight="600" fill="#1d1d1f" text-anchor="middle">DuckDB 是单进程嵌入式——后台动作很少，且都"挂靠"在某个能力域下</text>
+  <text x="510" y="98" font-size="10" fill="#6a6a70" text-anchor="middle">对比 Doris/ClickHouse 有独立的 Compaction/Merge 守护线程与调度器；DuckDB 没有那种重后台</text>
+
+  <!-- 四类后台动作 -->
+  <rect x="30" y="128" width="230" height="170" rx="12" fill="#fff7e6" stroke="#f0dcae"/>
+  <text x="145" y="152" font-size="11" font-weight="600" fill="#7a4d00" text-anchor="middle">Checkpoint</text>
+  <text x="145" y="174" font-size="9" fill="#9a7328" text-anchor="middle">挂靠：存储 + Catalog</text>
+  <text x="145" y="194" font-size="8.5" fill="#9a7328" text-anchor="middle">WAL 达阈值/显式/关库</text>
+  <text x="145" y="212" font-size="8.5" fill="#9a7328" text-anchor="middle">合并进单文件</text>
+  <text x="145" y="230" font-size="8.5" fill="#9a7328" text-anchor="middle">+ 压缩分析 + 截断 WAL</text>
+  <text x="145" y="256" font-size="8.5" fill="#b8912e" text-anchor="middle">checkpoint_manager.cpp</text>
+  <text x="145" y="280" font-size="8" fill="#b8912e" text-anchor="middle">→ 见 后台·Checkpoint</text>
+
+  <rect x="270" y="128" width="230" height="170" rx="12" fill="#fbeaea" stroke="#f0cccc"/>
+  <text x="385" y="152" font-size="11" font-weight="600" fill="#7d1f1f" text-anchor="middle">WAL 回放</text>
+  <text x="385" y="174" font-size="9" fill="#b06a6a" text-anchor="middle">挂靠：存储 + 事务</text>
+  <text x="385" y="194" font-size="8.5" fill="#b06a6a" text-anchor="middle">打开库时</text>
+  <text x="385" y="212" font-size="8.5" fill="#b06a6a" text-anchor="middle">重放未 checkpoint 变更</text>
+  <text x="385" y="230" font-size="8.5" fill="#b06a6a" text-anchor="middle">恢复到崩溃前状态</text>
+  <text x="385" y="256" font-size="8.5" fill="#c99" text-anchor="middle">wal_replay.cpp</text>
+  <text x="385" y="280" font-size="8" fill="#c99" text-anchor="middle">→ 见 DML·WAL</text>
+
+  <rect x="510" y="128" width="230" height="170" rx="12" fill="#eafaf1" stroke="#bce6cd"/>
+  <text x="625" y="152" font-size="11" font-weight="600" fill="#0f5132" text-anchor="middle">Buffer 驱逐 / 溢写清理</text>
+  <text x="625" y="174" font-size="9" fill="#3f8f66" text-anchor="middle">挂靠：内存 Buffer</text>
+  <text x="625" y="194" font-size="8.5" fill="#3f8f66" text-anchor="middle">内存压力时驱逐块</text>
+  <text x="625" y="212" font-size="8.5" fill="#3f8f66" text-anchor="middle">临时文件用完回收</text>
+  <text x="625" y="230" font-size="8.5" fill="#3f8f66" text-anchor="middle">PurgeAgedBlocks 年龄清理</text>
+  <text x="625" y="256" font-size="8.5" fill="#5aa06f" text-anchor="middle">buffer_pool.hpp</text>
+  <text x="625" y="280" font-size="8" fill="#5aa06f" text-anchor="middle">→ 见 内存·BufferManager</text>
+
+  <rect x="750" y="128" width="240" height="170" rx="12" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="870" y="152" font-size="11" font-weight="600" fill="#1b2a4a" text-anchor="middle">旧版本清理</text>
+  <text x="870" y="174" font-size="9" fill="#5b7db1" text-anchor="middle">挂靠：事务 MVCC</text>
+  <text x="870" y="194" font-size="8.5" fill="#5b7db1" text-anchor="middle">提交后按最低活跃</text>
+  <text x="870" y="212" font-size="8.5" fill="#5b7db1" text-anchor="middle">start_time 回收 UndoBuffer</text>
+  <text x="870" y="230" font-size="8.5" fill="#5b7db1" text-anchor="middle">旧值/删除标记</text>
+  <text x="870" y="256" font-size="8.5" fill="#8fa9cf" text-anchor="middle">undo_buffer.hpp:57</text>
+  <text x="870" y="280" font-size="8" fill="#8fa9cf" text-anchor="middle">→ 见 事务·乐观并发</text>
+
+  <rect x="30" y="316" width="960" height="88" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="48" y="340" font-size="12" font-weight="600" fill="#1d1d1f">为什么把它单列一篇，却又说"不是独立大域"</text>
+  <text x="48" y="364" font-size="10.5" fill="#494950">把"后台/异步"作为正交的执行时机维度单列，便于统一看清全库的异步部分；但每个动作的"机制"归它所属能力域，</text>
+  <text x="48" y="386" font-size="10.5" fill="#494950">这里只做汇总与索引——正如 Linux 内核里 kswapd/回写也分散在各子系统，而非一个独立"后台子系统"。</text>
+</svg>

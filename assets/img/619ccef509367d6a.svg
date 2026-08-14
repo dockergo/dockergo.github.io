@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="440" viewBox="0 0 1000 440" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs><filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter></defs>
+  <rect width="1000" height="440" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Parquet 原理 · PLAIN 与 RLE / Bit-Packing 混合</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">最基础两种编码：PLAIN 原样连续存;RLE/Bit-Packing 混合专治“低基数 + 连续重复”,也是所有层级(rep/def)与字典下标的编码</text>
+
+  <!-- PLAIN -->
+  <rect x="30" y="76" width="455" height="150" rx="12" fill="#e9f2ff" stroke="#a9ccf5" filter="url(#soft)"/>
+  <text x="48" y="100" font-size="11" font-weight="700" fill="#0a3d78">PLAIN（PLAIN = 0）· 所有物理类型</text>
+  <text x="48" y="122" font-size="9" fill="#2a5a92">值按类型定宽/变长原样连续排放,不做压缩变换</text>
+  <g text-anchor="middle" font-size="9">
+    <rect x="48" y="134" width="80" height="30" rx="6" fill="#fff" stroke="#a9ccf5"/><text x="88" y="154" fill="#0a3d78">1000</text>
+    <rect x="134" y="134" width="80" height="30" rx="6" fill="#fff" stroke="#a9ccf5"/><text x="174" y="154" fill="#0a3d78">1042</text>
+    <rect x="220" y="134" width="80" height="30" rx="6" fill="#fff" stroke="#a9ccf5"/><text x="260" y="154" fill="#0a3d78">2077</text>
+    <rect x="306" y="134" width="80" height="30" rx="6" fill="#fff" stroke="#a9ccf5"/><text x="346" y="154" fill="#0a3d78">3900</text>
+  </g>
+  <text x="48" y="188" font-size="8.6" fill="#5b7db1">· INT32/INT64/FLOAT/DOUBLE 定长小端;BOOLEAN 位打包</text>
+  <text x="48" y="206" font-size="8.6" fill="#5b7db1">· BYTE_ARRAY 前置 4B 长度 + 字节;FIXED 无长度前缀</text>
+  <text x="48" y="222" font-size="8.6" fill="#7fa0c4">最通用兜底;高基数随机值时它也可能是最优选择,再交给页级压缩(如 ZSTD)。</text>
+
+  <!-- RLE/BitPack -->
+  <rect x="505" y="76" width="465" height="150" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="523" y="100" font-size="11" font-weight="700" fill="#12402a">RLE / Bit-Packing 混合（RLE = 3）</text>
+  <text x="523" y="122" font-size="9" fill="#2f6f5f">按段自适应：重复多用 run-length,零散用 bit-packing</text>
+  <g text-anchor="middle" font-size="8.6">
+    <rect x="523" y="134" width="200" height="30" rx="6" fill="#e6f4f1" stroke="#b9dfd8"/><text x="623" y="153" fill="#0f6b5e">RLE run：值=7, 重复 500 次</text>
+    <rect x="729" y="134" width="220" height="30" rx="6" fill="#e6f4f1" stroke="#b9dfd8"/><text x="839" y="153" fill="#0f6b5e">bit-pack：[3,1,2,3,0,…] 紧位打包</text>
+  </g>
+  <text x="523" y="188" font-size="8.6" fill="#2f6f5f">· 每段头部标志位区分 run / bit-packed,位宽按最大值取</text>
+  <text x="523" y="206" font-size="8.6" fill="#2f6f5f">· 定长（500 个 7）压成“值 + 次数”几字节</text>
+  <text x="523" y="222" font-size="8.6" fill="#4c8567">用途：BOOLEAN、字典下标、以及所有 rep/def levels 都用它编码。</text>
+
+  <!-- 何时用哪个 -->
+  <rect x="30" y="248" width="940" height="86" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="48" y="272" font-size="11" font-weight="700" fill="#1b2a4a">选择直觉</text>
+  <text x="48" y="294" font-size="9.4" fill="#5b7db1">· 高基数、随机分布 → PLAIN（无重复可挖）+ 页压缩</text>
+  <text x="48" y="314" font-size="9.4" fill="#5b7db1">· 低基数、成段重复 → RLE run 极致压缩;中间态 → bit-packing 缩位宽</text>
+  <text x="520" y="294" font-size="9.4" fill="#5b7db1">· 层级序列（几乎都是小整数）天然适合 RLE/bit-pack</text>
+  <text x="520" y="314" font-size="9.4" fill="#5b7db1">· 编码是“值级变换”,与其后的页级压缩(codec)正交叠加</text>
+
+  <rect x="30" y="346" width="940" height="72" rx="12" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+  <text x="48" y="370" font-size="9.6" fill="#5a3410">编码 vs 压缩：编码理解数据语义（重复/递增/字典）,把值变成更短的表示;压缩(SNAPPY/ZSTD)是通用字节流算法,在编码之后对整页再压一层。</text>
+  <text x="48" y="390" font-size="9.6" fill="#93762e">Encoding 集合记在 ColumnMetaData.encodings;一个列块内不同页可用不同编码（如字典页用不了时回退 PLAIN）。</text>
+  <text x="48" y="410" font-size="8.6" fill="#a1877f">已弃用：BIT_PACKED(=4) 被 RLE/Bit-Packing 混合取代;PLAIN_DICTIONARY(=2) 被 RLE_DICTIONARY(=8) 取代。</text>
+</svg>

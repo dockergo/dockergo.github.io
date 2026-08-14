@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="560" viewBox="0 0 960 560" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect x="0" y="0" width="960" height="560" fill="#fbfbfd"/>
+  <text x="40" y="38" font-size="16" font-weight="600" fill="#1d1d1f">落盘结构 · Rowset → Segment 列存布局(LSM)</text>
+  <text x="40" y="58" font-size="11.5" fill="#86868b">MemTable 排序聚合后落成不可变 Segment;每列独立成文件,同步建主键索引与跳过索引</text>
+
+  <!-- Rowset 容器 -->
+  <rect x="30" y="78" width="640" height="440" rx="16" fill="#fbf7ef" stroke="#efe4cf"/>
+  <text x="50" y="102" font-size="13" font-weight="600" fill="#8a5a12">Rowset [start-end] · 一次导入产物(含 1+ Segment)</text>
+
+  <!-- Segment -->
+  <rect x="50" y="114" width="600" height="392" rx="13" fill="#ffffff" stroke="#ececef" filter="url(#soft)"/>
+  <text x="68" y="138" font-size="12.5" font-weight="600" fill="#1d1d1f">Segment .dat · 列式不可变文件</text>
+  <text x="68" y="156" font-size="10" fill="#86868b">按列拆成独立列文件;每列纵向切成多个 Data Page(unit=block)</text>
+
+  <!-- 4 列文件,纵向堆叠 block -->
+  <g font-size="10.5" text-anchor="middle">
+    <!-- key.bin 高亮 -->
+    <text x="120" y="184" font-size="11" font-weight="600" fill="#274a78">key.bin</text>
+    <rect x="70" y="192" width="100" height="42" rx="7" fill="#ecf2fb" stroke="#c4d5ee"/><text x="120" y="210" fill="#274a78">block 0</text><text x="120" y="225" font-size="8.5" fill="#7d93b5">rows 0–N</text>
+    <rect x="70" y="240" width="100" height="42" rx="7" fill="#ecf2fb" stroke="#c4d5ee"/><text x="120" y="258" fill="#274a78">block 1</text><text x="120" y="273" font-size="8.5" fill="#7d93b5">rows N–2N</text>
+    <rect x="70" y="288" width="100" height="42" rx="7" fill="#ecf2fb" stroke="#c4d5ee"/><text x="120" y="306" fill="#274a78">block 2</text><text x="120" y="321" font-size="8.5" fill="#7d93b5">rows 2N–</text>
+    <!-- v1.bin -->
+    <text x="240" y="184" font-size="11" font-weight="600" fill="#4a4e57">v1.bin</text>
+    <rect x="190" y="192" width="100" height="42" rx="7" fill="#f4f5f7" stroke="#e6e7ea"/><text x="240" y="216">编码块</text>
+    <rect x="190" y="240" width="100" height="42" rx="7" fill="#f4f5f7" stroke="#e6e7ea"/><text x="240" y="264">编码块</text>
+    <rect x="190" y="288" width="100" height="42" rx="7" fill="#f4f5f7" stroke="#e6e7ea"/><text x="240" y="312">编码块</text>
+    <!-- v2.bin -->
+    <text x="360" y="184" font-size="11" font-weight="600" fill="#4a4e57">v2.bin</text>
+    <rect x="310" y="192" width="100" height="42" rx="7" fill="#f4f5f7" stroke="#e6e7ea"/><text x="360" y="216">编码块</text>
+    <rect x="310" y="240" width="100" height="42" rx="7" fill="#f4f5f7" stroke="#e6e7ea"/><text x="360" y="264">编码块</text>
+    <rect x="310" y="288" width="100" height="42" rx="7" fill="#f4f5f7" stroke="#e6e7ea"/><text x="360" y="312">编码块</text>
+    <!-- __seq__.bin -->
+    <text x="480" y="184" font-size="11" font-weight="600" fill="#4a4e57">__seq__.bin</text>
+    <rect x="430" y="192" width="100" height="42" rx="7" fill="#f4f5f7" stroke="#e6e7ea"/><text x="480" y="216">序列列</text>
+    <rect x="430" y="240" width="100" height="42" rx="7" fill="#f4f5f7" stroke="#e6e7ea"/><text x="480" y="264">序列列</text>
+    <rect x="430" y="288" width="100" height="42" rx="7" fill="#f4f5f7" stroke="#e6e7ea"/><text x="480" y="312">序列列</text>
+  </g>
+  <!-- Footer 区 -->
+  <rect x="70" y="346" width="560" height="66" rx="10" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="88" y="368" font-size="11" font-weight="600" fill="#2c5a3a">Segment Footer · 元信息 + 内部索引</text>
+  <g font-size="9.5" fill="#4e7a5c">
+    <text x="88" y="388">· ShortKey 稀疏索引(每 block 首行前缀键)· ZoneMap(min/max 跳过)</text>
+    <text x="88" y="404">· BloomFilter(等值跳过)· Ordinal / 倒排 · 列偏移与编码类型</text>
+  </g>
+  <rect x="70" y="422" width="560" height="66" rx="10" fill="#faf4fb" stroke="#ecd9ef"/>
+  <text x="88" y="444" font-size="11" font-weight="600" fill="#7a3fb0">MoW 主键索引 + Delete Bitmap</text>
+  <text x="88" y="463" font-size="9.5" fill="#a06fc0">· 主键 → (block, offset) 定位 · Publish 期算 delete bitmap 标删旧版本</text>
+  <text x="88" y="479" font-size="9.5" fill="#a06fc0">· 读时按 bitmap 跳过被标删行,免现场归并</text>
+
+  <!-- 右:主键索引连到 key block 首行 -->
+  <rect x="700" y="150" width="230" height="230" rx="14" fill="#ffffff" stroke="#ececef" filter="url(#soft)"/>
+  <text x="718" y="174" font-size="12" font-weight="600" fill="#1d1d1f">主键索引(MoW)</text>
+  <g font-size="10" fill="#4a4e57" text-anchor="middle">
+    <rect x="718" y="188" width="194" height="36" rx="8" fill="#faf4fb" stroke="#ecd9ef"/><text x="815" y="210">key₀ → block 0 首行</text>
+    <rect x="718" y="234" width="194" height="36" rx="8" fill="#faf4fb" stroke="#ecd9ef"/><text x="815" y="256">keyₙ → block 1 首行</text>
+    <rect x="718" y="280" width="194" height="36" rx="8" fill="#faf4fb" stroke="#ecd9ef"/><text x="815" y="302">key₂ₙ → block 2 首行</text>
+  </g>
+  <text x="718" y="352" font-size="9.5" fill="#a06fc0">点查:二分主键索引 → 直定位 block</text>
+  <g stroke="#c7a8d8" stroke-width="1.3" stroke-dasharray="4 3" fill="none">
+    <path d="M718,206 L170,213" marker-end="url(#ar)"/>
+    <path d="M718,252 L170,261" marker-end="url(#ar)"/>
+    <path d="M718,298 L170,309" marker-end="url(#ar)"/>
+  </g>
+</svg>

@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="560" viewBox="0 0 1040 560" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1040" height="560" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Trino 两层访问控制 · System + Connector 都过才放行</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">以 checkCanSelectFromColumns 为例:三关顺序判定,deny-by-default</text>
+
+  <!-- decision chain -->
+  <rect x="30" y="72" width="980" height="150" rx="13" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="46" y="94" font-size="11" font-weight="700" fill="#1b2a4a">AccessControlManager.checkCanSelectFromColumns 三关</text>
+  <g font-size="8.8" text-anchor="middle">
+    <rect x="46" y="108" width="290" height="70" rx="9" fill="#f3f7fc" stroke="#cfe0f2"/><text x="191" y="130" font-size="9.5" font-weight="700" fill="#274a78">① checkCanAccessCatalog</text><text x="191" y="150" fill="#5b7db1">遍历系统控制器 canAccessCatalog</text><text x="191" y="166" fill="#5b7db1">任一 false → denyCatalogAccess</text>
+    <rect x="356" y="108" width="290" height="70" rx="9" fill="#faf4fb" stroke="#e2d2ee"/><text x="501" y="130" font-size="9.5" font-weight="700" fill="#5a3d78">② 系统级(先)</text><text x="501" y="150" fill="#7a5a95">systemAuthorizationCheck</text><text x="501" y="166" fill="#7a5a95">遍历所有 SystemAccessControl,任一抛即失败</text>
+    <rect x="666" y="108" width="344" height="70" rx="9" fill="#f5faf6" stroke="#cfe6d5"/><text x="838" y="130" font-size="9.5" font-weight="700" fill="#2c5a3a">③ 连接器级(后)</text><text x="838" y="150" fill="#2f6f4f">catalogAuthorizationCheck</text><text x="838" y="166" fill="#2f6f4f">该 catalog 的 ConnectorAccessControl(无则放行)</text>
+  </g>
+  <line x1="336" y1="143" x2="356" y2="143" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="646" y1="143" x2="666" y2="143" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <text x="520" y="206" text-anchor="middle" font-size="8.5" fill="#b1483a">三关都过才允许读这些列;任一关拒 → AccessDeniedException</text>
+
+  <!-- two styles -->
+  <rect x="30" y="236" width="490" height="150" rx="13" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="46" y="258" font-size="11" font-weight="700" fill="#1d1d1f">两种方法风格</text>
+  <rect x="46" y="272" width="450" height="46" rx="8" fill="#fff" stroke="#ececf1"/><text x="60" y="292" font-size="9" font-weight="600" fill="#b1483a">checkCanXxx(...) → void,抛异常</text><text x="60" y="308" font-size="8.5" fill="#6e6e73">如 checkCanInsertIntoTable;拒绝即 throw AccessDeniedException</text>
+  <rect x="46" y="326" width="450" height="46" rx="8" fill="#fff" stroke="#ececf1"/><text x="60" y="346" font-size="9" font-weight="600" fill="#12402a">filterXxx(...) → 返回允许子集</text><text x="60" y="362" font-size="8.5" fill="#6e6e73">如 filterTables/filterColumns;default 返 emptySet(全拒)</text>
+
+  <!-- system AC types -->
+  <rect x="540" y="236" width="470" height="150" rx="13" fill="#faf4fb" stroke="#e2d2ee"/>
+  <text x="556" y="258" font-size="11" font-weight="700" fill="#5a3d78">内置 SystemAccessControl 工厂</text>
+  <g font-size="8.8">
+    <text x="556" y="280" fill="#7a5a95">· default —— deny-most 默认(未配时)</text>
+    <text x="556" y="298" fill="#7a5a95">· allow-all —— 全放行(测试/内网)</text>
+    <text x="556" y="316" fill="#7a5a95">· read-only —— 只读</text>
+    <text x="556" y="334" fill="#7a5a95">· file —— 规则 JSON(user/表/列/会话属性规则)</text>
+  </g>
+  <text x="556" y="358" font-size="8.5" fill="#93762e">access-control.config-files 可配多个 → 全部咨询(叠加)</text>
+  <text x="556" y="376" font-size="8" fill="#7a5a95">file 插件在 trino-plugin-toolkit</text>
+
+  <!-- identity + deny default -->
+  <rect x="30" y="400" width="980" height="140" rx="13" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="46" y="422" font-size="11" font-weight="700" fill="#2c5a3a">Identity 与 deny-by-default</text>
+  <text x="46" y="444" font-size="9" fill="#2f6f4f">· Identity：user + groups + principal + enabledRoles + catalogRoles + extraCredentials(认证阶段确定)</text>
+  <text x="46" y="462" font-size="9" fill="#2f6f4f">· toConnectorIdentity(catalog)：投影成连接器视角(catalogRoles→该 catalog 的角色)传给 ConnectorAccessControl</text>
+  <text x="46" y="480" font-size="9" fill="#2f6f4f">· deny-by-default：SPI 所有 default 方法都拒绝(denyXxx)或返空子集 → permissive 插件必须显式 override</text>
+  <text x="46" y="498" font-size="9" fill="#2f6f4f">· SecurityContext(引擎侧,TransactionId+Identity+QueryId) ↔ SystemSecurityContext / ConnectorSecurityContext(SPI 侧)</text>
+  <text x="46" y="520" font-size="8.5" fill="#b1483a">· 注意 canAccessCatalog/canExecuteFunction 是返 boolean 的 canXxx,不是 checkCanXxx——命名区分风格</text>
+</svg>

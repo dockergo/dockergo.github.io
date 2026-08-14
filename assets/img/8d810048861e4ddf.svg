@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="430" viewBox="0 0 1020 430"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1020" height="430" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">Catalog 内存态与持久化 · 运行时在内存，checkpoint 序列化进单文件</text>
+
+  <!-- 运行时内存 -->
+  <rect x="30" y="52" width="300" height="300" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="48" y="76" font-size="12" font-weight="600" fill="#1b2a4a">运行时：内存中的 Catalog</text>
+  <rect x="48" y="90" width="264" height="50" rx="9" fill="#ffffff" stroke="#bcd0ec"/><text x="180" y="110" font-size="9.5" fill="#1b2a4a" text-anchor="middle">DuckCatalog → Schema → CatalogSet</text><text x="180" y="126" font-size="8.5" fill="#5b7db1" text-anchor="middle">对象即内存对象，查改都在内存</text>
+  <rect x="48" y="150" width="264" height="86" rx="9" fill="#eafaf1" stroke="#bce6cd"/><text x="180" y="172" font-size="10" font-weight="600" fill="#0f5132" text-anchor="middle">Default 生成器（惰性）</text><text x="180" y="192" font-size="8.5" fill="#3f8f66" text-anchor="middle">DefaultFunction/Schema/View/Type Generator</text><text x="180" y="208" font-size="8.5" fill="#3f8f66" text-anchor="middle">内建函数/information_schema 等</text><text x="180" y="224" font-size="8.5" fill="#3f8f66" text-anchor="middle">首次访问时才实例化（catalog/default/）</text>
+  <rect x="48" y="246" width="264" height="90" rx="9" fill="#fff7e6" stroke="#f0dcae"/><text x="180" y="268" font-size="10" font-weight="600" fill="#7a4d00" text-anchor="middle">MVCC 版本链（见 DDL）</text><text x="180" y="288" font-size="8.5" fill="#9a7328" text-anchor="middle">条目带 timestamp，事务性增删改</text><text x="180" y="306" font-size="8.5" fill="#9a7328" text-anchor="middle">依赖由 DependencyManager 管</text><text x="180" y="324" font-size="8.5" fill="#9a7328" text-anchor="middle">未提交仅本事务可见</text>
+
+  <!-- checkpoint 序列化 -->
+  <rect x="360" y="52" width="300" height="300" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="378" y="76" font-size="12" font-weight="600" fill="#1d1d1f">Checkpoint：序列化落盘</text>
+  <rect x="378" y="90" width="264" height="60" rx="9" fill="#f4eefb" stroke="#d9c9ef"/><text x="510" y="112" font-size="9.5" fill="#3c1361" text-anchor="middle">CheckpointWriter.WriteEntry（:409）</text><text x="510" y="130" font-size="8.5" fill="#7a5aa8" text-anchor="middle">WriteSchema/WriteView/… 各类型</text>
+  <rect x="378" y="160" width="264" height="60" rx="9" fill="#f4eefb" stroke="#d9c9ef"/><text x="510" y="182" font-size="9.5" fill="#3c1361" text-anchor="middle">写进 Metadata 块</text><text x="510" y="200" font-size="8.5" fill="#7a5aa8" text-anchor="middle">与数据同在一个 .duckdb 文件</text>
+  <rect x="378" y="230" width="264" height="106" rx="9" fill="#f6f6f8" stroke="#e2e2e7"/><text x="510" y="252" font-size="9.5" font-weight="600" fill="#494950" text-anchor="middle">无外部元数据服务</text><text x="510" y="274" font-size="8.5" fill="#6a6a70" text-anchor="middle">对比：ClickHouse Keeper / Doris FE+BDB</text><text x="510" y="292" font-size="8.5" fill="#6a6a70" text-anchor="middle">DuckDB 单机、目录即文件的一部分</text><text x="510" y="314" font-size="8.5" fill="#6a6a70" text-anchor="middle">迁移文件即迁移全部对象定义</text>
+
+  <!-- 打开恢复 -->
+  <rect x="690" y="52" width="300" height="300" rx="14" fill="#eafaf1" stroke="#bce6cd" filter="url(#soft)"/>
+  <text x="708" y="76" font-size="12" font-weight="600" fill="#0f5132">打开库：加载 Catalog</text>
+  <rect x="708" y="90" width="264" height="60" rx="9" fill="#ffffff" stroke="#bce6cd"/><text x="840" y="112" font-size="9.5" fill="#0f5132" text-anchor="middle">CheckpointReader.LoadCheckpoint（:372）</text><text x="840" y="130" font-size="8.5" fill="#3f8f66" text-anchor="middle">从 Metadata 块反序列化条目</text>
+  <rect x="708" y="160" width="264" height="60" rx="9" fill="#ffffff" stroke="#bce6cd"/><text x="840" y="182" font-size="9.5" fill="#0f5132" text-anchor="middle">回放 WAL 里未 checkpoint 的 DDL</text><text x="840" y="200" font-size="8.5" fill="#3f8f66" text-anchor="middle">WriteCreateTable 等条目重建</text>
+  <rect x="708" y="230" width="264" height="106" rx="9" fill="#fdfdf5" stroke="#bce6cd"/><text x="840" y="252" font-size="9.5" font-weight="600" fill="#0f5132" text-anchor="middle">恢复到崩溃前对象状态</text><text x="840" y="274" font-size="8.5" fill="#3f8f66" text-anchor="middle">:memory: 库无此步（不落盘）</text><text x="840" y="292" font-size="8.5" fill="#3f8f66" text-anchor="middle">default 对象每次启动惰性重建</text><text x="840" y="314" font-size="8.5" fill="#3f8f66" text-anchor="middle">用户对象来自文件 + WAL</text>
+
+  <line x1="330" y1="150" x2="360" y2="150" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+  <text x="332" y="142" font-size="8" fill="#86868b">checkpoint</text>
+  <line x1="660" y1="120" x2="690" y2="120" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+  <text x="662" y="112" font-size="8" fill="#86868b">open</text>
+</svg>

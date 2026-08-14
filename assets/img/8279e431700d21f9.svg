@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="400" viewBox="0 0 920 400" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="920" height="400" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">CBO：在 Memo 等价类结构上，用统计代价搜索最优物理计划</text>
+
+  <!-- Statistics -->
+  <rect x="28" y="150" width="176" height="96" rx="13" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="116" y="180" font-size="13" font-weight="600" fill="#5a3410" text-anchor="middle">Statistics</text>
+  <text x="116" y="200" font-size="10" fill="#93762e" text-anchor="middle">rows · NDV</text>
+  <text x="116" y="216" font-size="10" fill="#93762e" text-anchor="middle">min/max · 直方图</text>
+  <text x="116" y="234" font-size="10" fill="#93762e" text-anchor="middle">→ 喂代价模型</text>
+
+  <!-- Memo -->
+  <rect x="228" y="52" width="410" height="316" rx="14" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="248" y="76" font-size="13" font-weight="600" fill="#1d1d1f">Memo · Cascades 等价类搜索</text>
+  <rect x="248" y="88" width="370" height="86" rx="11" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="262" y="108" font-size="11" font-weight="600" fill="#274a78">Group A（A⋈B 的所有等价计划）</text>
+  <g text-anchor="middle" font-size="10">
+    <rect x="262" y="118" width="166" height="24" rx="7" fill="#ffffff" stroke="#c4d5ee"/><text x="345" y="134" fill="#274a78">GE: HashJoin(A,B)·Shuffle</text>
+    <rect x="438" y="118" width="166" height="24" rx="7" fill="#ffffff" stroke="#c4d5ee"/><text x="521" y="134" fill="#274a78">GE: HashJoin(B,A)·Broadcast</text>
+    <rect x="262" y="146" width="342" height="22" rx="7" fill="#f7faff" stroke="#dbe6f6"/><text x="433" y="162" fill="#5b7db1">同一 Group = 逻辑等价，择代价最低者</text>
+  </g>
+  <g text-anchor="middle" font-size="10.5" fill="#274a78">
+    <rect x="248" y="196" width="176" height="40" rx="10" fill="#f5f8fd" stroke="#d3e0f2"/><text x="336" y="212">Group B → Scan A</text><text x="336" y="228" font-size="9" fill="#8ba0c0">子等价类</text>
+    <rect x="442" y="196" width="176" height="40" rx="10" fill="#f5f8fd" stroke="#d3e0f2"/><text x="530" y="212">Group C → Scan B</text><text x="530" y="228" font-size="9" fill="#8ba0c0">子等价类</text>
+  </g>
+  <line x1="345" y1="174" x2="336" y2="196" stroke="#c7c7cc" stroke-width="1.2" fill="none" marker-end="url(#ar)"/>
+  <line x1="521" y1="174" x2="530" y2="196" stroke="#c7c7cc" stroke-width="1.2" fill="none" marker-end="url(#ar)"/>
+  <rect x="248" y="256" width="370" height="30" rx="9" fill="#fafafb" stroke="#ececf1"/><text x="433" y="276" font-size="10" fill="#6e6e73" text-anchor="middle">记忆化缓存代价 + 上界剪枝 → 避免 Join 顺序枚举爆炸</text>
+  <text x="248" y="312" font-size="10" fill="#86868b">输出决策：</text>
+  <g text-anchor="middle" font-size="9.5" fill="#555">
+    <rect x="248" y="320" width="118" height="34" rx="8" fill="#fafafa" stroke="#e0e0e5"/><text x="307" y="335">Join Order</text><text x="307" y="348" font-size="8.5" fill="#999">小表在前</text>
+    <rect x="374" y="320" width="118" height="34" rx="8" fill="#fafafa" stroke="#e0e0e5"/><text x="433" y="335">分布方式</text><text x="433" y="348" font-size="8.5" fill="#999">Colo/Bucket/Shuffle/Bcast</text>
+    <rect x="500" y="320" width="118" height="34" rx="8" fill="#fafafa" stroke="#e0e0e5"/><text x="559" y="335">聚合方式</text><text x="559" y="348" font-size="8.5" fill="#999">一/两阶段</text>
+  </g>
+
+  <!-- Output plan -->
+  <rect x="700" y="150" width="190" height="96" rx="13" fill="#f3e9fb" stroke="#d8c9ee" filter="url(#soft)"/>
+  <text x="795" y="192" font-size="13" font-weight="600" fill="#33194a" text-anchor="middle">最优 Physical Plan</text>
+  <text x="795" y="214" font-size="10" fill="#7a5aa0" text-anchor="middle">代价最低的计划</text>
+
+  <g stroke="#c7c7cc" stroke-width="1.5" fill="none">
+    <line x1="204" y1="198" x2="228" y2="198" marker-end="url(#ar)"/>
+    <line x1="638" y1="198" x2="700" y2="198" marker-end="url(#ar)"/>
+    <path d="M795,246 L795,384 L116,384 L116,246" stroke-dasharray="5 3" marker-end="url(#ar)"/>
+  </g>
+  <text x="216" y="192" font-size="9" fill="#a1a1a6" text-anchor="middle">代价</text>
+  <text x="455" y="378" font-size="10" fill="#a1a1a6" text-anchor="middle">HBO：实测回灌纠偏统计与代价</text>
+</svg>

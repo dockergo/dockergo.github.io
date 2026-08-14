@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="580" viewBox="0 0 1080 580" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="580" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="700" fill="#1d1d1f">支撑能力域 · 依赖关系图</text>
+  <text x="30" y="49" font-size="10" fill="#a1a1a6">实线 = 数据流/调用　虚线 = 状态约束(存/按…读)。贯穿层 sequence number 横切快照/元数据/删除</text>
+
+  <!-- edges (draw first, behind nodes) -->
+  <g stroke="#b8b8bf" stroke-width="1.5" fill="none">
+    <line x1="540" y1="98" x2="540" y2="120" marker-end="url(#ar)"/>            <!-- iface->catalog -->
+    <line x1="540" y1="168" x2="540" y2="206" marker-end="url(#ar)"/>            <!-- catalog->metadata -->
+    <path d="M450,90 C260,120 200,250 200,318" marker-end="url(#ar)"/>            <!-- iface->txn write -->
+    <line x1="290" y1="345" x2="425" y2="270" marker-end="url(#ar)"/>            <!-- txn->metadata write tree -->
+    <line x1="540" y1="410" x2="540" y2="290" marker-end="url(#ar)"/>            <!-- scan->metadata traverse -->
+    <line x1="810" y1="360" x2="655" y2="258" marker-end="url(#ar)"/>            <!-- delete->metadata delete manifest -->
+    <line x1="640" y1="380" x2="770" y2="365" marker-end="url(#ar)"/>            <!-- scan->delete attach -->
+    <path d="M810,470 C640,430 340,415 260,362" marker-end="url(#ar)"/>          <!-- maintain->txn 经提交路径 -->
+  </g>
+  <!-- dashed state constraints -->
+  <g stroke="#c7c7cc" stroke-width="1.4" fill="none" stroke-dasharray="5 4">
+    <line x1="360" y1="470" x2="470" y2="270" marker-end="url(#ar)"/>            <!-- schema->metadata store -->
+    <line x1="600" y1="470" x2="560" y2="290" marker-end="url(#ar)"/>            <!-- partition->metadata store -->
+    <line x1="560" y1="470" x2="560" y2="410" marker-end="url(#ar)"/>            <!-- partition<-scan use spec (scan uses spec) -->
+  </g>
+
+  <!-- nodes -->
+  <g filter="url(#soft)">
+  <rect x="440" y="56" width="200" height="42" rx="11" fill="#f4eefb" stroke="#d9c7ec"/>
+  <rect x="440" y="126" width="200" height="42" rx="11" fill="#e7f0fb" stroke="#b9d2ef"/>
+  <rect x="410" y="206" width="260" height="66" rx="13" fill="#eef3fb" stroke="#bcd0ec"/>
+  <rect x="110" y="318" width="200" height="52" rx="11" fill="#f5faf6" stroke="#cfe6d5"/>
+  <rect x="440" y="408" width="200" height="52" rx="11" fill="#e7f0fb" stroke="#b9d2ef"/>
+  <rect x="770" y="338" width="210" height="52" rx="11" fill="#f9ecec" stroke="#e8c9c9"/>
+  <rect x="250" y="468" width="200" height="46" rx="11" fill="#f4eefb" stroke="#d9c7ec"/>
+  <rect x="500" y="468" width="200" height="46" rx="11" fill="#f4eefb" stroke="#d9c7ec"/>
+  <rect x="770" y="468" width="210" height="46" rx="11" fill="#f7f7f9" stroke="#e3e3e8"/>
+  </g>
+  <g text-anchor="middle">
+  <text x="540" y="82" font-size="11" font-weight="700" fill="#3d2a5a">接触面 · 表 API</text>
+  <text x="540" y="152" font-size="11" font-weight="700" fill="#1b2a4a">catalog 与并发</text>
+  <text x="540" y="235" font-size="12" font-weight="700" fill="#1b2a4a">元数据树(核心)</text>
+  <text x="540" y="255" font-size="8.4" fill="#5b7db1">metadata→list→manifest→data file</text>
+  <text x="210" y="340" font-size="11" font-weight="700" fill="#12402a">快照与提交</text>
+  <text x="210" y="357" font-size="8.2" fill="#2f6f4f">原子 CAS + OCC 重试</text>
+  <text x="540" y="430" font-size="11" font-weight="700" fill="#1b2a4a">扫描规划</text>
+  <text x="540" y="447" font-size="8.2" fill="#5b7db1">两级剪枝 + residual</text>
+  <text x="875" y="360" font-size="11" font-weight="700" fill="#7a2230">行级删除(v2)</text>
+  <text x="875" y="377" font-size="8.2" fill="#a85560">delete file + MoR</text>
+  <text x="350" y="490" font-size="10.5" font-weight="700" fill="#3d2a5a">schema 演进</text>
+  <text x="350" y="506" font-size="8" fill="#8a6db3">字段 ID 追踪</text>
+  <text x="600" y="490" font-size="10.5" font-weight="700" fill="#3d2a5a">分区演进</text>
+  <text x="600" y="506" font-size="8" fill="#8a6db3">隐藏分区 + spec</text>
+  <text x="875" y="490" font-size="10.5" font-weight="700" fill="#1d1d1f">表维护</text>
+  <text x="875" y="506" font-size="8" fill="#6e6e73">compaction/expire</text>
+  </g>
+
+  <!-- edge labels -->
+  <g font-size="8" fill="#86868b">
+  <text x="556" y="114">找当前 metadata 指针</text>
+  <text x="556" y="192">load metadata</text>
+  <text x="300" y="200">commit 写新树</text>
+  <text x="440" y="350">遍历剪枝</text>
+  <text x="690" y="330">delete manifest</text>
+  <text x="672" y="388">附 deletes</text>
+  <text x="360" y="380" fill="#a1a1a6">存 schemas(约束)</text>
+  <text x="562" y="440" fill="#a1a1a6">按 spec 读</text>
+  <text x="560" y="452">经提交路径</text>
+  </g>
+
+  <rect x="30" y="534" width="1020" height="34" rx="10" fill="#f0f0f4" stroke="#d2d2d7"/>
+  <text x="540" y="555" font-size="9.5" font-weight="700" text-anchor="middle" fill="#48484a">贯穿层 · sequence number —— 每提交递增,快照/manifest 条目/delete file 都带 seq,行级删除靠 seq 比较决定作用于哪些数据文件</text>
+</svg>

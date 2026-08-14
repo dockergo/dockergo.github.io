@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="540" viewBox="0 0 920 540" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="920" height="540" fill="#fbfbfd"/>
+  <text x="30" y="34" font-size="15" font-weight="600" fill="#1d1d1f">Leader 选举：三状态机 + PreVote + 多数派授权</text>
+
+  <!-- 状态机 -->
+  <rect x="40" y="70" width="200" height="80" rx="40" fill="#f5faf6" stroke="#c9e6cf" filter="url(#soft)"/>
+  <text x="140" y="104" text-anchor="middle" font-size="13" font-weight="600" fill="#1f5130">Follower</text>
+  <text x="140" y="124" text-anchor="middle" font-size="10" fill="#4f9d69">收心跳/日志 · 初始态</text>
+
+  <rect x="360" y="70" width="200" height="80" rx="40" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="460" y="104" text-anchor="middle" font-size="13" font-weight="600" fill="#1b2a4a">Candidate</text>
+  <text x="460" y="124" text-anchor="middle" font-size="10" fill="#5b7db1">term++ · 拉票</text>
+
+  <rect x="680" y="70" width="200" height="80" rx="40" fill="#fbf7ef" stroke="#efe2c8" filter="url(#soft)"/>
+  <text x="780" y="104" text-anchor="middle" font-size="13" font-weight="600" fill="#8a6d1f">Leader</text>
+  <text x="780" y="124" text-anchor="middle" font-size="10" fill="#a1885a">发心跳 · 复制日志</text>
+
+  <path d="M240,110 L358,110" stroke="#c7c7cc" stroke-width="1.4" fill="none" marker-end="url(#ar)"/>
+  <text x="299" y="100" text-anchor="middle" font-size="9.5" fill="#86868b">选举超时</text>
+  <path d="M560,110 L678,110" stroke="#c7c7cc" stroke-width="1.4" fill="none" marker-end="url(#ar)"/>
+  <text x="619" y="100" text-anchor="middle" font-size="9.5" fill="#86868b">得多数票</text>
+  <path d="M780,152 C780,210 140,210 140,152" stroke="#c7c7cc" stroke-width="1.4" fill="none" marker-end="url(#ar)"/>
+  <text x="460" y="205" text-anchor="middle" font-size="9.5" fill="#86868b">见更高 term / 失联 → 退位为 Follower</text>
+  <path d="M460,152 C460,178 240,178 220,150" stroke="#d0d0d5" stroke-width="1.2" fill="none" stroke-dasharray="3 3" marker-end="url(#ar)"/>
+  <text x="330" y="172" text-anchor="middle" font-size="9" fill="#a1a1a6">分票/超时 → 新一轮</text>
+
+  <!-- 选举流程 -->
+  <rect x="40" y="240" width="400" height="270" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="56" y="264" font-size="12.5" font-weight="600" fill="#1b2a4a">选举流程（raft.go）</text>
+  <g font-size="10.5" fill="#2b3a5a">
+    <rect x="56" y="276" width="368" height="30" rx="7" fill="#ffffff" stroke="#cfe0f2"/>
+    <text x="66" y="295">① Follower 随机超时无心跳 → randomTimeout(HeartbeatTimeout)</text>
+    <rect x="56" y="312" width="368" height="30" rx="7" fill="#f3f7fc" stroke="#cfe0f2"/>
+    <text x="66" y="331">② <tspan font-weight="600">PreVote</tspan>：preElectSelf 不加 term 先探路（:293-298）</text>
+    <rect x="56" y="348" width="368" height="30" rx="7" fill="#ffffff" stroke="#cfe0f2"/>
+    <text x="66" y="367">③ 过 PreVote → <tspan font-weight="600">electSelf</tspan>：term++ 转 Candidate（:1999）</text>
+    <rect x="56" y="384" width="368" height="30" rx="7" fill="#ffffff" stroke="#cfe0f2"/>
+    <text x="66" y="403">④ persistVote 先给自己投票（落盘）</text>
+    <rect x="56" y="420" width="368" height="30" rx="7" fill="#ffffff" stroke="#cfe0f2"/>
+    <text x="66" y="439">⑤ 向所有 Voter 并发发 RequestVote RPC</text>
+    <rect x="56" y="456" width="368" height="30" rx="7" fill="#f5faf6" stroke="#c9e6cf"/>
+    <text x="66" y="475" fill="#1f5130">⑥ 得 voters/2+1 票 → 成为 Leader，立即发心跳</text>
+  </g>
+
+  <!-- 投票裁决 -->
+  <rect x="460" y="240" width="420" height="270" rx="13" fill="#f7f7f9" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="476" y="264" font-size="12.5" font-weight="600" fill="#1d1d1f">requestVote 接收方裁决（raft.go:1626）</text>
+  <g font-size="10.5" fill="#6e6e73">
+    <text x="476" y="290">· req.Term &lt; currentTerm → <tspan font-weight="600" fill="#8a2b1f">拒绝</tspan></text>
+    <text x="476" y="312">· req.Term &gt; currentTerm → 退位为 Follower 并更新 term</text>
+    <text x="476" y="334">· 已有已知 Leader 且非领导权转移 → <tspan font-weight="600" fill="#8a2b1f">拒绝</tspan></text>
+    <text x="476" y="356">· 候选人不在配置 / 非 Voter → <tspan font-weight="600" fill="#8a2b1f">拒绝</tspan></text>
+    <text x="476" y="378">· 候选人日志不比我新（term/index） → <tspan font-weight="600" fill="#8a2b1f">拒绝</tspan></text>
+    <text x="476" y="400">· 本任期已投过别人 → <tspan font-weight="600" fill="#8a2b1f">拒绝</tspan>（一任期一票，落盘保证）</text>
+    <text x="476" y="422" fill="#1f5130">· 以上全过 → <tspan font-weight="600">授权，persistVote 记录</tspan></text>
+  </g>
+  <rect x="476" y="440" width="388" height="54" rx="9" fill="#fbf7ef" stroke="#efe2c8"/>
+  <text x="486" y="461" font-size="10.5" font-weight="600" fill="#8a6d1f">PreVote 的价值</text>
+  <text x="486" y="479" font-size="10" fill="#a1885a">被隔离节点反复自增 term 会扰动集群；PreVote 不真正 +term，</text>
+  <text x="486" y="493" font-size="10" fill="#a1885a">先探能否赢，赢不了不打扰现任 Leader（默认开）。</text>
+</svg>

@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="420" viewBox="0 0 1020 420"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1020" height="420" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">模块类型与生命周期 · 一切功能皆模块（core/ngx_module.h）</text>
+
+  <!-- 模块类型 -->
+  <rect x="30" y="56" width="470" height="180" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="48" y="80" font-size="12.5" font-weight="600" fill="#1d1d1f">模块大类（按 type 字段）</text>
+  <rect x="48" y="96" width="215" height="40" rx="8" fill="#eef3fb" stroke="#bcd0ec"/><text x="155" y="121" font-size="9.5" fill="#1b2a4a" text-anchor="middle">NGX_CORE_MODULE（顶层）</text>
+  <rect x="271" y="96" width="211" height="40" rx="8" fill="#eef3fb" stroke="#bcd0ec"/><text x="376" y="121" font-size="9.5" fill="#1b2a4a" text-anchor="middle">NGX_EVENT_MODULE（事件）</text>
+  <rect x="48" y="144" width="215" height="40" rx="8" fill="#eafaf1" stroke="#bce6cd"/><text x="155" y="169" font-size="9.5" fill="#0f5132" text-anchor="middle">NGX_HTTP_MODULE（HTTP）</text>
+  <rect x="271" y="144" width="211" height="40" rx="8" fill="#fff7e6" stroke="#f0dcae"/><text x="376" y="169" font-size="9.5" fill="#7a4d00" text-anchor="middle">STREAM / MAIL / CONF</text>
+  <text x="48" y="210" font-size="9.5" fill="#494950">HTTP 模块内再分：handler / filter / upstream（上一图）。</text>
+  <text x="48" y="228" font-size="9.5" fill="#86868b">编译期静态链接进 ngx_modules[]，或动态 load_module 加载 .so。</text>
+
+  <!-- 配置钩子 -->
+  <rect x="520" y="56" width="470" height="180" rx="14" fill="#f4eefb" stroke="#d9c9ef" filter="url(#soft)"/>
+  <text x="538" y="80" font-size="12.5" font-weight="600" fill="#3c1361">HTTP 模块的配置钩子（ngx_http_module_t）</text>
+  <rect x="538" y="96" width="434" height="30" rx="7" fill="#ffffff" stroke="#d9c9ef"/><text x="554" y="116" font-size="9" fill="#3c1361">create_main/srv/loc_conf：各层建配置结构</text>
+  <rect x="538" y="132" width="434" height="30" rx="7" fill="#ffffff" stroke="#d9c9ef"/><text x="554" y="152" font-size="9" fill="#3c1361">merge_srv/loc_conf：继承合并（见配置指令篇）</text>
+  <rect x="538" y="168" width="434" height="30" rx="7" fill="#ffffff" stroke="#d9c9ef"/><text x="554" y="188" font-size="9" fill="#3c1361">preconfiguration / postconfiguration：注册变量 / 挂 filter、phase handler</text>
+  <text x="538" y="222" font-size="9" fill="#a58fc9">filter 与 phase handler 正是在 postconfiguration 里挂进流水线。</text>
+
+  <!-- 启动顺序 -->
+  <rect x="30" y="252" width="960" height="150" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="48" y="276" font-size="12.5" font-weight="600" fill="#1d1d1f">启动时模块初始化顺序</text>
+  <rect x="48" y="292" width="200" height="60" rx="10" fill="#eef3fb" stroke="#bcd0ec"/><text x="148" y="316" font-size="10" font-weight="600" fill="#1b2a4a" text-anchor="middle">① 解析配置</text><text x="148" y="336" font-size="8.5" fill="#5b7db1" text-anchor="middle">调各指令 set 回调</text>
+  <rect x="268" y="292" width="200" height="60" rx="10" fill="#eafaf1" stroke="#bce6cd"/><text x="368" y="316" font-size="10" font-weight="600" fill="#0f5132" text-anchor="middle">② create/merge conf</text><text x="368" y="336" font-size="8.5" fill="#3f8f66" text-anchor="middle">建并合并各层配置</text>
+  <rect x="488" y="292" width="200" height="60" rx="10" fill="#f4eefb" stroke="#d9c9ef"/><text x="588" y="316" font-size="10" font-weight="600" fill="#3c1361" text-anchor="middle">③ postconfiguration</text><text x="588" y="336" font-size="8.5" fill="#7a5aa8" text-anchor="middle">挂 filter / phase handler</text>
+  <rect x="708" y="292" width="262" height="60" rx="10" fill="#fff7e6" stroke="#f0dcae"/><text x="839" y="316" font-size="10" font-weight="600" fill="#7a4d00" text-anchor="middle">④ init_process（worker 启动）</text><text x="839" y="336" font-size="8.5" fill="#9a7328" text-anchor="middle">每 worker 各自初始化（连接池等）</text>
+  <line x1="248" y1="322" x2="268" y2="322" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="468" y1="322" x2="488" y2="322" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="688" y1="322" x2="708" y2="322" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <text x="48" y="378" font-size="9.5" fill="#86868b">前三步在 master（配置就绪），init_process 在每个 worker fork 后各跑一次。</text>
+</svg>

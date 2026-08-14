@@ -1,0 +1,114 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1150" height="660" viewBox="0 0 1150 660" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="aG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+    <marker id="aA" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#c99a3a"/></marker>
+    <marker id="aR" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#d1544a"/></marker>
+  </defs>
+  <rect width="1150" height="660" fill="#fbfbfd"/>
+
+  <!-- 判型标题带 -->
+  <text x="30" y="32" font-size="15" font-weight="700" fill="#1d1d1f">Hudi 一致性哈希环 bucket 索引 · 环上按需 split/merge，加/减容量只动被触及的相邻 bucket，其余区间不受影响</text>
+  <text x="30" y="53" font-size="10.5" fill="#6e6e73">HoodieConsistentHashingMetadata 记录环的当前状态；BaseConsistentHashingBucketClusteringPlanStrategy 判定何时拆/合；执行走独立的 Spark clustering 作业</text>
+
+  <!-- 图例 -->
+  <line x1="30" y1="80" x2="54" y2="80" stroke="#2f9e6e" stroke-width="2" marker-end="url(#aG)"/>
+  <text x="60" y="84" font-size="10" fill="#3a3a3c">record key → 哈希 → 落环上某 bucket</text>
+  <line x1="290" y1="80" x2="314" y2="80" stroke="#c99a3a" stroke-width="2" stroke-dasharray="5 3" marker-end="url(#aA)"/>
+  <text x="320" y="84" font-size="10" fill="#3a3a3c">splitBucket · 超 splitSize 拆分</text>
+  <line x1="530" y1="80" x2="554" y2="80" stroke="#d1544a" stroke-width="2" stroke-dasharray="5 3" marker-end="url(#aR)"/>
+  <text x="560" y="84" font-size="10" fill="#3a3a3c">mergeBucket · 低于 mergeSize 合并</text>
+  <text x="1120" y="84" font-size="10" fill="#a1a1a6" text-anchor="end">源码级已核实</text>
+  <line x1="30" y1="98" x2="1120" y2="98" stroke="#e4e7ec" stroke-width="1"/>
+
+  <!-- 左侧：一致性哈希环 -->
+  <rect x="30" y="112" width="470" height="440" rx="14" fill="#eaf6f0" stroke="#bfe3d1" filter="url(#soft)"/>
+  <text x="52" y="138" font-size="13" font-weight="700" fill="#2f6b4e">① 环视图 · 每个 bucket 占环上一段区间</text>
+
+  <!-- 环 -->
+  <circle cx="265" cy="345" r="150" fill="none" stroke="#9ed3b8" stroke-width="3"/>
+  <circle cx="265" cy="345" r="150" fill="none" stroke="#eaf6f0" stroke-width="1" stroke-dasharray="2 6"/>
+
+  <!-- 8 个 bucket 节点绕环排布（起于12点方向，顺时针） -->
+  <!-- 角度: -90,-45,0,45,90,135,180,225 (度)，r=150，中心(265,345) -->
+  <circle cx="265" cy="195" r="20" fill="#d7efe2" stroke="#2f9e6e" stroke-width="2"/>
+  <text x="265" y="200" font-size="10" font-weight="700" fill="#2f6b4e" text-anchor="middle">B0</text>
+
+  <circle cx="371" cy="239" r="20" fill="#d7efe2" stroke="#2f9e6e" stroke-width="2"/>
+  <text x="371" y="244" font-size="10" font-weight="700" fill="#2f6b4e" text-anchor="middle">B1</text>
+
+  <circle cx="415" cy="345" r="20" fill="#fbf3e2" stroke="#c99a3a" stroke-width="2.4"/>
+  <text x="415" y="350" font-size="10" font-weight="700" fill="#8a6417" text-anchor="middle">B2</text>
+  <text x="415" y="378" font-size="8" fill="#8a6417" text-anchor="middle">超 splitSize</text>
+
+  <circle cx="371" cy="451" r="20" fill="#d7efe2" stroke="#2f9e6e" stroke-width="2"/>
+  <text x="371" y="456" font-size="10" font-weight="700" fill="#2f6b4e" text-anchor="middle">B3</text>
+
+  <circle cx="265" cy="495" r="20" fill="#d7efe2" stroke="#2f9e6e" stroke-width="2"/>
+  <text x="265" y="500" font-size="10" font-weight="700" fill="#2f6b4e" text-anchor="middle">B4</text>
+
+  <circle cx="159" cy="451" r="20" fill="#fdecea" stroke="#d1544a" stroke-width="2.4"/>
+  <text x="159" y="456" font-size="10" font-weight="700" fill="#8a4038" text-anchor="middle">B5</text>
+
+  <circle cx="115" cy="345" r="20" fill="#fdecea" stroke="#d1544a" stroke-width="2.4"/>
+  <text x="115" y="350" font-size="10" font-weight="700" fill="#8a4038" text-anchor="middle">B6</text>
+  <text x="137" y="378" font-size="8" fill="#8a4038" text-anchor="middle">B5+B6 低于 mergeSize</text>
+
+  <circle cx="159" cy="239" r="20" fill="#d7efe2" stroke="#2f9e6e" stroke-width="2"/>
+  <text x="159" y="244" font-size="10" font-weight="700" fill="#2f6b4e" text-anchor="middle">B7</text>
+
+  <!-- split 箭头：B2 拆成两个新 bucket（往环外延伸虚线示意新增） -->
+  <path d="M 430 320 C 470 300 480 260 460 230" fill="none" stroke="#c99a3a" stroke-width="1.8" stroke-dasharray="5 3" marker-end="url(#aA)"/>
+  <text x="468" y="300" font-size="8.5" fill="#8a6417">split → B2a</text>
+  <path d="M 430 370 C 470 400 480 430 458 452" fill="none" stroke="#c99a3a" stroke-width="1.8" stroke-dasharray="5 3" marker-end="url(#aA)"/>
+  <text x="440" y="440" font-size="8.5" fill="#8a6417">split → B2b</text>
+
+  <!-- merge 箭头：B5、B6 向内合并出一个新 bucket -->
+  <path d="M 155 435 C 130 400 130 370 145 355" fill="none" stroke="#d1544a" stroke-width="1.8" stroke-dasharray="5 3" marker-end="url(#aR)"/>
+  <path d="M 113 328 C 118 300 130 285 148 275" fill="none" stroke="#d1544a" stroke-width="1.8" stroke-dasharray="5 3" marker-end="url(#aR)"/>
+  <circle cx="165" cy="310" r="16" fill="#fdecea" stroke="#d1544a" stroke-width="2" stroke-dasharray="3 2"/>
+  <text x="165" y="314" font-size="9" font-weight="700" fill="#8a4038" text-anchor="middle">B5'</text>
+  <text x="100" y="270" font-size="8.5" fill="#8a4038">merge → B5'</text>
+
+  <text x="265" y="345" font-size="9" fill="#4a7a63" text-anchor="middle" dy="2">numBuckets</text>
+  <text x="265" y="358" font-size="8" fill="#6f9c86" text-anchor="middle">动态变化</text>
+
+  <text x="52" y="580" font-size="9.5" fill="#3f8a63">record key 先哈希到环上一点，落入所在区间即归属该 bucket；split/merge 只重新划定被触及的区间边界，</text>
+  <text x="52" y="598" font-size="9.5" fill="#3f8a63">未受影响的 bucket（B0/B1/B3/B4/B7）区间与归属不变——这是「柔性」的来源：调整范围只有相邻局部。</text>
+  <text x="52" y="622" font-size="8.5" fill="#5f9c81">数据结构：HoodieConsistentHashingMetadata（version/partitionPath/instant/numBuckets/seqNo/List&lt;ConsistentHashingNode&gt;），由 ConsistentBucketIndexUtils 管理</text>
+
+  <!-- 右侧：调整流程 -->
+  <rect x="524" y="112" width="596" height="440" rx="14" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="546" y="138" font-size="13" font-weight="700" fill="#1d1d1f">② 动态调整流程 · 从触发条件到执行落地</text>
+
+  <rect x="546" y="156" width="552" height="70" rx="10" fill="#eaf6f0" stroke="#bfe3d1"/>
+  <text x="562" y="178" font-size="10.5" font-weight="700" fill="#2f6b4e">触发条件（ConsistentBucketIdentifier）</text>
+  <text x="562" y="198" font-size="9.5" fill="#3f8a63">splitBucket()：某 bucket 对应文件大小超过 splitSize</text>
+  <text x="562" y="216" font-size="9.5" fill="#3f8a63">mergeBucket()：相邻 bucket 总大小低于 mergeSize</text>
+
+  <line x1="822" y1="226" x2="822" y2="248" stroke="#4a7fd0" stroke-width="1.8" marker-end="url(#aA)"/>
+
+  <rect x="546" y="256" width="552" height="86" rx="10" fill="#eaf1fb" stroke="#c6d9f2"/>
+  <text x="562" y="280" font-size="10.5" font-weight="700" fill="#20375e">规划（BaseConsistentHashingBucketClusteringPlanStrategy）</text>
+  <text x="562" y="300" font-size="9.5" fill="#3a4a63">扫描各 bucket 状态，构建三类 clustering 分组：</text>
+  <text x="562" y="318" font-size="9.5" fill="#3a4a63">split 分组 / merge 分组 / sort 分组，产出一份 clustering 计划</text>
+  <text x="562" y="334" font-size="8.5" fill="#5a7099">计划只描述「要拆/合哪些 bucket」，不直接改数据</text>
+
+  <line x1="822" y1="342" x2="822" y2="364" stroke="#4a7fd0" stroke-width="1.8" marker-end="url(#aA)"/>
+
+  <rect x="546" y="372" width="552" height="80" rx="10" fill="#f4eefb" stroke="#dcc9ef"/>
+  <text x="562" y="396" font-size="10.5" font-weight="700" fill="#6f3ea8">执行（SingleSparkJobConsistentHashingExecutionStrategy）</text>
+  <text x="562" y="416" font-size="9.5" fill="#5a3a7a">用单个 Spark job 把计划中的 bucket 数据重写为新的</text>
+  <text x="562" y="434" font-size="9.5" fill="#5a3a7a">split/merge 结果，写完后更新环元数据（新 numBuckets/seqNo）</text>
+
+  <line x1="822" y1="452" x2="822" y2="474" stroke="#4a7fd0" stroke-width="1.8" marker-end="url(#aA)"/>
+
+  <rect x="546" y="482" width="552" height="70" rx="10" fill="#eaf6f0" stroke="#bfe3d1"/>
+  <text x="562" y="504" font-size="10.5" font-weight="700" fill="#2f6b4e">收敛</text>
+  <text x="562" y="524" font-size="9.5" fill="#3f8a63">HoodieConsistentHashingMetadata 的 seqNo 递增，环状态原子切换到新版本；</text>
+  <text x="562" y="540" font-size="8.5" fill="#5f9c81">未涉及的 bucket 不改动、不重写，代价与「被触及的区间大小」成正比</text>
+
+  <text x="546" y="578" font-size="9" fill="#8a97ab">注：本图机制细节均取自本仓库已核实的类名与字段（HoodieConsistentHashingMetadata / ConsistentBucketIndexUtils /</text>
+  <text x="546" y="596" font-size="9" fill="#8a97ab">BaseConsistentHashingBucketClusteringPlanStrategy / ConsistentBucketIdentifier / SingleSparkJobConsistentHashingExecutionStrategy）。</text>
+  <text x="546" y="614" font-size="9" fill="#8a97ab">环的可视化布局（角度/半径/B0-B7 命名）为示意排布，非源码字面结构。</text>
+</svg>

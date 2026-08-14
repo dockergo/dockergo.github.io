@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="620" viewBox="0 0 1060 620" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1060" height="620" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">物理部署视图：driver + executors 跑在 Standalone / YARN / K8s 上</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">同一 job→stage→task 模型，cluster manager 只换"资源怎么协商"；client vs cluster 决定 driver 位置</text>
+
+  <!-- three cluster managers -->
+  <g text-anchor="middle">
+    <rect x="40" y="76" width="320" height="230" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+    <text x="200" y="100" font-size="12" font-weight="700" fill="#1b2a4a">Standalone</text>
+    <text x="200" y="118" font-size="8.5" fill="#5b7db1">Spark 自带，最简</text>
+    <rect x="60" y="130" width="280" height="40" rx="8" fill="#fff" stroke="#bcd0ec"/><text x="200" y="150" font-size="9" font-weight="600" fill="#1b2a4a">Master（资源管理）</text><text x="200" y="163" font-size="7.5" fill="#5b7db1">deploy/master</text>
+    <rect x="60" y="180" width="130" height="46" rx="8" fill="#fff" stroke="#bcd0ec"/><text x="125" y="200" font-size="8.5" fill="#1b2a4a">Worker 1</text><text x="125" y="216" font-size="7.5" fill="#5b7db1">起 executor</text>
+    <rect x="210" y="180" width="130" height="46" rx="8" fill="#fff" stroke="#bcd0ec"/><text x="275" y="200" font-size="8.5" fill="#1b2a4a">Worker 2</text><text x="275" y="216" font-size="7.5" fill="#5b7db1">起 executor</text>
+    <text x="200" y="252" font-size="8" fill="#8aa6cf">Master 分配 Worker 上的 executor</text>
+    <text x="200" y="272" font-size="8" fill="#8aa6cf">适合：专用 Spark 集群</text>
+    <text x="200" y="292" font-size="8" fill="#8aa6cf">deploy/{Master,Worker}</text>
+
+    <rect x="370" y="76" width="320" height="230" rx="14" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+    <text x="530" y="100" font-size="12" font-weight="700" fill="#5a3410">YARN</text>
+    <text x="530" y="118" font-size="8.5" fill="#93762e">Hadoop 生态主流</text>
+    <rect x="390" y="130" width="280" height="40" rx="8" fill="#fff" stroke="#e8cf9a"/><text x="530" y="150" font-size="9" font-weight="600" fill="#5a3410">ResourceManager</text><text x="530" y="163" font-size="7.5" fill="#93762e">集群资源仲裁</text>
+    <rect x="390" y="180" width="130" height="46" rx="8" fill="#fff" stroke="#e8cf9a"/><text x="455" y="200" font-size="8.5" fill="#5a3410">ApplicationMaster</text><text x="455" y="216" font-size="7.5" fill="#93762e">申请 container</text>
+    <rect x="540" y="180" width="130" height="46" rx="8" fill="#fff" stroke="#e8cf9a"/><text x="605" y="200" font-size="8.5" fill="#5a3410">NodeManager</text><text x="605" y="216" font-size="7.5" fill="#93762e">container 起 executor</text>
+    <text x="530" y="252" font-size="8" fill="#b08843">executor 跑在 YARN container 里</text>
+    <text x="530" y="272" font-size="8" fill="#b08843">适合：与 Hadoop 共享集群</text>
+    <text x="530" y="292" font-size="8" fill="#b08843">resource-managers/yarn</text>
+
+    <rect x="700" y="76" width="320" height="230" rx="14" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+    <text x="860" y="100" font-size="12" font-weight="700" fill="#12402a">Kubernetes</text>
+    <text x="860" y="118" font-size="8.5" fill="#2f6f4f">云原生</text>
+    <rect x="720" y="130" width="280" height="40" rx="8" fill="#fff" stroke="#bfe0cd"/><text x="860" y="150" font-size="9" font-weight="600" fill="#12402a">K8s API Server</text><text x="860" y="163" font-size="7.5" fill="#2f6f4f">调度 pod</text>
+    <rect x="720" y="180" width="130" height="46" rx="8" fill="#fff" stroke="#bfe0cd"/><text x="785" y="200" font-size="8.5" fill="#12402a">driver pod</text><text x="785" y="216" font-size="7.5" fill="#2f6f4f">起 executor pod</text>
+    <rect x="870" y="180" width="130" height="46" rx="8" fill="#fff" stroke="#bfe0cd"/><text x="935" y="200" font-size="8.5" fill="#12402a">executor pod×N</text><text x="935" y="216" font-size="7.5" fill="#2f6f4f">每 executor=1 pod</text>
+    <text x="860" y="252" font-size="8" fill="#4c8567">executor 为 pod，弹性伸缩</text>
+    <text x="860" y="272" font-size="8" fill="#4c8567">适合：云原生/容器化</text>
+    <text x="860" y="292" font-size="8" fill="#4c8567">resource-managers/kubernetes</text>
+  </g>
+
+  <!-- deploy mode -->
+  <rect x="40" y="326" width="980" height="120" rx="14" fill="#f6f2fb" stroke="#d9c9ec"/>
+  <text x="60" y="350" font-size="11.5" font-weight="700" fill="#3d2a5a">client vs cluster deploy mode（driver 跑哪）</text>
+  <rect x="60" y="364" width="460" height="70" rx="10" fill="#faf7fd" stroke="#d9c9ec"/>
+  <text x="290" y="384" font-size="10" font-weight="600" fill="#3d2a5a" text-anchor="middle">client 模式</text>
+  <text x="290" y="404" font-size="8.5" fill="#7a5da5" text-anchor="middle">driver 跑在提交端（如你的终端/网关机）</text>
+  <text x="290" y="422" font-size="8" fill="#9a7cc4" text-anchor="middle">交互式（spark-shell）· driver 退出 app 结束</text>
+  <rect x="540" y="364" width="460" height="70" rx="10" fill="#faf7fd" stroke="#d9c9ec"/>
+  <text x="770" y="384" font-size="10" font-weight="600" fill="#3d2a5a" text-anchor="middle">cluster 模式</text>
+  <text x="770" y="404" font-size="8.5" fill="#7a5da5" text-anchor="middle">driver 跑在集群内（YARN AM / K8s driver pod）</text>
+  <text x="770" y="422" font-size="8" fill="#9a7cc4" text-anchor="middle">生产提交 · 提交端可断开 · SparkSubmit 分流</text>
+
+  <rect x="40" y="466" width="980" height="90" rx="12" fill="#f7f7f9" stroke="#e6e6ea"/>
+  <text x="60" y="490" font-size="11" font-weight="700" fill="#1d1d1f">一句话</text>
+  <text x="60" y="512" font-size="10" fill="#4b4b50">Spark 的 job→stage→task 执行模型与 cluster manager 无关：Standalone(Master/Worker)、YARN(RM/AM/container)、</text>
+  <text x="60" y="530" font-size="10" fill="#4b4b50">K8s(driver/executor pod) 只换"executor 怎么起、资源怎么协商"，主线不变。client/cluster 模式决定 driver 在提交端还是集群内。</text>
+  <text x="60" y="548" font-size="9" fill="#8a8a8f">调度与资源协商细节见「调度与集群管理」主线。</text>
+</svg>

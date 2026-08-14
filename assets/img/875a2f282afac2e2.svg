@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="450" viewBox="0 0 1020 450"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1020" height="450" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">配置指令结构 · 每条 directive 由某模块的 ngx_command_t 声明（conf_file.h:77）</text>
+
+  <!-- command struct -->
+  <rect x="30" y="52" width="470" height="250" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="48" y="76" font-size="12.5" font-weight="600" fill="#1d1d1f">ngx_command_t 五要素</text>
+  <rect x="48" y="92" width="434" height="40" rx="9" fill="#f4eefb" stroke="#d9c9ef"/><text x="64" y="112" font-size="10.5" font-weight="600" fill="#3c1361">name</text><text x="120" y="112" font-size="10" fill="#7a5aa8">指令名，如 worker_processes / proxy_pass</text><text x="64" y="126" font-size="8.5" fill="#a58fc9">配置里出现这个词就触发它</text>
+  <rect x="48" y="140" width="434" height="52" rx="9" fill="#eef3fb" stroke="#bcd0ec"/><text x="64" y="160" font-size="10.5" font-weight="600" fill="#1b2a4a">type（位掩码）</text><text x="64" y="178" font-size="9.5" fill="#5b7db1">上下文（在哪块合法）+ 参数个数 + 是否块/开关</text>
+  <rect x="48" y="200" width="434" height="52" rx="9" fill="#eafaf1" stroke="#bce6cd"/><text x="64" y="220" font-size="10.5" font-weight="600" fill="#0f5132">set 回调</text><text x="64" y="238" font-size="9.5" fill="#3f8f66">解析到该指令时调用，把参数写进配置结构</text>
+  <rect x="48" y="260" width="210" height="34" rx="8" fill="#fff7e6" stroke="#f0dcae"/><text x="153" y="282" font-size="9.5" fill="#7a4d00" text-anchor="middle">conf：存哪层配置</text>
+  <rect x="272" y="260" width="210" height="34" rx="8" fill="#fff7e6" stroke="#f0dcae"/><text x="377" y="282" font-size="9.5" fill="#7a4d00" text-anchor="middle">offset：结构体字段偏移</text>
+
+  <!-- type 位掩码详解 -->
+  <rect x="520" y="52" width="470" height="250" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="538" y="76" font-size="12.5" font-weight="600" fill="#1b2a4a">type 位掩码两组标志</text>
+  <text x="538" y="98" font-size="10.5" font-weight="600" fill="#1b2a4a">① 上下文（在哪个块里合法）</text>
+  <rect x="538" y="106" width="215" height="30" rx="7" fill="#ffffff" stroke="#bcd0ec"/><text x="646" y="126" font-size="9" fill="#1b2a4a" text-anchor="middle">NGX_MAIN_CONF（顶层）</text>
+  <rect x="761" y="106" width="211" height="30" rx="7" fill="#ffffff" stroke="#bcd0ec"/><text x="866" y="126" font-size="9" fill="#1b2a4a" text-anchor="middle">NGX_HTTP_MAIN_CONF（http{}）</text>
+  <rect x="538" y="142" width="215" height="30" rx="7" fill="#ffffff" stroke="#bcd0ec"/><text x="646" y="162" font-size="9" fill="#1b2a4a" text-anchor="middle">NGX_HTTP_SRV_CONF（server{}）</text>
+  <rect x="761" y="142" width="211" height="30" rx="7" fill="#ffffff" stroke="#bcd0ec"/><text x="866" y="162" font-size="9" fill="#1b2a4a" text-anchor="middle">NGX_HTTP_LOC_CONF（location{}）</text>
+  <text x="538" y="196" font-size="10.5" font-weight="600" fill="#1b2a4a">② 参数形态</text>
+  <rect x="538" y="204" width="140" height="30" rx="7" fill="#eafaf1" stroke="#bce6cd"/><text x="608" y="224" font-size="9" fill="#0f5132" text-anchor="middle">TAKE1/TAKE2…（定参数）</text>
+  <rect x="686" y="204" width="140" height="30" rx="7" fill="#f4eefb" stroke="#d9c9ef"/><text x="756" y="224" font-size="9" fill="#3c1361" text-anchor="middle">CONF_BLOCK（带 {} 块）</text>
+  <rect x="834" y="204" width="138" height="30" rx="7" fill="#fff7e6" stroke="#f0dcae"/><text x="903" y="224" font-size="9" fill="#7a4d00" text-anchor="middle">CONF_FLAG（on/off）</text>
+  <text x="538" y="258" font-size="9.5" fill="#5b7db1">放错上下文 → 解析报错"directive is not allowed here"；</text>
+  <text x="538" y="276" font-size="9.5" fill="#5b7db1">参数个数不符 → "invalid number of arguments"。</text>
+
+  <!-- 配置示例 -->
+  <rect x="30" y="316" width="960" height="118" rx="14" fill="#f6f6f8" stroke="#e2e2e7"/>
+  <text x="48" y="340" font-size="12" font-weight="600" fill="#1d1d1f">贯穿示例配置（后续各篇复用）</text>
+  <text x="48" y="362" font-size="10" fill="#494950" font-family="monospace">worker_processes auto;                    # main 上下文，TAKE1</text>
+  <text x="48" y="380" font-size="10" fill="#494950" font-family="monospace">http { upstream api { server a; server b; }   # http 块，含 upstream 子块</text>
+  <text x="48" y="398" font-size="10" fill="#494950" font-family="monospace">  server { location /api/ { proxy_pass http://api; proxy_cache c; } } }  # server→location 嵌套</text>
+  <text x="48" y="420" font-size="9" fill="#86868b">每个词都是一条 directive，各自由对应模块的 ngx_command_t 注册、在合法上下文里生效。</text>
+</svg>

@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="560" viewBox="0 0 1060 560" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1060" height="560" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">DAGScheduler ↔ TaskScheduler 交接：stage 级 → task 级</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">submitMissingTasks 末尾 taskScheduler.submitTasks(TaskSet)（DAGScheduler.scala:2021）——两层调度的边界</text>
+
+  <!-- DAGScheduler side -->
+  <rect x="40" y="76" width="300" height="200" rx="14" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="190" y="100" font-size="11.5" font-weight="700" fill="#12402a" text-anchor="middle">DAGScheduler（stage 级）</text>
+  <text x="190" y="120" font-size="8.5" fill="#2f6f4f" text-anchor="middle">driver 侧 · 逻辑层</text>
+  <g text-anchor="start" font-size="8.5" fill="#2f6f4f">
+    <text x="60" y="144">· 沿血缘切 stage（宽依赖边界）</text>
+    <text x="60" y="164">· 管 stage 依赖与提交顺序</text>
+    <text x="60" y="184">· 每 stage 拆 task → TaskSet</text>
+    <text x="60" y="204">· 处理 stage 级失败（重跑 map stage）</text>
+    <text x="60" y="224">· FetchFailed / resubmitFailedStages</text>
+  </g>
+  <text x="190" y="252" font-size="8" fill="#4c8567" text-anchor="middle">关心："job 怎么拆成 stage、哪个先跑"</text>
+
+  <!-- handoff -->
+  <rect x="380" y="130" width="300" height="92" rx="13" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="530" y="154" font-size="11" font-weight="700" fill="#5a3410" text-anchor="middle">交接：TaskSet</text>
+  <text x="530" y="174" font-size="8.5" fill="#93762e" text-anchor="middle">taskScheduler.submitTasks(</text>
+  <text x="530" y="190" font-size="8.5" fill="#93762e" text-anchor="middle">new TaskSet(...)）:2021</text>
+  <text x="530" y="210" font-size="8" fill="#b08843" text-anchor="middle">一个 stage 的所有 task 打包</text>
+  <g stroke="#c7c7cc" stroke-width="1.5" fill="none">
+    <line x1="340" y1="176" x2="380" y2="176" marker-end="url(#ar)"/>
+    <line x1="680" y1="176" x2="720" y2="176" marker-end="url(#ar)"/>
+  </g>
+
+  <!-- TaskScheduler side -->
+  <rect x="720" y="76" width="300" height="200" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="870" y="100" font-size="11.5" font-weight="700" fill="#1b2a4a" text-anchor="middle">TaskScheduler（task 级）</text>
+  <text x="870" y="120" font-size="8.5" fill="#5b7db1" text-anchor="middle">TaskSchedulerImpl:243 · 物理层</text>
+  <g text-anchor="start" font-size="8.5" fill="#5b7db1">
+    <text x="740" y="144">· TaskSetManager（:56）管每个 TaskSet</text>
+    <text x="740" y="164">· locality 延迟调度（就近执行）</text>
+    <text x="740" y="184">· task 级失败重试</text>
+    <text x="740" y="204">· 推测执行（慢 task 起备份）</text>
+    <text x="740" y="224">· 向 cluster manager 要 executor</text>
+  </g>
+  <text x="870" y="252" font-size="8" fill="#8aa6cf" text-anchor="middle">关心："每个 task 派到哪个 executor"</text>
+
+  <!-- executor exec -->
+  <rect x="380" y="300" width="300" height="110" rx="13" fill="#f3f7fc" stroke="#cfe0f2"/>
+  <text x="530" y="324" font-size="11" font-weight="700" fill="#274a78" text-anchor="middle">executor 上执行</text>
+  <text x="530" y="346" font-size="8.5" fill="#5b7db1" text-anchor="middle">Executor.TaskRunner（Executor.scala:687）</text>
+  <text x="530" y="364" font-size="8.5" fill="#5b7db1" text-anchor="middle">→ Task.run（Task.scala:87）→ runTask</text>
+  <text x="530" y="384" font-size="8" fill="#8aa6cf" text-anchor="middle">在 TaskContext 里跑该分区的计算</text>
+  <text x="530" y="400" font-size="8" fill="#8aa6cf" text-anchor="middle">ShuffleMapTask 写输出 / ResultTask 回结果</text>
+  <g stroke="#c7c7cc" stroke-width="1.4" fill="none"><line x1="870" y1="276" x2="640" y2="300" marker-end="url(#ar)"/></g>
+  <text x="770" y="292" font-size="8" fill="#8aa6cf">分派</text>
+
+  <rect x="40" y="300" width="300" height="110" rx="13" fill="#fdf9f0" stroke="#efe3cd"/>
+  <text x="190" y="324" font-size="10.5" font-weight="700" fill="#7a5a1e" text-anchor="middle">分工边界（为何分两层）</text>
+  <text x="60" y="346" font-size="8.5" fill="#93762e">· DAG 级：管"依赖/顺序"（本主线）</text>
+  <text x="60" y="364" font-size="8.5" fill="#93762e">· Task 级：管"locality/重试/资源"</text>
+  <text x="60" y="384" font-size="8.5" fill="#93762e">（详见「调度与集群管理」主线）</text>
+  <text x="60" y="402" font-size="8" fill="#b08843">解耦 → 逻辑调度与物理调度各司其职</text>
+
+  <rect x="40" y="426" width="980" height="100" rx="12" fill="#f7f7f9" stroke="#e6e6ea"/>
+  <text x="60" y="450" font-size="11" font-weight="700" fill="#1d1d1f">一句话</text>
+  <text x="60" y="472" font-size="10" fill="#4b4b50">执行模型（stage 级）与调度（task 级）在此交接：DAGScheduler 把一个 stage 的所有 task 打包成 TaskSet 交给</text>
+  <text x="60" y="490" font-size="10" fill="#4b4b50">TaskSchedulerImpl，后者用 TaskSetManager 做 locality 延迟调度、重试、推测执行，把 task 派到 executor 由 TaskRunner 执行。</text>
+  <text x="60" y="508" font-size="9" fill="#8a8a8f">两层解耦：DAG 管"逻辑依赖/顺序"，Task 管"物理位置/资源"。task 级细节见「调度与集群管理」主线。</text>
+</svg>

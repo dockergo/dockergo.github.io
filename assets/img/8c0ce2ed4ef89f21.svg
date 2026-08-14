@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="540" viewBox="0 0 1040 540" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1040" height="540" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Trino 认证链 · 有序 Authenticator 逐个尝试(first-success-wins)</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">http-server.authentication.type 定顺序 = 尝试顺序;首个成功即确定 Identity</text>
+
+  <!-- chain -->
+  <rect x="30" y="72" width="980" height="150" rx="13" fill="#faf4fb" stroke="#e2d2ee"/>
+  <text x="46" y="94" font-size="11" font-weight="700" fill="#5a3d78">AuthenticationFilter 尝试链（示例配置 PASSWORD,CERTIFICATE,JWT）</text>
+  <g font-size="8.5" text-anchor="middle">
+    <rect x="46" y="108" width="180" height="60" rx="9" fill="#fff" stroke="#e2d2ee"/><text x="136" y="128" font-size="9" font-weight="600" fill="#5a3d78">① Password</text><text x="136" y="145" fill="#7a5a95">试 HTTP Basic</text><text x="136" y="159" fill="#b1483a">失败 → 下一个</text>
+    <rect x="256" y="108" width="180" height="60" rx="9" fill="#fff" stroke="#e2d2ee"/><text x="346" y="128" font-size="9" font-weight="600" fill="#5a3d78">② Certificate</text><text x="346" y="145" fill="#7a5a95">试 X509 客户端证书</text><text x="346" y="159" fill="#12402a">成功 → 停!</text>
+    <rect x="466" y="108" width="180" height="60" rx="9" fill="#f7f7f9" stroke="#ececf1"/><text x="556" y="128" font-size="9" font-weight="600" fill="#a1a1a6">③ JWT(跳过)</text><text x="556" y="145" fill="#a1a1a6">已成功,不再试</text>
+    <rect x="700" y="108" width="280" height="60" rx="9" fill="#eafaf1" stroke="#bfe0cd"/><text x="840" y="128" font-size="9" font-weight="600" fill="#12402a">确定 Identity</text><text x="840" y="145" fill="#2f6f4f">user + groups + principal</text><text x="840" y="159" fill="#2f6f4f">经 UserMapping 规整用户名</text>
+  </g>
+  <line x1="226" y1="138" x2="256" y2="138" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="646" y1="138" x2="700" y2="138" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <text x="200" y="196" font-size="8.5" fill="#6e6e73">全失败 → 聚合各 authenticator 的错误 + WWW-Authenticate 头 → 一个 401</text>
+
+  <!-- authenticators -->
+  <rect x="30" y="236" width="980" height="220" rx="13" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="46" y="258" font-size="11" font-weight="700" fill="#1d1d1f">内置 Authenticator（io.trino.server.security）</text>
+  <g font-size="8.5">
+    <rect x="46" y="272" width="300" height="52" rx="8" fill="#eef3fb" stroke="#bcd0ec"/><text x="60" y="290" font-weight="600" fill="#1b2a4a">PasswordAuthenticator</text><text x="60" y="306" fill="#5b7db1">HTTP Basic → 遍历 SPI PasswordAuthenticator</text><text x="60" y="319" fill="#5b7db1">(LDAP / file / salted-file)</text>
+    <rect x="356" y="272" width="300" height="52" rx="8" fill="#eef3fb" stroke="#bcd0ec"/><text x="370" y="290" font-weight="600" fill="#1b2a4a">CertificateAuthenticator</text><text x="370" y="306" fill="#5b7db1">读 X509 客户端证书</text><text x="370" y="319" fill="#5b7db1">(mTLS)</text>
+    <rect x="666" y="272" width="328" height="52" rx="8" fill="#eef3fb" stroke="#bcd0ec"/><text x="680" y="290" font-weight="600" fill="#1b2a4a">KerberosAuthenticator</text><text x="680" y="306" fill="#5b7db1">SPNEGO/GSS-API(Negotiate)</text><text x="680" y="319" fill="#5b7db1">keytab + JAAS</text>
+    <rect x="46" y="332" width="300" height="52" rx="8" fill="#f5faf6" stroke="#cfe6d5"/><text x="60" y="350" font-weight="600" fill="#2c5a3a">JwtAuthenticator</text><text x="60" y="366" fill="#2f6f4f">Bearer JWT,签名 Key 校验</text><text x="60" y="379" fill="#2f6f4f">principalField 提取 → BasicPrincipal</text>
+    <rect x="356" y="332" width="300" height="52" rx="8" fill="#f5faf6" stroke="#cfe6d5"/><text x="370" y="350" font-weight="600" fill="#2c5a3a">OAuth2Authenticator</text><text x="370" y="366" fill="#2f6f4f">Bearer token 经 OAuth2Client 校验</text><text x="370" y="379" fill="#2f6f4f">TokenRefresher 续期</text>
+    <rect x="666" y="332" width="328" height="52" rx="8" fill="#fff7e6" stroke="#e8cf9a"/><text x="680" y="350" font-weight="600" fill="#5a3410">Header / Insecure</text><text x="680" y="366" fill="#93762e">Header:可信头认证</text><text x="680" y="379" fill="#93762e">Insecure:无凭据(仅非安全 HTTP,取 user 头)</text>
+  </g>
+  <rect x="46" y="394" width="948" height="50" rx="8" fill="#fff" stroke="#ececf1"/>
+  <text x="60" y="414" font-size="8.8" font-weight="600" fill="#1d1d1f">配置与加载</text>
+  <text x="60" y="432" font-size="8.5" fill="#6e6e73">http-server.authentication.type 有序列表 → @Provides 按序绑定 Authenticator;password 认证器插件从 password-authenticator.properties 加载</text>
+
+  <rect x="30" y="470" width="980" height="46" rx="12" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="46" y="492" font-size="9.5" font-weight="700" fill="#2c5a3a">要点</text>
+  <text x="46" y="508" font-size="8.8" fill="#2f6f4f">顺序即优先级,首成即停;非安全 HTTP 默认只允许 Insecure(除非显式开启);Identity 是后续访问控制的输入</text>
+</svg>

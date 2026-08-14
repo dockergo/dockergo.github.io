@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="520" viewBox="0 0 1080 520" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="520" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Rust Drop 顺序 · 变量逆声明序(LIFO) + 字段声明序 + drop flag 条件析构</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">作用域结束逐个析构:局部变量后进先出、复合类型自身先于字段且字段按声明序、部分 move 用 drop flag 运行时判是否还需析构</text>
+
+  <!-- legend -->
+  <g font-size="9" fill="#86868b">
+    <rect x="700" y="20" width="12" height="12" rx="3" fill="#eef3fb" stroke="#bcd0ec"/><text x="716" y="30">编译/控制</text>
+    <rect x="792" y="20" width="12" height="12" rx="3" fill="#eafaf1" stroke="#bfe0cd"/><text x="808" y="30">析构流</text>
+    <rect x="868" y="20" width="12" height="12" rx="3" fill="#fff7e6" stroke="#e8cf9a"/><text x="884" y="30">栈/堆</text>
+    <rect x="936" y="20" width="12" height="12" rx="3" fill="#fbeaea" stroke="#e7c3c3"/><text x="952" y="30">错误/避免</text>
+  </g>
+
+  <!-- Card 1: 局部变量 LIFO (blue) -->
+  <rect x="40" y="80" width="320" height="210" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="60" y="106" font-size="12.5" font-weight="600" fill="#1b2a4a">① 局部变量 · 逆声明序 LIFO</text>
+  <rect x="60" y="118" width="280" height="30" rx="7" fill="#ffffff" stroke="#cfe0f2"/>
+  <text x="74" y="138" font-size="9.5" fill="#1b2a4a">let a; let b; let c;  // 声明序</text>
+  <rect x="60" y="158" width="86" height="90" rx="8" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="103" y="178" font-size="10" font-weight="600" text-anchor="middle" fill="#12402a">drop c</text>
+  <text x="103" y="196" font-size="8.5" text-anchor="middle" fill="#2f6f4f">最后声明</text>
+  <text x="103" y="210" font-size="8.5" text-anchor="middle" fill="#2f6f4f">最先析构</text>
+  <rect x="157" y="158" width="86" height="90" rx="8" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="200" y="178" font-size="10" font-weight="600" text-anchor="middle" fill="#12402a">drop b</text>
+  <rect x="254" y="158" width="86" height="90" rx="8" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="297" y="178" font-size="10" font-weight="600" text-anchor="middle" fill="#12402a">drop a</text>
+  <text x="297" y="196" font-size="8.5" text-anchor="middle" fill="#2f6f4f">最先声明</text>
+  <text x="297" y="210" font-size="8.5" text-anchor="middle" fill="#2f6f4f">最后析构</text>
+  <path d="M146,203 L157,203" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <path d="M243,203 L254,203" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <text x="60" y="270" font-size="9" fill="#5b7db1">后声明的常借先声明的 → 逆序保被借的仍活</text>
+  <text x="60" y="284" font-size="9" fill="#5b7db1">临时值同理:按逆创建序析构</text>
+
+  <!-- Card 2: 复合类型字段声明序 (green) -->
+  <rect x="380" y="80" width="320" height="210" rx="14" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="400" y="106" font-size="12.5" font-weight="600" fill="#12402a">② 复合类型 · 自身先、字段声明序</text>
+  <rect x="400" y="118" width="280" height="30" rx="7" fill="#ffffff" stroke="#bfe0cd"/>
+  <text x="414" y="138" font-size="9.5" fill="#12402a">struct S { x, y, z }  impl Drop</text>
+  <rect x="400" y="158" width="280" height="34" rx="8" fill="#fff7e6" stroke="#efdcb4"/>
+  <text x="540" y="180" font-size="10" font-weight="600" text-anchor="middle" fill="#5a3410">先调 S 自己的 Drop::drop(&amp;mut self)</text>
+  <g text-anchor="middle" font-size="9.5">
+    <rect x="400" y="204" width="84" height="40" rx="8" fill="#ffffff" stroke="#bfe0cd"/><text x="442" y="228" fill="#12402a">字段 x</text>
+    <rect x="498" y="204" width="84" height="40" rx="8" fill="#ffffff" stroke="#bfe0cd"/><text x="540" y="228" fill="#12402a">字段 y</text>
+    <rect x="596" y="204" width="84" height="40" rx="8" fill="#ffffff" stroke="#bfe0cd"/><text x="638" y="228" fill="#12402a">字段 z</text>
+  </g>
+  <path d="M484,224 L498,224" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <path d="M582,224 L596,224" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <text x="400" y="266" font-size="9" fill="#2f6f4f">字段按声明序 x→y→z(与变量逆序相反)</text>
+  <text x="400" y="280" font-size="9" fill="#2f6f4f">enum 取活跃变体字段;数组按下标 0→n</text>
+
+  <!-- Card 3: drop flag (amber) -->
+  <rect x="720" y="80" width="320" height="210" rx="14" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="740" y="106" font-size="12.5" font-weight="600" fill="#5a3410">③ drop flag · 条件 / 部分 move</text>
+  <rect x="740" y="118" width="280" height="44" rx="7" fill="#ffffff" stroke="#efdcb4"/>
+  <text x="754" y="137" font-size="9" fill="#5a3410">if cond { drop(a) }  或  move 走一部分</text>
+  <text x="754" y="152" font-size="9" fill="#93762e">→ 出口处 a 可能已析构 / 已 move</text>
+  <rect x="740" y="172" width="280" height="60" rx="8" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="880" y="192" font-size="9.5" font-weight="600" text-anchor="middle" fill="#5a3410">栈上放一个布尔 drop flag</text>
+  <text x="880" y="209" font-size="9" text-anchor="middle" fill="#93762e">运行时记「此值是否还需析构」</text>
+  <text x="880" y="224" font-size="9" text-anchor="middle" fill="#93762e">出作用域按 flag 决定调不调 drop</text>
+  <text x="740" y="252" font-size="9" fill="#93762e">避免重复析构(double-free)与漏析构</text>
+  <text x="740" y="268" font-size="9" fill="#93762e">静态可判时编译期直接定,不留 flag</text>
+  <text x="740" y="284" font-size="9" fill="#93762e">全部由 MIR ElaborateDrops 精化插入</text>
+
+  <!-- Bottom strip: 编译期插入 -> 运行时执行 (blue flow) -->
+  <rect x="40" y="308" width="1000" height="108" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="60" y="334" font-size="12" font-weight="600" fill="#1b2a4a">全编译期确定「在哪、按什么序析构」,运行时只执行 —— 无 GC 扫描</text>
+  <g text-anchor="middle" font-size="9.5">
+    <rect x="60" y="348" width="270" height="48" rx="8" fill="#ffffff" stroke="#cfe0f2"/>
+    <text x="195" y="368" font-weight="600" fill="#1b2a4a">MIR ElaborateDrops</text>
+    <text x="195" y="384" font-size="9" fill="#5b7db1">在作用域出口插 drop + flag 检查</text>
+    <rect x="405" y="348" width="270" height="48" rx="8" fill="#ffffff" stroke="#cfe0f2"/>
+    <text x="540" y="368" font-weight="600" fill="#1b2a4a">按序生成析构代码</text>
+    <text x="540" y="384" font-size="9" fill="#5b7db1">变量 LIFO · 字段声明序 · 递归下钻</text>
+    <rect x="750" y="348" width="270" height="48" rx="8" fill="#eafaf1" stroke="#bfe0cd"/>
+    <text x="885" y="368" font-weight="600" fill="#12402a">运行时直接执行</text>
+    <text x="885" y="384" font-size="9" fill="#2f6f4f">按 flag 判是否析构 · 确定性 · 零 GC</text>
+  </g>
+  <path d="M330,372 L405,372" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <path d="M675,372 L750,372" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <text x="30" y="446" font-size="9.5" fill="#a1a1a6">为什么逆序:后声明的作用域内常借用先声明的;逆序析构保「被借的值在借用者析构后才析构」不悬垂</text>
+  <text x="30" y="470" font-size="9" fill="#a1a1a6">顺序全由语言规范固定(不可自定义);drop flag 只在编译期判不定的条件/部分 move 时出现 · 源码基准 Rust 1.99.0</text>
+</svg>

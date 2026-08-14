@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="520" viewBox="0 0 1060 520" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs><filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+  <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker></defs>
+  <rect width="1060" height="520" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">micro-batch（默认）：流切成小批，每批跑一次小批处理</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">MicroBatchExecution(runtime:60) runActivatedStream(:625) → triggerExecutor.execute(executeOneBatch)(:634) → runBatch(:1055)</text>
+  <!-- stream cut into batches -->
+  <text x="60" y="82" font-size="10" font-weight="700" fill="#1d1d1f">连续流 → 按 trigger 切批</text>
+  <g text-anchor="middle" font-size="8">
+    <rect x="60" y="92" width="140" height="50" rx="9" fill="#eef3fb" stroke="#bcd0ec"/><text x="130" y="114" font-weight="600" fill="#1b2a4a">批 1</text><text x="130" y="130" fill="#5b7db1">offset 0~100</text>
+    <text x="212" y="122" fill="#c7c7cc">→</text>
+    <rect x="226" y="92" width="140" height="50" rx="9" fill="#eef3fb" stroke="#bcd0ec"/><text x="296" y="114" font-weight="600" fill="#1b2a4a">批 2</text><text x="296" y="130" fill="#5b7db1">offset 100~250</text>
+    <text x="378" y="122" fill="#c7c7cc">→</text>
+    <rect x="392" y="92" width="140" height="50" rx="9" fill="#eef3fb" stroke="#bcd0ec"/><text x="462" y="114" font-weight="600" fill="#1b2a4a">批 3</text><text x="462" y="130" fill="#5b7db1">offset 250~…</text>
+    <text x="544" y="122" fill="#c7c7cc">→</text>
+    <rect x="558" y="92" width="140" height="50" rx="9" fill="#f2f7fd" stroke="#d4e2f2" stroke-dasharray="3 2"/><text x="628" y="118" fill="#8aa6cf">…… 持续</text>
+    <text x="760" y="122" font-size="9" fill="#5b7db1">每批当一次小批处理跑</text>
+  </g>
+  <rect x="40" y="162" width="480" height="150" rx="13" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="60" y="186" font-size="11" font-weight="700" fill="#12402a">每批一轮循环（runActivatedStream）</text>
+  <text x="60" y="210" font-size="9.5" fill="#2f6f4f">① 确定这批 offset 范围 → 写 offset WAL</text>
+  <text x="60" y="230" font-size="9.5" fill="#2f6f4f">② runBatch(:1055)：增量执行这一批（复用 Catalyst）</text>
+  <text x="60" y="250" font-size="9.5" fill="#2f6f4f">③ 更新 state store、写结果到 sink</text>
+  <text x="60" y="270" font-size="9.5" fill="#2f6f4f">④ 写 commit 日志 → 本批完成</text>
+  <text x="60" y="292" font-size="9" fill="#4c8567">triggerExecutor.execute 循环驱动（:634）</text>
+  <rect x="540" y="162" width="480" height="150" rx="13" fill="#fdf9f0" stroke="#efe3cd"/>
+  <text x="560" y="186" font-size="11" font-weight="700" fill="#7a5a1e">trigger：批的触发节奏（getTrigger:147）</text>
+  <text x="560" y="210" font-size="9.5" fill="#93762e">· 默认（不设）：ProcessingTimeExecutor 尽快连续跑</text>
+  <text x="580" y="228" font-size="8.5" fill="#b08843">interval=0 无等待循环（TriggerExecutor:71/:96）</text>
+  <text x="560" y="248" font-size="9.5" fill="#93762e">· ProcessingTime("N s")：每 N 秒一批（固定间隔）</text>
+  <text x="560" y="268" font-size="9.5" fill="#93762e">· Once / AvailableNow：处理现有数据跑一次就停</text>
+  <text x="560" y="290" font-size="9" fill="#b08843">延迟：百毫秒~秒级（批够小就近似实时）</text>
+  <rect x="40" y="324" width="980" height="90" rx="13" fill="#f3f7fc" stroke="#cfe0f2"/>
+  <text x="60" y="348" font-size="11" font-weight="700" fill="#274a78">micro-batch vs continuous</text>
+  <text x="60" y="370" font-size="9.5" fill="#5b7db1">· micro-batch（默认）：小批处理，延迟百毫秒~秒级——吞吐高、exactly-once 成熟、绝大多数场景够用</text>
+  <text x="60" y="390" font-size="9.5" fill="#5b7db1">· continuous（实验性）：逐条处理、毫秒级延迟——ContinuousExecution，限制多（部分算子不支持）</text>
+  <text x="60" y="408" font-size="9" fill="#8aa6cf">· 不是真正逐条：micro-batch 是"小批足够小 ≈ 实时"的工程折衷</text>
+  <rect x="40" y="426" width="980" height="42" rx="12" fill="#f7f7f9" stroke="#e6e6ea"/>
+  <text x="60" y="452" font-size="10" fill="#4b4b50"><tspan font-weight="700" fill="#1d1d1f">一句话：</tspan>默认 micro-batch 把流按 trigger 切成小批、每批当一次小批处理增量跑（百毫秒~秒级）；continuous 逐条低延迟但实验性。</text>
+</svg>

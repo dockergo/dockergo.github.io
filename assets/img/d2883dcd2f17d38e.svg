@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="392" viewBox="0 0 1000 392" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1000" height="392" fill="#fbfbfd"/>
+  <text x="30" y="28" font-size="14" font-weight="600" fill="#1d1d1f">device / driver / bus：设备与驱动互不直接查找，全靠总线 match 撮合</text>
+
+  <!-- legend -->
+  <g font-size="9.5">
+    <circle cx="36" cy="46" r="5" fill="#fff7e6" stroke="#e8cf9a"/><text x="46" y="49" fill="#93762e">设备（硬件实例）</text>
+    <circle cx="196" cy="46" r="5" fill="#eef3fb" stroke="#bcd0ec"/><text x="206" y="49" fill="#5b7db1">总线（媒人）</text>
+    <circle cx="316" cy="46" r="5" fill="#eafaf1" stroke="#bfe0cd"/><text x="326" y="49" fill="#2f6f4f">驱动（会开这类硬件）</text>
+  </g>
+
+  <!-- 设备侧 -->
+  <text x="60" y="88" font-size="11" font-weight="600" fill="#5a3410">设备表 · struct device</text>
+  <rect x="60" y="98" width="240" height="150" rx="11" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="180" y="124" font-size="10.5" font-weight="600" fill="#5a3410" text-anchor="middle">“我这块硬件在这”</text>
+  <text x="180" y="150" font-size="9.5" fill="#93762e" text-anchor="middle">一个硬件实例</text>
+  <text x="180" y="172" font-size="9.5" fill="#93762e" text-anchor="middle">内嵌 kobject → sysfs 目录</text>
+  <text x="180" y="194" font-size="9.5" fill="#93762e" text-anchor="middle">带 vendor/device ID 或</text>
+  <text x="180" y="212" font-size="9.5" fill="#93762e" text-anchor="middle">compatible 等身份信息</text>
+  <text x="180" y="234" font-size="9" fill="#93762e" text-anchor="middle">挂在某一条总线上</text>
+
+  <!-- 驱动侧 -->
+  <text x="700" y="88" font-size="11" font-weight="600" fill="#12402a">驱动表 · device_driver</text>
+  <rect x="700" y="98" width="240" height="150" rx="11" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="820" y="124" font-size="10.5" font-weight="600" fill="#12402a" text-anchor="middle">“我会开这类硬件”</text>
+  <text x="820" y="150" font-size="9.5" fill="#2f6f4f" text-anchor="middle">驱动代码</text>
+  <text x="820" y="172" font-size="9.5" fill="#2f6f4f" text-anchor="middle">声明支持的 id_table /</text>
+  <text x="820" y="190" font-size="9.5" fill="#2f6f4f" text-anchor="middle">of_match（compatible）</text>
+  <text x="820" y="212" font-size="9.5" fill="#2f6f4f" text-anchor="middle">提供 probe / remove</text>
+  <text x="820" y="234" font-size="9" fill="#2f6f4f" text-anchor="middle">注册进同一条总线</text>
+
+  <!-- 总线中枢 -->
+  <text x="380" y="88" font-size="11" font-weight="600" fill="#1b2a4a">总线 bus_type · 三个关键回调</text>
+  <rect x="360" y="98" width="280" height="150" rx="11" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <rect x="378" y="118" width="244" height="34" rx="8" fill="#ffffff" stroke="#bcd0ec"/>
+  <text x="500" y="139" font-size="9.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">match — 判定某设备与某驱动是否配对</text>
+  <rect x="378" y="160" width="244" height="34" rx="8" fill="#ffffff" stroke="#bcd0ec"/>
+  <text x="500" y="181" font-size="9.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">uevent — 生成热插拔环境变量</text>
+  <rect x="378" y="202" width="244" height="34" rx="8" fill="#ffffff" stroke="#bcd0ec"/>
+  <text x="500" y="223" font-size="9.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">probe — 撮合成功后绑定并初始化</text>
+
+  <!-- 挂载箭头 -->
+  <g stroke="#c7c7cc" stroke-width="1.5" fill="none">
+    <path d="M300,150 L360,150" marker-end="url(#ar)"/>
+    <path d="M700,150 L640,150" marker-end="url(#ar)"/>
+  </g>
+  <text x="330" y="142" font-size="8.5" fill="#86868b" text-anchor="middle">挂上</text>
+  <text x="670" y="142" font-size="8.5" fill="#86868b" text-anchor="middle">注册</text>
+
+  <text x="500" y="290" font-size="10" font-weight="600" fill="#1b2a4a" text-anchor="middle">总线是媒人：设备/驱动谁先出现都不确定 → match 双向撮合，命中即走 probe 绑定</text>
+  <text x="500" y="316" font-size="9.5" fill="#86868b" text-anchor="middle">match 语义随总线而异：PCI 比 vendor/device ID、platform 比 compatible/name、USB 比接口描述符</text>
+  <text x="500" y="340" font-size="9.5" fill="#86868b" text-anchor="middle">没有 match 回调的总线 → driver_match_device 默认“全部匹配”</text>
+</svg>

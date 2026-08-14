@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="600" viewBox="0 0 1120 600" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="aP" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#8a5cae"/></marker>
+    <marker id="aB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#4a7fd0"/></marker>
+    <marker id="aG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+  </defs>
+  <rect width="1120" height="600" fill="#fbfbfd"/>
+
+  <text x="30" y="32" font-size="15" font-weight="700" fill="#1d1d1f">稳定 Leader 摊销一阶段 · 一次 Prepare 抢占一整段实例，此后每条命令只跑 Phase 2 —— 稳态每决议仅 1 轮 RTT</text>
+  <text x="30" y="53" font-size="10.5" fill="#6e6e73">Basic Paxos 每个值两轮 RTT 且并发提案会活锁。Multi-Paxos：选出稳定 Leader，用一个提案号 n 对「所有未来实例」预承诺，Phase 1 从此摊销掉</text>
+
+  <!-- 图例 -->
+  <line x1="30" y1="80" x2="54" y2="80" stroke="#8a5cae" stroke-width="2" marker-end="url(#aP)"/>
+  <text x="60" y="84" font-size="10" fill="#3a3a3c">Phase 1（仅一次，跨所有实例）</text>
+  <line x1="330" y1="80" x2="354" y2="80" stroke="#4a7fd0" stroke-width="2" marker-end="url(#aB)"/>
+  <text x="360" y="84" font-size="10" fill="#3a3a3c">Phase 2（每命令一次）</text>
+  <line x1="590" y1="80" x2="614" y2="80" stroke="#2f9e6e" stroke-width="2" marker-end="url(#aG)"/>
+  <text x="620" y="84" font-size="10" fill="#3a3a3c">chosen</text>
+
+  <!-- 上：Basic vs Multi 对照条 -->
+  <rect x="30" y="100" width="525" height="96" rx="12" fill="#fdf3f2" stroke="#f0d4d0"/>
+  <text x="52" y="124" font-size="11.5" font-weight="700" fill="#8a4038">Basic Paxos（每个值都两阶段）</text>
+  <g font-size="9" text-anchor="middle">
+    <rect x="52" y="138" width="70" height="22" rx="6" fill="#f4eefb" stroke="#dcc9ef"/><text x="87" y="153" fill="#6f3ea8">P1 v1</text>
+    <rect x="126" y="138" width="70" height="22" rx="6" fill="#eaf1fb" stroke="#c6d9f2"/><text x="161" y="153" fill="#20375e">P2 v1</text>
+    <rect x="210" y="138" width="70" height="22" rx="6" fill="#f4eefb" stroke="#dcc9ef"/><text x="245" y="153" fill="#6f3ea8">P1 v2</text>
+    <rect x="284" y="138" width="70" height="22" rx="6" fill="#eaf1fb" stroke="#c6d9f2"/><text x="319" y="153" fill="#20375e">P2 v2</text>
+    <rect x="368" y="138" width="70" height="22" rx="6" fill="#f4eefb" stroke="#dcc9ef"/><text x="403" y="153" fill="#6f3ea8">P1 v3</text>
+    <rect x="442" y="138" width="70" height="22" rx="6" fill="#eaf1fb" stroke="#c6d9f2"/><text x="477" y="153" fill="#20375e">P2 v3</text>
+  </g>
+  <text x="52" y="182" font-size="9.5" fill="#8a4038">每值 2 RTT · 并发 Proposer 抬编号 → 活锁</text>
+
+  <rect x="575" y="100" width="515" height="96" rx="12" fill="#eaf6f0" stroke="#bfe3d1"/>
+  <text x="597" y="124" font-size="11.5" font-weight="700" fill="#2f6b4e">Multi-Paxos（Phase 1 只跑一次）</text>
+  <g font-size="9" text-anchor="middle">
+    <rect x="597" y="138" width="96" height="22" rx="6" fill="#f4eefb" stroke="#dcc9ef"/><text x="645" y="153" fill="#6f3ea8">P1 once (n)</text>
+    <rect x="701" y="138" width="58" height="22" rx="6" fill="#eaf1fb" stroke="#c6d9f2"/><text x="730" y="153" fill="#20375e">P2 v1</text>
+    <rect x="763" y="138" width="58" height="22" rx="6" fill="#eaf1fb" stroke="#c6d9f2"/><text x="792" y="153" fill="#20375e">P2 v2</text>
+    <rect x="825" y="138" width="58" height="22" rx="6" fill="#eaf1fb" stroke="#c6d9f2"/><text x="854" y="153" fill="#20375e">P2 v3</text>
+    <rect x="887" y="138" width="58" height="22" rx="6" fill="#eaf1fb" stroke="#c6d9f2"/><text x="916" y="153" fill="#20375e">P2 v4</text>
+    <rect x="949" y="138" width="58" height="22" rx="6" fill="#eaf1fb" stroke="#c6d9f2"/><text x="978" y="153" fill="#20375e">P2 v5</text>
+  </g>
+  <text x="597" y="182" font-size="9.5" fill="#2f6b4e">稳态每值 1 RTT · 稳定 Leader 无并发抬编号 → 无活锁</text>
+
+  <!-- 中：机制序列图 -->
+  <text x="200" y="230" font-size="12" font-weight="700" fill="#6f3ea8" text-anchor="middle">Leader</text>
+  <text x="700" y="230" font-size="12" font-weight="700" fill="#20375e" text-anchor="middle">Acceptors</text>
+  <line x1="200" y1="240" x2="200" y2="500" stroke="#dcc9ef" stroke-width="2"/>
+  <line x1="600" y1="240" x2="600" y2="500" stroke="#c6d9f2" stroke-width="1.6"/>
+  <line x1="800" y1="240" x2="800" y2="500" stroke="#c6d9f2" stroke-width="1.6"/>
+  <line x1="1000" y1="240" x2="1000" y2="500" stroke="#c6d9f2" stroke-width="1.6"/>
+
+  <!-- 一次性 P1 -->
+  <rect x="40" y="250" width="1050" height="72" rx="10" fill="#f4eefb" stroke="#dcc9ef"/>
+  <text x="58" y="270" font-size="11" font-weight="700" fill="#6f3ea8">① 就任时：一次 Prepare(n) 抢占「从 slot i 起的所有实例」</text>
+  <line x1="200" y1="292" x2="592" y2="292" stroke="#8a5cae" stroke-width="1.8" marker-end="url(#aP)"/>
+  <line x1="200" y1="294" x2="792" y2="304" stroke="#8a5cae" stroke-width="1.8" marker-end="url(#aP)"/>
+  <line x1="200" y1="296" x2="992" y2="312" stroke="#8a5cae" stroke-width="1.8" marker-end="url(#aP)"/>
+  <text x="360" y="288" font-size="9.5" fill="#6f3ea8">Prepare(n, from slot i)</text>
+  <text x="600" y="314" font-size="9" fill="#5a3a7a">Promise：承诺对 ≥i 的所有 slot 都不接受更小编号 + 回带各 slot 已接受值</text>
+
+  <!-- 稳态 P2 循环 -->
+  <rect x="40" y="332" width="1050" height="132" rx="10" fill="#eaf1fb" stroke="#c6d9f2"/>
+  <text x="58" y="352" font-size="11" font-weight="700" fill="#20375e">② 稳态：每条客户端命令分配下一个 slot，直接 Accept（跳过 Phase 1）</text>
+
+  <line x1="200" y1="378" x2="592" y2="378" stroke="#4a7fd0" stroke-width="1.8" marker-end="url(#aB)"/>
+  <line x1="200" y1="380" x2="792" y2="390" stroke="#4a7fd0" stroke-width="1.8" marker-end="url(#aB)"/>
+  <line x1="200" y1="382" x2="992" y2="398" stroke="#4a7fd0" stroke-width="1.8" marker-end="url(#aB)"/>
+  <text x="360" y="374" font-size="9.5" fill="#20375e">Accept(n, slot=i, cmd)</text>
+
+  <line x1="600" y1="418" x2="208" y2="430" stroke="#2f9e6e" stroke-width="1.4" marker-end="url(#aG)"/>
+  <line x1="800" y1="424" x2="208" y2="434" stroke="#2f9e6e" stroke-width="1.4" marker-end="url(#aG)"/>
+  <text x="380" y="448" font-size="9.5" fill="#2f6b4e">Accepted → 多数派达成即 chosen；slot i+1, i+2 … 流水线并发进行</text>
+
+  <!-- 底部：为何安全 + 抢占 -->
+  <rect x="40" y="474" width="640" height="112" rx="12" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="58" y="496" font-size="10.5" font-weight="700" fill="#2f6b4e">为何仍安全</text>
+  <text x="58" y="516" font-size="9.5" fill="#4a4a4f">一次 Prepare(n) 等价于对无穷多 slot 各做一次 Phase 1；</text>
+  <text x="58" y="532" font-size="9.5" fill="#4a4a4f">编号 n 在这些 slot 上持续有效，故省略重复的 Phase 1</text>
+  <text x="58" y="548" font-size="9.5" fill="#4a4a4f">不违反单决议安全性 —— 每个 slot 仍是一个独立 Paxos 实例。</text>
+  <text x="58" y="572" font-size="9" fill="#8a97ab">Flexible Paxos：只需「选举 quorum 与复制 quorum 相交」，二者不必都过半。</text>
+
+  <rect x="696" y="474" width="394" height="112" rx="12" fill="#fdf3f2" stroke="#f0d4d0"/>
+  <text x="714" y="496" font-size="10.5" font-weight="700" fill="#8a4038">Leader 更替 = 重新 Prepare</text>
+  <text x="714" y="516" font-size="9.5" fill="#4a4a4f">新 Leader 用更大的 n' 再跑一次 Phase 1 抢占，</text>
+  <text x="714" y="532" font-size="9.5" fill="#4a4a4f">回收所有 slot 已接受值并补齐空洞后，</text>
+  <text x="714" y="548" font-size="9.5" fill="#4a4a4f">才恢复稳态 Phase 2 —— 相当于 Raft 的选举 + 日志对齐。</text>
+  <text x="714" y="572" font-size="9" fill="#b06a60">故障切换偶发一次 Phase 1，稳态零 Phase 1。</text>
+</svg>

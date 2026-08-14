@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="720" viewBox="0 0 1120 720" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="aB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#4a7fd0"/></marker>
+    <marker id="aG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+    <marker id="aA" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#d99a2b"/></marker>
+    <marker id="aR" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#d1544a"/></marker>
+  </defs>
+  <rect width="1120" height="720" fill="#fbfbfd"/>
+
+  <text x="30" y="34" font-size="17" font-weight="700" fill="#1d1d1f">贪心 · 原理总览：每步取当下最优、提交后不回头</text>
+  <text x="30" y="56" font-size="11" fill="#6e6e73">正确性依赖两支柱——贪心选择性质（局部最优含于全局最优）＋ 最优子结构；比动规更快，但不总对（零钱反例即证）</text>
+
+  <!-- 图例 -->
+  <rect x="30" y="72" width="12" height="12" rx="2" fill="#4a7fd0"/><text x="48" y="82" font-size="10.5" fill="#3a3a3c">当前贪心选择</text>
+  <rect x="176" y="72" width="12" height="12" rx="2" fill="#2f9e6e"/><text x="194" y="82" font-size="10.5" fill="#3a3a3c">全局最优 / 成功</text>
+  <rect x="330" y="72" width="12" height="12" rx="2" fill="#d99a2b"/><text x="348" y="82" font-size="10.5" fill="#3a3a3c">状态 / 剩余问题</text>
+  <rect x="490" y="72" width="12" height="12" rx="2" fill="#d1544a"/><text x="508" y="82" font-size="10.5" fill="#3a3a3c">贪心失败 / 反例</text>
+
+  <!-- ===== ① 贪心决策骨架 ===== -->
+  <text x="30" y="116" font-size="12" font-weight="700" fill="#20375e">① 贪心骨架：只做一遍前进的循环 —— 取局部最优 → 提交（不回头）→ 缩小问题，直到解完</text>
+
+  <rect x="40" y="130" width="210" height="74" rx="12" fill="#fdf3e0" stroke="#e7c07a" filter="url(#soft)"/>
+  <text x="60" y="156" font-size="13" font-weight="700" fill="#8a5a12">状态 · 剩余问题</text>
+  <text x="60" y="178" font-size="10.5" fill="#5a4a2a">当前待解的规模</text>
+  <text x="60" y="194" font-size="10.5" fill="#5a4a2a">（剩余金额 / 剩余容量 …）</text>
+
+  <rect x="330" y="130" width="210" height="74" rx="12" fill="#eaf1fb" stroke="#4a7fd0" stroke-width="1.3" filter="url(#soft)"/>
+  <text x="350" y="156" font-size="13" font-weight="700" fill="#20375e">取当下最优</text>
+  <text x="350" y="178" font-size="10.5" fill="#3a4a63">从候选里挑此刻看最好的</text>
+  <text x="350" y="194" font-size="10.5" fill="#3a4a63">（最大面额 / 最高单价 …）</text>
+
+  <rect x="620" y="130" width="210" height="74" rx="12" fill="#eaf1fb" stroke="#4a7fd0" stroke-width="1.3" filter="url(#soft)"/>
+  <text x="640" y="156" font-size="13" font-weight="700" fill="#20375e">提交 · 不回头</text>
+  <text x="640" y="178" font-size="10.5" fill="#3a4a63">选定即固化，绝不撤销</text>
+  <text x="640" y="194" font-size="10.5" fill="#3a4a63">也不枚举其他分支</text>
+
+  <rect x="910" y="130" width="170" height="74" rx="12" fill="#e6f4ec" stroke="#2f9e6e" stroke-width="1.3" filter="url(#soft)"/>
+  <text x="930" y="156" font-size="13" font-weight="700" fill="#1f6b47">解完 · 输出</text>
+  <text x="930" y="178" font-size="10.5" fill="#2a5a43">规模归零即得解</text>
+  <text x="930" y="194" font-size="10.5" fill="#2a5a43">整体只扫一遍</text>
+
+  <line x1="250" y1="167" x2="330" y2="167" stroke="#d99a2b" stroke-width="2" marker-end="url(#aB)"/>
+  <line x1="540" y1="167" x2="620" y2="167" stroke="#4a7fd0" stroke-width="2" marker-end="url(#aB)"/>
+  <line x1="830" y1="167" x2="910" y2="167" stroke="#2f9e6e" stroke-width="2" marker-end="url(#aG)"/>
+  <!-- 回环：缩小问题后继续 -->
+  <path d="M725 204 V232 H435 V204" fill="none" stroke="#d99a2b" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#aA)"/>
+  <text x="580" y="226" font-size="10" fill="#8a5a12" text-anchor="middle">缩小问题后回到「取当下最优」——每步独立、无回溯栈</text>
+
+  <!-- ===== ② 两大正确性支柱 ===== -->
+  <text x="30" y="272" font-size="12" font-weight="700" fill="#1f6b47">② 何时能用贪心：必须同时满足两条，缺一则局部最优拼不出全局最优</text>
+
+  <rect x="40" y="286" width="510" height="120" rx="14" fill="#ffffff" stroke="#2f9e6e" stroke-width="1.3" filter="url(#soft)"/>
+  <text x="62" y="312" font-size="13" font-weight="700" fill="#1f6b47">支柱 A · 贪心选择性质</text>
+  <text x="62" y="336" font-size="10.5" fill="#4a4a4f">存在一个全局最优解，其第一步恰是「当下最优」。</text>
+  <text x="62" y="356" font-size="10.5" fill="#4a4a4f">于是可放心提交这一步，不必回头验证别的选择。</text>
+  <rect x="62" y="368" width="466" height="26" rx="7" fill="#e6f4ec" stroke="#a8ddc3"/>
+  <text x="74" y="385" font-size="10" fill="#1f6b47">证明常用「交换论证」：把最优解首步换成贪心步，解不变差。</text>
+
+  <rect x="570" y="286" width="510" height="120" rx="14" fill="#ffffff" stroke="#2f9e6e" stroke-width="1.3" filter="url(#soft)"/>
+  <text x="592" y="312" font-size="13" font-weight="700" fill="#1f6b47">支柱 B · 最优子结构</text>
+  <text x="592" y="336" font-size="10.5" fill="#4a4a4f">做完首步后，「剩余问题的最优解」＋「首步」＝ 原问题最优解。</text>
+  <text x="592" y="356" font-size="10.5" fill="#4a4a4f">于是问题递归缩小，每步都对子问题重复同一贪心。</text>
+  <rect x="592" y="368" width="466" height="26" rx="7" fill="#e6f4ec" stroke="#a8ddc3"/>
+  <text x="604" y="385" font-size="10" fill="#1f6b47">动规也要它；贪心额外要 A，才敢「只走一条路、不填全表」。</text>
+
+  <!-- ===== ③ 贪心 vs 动规 ===== -->
+  <text x="30" y="442" font-size="12" font-weight="700" fill="#8a5a12">③ 贪心 vs 动规：同为最优子结构，贪心每步锁死一个选择，动规枚举并缓存所有子问题</text>
+
+  <rect x="40" y="456" width="510" height="96" rx="12" fill="#eaf1fb" stroke="#4a7fd0" stroke-width="1.3" filter="url(#soft)"/>
+  <text x="62" y="480" font-size="12.5" font-weight="700" fill="#20375e">贪心 · 一条路走到底</text>
+  <text x="62" y="502" font-size="10.5" fill="#3a4a63">每步只保留一个候选，O(n) 或排序 O(n log n)</text>
+  <text x="62" y="521" font-size="10.5" fill="#3a4a63">无回溯、无表；快、省内存</text>
+  <text x="62" y="541" font-size="10.5" fill="#8a4038">代价：贪心选择性质不成立时会给出次优解</text>
+
+  <rect x="570" y="456" width="510" height="96" rx="12" fill="#fdf3e0" stroke="#e7c07a" filter="url(#soft)"/>
+  <text x="592" y="480" font-size="12.5" font-weight="700" fill="#8a5a12">动规 · 填表比较所有子问题</text>
+  <text x="592" y="502" font-size="10.5" fill="#5a4a2a">每个状态枚举全部决策取最优，常 O(n·amt) 级</text>
+  <text x="592" y="521" font-size="10.5" fill="#5a4a2a">用表缓存重叠子问题，慢但覆盖全</text>
+  <text x="592" y="541" font-size="10.5" fill="#1f6b47">收益：不依赖 A，任何面额都给出真正最优</text>
+
+  <!-- ===== ④ 成员归位 ===== -->
+  <text x="30" y="588" font-size="12" font-weight="700" fill="#8a5a12">④ 成员归位：本条目四例覆盖「反例 / 排序型 / 双指针型 / 数学型」四类贪心</text>
+
+  <rect x="40" y="602" width="252" height="96" rx="12" fill="#ffffff" stroke="#d1544a" stroke-width="1.6" filter="url(#soft)"/>
+  <text x="56" y="626" font-size="12" font-weight="700" fill="#8a4038">零钱反例 · GD1</text>
+  <text x="56" y="647" font-size="10" fill="#4a4a4f">优先取大面额；{1,3,4} 凑 6</text>
+  <text x="56" y="664" font-size="10" fill="#8a4038">贪心 3 枚 ✗ 最优 2 枚（3+3）</text>
+  <text x="56" y="686" font-size="10" fill="#6e6e73">教训：A 不成立 → 贪心失效</text>
+
+  <rect x="304" y="602" width="252" height="96" rx="12" fill="#ffffff" stroke="#d99a2b" stroke-width="1.6" filter="url(#soft)"/>
+  <text x="320" y="626" font-size="12" font-weight="700" fill="#8a5a12">分数背包 · GD2</text>
+  <text x="320" y="647" font-size="10" fill="#4a4a4f">按单位价值 v/w 降序装入</text>
+  <text x="320" y="664" font-size="10" fill="#4a4a4f">可切分 → 末件部分装满</text>
+  <text x="320" y="686" font-size="10" fill="#1f6b47">O(n log n)　贪心正确</text>
+
+  <rect x="568" y="602" width="252" height="96" rx="12" fill="#ffffff" stroke="#d99a2b" stroke-width="1.6" filter="url(#soft)"/>
+  <text x="584" y="626" font-size="12" font-weight="700" fill="#8a5a12">最大容量 · GD3</text>
+  <text x="584" y="647" font-size="10" fill="#4a4a4f">双指针夹逼，每次移短板</text>
+  <text x="584" y="664" font-size="10" fill="#4a4a4f">移长板容量不可能变好</text>
+  <text x="584" y="686" font-size="10" fill="#1f6b47">O(n)　贪心正确</text>
+
+  <rect x="832" y="602" width="248" height="96" rx="12" fill="#ffffff" stroke="#d99a2b" stroke-width="1.6" filter="url(#soft)"/>
+  <text x="848" y="626" font-size="12" font-weight="700" fill="#8a5a12">切分乘积 · GD4</text>
+  <text x="848" y="647" font-size="10" fill="#4a4a4f">尽量拆成 3，余 1 退成 2×2</text>
+  <text x="848" y="664" font-size="10" fill="#4a4a4f">3 因子乘积效率最高</text>
+  <text x="848" y="686" font-size="10" fill="#1f6b47">O(1)　数学结论</text>
+</svg>

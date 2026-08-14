@@ -1,0 +1,123 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="700" viewBox="0 0 1120 700" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="aG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+    <marker id="aB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#4a7fd0"/></marker>
+  </defs>
+  <rect width="1120" height="700" fill="#fbfbfd"/>
+
+  <text x="30" y="34" font-size="17" font-weight="700" fill="#1d1d1f">堆 · TopK：维护大小为 k 的小顶堆，一遍扫描得最大 k 个，O(n log k)</text>
+  <text x="30" y="56" font-size="11" fill="#6e6e73">小顶堆的堆顶 = 当前 k 个里的「最小者」= 入选门槛。新元素 &gt; 门槛才够格：替换堆顶并下沉；否则跳过。本例 nums=[1,8,3,5,9,2,7,6]，k=3</text>
+
+  <rect x="30" y="72" width="12" height="12" rx="2" fill="#d99a2b"/><text x="48" y="82" font-size="10.5" fill="#3a3a3c">小顶堆内容</text>
+  <rect x="150" y="72" width="12" height="12" rx="2" fill="#dff0e7" stroke="#2f9e6e"/><text x="168" y="82" font-size="10.5" fill="#3a3a3c">替换（够格入选）</text>
+  <rect x="300" y="72" width="12" height="12" rx="2" fill="#eef0f3" stroke="#c7ccd4"/><text x="318" y="82" font-size="10.5" fill="#3a3a3c">跳过（不够门槛）</text>
+
+  <!-- 输入数组 -->
+  <text x="40" y="112" font-size="12" font-weight="700" fill="#20375e">输入 nums（前 k=3 个先无条件入堆，之后逐个扫描）</text>
+  <g font-size="14" text-anchor="middle" font-weight="700">
+    <rect x="120" y="126" width="56" height="34" rx="5" fill="#fdf3e0" stroke="#d99a2b" stroke-width="1.5"/><text x="148" y="148" fill="#5a4a2a">1</text>
+    <rect x="176" y="126" width="56" height="34" rx="5" fill="#fdf3e0" stroke="#d99a2b" stroke-width="1.5"/><text x="204" y="148" fill="#5a4a2a">8</text>
+    <rect x="232" y="126" width="56" height="34" rx="5" fill="#fdf3e0" stroke="#d99a2b" stroke-width="1.5"/><text x="260" y="148" fill="#5a4a2a">3</text>
+    <rect x="288" y="126" width="56" height="34" rx="5" fill="#f2f7ff" stroke="#c6d9f2"/><text x="316" y="148" fill="#20375e">5</text>
+    <rect x="344" y="126" width="56" height="34" rx="5" fill="#f2f7ff" stroke="#c6d9f2"/><text x="372" y="148" fill="#20375e">9</text>
+    <rect x="400" y="126" width="56" height="34" rx="5" fill="#f2f7ff" stroke="#c6d9f2"/><text x="428" y="148" fill="#20375e">2</text>
+    <rect x="456" y="126" width="56" height="34" rx="5" fill="#f2f7ff" stroke="#c6d9f2"/><text x="484" y="148" fill="#20375e">7</text>
+    <rect x="512" y="126" width="56" height="34" rx="5" fill="#f2f7ff" stroke="#c6d9f2"/><text x="540" y="148" fill="#20375e">6</text>
+  </g>
+  <text x="232" y="176" font-size="9" fill="#8a5a12" text-anchor="middle">↑ 前 k 个：初始化</text>
+  <text x="456" y="176" font-size="9" fill="#5a7099" text-anchor="middle">↑ 其余：逐个扫描比较</text>
+
+  <!-- 决策表 -->
+  <text x="40" y="210" font-size="12" font-weight="700" fill="#20375e">扫描与决策（堆恒保持大小 k=3）</text>
+  <!-- 表头 -->
+  <rect x="40" y="222" width="640" height="26" rx="5" fill="#eef1f5"/>
+  <g font-size="10" font-weight="700" fill="#3a3a3c">
+    <text x="56" y="240">步</text>
+    <text x="120" y="240">当前元素</text>
+    <text x="230" y="240">与堆顶(门槛)比</text>
+    <text x="390" y="240">动作</text>
+    <text x="540" y="240">堆内容(小顶)</text>
+  </g>
+
+  <!-- R1 init -->
+  <rect x="40" y="248" width="640" height="40" fill="#fdf9f0"/>
+  <text x="56" y="273" font-size="10.5" fill="#8a5a12">初始</text>
+  <text x="120" y="273" font-size="10.5" fill="#5a4a2a">1, 8, 3</text>
+  <text x="230" y="273" font-size="10.5" fill="#6e6e73">建小顶堆</text>
+  <text x="390" y="273" font-size="10.5" fill="#8a5a12">前 k 个直接入堆</text>
+  <text x="540" y="273" font-size="10.5" font-weight="700" fill="#5a4a2a">{1,3,8}　门槛=1</text>
+
+  <!-- R2 -->
+  <rect x="40" y="288" width="640" height="40" fill="#f2faf5"/>
+  <text x="56" y="313" font-size="10.5" fill="#4a4a4f">1</text>
+  <text x="120" y="313" font-size="10.5" font-weight="700" fill="#20375e">5</text>
+  <text x="230" y="313" font-size="10.5" fill="#2f6b4e">5 &gt; 1 ✓</text>
+  <text x="390" y="313" font-size="10.5" fill="#2f6b4e">替换堆顶 → 下沉</text>
+  <text x="540" y="313" font-size="10.5" font-weight="700" fill="#5a4a2a">{3,5,8}　门槛=3</text>
+
+  <!-- R3 -->
+  <rect x="40" y="328" width="640" height="40" fill="#f2faf5"/>
+  <text x="56" y="353" font-size="10.5" fill="#4a4a4f">2</text>
+  <text x="120" y="353" font-size="10.5" font-weight="700" fill="#20375e">9</text>
+  <text x="230" y="353" font-size="10.5" fill="#2f6b4e">9 &gt; 3 ✓</text>
+  <text x="390" y="353" font-size="10.5" fill="#2f6b4e">替换堆顶 → 下沉</text>
+  <text x="540" y="353" font-size="10.5" font-weight="700" fill="#5a4a2a">{5,8,9}　门槛=5</text>
+
+  <!-- R4 skip -->
+  <rect x="40" y="368" width="640" height="40" fill="#f3f4f6"/>
+  <text x="56" y="393" font-size="10.5" fill="#4a4a4f">3</text>
+  <text x="120" y="393" font-size="10.5" font-weight="700" fill="#20375e">2</text>
+  <text x="230" y="393" font-size="10.5" fill="#8a8a8e">2 ≤ 5 ✗</text>
+  <text x="390" y="393" font-size="10.5" fill="#8a8a8e">跳过（不动堆）</text>
+  <text x="540" y="393" font-size="10.5" font-weight="700" fill="#8a8a8e">{5,8,9}　门槛=5</text>
+
+  <!-- R5 -->
+  <rect x="40" y="408" width="640" height="40" fill="#f2faf5"/>
+  <text x="56" y="433" font-size="10.5" fill="#4a4a4f">4</text>
+  <text x="120" y="433" font-size="10.5" font-weight="700" fill="#20375e">7</text>
+  <text x="230" y="433" font-size="10.5" fill="#2f6b4e">7 &gt; 5 ✓</text>
+  <text x="390" y="433" font-size="10.5" fill="#2f6b4e">替换堆顶 → 下沉</text>
+  <text x="540" y="433" font-size="10.5" font-weight="700" fill="#5a4a2a">{7,8,9}　门槛=7</text>
+
+  <!-- R6 skip -->
+  <rect x="40" y="448" width="640" height="40" fill="#f3f4f6"/>
+  <text x="56" y="473" font-size="10.5" fill="#4a4a4f">5</text>
+  <text x="120" y="473" font-size="10.5" font-weight="700" fill="#20375e">6</text>
+  <text x="230" y="473" font-size="10.5" fill="#8a8a8e">6 ≤ 7 ✗</text>
+  <text x="390" y="473" font-size="10.5" fill="#8a8a8e">跳过（不动堆）</text>
+  <text x="540" y="473" font-size="10.5" font-weight="700" fill="#8a8a8e">{7,8,9}　门槛=7</text>
+
+  <rect x="40" y="222" width="640" height="266" rx="5" fill="none" stroke="#e4e7ec"/>
+  <text x="40" y="510" font-size="11" font-weight="700" fill="#2f6b4e">扫描完毕 → 堆内 {7,8,9} 即 nums 的最大 3 个 ✓（无需整体排序）</text>
+
+  <!-- 右：为什么小顶堆 -->
+  <rect x="710" y="180" width="370" height="150" rx="12" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="732" y="206" font-size="12" font-weight="700" fill="#1d1d1f">为什么用「小顶」堆求最大 k 个</text>
+  <text x="732" y="230" font-size="10.5" fill="#4a4a4f">堆里始终是「目前领先的 k 个」候选</text>
+  <text x="732" y="250" font-size="10.5" fill="#4a4a4f">堆顶(最小) = 这 k 个里最弱的一名</text>
+  <text x="732" y="270" font-size="10.5" fill="#4a4a4f">新来者只要 &gt; 最弱者，就该顶掉它</text>
+  <text x="732" y="290" font-size="10.5" fill="#8a5a12">替换 = 弹最小 + 入新值，一次 siftDown</text>
+  <text x="732" y="312" font-size="10" fill="#8a97ab">求最小 k 个则对称地用「大顶堆」</text>
+
+  <!-- 最终小顶堆树 -->
+  <text x="710" y="358" font-size="11" font-weight="700" fill="#20375e">终态小顶堆（堆顶=门槛 7）</text>
+  <g stroke="#c6d9f2" stroke-width="1.5">
+    <line x1="895" y1="392" x2="850" y2="446"/>
+    <line x1="895" y1="392" x2="940" y2="446"/>
+  </g>
+  <g text-anchor="middle">
+    <circle cx="895" cy="382" r="22" fill="#dff0e7" stroke="#2f9e6e" stroke-width="1.6"/><text x="895" y="387" font-size="14" font-weight="700" fill="#2f6b4e">7</text>
+    <circle cx="850" cy="464" r="20" fill="#fdf3e0" stroke="#e7c07a"/><text x="850" y="469" font-size="13" font-weight="700" fill="#5a4a2a">8</text>
+    <circle cx="940" cy="464" r="20" fill="#fdf3e0" stroke="#e7c07a"/><text x="940" y="469" font-size="13" font-weight="700" fill="#5a4a2a">9</text>
+  </g>
+  <text x="895" y="504" font-size="9.5" fill="#6e6e73" text-anchor="middle">堆内即 TopK；若还想按序输出，逐次 pop 即可</text>
+
+  <!-- 底部复杂度对比 -->
+  <rect x="40" y="540" width="1040" height="140" rx="12" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="58" y="566" font-size="12" font-weight="700" fill="#20375e">为什么是 O(n log k) —— 与其它做法比</text>
+  <text x="58" y="592" font-size="10.5" fill="#2f6b4e">本法（size-k 堆）：n 个元素各做至多一次 O(log k) 堆操作 → O(n log k)，额外空间只 O(k)。当 k ≪ n 时远优于排序。</text>
+  <text x="58" y="616" font-size="10.5" fill="#4a4a4f">全排序后取前 k：O(n log n)，还要 O(n) 空间存全序 —— 为「只要 k 个」付了「排好全部」的钱。</text>
+  <text x="58" y="640" font-size="10.5" fill="#4a4a4f">建大顶堆再 pop k 次：O(n + k log n)。k 很小时也快，但需一次性持有全部 n 个元素（不适合流式）。</text>
+  <text x="58" y="664" font-size="10" fill="#8a97ab">size-k 小顶堆的独门优势：数据可「流式」到来、堆只占 O(k) 内存 —— 海量数据里挑 TopK 的标准解法。</text>
+</svg>

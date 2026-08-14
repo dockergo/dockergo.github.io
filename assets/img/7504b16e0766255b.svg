@@ -1,0 +1,147 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="680" viewBox="0 0 1120 680" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="aB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#4a7fd0"/></marker>
+  </defs>
+  <rect width="1120" height="680" fill="#fbfbfd"/>
+
+  <text x="30" y="34" font-size="17" font-weight="700" fill="#1d1d1f">DFS 深度优先遍历 · 同一棵树，「访问根」插入的时机不同 → 前 / 中 / 后序</text>
+  <text x="30" y="56" font-size="11" fill="#6e6e73">递归三步都做「递归左、递归右」；差别只在 append(根.Val) 这一句写在两次递归的哪个位置。节点内为值，左上角为访问序号</text>
+
+  <!-- 图例 -->
+  <rect x="30" y="72" width="12" height="12" rx="2" fill="#d99a2b"/><text x="48" y="82" font-size="10.5" fill="#3a3a3c">根节点（追踪其访问时机）</text>
+  <circle cx="220" cy="78" r="7" fill="#4a7fd0"/><text x="222" y="81.5" font-size="8" fill="#fff" text-anchor="middle">n</text><text x="234" y="82" font-size="10.5" fill="#3a3a3c">访问序号（第 n 个被记录）</text>
+  <rect x="430" y="72" width="12" height="12" rx="2" fill="#eaf1fb" stroke="#c6d9f2"/><text x="448" y="82" font-size="10.5" fill="#3a3a3c">普通节点</text>
+
+  <!-- ============ 前序 ============ -->
+  <text x="190" y="122" font-size="12.5" font-weight="700" fill="#20375e" text-anchor="middle">前序 preOrder　根 → 左 → 右</text>
+  <!-- 边 -->
+  <line x1="190" y1="155" x2="120" y2="210" stroke="#9dbdea" stroke-width="1.6"/>
+  <line x1="190" y1="155" x2="260" y2="210" stroke="#9dbdea" stroke-width="1.6"/>
+  <line x1="120" y1="210" x2="85" y2="265" stroke="#9dbdea" stroke-width="1.6"/>
+  <line x1="120" y1="210" x2="155" y2="265" stroke="#9dbdea" stroke-width="1.6"/>
+  <line x1="260" y1="210" x2="225" y2="265" stroke="#9dbdea" stroke-width="1.6"/>
+  <line x1="260" y1="210" x2="295" y2="265" stroke="#9dbdea" stroke-width="1.6"/>
+  <g font-size="12" text-anchor="middle">
+    <circle cx="190" cy="155" r="16" fill="#fdf3e0" stroke="#d99a2b" stroke-width="1.8"/><text x="190" y="159" fill="#5a4a2a" font-weight="700">1</text>
+    <circle cx="120" cy="210" r="16" fill="#eaf1fb" stroke="#4a7fd0" stroke-width="1.3"/><text x="120" y="214" fill="#20375e">2</text>
+    <circle cx="260" cy="210" r="16" fill="#eaf1fb" stroke="#4a7fd0" stroke-width="1.3"/><text x="260" y="214" fill="#20375e">3</text>
+    <circle cx="85" cy="265" r="16" fill="#eaf1fb" stroke="#4a7fd0" stroke-width="1.3"/><text x="85" y="269" fill="#20375e">4</text>
+    <circle cx="155" cy="265" r="16" fill="#eaf1fb" stroke="#4a7fd0" stroke-width="1.3"/><text x="155" y="269" fill="#20375e">5</text>
+    <circle cx="225" cy="265" r="16" fill="#eaf1fb" stroke="#4a7fd0" stroke-width="1.3"/><text x="225" y="269" fill="#20375e">6</text>
+    <circle cx="295" cy="265" r="16" fill="#eaf1fb" stroke="#4a7fd0" stroke-width="1.3"/><text x="295" y="269" fill="#20375e">7</text>
+  </g>
+  <!-- 访问序号 前序: 1->1,2->2,4->3,5->4,3->5,6->6,7->7 -->
+  <g font-size="9" text-anchor="middle" fill="#fff">
+    <circle cx="206" cy="140" r="8" fill="#d99a2b"/><text x="206" y="143.5">1</text>
+    <circle cx="136" cy="195" r="8" fill="#4a7fd0"/><text x="136" y="198.5">2</text>
+    <circle cx="276" cy="195" r="8" fill="#4a7fd0"/><text x="276" y="198.5">5</text>
+    <circle cx="101" cy="250" r="8" fill="#4a7fd0"/><text x="101" y="253.5">3</text>
+    <circle cx="171" cy="250" r="8" fill="#4a7fd0"/><text x="171" y="253.5">4</text>
+    <circle cx="241" cy="250" r="8" fill="#4a7fd0"/><text x="241" y="253.5">6</text>
+    <circle cx="311" cy="250" r="8" fill="#4a7fd0"/><text x="311" y="253.5">7</text>
+  </g>
+  <text x="190" y="308" font-size="10" fill="#8a5a12" text-anchor="middle">根第 1 个访问：一进节点就记</text>
+  <rect x="55" y="320" width="270" height="26" rx="6" fill="#fff7e8" stroke="#e7c07a"/>
+  <text x="190" y="337" font-size="11" fill="#5a4a2a" text-anchor="middle" font-weight="700">1 · 2 · 4 · 5 · 3 · 6 · 7</text>
+
+  <!-- ============ 中序 ============ -->
+  <text x="560" y="122" font-size="12.5" font-weight="700" fill="#20375e" text-anchor="middle">中序 inOrder　左 → 根 → 右</text>
+  <line x1="560" y1="155" x2="490" y2="210" stroke="#9dbdea" stroke-width="1.6"/>
+  <line x1="560" y1="155" x2="630" y2="210" stroke="#9dbdea" stroke-width="1.6"/>
+  <line x1="490" y1="210" x2="455" y2="265" stroke="#9dbdea" stroke-width="1.6"/>
+  <line x1="490" y1="210" x2="525" y2="265" stroke="#9dbdea" stroke-width="1.6"/>
+  <line x1="630" y1="210" x2="595" y2="265" stroke="#9dbdea" stroke-width="1.6"/>
+  <line x1="630" y1="210" x2="665" y2="265" stroke="#9dbdea" stroke-width="1.6"/>
+  <g font-size="12" text-anchor="middle">
+    <circle cx="560" cy="155" r="16" fill="#fdf3e0" stroke="#d99a2b" stroke-width="1.8"/><text x="560" y="159" fill="#5a4a2a" font-weight="700">1</text>
+    <circle cx="490" cy="210" r="16" fill="#eaf1fb" stroke="#4a7fd0" stroke-width="1.3"/><text x="490" y="214" fill="#20375e">2</text>
+    <circle cx="630" cy="210" r="16" fill="#eaf1fb" stroke="#4a7fd0" stroke-width="1.3"/><text x="630" y="214" fill="#20375e">3</text>
+    <circle cx="455" cy="265" r="16" fill="#eaf1fb" stroke="#4a7fd0" stroke-width="1.3"/><text x="455" y="269" fill="#20375e">4</text>
+    <circle cx="525" cy="265" r="16" fill="#eaf1fb" stroke="#4a7fd0" stroke-width="1.3"/><text x="525" y="269" fill="#20375e">5</text>
+    <circle cx="595" cy="265" r="16" fill="#eaf1fb" stroke="#4a7fd0" stroke-width="1.3"/><text x="595" y="269" fill="#20375e">6</text>
+    <circle cx="665" cy="265" r="16" fill="#eaf1fb" stroke="#4a7fd0" stroke-width="1.3"/><text x="665" y="269" fill="#20375e">7</text>
+  </g>
+  <!-- 中序: 4->1,2->2,5->3,1->4,6->5,3->6,7->7 -->
+  <g font-size="9" text-anchor="middle" fill="#fff">
+    <circle cx="576" cy="140" r="8" fill="#d99a2b"/><text x="576" y="143.5">4</text>
+    <circle cx="506" cy="195" r="8" fill="#4a7fd0"/><text x="506" y="198.5">2</text>
+    <circle cx="646" cy="195" r="8" fill="#4a7fd0"/><text x="646" y="198.5">6</text>
+    <circle cx="471" cy="250" r="8" fill="#4a7fd0"/><text x="471" y="253.5">1</text>
+    <circle cx="541" cy="250" r="8" fill="#4a7fd0"/><text x="541" y="253.5">3</text>
+    <circle cx="611" cy="250" r="8" fill="#4a7fd0"/><text x="611" y="253.5">5</text>
+    <circle cx="681" cy="250" r="8" fill="#4a7fd0"/><text x="681" y="253.5">7</text>
+  </g>
+  <text x="560" y="308" font-size="10" fill="#8a5a12" text-anchor="middle">根第 4 个访问：夹在左右子之间</text>
+  <rect x="425" y="320" width="270" height="26" rx="6" fill="#fff7e8" stroke="#e7c07a"/>
+  <text x="560" y="337" font-size="11" fill="#5a4a2a" text-anchor="middle" font-weight="700">4 · 2 · 5 · 1 · 6 · 3 · 7</text>
+
+  <!-- ============ 后序 ============ -->
+  <text x="930" y="122" font-size="12.5" font-weight="700" fill="#20375e" text-anchor="middle">后序 postOrder　左 → 右 → 根</text>
+  <line x1="930" y1="155" x2="860" y2="210" stroke="#9dbdea" stroke-width="1.6"/>
+  <line x1="930" y1="155" x2="1000" y2="210" stroke="#9dbdea" stroke-width="1.6"/>
+  <line x1="860" y1="210" x2="825" y2="265" stroke="#9dbdea" stroke-width="1.6"/>
+  <line x1="860" y1="210" x2="895" y2="265" stroke="#9dbdea" stroke-width="1.6"/>
+  <line x1="1000" y1="210" x2="965" y2="265" stroke="#9dbdea" stroke-width="1.6"/>
+  <line x1="1000" y1="210" x2="1035" y2="265" stroke="#9dbdea" stroke-width="1.6"/>
+  <g font-size="12" text-anchor="middle">
+    <circle cx="930" cy="155" r="16" fill="#fdf3e0" stroke="#d99a2b" stroke-width="1.8"/><text x="930" y="159" fill="#5a4a2a" font-weight="700">1</text>
+    <circle cx="860" cy="210" r="16" fill="#eaf1fb" stroke="#4a7fd0" stroke-width="1.3"/><text x="860" y="214" fill="#20375e">2</text>
+    <circle cx="1000" cy="210" r="16" fill="#eaf1fb" stroke="#4a7fd0" stroke-width="1.3"/><text x="1000" y="214" fill="#20375e">3</text>
+    <circle cx="825" cy="265" r="16" fill="#eaf1fb" stroke="#4a7fd0" stroke-width="1.3"/><text x="825" y="269" fill="#20375e">4</text>
+    <circle cx="895" cy="265" r="16" fill="#eaf1fb" stroke="#4a7fd0" stroke-width="1.3"/><text x="895" y="269" fill="#20375e">5</text>
+    <circle cx="965" cy="265" r="16" fill="#eaf1fb" stroke="#4a7fd0" stroke-width="1.3"/><text x="965" y="269" fill="#20375e">6</text>
+    <circle cx="1035" cy="265" r="16" fill="#eaf1fb" stroke="#4a7fd0" stroke-width="1.3"/><text x="1035" y="269" fill="#20375e">7</text>
+  </g>
+  <!-- 后序: 4->1,5->2,2->3,6->4,7->5,3->6,1->7 -->
+  <g font-size="9" text-anchor="middle" fill="#fff">
+    <circle cx="946" cy="140" r="8" fill="#d99a2b"/><text x="946" y="143.5">7</text>
+    <circle cx="876" cy="195" r="8" fill="#4a7fd0"/><text x="876" y="198.5">3</text>
+    <circle cx="1016" cy="195" r="8" fill="#4a7fd0"/><text x="1016" y="198.5">6</text>
+    <circle cx="841" cy="250" r="8" fill="#4a7fd0"/><text x="841" y="253.5">1</text>
+    <circle cx="911" cy="250" r="8" fill="#4a7fd0"/><text x="911" y="253.5">2</text>
+    <circle cx="981" cy="250" r="8" fill="#4a7fd0"/><text x="981" y="253.5">4</text>
+    <circle cx="1051" cy="250" r="8" fill="#4a7fd0"/><text x="1051" y="253.5">5</text>
+  </g>
+  <text x="930" y="308" font-size="10" fill="#8a5a12" text-anchor="middle">根第 7 个访问：左右都做完才记</text>
+  <rect x="795" y="320" width="270" height="26" rx="6" fill="#fff7e8" stroke="#e7c07a"/>
+  <text x="930" y="337" font-size="11" fill="#5a4a2a" text-anchor="middle" font-weight="700">4 · 5 · 2 · 6 · 7 · 3 · 1</text>
+
+  <!-- ===== 递归栈深度 ===== -->
+  <rect x="30" y="368" width="600" height="288" rx="12" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="50" y="392" font-size="12.5" font-weight="700" fill="#20375e">递归 = 隐式调用栈：下潜即压栈，返回即弹栈</text>
+  <text x="50" y="412" font-size="10.5" fill="#6e6e73">以前序访问到最左叶 4 的瞬间为例，栈里正压着从根到 4 的整条路径</text>
+  <!-- 栈画法：竖直栈 -->
+  <g font-size="11" text-anchor="middle">
+    <rect x="70" y="450" width="150" height="30" rx="5" fill="#eaf1fb" stroke="#c6d9f2"/><text x="145" y="470" fill="#20375e">preOrder(4)　栈顶</text>
+    <rect x="70" y="484" width="150" height="30" rx="5" fill="#eaf1fb" stroke="#c6d9f2"/><text x="145" y="504" fill="#20375e">preOrder(2)</text>
+    <rect x="70" y="518" width="150" height="30" rx="5" fill="#eaf1fb" stroke="#c6d9f2"/><text x="145" y="538" fill="#20375e">preOrder(1)　栈底</text>
+  </g>
+  <line x1="255" y1="465" x2="255" y2="533" stroke="#4a7fd0" stroke-width="1.6" marker-end="url(#aB)"/>
+  <text x="270" y="470" font-size="10" fill="#4a4a4f">越往深，栈越高</text>
+  <text x="270" y="492" font-size="10" fill="#4a4a4f">栈的最大高度 = 树的高度 h</text>
+  <text x="270" y="514" font-size="10" fill="#4a4a4f">访问完 4 返回 → 弹栈 → 转向 5</text>
+  <text x="270" y="536" font-size="10" fill="#8a97ab">迭代实现可用显式栈替代递归</text>
+  <rect x="50" y="576" width="560" height="60" rx="10" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="68" y="600" font-size="10.5" fill="#4a4a4f">时间 O(n)：每节点恰好进出递归一次。</text>
+  <text x="68" y="622" font-size="10.5" fill="#4a4a4f">空间 O(h)：栈深等于树高，平衡树 O(log n)，退化成链则 O(n)。</text>
+
+  <!-- ===== 用途 ===== -->
+  <rect x="650" y="368" width="440" height="288" rx="12" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="670" y="392" font-size="12.5" font-weight="700" fill="#20375e">三种次序各擅其用</text>
+  <rect x="670" y="410" width="400" height="66" rx="8" fill="#f2f7ff" stroke="#c6d9f2"/>
+  <text x="686" y="432" font-size="11" font-weight="700" fill="#20375e">前序</text>
+  <text x="736" y="432" font-size="10.5" fill="#4a4a4f">先处理根 → 复制树、序列化、</text>
+  <text x="736" y="452" font-size="10.5" fill="#4a4a4f">先序输出目录结构</text>
+  <text x="686" y="470" font-size="9.5" fill="#8a97ab">自顶向下：父先于子</text>
+  <rect x="670" y="486" width="400" height="66" rx="8" fill="#f2f7ff" stroke="#c6d9f2"/>
+  <text x="686" y="508" font-size="11" font-weight="700" fill="#20375e">中序</text>
+  <text x="736" y="508" font-size="10.5" fill="#4a4a4f">左根右 → 在 BST 上得到升序，</text>
+  <text x="736" y="528" font-size="10.5" fill="#4a4a4f">范围查询、找第 k 小</text>
+  <text x="686" y="546" font-size="9.5" fill="#2f9e6e">BST + 中序 = 排好序的输出</text>
+  <rect x="670" y="562" width="400" height="72" rx="8" fill="#f2f7ff" stroke="#c6d9f2"/>
+  <text x="686" y="584" font-size="11" font-weight="700" fill="#20375e">后序</text>
+  <text x="736" y="584" font-size="10.5" fill="#4a4a4f">左右先于根 → 先算完子树再合并：</text>
+  <text x="736" y="604" font-size="10.5" fill="#4a4a4f">释放子树内存、算目录总大小、</text>
+  <text x="736" y="622" font-size="10.5" fill="#4a4a4f">表达式树求值</text>
+</svg>

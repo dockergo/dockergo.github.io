@@ -20,6 +20,10 @@ design/ 处于最新,再重建导航,导航才会反映真实最新状态。
   python3 update.py --skip spark     # 跳过指定项目(其余项目 + 导航照常)
   python3 update.py --list           # 只列出发现的项目与其 gen.py,不执行
   python3 update.py --no-nav         # 只更新项目,不重建导航
+  python3 update.py --no-optimize    # 生成后不跑第 3 层资源优化(保留 base64 内联版)
+
+第 3 层 · 资源优化:两层生成完毕后默认跑 optimize_assets.py,把 base64 内联图抽外部
+              去重 + 内联 <style> 抽共享 css(降体积、跨页缓存)。纯后处理、可回滚。
 
 退出码:全部成功 0;任一步骤失败 1(失败不中断后续,末尾汇总)。
 """
@@ -100,6 +104,33 @@ def run_gen(gen_path, label):
     return ok, dt, tail
 
 
+def run_optimize():
+    """gen.py 全部生成后,跑根目录 optimize_assets.py 把产物做加载性能后处理:
+    内联 base64 svg 抽外部去重 + 内联 <style> 抽共享 css。纯二次加工,可回滚。
+    返回 (ok, seconds, tail)。"""
+    opt = os.path.join(HERE, "optimize_assets.py")
+    if not os.path.isfile(opt):
+        return False, 0.0, "缺少 optimize_assets.py"
+    t0 = time.time()
+    try:
+        proc = subprocess.run(
+            [sys.executable, opt],
+            cwd=HERE, capture_output=True, text=True, timeout=600,
+        )
+    except subprocess.TimeoutExpired:
+        return False, time.time() - t0, "超时(>600s)"
+    except Exception as e:  # noqa: BLE001
+        return False, time.time() - t0, f"启动失败:{e}"
+    dt = time.time() - t0
+    ok = proc.returncode == 0
+    stream = (proc.stdout or "") + (proc.stderr or "")
+    lines = [ln for ln in stream.splitlines() if ln.strip()]
+    tail = lines[-1].strip() if lines else ""
+    if not ok and not tail:
+        tail = f"退出码 {proc.returncode}"
+    return ok, dt, tail
+
+
 def main():
     ap = argparse.ArgumentParser(
         description="一键分层更新:先各项目 gen.py,后根 gen.py 重建整体导航",
@@ -115,6 +146,8 @@ def main():
                     help="只更新项目,不重建整体导航")
     ap.add_argument("--list", action="store_true",
                     help="只列出发现的项目及其 gen.py,不执行")
+    ap.add_argument("--no-optimize", action="store_true",
+                    help="跳过第 3 层资源优化(默认生成后跑 optimize_assets.py 抽外链)")
     args = ap.parse_args()
 
     projects = discover_projects()
@@ -180,6 +213,18 @@ def main():
                 print(f"  {red('✗')} 整体导航 {dim(f'{dt:.2f}s')}  {red(tail)}")
                 failures.append(("整体导航", tail))
 
+    # ── 第 3 层:资源优化(把 base64 内联产物抽外链,恢复加载性能) ──
+    # gen.py 生成的是 base64 内联版;此步把内联 svg 抽外部去重 + 内联 <style>
+    # 抽共享 css,降体积、启用跨页缓存。纯后处理、幂等、可回滚(重跑 gen.py 恢复)。
+    if not args.no_optimize:
+        print(bold(cyan("\n◆ 第 3 层 · 资源优化(base64 外链 + CSS 抽离)\n")))
+        ok, dt, tail = run_optimize()
+        if ok:
+            print(f"  {green('✓')} 资源优化 {dim(f'{dt:.2f}s')}  {dim(tail)}")
+        else:
+            print(f"  {red('✗')} 资源优化 {dim(f'{dt:.2f}s')}  {red(tail)}")
+            failures.append(("资源优化", tail))
+
     # ── 汇总 ──
     total = time.time() - t_start
     print(bold(f"\n{'─'*46}"))
@@ -189,7 +234,7 @@ def main():
             print(red(f"    · {name}: {why}"))
         return 1
     print(green(bold(f"✓ 全部成功(耗时 {total:.2f}s)")))
-    print(dim(f"  项目 {len(selected)} 个 · 整体导航 {'已重建' if not args.no_nav else '跳过'}"))
+    print(dim(f"  项目 {len(selected)} 个 · 整体导航 {'已重建' if not args.no_nav else '跳过'} · 资源优化 {'跳过' if args.no_optimize else '已执行'}"))
     return 0
 
 

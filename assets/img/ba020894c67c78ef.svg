@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="520" viewBox="0 0 1080 520"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1080" height="520" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Milvus collection 分片 · vchannel + partition + segment</text>
+  <text x="30" y="50" font-size="11" fill="#a1a1a6">层次:collection → N 个 vchannel(shard)× partition → 多个 segment;vchannel 决定写入并行,segment 决定检索粒度</text>
+
+  <!-- collection -->
+  <rect x="400" y="72" width="280" height="50" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="540" y="94" font-size="12" font-weight="600" fill="#1b2a4a" text-anchor="middle">collection</text>
+  <text x="540" y="111" font-size="9" fill="#5b7db1" text-anchor="middle">建表 ShardsNum 决定 vchannel 数(默认 1)</text>
+
+  <!-- split to 2 vchannels -->
+  <path d="M540,122 L540,142 L280,142 L280,162" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M540,122 L540,142 L800,142 L800,162" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <!-- vchannel 0 -->
+  <rect x="60" y="164" width="440" height="250" rx="14" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="80" y="188" font-size="12" font-weight="600" fill="#5a3410">vchannel-0(shard = 写入日志分片)</text>
+  <text x="80" y="205" font-size="8.5" fill="#93762e">映射一个物理 MQ channel(ToPhysicalChannel)· ShardsNum 默认 1(common.go:77)</text>
+
+  <!-- partition A within vchannel0 -->
+  <rect x="80" y="216" width="400" height="88" rx="11" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="100" y="238" font-size="10.5" font-weight="600" fill="#5a3410">partition A(逻辑分区,如按日期)</text>
+  <rect x="100" y="248" width="110" height="46" rx="8" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="155" y="268" font-size="9" font-weight="600" fill="#12402a" text-anchor="middle">segment(growing)</text>
+  <text x="155" y="284" font-size="8" fill="#2f6f4f" text-anchor="middle">内存可变</text>
+  <rect x="222" y="248" width="110" height="46" rx="8" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="277" y="268" font-size="9" font-weight="600" fill="#5a3410" text-anchor="middle">segment(sealed)</text>
+  <text x="277" y="284" font-size="8" fill="#93762e" text-anchor="middle">落盘不可变</text>
+  <rect x="344" y="248" width="118" height="46" rx="8" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="403" y="268" font-size="9" font-weight="600" fill="#5a3410" text-anchor="middle">segment(sealed)</text>
+  <text x="403" y="284" font-size="8" fill="#93762e" text-anchor="middle">落盘不可变</text>
+
+  <!-- partition B within vchannel0 -->
+  <rect x="80" y="314" width="400" height="88" rx="11" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="100" y="336" font-size="10.5" font-weight="600" fill="#5a3410">partition B</text>
+  <rect x="100" y="346" width="110" height="46" rx="8" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="155" y="366" font-size="9" font-weight="600" fill="#12402a" text-anchor="middle">segment(growing)</text>
+  <text x="155" y="382" font-size="8" fill="#2f6f4f" text-anchor="middle">内存可变</text>
+  <rect x="222" y="346" width="240" height="46" rx="8" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="342" y="366" font-size="9" font-weight="600" fill="#5a3410" text-anchor="middle">segment(sealed) × 多个</text>
+  <text x="342" y="382" font-size="8" fill="#93762e" text-anchor="middle">按 (collection, partition, channel) 分配</text>
+
+  <!-- vchannel 1 -->
+  <rect x="580" y="164" width="440" height="250" rx="14" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="600" y="188" font-size="12" font-weight="600" fill="#5a3410">vchannel-1(另一 shard,写入并行度)</text>
+  <text x="600" y="205" font-size="8.5" fill="#93762e">多 vchannel = 更高写入并行,但增日志/调度开销</text>
+
+  <rect x="600" y="216" width="400" height="88" rx="11" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="620" y="238" font-size="10.5" font-weight="600" fill="#5a3410">partition A(同一分区跨 vchannel 分布)</text>
+  <rect x="620" y="248" width="110" height="46" rx="8" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="675" y="268" font-size="9" font-weight="600" fill="#12402a" text-anchor="middle">segment(growing)</text>
+  <text x="675" y="284" font-size="8" fill="#2f6f4f" text-anchor="middle">内存可变</text>
+  <rect x="742" y="248" width="240" height="46" rx="8" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="862" y="268" font-size="9" font-weight="600" fill="#5a3410" text-anchor="middle">segment(sealed) × 多个</text>
+  <text x="862" y="284" font-size="8" fill="#93762e" text-anchor="middle">SegmentManager 分配(segment_manager.go:307)</text>
+
+  <rect x="600" y="314" width="400" height="88" rx="11" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="620" y="336" font-size="10.5" font-weight="600" fill="#5a3410">partition B</text>
+  <rect x="620" y="346" width="360" height="46" rx="8" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="800" y="366" font-size="9" font-weight="600" fill="#5a3410" text-anchor="middle">growing + sealed segments</text>
+  <text x="800" y="382" font-size="8" fill="#93762e" text-anchor="middle">同一 (partition, channel) 下的物理数据单位</text>
+
+  <!-- sealing rule footer -->
+  <rect x="60" y="428" width="960" height="76" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="80" y="452" font-size="11" font-weight="600" fill="#1b2a4a">封段规则(DataCoord SegmentManager)</text>
+  <text x="80" y="475" font-size="10" fill="#274a78">growing 段超过 maxSize(默认 1024MB)即封成 sealed;sealed 不可变、异步建索引后进入 QueryNode 检索</text>
+  <text x="80" y="494" font-size="9.5" fill="#5b7db1">vchannel 是写入日志的分片单位(决定并行写入),segment 是检索与索引的粒度</text>
+</svg>

@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="430" viewBox="0 0 1020 430"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1020" height="430" fill="#fbfbfd"/>
+  <text x="30" y="28" font-size="14" font-weight="600" fill="#1d1d1f">缓存存储与后台管理 · 索引在共享内存、数据在磁盘（ngx_http_file_cache.c）</text>
+  <!-- 图例 -->
+  <rect x="628" y="18" width="12" height="12" rx="3" fill="#eef3fb" stroke="#bcd0ec"/><text x="644" y="28" font-size="9" fill="#6a6a70">共享内存索引</text>
+  <rect x="740" y="18" width="12" height="12" rx="3" fill="#fff7e6" stroke="#f0dcae"/><text x="756" y="28" font-size="9" fill="#6a6a70">磁盘文件</text>
+  <rect x="836" y="18" width="12" height="12" rx="3" fill="#eafaf1" stroke="#bce6cd"/><text x="852" y="28" font-size="9" fill="#6a6a70">后台进程</text>
+
+  <!-- 共享内存索引 -->
+  <rect x="30" y="48" width="450" height="150" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="48" y="72" font-size="12" font-weight="600" fill="#1b2a4a">keys_zone：共享内存索引（红黑树）</text>
+  <rect x="48" y="86" width="200" height="44" rx="9" fill="#ffffff" stroke="#bcd0ec"/><text x="148" y="106" font-size="9.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">key(MD5) → 缓存节点</text><text x="148" y="122" font-size="8" fill="#5b7db1" text-anchor="middle">by key 查节点得状态</text>
+  <rect x="264" y="86" width="200" height="44" rx="9" fill="#ffffff" stroke="#bcd0ec"/><text x="364" y="106" font-size="9.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">节点存元数据</text><text x="364" y="122" font-size="8" fill="#5b7db1" text-anchor="middle">有效期 / 大小 / LRU 位置</text>
+  <text x="48" y="152" font-size="9.5" fill="#5b7db1">内存只存 key→元数据映射，不放响应体；多 worker 共享此索引。</text>
+  <text x="48" y="172" font-size="9.5" fill="#5b7db1">索引写满时由 cache manager 立即按 LRU 强淘汰腾位。</text>
+
+  <!-- 磁盘分级目录 -->
+  <rect x="510" y="48" width="478" height="150" rx="14" fill="#fff7e6" stroke="#f0dcae" filter="url(#soft)"/>
+  <text x="528" y="72" font-size="12" font-weight="600" fill="#7a4d00">磁盘：分级目录 levels=1:2 + 缓存文件</text>
+  <rect x="528" y="86" width="120" height="44" rx="9" fill="#ffffff" stroke="#f0dcae"/><text x="588" y="106" font-size="9" font-weight="600" fill="#7a4d00" text-anchor="middle">按 MD5 末位</text><text x="588" y="122" font-size="8" fill="#9a7328" text-anchor="middle">切子目录 c/29/…</text>
+  <rect x="664" y="86" width="324" height="44" rx="9" fill="#ffffff" stroke="#f0dcae"/><text x="676" y="104" font-size="8.5" fill="#9a7328">缓存文件 = 文件头(元数据) + 响应头 + 响应体</text><text x="676" y="120" font-size="8" fill="#9a7328">写临时文件 → 原子 rename 进目标路径</text>
+  <text x="528" y="152" font-size="9.5" fill="#9a7328">分级目录把海量文件打散，避免单目录过大拖慢查找。</text>
+  <text x="528" y="172" font-size="9.5" fill="#9a7328">文件头校验：version 不符 / md5 冲突 / 过小 → 判失效丢弃回源。</text>
+  <line x1="480" y1="123" x2="510" y2="123" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <text x="495" y="116" font-size="8" fill="#86868b" text-anchor="middle"></text>
+
+  <!-- cache manager -->
+  <rect x="30" y="214" width="620" height="130" rx="14" fill="#eafaf1" stroke="#bce6cd" filter="url(#soft)"/>
+  <text x="48" y="238" font-size="12" font-weight="600" fill="#0f5132">cache manager 进程 · 常驻后台，控总量与新鲜度</text>
+  <rect x="48" y="252" width="290" height="76" rx="10" fill="#ffffff" stroke="#bce6cd"/><text x="193" y="276" font-size="10" font-weight="600" fill="#0f5132" text-anchor="middle">按 max_size 强淘汰</text><text x="193" y="296" font-size="8.5" fill="#3f8f66" text-anchor="middle">总量超阈值 → forced_expire</text><text x="193" y="312" font-size="8.5" fill="#3f8f66" text-anchor="middle">按 LRU 删最久未用，压回上限</text>
+  <rect x="356" y="252" width="278" height="76" rx="10" fill="#ffffff" stroke="#bce6cd"/><text x="495" y="276" font-size="10" font-weight="600" fill="#0f5132" text-anchor="middle">按 inactive 清理</text><text x="495" y="296" font-size="8.5" fill="#3f8f66" text-anchor="middle">超时未被访问 → expire 清掉</text><text x="495" y="312" font-size="8.5" fill="#3f8f66" text-anchor="middle">渐进淘汰，短时超限可容忍</text>
+
+  <!-- cache loader -->
+  <rect x="668" y="214" width="320" height="130" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="686" y="238" font-size="12" font-weight="600" fill="#1b2a4a">cache loader 进程 · 只在启动跑一次</text>
+  <rect x="686" y="252" width="284" height="76" rx="10" fill="#ffffff" stroke="#bcd0ec"/><text x="828" y="276" font-size="10" font-weight="600" fill="#1b2a4a" text-anchor="middle">扫描缓存目录</text><text x="828" y="296" font-size="8.5" fill="#5b7db1" text-anchor="middle">把已有磁盘文件</text><text x="828" y="312" font-size="8.5" fill="#5b7db1" text-anchor="middle">重建进内存索引后退出</text>
+
+  <!-- 底注 -->
+  <rect x="30" y="358" width="958" height="48" rx="12" fill="#f6f6f8" stroke="#e2e2e7"/>
+  <text x="48" y="380" font-size="9.5" fill="#494950">不变式：命中只碰磁盘不碰后端；坏文件永不返给客户端（校验失败即回源重建）；总量由 manager 后台持续压回 max_size。</text>
+  <text x="48" y="398" font-size="9.5" fill="#86868b">manager / loader 是独立的后台进程，不在 worker 事件循环里，淘汰与加载都不阻塞请求处理。</text>
+</svg>

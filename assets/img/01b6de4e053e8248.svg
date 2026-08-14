@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="360" viewBox="0 0 1000 360" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs><filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter><marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker></defs>
+  <rect width="1000" height="360" fill="#fbfbfd"/>
+  <text x="40" y="30" font-size="14" font-weight="600" fill="#1d1d1f">高并发点查旁路：把主键等值取整行从"分析型全规划"降为"KV 直取"</text>
+
+  <!-- normal path -->
+  <rect x="40" y="58" width="920" height="40" rx="11" fill="#f4f6fa" stroke="#dfe4ea"/>
+  <text x="60" y="83" font-size="11.5" fill="#6e6e73">常规分析路径：FE 完整规划（Nereids） → MPP 下发 → 列存扫描 → 汇聚（重，适合大查询，不适合高 QPS 点查）</text>
+
+  <text x="40" y="128" font-size="12.5" font-weight="600" fill="#1b2a4a">旁路（需 Unique Key + Merge-on-Write + 开行存）：</text>
+  <g text-anchor="middle">
+    <rect x="40" y="146" width="220" height="80" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/><text x="150" y="174" font-size="12.5" font-weight="600" fill="#1b2a4a">Short-Circuit 短路</text><text x="150" y="196" font-size="10.5" fill="#5b7db1">跳过 FE 完整规划</text><text x="150" y="212" font-size="10.5" fill="#5b7db1">直达存储点查</text>
+    <rect x="290" y="146" width="220" height="80" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/><text x="400" y="174" font-size="12.5" font-weight="600" fill="#1b2a4a">PreparedStatement</text><text x="400" y="196" font-size="10.5" fill="#5b7db1">缓存计划与表达式</text><text x="400" y="212" font-size="10.5" fill="#5b7db1">省 FE CPU</text>
+    <rect x="540" y="146" width="220" height="80" rx="13" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/><text x="650" y="174" font-size="12.5" font-weight="600" fill="#12402a">Row Store 行存</text><text x="650" y="196" font-size="10.5" fill="#2f6f4f">整行连续存储</text><text x="650" y="212" font-size="10.5" fill="#2f6f4f">减少读整行随机 IO</text>
+    <rect x="790" y="146" width="170" height="80" rx="13" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/><text x="875" y="174" font-size="12.5" font-weight="600" fill="#5a3410">Row Cache</text><text x="875" y="196" font-size="10.5" fill="#93762e">专用行缓存</text><text x="875" y="212" font-size="10.5" fill="#93762e">不被大查询挤掉</text>
+  </g>
+  <g stroke="#c7c7cc" stroke-width="1.4" fill="none"><line x1="260" y1="186" x2="290" y2="186" marker-end="url(#ar)"/><line x1="510" y1="186" x2="540" y2="186" marker-end="url(#ar)"/><line x1="760" y1="186" x2="790" y2="186" marker-end="url(#ar)"/></g>
+
+  <rect x="40" y="262" width="920" height="66" rx="12" fill="#ecf5ee" stroke="#c2ddc9"/>
+  <text x="500" y="290" font-size="12.5" font-weight="600" fill="#2c5a3a" text-anchor="middle">主键点查：PK 索引定位 → 行存直取整行 → Row Cache 命中直接返回</text>
+  <text x="500" y="312" font-size="11" fill="#4e7a5c" text-anchor="middle">四层叠加把点查 P99 压到毫秒级，支撑高并发 QPS（`store_row_column` + `enable_unique_key_merge_on_write`）</text>
+</svg>

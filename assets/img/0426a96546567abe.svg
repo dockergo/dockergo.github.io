@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="520" viewBox="0 0 1080 520" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="520" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Rust query 系统 + 增量编译 —— 按需计算 + 缓存,不是线性 pass</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">编译是有向图依赖(类型依赖 HIR、借用检查依赖 MIR…);query 按需拉取 + 缓存,只重算受影响部分</text>
+
+  <!-- Left: query 驱动 (blue) -->
+  <rect x="40" y="82" width="480" height="230" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="62" y="108" font-size="12.5" font-weight="600" fill="#1b2a4a">① query 驱动 · 按需 + 缓存(非线性 pass)</text>
+  <text x="62" y="128" font-size="9.5" fill="#5b7db1">rustc_query_impl (lib.rs:22)</text>
+  <text x="62" y="144" font-size="9" fill="#5b7db1">模块 execution / plumbing / query_impl / job</text>
+  <!-- query nodes -->
+  <g text-anchor="middle">
+    <rect x="62" y="160" width="200" height="42" rx="8" fill="#ffffff" stroke="#cfe0f2"/>
+    <text x="162" y="178" font-size="9.5" font-weight="600" fill="#1b2a4a">optimized_mir(def)</text>
+    <text x="162" y="194" font-size="9" fill="#5b7db1">按需计算 · 结果缓存</text>
+    <rect x="298" y="160" width="200" height="42" rx="8" fill="#ffffff" stroke="#cfe0f2"/>
+    <text x="398" y="178" font-size="9.5" font-weight="600" fill="#1b2a4a">mir_borrowck(def)</text>
+    <text x="398" y="194" font-size="9" fill="#5b7db1">按需计算 · 结果缓存</text>
+  </g>
+  <text x="62" y="228" font-size="10" fill="#1b2a4a">每个都是 query:第一次算,之后直接读缓存</text>
+  <text x="62" y="250" font-size="10" fill="#1b2a4a">依赖图按需拉取,不按固定流水线顺序</text>
+  <rect x="62" y="262" width="436" height="40" rx="8" fill="#fbeaea" stroke="#e7c3c3"/>
+  <text x="80" y="280" font-size="9.5" font-weight="600" fill="#4a1414">注:旧 rustc_query_system 已不存在</text>
+  <text x="80" y="295" font-size="9" fill="#7a2a2a">1.99 改为 rustc_query_impl + rustc_middle/dep_graph</text>
+
+  <!-- Right: 增量编译 (green) -->
+  <rect x="540" y="82" width="500" height="230" rx="14" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="562" y="108" font-size="12.5" font-weight="600" fill="#12402a">② 增量编译 · dep-graph 红绿标记</text>
+  <text x="562" y="128" font-size="9.5" fill="#2f6f4f">rustc_middle/src/dep_graph/graph.rs</text>
+  <text x="562" y="144" font-size="9" fill="#2f6f4f">try_mark_green (:885) · rustc_incremental 序列化/重载</text>
+  <!-- green vs red -->
+  <rect x="562" y="160" width="220" height="86" rx="8" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="672" y="182" font-size="10.5" font-weight="600" text-anchor="middle" fill="#2c5a3a">绿 · 输入没变</text>
+  <text x="672" y="204" font-size="9.5" text-anchor="middle" fill="#2f6f4f">try_mark_green 成功</text>
+  <text x="672" y="224" font-size="9.5" text-anchor="middle" fill="#2f6f4f">复用缓存结果</text>
+  <text x="672" y="240" font-size="9" text-anchor="middle" fill="#a1a1a6">不重算</text>
+  <rect x="798" y="160" width="220" height="86" rx="8" fill="#fbeaea" stroke="#e7c3c3"/>
+  <text x="908" y="182" font-size="10.5" font-weight="600" text-anchor="middle" fill="#4a1414">红 · 输入变了</text>
+  <text x="908" y="204" font-size="9.5" text-anchor="middle" fill="#7a2a2a">标记为红</text>
+  <text x="908" y="224" font-size="9.5" text-anchor="middle" fill="#7a2a2a">重新计算 query</text>
+  <text x="908" y="240" font-size="9" text-anchor="middle" fill="#a1a1a6">仅受影响部分</text>
+  <text x="562" y="270" font-size="10" fill="#12402a">改一行 → 只重编相关部分,大幅加速迭代</text>
+  <text x="562" y="292" font-size="9" fill="#a1a1a6">CARGO_INCREMENTAL:debug 默认开,release 常关</text>
+
+  <path d="M782,203 L798,203" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <!-- bottom band: 为什么 query (white) -->
+  <rect x="40" y="330" width="1000" height="110" rx="14" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="62" y="356" font-size="12" font-weight="600" fill="#1d1d1f">为什么 query 而非线性 pass</text>
+  <text x="62" y="380" font-size="10" fill="#6e6e73">编译是依赖图(有向):optimized_mir 依赖 mir_borrowck 依赖 mir_promoted…</text>
+  <text x="62" y="402" font-size="10" fill="#6e6e73">query 按需拉取 + 缓存;增量编译借 dep-graph 红绿标记,只重算受影响的 query</text>
+  <text x="62" y="424" font-size="10" fill="#6e6e73">结果:改动只重编受影响部分,加快开发迭代 —— 编译不是流水线,是依赖图</text>
+
+  <text x="30" y="470" font-size="9.5" fill="#a1a1a6">误区:rustc 是线性 pass —— query 驱动(按需 + 缓存 + 增量),编译是依赖图不是流水线</text>
+  <text x="30" y="500" font-size="9" fill="#a1a1a6">codegen-units:并行 codegen 单元数(多则并行快、优化略降) · 源码基准 Rust 1.99.0</text>
+</svg>

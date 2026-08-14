@@ -1,0 +1,124 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="640" viewBox="0 0 1120 640" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+  </defs>
+  <rect width="1120" height="640" fill="#fbfbfd"/>
+
+  <text x="30" y="32" font-size="15" font-weight="700" fill="#1d1d1f">算法核心差异对比 · 悲观 2PL vs 乐观 OCC vs MVCC-SI vs 分布式 2PC —— 都在解「并发正确性」，分歧在加锁时机、读写是否互阻、冲突检测点与中止代价</text>
+  <text x="30" y="53" font-size="10.5" fill="#6e6e73">四类并发控制在同一目标（可串行化 / 隔离）下的取舍；下表按 4 个维度横向对照</text>
+
+  <!-- 列头 -->
+  <rect x="30" y="72" width="176" height="40" rx="9" fill="#eef0f3" stroke="#e4e7ec"/>
+  <text x="118" y="97" font-size="12" font-weight="700" fill="#4a4a4f" text-anchor="middle">对比维度</text>
+  <rect x="212" y="72" width="216" height="40" rx="9" fill="#fdeef0" stroke="#f2c9d0"/>
+  <text x="320" y="97" font-size="12.5" font-weight="800" fill="#a03048" text-anchor="middle">2PL 悲观锁</text>
+  <rect x="434" y="72" width="216" height="40" rx="9" fill="#eaf1fb" stroke="#c6d9f2"/>
+  <text x="542" y="97" font-size="12.5" font-weight="800" fill="#20375e" text-anchor="middle">MVCC / SI</text>
+  <rect x="656" y="72" width="216" height="40" rx="9" fill="#eaf6f0" stroke="#bfe3d1"/>
+  <text x="764" y="97" font-size="12.5" font-weight="800" fill="#2f6b4e" text-anchor="middle">OCC 乐观</text>
+  <rect x="878" y="72" width="212" height="40" rx="9" fill="#f4eefb" stroke="#dcc9ef"/>
+  <text x="984" y="97" font-size="12.5" font-weight="800" fill="#6f3ea8" text-anchor="middle">2PC / Percolator</text>
+
+  <!-- 行1 加锁时机 -->
+  <rect x="30" y="120" width="176" height="112" rx="9" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="46" y="150" font-size="11.5" font-weight="700" fill="#1d1d1f">① 加锁 / 版本时机</text>
+  <text x="46" y="172" font-size="9" fill="#8a97ab">何时对数据施加</text>
+  <text x="46" y="186" font-size="9" fill="#8a97ab">并发控制</text>
+  <rect x="212" y="120" width="216" height="112" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="228" y="146" font-size="10" font-weight="700" fill="#a03048">执行期即加锁</text>
+  <text x="228" y="166" font-size="9.5" fill="#4a4a4f">读加共享锁、写加排他锁；</text>
+  <text x="228" y="182" font-size="9.5" fill="#4a4a4f">增长期只加不放，收缩期</text>
+  <text x="228" y="198" font-size="9.5" fill="#4a4a4f">只放不加（两阶段）。</text>
+  <text x="228" y="218" font-size="9" fill="#8a97ab">先取锁再动数据</text>
+  <rect x="434" y="120" width="216" height="112" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="450" y="146" font-size="10" font-weight="700" fill="#20375e">写建新版本、读挑快照</text>
+  <text x="450" y="166" font-size="9.5" fill="#4a4a4f">写不覆盖旧值而追加带 ts</text>
+  <text x="450" y="182" font-size="9.5" fill="#4a4a4f">的新版本；读按 start-ts</text>
+  <text x="450" y="198" font-size="9.5" fill="#4a4a4f">选可见版本，无需读锁。</text>
+  <text x="450" y="218" font-size="9" fill="#8a97ab">写仍可能加写锁</text>
+  <rect x="656" y="120" width="216" height="112" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="672" y="146" font-size="10" font-weight="700" fill="#2f6b4e">全程不加锁</text>
+  <text x="672" y="166" font-size="9.5" fill="#4a4a4f">读记版本号入 read set、</text>
+  <text x="672" y="182" font-size="9.5" fill="#4a4a4f">写进本地缓冲；提交时才</text>
+  <text x="672" y="198" font-size="9.5" fill="#4a4a4f">进临界区验证。</text>
+  <text x="672" y="218" font-size="9" fill="#8a97ab">先改后验</text>
+  <rect x="878" y="120" width="212" height="112" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="894" y="146" font-size="10" font-weight="700" fill="#6f3ea8">Prewrite 逐 key 上锁</text>
+  <text x="894" y="166" font-size="9.5" fill="#4a4a4f">跨分片：每个写 key 上锁，</text>
+  <text x="894" y="182" font-size="9.5" fill="#4a4a4f">选一个 Primary 锁作</text>
+  <text x="894" y="198" font-size="9.5" fill="#4a4a4f">原子仲裁点。</text>
+  <text x="894" y="218" font-size="9" fill="#8a97ab">锁 + 版本混合</text>
+
+  <!-- 行2 读写是否互阻 -->
+  <rect x="30" y="236" width="176" height="96" rx="9" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="46" y="266" font-size="11.5" font-weight="700" fill="#1d1d1f">② 读写是否互阻</text>
+  <text x="46" y="286" font-size="9" fill="#8a97ab">读会不会挡写、</text>
+  <text x="46" y="300" font-size="9" fill="#8a97ab">写会不会挡读</text>
+  <rect x="212" y="236" width="216" height="96" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="228" y="262" font-size="10" font-weight="700" fill="#a03048">读写互阻</text>
+  <text x="228" y="282" font-size="9.5" fill="#4a4a4f">读锁挡写锁、写锁挡一切；</text>
+  <text x="228" y="298" font-size="9.5" fill="#4a4a4f">并发度受锁粒度限制。</text>
+  <rect x="434" y="236" width="216" height="96" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="450" y="262" font-size="10" font-weight="700" fill="#20375e">读写不互阻</text>
+  <text x="450" y="282" font-size="9.5" fill="#4a4a4f">读走快照、写建新版；二者</text>
+  <text x="450" y="298" font-size="9.5" fill="#4a4a4f">并行——这是 MVCC 的立身点。</text>
+  <rect x="656" y="236" width="216" height="96" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="672" y="262" font-size="10" font-weight="700" fill="#2f6b4e">执行期全不阻</text>
+  <text x="672" y="282" font-size="9.5" fill="#4a4a4f">读写都乐观进行，冲突推迟</text>
+  <text x="672" y="298" font-size="9.5" fill="#4a4a4f">到提交时才暴露。</text>
+  <rect x="878" y="236" width="212" height="96" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="894" y="262" font-size="10" font-weight="700" fill="#6f3ea8">跨分片锁 + 快照读</text>
+  <text x="894" y="282" font-size="9.5" fill="#4a4a4f">底层常配 MVCC：读快照，</text>
+  <text x="894" y="298" font-size="9.5" fill="#4a4a4f">写经 Prewrite 锁串行。</text>
+
+  <!-- 行3 冲突检测点 -->
+  <rect x="30" y="336" width="176" height="96" rx="9" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="46" y="366" font-size="11.5" font-weight="700" fill="#1d1d1f">③ 冲突检测点</text>
+  <text x="46" y="386" font-size="9" fill="#8a97ab">何时、如何发现</text>
+  <text x="46" y="400" font-size="9" fill="#8a97ab">写写 / 写偏冲突</text>
+  <rect x="212" y="336" width="216" height="96" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="228" y="362" font-size="10" font-weight="700" fill="#a03048">加锁时即挡 + 死锁检测</text>
+  <text x="228" y="382" font-size="9.5" fill="#4a4a4f">冲突表现为等锁；循环等待</text>
+  <text x="228" y="398" font-size="9.5" fill="#4a4a4f">靠等待图 / 超时检测中止。</text>
+  <rect x="434" y="336" width="216" height="96" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="450" y="362" font-size="10" font-weight="700" fill="#20375e">SI 有写偏 → SSI 兜底</text>
+  <text x="450" y="382" font-size="9.5" fill="#4a4a4f">纯 SI 不挡写偏；SSI 追踪</text>
+  <text x="450" y="398" font-size="9.5" fill="#4a4a4f">rw-反依赖危险结构中止一方。</text>
+  <rect x="656" y="336" width="216" height="96" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="672" y="362" font-size="10" font-weight="700" fill="#2f6b4e">提交时校验 read set</text>
+  <text x="672" y="382" font-size="9.5" fill="#4a4a4f">验证阶段逐 key 比版本号；</text>
+  <text x="672" y="398" font-size="9.5" fill="#4a4a4f">任一被改过则整事务 abort。</text>
+  <rect x="878" y="336" width="212" height="96" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="894" y="362" font-size="10" font-weight="700" fill="#6f3ea8">Prewrite 时探锁 / 探提交</text>
+  <text x="894" y="382" font-size="9.5" fill="#4a4a4f">遇已有锁或更新提交即回滚；</text>
+  <text x="894" y="398" font-size="9.5" fill="#4a4a4f">读者 lazy resolve 残留锁。</text>
+
+  <!-- 行4 中止代价 -->
+  <rect x="30" y="436" width="176" height="96" rx="9" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="46" y="466" font-size="11.5" font-weight="700" fill="#1d1d1f">④ 中止 / 适用场景</text>
+  <text x="46" y="486" font-size="9" fill="#8a97ab">冲突代价 +</text>
+  <text x="46" y="500" font-size="9" fill="#8a97ab">最优负载</text>
+  <rect x="212" y="436" width="216" height="96" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="228" y="462" font-size="10" font-weight="700" fill="#a03048">阻塞等待 · 高冲突稳</text>
+  <text x="228" y="482" font-size="9.5" fill="#4a4a4f">冲突不重试而是等，吞吐随</text>
+  <text x="228" y="498" font-size="9.5" fill="#4a4a4f">争用降；写多 / 高冲突首选。</text>
+  <rect x="434" y="436" width="216" height="96" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="450" y="462" font-size="10" font-weight="700" fill="#20375e">读多不受影响 · 需 GC</text>
+  <text x="450" y="482" font-size="9.5" fill="#4a4a4f">读密集最优；代价是旧版本</text>
+  <text x="450" y="498" font-size="9.5" fill="#4a4a4f">膨胀，需后台回收。</text>
+  <rect x="656" y="436" width="216" height="96" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="672" y="462" font-size="10" font-weight="700" fill="#2f6b4e">重试放大 · 低冲突最优</text>
+  <text x="672" y="482" font-size="9.5" fill="#4a4a4f">无锁无死锁；但冲突一高，</text>
+  <text x="672" y="498" font-size="9.5" fill="#4a4a4f">abort 重试浪费急剧放大。</text>
+  <rect x="878" y="436" width="212" height="96" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="894" y="462" font-size="10" font-weight="700" fill="#6f3ea8">故障不依赖协调者</text>
+  <text x="894" y="482" font-size="9.5" fill="#4a4a4f">Primary 一锤定音；协调者崩</text>
+  <text x="894" y="498" font-size="9.5" fill="#4a4a4f">溃也能 lazy 恢复。跨分片场景。</text>
+
+  <!-- 底部一句话 -->
+  <rect x="30" y="548" width="1060" height="72" rx="12" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="48" y="572" font-size="10.5" font-weight="700" fill="#1d1d1f">一句话</text>
+  <text x="110" y="572" font-size="10" fill="#4a4a4f"><tspan font-weight="700" fill="#a03048">2PL</tspan> 悲观、执行期加锁、高冲突稳但读写互阻；<tspan font-weight="700" fill="#20375e">MVCC/SI</tspan> 读写不互阻、读多最优、写偏需 SSI 补；<tspan font-weight="700" fill="#2f6b4e">OCC</tspan> 无锁乐观、低冲突最优、高冲突重试爆炸。</text>
+  <text x="110" y="592" font-size="10" fill="#4a4a4f"><tspan font-weight="700" fill="#6f3ea8">Percolator/2PC</tspan> 解跨分片原子提交，把协调者阻塞点下放成一个可探查的 Primary key。</text>
+  <text x="110" y="611" font-size="9" fill="#8a97ab">共同目标是可串行化 / 隔离；分歧本质是「冲突在执行期挡（悲观）还是提交期验（乐观）」× 「版本存不存」的四象限。</text>
+</svg>

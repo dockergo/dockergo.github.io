@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="450" viewBox="0 0 1020 450"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1020" height="450" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">Join 定序 · 基数估计驱动，规模决定精确 DP 还是贪心近似（optimizer/join_order/）</text>
+
+  <!-- 输入 -->
+  <rect x="30" y="52" width="300" height="150" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="48" y="76" font-size="12" font-weight="600" fill="#1d1d1f">① 构建查询图 QueryGraph</text>
+  <text x="48" y="98" font-size="9.5" fill="#494950">relation_manager 抽出参与 Join 的关系，</text>
+  <text x="48" y="114" font-size="9.5" fill="#494950">join_predicate 抽出连接条件为边。</text>
+  <rect x="60" y="128" width="70" height="30" rx="15" fill="#fff7e6" stroke="#f0dcae"/><text x="95" y="148" font-size="9" fill="#7a4d00" text-anchor="middle">sales</text>
+  <rect x="200" y="128" width="90" height="30" rx="15" fill="#fff7e6" stroke="#f0dcae"/><text x="245" y="148" font-size="9" fill="#7a4d00" text-anchor="middle">customers</text>
+  <line x1="130" y1="143" x2="200" y2="143" stroke="#c7c7cc" stroke-width="1.3"/>
+  <text x="150" y="138" font-size="8" fill="#86868b">cust_id</text>
+  <text x="48" y="184" font-size="9" fill="#86868b">query_graph_manager.cpp</text>
+
+  <!-- 基数估计 -->
+  <rect x="360" y="52" width="300" height="150" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="378" y="76" font-size="12" font-weight="600" fill="#1b2a4a">② 基数与代价估计</text>
+  <text x="378" y="100" font-size="9.5" fill="#5b7db1">CardinalityEstimator：用列统计估各中间</text>
+  <text x="378" y="116" font-size="9.5" fill="#5b7db1">结果的行数（cardinality_estimator.cpp）</text>
+  <text x="378" y="140" font-size="9.5" fill="#5b7db1">CostModel：把中间结果大小折成代价</text>
+  <text x="378" y="156" font-size="9.5" fill="#5b7db1">（cost_model.cpp）</text>
+  <text x="378" y="182" font-size="9" fill="#8fa9cf">"哪种顺序中间结果最小" = 目标</text>
+
+  <!-- 枚举 -->
+  <rect x="690" y="52" width="300" height="150" rx="14" fill="#eafaf1" stroke="#bce6cd" filter="url(#soft)"/>
+  <text x="708" y="76" font-size="12" font-weight="600" fill="#0f5132">③ PlanEnumerator 选序</text>
+  <text x="708" y="100" font-size="9.5" fill="#3f8f66">SolveJoinOrder（plan_enumerator.hpp:36）</text>
+  <text x="708" y="124" font-size="9.5" fill="#3f8f66">按关系数量二选一 →</text>
+  <text x="708" y="148" font-size="9" fill="#5aa06f">输出重排后的 Join 树给后续 pass</text>
+  <text x="708" y="182" font-size="9" fill="#86868b">SolveJoinOrderExactly / Approximately</text>
+
+  <line x1="330" y1="127" x2="360" y2="127" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+  <line x1="660" y1="127" x2="690" y2="127" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+
+  <!-- 两种策略 -->
+  <rect x="30" y="222" width="465" height="200" rx="14" fill="#f4eefb" stroke="#d9c9ef" filter="url(#soft)"/>
+  <text x="48" y="246" font-size="12" font-weight="600" fill="#3c1361">关系较少 → 精确 DP（SolveJoinOrderExactly :66）</text>
+  <text x="48" y="270" font-size="10" fill="#7a5aa8">动态规划枚举子集的最优连接，保证在搜索空间内</text>
+  <text x="48" y="288" font-size="10" fill="#7a5aa8">找到代价最小的 Join 顺序。</text>
+  <rect x="48" y="304" width="417" height="44" rx="9" fill="#ffffff" stroke="#d9c9ef"/>
+  <text x="256" y="326" font-size="9.5" fill="#3c1361" text-anchor="middle">最优，但复杂度随关系数指数增长</text>
+  <text x="256" y="341" font-size="8.5" fill="#7a5aa8" text-anchor="middle">故只在关系数不大时用</text>
+  <text x="48" y="374" font-size="9.5" fill="#a58fc9">适合大多数 OLAP 查询（Join 表数量有限）。</text>
+  <text x="48" y="398" font-size="9.5" fill="#a58fc9">DPHyp 类超图动态规划，处理复杂 Join 图。</text>
+
+  <rect x="525" y="222" width="465" height="200" rx="14" fill="#fff7e6" stroke="#f0dcae" filter="url(#soft)"/>
+  <text x="543" y="246" font-size="12" font-weight="600" fill="#7a4d00">关系很多 → 贪心近似（SolveJoinOrderApproximately :68）</text>
+  <text x="543" y="270" font-size="10" fill="#9a7328">当关系数超阈值，DP 搜索空间太大不可行，</text>
+  <text x="543" y="288" font-size="10" fill="#9a7328">改用贪心：每步选当前代价最小的连接合并。</text>
+  <rect x="543" y="304" width="417" height="44" rx="9" fill="#ffffff" stroke="#f0dcae"/>
+  <text x="751" y="326" font-size="9.5" fill="#7a4d00" text-anchor="middle">牺牲最优性换可行的规划时间</text>
+  <text x="751" y="341" font-size="8.5" fill="#9a7328" text-anchor="middle">避免优化本身成为瓶颈</text>
+  <text x="543" y="374" font-size="9.5" fill="#b8912e">大宽表星型/雪花多表 Join 时触发。</text>
+  <text x="543" y="398" font-size="9.5" fill="#b8912e">规划期可控，代价通常仍显著优于原始顺序。</text>
+</svg>

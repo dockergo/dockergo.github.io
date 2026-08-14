@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="400" viewBox="0 0 920 400" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+    <marker id="arg" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#1d8f3f"/></marker>
+    <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#c4341c"/></marker>
+  </defs>
+  <rect width="920" height="400" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">租约作 GC 根 · 标记-清除：从根出发标记可达，未标记的 blob/快照回收</text>
+
+  <!-- GC 根 -->
+  <rect x="30" y="60" width="220" height="200" rx="12" fill="#f6f8fc" stroke="#cfe0f2" filter="url(#soft)"/>
+  <text x="140" y="84" font-size="12" font-weight="600" fill="#5b7db1" text-anchor="middle">GC 根（可达性起点）</text>
+  <rect x="48" y="98" width="184" height="34" rx="7" fill="#fff" stroke="#cfe0f2"/>
+  <text x="60" y="119" font-size="10" fill="#1b2a4a">镜像对象（引用 config + 层）</text>
+  <rect x="48" y="140" width="184" height="34" rx="7" fill="#fff" stroke="#cfe0f2"/>
+  <text x="60" y="161" font-size="10" fill="#1b2a4a">容器（引用 rootfs 快照）</text>
+  <rect x="48" y="182" width="184" height="60" rx="7" fill="#fbf7ef" stroke="#ecdcbf"/>
+  <text x="60" y="202" font-size="10" font-weight="600" fill="#8a6d3b">租约 lease（临时根）</text>
+  <text x="60" y="220" font-size="9" fill="#b08535">多步操作期挂住中间物</text>
+  <text x="60" y="235" font-size="8.5" fill="#a1a1a6">lease.go:32 Manager · :36 AddResource</text>
+
+  <!-- 可达对象 -->
+  <rect x="330" y="60" width="250" height="200" rx="12" fill="#f5faf6" stroke="#cfe6d2" filter="url(#soft)"/>
+  <text x="455" y="84" font-size="12" font-weight="600" fill="#1d8f3f" text-anchor="middle">标记：可达 → 保留</text>
+  <rect x="348" y="98" width="214" height="30" rx="6" fill="#fff" stroke="#cfe6d2"/>
+  <text x="360" y="118" font-size="9.5" fill="#1d8f3f">blob（blobs/&lt;algo&gt;/&lt;digest&gt;）</text>
+  <rect x="348" y="136" width="214" height="30" rx="6" fill="#fff" stroke="#cfe6d2"/>
+  <text x="360" y="156" font-size="9.5" fill="#1d8f3f">Committed 快照（parent 链）</text>
+  <text x="348" y="192" font-size="9.5" fill="#4a8a5c">"引用" = 一个摘要字符串</text>
+  <text x="348" y="210" font-size="9.5" fill="#4a8a5c">→ 无需扫描/比对内容本身</text>
+  <text x="348" y="234" font-size="9" fill="#a1a1a6">内容寻址让标记极简</text>
+
+  <!-- 清除 -->
+  <rect x="660" y="60" width="230" height="200" rx="12" fill="#fdf1ef" stroke="#f0c4bc" filter="url(#soft)"/>
+  <text x="775" y="84" font-size="12" font-weight="600" fill="#c4341c" text-anchor="middle">清除：未标记 → 回收</text>
+  <rect x="678" y="98" width="194" height="34" rx="7" fill="#fff" stroke="#f0c4bc"/>
+  <text x="690" y="119" font-size="9.5" fill="#c4341c">无引用 blob（删镜像后）</text>
+  <rect x="678" y="140" width="194" height="34" rx="7" fill="#fff" stroke="#f0c4bc"/>
+  <text x="690" y="161" font-size="9.5" fill="#c4341c">悬垂快照 / 残留 ingest</text>
+  <text x="678" y="200" font-size="9.5" fill="#c0641a">plugins/gc 独立插件</text>
+  <text x="678" y="220" font-size="9.5" fill="#c0641a">删镜像 = 删引用，非立即释放磁盘</text>
+  <text x="678" y="238" font-size="8.5" fill="#a1a1a6">GC 扫描后才回收</text>
+
+  <path d="M250 150 L330 150" fill="none" stroke="#1d8f3f" stroke-width="1.8" marker-end="url(#arg)"/>
+  <text x="258" y="142" font-size="9" fill="#1d8f3f">标记可达</text>
+  <path d="M580 150 L660 150" fill="none" stroke="#c4341c" stroke-width="1.8" marker-end="url(#arr)"/>
+  <text x="588" y="142" font-size="9" fill="#c4341c">其余清除</text>
+
+  <!-- 租约生命周期 -->
+  <rect x="30" y="290" width="860" height="66" rx="11" fill="#fbf7ef" stroke="#ecdcbf"/>
+  <text x="46" y="312" font-size="11.5" font-weight="600" fill="#8a6d3b">租约防误删：拉取/解包这类多步操作 → 先建 lease 挂住中间 blob/快照 → 操作完成、镜像对象成新根 → 释放 lease</text>
+  <text x="46" y="334" font-size="9.5" fill="#b08535">没有租约，GC 可能在操作未完成时把"还没被镜像对象引用"的中间物当垃圾回收 · 元数据库 core/metadata/db.go:120 NewDB 用 bbolt 记账全部引用</text>
+  <text x="46" y="350" font-size="8.5" fill="#a1a1a6">content store 只管字节；"谁引用了哪个摘要"记在 bbolt + 租约里</text>
+</svg>

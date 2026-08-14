@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="420" viewBox="0 0 1020 420"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1020" height="420" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">配置继承与合并 · location 继承 server 继承 http（merge_loc_conf，core_module.c:39）</text>
+
+  <!-- 继承链 -->
+  <rect x="30" y="56" width="440" height="320" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="48" y="80" font-size="12.5" font-weight="600" fill="#1d1d1f">指令值沿嵌套向内继承，可就近覆盖</text>
+
+  <rect x="60" y="96" width="380" height="70" rx="11" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="76" y="118" font-size="10.5" font-weight="600" fill="#1b2a4a">http { gzip on; proxy_read_timeout 60s; }</text>
+  <text x="76" y="138" font-size="9" fill="#5b7db1">顶层默认：对所有 server/location 生效</text>
+  <text x="76" y="156" font-size="9" fill="#5b7db1">除非被下层覆盖</text>
+
+  <rect x="90" y="182" width="350" height="70" rx="11" fill="#eafaf1" stroke="#bce6cd"/>
+  <text x="106" y="204" font-size="10.5" font-weight="600" fill="#0f5132">server { proxy_read_timeout 30s; }</text>
+  <text x="106" y="224" font-size="9" fill="#3f8f66">覆盖 http 的 60s → 本 server 内为 30s</text>
+  <text x="106" y="242" font-size="9" fill="#3f8f66">gzip 未写 → 继承 http 的 on</text>
+
+  <rect x="120" y="268" width="320" height="90" rx="11" fill="#f4eefb" stroke="#d9c9ef"/>
+  <text x="136" y="290" font-size="10.5" font-weight="600" fill="#3c1361">location /api/ { gzip off; }</text>
+  <text x="136" y="310" font-size="9" fill="#7a5aa8">gzip 覆盖为 off（仅本 location）</text>
+  <text x="136" y="328" font-size="9" fill="#7a5aa8">proxy_read_timeout 未写 → 继承 server 的 30s</text>
+  <text x="136" y="346" font-size="9" fill="#7a5aa8">最终该 location：gzip off + timeout 30s</text>
+
+  <line x1="250" y1="166" x2="250" y2="182" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="280" y1="252" x2="280" y2="268" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+
+  <!-- 合并机制 -->
+  <rect x="490" y="56" width="500" height="320" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="508" y="80" font-size="12.5" font-weight="600" fill="#1b2a4a">合并机制（merge 阶段，解析后）</text>
+  <rect x="508" y="96" width="464" height="56" rx="10" fill="#ffffff" stroke="#bcd0ec"/>
+  <text x="524" y="118" font-size="10" font-weight="600" fill="#1b2a4a">create_loc_conf：每层先建"未设"标记的配置结构</text>
+  <text x="524" y="138" font-size="9" fill="#5b7db1">字段初值为 UNSET，表示"这层没显式配"</text>
+  <rect x="508" y="160" width="464" height="56" rx="10" fill="#eafaf1" stroke="#bce6cd"/>
+  <text x="524" y="182" font-size="10" font-weight="600" fill="#0f5132">merge_loc_conf：自外向内合并</text>
+  <text x="524" y="202" font-size="9" fill="#3f8f66">本层 UNSET → 取父层值（继承）；已设 → 保留（覆盖）</text>
+  <rect x="508" y="224" width="464" height="56" rx="10" fill="#f6f6f8" stroke="#e2e2e7"/>
+  <text x="524" y="246" font-size="10" font-weight="600" fill="#494950">ngx_conf_merge_* 宏族</text>
+  <text x="524" y="266" font-size="9" fill="#6a6a70">merge_value / merge_size_value / merge_msec_value…带默认值</text>
+  <rect x="508" y="288" width="464" height="72" rx="10" fill="#fff7e6" stroke="#f0dcae"/>
+  <text x="524" y="310" font-size="10" font-weight="600" fill="#7a4d00">意义</text>
+  <text x="524" y="330" font-size="9" fill="#9a7328">• 少写重复：顶层配一次，下层按需覆盖</text>
+  <text x="524" y="348" font-size="9" fill="#9a7328">• 但并非所有指令都继承——数组类（add_header 等）遵循"就近唯一"或替换语义</text>
+
+  <line x1="470" y1="216" x2="490" y2="216" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+</svg>

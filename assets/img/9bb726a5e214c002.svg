@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="540" viewBox="0 0 1060 540" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs><filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+  <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker></defs>
+  <rect width="1060" height="540" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">BlockManager 架构：每节点一个 + driver 全局块目录</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">BlockManager.scala:182（每 driver/executor 各一）· BlockManagerMaster.scala:34 · MasterEndpoint:51</text>
+  <!-- driver -->
+  <rect x="360" y="76" width="340" height="96" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="530" y="100" font-size="11.5" font-weight="700" fill="#1b2a4a" text-anchor="middle">Driver</text>
+  <rect x="380" y="110" width="300" height="48" rx="9" fill="#e9f1fb" stroke="#c4d8f0"/>
+  <text x="530" y="130" font-size="10" font-weight="600" fill="#1b2a4a" text-anchor="middle">BlockManagerMaster（全局目录）</text>
+  <text x="530" y="148" font-size="8" fill="#5b7db1" text-anchor="middle">记录"哪个 block 在哪个 BlockManager 上"</text>
+  <!-- executors -->
+  <g text-anchor="middle">
+    <rect x="40" y="220" width="300" height="150" rx="13" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+    <text x="190" y="244" font-size="11" font-weight="700" fill="#5a3410">Executor 1</text>
+    <rect x="60" y="256" width="260" height="40" rx="8" fill="#fff" stroke="#efdcb4"/><text x="190" y="281" font-size="9" font-weight="600" fill="#5a3410">BlockManager</text>
+    <rect x="60" y="304" width="124" height="52" rx="7" fill="#eafaf1" stroke="#bfe0cd"/><text x="122" y="325" font-size="8" font-weight="600" fill="#12402a">MemoryStore</text><text x="122" y="340" font-size="7" fill="#4c8567">内存块</text>
+    <rect x="196" y="304" width="124" height="52" rx="7" fill="#f2f2f4" stroke="#dcdce0"/><text x="258" y="325" font-size="8" font-weight="600" fill="#48484c">DiskStore</text><text x="258" y="340" font-size="7" fill="#8a8a8f">磁盘块</text>
+    <rect x="380" y="220" width="300" height="150" rx="13" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+    <text x="530" y="244" font-size="11" font-weight="700" fill="#5a3410">Executor 2</text>
+    <rect x="400" y="256" width="260" height="40" rx="8" fill="#fff" stroke="#efdcb4"/><text x="530" y="281" font-size="9" font-weight="600" fill="#5a3410">BlockManager</text>
+    <rect x="400" y="304" width="124" height="52" rx="7" fill="#eafaf1" stroke="#bfe0cd"/><text x="462" y="325" font-size="8" font-weight="600" fill="#12402a">MemoryStore</text><text x="462" y="340" font-size="7" fill="#4c8567">内存块</text>
+    <rect x="536" y="304" width="124" height="52" rx="7" fill="#f2f2f4" stroke="#dcdce0"/><text x="598" y="325" font-size="8" font-weight="600" fill="#48484c">DiskStore</text><text x="598" y="340" font-size="7" fill="#8a8a8f">磁盘块</text>
+    <rect x="720" y="220" width="300" height="150" rx="13" fill="#fdf6ea" stroke="#efdcb4" filter="url(#soft)"/>
+    <text x="870" y="244" font-size="11" font-weight="700" fill="#5a3410">Executor N …</text>
+    <rect x="740" y="256" width="260" height="40" rx="8" fill="#fff" stroke="#efdcb4"/><text x="870" y="281" font-size="9" font-weight="600" fill="#5a3410">BlockManager</text>
+    <rect x="740" y="304" width="124" height="52" rx="7" fill="#eafaf1" stroke="#bfe0cd"/><text x="802" y="325" font-size="8" font-weight="600" fill="#12402a">MemoryStore</text>
+    <rect x="876" y="304" width="124" height="52" rx="7" fill="#f2f2f4" stroke="#dcdce0"/><text x="938" y="325" font-size="8" font-weight="600" fill="#48484c">DiskStore</text>
+  </g>
+  <g stroke="#c7c7cc" stroke-width="1.3" fill="none" stroke-dasharray="4 3">
+    <path d="M470,172 L190,220" marker-end="url(#ar)"/><line x1="530" y1="172" x2="530" y2="220" marker-end="url(#ar)"/><path d="M590,172 L870,220" marker-end="url(#ar)"/>
+  </g>
+  <text x="712" y="200" font-size="8" fill="#a1a1a6">注册/汇报块位置</text>
+  <!-- peer fetch -->
+  <path d="M340,330 L380,330" stroke="#5b7db1" stroke-width="1.4" fill="none" marker-end="url(#ar)"/>
+  <path d="M680,330 L720,330" stroke="#5b7db1" stroke-width="1.4" fill="none" marker-end="url(#ar)"/>
+  <text x="530" y="392" font-size="8.5" fill="#5b7db1" text-anchor="middle">executor 间点对点拉远程 block（getRemoteBlock:1152）</text>
+  <rect x="40" y="410" width="980" height="76" rx="12" fill="#f7f7f9" stroke="#e6e6ea"/>
+  <text x="60" y="434" font-size="11" font-weight="700" fill="#1d1d1f">一句话</text>
+  <text x="60" y="456" font-size="10" fill="#4b4b50">BlockManager 跑在每个节点（driver+每 executor），本地用 MemoryStore/DiskStore 存块；driver 侧 BlockManagerMaster</text>
+  <text x="60" y="474" font-size="10" fill="#4b4b50">是全局位置目录——各节点注册块位置，取远程块时先问它去哪拉。统一管 cache 分区 / shuffle / broadcast 三类块。</text>
+</svg>

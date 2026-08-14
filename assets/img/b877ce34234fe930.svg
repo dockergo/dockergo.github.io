@@ -1,0 +1,112 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1160" height="700" viewBox="0 0 1160 700" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+  </defs>
+  <rect width="1160" height="700" fill="#fbfbfd"/>
+
+  <text x="30" y="32" font-size="15" font-weight="700" fill="#1d1d1f">限流 vs 背压 · 三个真实项目在「超限之后怎么办」上的系统性差异 —— 都在解「上游快于下游」，分歧在拒绝还是减速、信号怎么传、谁承担代价</text>
+  <text x="30" y="53" font-size="10.5" fill="#6e6e73">nginx / client-go 站在边缘、按「请求」或「item」独立判定；Flink 站在数据流内部、用跨网络的显式信号做全链路协调</text>
+
+  <!-- 列头 -->
+  <rect x="30" y="72" width="170" height="40" rx="9" fill="#eef0f3" stroke="#e4e7ec"/>
+  <text x="115" y="97" font-size="12" font-weight="700" fill="#4a4a4f" text-anchor="middle">对比维度</text>
+  <rect x="218" y="72" width="296" height="40" rx="9" fill="#fbf3e2" stroke="#ecd6a8"/>
+  <text x="366" y="97" font-size="12.5" font-weight="800" fill="#8a6417" text-anchor="middle">nginx limit_req</text>
+  <rect x="532" y="72" width="296" height="40" rx="9" fill="#eaf1fb" stroke="#c6d9f2"/>
+  <text x="680" y="97" font-size="12.5" font-weight="800" fill="#20375e" text-anchor="middle">k8s client-go workqueue</text>
+  <rect x="846" y="72" width="296" height="40" rx="9" fill="#e4f4f4" stroke="#bfe1e1"/>
+  <text x="994" y="97" font-size="12.5" font-weight="800" fill="#1d6b6e" text-anchor="middle">Flink credit-based 反压</text>
+
+  <!-- 行1 触发姿态 -->
+  <rect x="30" y="120" width="170" height="122" rx="9" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="46" y="150" font-size="11.5" font-weight="700" fill="#1d1d1f">① 触发姿态</text>
+  <text x="46" y="172" font-size="9" fill="#8a97ab">超限之后的第一</text>
+  <text x="46" y="186" font-size="9" fill="#8a97ab">反应：拒绝还是</text>
+  <text x="46" y="200" font-size="9" fill="#8a97ab">减速</text>
+  <rect x="218" y="120" width="296" height="122" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="234" y="146" font-size="10" font-weight="700" fill="#8a6417">拒绝 / 延迟在边缘</text>
+  <text x="234" y="166" font-size="9.5" fill="#4a4a4f">请求级判定；超出容忍即拒绝</text>
+  <text x="234" y="182" font-size="9.5" fill="#4a4a4f">（如 503）或短暂延迟排队，</text>
+  <text x="234" y="198" font-size="9.5" fill="#4a4a4f">不深入系统内部状态。</text>
+  <text x="234" y="218" font-size="9" fill="#b0854a">网关一挡，后端无感知</text>
+  <rect x="532" y="120" width="296" height="122" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="548" y="146" font-size="10" font-weight="700" fill="#20375e">延后重试，不拒绝</text>
+  <text x="548" y="166" font-size="9.5" fill="#4a4a4f">item 级判定；超限不丢弃，是把</text>
+  <text x="548" y="182" font-size="9.5" fill="#4a4a4f">该 item 重新入队的时间往后推</text>
+  <text x="548" y="198" font-size="9.5" fill="#4a4a4f">（退避 + 令牌桶取更严格一方）。</text>
+  <text x="548" y="218" font-size="9" fill="#5a7099">队列里其他 item 不受影响</text>
+  <rect x="846" y="120" width="296" height="122" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="862" y="146" font-size="10" font-weight="700" fill="#1d6b6e">内部减速，无拒绝动作</text>
+  <text x="862" y="166" font-size="9.5" fill="#4a4a4f">流级；没有「拒绝」这个概念——</text>
+  <text x="862" y="182" font-size="9.5" fill="#4a4a4f">下游没有空间时，上游主动停发，</text>
+  <text x="862" y="198" font-size="9.5" fill="#4a4a4f">等 credit 到来再继续。</text>
+  <text x="862" y="218" font-size="9" fill="#4a8a8c">压力向上游逐级传导，不在原地消化</text>
+
+  <!-- 行2 信号方向 -->
+  <rect x="30" y="250" width="170" height="106" rx="9" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="46" y="278" font-size="11.5" font-weight="700" fill="#1d1d1f">② 信号方向</text>
+  <text x="46" y="300" font-size="9" fill="#8a97ab">判定依据的状态</text>
+  <text x="46" y="314" font-size="9" fill="#8a97ab">在哪、怎么传递</text>
+  <rect x="218" y="250" width="296" height="106" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="234" y="276" font-size="10" font-weight="700" fill="#8a6417">单点本地状态</text>
+  <text x="234" y="296" font-size="9.5" fill="#4a4a4f">按 key 的 `excess` 计数存在共享</text>
+  <text x="234" y="312" font-size="9.5" fill="#4a4a4f">内存区，当场判定，无跨进程通信。</text>
+  <text x="234" y="332" font-size="9" fill="#b0854a">不涉及网络信号</text>
+  <rect x="532" y="250" width="296" height="106" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="548" y="276" font-size="10" font-weight="700" fill="#20375e">单进程内部状态</text>
+  <text x="548" y="296" font-size="9.5" fill="#4a4a4f">限速判定发生在 controller 自己的</text>
+  <text x="548" y="312" font-size="9.5" fill="#4a4a4f">进程内（workqueue 内部），不跨网络。</text>
+  <text x="548" y="332" font-size="9" fill="#5a7099">也不涉及网络信号</text>
+  <rect x="846" y="250" width="296" height="106" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="862" y="276" font-size="10" font-weight="700" fill="#1d6b6e">显式跨网络反向信号</text>
+  <text x="862" y="296" font-size="9.5" fill="#4a4a4f">credit / backlog 是消费者 → 生产者</text>
+  <text x="862" y="312" font-size="9.5" fill="#4a4a4f">的网络消息（`AddCredit`），跨 task 边界。</text>
+  <text x="862" y="332" font-size="9" fill="#4a8a8c">这是三者中唯一的跨节点信号</text>
+
+  <!-- 行3 对外可见后果 -->
+  <rect x="30" y="366" width="170" height="106" rx="9" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="46" y="394" font-size="11.5" font-weight="700" fill="#1d1d1f">③ 可见后果</text>
+  <text x="46" y="416" font-size="9" fill="#8a97ab">客户端/上游会</text>
+  <text x="46" y="430" font-size="9" fill="#8a97ab">观察到什么</text>
+  <rect x="218" y="366" width="296" height="106" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="234" y="392" font-size="10" font-weight="700" fill="#8a6417">可能失败或明显变慢</text>
+  <text x="234" y="412" font-size="9.5" fill="#4a4a4f">客户端可能拿到拒绝响应，或感觉</text>
+  <text x="234" y="428" font-size="9.5" fill="#4a4a4f">到排队延迟；失败需自己重试。</text>
+  <text x="234" y="448" font-size="9" fill="#b0854a">代价由请求发起方承担</text>
+  <rect x="532" y="366" width="296" height="106" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="548" y="392" font-size="10" font-weight="700" fill="#20375e">item 处理延后，不丢</text>
+  <text x="548" y="412" font-size="9.5" fill="#4a4a4f">item 不丢弃，但 reconcile 它的时间</text>
+  <text x="548" y="428" font-size="9.5" fill="#4a4a4f">点被推后；期间队列表现仍「正常」。</text>
+  <text x="548" y="448" font-size="9" fill="#5a7099">代价由该 item 的处理时延承担</text>
+  <rect x="846" y="366" width="296" height="106" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="862" y="392" font-size="10" font-weight="700" fill="#1d6b6e">全链路吞吐下降，不丢</text>
+  <text x="862" y="412" font-size="9.5" fill="#4a4a4f">没有任何显式错误或拒绝，只是上游</text>
+  <text x="862" y="428" font-size="9.5" fill="#4a4a4f">算子被动降速，作业整体变慢。</text>
+  <text x="862" y="448" font-size="9" fill="#4a8a8c">代价由整条流水线共同承担</text>
+
+  <!-- 行4 典型场景 -->
+  <rect x="30" y="482" width="170" height="92" rx="9" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="46" y="510" font-size="11.5" font-weight="700" fill="#1d1d1f">④ 典型场景</text>
+  <text x="46" y="532" font-size="9" fill="#8a97ab">最适合部署</text>
+  <text x="46" y="546" font-size="9" fill="#8a97ab">的位置</text>
+  <rect x="218" y="482" width="296" height="92" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="234" y="510" font-size="10" font-weight="700" fill="#8a6417">API 网关 / 多租户限速</text>
+  <text x="234" y="530" font-size="9.5" fill="#4a4a4f">按客户端 IP 或 key 保护后端，</text>
+  <text x="234" y="546" font-size="9.5" fill="#4a4a4f">流量单位是「独立请求」。</text>
+  <rect x="532" y="482" width="296" height="92" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="548" y="510" font-size="10" font-weight="700" fill="#20375e">控制器与外部系统交互重试</text>
+  <text x="548" y="530" font-size="9.5" fill="#4a4a4f">k8s controller 调用 apiserver / 云</text>
+  <text x="548" y="546" font-size="9.5" fill="#4a4a4f">API 出错后的重试节奏控制。</text>
+  <rect x="846" y="482" width="296" height="92" rx="9" fill="#fff" stroke="#e4e7ec"/>
+  <text x="862" y="510" font-size="10" font-weight="700" fill="#1d6b6e">流处理算子间速率匹配</text>
+  <text x="862" y="530" font-size="9.5" fill="#4a4a4f">流量单位是「必须保序处理完的</text>
+  <text x="862" y="546" font-size="9.5" fill="#4a4a4f">数据流」，天然丢不起。</text>
+
+  <!-- 底部一句话总结 -->
+  <rect x="30" y="590" width="1100" height="96" rx="12" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="48" y="614" font-size="10.5" font-weight="700" fill="#1d1d1f">一句话</text>
+  <text x="110" y="614" font-size="10" fill="#4a4a4f"><tspan font-weight="700" fill="#8a6417">nginx</tspan> 与 <tspan font-weight="700" fill="#20375e">client-go</tspan> 都选择在边缘挡住——超限就拒绝或延后，系统内部处理逻辑不被打扰；<tspan font-weight="700" fill="#1d6b6e">Flink</tspan> 把「处理不过来」变成一条反向传导的网络信号，让上游自己降速，全链路无拒绝、无丢弃。</text>
+  <text x="110" y="634" font-size="10" fill="#4a4a4f">但 nginx 与 client-go 的「挡」不是一回事：nginx 是无状态的请求级拒绝/延迟；client-go 是有状态的 item 级延后，且默认是「指数退避 + 令牌桶取更严格一方」的组合，不是单一令牌桶。</text>
+  <text x="110" y="654" font-size="9" fill="#8a97ab">诚实边界：nginx `excess` 的精确公式与 `rate`/`burst`/`nodelay` 默认值本轮未源码级核实，仅保留概念层描述；client-go 的双策略组合已源码级确认。</text>
+  <text x="110" y="672" font-size="9" fill="#8a97ab">共同目标是让「快的一方」别压垮「慢的一方」；分歧本质是「谁来承担减速的代价」——发起方（拒绝/重试）还是全链路（一起变慢）。</text>
+</svg>

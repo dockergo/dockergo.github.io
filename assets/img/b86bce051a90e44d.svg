@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="500" viewBox="0 0 1040 500" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1040" height="500" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Trino 无持久元数据 · schema/统计每查询穿透现取</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">与存算一体引擎的持久元数据服务根本不同:集群自身只有内存态,数据的真相在外部源</text>
+
+  <!--穿透 flow -->
+  <g font-size="8.8" text-anchor="middle">
+    <rect x="30" y="76" width="200" height="70" rx="10" fill="#eef3fb" stroke="#bcd0ec"/><text x="130" y="98" font-size="9.5" font-weight="700" fill="#1b2a4a">分析阶段</text><text x="130" y="118" fill="#5b7db1">StatementAnalyzer</text><text x="130" y="134" fill="#5b7db1">visitTable</text>
+    <rect x="270" y="76" width="200" height="70" rx="10" fill="#f3f7fc" stroke="#cfe0f2"/><text x="370" y="98" font-size="9.5" font-weight="700" fill="#274a78">MetadataManager</text><text x="370" y="118" fill="#5b7db1">getTableHandle</text><text x="370" y="134" fill="#5b7db1">getTableStatistics</text>
+    <rect x="510" y="76" width="200" height="70" rx="10" fill="#fff7e6" stroke="#e8cf9a"/><text x="610" y="98" font-size="9.5" font-weight="700" fill="#5a3410">ConnectorMetadata</text><text x="610" y="118" fill="#93762e">连接器实现</text><text x="610" y="134" fill="#93762e">实时问外部源</text>
+    <rect x="750" y="76" width="260" height="70" rx="10" fill="#f5faf6" stroke="#cfe6d5"/><text x="880" y="98" font-size="9.5" font-weight="700" fill="#2c5a3a">外部源(真相)</text><text x="880" y="118" fill="#2f6f4f">Hive metastore / 库 information_schema</text><text x="880" y="134" fill="#2f6f4f">Iceberg catalog / manifest</text>
+  </g>
+  <line x1="230" y1="111" x2="270" y2="111" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+  <line x1="470" y1="111" x2="510" y2="111" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+  <line x1="710" y1="111" x2="750" y2="111" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+  <text x="520" y="166" text-anchor="middle" font-size="8.5" fill="#a1a1a6">每次查询都走这条穿透链——永远看到最新 schema,连接器多会缓存缓解往返开销</text>
+
+  <!-- what engine holds -->
+  <rect x="30" y="184" width="490" height="180" rx="13" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="46" y="206" font-size="11" font-weight="700" fill="#1b2a4a">集群自身只持有内存态</text>
+  <rect x="50" y="220" width="450" height="34" rx="7" fill="#f3f7fc" stroke="#cfe0f2"/><text x="64" y="241" font-size="8.8" fill="#274a78">Session：会话属性(时区、系统属性、catalog 角色…)</text>
+  <rect x="50" y="260" width="450" height="34" rx="7" fill="#f3f7fc" stroke="#cfe0f2"/><text x="64" y="281" font-size="8.8" fill="#274a78">QueryStateMachine：查询状态机(QUEUED→…→FINISHED)</text>
+  <rect x="50" y="300" width="450" height="34" rx="7" fill="#f3f7fc" stroke="#cfe0f2"/><text x="64" y="321" font-size="8.8" fill="#274a78">事务上下文：连接器级 TransactionHandle(查询/语句范围)</text>
+  <text x="46" y="352" font-size="8.5" fill="#b1483a">全部随查询结束回收——无一落盘、无常驻元数据服务</text>
+
+  <!-- vs 存算一体 -->
+  <rect x="540" y="184" width="470" height="180" rx="13" fill="#faf4fb" stroke="#e2d2ee"/>
+  <text x="556" y="206" font-size="11" font-weight="700" fill="#5a3d78">对比：存算一体引擎的持久元数据</text>
+  <text x="556" y="228" font-size="8.8" fill="#7a5a95">· Doris：FE + BDB-JE + EditLog,全局持久状态、多数派选主</text>
+  <text x="556" y="246" font-size="8.8" fill="#7a5a95">· ClickHouse：clickhouse-keeper(Raft),复制元数据/DDL 队列</text>
+  <text x="556" y="264" font-size="8.8" fill="#7a5a95">· 它们必须持久化 schema/版本/副本状态 → 需要共识保一致</text>
+  <rect x="556" y="278" width="438" height="76" rx="9" fill="#fff" stroke="#e2d2ee"/>
+  <text x="570" y="298" font-size="9" font-weight="700" fill="#5a3d78">Trino 为何不需要</text>
+  <text x="570" y="317" font-size="8.5" fill="#7a5a95">数据不归它管 → schema 不归它存 → 无需持久化 → 无需共识</text>
+  <text x="570" y="335" font-size="8.5" fill="#7a5a95">元数据的"真相"永远在外部源,Trino 只是查询期临时读取者</text>
+  <text x="570" y="350" font-size="8" fill="#93762e">代价换来的是"一套 SQL 查遍所有源"的灵活</text>
+
+  <!-- tradeoff -->
+  <rect x="30" y="384" width="980" height="96" rx="13" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="46" y="406" font-size="11" font-weight="700" fill="#1d1d1f">权衡</text>
+  <text x="46" y="428" font-size="9" fill="#6e6e73">· 好处：永远最新 schema、无元数据同步/一致性问题、加数据源只需加 catalog 配置、无元数据服务运维</text>
+  <text x="46" y="446" font-size="9" fill="#6e6e73">· 代价：每查询有元数据往返(list 表/列/统计)——连接器缓存 + coordinator 侧缓存缓解;冷元数据首查稍慢</text>
+  <text x="46" y="466" font-size="9" fill="#b1483a">· 关键认知：Trino 的"元数据"是动词(去取),不是名词(存着的东西)——这是理解它无状态的核心</text>
+</svg>

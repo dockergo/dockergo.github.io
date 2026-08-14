@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="470" viewBox="0 0 1020 470"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1020" height="470" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">存储数据层次 · 表如何一层层落到 256KB 的块（列存）</text>
+
+  <rect x="30" y="52" width="960" height="52" rx="11" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="510" y="83" font-size="12" font-weight="600" fill="#1b2a4a" text-anchor="middle">DataTable（一张表的运行时句柄）→ RowGroupCollection（该表所有行组）</text>
+
+  <rect x="30" y="120" width="960" height="90" rx="12" fill="#fff7e6" stroke="#f0dcae"/>
+  <text x="48" y="144" font-size="11.5" font-weight="600" fill="#7a4d00">RowGroup（水平切分，每组 122880 行 = 60 个向量）</text>
+  <rect x="48" y="156" width="220" height="44" rx="8" fill="#ffffff" stroke="#f0dcae"/><text x="158" y="182" font-size="10" fill="#7a4d00" text-anchor="middle">RowGroup 0（行 0 – 122879）</text>
+  <rect x="278" y="156" width="220" height="44" rx="8" fill="#ffffff" stroke="#f0dcae"/><text x="388" y="182" font-size="10" fill="#7a4d00" text-anchor="middle">RowGroup 1</text>
+  <rect x="508" y="156" width="220" height="44" rx="8" fill="#ffffff" stroke="#f0dcae"/><text x="618" y="182" font-size="10" fill="#7a4d00" text-anchor="middle">RowGroup 2</text>
+  <rect x="738" y="156" width="234" height="44" rx="8" fill="#ffffff" stroke="#f0dcae"/><text x="855" y="182" font-size="10" fill="#7a4d00" text-anchor="middle">… 每组带列统计(min/max)</text>
+
+  <rect x="30" y="226" width="960" height="96" rx="12" fill="#f4eefb" stroke="#d9c9ef"/>
+  <text x="48" y="250" font-size="11.5" font-weight="600" fill="#3c1361">RowGroup 内按列拆：ColumnData（一列在该组的数据）</text>
+  <rect x="48" y="262" width="290" height="48" rx="8" fill="#ffffff" stroke="#d9c9ef"/><text x="193" y="284" font-size="10" fill="#3c1361" text-anchor="middle">列 region → ColumnData</text><text x="193" y="300" font-size="8.5" fill="#7a5aa8" text-anchor="middle">纵向只取本列 → 列存优势</text>
+  <rect x="352" y="262" width="290" height="48" rx="8" fill="#ffffff" stroke="#d9c9ef"/><text x="497" y="284" font-size="10" fill="#3c1361" text-anchor="middle">列 amount → ColumnData</text>
+  <rect x="656" y="262" width="316" height="48" rx="8" fill="#ffffff" stroke="#d9c9ef"/><text x="814" y="284" font-size="10" fill="#3c1361" text-anchor="middle">列 year → ColumnData …</text>
+
+  <rect x="30" y="338" width="620" height="112" rx="12" fill="#eafaf1" stroke="#bce6cd"/>
+  <text x="48" y="362" font-size="11.5" font-weight="600" fill="#0f5132">ColumnData 内切成 ColumnSegment（连续值段）</text>
+  <rect x="48" y="374" width="180" height="60" rx="8" fill="#ffffff" stroke="#bce6cd"/><text x="138" y="398" font-size="9.5" fill="#0f5132" text-anchor="middle">Segment A</text><text x="138" y="416" font-size="8.5" fill="#3f8f66" text-anchor="middle">选定压缩编码</text>
+  <rect x="238" y="374" width="180" height="60" rx="8" fill="#ffffff" stroke="#bce6cd"/><text x="328" y="398" font-size="9.5" fill="#0f5132" text-anchor="middle">Segment B</text><text x="328" y="416" font-size="8.5" fill="#3f8f66" text-anchor="middle">各段可用不同编码</text>
+  <rect x="428" y="374" width="204" height="60" rx="8" fill="#ffffff" stroke="#bce6cd"/><text x="530" y="398" font-size="9.5" fill="#0f5132" text-anchor="middle">Segment …</text><text x="530" y="416" font-size="8.5" fill="#3f8f66" text-anchor="middle">段是压缩与扫描的单位</text>
+
+  <rect x="668" y="338" width="322" height="112" rx="12" fill="#ffffff" stroke="#e2e2e7"/>
+  <text x="686" y="362" font-size="11.5" font-weight="600" fill="#1d1d1f">最终落到 Block（256KB）</text>
+  <text x="686" y="384" font-size="9.5" fill="#494950">Segment 数据存进定长块（DEFAULT_BLOCK_ALLOC_SIZE</text>
+  <text x="686" y="400" font-size="9.5" fill="#494950">= 262144，storage_info.hpp:33）；</text>
+  <text x="686" y="420" font-size="9.5" fill="#494950">Block 是磁盘 I/O 与 Buffer 换页的最小单位。</text>
+  <text x="686" y="438" font-size="8.5" fill="#86868b">大值（如长字符串）另走 overflow 块</text>
+
+  <line x1="510" y1="104" x2="510" y2="120" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="388" y1="210" x2="388" y2="226" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="193" y1="310" x2="193" y2="338" stroke="#c7c7cc" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="640" y1="394" x2="668" y2="394" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+</svg>

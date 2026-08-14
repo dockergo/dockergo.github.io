@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="540" viewBox="0 0 1080 540" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="540" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">RocksDB MVCC · SequenceNumber + 内部键实现多版本</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">多版本靠 seq 而非锁:内部键=用户键+seq+类型,同键多版本按 seq 降序,读在快照 seq 下取可见最新</text>
+
+  <!-- internal key structure -->
+  <rect x="30" y="70" width="500" height="180" rx="13" fill="#faf4fb" stroke="#e2d2ee"/>
+  <text x="46" y="92" font-size="11" font-weight="700" fill="#5a3d78">内部键(InternalKey)结构</text>
+  <g font-size="8.5" text-anchor="middle">
+    <rect x="46" y="104" width="230" height="40" rx="7" fill="#f4eefb" stroke="#d9c7ec"/><text x="161" y="122" font-weight="600" fill="#3d2a5a">用户键 user_key</text><text x="161" y="137" fill="#7a5a95">你 Put 的 key</text>
+    <rect x="284" y="104" width="140" height="40" rx="7" fill="#faf4fb" stroke="#e2d2ee"/><text x="354" y="122" font-weight="600" fill="#5a3d78">seq(7 字节)</text><text x="354" y="137" fill="#7a5a95">全局递增写序号</text>
+    <rect x="432" y="104" width="84" height="40" rx="7" fill="#fff" stroke="#e2d2ee"/><text x="474" y="122" font-weight="600" fill="#5a3d78">类型(1B)</text><text x="474" y="137" fill="#7a5a95">Value/Delete…</text>
+  </g>
+  <text x="46" y="170" font-size="8.5" fill="#7a5a95">排序:先按 user_key 升序,同 user_key 按 seq <tspan font-weight="700">降序</tspan>(新版本排前)</text>
+  <rect x="46" y="182" width="470" height="60" rx="8" fill="#fff" stroke="#e2d2ee"/><text x="60" y="202" font-size="8.5" font-weight="600" fill="#5a3d78">类型 ValueType(db/dbformat.h)</text><text x="60" y="220" font-size="8" fill="#7a5a95">kTypeValue(值)· kTypeDeletion(墓碑)· kTypeMerge(操作数)</text><text x="60" y="236" font-size="8" fill="#7a5a95">kTypeSingleDeletion · kTypeRangeDeletion …</text>
+
+  <!-- versions example -->
+  <rect x="550" y="70" width="500" height="180" rx="13" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="566" y="92" font-size="11" font-weight="700" fill="#1b2a4a">多版本示例(同 key "k")</text>
+  <g font-size="8.5" text-anchor="middle">
+    <rect x="566" y="104" width="470" height="26" rx="6" fill="#f3f7fc" stroke="#cfe0f2"/><text x="801" y="121" fill="#274a78">k · seq=12 · Delete(墓碑)  ← 最新</text>
+    <rect x="566" y="134" width="470" height="26" rx="6" fill="#eef3fb" stroke="#bcd0ec"/><text x="801" y="151" fill="#1b2a4a">k · seq=9 · Value "v3"</text>
+    <rect x="566" y="164" width="470" height="26" rx="6" fill="#eef3fb" stroke="#bcd0ec"/><text x="801" y="181" fill="#1b2a4a">k · seq=5 · Value "v2"</text>
+    <rect x="566" y="194" width="470" height="26" rx="6" fill="#eef3fb" stroke="#bcd0ec"/><text x="801" y="211" fill="#1b2a4a">k · seq=2 · Value "v1"  ← 最老</text>
+  </g>
+  <text x="566" y="240" font-size="8" fill="#5b7db1">物理上可能散落在 MemTable 与多层 SST,但逻辑上按此序归并</text>
+
+  <!-- read at snapshot -->
+  <rect x="30" y="266" width="1020" height="150" rx="13" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="46" y="288" font-size="11" font-weight="700" fill="#12402a">读在某快照 seq 下取版本(MVCC 的本质)</text>
+  <g font-size="8.8">
+    <rect x="46" y="300" width="490" height="46" rx="8" fill="#eafaf1" stroke="#bfe0cd"/><text x="60" y="320" font-weight="600" fill="#12402a">读快照 seq=10:</text><text x="60" y="338" fill="#2f6f4f">seq=12 &gt; 10 不可见(跳过)→ 命中 seq=9 "v3" → 返回 "v3"</text>
+    <rect x="546" y="300" width="490" height="46" rx="8" fill="#eafaf1" stroke="#bfe0cd"/><text x="560" y="320" font-weight="600" fill="#12402a">读快照 seq=13(或无快照,读最新):</text><text x="560" y="338" fill="#2f6f4f">命中 seq=12 墓碑 → 返回 NotFound</text>
+  </g>
+  <text x="46" y="368" font-size="9" fill="#2f6f4f">· 同一份数据,不同快照看到不同版本 → 这就是多版本并发控制:读不阻塞写、每个读有自己一致的时间点</text>
+  <text x="46" y="386" font-size="9" fill="#2f6f4f">· seq 由 VersionSet 全局维护、随每次写递增、随 MANIFEST 持久化(见版本主线)</text>
+  <text x="46" y="404" font-size="8.5" fill="#b1483a">· 旧版本(seq=5/2)何时能删?Compaction 时,若低于最老存活快照且被更新版本覆盖 → 丢弃回收(见 Compaction)</text>
+
+  <!-- notes -->
+  <rect x="30" y="432" width="1020" height="72" rx="13" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="46" y="454" font-size="11" font-weight="700" fill="#1d1d1f">要点</text>
+  <text x="46" y="476" font-size="9" fill="#6e6e73">· MVCC 不用锁:多版本 + 快照 seq 让读写天然并发;这是 LSM"追加不覆盖"的直接红利(旧版本本就还在,顺手用作 MVCC)</text>
+  <text x="46" y="494" font-size="8.5" fill="#b1483a">· 归属:seq 在【版本】VersionSet 维护;快照应用在【读取路径】;归并去版本在【Compaction】;类型/内部键格式是本主线基础</text>
+</svg>

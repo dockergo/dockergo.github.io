@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="430" viewBox="0 0 1020 430"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1020" height="430" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">内存池 · 按生命周期分配、一次性释放（ngx_palloc.c）</text>
+
+  <!-- pool 分配 -->
+  <rect x="30" y="56" width="500" height="220" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="48" y="80" font-size="12.5" font-weight="600" fill="#1d1d1f">一个 pool 内的分配策略</text>
+  <rect x="48" y="96" width="464" height="60" rx="10" fill="#eafaf1" stroke="#bce6cd"/>
+  <text x="64" y="118" font-size="10.5" font-weight="600" fill="#0f5132">小块（≤ max）：ngx_palloc 指针 bump</text>
+  <text x="64" y="138" font-size="9" fill="#3f8f66">在预分配的内存块里移动指针切一段，几乎零开销；</text>
+  <text x="64" y="152" font-size="9" fill="#3f8f66">max = min(size, NGX_MAX_ALLOC_FROM_POOL=pagesize-1，palloc.h:17）</text>
+  <rect x="48" y="164" width="464" height="52" rx="10" fill="#fff7e6" stroke="#f0dcae"/>
+  <text x="64" y="186" font-size="10.5" font-weight="600" fill="#7a4d00">大块（&gt; max）：直接 malloc，挂 large 链</text>
+  <text x="64" y="204" font-size="9" fill="#9a7328">单独管理，pool 销毁时一并 free</text>
+  <rect x="48" y="224" width="464" height="44" rx="10" fill="#f4eefb" stroke="#d9c9ef"/>
+  <text x="64" y="246" font-size="10.5" font-weight="600" fill="#3c1361">cleanup 回调：ngx_pool_cleanup_add</text>
+  <text x="64" y="262" font-size="9" fill="#7a5aa8">注册"销毁时要做的事"（关 fd / 删临时文件）</text>
+
+  <!-- 生命周期 -->
+  <rect x="550" y="56" width="440" height="220" rx="14" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="568" y="80" font-size="12.5" font-weight="600" fill="#1b2a4a">按对象生命周期开池</text>
+  <rect x="568" y="96" width="404" height="52" rx="10" fill="#ffffff" stroke="#bcd0ec"/><text x="770" y="118" font-size="10" font-weight="600" fill="#1b2a4a" text-anchor="middle">连接池：连接建立时创建</text><text x="770" y="136" font-size="8.5" fill="#5b7db1" text-anchor="middle">connection_pool_size</text>
+  <rect x="568" y="156" width="404" height="52" rx="10" fill="#ffffff" stroke="#bcd0ec"/><text x="770" y="178" font-size="10" font-weight="600" fill="#1b2a4a" text-anchor="middle">请求池：请求开始时创建</text><text x="770" y="196" font-size="8.5" fill="#5b7db1" text-anchor="middle">request_pool_size · 请求结束整体销毁</text>
+  <rect x="568" y="216" width="404" height="52" rx="10" fill="#eafaf1" stroke="#bce6cd"/><text x="770" y="238" font-size="10" font-weight="600" fill="#0f5132" text-anchor="middle">关键收益：无需逐个 free</text><text x="770" y="256" font-size="8.5" fill="#3f8f66" text-anchor="middle">请求处理中随手 palloc，结束一次 destroy_pool 全回收</text>
+
+  <!-- 意义 -->
+  <rect x="30" y="292" width="960" height="120" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="48" y="316" font-size="12.5" font-weight="600" fill="#1d1d1f">为什么这样设计</text>
+  <text x="48" y="340" font-size="10.5" fill="#494950">• <tspan font-weight="600">杜绝内存泄漏</tspan>：请求相关的所有分配挂在请求池，请求一结束整池销毁，忘记 free 也不漏。</text>
+  <text x="48" y="362" font-size="10.5" fill="#494950">• <tspan font-weight="600">快</tspan>：小块分配是指针移动，无 malloc/free 系统调用开销；契合"每请求大量小分配"的模式。</text>
+  <text x="48" y="384" font-size="10.5" fill="#494950">• <tspan font-weight="600">局部性好</tspan>：同一请求的数据聚在相邻内存，cache 友好。ngx_reset_pool 可复用池（如 keepalive）。</text>
+  <text x="48" y="404" font-size="9.5" fill="#86868b">create_pool:19 · palloc:123 · pnalloc:136(不对齐) · destroy_pool:47 · reset_pool:100</text>
+</svg>

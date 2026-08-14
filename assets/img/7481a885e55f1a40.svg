@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="440" viewBox="0 0 960 440"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="960" height="440" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">ZooKeeper 对单客户端的三条顺序保证 · "感知变化 → 重读拿新值"因此安全</text>
+
+  <!-- ① 写全局有序 -->
+  <rect x="30" y="56" width="290" height="250" rx="14" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="48" y="80" font-size="11.5" font-weight="600" fill="#1b2a4a">① 写全局有序</text>
+  <text x="48" y="100" font-size="9" fill="#5b7db1">所有写按 zxid 线性化</text>
+  <line x1="60" y1="140" x2="300" y2="140" stroke="#bcd0ec" stroke-width="1.4" marker-end="url(#ar)"/>
+  <rect x="70" y="126" width="42" height="28" rx="6" fill="#ffffff" stroke="#bcd0ec"/><text x="91" y="144" font-size="8" fill="#1b2a4a" text-anchor="middle">z1</text>
+  <rect x="140" y="126" width="42" height="28" rx="6" fill="#ffffff" stroke="#bcd0ec"/><text x="161" y="144" font-size="8" fill="#1b2a4a" text-anchor="middle">z2</text>
+  <rect x="210" y="126" width="42" height="28" rx="6" fill="#ffffff" stroke="#bcd0ec"/><text x="231" y="144" font-size="8" fill="#1b2a4a" text-anchor="middle">z3</text>
+  <text x="48" y="192" font-size="9" fill="#5b7db1">· 所有客户端看到相同的写顺序</text>
+  <text x="48" y="214" font-size="9" fill="#5b7db1">· 与它们连到哪台服务器无关</text>
+  <text x="48" y="242" font-size="8.5" fill="#86868b">由唯一 Leader 定序 + 过半提交保证；</text>
+  <text x="48" y="258" font-size="8.5" fill="#86868b">这是"线性化写"的对外表现。</text>
+  <text x="48" y="286" font-size="8.5" fill="#86868b">读默认不经共识，故可能看到略旧值。</text>
+
+  <!-- ② 客户端 FIFO -->
+  <rect x="336" y="56" width="290" height="250" rx="14" fill="#eafaf1" stroke="#bce6cd"/>
+  <text x="352" y="80" font-size="11.5" font-weight="600" fill="#0f5132">② 客户端 FIFO</text>
+  <text x="352" y="100" font-size="9" fill="#2f6f4f">同一 client 的请求按发送序执行</text>
+  <rect x="352" y="120" width="90" height="34" rx="8" fill="#ffffff" stroke="#bce6cd"/><text x="397" y="141" font-size="8.5" fill="#0f5132" text-anchor="middle">client</text>
+  <rect x="500" y="112" width="110" height="22" rx="6" fill="#ffffff" stroke="#bce6cd"/><text x="555" y="127" font-size="8" fill="#0f5132" text-anchor="middle">op A（先发）</text>
+  <rect x="500" y="140" width="110" height="22" rx="6" fill="#ffffff" stroke="#bce6cd"/><text x="555" y="155" font-size="8" fill="#0f5132" text-anchor="middle">op B（后发）</text>
+  <line x1="442" y1="130" x2="500" y2="123" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="442" y1="140" x2="500" y2="151" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <text x="352" y="198" font-size="9" fill="#2f6f4f">· 服务端按发送顺序处理 A 再 B</text>
+  <text x="352" y="220" font-size="9" fill="#2f6f4f">· 断连重连到另一台后仍保持</text>
+  <text x="352" y="248" font-size="8.5" fill="#86868b">CommitProcessor 对齐"本地排序"与</text>
+  <text x="352" y="264" font-size="8.5" fill="#86868b">"ZAB 提交序"，保证单会话不乱序。</text>
+  <text x="352" y="290" font-size="8.5" fill="#86868b">故可安全地"读 stat → 按 version CAS 写"。</text>
+
+  <!-- ③ watch 与数据视图有序 -->
+  <rect x="642" y="56" width="288" height="250" rx="14" fill="#f4eefb" stroke="#d9c9ef"/>
+  <text x="658" y="80" font-size="11.5" font-weight="600" fill="#3c1361">③ watch 与视图有序</text>
+  <text x="658" y="100" font-size="9" fill="#7a3fb0">先收 watch 事件，再看到其后的读结果</text>
+  <rect x="658" y="118" width="256" height="30" rx="7" fill="#ffffff" stroke="#d9c9ef"/><text x="786" y="137" font-size="8" fill="#3c1361" text-anchor="middle">写 @zxid=z → 触发 watch(z)</text>
+  <rect x="658" y="154" width="256" height="30" rx="7" fill="#ffffff" stroke="#d9c9ef"/><text x="786" y="173" font-size="8" fill="#3c1361" text-anchor="middle">客户端先收到该事件</text>
+  <rect x="658" y="190" width="256" height="30" rx="7" fill="#ffffff" stroke="#d9c9ef"/><text x="786" y="209" font-size="8" fill="#3c1361" text-anchor="middle">再重读 → 看到 ≥ z 的新值</text>
+  <line x1="786" y1="148" x2="786" y2="154" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="786" y1="184" x2="786" y2="190" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <text x="658" y="244" font-size="8.5" fill="#7a3fb0">不会出现"读到新值却漏了 watch" →</text>
+  <text x="658" y="260" font-size="8.5" fill="#7a3fb0">"感知变化 → 重读拿新值"是安全的。</text>
+  <text x="658" y="288" font-size="8.5" fill="#86868b">同源于同一 zxid 全序。</text>
+
+  <!-- 底部 -->
+  <rect x="30" y="322" width="900" height="102" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="48" y="346" font-size="11.5" font-weight="600" fill="#1d1d1f">边界与工程封装</text>
+  <text x="48" y="370" font-size="9.5" fill="#494950">· 标准 watch 一次性：从触发到重挂之间的变更会漏（gap）——连续监听用 PERSISTENT/RECURSIVE 或业务层版本号兜底。</text>
+  <text x="48" y="390" font-size="9.5" fill="#494950">· 编程有同步 API（ZooKeeper 类）与异步回调；生产普遍用 Apache Curator 封装重连 / 锁 / 选主 / 路径缓存。</text>
+  <text x="48" y="410" font-size="9.5" fill="#86868b">· 顺序保证针对"单客户端视角"；跨客户端的相对时序不保证（只保证同一 zxid 全序对所有人一致）。</text>
+</svg>

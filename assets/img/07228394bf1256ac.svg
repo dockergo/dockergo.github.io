@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="340" viewBox="0 0 900 340" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="g1" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="g1x" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#8a5cae"/></marker>
+  </defs>
+  <rect width="900" height="340" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">binlog 组提交 · FLUSH → SYNC → COMMIT 三阶段合并 fsync</text>
+  <text x="30" y="48" font-size="10.5" fill="#6e6e73">并发事务排进阶段队列，每阶段 leader 批量处理，一次 fsync 摊薄给一批事务</text>
+
+  <!-- 并发事务入队 -->
+  <g text-anchor="middle" font-size="8.5">
+    <rect x="40" y="90" width="70" height="30" rx="6" fill="#faf6fb" stroke="#e4cdea"/><text x="75" y="110" fill="#8944ab">事务T1</text>
+    <rect x="40" y="128" width="70" height="30" rx="6" fill="#faf6fb" stroke="#e4cdea"/><text x="75" y="148" fill="#8944ab">事务T2</text>
+    <rect x="40" y="166" width="70" height="30" rx="6" fill="#faf6fb" stroke="#e4cdea"/><text x="75" y="186" fill="#8944ab">事务T3</text>
+  </g>
+  <text x="75" y="216" font-size="8.5" fill="#6e6e73" text-anchor="middle">enroll_for 入队</text>
+
+  <!-- 三阶段 -->
+  <g text-anchor="middle">
+    <rect x="170" y="100" width="200" height="86" rx="11" fill="#f4f7fc" stroke="#cfe0f2" filter="url(#g1)"/>
+    <text x="270" y="126" font-size="11" font-weight="700" fill="#5b7db1">① FLUSH 阶段</text><text x="270" y="146" font-size="8.5" fill="#6e6e73">批量把各事务 binlog</text><text x="270" y="162" font-size="8.5" fill="#6e6e73">写入 binlog 文件缓存</text><text x="270" y="179" font-size="7.5" fill="#9aa8bd">flush_cache_to_file</text>
+
+    <rect x="390" y="100" width="200" height="86" rx="11" fill="#fbf7ef" stroke="#ecdcbf" filter="url(#g1)"/>
+    <text x="490" y="126" font-size="11" font-weight="700" fill="#8a6d3b">② SYNC 阶段</text><text x="490" y="146" font-size="8.5" fill="#b08535">一次 fsync 落盘</text><text x="490" y="162" font-size="8.5" fill="#b08535">多事务共享（关键提吞吐）</text><text x="490" y="179" font-size="7.5" fill="#c3ab7e">sync_binlog_file `:9224`</text>
+
+    <rect x="610" y="100" width="200" height="86" rx="11" fill="#eef7f1" stroke="#8fcaa8" filter="url(#g1)"/>
+    <text x="710" y="126" font-size="11" font-weight="700" fill="#1c7a4d">③ COMMIT 阶段</text><text x="710" y="146" font-size="8.5" fill="#3c7a58">按序通知引擎 commit</text><text x="710" y="162" font-size="8.5" fill="#3c7a58">写 redo(commit)</text><text x="710" y="179" font-size="7.5" fill="#6ba489">process_commit_stage_queue</text>
+  </g>
+  <g stroke="#8a5cae" stroke-width="1.6" marker-end="url(#g1x)">
+    <line x1="110" y1="140" x2="170" y2="140"/><line x1="370" y1="143" x2="390" y2="143"/><line x1="590" y1="143" x2="610" y2="143"/>
+  </g>
+
+  <!-- 效果对比 -->
+  <rect x="40" y="230" width="820" height="72" rx="11" fill="#f6f6f8" stroke="#e2e2e7" filter="url(#g1)"/>
+  <text x="58" y="252" font-size="11" font-weight="700" fill="#1d1d1f">为什么要组提交</text>
+  <text x="58" y="272" font-size="9" fill="#6e6e73">无组提交：N 个事务 = N 次 fsync（磁盘 fsync 是瓶颈）→ 吞吐低</text>
+  <text x="58" y="290" font-size="9" fill="#1c7a4d">有组提交：一批事务共享 1 次 fsync → 吞吐随并发提升，且保持提交顺序一致（供复制）</text>
+
+  <text x="450" y="326" font-size="8.5" fill="#8a94a6" text-anchor="middle">锚点：ordered_commit `sql/binlog.cc:9520` · enroll_for `:2123` · process_commit_stage_queue `:9013` · sync_binlog_file `:9224`</text>
+</svg>

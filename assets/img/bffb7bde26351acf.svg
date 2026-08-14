@@ -1,0 +1,114 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="640" viewBox="0 0 1120 640" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="aG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+    <marker id="aA" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#c99a3a"/></marker>
+    <marker id="aR" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#c4562f"/></marker>
+    <marker id="aBk" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#8a8a8f"/></marker>
+  </defs>
+  <rect width="1120" height="640" fill="#fbfbfd"/>
+
+  <text x="30" y="32" font-size="15" font-weight="700" fill="#1d1d1f">图解点 ③ cgroup High/Max 水位线与 OOM 触发状态机 · 用量越过一道道水位，回收压力逐级升级，兜底才动 OOM</text>
+  <text x="30" y="53" font-size="10.5" fill="#6e6e73">mem.high 软限（超了节流并加压回收）→ mem.max 硬限（超了阻塞分配 + 强回收）→ 回收仍不够 → 触发 OOM killer 选进程杀掉；回收见效则回落</text>
+
+  <line x1="30" y1="80" x2="54" y2="80" stroke="#2f9e6e" stroke-width="2" marker-end="url(#aG)"/>
+  <text x="60" y="84" font-size="10" fill="#3a3a3c">用量上升（分配）</text>
+  <line x1="220" y1="80" x2="244" y2="80" stroke="#c99a3a" stroke-width="2" stroke-dasharray="5 3" marker-end="url(#aA)"/>
+  <text x="250" y="84" font-size="10" fill="#3a3a3c">越过水位 → 升级回收</text>
+  <line x1="452" y1="80" x2="476" y2="80" stroke="#4a7fd0" stroke-width="2" stroke-dasharray="4 3" marker-end="url(#aBk)"/>
+  <text x="482" y="84" font-size="10" fill="#3a3a3c">回收见效 → 回落到低水位</text>
+  <line x1="700" y1="80" x2="724" y2="80" stroke="#c4562f" stroke-width="2" marker-end="url(#aR)"/>
+  <text x="730" y="84" font-size="10" fill="#3a3a3c">回收失败 → OOM 兜底</text>
+
+  <!-- 左：水位标尺 -->
+  <rect x="30" y="112" width="150" height="500" rx="12" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="105" y="136" font-size="11" font-weight="700" fill="#1d1d1f" text-anchor="middle">内存用量标尺</text>
+  <!-- 竖条 -->
+  <rect x="86" y="152" width="38" height="440" rx="8" fill="#ffffff" stroke="#d9dde4"/>
+  <!-- 分段填充 -->
+  <rect x="86" y="452" width="38" height="140" rx="8" fill="#e7f4ec"/>
+  <rect x="86" y="322" width="38" height="130" fill="#fbf3e2"/>
+  <rect x="86" y="212" width="38" height="110" fill="#fdecea"/>
+  <rect x="86" y="152" width="38" height="60" rx="8" fill="#f7d9d1"/>
+  <!-- 水位刻度线 -->
+  <line x1="80" y1="322" x2="130" y2="322" stroke="#c99a3a" stroke-width="2"/>
+  <text x="105" y="316" font-size="8" fill="#8a6417" text-anchor="middle">high</text>
+  <line x1="80" y1="212" x2="130" y2="212" stroke="#b23b30" stroke-width="2"/>
+  <text x="105" y="206" font-size="8" fill="#b23b30" text-anchor="middle">max</text>
+  <text x="105" y="580" font-size="8" fill="#2f6b4e" text-anchor="middle">低水位</text>
+  <text x="105" y="180" font-size="8" fill="#b23b30" text-anchor="middle">触顶区</text>
+
+  <!-- 状态机：4 个状态纵向排列 -->
+  <!-- 状态1 正常 -->
+  <rect x="220" y="130" width="330" height="96" rx="13" fill="#eef7f2" stroke="#c9e6d7" filter="url(#soft)"/>
+  <text x="240" y="156" font-size="12.5" font-weight="700" fill="#2f6b4e">状态 A · 正常（用量 &lt; high）</text>
+  <text x="240" y="180" font-size="9.5" fill="#2f6b4e">分配畅通，无额外回收压力</text>
+  <text x="240" y="200" font-size="9.5" fill="#2f6b4e">后台回收按常规节奏进行</text>
+  <text x="240" y="218" font-size="8.5" fill="#5a9078">稳态：绝大多数时间待在这里</text>
+
+  <!-- 状态2 软限节流 -->
+  <rect x="220" y="258" width="330" height="110" rx="13" fill="#fbf3e2" stroke="#ecd6a8" filter="url(#soft)"/>
+  <text x="240" y="284" font-size="12.5" font-weight="700" fill="#8a6417">状态 B · 软限节流（≥ mem.high）</text>
+  <text x="240" y="308" font-size="9.5" fill="#7a5a1a">越过 high：进程被节流（throttle）</text>
+  <text x="240" y="328" font-size="9.5" fill="#7a5a1a">内核加压回收：换出 / 丢缓存页</text>
+  <text x="240" y="348" font-size="9.5" fill="#7a5a1a">不杀进程，给系统「降下来」的机会</text>
+  <text x="240" y="364" font-size="8.5" fill="#a98a3a">软限：可短暂超过，但会被持续施压</text>
+
+  <!-- 状态3 硬限阻塞 -->
+  <rect x="220" y="400" width="330" height="110" rx="13" fill="#fdecea" stroke="#f3c9c3" filter="url(#soft)"/>
+  <text x="240" y="426" font-size="12.5" font-weight="700" fill="#b23b30">状态 C · 硬限阻塞（触 mem.max）</text>
+  <text x="240" y="450" font-size="9.5" fill="#9a4038">触顶：新分配被阻塞 / 拒绝</text>
+  <text x="240" y="470" font-size="9.5" fill="#9a4038">同步强制回收，尽力腾出空间</text>
+  <text x="240" y="490" font-size="9.5" fill="#9a4038">回收成功 → 分配放行，回落</text>
+  <text x="240" y="506" font-size="8.5" fill="#c98a82">硬限：不可逾越的上界</text>
+
+  <!-- 状态4 OOM -->
+  <rect x="220" y="542" width="330" height="76" rx="13" fill="#f7d9d1" stroke="#e0a595" filter="url(#soft)"/>
+  <text x="240" y="568" font-size="12.5" font-weight="700" fill="#8a2318">状态 D · OOM killer（回收无果）</text>
+  <text x="240" y="590" font-size="9.5" fill="#8a2318">按评分选一个进程杀掉，释放内存</text>
+  <text x="240" y="608" font-size="8.5" fill="#a5564a">最后手段：宁可牺牲一个，保住整组不崩</text>
+
+  <!-- 状态间转移箭头 -->
+  <!-- A → B (升) -->
+  <line x1="385" y1="226" x2="385" y2="256" stroke="#c99a3a" stroke-width="2" stroke-dasharray="5 3" marker-end="url(#aA)"/>
+  <text x="392" y="246" font-size="8.5" fill="#8a6417">越 high</text>
+  <!-- B → C (升) -->
+  <line x1="385" y1="368" x2="385" y2="398" stroke="#c99a3a" stroke-width="2" stroke-dasharray="5 3" marker-end="url(#aA)"/>
+  <text x="392" y="388" font-size="8.5" fill="#8a6417">压不住，触 max</text>
+  <!-- C → D (升, OOM) -->
+  <line x1="385" y1="510" x2="385" y2="540" stroke="#c4562f" stroke-width="2.2" marker-end="url(#aR)"/>
+  <text x="392" y="530" font-size="8.5" fill="#c4562f">回收失败</text>
+  <!-- 回落：B → A -->
+  <path d="M520 258 C 560 240, 560 208, 522 200" fill="none" stroke="#4a7fd0" stroke-width="1.8" stroke-dasharray="4 3" marker-end="url(#aBk)"/>
+  <text x="556" y="232" font-size="8" fill="#2f5c98">回落</text>
+  <!-- 回落：C → B -->
+  <path d="M520 400 C 560 384, 560 352, 522 344" fill="none" stroke="#4a7fd0" stroke-width="1.8" stroke-dasharray="4 3" marker-end="url(#aBk)"/>
+  <text x="556" y="376" font-size="8" fill="#2f5c98">回收见效</text>
+
+  <!-- 右：机理要点 -->
+  <rect x="580" y="130" width="510" height="220" rx="13" fill="#ffffff" stroke="#d9dde4" filter="url(#soft)"/>
+  <text x="600" y="156" font-size="12" font-weight="700" fill="#1d1d1f">两道水位为什么这样分工</text>
+  <text x="600" y="182" font-size="9.5" fill="#4a4a4f"><tspan font-weight="700" fill="#8a6417">mem.high（软）</tspan> = 早期预警线：超过就<tspan font-weight="700">节流 + 主动回收</tspan>，</text>
+  <text x="616" y="200" font-size="9.5" fill="#4a4a4f">目标是把用量「柔性地」压回去，避免直接撞硬限</text>
+  <text x="600" y="226" font-size="9.5" fill="#4a4a4f"><tspan font-weight="700" fill="#b23b30">mem.max（硬）</tspan> = 绝对上界：触顶<tspan font-weight="700">阻塞分配</tspan>并强回收，</text>
+  <text x="616" y="244" font-size="9.5" fill="#4a4a4f">保证一组进程绝不会占用超过配额的内存</text>
+  <text x="600" y="270" font-size="9.5" fill="#4a4a4f">分级的价值：<tspan font-weight="700">先软后硬、先回收后杀</tspan>——大多数压力在</text>
+  <text x="616" y="288" font-size="9.5" fill="#4a4a4f">软限区就被回收化解，OOM 只是极端兜底</text>
+  <text x="600" y="314" font-size="9.5" fill="#4a4a4f">隔离效果：某组失控只在<tspan font-weight="700">自己的笼子里</tspan>触发回收 / OOM，</text>
+  <text x="616" y="332" font-size="9.5" fill="#4a4a4f">不会拖垮同机的其他组</text>
+
+  <!-- 右下：回收手段 -->
+  <rect x="580" y="366" width="510" height="180" rx="13" fill="#f6f7f9" stroke="#e4e7ec"/>
+  <text x="600" y="392" font-size="12" font-weight="700" fill="#1d1d1f">「回收」具体在做什么</text>
+  <text x="600" y="416" font-size="9.5" fill="#4a4a4f">· 丢弃干净的文件页缓存（可从磁盘重读，代价小）</text>
+  <text x="600" y="438" font-size="9.5" fill="#4a4a4f">· 把匿名脏页换出到 swap（若开启）</text>
+  <text x="600" y="460" font-size="9.5" fill="#4a4a4f">· 收缩各类可回收的内核缓存（如 slab 可回收部分）</text>
+  <text x="600" y="482" font-size="9.5" fill="#4a4a4f">· 回收量足够 → 用量回落 → 退回低水位状态</text>
+  <text x="600" y="510" font-size="9" fill="#8a97ab">状态机不断在「上升越水位 / 回收后回落」之间往复，</text>
+  <text x="600" y="528" font-size="9" fill="#8a97ab">OOM 是这条链彻底失败时的最终吸收态</text>
+
+  <!-- 右下角提示 -->
+  <text x="1076" y="574" font-size="9.5" fill="#8a2318" text-anchor="end">软 → 硬 → OOM：一条单向升级、可随回收回落的状态链</text>
+  <line x1="580" y1="560" x2="1090" y2="560" stroke="#eeeef2" stroke-width="1"/>
+  <text x="580" y="576" font-size="9.5" fill="#a5401f">升级由「用量 vs 水位」驱动 · 回落由「回收成效」驱动</text>
+</svg>

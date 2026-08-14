@@ -1,0 +1,114 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="480" viewBox="0 0 960 480" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="960" height="480" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">两个物理形态 · 编译期（离线多进程）vs 运行期（单进程 M×P×G）</text>
+  <text x="30" y="48" font-size="11" fill="#6e6e73">同一个程序，两种截然不同的物理运行形态：编译是可缓存的离线多进程流水；运行是单进程内三者动态编织　go1.26.4</text>
+
+  <!-- ============ LEFT: compile-time (blue container) ============ -->
+  <rect x="24" y="62" width="452" height="400" rx="14" fill="#f4f7fc" stroke="#d5e0f0"/>
+  <text x="44" y="86" font-size="13" font-weight="600" fill="#1b2a4a">编译期形态 · go build 驱动</text>
+  <text x="44" y="103" font-size="9.5" fill="#5b7db1">离线 · 多进程 · 可缓存（$GOCACHE）· 结束即退出</text>
+
+  <!-- go build driver -->
+  <rect x="44" y="116" width="412" height="46" rx="10" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="58" y="138" font-size="12" font-weight="600" fill="#1b2a4a">go build · 构建驱动</text>
+  <text x="58" y="154" font-size="9" fill="#5b7db1">MVS 解析依赖版本 → 构造 Action 图 → 调度并行编译</text>
+  <rect x="352" y="126" width="94" height="26" rx="8" fill="#ffffff" stroke="#cfe0f2"/>
+  <text x="399" y="143" font-size="9.5" fill="#1b2a4a" text-anchor="middle">MVS 版本选择</text>
+  <line x1="250" y1="162" x2="250" y2="178" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- Action graph: parallel per-package compile processes -->
+  <rect x="44" y="180" width="412" height="150" rx="11" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="58" y="201" font-size="11" font-weight="600" fill="#1d1d1f">Action 图 · 每包一个独立 compile 进程（并行）</text>
+  <rect x="58" y="212" width="118" height="50" rx="9" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="117" y="232" font-size="10" font-weight="600" fill="#1b2a4a" text-anchor="middle">compile pkg A</text>
+  <text x="117" y="248" font-size="8.5" fill="#5b7db1" text-anchor="middle">进程 · 独立</text>
+  <rect x="192" y="212" width="118" height="50" rx="9" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="251" y="232" font-size="10" font-weight="600" fill="#1b2a4a" text-anchor="middle">compile pkg B</text>
+  <text x="251" y="248" font-size="8.5" fill="#5b7db1" text-anchor="middle">进程 · 独立</text>
+  <rect x="326" y="212" width="118" height="50" rx="9" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="385" y="232" font-size="10" font-weight="600" fill="#1b2a4a" text-anchor="middle">compile pkg C</text>
+  <text x="385" y="248" font-size="8.5" fill="#5b7db1" text-anchor="middle">进程 · 独立</text>
+  <text x="58" y="284" font-size="9" fill="#6e6e73">依赖就绪才可编译（拓扑序）· 无依赖者并发跑 · 命中缓存则跳过</text>
+  <rect x="58" y="294" width="386" height="26" rx="8" fill="#fdf6ec" stroke="#f0dcaf"/>
+  <text x="251" y="311" font-size="9.5" fill="#6b4e16" text-anchor="middle">输出 .a 归档（package object）→ 存入构建缓存</text>
+  <line x1="250" y1="330" x2="250" y2="346" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- link -->
+  <rect x="44" y="348" width="412" height="44" rx="10" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="58" y="369" font-size="11.5" font-weight="600" fill="#1b2a4a">link · 单个链接进程</text>
+  <text x="58" y="384" font-size="9" fill="#5b7db1">汇总所有 .a + runtime → 死代码剪枝 → 一个可执行文件</text>
+  <line x1="250" y1="392" x2="250" y2="406" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- binary artifact -->
+  <rect x="120" y="408" width="260" height="42" rx="10" fill="#fdf6ec" stroke="#f0dcaf" filter="url(#soft)"/>
+  <text x="250" y="426" font-size="11.5" font-weight="600" fill="#6b4e16" text-anchor="middle">单一自包含二进制</text>
+  <text x="250" y="441" font-size="9" fill="#a9822f" text-anchor="middle">编译进程全部退出 · 产物落盘 · 离线可分发</text>
+
+  <!-- ============ transition arrow ============ -->
+  <line x1="478" y1="256" x2="500" y2="256" stroke="#b8b8bf" stroke-width="1.6" marker-end="url(#ar)"/>
+  <text x="489" y="248" font-size="8.5" fill="#8e8e93" text-anchor="middle">exec</text>
+
+  <!-- ============ RIGHT: runtime (green container) ============ -->
+  <rect x="502" y="62" width="434" height="400" rx="14" fill="#f3faf5" stroke="#cfe6d6"/>
+  <text x="522" y="86" font-size="13" font-weight="600" fill="#1d4a2b">运行期形态 · 单进程内 M×P×G</text>
+  <text x="522" y="103" font-size="9.5" fill="#4a8c60">三者动态编织 · 用户态 M:N 调度 · 进程存活期间持续运行</text>
+
+  <!-- process boundary note -->
+  <rect x="522" y="116" width="394" height="24" rx="8" fill="#ffffff" stroke="#e2e2e7"/>
+  <text x="719" y="132" font-size="9.5" fill="#6e6e73" text-anchor="middle">单一 OS 进程边界　—　所有 M / P / G 都活在其中</text>
+
+  <!-- P row (blue, execution permit) -->
+  <text x="522" y="160" font-size="10" font-weight="600" fill="#1b2a4a">P · 逻辑处理器 = GOMAXPROCS（执行许可 + 本地资源）</text>
+  <rect x="522" y="166" width="126" height="52" rx="10" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="585" y="188" font-size="11" font-weight="600" fill="#1b2a4a" text-anchor="middle">P0</text>
+  <text x="585" y="204" font-size="8.5" fill="#5b7db1" text-anchor="middle">runq · mcache</text>
+  <rect x="656" y="166" width="126" height="52" rx="10" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="719" y="188" font-size="11" font-weight="600" fill="#1b2a4a" text-anchor="middle">P1</text>
+  <text x="719" y="204" font-size="8.5" fill="#5b7db1" text-anchor="middle">runq · mcache</text>
+  <rect x="790" y="166" width="126" height="52" rx="10" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="853" y="188" font-size="11" font-weight="600" fill="#1b2a4a" text-anchor="middle">P2</text>
+  <text x="853" y="204" font-size="8.5" fill="#5b7db1" text-anchor="middle">runq · mcache</text>
+
+  <!-- M row (neutral, OS thread) - bind arrows to P -->
+  <line x1="585" y1="218" x2="585" y2="238" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <line x1="719" y1="218" x2="719" y2="238" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <text x="620" y="233" font-size="8.5" fill="#8e8e93">绑定</text>
+  <text x="522" y="252" font-size="10" font-weight="600" fill="#1d1d1f">M · OS 线程（machine）· 必须绑 P 才能跑用户 G</text>
+  <rect x="522" y="258" width="126" height="50" rx="10" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="585" y="279" font-size="11" font-weight="600" fill="#1d1d1f" text-anchor="middle">M0（持 P0）</text>
+  <text x="585" y="295" font-size="8.5" fill="#6e6e73" text-anchor="middle">g0 调度栈</text>
+  <rect x="656" y="258" width="126" height="50" rx="10" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="719" y="279" font-size="11" font-weight="600" fill="#1d1d1f" text-anchor="middle">M1（持 P1）</text>
+  <text x="719" y="295" font-size="8.5" fill="#6e6e73" text-anchor="middle">g0 调度栈</text>
+  <rect x="790" y="258" width="126" height="50" rx="10" fill="#f6f6f7" stroke="#e2e2e7"/>
+  <text x="853" y="279" font-size="11" font-weight="600" fill="#8e8e93" text-anchor="middle">M2（无 P）</text>
+  <text x="853" y="295" font-size="8.5" fill="#a1a1a6" text-anchor="middle">空闲 / 系统调用中</text>
+
+  <!-- G row (green, goroutines) run on M -->
+  <line x1="585" y1="308" x2="585" y2="326" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <line x1="719" y1="308" x2="719" y2="326" stroke="#c7c7cc" stroke-width="1.5" marker-end="url(#ar)"/>
+  <text x="620" y="322" font-size="8.5" fill="#8e8e93">执行</text>
+  <text x="522" y="340" font-size="10" font-weight="600" fill="#1d4a2b">G · goroutine（初始 2KB 栈）· 海量 · 在 P 队列间流动</text>
+  <rect x="522" y="346" width="126" height="46" rx="10" fill="#eef7f0" stroke="#bfe0c8"/>
+  <text x="585" y="366" font-size="10" font-weight="600" fill="#1d4a2b" text-anchor="middle">G 运行中</text>
+  <text x="585" y="381" font-size="8.5" fill="#4a8c60" text-anchor="middle">_Grunning</text>
+  <rect x="656" y="346" width="126" height="46" rx="10" fill="#eef7f0" stroke="#bfe0c8"/>
+  <text x="719" y="366" font-size="10" font-weight="600" fill="#1d4a2b" text-anchor="middle">G 运行中</text>
+  <text x="719" y="381" font-size="8.5" fill="#4a8c60" text-anchor="middle">_Grunning</text>
+  <rect x="790" y="346" width="126" height="46" rx="10" fill="#f6f6f7" stroke="#e2e2e7"/>
+  <text x="853" y="366" font-size="10" font-weight="600" fill="#6e6e73" text-anchor="middle">G 就绪 / 等待</text>
+  <text x="853" y="381" font-size="8.5" fill="#8e8e93" text-anchor="middle">runq / _Gwaiting</text>
+
+  <!-- sysmon: doesn't hold P -->
+  <rect x="522" y="404" width="394" height="46" rx="10" fill="#f5f0fb" stroke="#ddcdf0" filter="url(#soft)"/>
+  <text x="536" y="424" font-size="11" font-weight="600" fill="#3d2a5a">sysmon · 后台监控线程</text>
+  <text x="536" y="440" font-size="9" fill="#7d5bb1">铁律：不占 P，独立跑；负责抢占、netpoll、强制 GC　—　M 无 P 不能跑用户 G</text>
+</svg>

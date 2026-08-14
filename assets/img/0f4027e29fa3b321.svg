@@ -1,0 +1,105 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="720" viewBox="0 0 1120 720" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="aB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#4a7fd0"/></marker>
+    <marker id="aR" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#d1544a"/></marker>
+  </defs>
+  <rect width="1120" height="720" fill="#fbfbfd"/>
+
+  <text x="30" y="34" font-size="17" font-weight="700" fill="#1d1d1f">BT2 · 全排列：selected[] 标记已用 + 遍历选择列表；含重复元素时先排序，同层相同值只选一次</text>
+  <text x="30" y="56" font-size="11" fill="#6e6e73">示例 nums=[1,1,2]（已排序）。每一位从未被 selected 的下标里挑；同一层若某个值已试过，其它相同值的下标一律跳过 —— 这是去重剪枝的关键</text>
+
+  <!-- 图例 -->
+  <rect x="30" y="72" width="12" height="12" rx="2" fill="#d99a2b"/><text x="48" y="82" font-size="10.5" fill="#3a3a3c">state 前缀（状态）</text>
+  <rect x="200" y="72" width="12" height="12" rx="2" fill="#4a7fd0"/><text x="218" y="82" font-size="10.5" fill="#3a3a3c">尝试 · 选一个下标</text>
+  <rect x="360" y="72" width="12" height="12" rx="2" fill="#2f9e6e"/><text x="378" y="82" font-size="10.5" fill="#3a3a3c">长度满 → 记录排列</text>
+  <rect x="530" y="72" width="12" height="12" rx="2" fill="#d1544a"/><text x="548" y="82" font-size="10.5" fill="#3a3a3c">去重剪枝：同层同值只选一次</text>
+
+  <text x="30" y="110" font-size="12" font-weight="700" fill="#8a5a12">① 解空间树（下标标于边上；红叉为被去重剪掉的重复分支）</text>
+
+  <!-- 层标签 -->
+  <text x="40" y="235" font-size="10" fill="#6e6e73">第 1 位</text>
+  <text x="40" y="335" font-size="10" fill="#6e6e73">第 2 位</text>
+  <text x="40" y="435" font-size="10" fill="#6e6e73">第 3 位</text>
+
+  <!-- root -->
+  <rect x="527" y="126" width="66" height="30" rx="7" fill="#fdf3e0" stroke="#d99a2b" stroke-width="1.5"/><text x="560" y="146" font-size="12" font-weight="700" fill="#8a5a12" text-anchor="middle">[ ]</text>
+
+  <!-- edges L0->L1 -->
+  <path d="M560 156 V185 H300 V215" fill="none" stroke="#4a7fd0" stroke-width="1.4"/>
+  <path d="M560 156 V215" fill="none" stroke="#d1544a" stroke-width="1.5" stroke-dasharray="5 3"/>
+  <path d="M560 156 V185 H820 V215" fill="none" stroke="#4a7fd0" stroke-width="1.4"/>
+  <text x="415" y="180" font-size="9" fill="#20375e">选 i₀=1</text>
+  <text x="700" y="180" font-size="9" fill="#20375e">选 i₂=2</text>
+  <line x1="552" y1="182" x2="568" y2="198" stroke="#d1544a" stroke-width="2"/><line x1="568" y1="182" x2="552" y2="198" stroke="#d1544a" stroke-width="2"/>
+
+  <!-- L1 nodes -->
+  <rect x="267" y="215" width="66" height="30" rx="7" fill="#eaf1fb" stroke="#4a7fd0" stroke-width="1.3"/><text x="300" y="235" font-size="12" fill="#20375e" text-anchor="middle">[1]</text>
+  <rect x="527" y="215" width="66" height="30" rx="7" fill="#fbe6e3" stroke="#e8a79f" stroke-dasharray="4 3"/><text x="560" y="230" font-size="9.5" fill="#8a4038" text-anchor="middle">选 i₁=1 ✗</text><text x="560" y="242" font-size="8" fill="#8a4038" text-anchor="middle">值1同层已试</text>
+  <rect x="787" y="215" width="66" height="30" rx="7" fill="#eaf1fb" stroke="#4a7fd0" stroke-width="1.3"/><text x="820" y="235" font-size="12" fill="#20375e" text-anchor="middle">[2]</text>
+
+  <!-- edges L1->L2 -->
+  <path d="M300 245 V280 H200 V315" fill="none" stroke="#4a7fd0" stroke-width="1.3"/>
+  <path d="M300 245 V280 H400 V315" fill="none" stroke="#4a7fd0" stroke-width="1.3"/>
+  <path d="M820 245 V280 H740 V315" fill="none" stroke="#4a7fd0" stroke-width="1.3"/>
+  <path d="M820 245 V280 H900 V315" fill="none" stroke="#d1544a" stroke-width="1.4" stroke-dasharray="5 3"/>
+  <text x="205" y="275" font-size="9" fill="#20375e">i₁=1</text>
+  <text x="405" y="275" font-size="9" fill="#20375e">i₂=2</text>
+  <text x="700" y="275" font-size="9" fill="#20375e">i₀=1</text>
+  <line x1="892" y1="282" x2="908" y2="298" stroke="#d1544a" stroke-width="2"/><line x1="908" y1="282" x2="892" y2="298" stroke="#d1544a" stroke-width="2"/>
+
+  <!-- L2 nodes -->
+  <rect x="167" y="315" width="66" height="30" rx="7" fill="#eaf1fb" stroke="#4a7fd0" stroke-width="1.3"/><text x="200" y="335" font-size="12" fill="#20375e" text-anchor="middle">[1,1]</text>
+  <rect x="367" y="315" width="66" height="30" rx="7" fill="#eaf1fb" stroke="#4a7fd0" stroke-width="1.3"/><text x="400" y="335" font-size="12" fill="#20375e" text-anchor="middle">[1,2]</text>
+  <rect x="707" y="315" width="66" height="30" rx="7" fill="#eaf1fb" stroke="#4a7fd0" stroke-width="1.3"/><text x="740" y="335" font-size="12" fill="#20375e" text-anchor="middle">[2,1]</text>
+  <rect x="867" y="315" width="66" height="30" rx="7" fill="#fbe6e3" stroke="#e8a79f" stroke-dasharray="4 3"/><text x="900" y="330" font-size="9.5" fill="#8a4038" text-anchor="middle">i₁=1 ✗</text><text x="900" y="342" font-size="8" fill="#8a4038" text-anchor="middle">同层重复</text>
+
+  <!-- edges L2->L3 -->
+  <path d="M200 345 V415" fill="none" stroke="#4a7fd0" stroke-width="1.3"/>
+  <path d="M400 345 V415" fill="none" stroke="#4a7fd0" stroke-width="1.3"/>
+  <path d="M740 345 V415" fill="none" stroke="#4a7fd0" stroke-width="1.3"/>
+  <text x="208" y="380" font-size="9" fill="#20375e">i₂=2</text>
+  <text x="408" y="380" font-size="9" fill="#20375e">i₁=1</text>
+  <text x="748" y="380" font-size="9" fill="#20375e">i₁=1</text>
+
+  <!-- L3 leaves (solutions) -->
+  <rect x="163" y="415" width="74" height="30" rx="7" fill="#e6f4ec" stroke="#2f9e6e" stroke-width="1.5"/><text x="200" y="435" font-size="12" font-weight="700" fill="#1f6b47" text-anchor="middle">[1,1,2]</text>
+  <rect x="363" y="415" width="74" height="30" rx="7" fill="#e6f4ec" stroke="#2f9e6e" stroke-width="1.5"/><text x="400" y="435" font-size="12" font-weight="700" fill="#1f6b47" text-anchor="middle">[1,2,1]</text>
+  <rect x="703" y="415" width="74" height="30" rx="7" fill="#e6f4ec" stroke="#2f9e6e" stroke-width="1.5"/><text x="740" y="435" font-size="12" font-weight="700" fill="#1f6b47" text-anchor="middle">[2,1,1]</text>
+
+  <text x="960" y="330" font-size="10.5" font-weight="700" fill="#1f6b47">3 个不同排列</text>
+  <text x="960" y="352" font-size="10" fill="#6e6e73">若不去重会产生</text>
+  <text x="960" y="368" font-size="10" fill="#6e6e73">3!=6 个（含重复）</text>
+  <text x="960" y="390" font-size="10" fill="#8a4038">被剪掉 2 条重复分支</text>
+
+  <!-- ===== ② selected + duplicated 机制 ===== -->
+  <rect x="40" y="470" width="516" height="222" rx="14" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="62" y="496" font-size="13" font-weight="700" fill="#20375e">② 两道剪枝各管一件事</text>
+
+  <text x="62" y="524" font-size="11" font-weight="700" fill="#8a5a12">剪枝一 · selected[]：不重复用同一个下标</text>
+  <text x="62" y="546" font-size="10.5" fill="#4a4a4f">选中 i 时 selected[i]=true，回退时置回 false。</text>
+  <text x="62" y="564" font-size="10.5" fill="#4a4a4f">保证一个排列里每个位置各出现一次。</text>
+  <!-- selected array snapshot -->
+  <g font-size="9" text-anchor="middle">
+    <rect x="62" y="576" width="40" height="26" rx="4" fill="#fdf3e0" stroke="#e7c07a"/><text x="82" y="590" fill="#8a5a12">i₀=1</text><text x="82" y="600" fill="#2f6b4e">T</text>
+    <rect x="104" y="576" width="40" height="26" rx="4" fill="#fdf3e0" stroke="#e7c07a"/><text x="124" y="590" fill="#8a5a12">i₁=1</text><text x="124" y="600" fill="#a1a1a6">F</text>
+    <rect x="146" y="576" width="40" height="26" rx="4" fill="#f6f7f9" stroke="#e4e7ec"/><text x="166" y="590" fill="#6e6e73">i₂=2</text><text x="166" y="600" fill="#a1a1a6">F</text>
+    <text x="230" y="594" fill="#6e6e73" text-anchor="start">← selected 布尔标记</text>
+  </g>
+
+  <text x="62" y="632" font-size="11" font-weight="700" fill="#d1544a">剪枝二 · 同层去重：相同值只选一次</text>
+  <text x="62" y="654" font-size="10.5" fill="#4a4a4f">每进一层新建 duplicated 集合；某值已试过就跳过</text>
+  <text x="62" y="672" font-size="10.5" fill="#4a4a4f">同值的其它下标 —— 避免 [1ₐ,1_b] 与 [1_b,1ₐ] 撞车。</text>
+
+  <!-- ===== ③ 要点 ===== -->
+  <rect x="568" y="470" width="516" height="222" rx="14" fill="#ffffff" stroke="#e4e7ec" filter="url(#soft)"/>
+  <text x="590" y="496" font-size="13" font-weight="700" fill="#8a5a12">③ 为什么必须「先排序 + 每层独立集合」</text>
+  <text x="590" y="522" font-size="10.5" fill="#4a4a4f">• 排序让相同值相邻，同层重复才能被一致识别。</text>
+  <text x="590" y="544" font-size="10.5" fill="#4a4a4f">• duplicated 是「层内」的：不同层可以再用同一个值，</text>
+  <text x="608" y="562" font-size="10.5" fill="#4a4a4f">否则会漏掉像 [1,1,2] 这种含重复值的合法排列。</text>
+  <text x="590" y="586" font-size="10.5" fill="#4a4a4f">• selected 是「路径」维度：管一个下标别用两次；</text>
+  <text x="608" y="604" font-size="10.5" fill="#4a4a4f">duplicated 是「兄弟」维度：管同层别选相同值。</text>
+  <text x="590" y="628" font-size="10.5" fill="#8a4038">• 两者缺一：只有 selected → 输出含重复排列；</text>
+  <text x="608" y="646" font-size="10.5" fill="#8a4038">只有 duplicated → 会错误地把不同位置的选择也剪掉。</text>
+  <text x="590" y="674" font-size="10.5" fill="#2f6b4e">• 记录解时同样要存拷贝，防止回退污染已存结果。</text>
+</svg>

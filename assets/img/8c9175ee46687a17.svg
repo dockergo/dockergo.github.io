@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="512" viewBox="0 0 1080 512"
+     font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1080" height="512" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Neo4j Forseti 锁管理器与 dreadlocks 死锁检测</text>
+  <text x="30" y="52" font-size="11.5" fill="#a1a1a6">每 client 记等待链,死锁检测 O(1);最优抢锁一次 CAS;共享锁可升级 / 排他可降级 / 栈式重入;死锁抛 DeadlockDetectedException</text>
+
+  <!-- 左:LockManager + Forseti -->
+  <rect x="40" y="88" width="300" height="126" rx="13" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="56" y="116" font-size="12" font-weight="600" fill="#3d2a5a">LockManager 接口</text>
+  <text x="56" y="140" font-size="10.5" fill="#6b5590">每事务一个 client 抓锁</text>
+  <text x="56" y="161" font-size="10.5" fill="#6b5590">共享锁可升级 · 排他锁可降级</text>
+  <text x="56" y="182" font-size="10.5" fill="#6b5590">锁可栈式重入(等量 acquire / release)</text>
+  <text x="56" y="203" font-size="9" fill="#a1a1a6">locking/LockManager.java</text>
+
+  <rect x="40" y="230" width="300" height="126" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="56" y="258" font-size="12" font-weight="600" fill="#1b2a4a">ForsetiLockManager · 默认实现</text>
+  <text x="56" y="282" font-size="10.5" fill="#274a78">dreadlocks 死锁检测</text>
+  <text x="56" y="303" font-size="10.5" fill="#274a78">最优抢锁 = 一次 CAS(无竞争近零开销)</text>
+  <text x="56" y="324" font-size="10.5" fill="#274a78">死锁 &#8594; DeadlockDetectedException</text>
+  <text x="56" y="345" font-size="9" fill="#a1a1a6">locking/forseti/ForsetiLockManager.java</text>
+
+  <path d="M190,214 L190,230" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <!-- 右上:dreadlocks 本地等待链 -->
+  <rect x="380" y="88" width="660" height="150" rx="13" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="396" y="116" font-size="12" font-weight="600" fill="#12402a">dreadlocks:每 client 记"正在等谁" · O(1) 本地检查</text>
+
+  <rect x="410" y="136" width="120" height="52" rx="11" fill="#ffffff" stroke="#bfe0cd"/>
+  <text x="470" y="160" font-size="10.5" font-weight="600" fill="#12402a" text-anchor="middle">client A</text>
+  <text x="470" y="178" font-size="9" fill="#2f6f4f" text-anchor="middle">等 B</text>
+  <rect x="620" y="136" width="120" height="52" rx="11" fill="#ffffff" stroke="#bfe0cd"/>
+  <text x="680" y="160" font-size="10.5" font-weight="600" fill="#12402a" text-anchor="middle">client B</text>
+  <text x="680" y="178" font-size="9" fill="#2f6f4f" text-anchor="middle">等 A</text>
+
+  <path d="M530,155 L620,155" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M620,172 L530,172" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="575" y="149" font-size="8.5" fill="#a1a1a6" text-anchor="middle">等待链</text>
+
+  <rect x="770" y="136" width="252" height="52" rx="11" fill="#fbeaea" stroke="#e7c3c3"/>
+  <text x="896" y="159" font-size="10.5" font-weight="600" fill="#4a1414" text-anchor="middle">A 等 B &#38; B 等 A &#8594; 成环</text>
+  <text x="896" y="177" font-size="9" fill="#7a2a2a" text-anchor="middle">本地即判定死锁,抛异常</text>
+
+  <path d="M740,162 L770,162" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="396" y="222" font-size="9.5" fill="#2f6f4f">等待者直接记录等待链,检测退化成 O(1) 的本地检查 — 不遍历资源分配图</text>
+
+  <!-- 右下:对比传统 -->
+  <text x="380" y="272" font-size="12" font-weight="600" fill="#1d1d1f">对比:检测同一死锁</text>
+
+  <rect x="380" y="286" width="320" height="128" rx="13" fill="#fbeaea" stroke="#e7c3c3" filter="url(#soft)"/>
+  <text x="396" y="314" font-size="11.5" font-weight="600" fill="#4a1414">传统:遍历等待图找环</text>
+  <text x="396" y="338" font-size="10.5" fill="#7a2a2a">遍历"谁等谁"的图搜索环路</text>
+  <text x="396" y="359" font-size="10.5" fill="#7a2a2a">复杂度 O(V+E)</text>
+  <text x="396" y="380" font-size="10.5" fill="#7a2a2a">高并发下开销大</text>
+
+  <rect x="720" y="286" width="320" height="128" rx="13" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="736" y="314" font-size="11.5" font-weight="600" fill="#12402a">dreadlocks:本地检查</text>
+  <text x="736" y="338" font-size="10.5" fill="#2f6f4f">每 client 直接持有等待链</text>
+  <text x="736" y="359" font-size="10.5" fill="#2f6f4f">复杂度 O(1)</text>
+  <text x="736" y="380" font-size="10.5" fill="#2f6f4f">高并发省大量开销</text>
+
+  <path d="M700,350 L720,350" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <text x="40" y="446" font-size="9.5" fill="#a1a1a6">community 是锁基并发(非 MVCC):写加写锁串行化;死锁是高并发正常现象,应用层捕获 DeadlockDetectedException 重试。</text>
+</svg>

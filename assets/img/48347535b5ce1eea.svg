@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="520" viewBox="0 0 1080 520" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="520" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">RocksDB 点查 vs 范围扫描 · Get 短路 vs Iterator 归并</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">两种读代价迥异:点查找到即停+布隆短路;扫描要归并所有相交文件、无法布隆短路</text>
+
+  <!-- point lookup -->
+  <rect x="30" y="70" width="500" height="200" rx="13" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="46" y="92" font-size="11.5" font-weight="700" fill="#1b2a4a">点查 Get("k")</text>
+  <text x="46" y="112" font-size="9" fill="#5b7db1">目标:某 key 的最新可见值</text>
+  <g font-size="8.8">
+    <rect x="46" y="122" width="470" height="30" rx="7" fill="#f3f7fc" stroke="#cfe0f2"/><text x="60" y="141" fill="#274a78">· 逐层查,布隆短路掉不含 key 的文件</text>
+    <rect x="46" y="158" width="470" height="30" rx="7" fill="#f3f7fc" stroke="#cfe0f2"/><text x="60" y="177" fill="#274a78">· 找到第一个可见版本即停,不查更老层</text>
+    <rect x="46" y="194" width="470" height="30" rx="7" fill="#eafaf1" stroke="#bfe0cd"/><text x="60" y="213" fill="#12402a">· 代价≈ O(层数) 次布隆判断 + 1~2 次 block 读</text>
+    <rect x="46" y="230" width="470" height="30" rx="7" fill="#fff" stroke="#bcd0ec"/><text x="60" y="249" fill="#5b7db1">· MultiGet:多 key 共享 SuperVersion、批量布隆、并行 IO</text>
+  </g>
+
+  <!-- range scan -->
+  <rect x="550" y="70" width="500" height="200" rx="13" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="566" y="92" font-size="11.5" font-weight="700" fill="#12402a">范围扫描 Iterator(Seek/Next)</text>
+  <text x="566" y="112" font-size="9" fill="#2f6f4f">目标:一段 key 的有序序列</text>
+  <g font-size="8.8">
+    <rect x="566" y="122" width="470" height="30" rx="7" fill="#f5faf6" stroke="#cfe6d5"/><text x="580" y="141" fill="#2c5a3a">· 建 MergingIterator 归并所有来源(见接触面 Iterator)</text>
+    <rect x="566" y="158" width="470" height="30" rx="7" fill="#fff7e6" stroke="#e8cf9a"/><text x="580" y="177" fill="#5a3410">· 无法布隆短路:要真读每个可能相交的文件</text>
+    <rect x="566" y="194" width="470" height="30" rx="7" fill="#ffecec" stroke="#e0a0a0"/><text x="580" y="213" fill="#b1483a">· 代价高得多:每个相交文件都要打开+读</text>
+    <rect x="566" y="230" width="470" height="30" rx="7" fill="#fff" stroke="#cfe6d5"/><text x="580" y="249" fill="#2f6f4f">· 优化:readahead/async_io 预读、前缀布隆(同前缀扫可短路)</text>
+  </g>
+
+  <!-- comparison table -->
+  <rect x="30" y="286" width="1020" height="130" rx="13" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="46" y="308" font-size="11" font-weight="700" fill="#1d1d1f">代价对比</text>
+  <g font-size="8.8">
+    <rect x="46" y="320" width="230" height="26" rx="6" fill="#eef3fb" stroke="#bcd0ec"/><text x="60" y="338" fill="#1b2a4a">维度</text>
+    <rect x="286" y="320" width="360" height="26" rx="6" fill="#eef3fb" stroke="#bcd0ec"/><text x="300" y="338" fill="#1b2a4a">点查 Get</text>
+    <rect x="656" y="320" width="380" height="26" rx="6" fill="#f5faf6" stroke="#cfe6d5"/><text x="670" y="338" fill="#2c5a3a">范围扫描 Iterator</text>
+    <text x="60" y="366" fill="#4b4b50">布隆短路</text><text x="300" y="366" fill="#2f6f4f">✓ 跳过无关文件</text><text x="670" y="366" fill="#b1483a">✗(除非前缀布隆+同前缀)</text>
+    <text x="60" y="386" fill="#4b4b50">读文件数</text><text x="300" y="386" fill="#2f6f4f">通常 1~2 个 block</text><text x="670" y="386" fill="#b1483a">所有与范围相交的文件</text>
+    <text x="60" y="406" fill="#4b4b50">终止</text><text x="300" y="406" fill="#2f6f4f">找到即停</text><text x="670" y="406" fill="#b1483a">遍历到范围末尾</text>
+  </g>
+
+  <!-- notes -->
+  <rect x="30" y="432" width="1020" height="72" rx="13" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="46" y="454" font-size="11" font-weight="700" fill="#2c5a3a">工程建议</text>
+  <text x="46" y="476" font-size="9" fill="#2f6f4f">· 能点查就别扫描;必须扫描时:设 prefix_extractor + 前缀布隆让"同前缀范围"也能短路;开 readahead 预读顺序块</text>
+  <text x="46" y="494" font-size="9" fill="#2f6f4f">· 大范围扫描设 ReadOptions::fill_cache=false 避免污染 block cache;iterate_upper_bound 限定上界减少读</text>
+</svg>

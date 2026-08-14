@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="540" viewBox="0 0 1040 540" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1040" height="540" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Trino WorkProcessor 算子 · Transformation 流水 + 桥接经典契约</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">483 中 Join 探测/TopN/ScanFilterProject 已改为 WorkProcessor;经 adapter 桥回 Driver 泵</text>
+
+  <!-- Transformation chain -->
+  <rect x="30" y="72" width="980" height="180" rx="13" fill="#eef3fb" stroke="#bcd0ec"/>
+  <text x="46" y="94" font-size="11" font-weight="700" fill="#1b2a4a">WorkProcessor.Transformation&lt;I,O&gt;：输入流 → 输出流（惰性、背压、可 yield）</text>
+  <g font-size="8.8" text-anchor="middle">
+    <rect x="50" y="110" width="150" height="60" rx="9" fill="#fff7e6" stroke="#e8cf9a"/><text x="125" y="132" font-weight="600" fill="#5a3410">源 Split/Page 流</text><text x="125" y="150" fill="#93762e">WorkProcessor&lt;Page&gt;</text>
+    <rect x="240" y="110" width="170" height="60" rx="9" fill="#f3f7fc" stroke="#cfe0f2"/><text x="325" y="128" font-weight="600" fill="#274a78">Transform: 扫描+过滤</text><text x="325" y="146" fill="#5b7db1">process(page)→result</text><text x="325" y="162" fill="#5b7db1">ScanFilterProject</text>
+    <rect x="450" y="110" width="170" height="60" rx="9" fill="#f3f7fc" stroke="#cfe0f2"/><text x="535" y="128" font-weight="600" fill="#274a78">Transform: Join 探测</text><text x="535" y="146" fill="#5b7db1">DefaultPageJoiner</text><text x="535" y="162" fill="#5b7db1">逐行查 LookupSource</text>
+    <rect x="660" y="110" width="150" height="60" rx="9" fill="#f3f7fc" stroke="#cfe0f2"/><text x="735" y="128" font-weight="600" fill="#274a78">Transform: TopN</text><text x="735" y="146" fill="#5b7db1">TopNProcessor 堆</text>
+    <rect x="850" y="110" width="160" height="60" rx="9" fill="#eafaf1" stroke="#bfe0cd"/><text x="930" y="132" font-weight="600" fill="#12402a">输出 Page 流</text><text x="930" y="150" fill="#2f6f4f">WorkProcessor&lt;Page&gt;</text>
+  </g>
+  <line x1="200" y1="140" x2="240" y2="140" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+  <line x1="410" y1="140" x2="450" y2="140" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+  <line x1="620" y1="140" x2="660" y2="140" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+  <line x1="810" y1="140" x2="850" y2="140" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+  <text x="46" y="196" font-size="8.8" fill="#5b7db1">每个 Transformation 惰性拉取上游 → 变换 → 交下游;可返回 "needs more input" / "yield" / "finished"</text>
+  <rect x="46" y="210" width="948" height="30" rx="7" fill="#fff" stroke="#bcd0ec"/><text x="60" y="229" font-size="8.5" fill="#1b2a4a">融合优势：ScanFilterAndProject 把 扫描→过滤→投影 融成一条流水,省去经典算子间的 Page 拷贝与跳转</text>
+
+  <!-- adapter bridge -->
+  <rect x="30" y="272" width="980" height="120" rx="13" fill="#f5faf6" stroke="#cfe6d5"/>
+  <text x="46" y="294" font-size="11" font-weight="700" fill="#2c5a3a">桥接回 Driver：WorkProcessorOperatorAdapter</text>
+  <g font-size="8.8" text-anchor="middle">
+    <rect x="50" y="308" width="280" height="66" rx="9" fill="#fff" stroke="#cfe6d5"/><text x="190" y="330" font-weight="600" fill="#2c5a3a">WorkProcessor 算子</text><text x="190" y="348" fill="#2f6f4f">只写 Transformation 逻辑</text><text x="190" y="364" fill="#2f6f4f">无需手写状态机</text>
+    <rect x="380" y="308" width="280" height="66" rx="9" fill="#eef3fb" stroke="#bcd0ec"/><text x="520" y="330" font-weight="600" fill="#1b2a4a">Adapter</text><text x="520" y="348" fill="#5b7db1">把 Transformation 包装成</text><text x="520" y="364" fill="#5b7db1">经典 addInput/getOutput</text>
+    <rect x="710" y="308" width="280" height="66" rx="9" fill="#eafaf1" stroke="#bfe0cd"/><text x="850" y="330" font-weight="600" fill="#12402a">Driver 泵</text><text x="850" y="348" fill="#2f6f4f">无感知地泵动</text><text x="850" y="364" fill="#2f6f4f">与经典算子混排在同一链</text>
+  </g>
+  <line x1="330" y1="341" x2="380" y2="341" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+  <line x1="660" y1="341" x2="710" y2="341" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+
+  <rect x="30" y="412" width="980" height="108" rx="13" fill="#f7f7f9" stroke="#ececf1"/>
+  <text x="46" y="434" font-size="11" font-weight="700" fill="#1d1d1f">为什么两套并存</text>
+  <text x="46" y="456" font-size="9" fill="#6e6e73">· 经典 Operator：老算子仍用手写状态机(HashAggregation/HashBuilder 等),精确控制内存/溢写时机</text>
+  <text x="46" y="474" font-size="9" fill="#6e6e73">· WorkProcessor：新算子用声明式流水,易组合、易融合、天然惰性——逐步迁移中</text>
+  <text x="46" y="492" font-size="9" fill="#6e6e73">· Adapter 让二者在同一条 Driver 链里无缝混排,对 Driver 泵透明</text>
+  <text x="46" y="512" font-size="9" fill="#b1483a">· 读源码时注意：LookupJoinOperator 是 WorkProcessorOperator,不是经典 Operator——方法体在 DefaultPageJoiner</text>
+</svg>

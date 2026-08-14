@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="466" viewBox="0 0 1020 466"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1020" height="466" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">分布式通信时间线 · 通信藏进计算（overlap，横轴为时间）</text>
+  <!-- legend -->
+  <rect x="700" y="18" width="12" height="12" rx="3" fill="#eef3fb" stroke="#bcd0ec"/><text x="718" y="28" font-size="9.5" fill="#1b2a4a">计算</text>
+  <rect x="770" y="18" width="12" height="12" rx="3" fill="#eafaf1" stroke="#bce6cd"/><text x="788" y="28" font-size="9.5" fill="#0f5132">通信</text>
+  <rect x="840" y="18" width="12" height="12" rx="3" fill="#fff7e6" stroke="#f0dcae"/><text x="858" y="28" font-size="9.5" fill="#7a4d00">参数状态</text>
+
+  <!-- Block A: DDP -->
+  <rect x="30" y="52" width="960" height="180" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="48" y="76" font-size="12" font-weight="600" fill="#1b2a4a">DDP · 数据并行：反向从后往前算梯度，桶满即 all-reduce，与后续反向 overlap</text>
+  <text x="924" y="76" font-size="8.5" fill="#a1a1a6" text-anchor="end">时间 →</text>
+  <text x="48" y="122" font-size="9" fill="#5b5b63">反向计算</text>
+  <text x="48" y="176" font-size="9" fill="#5b5b63">梯度通信</text>
+  <!-- compute lane -->
+  <rect x="150" y="100" width="210" height="36" rx="8" fill="#eef3fb" stroke="#bcd0ec"/><text x="255" y="123" font-size="9.5" fill="#1b2a4a" text-anchor="middle">反向 L3</text>
+  <rect x="366" y="100" width="210" height="36" rx="8" fill="#eef3fb" stroke="#bcd0ec"/><text x="471" y="123" font-size="9.5" fill="#1b2a4a" text-anchor="middle">反向 L2</text>
+  <rect x="582" y="100" width="210" height="36" rx="8" fill="#eef3fb" stroke="#bcd0ec"/><text x="687" y="123" font-size="9.5" fill="#1b2a4a" text-anchor="middle">反向 L1</text>
+  <!-- comm lane -->
+  <rect x="366" y="154" width="210" height="36" rx="8" fill="#eafaf1" stroke="#bce6cd"/><text x="471" y="177" font-size="9" fill="#0f5132" text-anchor="middle">all-reduce 桶3</text>
+  <rect x="582" y="154" width="210" height="36" rx="8" fill="#eafaf1" stroke="#bce6cd"/><text x="687" y="177" font-size="9" fill="#0f5132" text-anchor="middle">all-reduce 桶2</text>
+  <rect x="798" y="154" width="150" height="36" rx="8" fill="#eafaf1" stroke="#bce6cd"/><text x="873" y="177" font-size="9" fill="#0f5132" text-anchor="middle">all-reduce 桶1</text>
+  <!-- hook triggers -->
+  <line x1="360" y1="136" x2="372" y2="154" stroke="#3f8f66" stroke-dasharray="3 2" marker-end="url(#ar)"/>
+  <line x1="576" y1="136" x2="588" y2="154" stroke="#3f8f66" stroke-dasharray="3 2" marker-end="url(#ar)"/>
+  <text x="600" y="150" font-size="8" fill="#3f8f66">桶满触发 ↘</text>
+  <text x="48" y="216" font-size="8.5" fill="#86868b">梯度就绪 hook → mark_variable_ready → 桶满即 all-reduce；同步后各卡 step，无参数服务器。</text>
+
+  <!-- Block B: FSDP -->
+  <rect x="30" y="248" width="960" height="184" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="48" y="272" font-size="12" font-weight="600" fill="#0f5132">FSDP · 分片：层前 all-gather unshard、算完 reshard 丢副本，反向 reduce-scatter 归并梯度</text>
+  <text x="924" y="272" font-size="8.5" fill="#a1a1a6" text-anchor="end">时间 →</text>
+  <text x="48" y="316" font-size="9" fill="#5b5b63">计算</text>
+  <text x="48" y="366" font-size="9" fill="#5b5b63">通信</text>
+  <!-- compute lane -->
+  <rect x="256" y="294" width="200" height="34" rx="8" fill="#eef3fb" stroke="#bcd0ec"/><text x="356" y="316" font-size="9.5" fill="#1b2a4a" text-anchor="middle">计算 L1</text>
+  <rect x="560" y="294" width="200" height="34" rx="8" fill="#eef3fb" stroke="#bcd0ec"/><text x="660" y="316" font-size="9.5" fill="#1b2a4a" text-anchor="middle">计算 L2</text>
+  <!-- shard state markers -->
+  <rect x="462" y="294" width="92" height="34" rx="8" fill="#fff7e6" stroke="#f0dcae"/><text x="508" y="316" font-size="8.5" fill="#7a4d00" text-anchor="middle">reshard L1</text>
+  <!-- comm lane -->
+  <rect x="150" y="344" width="100" height="34" rx="8" fill="#eafaf1" stroke="#bce6cd"/><text x="200" y="366" font-size="8.5" fill="#0f5132" text-anchor="middle">unshard L1</text>
+  <rect x="462" y="344" width="92" height="34" rx="8" fill="#eafaf1" stroke="#bce6cd"/><text x="508" y="366" font-size="8" fill="#0f5132" text-anchor="middle">prefetch L2</text>
+  <rect x="766" y="344" width="182" height="34" rx="8" fill="#eafaf1" stroke="#bce6cd"/><text x="857" y="366" font-size="8.5" fill="#0f5132" text-anchor="middle">reduce-scatter 梯度</text>
+  <line x1="250" y1="361" x2="256" y2="311" stroke="#3f8f66" stroke-dasharray="3 2" marker-end="url(#ar)"/>
+  <text x="48" y="410" font-size="8.5" fill="#86868b">层前 all-gather 得全量参数、算完立即 reshard 释放；prefetch 提前 unshard 下一层藏延迟；反向 reduce-scatter 归并并分发梯度分片。</text>
+</svg>

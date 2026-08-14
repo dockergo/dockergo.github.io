@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="470" viewBox="0 0 920 470"
+     font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="920" height="470" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">期望态 vs 实际态:RedundancyMonitor 每 3 秒对账,欠则复制、多则删、坏则重建</text>
+
+  <!-- 期望态 -->
+  <rect x="30" y="56" width="270" height="120" rx="13" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="165" y="80" font-size="11" font-weight="600" fill="#1b2a4a" text-anchor="middle">期望态(NameNode)</text>
+  <text x="165" y="104" font-size="9" fill="#5b7db1" text-anchor="middle">blk_1 应有 3 副本</text>
+  <text x="165" y="126" font-size="9" fill="#5b7db1" text-anchor="middle">来自文件的 replication 设置</text>
+  <text x="165" y="152" font-size="8.5" fill="#86868b" text-anchor="middle">存于命名空间元数据</text>
+
+  <!-- 实际态 -->
+  <rect x="620" y="56" width="270" height="120" rx="13" fill="#fff7e6" stroke="#f0dcae" filter="url(#soft)"/>
+  <text x="755" y="80" font-size="11" font-weight="600" fill="#7a4d00" text-anchor="middle">实际态(DataNode 群)</text>
+  <text x="755" y="104" font-size="9" fill="#9a7328" text-anchor="middle">blk_1 现存 2 副本(一台宕机)</text>
+  <text x="755" y="126" font-size="9" fill="#9a7328" text-anchor="middle">由块汇报持续上报</text>
+  <text x="755" y="152" font-size="8.5" fill="#9a7328" text-anchor="middle">→ 内存 blocksMap</text>
+
+  <!-- 对账器 -->
+  <rect x="335" y="66" width="250" height="100" rx="13" fill="#eafaf1" stroke="#bce6cd" filter="url(#soft)"/>
+  <text x="460" y="90" font-size="11" font-weight="600" fill="#0f5132" text-anchor="middle">RedundancyMonitor</text>
+  <text x="460" y="112" font-size="8.5" fill="#3f8f66" text-anchor="middle">BlockManager.java:5388(Daemon)</text>
+  <text x="460" y="132" font-size="8.5" fill="#3f8f66" text-anchor="middle">每 3 秒一轮(DFSConfigKeys.java:303)</text>
+  <text x="460" y="152" font-size="8.5" fill="#3f8f66" text-anchor="middle">对账期望 vs 实际</text>
+  <path d="M300,116 L335,116" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M620,116 L585,116" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <!-- 三种动作 -->
+  <rect x="30" y="200" width="280" height="180" rx="13" fill="#fdf3f2" stroke="#f0c9c2"/>
+  <text x="170" y="224" font-size="11" font-weight="600" fill="#c4341c" text-anchor="middle">① 欠副本 under-replicated</text>
+  <text x="170" y="250" font-size="8.8" fill="#a33" text-anchor="middle">进 neededReconstruction 队列(:394)</text>
+  <text x="170" y="272" font-size="8.8" fill="#a33" text-anchor="middle">computeBlockReconstructionWork</text>
+  <text x="170" y="290" font-size="8.5" fill="#a33" text-anchor="middle">(BlockManager.java:2113)</text>
+  <text x="170" y="314" font-size="8.8" fill="#a33" text-anchor="middle">选源副本 + 目标节点</text>
+  <text x="170" y="336" font-size="8.8" fill="#a33" text-anchor="middle">复制命令随心跳响应下发</text>
+  <text x="170" y="362" font-size="8.5" fill="#86868b" text-anchor="middle">每轮量 = 活节点×倍率(默认2,:620)</text>
+
+  <rect x="322" y="200" width="276" height="180" rx="13" fill="#f7f7f9" stroke="#e2e2e7"/>
+  <text x="460" y="224" font-size="11" font-weight="600" fill="#1d1d1f" text-anchor="middle">② 过副本 over-replicated</text>
+  <text x="460" y="250" font-size="8.8" fill="#494950" text-anchor="middle">删除多余副本</text>
+  <text x="460" y="272" font-size="8.8" fill="#494950" text-anchor="middle">优先删:磁盘满的节点</text>
+  <text x="460" y="294" font-size="8.8" fill="#494950" text-anchor="middle">优先删:同机架冗余的</text>
+  <text x="460" y="322" font-size="8.8" fill="#494950" text-anchor="middle">删除命令同样随心跳下发</text>
+  <text x="460" y="352" font-size="8.5" fill="#86868b" text-anchor="middle">保持放置策略不被破坏</text>
+
+  <rect x="610" y="200" width="280" height="180" rx="13" fill="#fff7e6" stroke="#f0dcae"/>
+  <text x="750" y="224" font-size="11" font-weight="600" fill="#7a4d00" text-anchor="middle">③ 损坏 / 误副本</text>
+  <text x="750" y="250" font-size="8.8" fill="#9a7328" text-anchor="middle">读校验失败 或 块扫描发现</text>
+  <text x="750" y="272" font-size="8.8" fill="#9a7328" text-anchor="middle">标记坏块 → 从好副本重建</text>
+  <text x="750" y="298" font-size="8.8" fill="#9a7328" text-anchor="middle">纠删码块用编码重构</text>
+  <text x="750" y="320" font-size="8.8" fill="#9a7328" text-anchor="middle">而非整块复制</text>
+  <text x="750" y="352" font-size="8.5" fill="#86868b" text-anchor="middle">全程后台异步,不阻塞读写</text>
+
+  <path d="M460,166 L170,200" stroke="#c7c7cc" stroke-width="1.3" fill="none" marker-end="url(#ar)"/>
+  <path d="M460,166 L460,200" stroke="#c7c7cc" stroke-width="1.3" fill="none" marker-end="url(#ar)"/>
+  <path d="M460,166 L750,200" stroke="#c7c7cc" stroke-width="1.3" fill="none" marker-end="url(#ar)"/>
+
+  <rect x="30" y="400" width="860" height="52" rx="12" fill="#f4eefb" stroke="#d9c9ef"/>
+  <text x="460" y="424" font-size="10" fill="#3c1361" text-anchor="middle">节点宕机判定:超过约 10.5 分钟无心跳 → 其上所有块进欠副本队列,触发大批重建</text>
+  <text x="460" y="442" font-size="8.8" fill="#7c5aa6" text-anchor="middle">退役请用 decommission(先复制走副本再下线),避免瞬时欠副本风暴</text>
+</svg>

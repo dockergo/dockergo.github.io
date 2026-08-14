@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="330" viewBox="0 0 920 330" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs><filter id="s" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter><marker id="a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#8fb0d8"/></marker></defs>
+  <rect width="920" height="330" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">编译五段流水：SQL → AST → 算子树 → Calcite CBO → 引擎无关物理 DAG</text>
+
+  <!-- 5 stages -->
+  <g text-anchor="middle" font-size="11">
+    <rect x="40" y="80" width="150" height="70" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#s)"/><text x="115" y="106" font-weight="600" fill="#1b2a4a">① 解析</text><text x="115" y="126" font-size="9.5" fill="#5b6b86">ANTLR → AST</text><text x="115" y="142" font-size="9" fill="#8fa2bd">Compiler.parse()</text>
+    <rect x="220" y="80" width="150" height="70" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#s)"/><text x="295" y="106" font-weight="600" fill="#1b2a4a">② 语义分析</text><text x="295" y="126" font-size="9.5" fill="#5b6b86">AST → 算子树</text><text x="295" y="142" font-size="9" fill="#8fa2bd">SemanticAnalyzer</text>
+    <rect x="400" y="80" width="150" height="70" rx="12" fill="#e3edfa" stroke="#9fbde3" filter="url(#s)"/><text x="475" y="106" font-weight="600" fill="#1b2a4a">③ 逻辑优化</text><text x="475" y="126" font-size="9.5" fill="#5b6b86">Calcite CBO</text><text x="475" y="142" font-size="9" fill="#8fa2bd">CalcitePlanner</text>
+    <rect x="580" y="80" width="150" height="70" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#s)"/><text x="655" y="106" font-weight="600" fill="#1b2a4a">④ 物理编译</text><text x="655" y="126" font-size="9.5" fill="#5b6b86">TaskCompiler → DAG</text><text x="655" y="142" font-size="9" fill="#8fa2bd">TaskCompiler</text>
+    <rect x="760" y="80" width="130" height="70" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#s)"/><text x="825" y="106" font-weight="600" fill="#12402a">⑤ 产物</text><text x="825" y="126" font-size="9.5" fill="#3f7a56">引擎无关 Task DAG</text><text x="825" y="142" font-size="9" fill="#5f9678">交执行引擎</text>
+  </g>
+  <g stroke="#8fb0d8" stroke-width="1.5" fill="none" marker-end="url(#a)">
+    <path d="M190,115 L218,115"/><path d="M370,115 L398,115"/><path d="M550,115 L578,115"/><path d="M730,115 L758,115"/>
+  </g>
+  <text x="115" y="70" font-size="9.5" fill="#a1a1a6" text-anchor="middle">Compiler.compile() 总入口</text>
+
+  <!-- CBO detail band -->
+  <rect x="40" y="190" width="470" height="66" rx="12" fill="#e3edfa" stroke="#c3d7ef"/>
+  <text x="275" y="212" font-size="11" font-weight="600" fill="#1b2a4a" text-anchor="middle">③ Calcite CBO 三类改写（靠 ANALYZE 统计驱动代价）</text>
+  <text x="275" y="234" font-size="10" fill="#4a5f80" text-anchor="middle">谓词下推 · 列裁剪 · Join 重排 → logicalPlan() 产逻辑计划</text>
+  <text x="275" y="248" font-size="9.5" fill="#8fa2bd" text-anchor="middle">apply() 在 CalcitePlannerAction 内执行优化规则</text>
+
+  <!-- decouple note -->
+  <rect x="530" y="190" width="360" height="66" rx="12" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="710" y="212" font-size="11" font-weight="600" fill="#5a3410" text-anchor="middle">存算解耦里唯一不解耦的核心</text>
+  <text x="710" y="234" font-size="10" fill="#8a6a2e" text-anchor="middle">前端 ANTLR + 语义分析自管，仅优化器借 Calcite</text>
+  <text x="710" y="248" font-size="9.5" fill="#a88a4e" text-anchor="middle">后端产物引擎无关 → Tez/MR/LLAP 都能跑</text>
+
+  <text x="30" y="300" font-size="10.5" fill="#6e6e73">读法：SQL 一路降级为「引擎无关算子/Task DAG」，切执行引擎不改 SQL；CBO 是唯一依赖统计信息的智能环节，ANALYZE 不做则退化为 RBO。</text>
+</svg>

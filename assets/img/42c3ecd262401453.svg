@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="520" viewBox="0 0 1080 520" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="520" fill="#fbfbfd"/>
+
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">FFmpeg 能力域依赖关系图 —— 数据流 + 约束 + 贯穿层</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">实线=数据流(packet/frame 流经);虚线=约束(格式/硬件配置) ｜ 贯穿层 AVBufferRef 引用计数横切所有 packet/frame</text>
+
+  <!-- 主数据流五段 y=96 h=88 -->
+  <rect x="30" y="96" width="188" height="88" rx="12" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="124" y="128" font-size="12" font-weight="600" text-anchor="middle" fill="#5a3410">容器格式 · demux</text>
+  <text x="124" y="150" font-size="8.5" text-anchor="middle" fill="#93762e">libavformat 拆容器</text>
+  <text x="124" y="168" font-size="8.5" text-anchor="middle" fill="#93762e">→ AVPacket</text>
+
+  <rect x="248" y="96" width="188" height="88" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="342" y="128" font-size="12" font-weight="600" text-anchor="middle" fill="#12402a">编解码 · decode</text>
+  <text x="342" y="150" font-size="8.5" text-anchor="middle" fill="#2f6f4f">libavcodec send/receive</text>
+  <text x="342" y="168" font-size="8.5" text-anchor="middle" fill="#2f6f4f">AVPacket → AVFrame</text>
+
+  <rect x="466" y="96" width="188" height="88" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="560" y="128" font-size="12" font-weight="600" text-anchor="middle" fill="#1b2a4a">滤镜图(可选)</text>
+  <text x="560" y="150" font-size="8.5" text-anchor="middle" fill="#5b7db1">AVFilterGraph</text>
+  <text x="560" y="168" font-size="8.5" text-anchor="middle" fill="#5b7db1">AVFrame → AVFrame</text>
+
+  <rect x="684" y="96" width="188" height="88" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="778" y="128" font-size="12" font-weight="600" text-anchor="middle" fill="#12402a">编解码 · encode</text>
+  <text x="778" y="150" font-size="8.5" text-anchor="middle" fill="#2f6f4f">libavcodec send/receive</text>
+  <text x="778" y="168" font-size="8.5" text-anchor="middle" fill="#2f6f4f">AVFrame → AVPacket</text>
+
+  <rect x="902" y="96" width="148" height="88" rx="12" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="976" y="128" font-size="12" font-weight="600" text-anchor="middle" fill="#5a3410">容器格式 · mux</text>
+  <text x="976" y="150" font-size="8.5" text-anchor="middle" fill="#93762e">libavformat 封容器</text>
+  <text x="976" y="168" font-size="8.5" text-anchor="middle" fill="#93762e">AVPacket →文件</text>
+
+  <!-- 实线数据流箭头 -->
+  <path d="M218,140 L248,140" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M436,140 L466,140" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M654,140 L684,140" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M872,140 L902,140" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <!-- 约束层(虚线指向) y=232 -->
+  <rect x="30" y="232" width="248" height="78" rx="12" fill="#ffffff" stroke="#e4e4ea" filter="url(#soft)"/>
+  <text x="154" y="260" font-size="11" font-weight="600" text-anchor="middle" fill="#1d1d1f">库分层</text>
+  <text x="154" y="281" font-size="8.5" text-anchor="middle" fill="#6e6e73">六库单向依赖 · util 在底</text>
+  <text x="154" y="298" font-size="8.5" text-anchor="middle" fill="#86868b">承载上面所有能力域</text>
+
+  <rect x="306" y="232" width="248" height="78" rx="12" fill="#ffffff" stroke="#e4e4ea" filter="url(#soft)"/>
+  <text x="430" y="260" font-size="11" font-weight="600" text-anchor="middle" fill="#1d1d1f">像素与采样格式</text>
+  <text x="430" y="281" font-size="8.5" text-anchor="middle" fill="#6e6e73">AVPixelFormat/AVSampleFormat</text>
+  <text x="430" y="298" font-size="8.5" text-anchor="middle" fill="#86868b">约束 decode/filter/encode 帧格式</text>
+
+  <rect x="582" y="232" width="248" height="78" rx="12" fill="#ffffff" stroke="#e4e4ea" filter="url(#soft)"/>
+  <text x="706" y="260" font-size="11" font-weight="600" text-anchor="middle" fill="#1d1d1f">硬件加速 hwaccel</text>
+  <text x="706" y="281" font-size="8.5" text-anchor="middle" fill="#6e6e73">cuda / vaapi GPU 帧留显存</text>
+  <text x="706" y="298" font-size="8.5" text-anchor="middle" fill="#86868b">约束 decode 走 GPU 路径</text>
+
+  <rect x="858" y="232" width="192" height="78" rx="12" fill="#ffffff" stroke="#e4e4ea" filter="url(#soft)"/>
+  <text x="954" y="260" font-size="11" font-weight="600" text-anchor="middle" fill="#1d1d1f">核心数据结构</text>
+  <text x="954" y="281" font-size="8.5" text-anchor="middle" fill="#6e6e73">AVPacket / AVFrame</text>
+  <text x="954" y="298" font-size="8.5" text-anchor="middle" fill="#86868b">管线流动的载体</text>
+
+  <!-- 虚线约束箭头(从约束层指向管线段) -->
+  <path d="M430,232 L430,200 L342,200 L342,184" stroke="#c7c7cc" stroke-width="1.3" stroke-dasharray="5 4" fill="none" marker-end="url(#ar)"/>
+  <path d="M470,232 L470,208 L560,208 L560,184" stroke="#c7c7cc" stroke-width="1.3" stroke-dasharray="5 4" fill="none" marker-end="url(#ar)"/>
+  <path d="M706,232 L706,200 L778,200 L778,184" stroke="#c7c7cc" stroke-width="1.3" stroke-dasharray="5 4" fill="none" marker-end="url(#ar)"/>
+  <path d="M690,232 L690,214 L360,214 L360,184" stroke="#c7c7cc" stroke-width="1.3" stroke-dasharray="5 4" fill="none" marker-end="url(#ar)"/>
+
+  <!-- 贯穿层 AVBufferRef y=346 -->
+  <rect x="30" y="346" width="1020" height="82" rx="12" fill="#fbeaea" stroke="#e6b8b8" filter="url(#soft)"/>
+  <text x="50" y="374" font-size="12" font-weight="600" fill="#7a2a2a">贯穿层 · AVBufferRef 引用计数(横切所有 packet/frame)</text>
+  <text x="50" y="396" font-size="9.5" fill="#a05a5a">AVPacket/AVFrame 的数据都是引用计数缓冲 · 管线各段共享同一 buffer 零拷贝 · av_buffer_ref 增引用而非复制、av_buffer_unref 归零才释放</text>
+  <text x="50" y="414" font-size="9" fill="#c07a7a">横切 demux→decode→filter→encode→mux 全程:数据轻量流动、深拷贝会爆内存(1080p 一帧≈3MB),零拷贝是高效核心</text>
+  <!-- 贯穿虚线连到五段底部 -->
+  <path d="M124,346 L124,184" stroke="#e6b8b8" stroke-width="1.2" stroke-dasharray="3 4" fill="none" opacity="0.7"/>
+  <path d="M342,346 L342,220" stroke="#e6b8b8" stroke-width="1.2" stroke-dasharray="3 4" fill="none" opacity="0.7"/>
+  <path d="M778,346 L778,220" stroke="#e6b8b8" stroke-width="1.2" stroke-dasharray="3 4" fill="none" opacity="0.7"/>
+  <path d="M976,346 L976,184" stroke="#e6b8b8" stroke-width="1.2" stroke-dasharray="3 4" fill="none" opacity="0.7"/>
+
+  <!-- 图例 -->
+  <path d="M50,452 L96,452" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="104" y="456" font-size="9" fill="#6e6e73">实线 = 数据流(packet/frame)</text>
+  <path d="M310,452 L356,452" stroke="#c7c7cc" stroke-width="1.3" stroke-dasharray="5 4" fill="none" marker-end="url(#ar)"/>
+  <text x="364" y="456" font-size="9" fill="#6e6e73">虚线 = 约束(格式 / 硬件配置)</text>
+  <rect x="600" y="446" width="20" height="12" rx="3" fill="#fbeaea" stroke="#e6b8b8"/>
+  <text x="628" y="456" font-size="9" fill="#6e6e73">红带 = 贯穿层 AVBufferRef 引用计数</text>
+
+  <text x="30" y="500" font-size="9" fill="#a1a1a6">源码基准 FFmpeg(git 1588bce) · 五段管线是数据流主干,格式/硬件/库分层作为约束支撑,引用计数贯穿全程实现零拷贝</text>
+</svg>

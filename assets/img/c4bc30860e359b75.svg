@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="540" viewBox="0 0 1080 540"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1080" height="540" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">Milvus 段上 ANN 检索执行 · 段类型决定路径</text>
+  <text x="30" y="50" font-size="11" fill="#a1a1a6">SegmentInterface::Search → PhyVectorSearchNode → segment_-&gt;vector_search;sealed 建了索引才走 knowhere 快路径</text>
+
+  <!-- entry -->
+  <rect x="380" y="72" width="320" height="54" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="540" y="95" font-size="12" font-weight="600" fill="#12402a" text-anchor="middle">SegmentInternalInterface::Search</text>
+  <text x="540" y="113" font-size="9" fill="#2f6f4f" text-anchor="middle">SegmentInterface.cpp:138 · 物理算子 PhyVectorSearchNode</text>
+
+  <!-- split to sealed / growing -->
+  <path d="M540,126 L540,146 L290,146 L290,170" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M540,126 L540,146 L850,146 L850,170" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <text x="290" y="162" font-size="9.5" fill="#a1a1a6" text-anchor="middle">sealed 段(不可变落盘)</text>
+  <text x="850" y="162" font-size="9.5" fill="#a1a1a6" text-anchor="middle">growing 段(内存可变)</text>
+
+  <!-- sealed group -->
+  <rect x="40" y="176" width="620" height="238" rx="14" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="60" y="200" font-size="12" font-weight="600" fill="#5a3410">sealed 段:ChunkedSegmentSealedImpl::vector_search(ChunkedSegmentSealedImpl.cpp:3416)三分支</text>
+
+  <!-- branch 1 -->
+  <rect x="60" y="216" width="192" height="182" rx="11" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="156" y="240" font-size="11" font-weight="600" fill="#5a3410" text-anchor="middle">① 临时 binlog 索引</text>
+  <text x="156" y="266" font-size="9.5" fill="#5a3410" text-anchor="middle">段有临时构建的</text>
+  <text x="156" y="282" font-size="9.5" fill="#5a3410" text-anchor="middle">binlog 索引</text>
+  <rect x="80" y="300" width="152" height="42" rx="9" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="156" y="320" font-size="10" font-weight="600" fill="#12402a" text-anchor="middle">SearchOnSealedIndex</text>
+  <text x="156" y="335" font-size="8.5" fill="#2f6f4f" text-anchor="middle">走 knowhere 索引</text>
+  <text x="156" y="368" font-size="8.5" fill="#93762e" text-anchor="middle">早期即建的临时索引</text>
+  <text x="156" y="384" font-size="8.5" fill="#93762e" text-anchor="middle">先于正式索引可用</text>
+
+  <!-- branch 2 -->
+  <rect x="264" y="216" width="192" height="182" rx="11" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="360" y="240" font-size="11" font-weight="600" fill="#5a3410" text-anchor="middle">② index_ready_bitset</text>
+  <text x="360" y="266" font-size="9.5" fill="#5a3410" text-anchor="middle">正式索引就绪</text>
+  <text x="360" y="282" font-size="9.5" fill="#5a3410" text-anchor="middle">(异步建索引完成)</text>
+  <rect x="284" y="300" width="152" height="42" rx="9" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="360" y="320" font-size="10" font-weight="600" fill="#12402a" text-anchor="middle">SearchOnSealedIndex</text>
+  <text x="360" y="335" font-size="8.5" fill="#2f6f4f" text-anchor="middle">正常 knowhere 路径</text>
+  <text x="360" y="368" font-size="8.5" fill="#93762e" text-anchor="middle">近对数级快路径</text>
+  <text x="360" y="384" font-size="8.5" fill="#93762e" text-anchor="middle">检索快的常态目标</text>
+
+  <!-- branch 3 -->
+  <rect x="468" y="216" width="176" height="182" rx="11" fill="#fbeaea" stroke="#e7c3c3" filter="url(#soft)"/>
+  <text x="556" y="240" font-size="11" font-weight="600" fill="#4a1414" text-anchor="middle">③ 仅字段数据</text>
+  <text x="556" y="266" font-size="9.5" fill="#4a1414" text-anchor="middle">未建任何索引</text>
+  <text x="556" y="282" font-size="9.5" fill="#4a1414" text-anchor="middle">只有原始列数据</text>
+  <rect x="486" y="300" width="140" height="42" rx="9" fill="#fbeaea" stroke="#e7c3c3"/>
+  <text x="556" y="320" font-size="10" font-weight="600" fill="#4a1414" text-anchor="middle">SearchOnSealedColumn</text>
+  <text x="556" y="335" font-size="8.5" fill="#7a2a2a" text-anchor="middle">暴力扫描</text>
+  <text x="556" y="368" font-size="8.5" fill="#7a2a2a" text-anchor="middle">未建索引前查询慢</text>
+  <text x="556" y="384" font-size="8.5" fill="#7a2a2a" text-anchor="middle">属正常现象</text>
+
+  <!-- growing group -->
+  <rect x="680" y="176" width="360" height="238" rx="14" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="700" y="200" font-size="12" font-weight="600" fill="#5a3410">growing 段:SegmentGrowingImpl::vector_search → SearchOnGrowing</text>
+
+  <rect x="700" y="216" width="320" height="182" rx="11" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="860" y="242" font-size="11" font-weight="600" fill="#5a3410" text-anchor="middle">内存可变、通常无索引 → 总走暴力</text>
+  <rect x="720" y="256" width="140" height="52" rx="9" fill="#eafaf1" stroke="#bfe0cd"/>
+  <text x="790" y="278" font-size="9.5" font-weight="600" fill="#12402a" text-anchor="middle">有临时索引</text>
+  <text x="790" y="294" font-size="8.5" fill="#2f6f4f" text-anchor="middle">则用临时索引</text>
+  <rect x="880" y="256" width="120" height="52" rx="9" fill="#fbeaea" stroke="#e7c3c3"/>
+  <text x="940" y="278" font-size="9.5" font-weight="600" fill="#4a1414" text-anchor="middle">否则暴力</text>
+  <text x="940" y="294" font-size="8.5" fill="#7a2a2a" text-anchor="middle">分块 + 归并</text>
+  <text x="860" y="332" font-size="9" fill="#93762e" text-anchor="middle">暴力分块 + SubSearchResult 归并</text>
+  <text x="860" y="360" font-size="9" fill="#93762e" text-anchor="middle">growing 无索引 → 刚导入查询慢是正常的</text>
+  <text x="860" y="380" font-size="9" fill="#93762e" text-anchor="middle">等 flush 成 sealed + 建索引后才快</text>
+
+  <!-- knowhere footer -->
+  <rect x="40" y="436" width="1000" height="76" rx="13" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="60" y="460" font-size="11" font-weight="600" fill="#12402a">knowhere 查询:index_.Search(dataset, conf, bitset, ...)(VectorMemIndex.cpp:778)</text>
+  <text x="60" y="483" font-size="10" fill="#2f6f4f">返回 topK 结果;度量类型 metric = L2(欧氏) / IP(内积) / COSINE(余弦)(Types.h:697)</text>
+  <text x="60" y="502" font-size="9.5" fill="#a1a1a6">关键:growing 与未建索引 sealed 走暴力,sealed 建了 knowhere 索引才走快路径 —— 及时建索引是查询快的前提</text>
+</svg>

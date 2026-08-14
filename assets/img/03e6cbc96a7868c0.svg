@@ -1,0 +1,140 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="720" viewBox="0 0 1080 720" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="aHot" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+    <marker id="aState" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#c99a3a"/></marker>
+    <marker id="aCtl" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#5b7db1"/></marker>
+    <marker id="aFail" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#d38236"/></marker>
+    <marker id="aX" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#8a5cae"/></marker>
+  </defs>
+  <rect width="1080" height="720" fill="#fbfbfd"/>
+
+  <!-- ===== 标题带 · 判型 ===== -->
+  <text x="30" y="26" font-size="14" font-weight="600" fill="#1d1d1f">MySQL 总架构 · 可插拔存储引擎的关系数据库：SQL 层（解析/优化/执行）与存储引擎经 handler API 解耦，默认引擎 InnoDB 提供 ACID 事务</text>
+  <text x="30" y="44" font-size="10.5" fill="#6e6e73">分层脊：客户端连接 → SQL 层（Server 层 · 引擎无关）→ handler API 抽象边界 → InnoDB（B+树聚簇索引 / Buffer Pool / redo·undo）→ 持久化底盘　组件经虚函数缝协作　源码基准 v5.7.44</text>
+
+  <!-- ===== 设计张力铭牌带（显式）===== -->
+  <rect x="24" y="52" width="1032" height="48" rx="10" fill="#fbf2ea" stroke="#e6cdae"/>
+  <text x="40" y="71" font-size="11" font-weight="700" fill="#b0651f">设计张力</text>
+  <text x="104" y="71" font-size="10" fill="#5a4a3a">SQL 层引擎无关<tspan fill="#8a6d3b">（只调 handler 虚函数）</tspan><tspan font-weight="700" fill="#c0392b"> ⟷ vs ⟷ </tspan>InnoDB 事务/崩溃恢复深度耦合<tspan fill="#8a6d3b">：解耦切出可插拔缝，代价是 binlog（Server 逻辑日志）与 redo（引擎物理日志）双日志须靠</tspan><tspan font-weight="700" fill="#b0651f"> 两阶段提交 </tspan><tspan fill="#8a6d3b">对账</tspan></text>
+  <text x="104" y="89" font-size="9.5" fill="#5a4a3a">ACID 持久<tspan fill="#8a6d3b">（redo WAL 先行 + double-write 防断裂 + fsync 落盘）</tspan><tspan font-weight="700" fill="#c0392b"> ⟷ vs ⟷ </tspan>写吞吐<tspan fill="#8a6d3b">（组提交合并 fsync、Buffer Pool 缓存 + page cleaner 异步刷脏，故崩溃后必须靠 redo 重放 + undo 回滚重建一致态）</tspan></text>
+
+  <!-- ===== 图例：五型语义路径 ===== -->
+  <line x1="40" y1="113" x2="62" y2="113" stroke="#2f9e6e" stroke-width="1.8" marker-end="url(#aHot)"/>
+  <text x="68" y="117" font-size="10" fill="#3a3a3c">Hot · SQL / 数据流</text>
+  <line x1="196" y1="113" x2="218" y2="113" stroke="#5b7db1" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#aCtl)"/>
+  <text x="224" y="117" font-size="10" fill="#3a3a3c">Control · 优化 + 后台调度</text>
+  <line x1="404" y1="113" x2="426" y2="113" stroke="#c99a3a" stroke-width="1.8" marker-end="url(#aState)"/>
+  <text x="432" y="117" font-size="10" fill="#3a3a3c">State · Buffer Pool / redo 状态</text>
+  <line x1="648" y1="113" x2="670" y2="113" stroke="#d38236" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#aFail)"/>
+  <text x="676" y="117" font-size="10" fill="#3a3a3c">失败 · 崩溃恢复</text>
+  <line x1="810" y1="113" x2="832" y2="113" stroke="#8a5cae" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#aX)"/>
+  <text x="838" y="117" font-size="10" fill="#3a3a3c">横切 · 复制</text>
+  <text x="1056" y="117" font-size="10" fill="#a1a1a6" text-anchor="end">框 = 主线可下钻</text>
+
+  <!-- ===== powers 立身带 ===== -->
+  <rect x="24" y="126" width="1032" height="26" rx="8" fill="#f6f6f8" stroke="#e2e2e7" data-tid="MySQL原理_全景主线框架" data-lab="全景主线框架"/>
+  <text x="40" y="143" font-size="10" fill="#4a4a4f">powers：世界最流行的开源关系数据库 —— 两层架构（Server 层 + 存储引擎层）经 handler API 解耦，同一条 SQL 可跑在不同引擎之上；InnoDB 以 B+树 + 事务日志兑现 ACID</text>
+
+  <!-- ===== ① 连接层 ===== -->
+  <rect x="24" y="158" width="1032" height="40" rx="14" fill="#eef2f7" stroke="#d4ddeb" filter="url(#soft)" data-tid="MySQL原理_支撑_连接与线程模型" data-lab="连接与线程模型"/>
+  <text x="40" y="176" font-size="12" font-weight="600" fill="#3f5573">① 连接层 · 每个客户端连接绑定一个 THD 会话对象（认证后进入命令循环）</text>
+  <text x="40" y="191" font-size="9" fill="#6a7c96">监听 socket → 连接处理器（per-thread 每连接一线程 / one-thread 单线程）· 命令主循环逐条取 SQL 派发</text>
+
+  <!-- Hot：连接层 → SQL 层 -->
+  <line x1="300" y1="198" x2="300" y2="210" stroke="#2f9e6e" stroke-width="1.8" marker-end="url(#aHot)"/>
+  <text x="306" y="207" font-size="8" fill="#2f9e6e">SQL 文本下行</text>
+
+  <!-- ===== ② SQL 层（Server 层，引擎无关）===== -->
+  <rect x="24" y="210" width="1032" height="128" rx="14" fill="#f4f7fc" stroke="#cfe0f2" data-tid="MySQL原理_接口_SQL执行生命周期" data-lab="SQL 执行生命周期"/>
+  <text x="40" y="228" font-size="12" font-weight="600" fill="#5b7db1">② SQL 层（Server 层）· 引擎无关：把 SQL 文本变成执行计划，再逐行驱动存储引擎</text>
+  <g text-anchor="middle">
+    <rect x="40" y="244" width="230" height="88" rx="9" fill="#fff" stroke="#dbe6f4" filter="url(#soft)"/>
+    <text x="155" y="266" font-size="10.5" font-weight="600" fill="#1d1d1f">解析器 Parser</text><text x="155" y="283" font-size="8.5" fill="#6e6e73">词法 + 语法分析 → 语法树</text><text x="155" y="299" font-size="8.5" fill="#6e6e73">预处理：名称解析 · 权限检查</text><text x="155" y="315" font-size="8.5" fill="#6e6e73">得到内部查询结构</text>
+    <rect x="282" y="244" width="230" height="88" rx="9" fill="#fff" stroke="#cfe0f2" filter="url(#soft)" data-tid="MySQL原理_支撑_查询优化器" data-lab="查询优化器"/>
+    <text x="397" y="266" font-size="10.5" font-weight="600" fill="#5b7db1">查询优化器 Optimizer</text><text x="397" y="283" font-size="8.5" fill="#6e6e73">基于代价：选索引 · 定连接顺序</text><text x="397" y="299" font-size="8.5" fill="#6e6e73">常量折叠 · 子查询改写</text><text x="397" y="315" font-size="8.5" fill="#6e6e73">生成执行计划 QEP</text>
+    <rect x="524" y="244" width="230" height="88" rx="9" fill="#fff" stroke="#dbe6f4" filter="url(#soft)"/>
+    <text x="639" y="266" font-size="10.5" font-weight="600" fill="#1d1d1f">执行器 Executor</text><text x="639" y="283" font-size="8.5" fill="#6e6e73">火山模型：嵌套循环逐行迭代</text><text x="639" y="299" font-size="8.5" fill="#6e6e73">拉取一行 → 过滤 → 上抛</text><text x="639" y="315" font-size="8.5" fill="#6e6e73">经 handler 读写行</text>
+    <rect x="766" y="244" width="274" height="88" rx="9" fill="#faf6fb" stroke="#e4cdea" filter="url(#soft)" data-tid="MySQL原理_支撑_binlog与复制" data-lab="binlog"/>
+    <text x="903" y="266" font-size="10.5" font-weight="600" fill="#8944ab">binlog（Server 层日志）</text><text x="903" y="283" font-size="8.5" fill="#6e6e73">逻辑变更日志：复制 + 时点恢复</text><text x="903" y="299" font-size="8.5" fill="#6e6e73">提交时与 redo 两阶段提交对账</text><text x="903" y="315" font-size="8.5" fill="#6e6e73">组提交合并多事务 fsync</text>
+  </g>
+  <!-- Control：优化器内部选计划 -->
+  <path d="M300,300 q-16,-13 -30,0" fill="none" stroke="#5b7db1" stroke-width="1.4" stroke-dasharray="4 3" marker-end="url(#aCtl)"/>
+
+  <!-- Hot：执行器 → handler 缝 -->
+  <line x1="639" y1="332" x2="639" y2="348" stroke="#2f9e6e" stroke-width="1.8" marker-end="url(#aHot)"/>
+  <text x="645" y="344" font-size="8" fill="#2f9e6e">调虚函数取/写行</text>
+
+  <!-- ===== ③ handler API 缝（可插拔边界 · 灵魂）===== -->
+  <rect x="24" y="348" width="1032" height="42" rx="12" fill="#eef7f1" stroke="#8fcaa8" stroke-width="1.5" stroke-dasharray="7 4" data-tid="MySQL原理_支撑_handler存储引擎API" data-lab="handler API"/>
+  <text x="40" y="368" font-size="12" font-weight="600" fill="#1c7a4d">③ handler API · 可插拔存储引擎抽象边界　★灵魂：SQL 层不懂行如何存储，只调统一虚函数</text>
+  <text x="40" y="384" font-size="9" fill="#3c7a58">handlerton（每引擎单例，登记 commit / prepare / rollback / create）＋ handler（每表实例：write_row · index_read · rnd_next · external_lock）</text>
+
+  <!-- Hot：handler → InnoDB -->
+  <line x1="300" y1="390" x2="300" y2="398" stroke="#2f9e6e" stroke-width="1.8" marker-end="url(#aHot)"/>
+  <line x1="900" y1="390" x2="900" y2="398" stroke="#8a5cae" stroke-width="1.4" stroke-dasharray="5 3" marker-end="url(#aX)"/>
+
+  <!-- ===== ④ InnoDB 存储引擎 ===== -->
+  <rect x="24" y="398" width="1032" height="244" rx="14" fill="#fbf7ef" stroke="#ecdcbf"/>
+  <text x="40" y="416" font-size="12" font-weight="600" fill="#8a6d3b">④ InnoDB 存储引擎 · 默认引擎：B+树聚簇索引 + Buffer Pool + redo/undo，兑现 ACID 事务与崩溃恢复</text>
+  <!-- Row A -->
+  <g>
+    <rect x="40" y="424" width="506" height="102" rx="11" fill="#fff" stroke="#ecdcbf" filter="url(#soft)" data-tid="MySQL原理_支撑_InnoDB_BufferPool与B树" data-lab="Buffer Pool"/>
+    <text x="56" y="445" font-size="11" font-weight="600" fill="#1d1d1f">Buffer Pool 缓冲池</text>
+    <text x="56" y="463" font-size="9" fill="#6e6e73">缓存数据页 / 索引页（页 = 16KB 磁盘 I/O 单元）· LRU 冷热淘汰</text>
+    <text x="56" y="480" font-size="9" fill="#6e6e73">flush_list 记脏页 · page cleaner 线程异步刷盘（不阻塞事务）</text>
+    <text x="56" y="497" font-size="9" fill="#6e6e73">命中即内存读写；未命中才从磁盘读页入池</text>
+    <text x="56" y="515" font-size="8.5" fill="#b08535">读写都先落 Buffer Pool，磁盘 I/O 与事务解耦</text>
+
+    <rect x="556" y="424" width="484" height="102" rx="11" fill="#fff" stroke="#ecdcbf" filter="url(#soft)" data-tid="MySQL原理_支撑_InnoDB_BufferPool与B树" data-lab="B+树聚簇索引"/>
+    <text x="572" y="445" font-size="11" font-weight="600" fill="#1d1d1f">B+树聚簇索引</text>
+    <text x="572" y="463" font-size="9" fill="#6e6e73">主键即数据：聚簇索引叶子结点直接存整行</text>
+    <text x="572" y="480" font-size="9" fill="#6e6e73">二级索引叶子只存主键 → 需回表取整行</text>
+    <text x="572" y="497" font-size="9" fill="#6e6e73">自根向叶逐层下探定位记录 · 范围扫描走叶子链表</text>
+    <text x="572" y="515" font-size="8.5" fill="#b08535">树高低 → 磁盘随机 I/O 少，页缓存复用率高</text>
+  </g>
+  <!-- Row B -->
+  <g>
+    <rect x="40" y="534" width="330" height="100" rx="11" fill="#fff" stroke="#ecdcbf" filter="url(#soft)" data-tid="MySQL原理_支撑_InnoDB事务与MVCC" data-lab="undo + ReadView"/>
+    <text x="56" y="554" font-size="10.5" font-weight="600" fill="#1d1d1f">undo log + ReadView（MVCC）</text>
+    <text x="56" y="571" font-size="8.7" fill="#6e6e73">快照读：按事务可见性沿版本链拼旧版本</text>
+    <text x="56" y="587" font-size="8.7" fill="#6e6e73">行内 DB_TRX_ID / DB_ROLL_PTR 指向 undo</text>
+    <text x="56" y="603" font-size="8.7" fill="#6e6e73">读不加锁、写不阻读 → 读写并发</text>
+    <text x="56" y="621" font-size="8.5" fill="#b08535">回滚也靠 undo 反向回放</text>
+
+    <rect x="380" y="534" width="330" height="100" rx="11" fill="#fff" stroke="#ecdcbf" filter="url(#soft)" data-tid="MySQL原理_支撑_InnoDB事务与MVCC" data-lab="锁 + purge"/>
+    <text x="396" y="554" font-size="10.5" font-weight="600" fill="#1d1d1f">锁管理器 + purge 线程</text>
+    <text x="396" y="571" font-size="8.7" fill="#6e6e73">当前读加行锁：共享 S / 排他 X · 间隙锁防幻读</text>
+    <text x="396" y="587" font-size="8.7" fill="#6e6e73">死锁检测器：发现环 → 回滚代价小的事务</text>
+    <text x="396" y="603" font-size="8.7" fill="#6e6e73">purge 后台线程回收再无事务可见的旧版本</text>
+    <text x="396" y="621" font-size="8.5" fill="#b08535">锁 + MVCC 共同实现隔离级别</text>
+
+    <rect x="720" y="534" width="320" height="100" rx="11" fill="#fff" stroke="#ecdcbf" filter="url(#soft)" data-tid="MySQL原理_支撑_redo日志与崩溃恢复" data-lab="redo + double-write"/>
+    <text x="736" y="554" font-size="10.5" font-weight="600" fill="#1d1d1f">redo log（WAL）+ double-write</text>
+    <text x="736" y="571" font-size="8.7" fill="#6e6e73">先写日志后写页：提交只需顺序写 redo + fsync</text>
+    <text x="736" y="587" font-size="8.7" fill="#6e6e73">double-write 防页部分写断裂（撕页）</text>
+    <text x="736" y="603" font-size="8.7" fill="#6e6e73">checkpoint 推进 LSN，界定恢复起点</text>
+    <text x="736" y="621" font-size="8.5" fill="#b08535">崩溃后 redo 重放已提交、undo 回滚未提交</text>
+  </g>
+
+  <!-- State：Buffer Pool ↔ 持久化（刷脏 / 读页） -->
+  <line x1="200" y1="526" x2="200" y2="534" stroke="#c99a3a" stroke-width="1.4" marker-end="url(#aState)"/>
+  <line x1="290" y1="634" x2="290" y2="646" stroke="#c99a3a" stroke-width="1.6" marker-start="url(#aState)" marker-end="url(#aState)"/>
+  <text x="296" y="643" font-size="8" fill="#b08535">脏页刷盘 / 缺页读入</text>
+  <!-- State：redo → 持久化（redo 文件） -->
+  <line x1="880" y1="634" x2="880" y2="646" stroke="#c99a3a" stroke-width="1.6" marker-end="url(#aState)"/>
+  <!-- 失败：持久化 redo → Buffer Pool（崩溃重放，左侧margin回路） -->
+  <path d="M14,660 L14,470 L40,470" fill="none" stroke="#d38236" stroke-width="1.5" stroke-dasharray="5 3" marker-end="url(#aFail)"/>
+  <text x="10" y="560" font-size="8" fill="#d38236" text-anchor="middle" transform="rotate(-90 10 560)">崩溃后 redo 重放页 → Buffer Pool</text>
+
+  <!-- ===== ⑤ 持久化底盘 ===== -->
+  <rect x="24" y="646" width="1032" height="30" rx="8" fill="#eafaf1" stroke="#b8e6cd"/>
+  <text x="40" y="665" font-size="10" fill="#1c6b45">⑤ 持久化底盘 · 数据文件 .ibd（聚簇索引页）｜ redo log 文件 ｜ doublewrite 缓冲 ｜ undo 表空间 ｜ binlog 文件 —— fsync 落盘兑现 D 持久性</text>
+
+  <!-- 横切 · 复制（binlog → 从库，右侧 margin 路由） -->
+  <path d="M1040,288 L1066,288 L1066,660 L1040,660" fill="none" stroke="#8a5cae" stroke-width="1.5" stroke-dasharray="5 3" marker-end="url(#aX)"/>
+  <text x="1074" y="470" font-size="8" fill="#8a5cae" text-anchor="middle" transform="rotate(90 1074 470)">复制横切：binlog → 从库 relay log → SQL 线程重放</text>
+
+  <!-- ===== 读法 ===== -->
+  <text x="540" y="702" font-size="10" fill="#4a4a4f" text-anchor="middle">读法：SQL 从连接层进入 → SQL 层解析/优化/执行 → 穿 handler 缝调 InnoDB → 命中 Buffer Pool 或经 B+树取页 → 写 redo(先行)+undo，提交时 binlog 与 redo 两阶段组提交对账 → 崩溃后 redo 重放 + undo 回滚</text>
+</svg>

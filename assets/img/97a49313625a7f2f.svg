@@ -1,0 +1,99 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="640" viewBox="0 0 1120 640" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.08"/></filter>
+    <marker id="aT" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2aa0a4"/></marker>
+    <marker id="aG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#2f9e6e"/></marker>
+    <marker id="aR" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#d1544a"/></marker>
+  </defs>
+  <rect width="1120" height="640" fill="#fbfbfd"/>
+
+  <text x="30" y="32" font-size="15" font-weight="700" fill="#1d1d1f">图解点 ① DPDK 用户态 DMA 与 mbuf 循环 · 内核旁路：网卡 DMA 直入用户态 mbuf 环形缓冲，轮询而非中断，免内核-用户拷贝</text>
+  <text x="30" y="53" font-size="10.5" fill="#6e6e73">驱动映射到用户态 → 网卡把收到的帧 DMA 写进预分配的 mbuf → rx ring 描述符指向它 → 应用轮询取出处理 → mbuf 归还内存池循环复用</text>
+
+  <line x1="30" y1="80" x2="54" y2="80" stroke="#2aa0a4" stroke-width="2" marker-end="url(#aT)"/>
+  <text x="60" y="84" font-size="10" fill="#3a3a3c">DMA 直写（硬件搬字节，CPU 不参与）</text>
+  <line x1="330" y1="80" x2="354" y2="80" stroke="#2f9e6e" stroke-width="2" marker-end="url(#aG)"/>
+  <text x="360" y="84" font-size="10" fill="#3a3a3c">轮询取包 / 处理（无中断）</text>
+  <line x1="588" y1="80" x2="612" y2="80" stroke="#d1544a" stroke-width="2" stroke-dasharray="5 3" marker-end="url(#aR)"/>
+  <text x="618" y="84" font-size="10" fill="#3a3a3c">mbuf 归还内存池 · 环形复用</text>
+
+  <!-- 对比条：传统 vs 旁路 -->
+  <rect x="30" y="100" width="1060" height="46" rx="9" fill="#fdecea" stroke="#f3c9c3"/>
+  <text x="46" y="121" font-size="10" font-weight="700" fill="#b23b30">传统内核路径（对照）</text>
+  <text x="46" y="138" font-size="9" fill="#9a4038">网卡 → 中断 → 内核 socket 缓冲 → syscall 拷贝到用户缓冲：一次内核-用户拷贝 + 中断 + 上下文切换</text>
+  <text x="1074" y="130" font-size="9.5" fill="#b23b30" text-anchor="end">↓ 旁路把这些全省掉 ↓</text>
+
+  <!-- 网卡 NIC -->
+  <rect x="30" y="176" width="180" height="200" rx="13" fill="#ffffff" stroke="#d9dde4" filter="url(#soft)"/>
+  <text x="120" y="202" font-size="12" font-weight="700" fill="#1d1d1f" text-anchor="middle">网卡 NIC</text>
+  <text x="46" y="228" font-size="9.5" fill="#4a4a4f">收到以太帧</text>
+  <text x="46" y="250" font-size="9.5" fill="#4a4a4f">查 rx ring 拿到空闲</text>
+  <text x="46" y="268" font-size="9.5" fill="#4a4a4f">mbuf 的物理地址</text>
+  <text x="46" y="292" font-size="9.5" fill="#4a4a4f">DMA 引擎直接把帧</text>
+  <text x="46" y="310" font-size="9.5" fill="#4a4a4f">写进那块 mbuf</text>
+  <text x="46" y="336" font-size="9.5" fill="#4a4a4f">回填描述符 = done</text>
+  <text x="46" y="360" font-size="8.5" fill="#8a97ab">全程不打扰 CPU</text>
+
+  <!-- mbuf 环形缓冲（核心） -->
+  <rect x="250" y="164" width="470" height="330" rx="14" fill="#e3f4f4" stroke="#bfe3e4"/>
+  <text x="270" y="190" font-size="12" font-weight="700" fill="#1a6d70">用户态 mbuf 环形缓冲（rx ring）</text>
+  <text x="270" y="208" font-size="8.5" fill="#4a8d8f">描述符环 + 预分配 mbuf；生产者=网卡，消费者=应用</text>
+
+  <!-- ring 圆环示意 -->
+  <circle cx="485" cy="345" r="112" fill="none" stroke="#8fcccd" stroke-width="2" stroke-dasharray="4 4"/>
+  <!-- 8 个槽位 -->
+  <g font-size="9" text-anchor="middle">
+    <rect x="455" y="221" width="60" height="30" rx="6" fill="#2aa0a4"/><text x="485" y="240" fill="#fff">帧0</text>
+    <rect x="551" y="256" width="60" height="30" rx="6" fill="#2aa0a4"/><text x="581" y="275" fill="#fff">帧1</text>
+    <rect x="571" y="330" width="60" height="30" rx="6" fill="#2aa0a4"/><text x="601" y="349" fill="#fff">帧2</text>
+    <rect x="551" y="404" width="60" height="30" rx="6" fill="#ffffff" stroke="#8fcccd"/><text x="581" y="423" fill="#4a8d8f">空</text>
+    <rect x="455" y="439" width="60" height="30" rx="6" fill="#ffffff" stroke="#8fcccd"/><text x="485" y="458" fill="#4a8d8f">空</text>
+    <rect x="359" y="404" width="60" height="30" rx="6" fill="#ffffff" stroke="#8fcccd"/><text x="389" y="423" fill="#4a8d8f">空</text>
+    <rect x="339" y="330" width="60" height="30" rx="6" fill="#dff2e8" stroke="#9ed3b8"/><text x="369" y="349" fill="#2f6b4e">处理中</text>
+    <rect x="359" y="256" width="60" height="30" rx="6" fill="#dff2e8" stroke="#9ed3b8"/><text x="389" y="275" fill="#2f6b4e">处理中</text>
+  </g>
+  <text x="485" y="330" font-size="10" font-weight="700" fill="#1a6d70" text-anchor="middle">mbuf</text>
+  <text x="485" y="348" font-size="10" font-weight="700" fill="#1a6d70" text-anchor="middle">ring</text>
+  <!-- 生产/消费指针 -->
+  <text x="601" y="312" font-size="8" fill="#b23b30">head（网卡填）</text>
+  <text x="369" y="248" font-size="8" fill="#2f6b4e">tail（应用取）</text>
+  <text x="270" y="478" font-size="8.5" fill="#4a8d8f">同一块 mbuf 内存反复复用，零 malloc / free 抖动</text>
+
+  <!-- 应用 poll -->
+  <rect x="760" y="176" width="330" height="150" rx="13" fill="#eaf6f0" stroke="#bfe3d1" filter="url(#soft)"/>
+  <text x="776" y="202" font-size="12" font-weight="700" fill="#2f6b4e">应用 · PMD 轮询模式驱动</text>
+  <text x="776" y="226" font-size="9.5" fill="#2f6b4e">忙轮询 rx ring：有新描述符就取 mbuf</text>
+  <text x="776" y="248" font-size="9.5" fill="#2f6b4e">直接读 mbuf 里的字节 —— 无系统调用</text>
+  <text x="776" y="270" font-size="9.5" fill="#2f6b4e">解析 / 转发 / 交给上层协议</text>
+  <text x="776" y="292" font-size="9.5" fill="#2f6b4e">独占一个 CPU 核持续 poll</text>
+  <text x="776" y="314" font-size="8.5" fill="#8a97ab">用一核 100% 换极低时延 + 无中断风暴</text>
+
+  <!-- 收益卡 -->
+  <rect x="760" y="344" width="330" height="150" rx="13" fill="#ffffff" stroke="#d9dde4" filter="url(#soft)"/>
+  <text x="776" y="370" font-size="12" font-weight="700" fill="#1d1d1f">为什么快 · 省了什么</text>
+  <text x="776" y="394" font-size="9.5" fill="#4a4a4f">✓ 免内核-用户拷贝：应用直读 DMA 落地的内存</text>
+  <text x="776" y="416" font-size="9.5" fill="#4a4a4f">✓ 免中断：轮询替代，无中断处理 / 软中断</text>
+  <text x="776" y="438" font-size="9.5" fill="#4a4a4f">✓ 免上下文切换：全程在用户态一个线程</text>
+  <text x="776" y="460" font-size="9.5" fill="#4a4a4f">✓ 大页 + 内存池：TLB 友好、无分配抖动</text>
+  <text x="776" y="482" font-size="8.5" fill="#8a97ab">代价：绕过内核，安全 / 通用性由应用自己扛</text>
+
+  <!-- tx 归还环 -->
+  <rect x="250" y="514" width="840" height="104" rx="13" fill="#fbf3e2" stroke="#ecd6a8" filter="url(#soft)"/>
+  <text x="270" y="540" font-size="12" font-weight="700" fill="#8a6417">发送与循环复用 · tx ring</text>
+  <text x="270" y="564" font-size="9.5" fill="#7a5a1a">① 应用处理完 → 构造发送 mbuf 挂到 tx ring，网卡 DMA 读出上线</text>
+  <text x="270" y="586" font-size="9.5" fill="#7a5a1a">② 收 / 发用完的 mbuf 归还内存池 → 立即可被下一帧复用，形成闭环</text>
+  <text x="270" y="608" font-size="8.5" fill="#a98a3a">整个数据面是一个「取-用-还」的环，稳态零分配、零拷贝</text>
+
+  <!-- 连线 -->
+  <!-- NIC → ring (DMA) -->
+  <line x1="210" y1="270" x2="336" y2="300" stroke="#2aa0a4" stroke-width="2.4" marker-end="url(#aT)"/>
+  <text x="214" y="262" font-size="8.5" fill="#1a6d70">DMA 直写 mbuf</text>
+  <!-- ring → app (poll) -->
+  <line x1="634" y1="270" x2="758" y2="250" stroke="#2f9e6e" stroke-width="2.2" marker-end="url(#aG)"/>
+  <text x="640" y="242" font-size="8.5" fill="#2f6b4e">轮询取 mbuf</text>
+  <!-- app → 归还 (recycle) -->
+  <line x1="850" y1="494" x2="720" y2="558" stroke="#d1544a" stroke-width="1.8" stroke-dasharray="5 3" marker-end="url(#aR)"/>
+  <text x="770" y="520" font-size="8.5" fill="#b23b30">归还复用</text>
+  <!-- 归还 → ring -->
+  <line x1="420" y1="514" x2="470" y2="470" stroke="#d1544a" stroke-width="1.8" stroke-dasharray="5 3" marker-end="url(#aR)"/>
+</svg>

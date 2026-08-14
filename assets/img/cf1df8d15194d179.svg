@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="470" viewBox="0 0 1020 470" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs><filter id="sf" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="3.5" flood-color="#1d1d1f" flood-opacity="0.08"/></filter></defs>
+  <rect width="1020" height="470" fill="#fbfbfd"/>
+  <text x="24" y="30" font-size="14" font-weight="700" fill="#1d1d1f">TokenFetcher 状态机：一次取 token 服务多次调用 · 到期前预刷新 · 失败集中退避</text>
+  <text x="24" y="49" font-size="10" fill="#8a8a8e">GetRequestMetadata 返回可挂起的 ArenaPromise，在「发送前一刻」据缓存令牌状态四选一（token_fetcher_credentials.cc:245）</text>
+
+  <!-- entry -->
+  <rect x="24" y="66" width="470" height="84" rx="12" fill="#f4f6fb" stroke="#cdd8ea" filter="url(#sf)"/>
+  <text x="40" y="89" font-size="11" font-weight="700" fill="#4f6f9f">① 入口：GetRequestMetadata() 求值</text>
+  <text x="40" y="109" font-size="8.5" fill="#5f7799">返回 ArenaPromise —— 不预先写好 metadata，令牌在发送前一刻才拼装</text>
+  <text x="40" y="125" font-size="8.5" fill="#5f7799">从而过期/刷新逻辑总能生效；据缓存状态走下方四条互斥分支</text>
+  <text x="40" y="143" font-size="7.5" fill="#93a3bd">token_fetcher/token_fetcher_credentials.cc:245</text>
+
+  <!-- token lifetime axis -->
+  <rect x="526" y="66" width="470" height="84" rx="12" fill="#fbfbfd" stroke="#e6e6ea" filter="url(#sf)"/>
+  <text x="542" y="89" font-size="11" font-weight="700" fill="#6e6e73">令牌寿命轴 · 刷新窗口</text>
+  <rect x="542" y="100" width="230" height="18" rx="4" fill="#eafaf1" stroke="#b8e6cd"/>
+  <rect x="772" y="100" width="140" height="18" rx="4" fill="#f4eefb" stroke="#ddccef"/>
+  <rect x="912" y="100" width="68" height="18" rx="4" fill="#f3f3f5" stroke="#dcdce0"/>
+  <text x="657" y="113" font-size="8" text-anchor="middle" fill="#1c6b45">有效期 · 命中快路</text>
+  <text x="842" y="113" font-size="8" text-anchor="middle" fill="#6f3ea8">刷新窗口 60s · 预刷新</text>
+  <text x="946" y="113" font-size="8" text-anchor="middle" fill="#8a8a8e">已过期</text>
+  <text x="542" y="138" font-size="8" fill="#9a9aa0">进入到期前 60 秒（kTokenRefreshDuration，:39）即触发后台预刷新，旧令牌仍可用</text>
+
+  <text x="24" y="172" font-size="10.5" font-weight="700" fill="#4a4a4f">② 据缓存令牌状态四选一（互斥分支）</text>
+
+  <!-- state cards -->
+  <!-- card1 fast path -->
+  <rect x="24" y="180" width="237" height="200" rx="12" fill="#eafaf1" stroke="#b8e6cd" filter="url(#sf)"/>
+  <text x="38" y="203" font-size="11" font-weight="700" fill="#1c6b45">A · 命中缓存快路</text>
+  <text x="38" y="223" font-size="7.5" fill="#4a9970">条件</text>
+  <text x="38" y="238" font-size="8.5" fill="#256b48">有未过期的缓存令牌</text>
+  <text x="38" y="262" font-size="7.5" fill="#4a9970">动作</text>
+  <text x="38" y="277" font-size="8.5" fill="#256b48">AddTokenToClientInitial-</text>
+  <text x="38" y="290" font-size="8.5" fill="#256b48">Metadata → Immediate 返回</text>
+  <text x="38" y="316" font-size="8" fill="#5aa07d">同一令牌复用于多次调用，</text>
+  <text x="38" y="329" font-size="8" fill="#5aa07d">避免每调用同步取 token 阻塞</text>
+  <text x="38" y="372" font-size="7" fill="#7bb597">creds.cc:269 · :51</text>
+
+  <!-- card2 prefetch -->
+  <rect x="269" y="180" width="237" height="200" rx="12" fill="#f4eefb" stroke="#ddccef" filter="url(#sf)"/>
+  <text x="283" y="203" font-size="11" font-weight="700" fill="#6f3ea8">B · 预刷新触发</text>
+  <text x="283" y="223" font-size="7.5" fill="#9a76c0">条件</text>
+  <text x="283" y="238" font-size="8.5" fill="#6f3ea8">缓存空，或剩余寿命进入</text>
+  <text x="283" y="251" font-size="8.5" fill="#6f3ea8">刷新窗口，且无在途 fetch</text>
+  <text x="283" y="275" font-size="7.5" fill="#9a76c0">动作</text>
+  <text x="283" y="290" font-size="8.5" fill="#6f3ea8">启动新 FetchState 换新</text>
+  <text x="283" y="316" font-size="8" fill="#a98cc7">本次调用仍可用旧令牌，</text>
+  <text x="283" y="329" font-size="8" fill="#a98cc7">后台刷新不阻塞热路径</text>
+  <text x="283" y="372" font-size="7" fill="#b79fd4">kTokenRefreshDuration :39</text>
+
+  <!-- card3 queue -->
+  <rect x="514" y="180" width="237" height="200" rx="12" fill="#f6f8fc" stroke="#cfe0f2" filter="url(#sf)"/>
+  <text x="528" y="203" font-size="11" font-weight="700" fill="#4f6f9f">C · 无缓存排队</text>
+  <text x="528" y="223" font-size="7.5" fill="#7d94b5">条件</text>
+  <text x="528" y="238" font-size="8.5" fill="#3f5f8f">既无缓存、又需现取令牌</text>
+  <text x="528" y="262" font-size="7.5" fill="#7d94b5">动作</text>
+  <text x="528" y="277" font-size="8.5" fill="#3f5f8f">QueueCall → 返回 Pending</text>
+  <text x="528" y="290" font-size="8.5" fill="#3f5f8f">承诺，挂起等待</text>
+  <text x="528" y="316" font-size="8" fill="#7d94b5">一次 fetch 完成后统一唤醒</text>
+  <text x="528" y="329" font-size="8" fill="#7d94b5">整队，写各自 metadata</text>
+  <text x="528" y="372" font-size="7" fill="#9db3ce">:281 QueueCall · :300 唤醒</text>
+
+  <!-- card4 backoff -->
+  <rect x="759" y="180" width="237" height="200" rx="12" fill="#fdeeee" stroke="#f0cccc" filter="url(#sf)"/>
+  <text x="773" y="203" font-size="11" font-weight="700" fill="#b23a3a">D · 退避失败</text>
+  <text x="773" y="223" font-size="7.5" fill="#c98080">条件</text>
+  <text x="773" y="238" font-size="8.5" fill="#a33636">上次 fetch 处于 backoff</text>
+  <text x="773" y="251" font-size="8.5" fill="#a33636">且 status ≠ OK</text>
+  <text x="773" y="275" font-size="7.5" fill="#c98080">动作</text>
+  <text x="773" y="290" font-size="8.5" fill="#a33636">直接以该 status 让调用失败</text>
+  <text x="773" y="316" font-size="8" fill="#c56b6b">不再向令牌端点发请求，</text>
+  <text x="773" y="329" font-size="8" fill="#c56b6b">保护后端不被打爆</text>
+  <text x="773" y="372" font-size="7" fill="#d69a9a">backoff &amp;&amp; !OK 分支</text>
+
+  <text x="24" y="410" font-size="9.5" fill="#4a4a4f">读法：四态互斥——命中即快路复用（A）、进入刷新窗口则后台预刷新旧令牌仍可用（B）、无缓存则排队等一次 fetch（C）、退避期直接失败（D）。</text>
+  <text x="24" y="432" font-size="9" fill="#6e6e73">核心不变量：并发命中同一凭证的调用至多触发一次在途 fetch，其余复用或排队——把"最易写坏的令牌管理"收敛进可复用基类。</text>
+  <text x="24" y="454" font-size="9" fill="#a1a1a6">安全约束：取回的 bearer token 仍受客户端 filter 的安全级别校验，不足则不发出（见「客户端 filter 编排」）。</text>
+</svg>

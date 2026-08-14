@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="440" viewBox="0 0 1020 440"
+  font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/>
+    </marker>
+  </defs>
+  <rect width="1020" height="440" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">SSL/TLS · 事件驱动的非阻塞握手 + 终止加密（ngx_event_openssl.c）</text>
+
+  <!-- 握手 -->
+  <rect x="30" y="56" width="600" height="200" rx="14" fill="#fbeaea" stroke="#f0cccc" filter="url(#soft)"/>
+  <text x="48" y="80" font-size="12.5" font-weight="600" fill="#7d1f1f">TLS 握手嵌进事件循环（不阻塞 worker）</text>
+  <rect x="48" y="96" width="170" height="60" rx="10" fill="#ffffff" stroke="#f0cccc"/><text x="133" y="120" font-size="9.5" font-weight="600" fill="#7d1f1f" text-anchor="middle">ClientHello</text><text x="133" y="140" font-size="8.5" fill="#b06a6a" text-anchor="middle">含 SNI（目标域名）</text>
+  <rect x="238" y="96" width="180" height="60" rx="10" fill="#ffffff" stroke="#f0cccc"/><text x="328" y="118" font-size="9.5" font-weight="600" fill="#7d1f1f" text-anchor="middle">按 SNI 选证书</text><text x="328" y="138" font-size="8.5" fill="#b06a6a" text-anchor="middle">一个 IP 多域名各自证书</text>
+  <rect x="438" y="96" width="172" height="60" rx="10" fill="#ffffff" stroke="#f0cccc"/><text x="524" y="118" font-size="9.5" font-weight="600" fill="#7d1f1f" text-anchor="middle">密钥协商</text><text x="524" y="138" font-size="8.5" fill="#b06a6a" text-anchor="middle">证书 + ECDHE 等</text>
+  <line x1="218" y1="126" x2="238" y2="126" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <line x1="418" y1="126" x2="438" y2="126" stroke="#c7c7cc" stroke-width="1.2" marker-end="url(#ar)"/>
+  <rect x="48" y="168" width="562" height="72" rx="10" fill="#fdf2f2" stroke="#f0cccc"/>
+  <text x="64" y="190" font-size="9.5" font-weight="600" fill="#7d1f1f">关键：握手的每一步都是"读到就绪数据→算一步→等下一段"</text>
+  <text x="64" y="210" font-size="9" fill="#b06a6a">SSL_do_handshake 返回 WANT_READ/WANT_WRITE 时挂起等事件，与 phase 引擎的 AGAIN 机制一致——</text>
+  <text x="64" y="228" font-size="9" fill="#b06a6a">慢握手不占线程，worker 转去处理别的连接。</text>
+
+  <!-- 优化 -->
+  <rect x="650" y="56" width="340" height="200" rx="14" fill="#eafaf1" stroke="#bce6cd" filter="url(#soft)"/>
+  <text x="668" y="80" font-size="12.5" font-weight="600" fill="#0f5132">握手很贵 → 复用与优化</text>
+  <rect x="668" y="96" width="304" height="44" rx="9" fill="#ffffff" stroke="#bce6cd"/><text x="684" y="116" font-size="9.5" font-weight="600" fill="#0f5132">会话复用</text><text x="684" y="132" font-size="8.5" fill="#3f8f66">session cache（共享内存）/ session ticket 免全握手</text>
+  <rect x="668" y="148" width="304" height="44" rx="9" fill="#ffffff" stroke="#bce6cd"/><text x="684" y="168" font-size="9.5" font-weight="600" fill="#0f5132">OCSP stapling</text><text x="684" y="184" font-size="8.5" fill="#3f8f66">nginx 代取证书状态，省客户端一次外部查询</text>
+  <rect x="668" y="200" width="304" height="44" rx="9" fill="#ffffff" stroke="#bce6cd"/><text x="684" y="220" font-size="9.5" font-weight="600" fill="#0f5132">TLS 1.3 / 0-RTT</text><text x="684" y="236" font-size="8.5" fill="#3f8f66">更少往返；ssl_protocols 控制版本</text>
+
+  <!-- 终止 -->
+  <rect x="30" y="272" width="960" height="144" rx="14" fill="#ffffff" stroke="#e2e2e7" filter="url(#soft)"/>
+  <text x="48" y="296" font-size="12.5" font-weight="600" fill="#1d1d1f">TLS 终止（termination）：加密边界在 nginx</text>
+  <rect x="48" y="312" width="280" height="86" rx="10" fill="#fbeaea" stroke="#f0cccc"/><text x="188" y="336" font-size="10" font-weight="600" fill="#7d1f1f" text-anchor="middle">客户端 ⇄ nginx</text><text x="188" y="358" font-size="8.5" fill="#b06a6a" text-anchor="middle">HTTPS 加密</text><text x="188" y="376" font-size="8.5" fill="#b06a6a" text-anchor="middle">nginx 解密</text>
+  <rect x="360" y="312" width="280" height="86" rx="10" fill="#eef3fb" stroke="#bcd0ec"/><text x="500" y="336" font-size="10" font-weight="600" fill="#1b2a4a" text-anchor="middle">nginx ⇄ 后端</text><text x="500" y="358" font-size="8.5" fill="#5b7db1" text-anchor="middle">明文 HTTP（内网）</text><text x="500" y="376" font-size="8.5" fill="#5b7db1" text-anchor="middle">或再加密（proxy_ssl）</text>
+  <rect x="672" y="312" width="298" height="86" rx="10" fill="#f6f6f8" stroke="#e2e2e7"/><text x="821" y="336" font-size="10" font-weight="600" fill="#494950" text-anchor="middle">收益</text><text x="821" y="358" font-size="8.5" fill="#6a6a70" text-anchor="middle">后端不必管证书/加密</text><text x="821" y="376" font-size="8.5" fill="#6a6a70" text-anchor="middle">证书集中在 nginx 统一管理</text>
+  <line x1="328" y1="355" x2="360" y2="355" stroke="#c7c7cc" stroke-width="1.4" marker-end="url(#ar)"/>
+</svg>

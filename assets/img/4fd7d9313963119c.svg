@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="520" viewBox="0 0 1080 520" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#b8b8bf"/></marker>
+  </defs>
+  <rect width="1080" height="520" fill="#fbfbfd"/>
+
+  <text x="30" y="30" font-size="15" font-weight="700" fill="#1d1d1f">库协作 —— 一次转码用几个库(按任务组合最小库集)</text>
+  <text x="30" y="50" font-size="10.5" fill="#a1a1a6">ffmpeg -i in.mp4 -vf scale=1280:720 out.webm · 不是每次都用全部库,按任务挑最小集</text>
+
+  <!-- 命令带(紫=接触面) -->
+  <rect x="30" y="72" width="1020" height="44" rx="12" fill="#f4eefb" stroke="#d9c7ec" filter="url(#soft)"/>
+  <text x="52" y="100" font-size="11" font-weight="600" fill="#3d2a5a">ffmpeg -i in.mp4 -vf scale=1280:720 out.webm</text>
+  <text x="1028" y="100" font-size="9" text-anchor="end" fill="#7a5aa0">H.264/mp4 → 缩放 → VP9/webm</text>
+
+  <!-- 转码管线各段 + 负责库 y=140 -->
+  <!-- 打开/demux (琥珀=format) -->
+  <rect x="30" y="140" width="150" height="150" rx="12" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="105" y="166" font-size="11" font-weight="600" text-anchor="middle" fill="#5a3410">打开 in.mp4</text>
+  <text x="105" y="186" font-size="9" text-anchor="middle" fill="#93762e">demux 拆容器</text>
+  <text x="105" y="212" font-size="9.5" text-anchor="middle" fill="#93762e">libavformat</text>
+  <text x="105" y="248" font-size="8.5" text-anchor="middle" fill="#93762e">读出</text>
+  <text x="105" y="264" font-size="8.5" text-anchor="middle" fill="#93762e">AVPacket(H.264)</text>
+
+  <!-- 解 H.264 (绿=codec) -->
+  <rect x="212" y="140" width="150" height="150" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="287" y="166" font-size="11" font-weight="600" text-anchor="middle" fill="#12402a">解 H.264</text>
+  <text x="287" y="186" font-size="9" text-anchor="middle" fill="#2f6f4f">decode</text>
+  <text x="287" y="212" font-size="9.5" text-anchor="middle" fill="#2f6f4f">libavcodec</text>
+  <text x="287" y="248" font-size="8.5" text-anchor="middle" fill="#2f6f4f">得</text>
+  <text x="287" y="264" font-size="8.5" text-anchor="middle" fill="#2f6f4f">AVFrame(原始)</text>
+
+  <!-- scale 滤镜 (蓝=filter) -->
+  <rect x="394" y="140" width="150" height="150" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#soft)"/>
+  <text x="469" y="166" font-size="11" font-weight="600" text-anchor="middle" fill="#1b2a4a">scale 1280:720</text>
+  <text x="469" y="186" font-size="9" text-anchor="middle" fill="#5b7db1">filter 滤镜</text>
+  <text x="469" y="212" font-size="9.5" text-anchor="middle" fill="#5b7db1">libavfilter</text>
+  <text x="469" y="248" font-size="8.5" text-anchor="middle" fill="#5b7db1">内部按需调</text>
+  <text x="469" y="264" font-size="8.5" text-anchor="middle" fill="#5b7db1">libswscale</text>
+
+  <!-- 编 VP9 (绿=codec) -->
+  <rect x="576" y="140" width="150" height="150" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#soft)"/>
+  <text x="651" y="166" font-size="11" font-weight="600" text-anchor="middle" fill="#12402a">编 VP9</text>
+  <text x="651" y="186" font-size="9" text-anchor="middle" fill="#2f6f4f">encode</text>
+  <text x="651" y="212" font-size="9.5" text-anchor="middle" fill="#2f6f4f">libavcodec</text>
+  <text x="651" y="248" font-size="8.5" text-anchor="middle" fill="#2f6f4f">得</text>
+  <text x="651" y="264" font-size="8.5" text-anchor="middle" fill="#2f6f4f">AVPacket(VP9)</text>
+
+  <!-- 写/mux (琥珀=format) -->
+  <rect x="758" y="140" width="150" height="150" rx="12" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="833" y="166" font-size="11" font-weight="600" text-anchor="middle" fill="#5a3410">写 out.webm</text>
+  <text x="833" y="186" font-size="9" text-anchor="middle" fill="#93762e">mux 封容器</text>
+  <text x="833" y="212" font-size="9.5" text-anchor="middle" fill="#93762e">libavformat</text>
+  <text x="833" y="248" font-size="8.5" text-anchor="middle" fill="#93762e">interleaved</text>
+  <text x="833" y="264" font-size="8.5" text-anchor="middle" fill="#93762e">write_frame</text>
+
+  <!-- 段间箭头 -->
+  <path d="M180,215 L210,215" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M362,215 L392,215" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M544,215 L574,215" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+  <path d="M726,215 L756,215" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <!-- 右侧:libavutil 竖向贯穿(白/中性) -->
+  <rect x="924" y="140" width="126" height="150" rx="12" fill="#ffffff" stroke="#ececf1" filter="url(#soft)"/>
+  <text x="987" y="168" font-size="11" font-weight="700" text-anchor="middle" fill="#1d1d1f">libavutil</text>
+  <text x="987" y="192" font-size="8.5" text-anchor="middle" fill="#6e6e73">全程贯穿</text>
+  <text x="987" y="214" font-size="8.5" text-anchor="middle" fill="#6e6e73">AVFrame /</text>
+  <text x="987" y="230" font-size="8.5" text-anchor="middle" fill="#6e6e73">AVPacket</text>
+  <text x="987" y="252" font-size="8.5" text-anchor="middle" fill="#6e6e73">引用计数</text>
+  <text x="987" y="274" font-size="8.5" text-anchor="middle" fill="#86868b">被所有段用</text>
+  <path d="M908,215 L922,215" stroke="#c7c7cc" stroke-width="1.5" fill="none" marker-end="url(#ar)"/>
+
+  <!-- 底部对比:转码 vs 纯 remux -->
+  <rect x="30" y="316" width="500" height="150" rx="13" fill="#f5faf6" stroke="#cfe6d5" filter="url(#soft)"/>
+  <text x="52" y="344" font-size="12" font-weight="600" fill="#2c5a3a">转码(本例)· 用 5 个库</text>
+  <text x="52" y="370" font-size="9.5" fill="#2c5a3a">format 打开/写 · codec 解 H.264 编 VP9</text>
+  <text x="52" y="390" font-size="9.5" fill="#2c5a3a">filter 做 scale · swscale 像素转换(若需)</text>
+  <text x="52" y="410" font-size="9.5" fill="#2c5a3a">util 全程 frame/packet 与引用计数</text>
+  <text x="52" y="438" font-size="9" fill="#4a8a63">改编码或加滤镜时才需要 codec / filter,</text>
+  <text x="52" y="456" font-size="9" fill="#4a8a63">按任务组合最小库集。</text>
+
+  <rect x="550" y="316" width="500" height="150" rx="13" fill="#fff7e6" stroke="#e8cf9a" filter="url(#soft)"/>
+  <text x="572" y="344" font-size="12" font-weight="600" fill="#5a3410">纯 remux(-c copy)· 只用 2 个库</text>
+  <text x="572" y="370" font-size="9.5" fill="#93762e">只重封装:libavformat 拆一个容器、封另一容器</text>
+  <text x="572" y="390" font-size="9.5" fill="#93762e">+ libavutil 承载 packet / 引用计数</text>
+  <text x="572" y="410" font-size="9.5" fill="#93762e">不碰 codec / filter —— 不解码不编码</text>
+  <text x="572" y="438" font-size="9" fill="#c07a7a">编码不变、只换容器 · 无损、极快</text>
+  <text x="572" y="456" font-size="9" fill="#c07a7a">packet 原样搬运,不经过 decode/encode</text>
+
+  <text x="30" y="504" font-size="9" fill="#a1a1a6">源码基准 FFmpeg(1588bce) · 转码=format+codec+filter+swscale+util · 纯 remux=format+util · util 全程贯穿</text>
+</svg>
