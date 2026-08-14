@@ -16,6 +16,8 @@
 
 ## 二、三层契约的职责边界
 
+![存储与序列化：三层可插拔契约 + ORC 列存布局 + 分区分桶](Hive原理_存储_01三层契约.svg)
+
 | 契约 | 粒度 | 输入 → 输出 | 典型实现 |
 |---|---|---|---|
 | SerDe | 单行 | `Writable` ⇄ 行对象（配 ObjectInspector 解释字段） | `LazySimpleSerDe`（文本延迟解析）、`OrcSerde`、`AvroSerDe` |

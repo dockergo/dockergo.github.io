@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="380" viewBox="0 0 920 380" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs><filter id="hs2s" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter><marker id="hs2a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#8ec6a3"/></marker></defs>
+  <rect width="920" height="380" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">HiveServer2 服务栈：一条 SQL 从 JDBC 客户端穿到 Driver 引擎（协议标准化 + 多会话隔离 + 异步执行)</text>
+
+  <!-- pipeline stack -->
+  <g text-anchor="middle" font-size="11">
+    <rect x="40" y="80" width="118" height="130" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#hs2s)"/><text x="99" y="106" font-weight="600" fill="#1b2a4a">JDBC 客户端</text><text x="99" y="128" font-size="9.5" fill="#3a5580">HiveStatement</text><text x="99" y="150" font-size="9.5" fill="#6e6e73">发 ExecuteStatement</text><text x="99" y="166" font-size="9.5" fill="#6e6e73">轮询状态</text><text x="99" y="182" font-size="9.5" fill="#6e6e73">按 fetchSize 分批取</text>
+
+    <rect x="182" y="80" width="118" height="130" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#hs2s)"/><text x="241" y="106" font-weight="600" fill="#12402a">Thrift 前端</text><text x="241" y="128" font-size="9.5" fill="#3f7a56">ThriftCLIService</text><text x="241" y="150" font-size="9.5" fill="#6e6e73">binary / http</text><text x="241" y="166" font-size="9.5" fill="#6e6e73">解 Thrift 请求</text><text x="241" y="182" font-size="9.5" fill="#6e6e73">转调 CLIService</text>
+
+    <rect x="324" y="80" width="118" height="130" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#hs2s)"/><text x="383" y="106" font-weight="600" fill="#12402a">服务门面</text><text x="383" y="128" font-size="9.5" fill="#3f7a56">CLIService</text><text x="383" y="150" font-size="9.5" fill="#6e6e73">ICLIService 入口</text><text x="383" y="166" font-size="9.5" fill="#6e6e73">会话/操作统一</text><text x="383" y="182" font-size="9.5" fill="#6e6e73">转发到 Session</text>
+
+    <rect x="466" y="80" width="118" height="130" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#hs2s)"/><text x="525" y="106" font-weight="600" fill="#12402a">会话</text><text x="525" y="128" font-size="9.5" fill="#3f7a56">HiveSessionImpl</text><text x="525" y="150" font-size="9.5" fill="#6e6e73">独立库/临时表</text><text x="525" y="166" font-size="9.5" fill="#6e6e73">独立配置覆盖</text><text x="525" y="182" font-size="9.5" fill="#6e6e73">交 OperationManager</text>
+
+    <rect x="608" y="80" width="118" height="130" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#hs2s)"/><text x="667" y="106" font-weight="600" fill="#12402a">操作</text><text x="667" y="128" font-size="9.5" fill="#3f7a56">SQLOperation</text><text x="667" y="150" font-size="9.5" fill="#6e6e73">prepare 编译</text><text x="667" y="166" font-size="9.5" fill="#6e6e73">BackgroundWork 异步</text><text x="667" y="182" font-size="9.5" fill="#6e6e73">UGI.doAs 切身份</text>
+
+    <rect x="750" y="80" width="118" height="130" rx="12" fill="#fdf6ea" stroke="#efdcb4" filter="url(#hs2s)"/><text x="809" y="106" font-weight="600" fill="#5a3410">引擎</text><text x="809" y="128" font-size="9.5" fill="#8a6a2e">Driver</text><text x="809" y="150" font-size="9.5" fill="#a07a35">编译 → 优化</text><text x="809" y="166" font-size="9.5" fill="#a07a35">→ 执行</text><text x="809" y="182" font-size="9.5" fill="#a07a35">结果缓存待取</text>
+  </g>
+
+  <g stroke="#8ec6a3" stroke-width="1.5" fill="none" marker-end="url(#hs2a)">
+    <path d="M158,145 L180,145"/><path d="M300,145 L322,145"/><path d="M442,145 L464,145"/><path d="M584,145 L606,145"/><path d="M726,145 L748,145" stroke="#d0a95a"/>
+  </g>
+
+  <!-- session isolation band -->
+  <rect x="40" y="240" width="410" height="112" rx="10" fill="#eef3fb" stroke="#dbe4f2"/>
+  <text x="245" y="264" font-size="11" font-weight="600" fill="#1b2a4a" text-anchor="middle">会话隔离：池子 vs ThreadLocal 指针</text>
+  <text x="245" y="286" font-size="10" fill="#3a5580" text-anchor="middle">SessionManager 管会话对象生命周期(创建/缓存/超时回收)</text>
+  <text x="245" y="304" font-size="10" fill="#3a5580" text-anchor="middle">SessionState(ThreadLocal) 管当前线程看到的是哪个会话</text>
+  <text x="245" y="326" font-size="10" fill="#6e6e73" text-anchor="middle">同一线程池不同请求互不串味 · 各持独立库/临时函数/临时表</text>
+
+  <!-- async + auth band -->
+  <rect x="470" y="240" width="410" height="112" rx="10" fill="#fdf6ea" stroke="#efdcb4"/>
+  <text x="675" y="264" font-size="11" font-weight="600" fill="#5a3410" text-anchor="middle">异步执行 + 认证代理</text>
+  <text x="675" y="286" font-size="10" fill="#8a6a2e" text-anchor="middle">ExecuteStatement 立即返 handle,查询后台线程跑不阻塞连接</text>
+  <text x="675" y="304" font-size="10" fill="#8a6a2e" text-anchor="middle">UGI.doAs:服务身份(hive)与数据访问身份(发起用户)分离</text>
+  <text x="675" y="326" font-size="10" fill="#6e6e73" text-anchor="middle">7 种认证(KERBEROS/LDAP/JWT/SAML…)把接入身份钉死在入口</text>
+</svg>

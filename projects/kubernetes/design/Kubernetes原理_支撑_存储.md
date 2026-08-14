@@ -39,6 +39,8 @@
 
 ## 拓展 · CSI 挂载三阶段
 
+![CSI三阶段时序](Kubernetes原理_支撑_存储_02CSI三阶段时序.svg)
+
 | 阶段 | 执行者 | 动作 |
 |---|---|---|
 | Provision | 外部 CSI provisioner | 在后端创建卷 → 生成 PV |

@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="360" viewBox="0 0 920 360" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="eg2s" x="-4%" y="-4%" width="108%" height="112%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="eg2a" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="#8ec6a3"/></marker>
+  </defs>
+  <rect width="920" height="360" fill="#fbfbfd"/>
+  <text x="40" y="42" font-size="14" font-weight="600" fill="#1d1d1f">eager 模式：逐算子直接下发（无图、无数据流调度器）</text>
+
+  <g filter="url(#eg2s)">
+    <rect x="40" y="76" width="200" height="112" rx="12" fill="#eef3fb" stroke="#bcd0ec" stroke-width="1"/>
+    <rect x="280" y="76" width="220" height="112" rx="12" fill="#eafaf1" stroke="#bfe0cd" stroke-width="1"/>
+    <rect x="540" y="76" width="200" height="112" rx="12" fill="#eafaf1" stroke="#bfe0cd" stroke-width="1"/>
+    <rect x="780" y="76" width="100" height="112" rx="12" fill="#fdf6ea" stroke="#efdcb4" stroke-width="1"/>
+  </g>
+  <text x="140" y="104" font-size="12.5" font-weight="600" fill="#1b2a4a" text-anchor="middle">① 顶层分派</text>
+  <text x="140" y="130" font-size="11" fill="#3a5580" text-anchor="middle">EagerExecute</text>
+  <text x="140" y="150" font-size="11" fill="#6e6e73" text-anchor="middle">本地 → EagerLocalExecute</text>
+  <text x="140" y="170" font-size="11" fill="#6e6e73" text-anchor="middle">一次一个 op</text>
+
+  <text x="390" y="104" font-size="12.5" font-weight="600" fill="#12402a" text-anchor="middle">② kernel 缓存</text>
+  <text x="390" y="130" font-size="11" fill="#3f7a56" text-anchor="middle">GetOrCreateKernelAndDevice</text>
+  <text x="390" y="150" font-size="11" fill="#6e6e73" text-anchor="middle">按 op 签名查 / 建</text>
+  <text x="390" y="170" font-size="11" fill="#6e6e73" text-anchor="middle">KernelAndDevice 并缓存</text>
+
+  <text x="640" y="104" font-size="12.5" font-weight="600" fill="#12402a" text-anchor="middle">③ 执行</text>
+  <text x="640" y="130" font-size="11" fill="#3f7a56" text-anchor="middle">AddOrExecuteNode</text>
+  <text x="640" y="150" font-size="11" fill="#6e6e73" text-anchor="middle">同步执行 或 构造</text>
+  <text x="640" y="170" font-size="11" fill="#6e6e73" text-anchor="middle">AsyncExecuteNode 入队</text>
+
+  <text x="830" y="104" font-size="12.5" font-weight="600" fill="#5a3410" text-anchor="middle">④ 结果</text>
+  <text x="830" y="130" font-size="11" fill="#8a6a2e" text-anchor="middle">TensorHandle</text>
+
+  <g stroke="#8ec6a3" stroke-width="1.5" marker-end="url(#eg2a)" fill="none">
+    <path d="M240,132 L278,132"/><path d="M500,132 L538,132"/><path d="M740,132 L778,132"/>
+  </g>
+
+  <g filter="url(#eg2s)"><rect x="40" y="216" width="410" height="104" rx="10" fill="#eafaf1" stroke="#bfe0cd" stroke-width="1"/></g>
+  <text x="60" y="242" font-size="12.5" font-weight="600" fill="#12402a">异步下发 · 靠 stream 拿并行</text>
+  <text x="60" y="268" font-size="11" fill="#3f7a56">GPU 上把 op 异步下发到 CUDA stream</text>
+  <text x="60" y="290" font-size="11" fill="#6e6e73">Python 侧不阻塞等结果</text>
+  <text x="60" y="310" font-size="11" fill="#6e6e73">需具体值（如 .numpy）时才同步</text>
+
+  <g filter="url(#eg2s)"><rect x="470" y="216" width="410" height="104" rx="10" fill="#fdf6ea" stroke="#efdcb4" stroke-width="1"/></g>
+  <text x="490" y="242" font-size="12.5" font-weight="600" fill="#5a3410">与图模式的区别 · 谁编排一批 op</text>
+  <text x="490" y="268" font-size="11" fill="#8a6a2e">eager：靠 stream 异步 + kernel 缓存</text>
+  <text x="490" y="290" font-size="11" fill="#6e6e73">图模式：靠 Executor 数据流调度</text>
+  <text x="490" y="310" font-size="11" fill="#6e6e73">两者最终都落到 OpKernel::Compute</text>
+</svg>

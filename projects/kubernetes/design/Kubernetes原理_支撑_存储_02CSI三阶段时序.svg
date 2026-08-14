@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="380" viewBox="0 0 920 380" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="cs2s" x="-4%" y="-4%" width="108%" height="112%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="cs2a" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="#8ec6a3"/></marker>
+    <marker id="cs2y" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="#d0a95a"/></marker>
+  </defs>
+  <rect width="920" height="380" fill="#fbfbfd"/>
+  <text x="40" y="42" font-size="14" font-weight="600" fill="#1d1d1f">CSI 挂载三阶段：Provision → Attach → Mount（删除逆序）</text>
+
+  <g filter="url(#cs2s)">
+    <rect x="40" y="80" width="260" height="128" rx="12" fill="#eafaf1" stroke="#bfe0cd" stroke-width="1"/>
+    <rect x="330" y="80" width="260" height="128" rx="12" fill="#eef3fb" stroke="#bcd0ec" stroke-width="1"/>
+    <rect x="620" y="80" width="260" height="128" rx="12" fill="#fdf6ea" stroke="#efdcb4" stroke-width="1"/>
+  </g>
+  <text x="170" y="110" font-size="13" font-weight="600" fill="#12402a" text-anchor="middle">① Provision</text>
+  <text x="170" y="136" font-size="11.5" fill="#3f7a56" text-anchor="middle">external-provisioner</text>
+  <text x="170" y="158" font-size="11" fill="#6e6e73" text-anchor="middle">后端建卷 → 生成 PV</text>
+  <text x="170" y="178" font-size="11" fill="#6e6e73" text-anchor="middle">按 StorageClass 动态供给</text>
+  <text x="170" y="198" font-size="11" fill="#a1a1a6" text-anchor="middle">卷层面：卷是否存在</text>
+
+  <text x="460" y="110" font-size="13" font-weight="600" fill="#1b2a4a" text-anchor="middle">② Attach</text>
+  <text x="460" y="136" font-size="11.5" fill="#3a5580" text-anchor="middle">AttachDetach 控制器</text>
+  <text x="460" y="158" font-size="11" fill="#6e6e73" text-anchor="middle">把卷挂到目标节点</text>
+  <text x="460" y="178" font-size="11" fill="#6e6e73" text-anchor="middle">VolumeAttachment 记录</text>
+  <text x="460" y="198" font-size="11" fill="#a1a1a6" text-anchor="middle">节点层面：卷是否 attach</text>
+
+  <text x="750" y="110" font-size="13" font-weight="600" fill="#5a3410" text-anchor="middle">③ Mount</text>
+  <text x="750" y="136" font-size="11.5" fill="#8a6a2e" text-anchor="middle">kubelet + 节点 CSI driver</text>
+  <text x="750" y="158" font-size="11" fill="#6e6e73" text-anchor="middle">挂进容器</text>
+  <text x="750" y="178" font-size="11" fill="#6e6e73" text-anchor="middle">Pod 可读写卷</text>
+  <text x="750" y="198" font-size="11" fill="#a1a1a6" text-anchor="middle">容器层面：卷是否可用</text>
+
+  <g stroke="#8ec6a3" stroke-width="1.5" marker-end="url(#cs2a)" fill="none">
+    <path d="M300,144 L328,144"/><path d="M590,144 L618,144"/>
+  </g>
+
+  <g filter="url(#cs2s)"><rect x="40" y="236" width="840" height="106" rx="10" fill="#fdf6ea" stroke="#efdcb4" stroke-width="1"/></g>
+  <text x="60" y="262" font-size="12.5" font-weight="600" fill="#5a3410">删除逆序：Unmount → Detach → 回收（顺序错则泄漏卷 / 损坏数据）</text>
+  <g stroke="#d0a95a" stroke-width="1.5" marker-end="url(#cs2y)" fill="none">
+    <path d="M300,300 L360,300"/><path d="M540,300 L600,300"/>
+  </g>
+  <g font-size="11" fill="#8a6a2e">
+    <text x="120" y="304" text-anchor="middle">Unmount 从容器卸载</text>
+    <text x="450" y="304" text-anchor="middle">Detach 从节点卸载</text>
+    <text x="720" y="304" text-anchor="middle">按 reclaimPolicy 回收 / 保留</text>
+  </g>
+  <text x="60" y="330" font-size="11" fill="#6e6e73">WaitForFirstConsumer 延迟绑定：等调度器决定 Pod 落哪节点，再按拓扑选卷（避免卷选在错误可用区）</text>
+</svg>

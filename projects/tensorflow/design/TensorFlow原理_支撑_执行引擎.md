@@ -16,7 +16,7 @@
 
 ## 二、eager 模式：逐算子直接下发
 
-![数据流执行](TensorFlow原理_执行引擎_01数据流执行.svg)
+![eager 逐算子下发](TensorFlow原理_执行引擎_02eager逐算子下发.svg)
 
 eager 无图、无数据流调度器：顶层 `EagerExecute`（`eager/execute.cc:2261`）分派，本地路径进 `EagerLocalExecute`（`eager/execute.cc:1734`）——一个 op 一次：`GetOrCreateKernelAndDevice`（`execute.cc:1264`，按 op 签名查/建 `KernelAndDevice` 并缓存）→ `AddOrExecuteNode`（`execute.cc:1649`）执行 → 返回 `TensorHandle`。
 

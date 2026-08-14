@@ -17,6 +17,8 @@
 
 ## 二、服务栈分层：从 Thrift 到 Driver
 
+![HiveServer2 服务栈：一条 SQL 从 JDBC 客户端穿到 Driver 引擎](Hive原理_会话_01HS2服务栈.svg)
+
 一条 SQL 从客户端到引擎，穿过这条链路（每层职责单一、可替换）：
 
 | 层 | 载体 | 职责 |

@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="380" viewBox="0 0 920 380" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs><filter id="stgs" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter><marker id="stga" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L9,5 L0,10 z" fill="#8ec6a3"/></marker></defs>
+  <rect width="920" height="380" fill="#fbfbfd"/>
+  <text x="30" y="30" font-size="14" font-weight="600" fill="#1d1d1f">存储与序列化：一堆字节如何变成表 —— 三层可插拔契约（换格式=换元数据里的一组类名,引擎零改动)</text>
+
+  <!-- three contract layers -->
+  <g text-anchor="middle" font-size="11">
+    <rect x="40" y="76" width="255" height="126" rx="12" fill="#eafaf1" stroke="#bfe0cd" filter="url(#stgs)"/><text x="167" y="102" font-weight="600" fill="#12402a">SerDe · 单行粒度</text><text x="167" y="124" font-size="9.5" fill="#3f7a56">Writable ⇄ 行对象(双向编解码)</text><text x="167" y="142" font-size="9.5" fill="#6e6e73">LazySimpleSerDe · OrcSerde · AvroSerDe</text><text x="167" y="164" font-size="9.5" fill="#6e6e73">配 ObjectInspector 解释字段类型</text><text x="167" y="182" font-size="9.5" fill="#6e6e73">用到哪列才解析哪列(延迟解析)</text>
+
+    <rect x="315" y="76" width="255" height="126" rx="12" fill="#eef3fb" stroke="#bcd0ec" filter="url(#stgs)"/><text x="442" y="102" font-weight="600" fill="#1b2a4a">InputFormat/OutputFormat · 文件粒度</text><text x="442" y="124" font-size="9.5" fill="#3a5580">目录 → InputSplit[] → RecordReader</text><text x="442" y="142" font-size="9.5" fill="#6e6e73">HiveInputFormat 按路径多路复用</text><text x="442" y="164" font-size="9.5" fill="#6e6e73">一张表可混装 ORC + Text 分区</text><text x="442" y="182" font-size="9.5" fill="#6e6e73">getInputFormatFromCache 复用实例</text>
+
+    <rect x="590" y="76" width="290" height="126" rx="12" fill="#fdf6ea" stroke="#efdcb4" filter="url(#stgs)"/><text x="735" y="102" font-weight="600" fill="#5a3410">StorageHandler · 存储系统粒度</text><text x="735" y="124" font-size="9.5" fill="#8a6a2e">捆绑 IF+OF+SerDe+MetaHook 一套</text><text x="735" y="142" font-size="9.5" fill="#a07a35">数据不在 HDFS 时整体接入</text><text x="735" y="164" font-size="9.5" fill="#a07a35">HBase · Kafka · JDBC · Iceberg</text><text x="735" y="182" font-size="9.5" fill="#a07a35">引擎无感知,当成普通表读写</text>
+  </g>
+
+  <text x="460" y="228" font-size="10" fill="#a1a1a6" text-anchor="middle">表的物理形态 = 元数据里 SerDe + InputFormat + OutputFormat（可选 StorageHandler）这组类名</text>
+
+  <!-- ORC layout band -->
+  <rect x="40" y="252" width="490" height="100" rx="10" fill="#eafaf1" stroke="#dbe9e0"/>
+  <text x="285" y="276" font-size="11" font-weight="600" fill="#12402a" text-anchor="middle">ORC：原生列存 + ACID 承载者</text>
+  <g text-anchor="middle" font-size="9.5">
+    <rect x="60" y="288" width="140" height="46" rx="8" fill="#eafaf1" stroke="#bfe0cd"/><text x="130" y="306" fill="#12402a">base_*</text><text x="130" y="322" fill="#3f7a56">major compaction 全量基线</text>
+    <rect x="212" y="288" width="140" height="46" rx="8" fill="#eef3fb" stroke="#bcd0ec"/><text x="282" y="306" fill="#1b2a4a">delta_*</text><text x="282" y="322" fill="#3a5580">一批事务的插入/更新增量</text>
+    <rect x="364" y="288" width="146" height="46" rx="8" fill="#fdf6ea" stroke="#efdcb4"/><text x="437" y="306" fill="#5a3410">delete_delta_*</text><text x="437" y="322" fill="#8a6a2e">按 ROW__ID 定位删除标记</text>
+  </g>
+
+  <!-- partition/bucket band -->
+  <rect x="550" y="252" width="330" height="100" rx="10" fill="#eef3fb" stroke="#dbe4f2"/>
+  <text x="715" y="276" font-size="11" font-weight="600" fill="#1b2a4a" text-anchor="middle">分区裁剪 + 哈希分桶</text>
+  <text x="715" y="298" font-size="10" fill="#3a5580" text-anchor="middle">分区:每个值=子目录,WHERE 转目录裁剪(列不进文件)</text>
+  <text x="715" y="316" font-size="10" fill="#3a5580" text-anchor="middle">分桶:hash % num_buckets 散到固定文件,利于 join/采样</text>
+  <text x="715" y="336" font-size="10" fill="#6e6e73" text-anchor="middle">split 策略 BI/ETL/HYBRID 自适应平衡切分开销与并行度</text>
+</svg>

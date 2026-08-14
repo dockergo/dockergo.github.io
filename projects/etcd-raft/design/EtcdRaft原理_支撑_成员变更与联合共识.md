@@ -16,6 +16,8 @@
 
 ## 二、串行化门 + 宿主驱动
 
+![串行化门与宿主驱动](EtcdRaft原理_支撑_成员变更与联合共识_02串行化门与宿主驱动.svg)
+
 - **pendingConfIndex 门**：`stepLeader` 处理 `MsgProp` 时，对 ConfChange 做三态校验——`alreadyPending`（还有未应用的变更）、`alreadyJoint`（已在联合态）、`wantsLeaveJoint`（空变更=想离开联合）（`raft.go:1326-1337`）。校验不过就把这条变成 no-op（`:1341`），保证**同一时刻至多一个未决 ConfChange**。
 - **宿主发起**：`Node.ProposeConfChange`（`node.go:153`）接受 `pb.ConfChange`（deprecated）或 `pb.ConfChangeV2`；后者"allows arbitrary configuration changes via joint consensus, notably including replacing a voter"（`node.go:148-152`）。
 - **宿主应用**：当 `Ready.CommittedEntries` 中出现 ConfChange 类型条目时，宿主**必须**调 `ApplyConfChange`（`node.go:179-187`），返回的 `ConfState` 要记进快照；除非应用决定把它当 no-op 拒绝（`node.go:181-184`）。

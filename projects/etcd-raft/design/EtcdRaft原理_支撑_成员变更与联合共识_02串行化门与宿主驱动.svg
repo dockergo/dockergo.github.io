@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="360" viewBox="0 0 920 360" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <filter id="cc2s" x="-4%" y="-4%" width="108%" height="112%"><feDropShadow dx="0" dy="1.5" stdDeviation="4" flood-color="#1d1d1f" flood-opacity="0.07"/></filter>
+    <marker id="cc2a" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="#8ec6a3"/></marker>
+  </defs>
+  <rect width="920" height="360" fill="#fbfbfd"/>
+  <text x="40" y="42" font-size="14" font-weight="600" fill="#1d1d1f">串行化门 + 宿主驱动：至多一个未决 ConfChange</text>
+
+  <g filter="url(#cc2s)">
+    <rect x="40" y="72" width="250" height="120" rx="12" fill="#eef3fb" stroke="#bcd0ec" stroke-width="1"/>
+    <rect x="335" y="72" width="250" height="120" rx="12" fill="#eafaf1" stroke="#bfe0cd" stroke-width="1"/>
+    <rect x="630" y="72" width="250" height="120" rx="12" fill="#fdf6ea" stroke="#efdcb4" stroke-width="1"/>
+  </g>
+  <text x="165" y="100" font-size="13" font-weight="600" fill="#1b2a4a" text-anchor="middle">① 宿主发起</text>
+  <text x="165" y="126" font-size="11.5" fill="#3a5580" text-anchor="middle">Node.ProposeConfChange</text>
+  <text x="165" y="146" font-size="11" fill="#6e6e73" text-anchor="middle">ConfChangeV2 → 联合共识</text>
+  <text x="165" y="166" font-size="11" fill="#6e6e73" text-anchor="middle">可原子替换多个 voter</text>
+
+  <text x="460" y="100" font-size="13" font-weight="600" fill="#12402a" text-anchor="middle">② 提交</text>
+  <text x="460" y="126" font-size="11.5" fill="#3f7a56" text-anchor="middle">Ready.CommittedEntries</text>
+  <text x="460" y="146" font-size="11" fill="#6e6e73" text-anchor="middle">见 ConfChange 类型条目</text>
+  <text x="460" y="166" font-size="11" fill="#6e6e73" text-anchor="middle">联合期需两多数派同时过</text>
+
+  <text x="755" y="100" font-size="13" font-weight="600" fill="#5a3410" text-anchor="middle">③ 宿主应用</text>
+  <text x="755" y="126" font-size="11.5" fill="#8a6a2e" text-anchor="middle">Node.ApplyConfChange</text>
+  <text x="755" y="146" font-size="11" fill="#6e6e73" text-anchor="middle">必须回调, 否则视图分叉</text>
+  <text x="755" y="166" font-size="11" fill="#6e6e73" text-anchor="middle">返回 ConfState 记进快照</text>
+
+  <g stroke="#8ec6a3" stroke-width="1.5" marker-end="url(#cc2a)" fill="none">
+    <path d="M290,132 L333,132"/>
+    <path d="M585,132 L628,132"/>
+  </g>
+
+  <g filter="url(#cc2s)"><rect x="40" y="216" width="840" height="104" rx="10" fill="#eef3fb" stroke="#bcd0ec" stroke-width="1"/></g>
+  <text x="60" y="242" font-size="12.5" font-weight="600" fill="#1b2a4a">pendingConfIndex 门 · stepLeader 处理 MsgProp 三态校验</text>
+  <g font-size="11" fill="#3a5580">
+    <text x="72" y="270">alreadyPending — 还有未应用变更</text>
+    <text x="360" y="270">alreadyJoint — 已在联合态</text>
+    <text x="628" y="270">wantsLeaveJoint — 空变更=离开联合</text>
+  </g>
+  <text x="60" y="300" font-size="11.5" fill="#6e6e73">校验不过 → 降级为 no-op，保证同一时刻至多一个未决 ConfChange；AutoLeave 联合提交后自动追加离开</text>
+</svg>
