@@ -2242,75 +2242,7 @@ _EXPLAIN_SQL = ("SELECT o.region, sum(o.amount)\n"
                 "ORDER BY 2 DESC\n"
                 "LIMIT 10;")
 _explain_shortmap = ["PARSED", "ANALYZED", "REWRITTEN(RBO)", "OPTIMIZED(CBO)", "DISTRIBUTED"]
-EXPLAIN_MMS = [
- ("EXPLAIN PARSED PLAN · 未绑定 AST 逻辑计划", r'''flowchart TB
-  p_sql["SQL 文本"] --> p_parse["Parser · antlr4 语法树"]
-  p_parse --> p_plan["未绑定 LogicalPlan<br/><small>列/表仅按名字占位,未解析元数据</small>"]
-  p_plan --> p_limit["LogicalLimit 10"]
-  p_limit --> p_sort["LogicalSort · ORDER BY 2 DESC"]
-  p_sort --> p_agg["LogicalAggregate · GROUP BY region · sum(amount)"]
-  p_agg --> p_filter["LogicalFilter · u.age&gt;30 AND o.dt='2026-01-01'"]
-  p_filter --> p_join["LogicalJoin · o.uid=u.uid(类型未定)"]
-  p_join --> p_o["UnboundRelation orders"]
-  p_join --> p_u["UnboundRelation users"]
-  classDef s stroke:#4a90d9,color:#1a3a5c,stroke-width:1.4px;
-  classDef n stroke:#8b5cd6,color:#3a1a5c,stroke-width:1.4px;
-  class p_sql,p_parse s; class p_plan,p_limit,p_sort,p_agg,p_filter,p_join,p_o,p_u n;
-  linkStyle default stroke:#aab4c2,stroke-width:1.6px;'''),
- ("EXPLAIN ANALYZED PLAN · 绑定元数据后的逻辑计划", r'''flowchart TB
-  a_note["绑定:列/类型/权限解析,UnboundRelation→LogicalOlapScan"] --> a_limit
-  a_limit["LogicalLimit 10"] --> a_sort["LogicalSort · $2 DESC"]
-  a_sort --> a_agg["LogicalAggregate · region:VARCHAR · sum(amount:DECIMAL)"]
-  a_agg --> a_filter["LogicalFilter · u.age:INT&gt;30 AND o.dt:DATE='2026-01-01'"]
-  a_filter --> a_join["LogicalJoin INNER · o.uid=u.uid(BIGINT=BIGINT)"]
-  a_join --> a_o["LogicalOlapScan orders · 已绑定 schema"]
-  a_join --> a_u["LogicalOlapScan users · 已绑定 schema"]
-  classDef s stroke:#3c9d5c,color:#1a4a2c,stroke-width:1.4px;
-  classDef n stroke:#8b5cd6,color:#3a1a5c,stroke-width:1.4px;
-  class a_note s; class a_limit,a_sort,a_agg,a_filter,a_join,a_o,a_u n;
-  linkStyle default stroke:#aab4c2,stroke-width:1.6px;'''),
- ("EXPLAIN REWRITTEN PLAN · RBO 规则改写后", r'''flowchart TB
-  r_note["RBO:谓词下推到 Scan · 列裁剪 · Filter 拆分下沉"] --> r_limit
-  r_limit["LogicalLimit 10"] --> r_sort["LogicalSort · $2 DESC"]
-  r_sort --> r_agg["LogicalAggregate · GROUP BY region · sum(amount)"]
-  r_agg --> r_join["LogicalJoin INNER · o.uid=u.uid"]
-  r_join --> r_o["LogicalOlapScan orders<br/><small>↓下推 dt='2026-01-01' · 只取 uid,amount,region,dt</small>"]
-  r_join --> r_u["LogicalOlapScan users<br/><small>↓下推 age&gt;30 · 只取 uid,age</small>"]
-  classDef s stroke:#d0913a,color:#5c3d0f,stroke-width:1.4px;
-  classDef n stroke:#8b5cd6,color:#3a1a5c,stroke-width:1.4px;
-  class r_note s; class r_limit,r_sort,r_agg,r_join,r_o,r_u n;
-  linkStyle default stroke:#aab4c2,stroke-width:1.6px;'''),
- ("EXPLAIN OPTIMIZED PLAN · CBO 定型物理计划", r'''flowchart TB
-  o_note["CBO:Join Reorder + 分布策略 + 两阶段聚合(Cascades/Memo 择优)"] --> o_topn
-  o_topn["PhysicalTopN 10 · $2 DESC<br/><small>Sort+Limit 合并为 TopN</small>"] --> o_aggG["PhysicalHashAggregate(GLOBAL) · sum merge"]
-  o_aggG --> o_shuf["PhysicalDistribute · SHUFFLE by region"]
-  o_shuf --> o_aggL["PhysicalHashAggregate(LOCAL) · 预聚合"]
-  o_aggL --> o_join["PhysicalHashJoin INNER · o.uid=u.uid<br/><small>users 为 build 侧(较小)</small>"]
-  o_join --> o_o["PhysicalOlapScan orders · dt 分区裁剪 + 谓词下推"]
-  o_join --> o_ub["PhysicalDistribute · BROADCAST users"] --> o_u["PhysicalOlapScan users · age&gt;30"]
-  classDef s stroke:#d0913a,color:#5c3d0f,stroke-width:1.4px;
-  classDef n stroke:#5b8cff,color:#1a3a5c,stroke-width:1.4px;
-  class o_note s; class o_topn,o_aggG,o_shuf,o_aggL,o_join,o_o,o_ub,o_u n;
-  linkStyle default stroke:#aab4c2,stroke-width:1.6px;'''),
- ("EXPLAIN DISTRIBUTED PLAN · 分片 + Exchange", r'''flowchart TB
-  d_note["切 PlanFragment + Exchange 边界,下发多 BE 并行"] --> F0
-  subgraph F0["Fragment 0 · 汇聚(1 实例)"]
-    f0_res["ResultSink → FE ResultReceiver"] --> f0_topn["TopN 10(final)"] --> f0_aggG["HashAgg GLOBAL"] --> f0_ex["ExchangeNode ← SHUFFLE"]
-  end
-  subgraph F1["Fragment 1 · Join+预聚合(N 实例)"]
-    f1_aggL["HashAgg LOCAL"] --> f1_join["HashJoin INNER"] --> f1_scanO["OlapScan orders(分区裁剪)"]
-    f1_join --> f1_bex["ExchangeNode ← BROADCAST"]
-  end
-  subgraph F2["Fragment 2 · 广播 users(N 实例)"]
-    f2_scanU["OlapScan users(age&gt;30)"]
-  end
-  f0_ex -. SHUFFLE by region .-> f1_aggL
-  f1_bex -. BROADCAST .-> f2_scanU
-  classDef s stroke:#8b5cd6,color:#3a1a5c,stroke-width:1.4px;
-  classDef n stroke:#5b8cff,color:#1a3a5c,stroke-width:1.4px;
-  class d_note s; class f0_res,f0_topn,f0_aggG,f0_ex,f1_aggL,f1_join,f1_scanO,f1_bex,f2_scanU n;
-  linkStyle default stroke:#aab4c2,stroke-width:1.6px;'''),
-]
+# 注:原 EXPLAIN_MMS(5 阶段 mermaid 计划树)已被 explaincmd 手绘 SVG 替代,死代码已删除。
 
 def _build_multi_blocks(mms, shortmap):
     navs = "".join(

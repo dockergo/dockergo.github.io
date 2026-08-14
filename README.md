@@ -9,7 +9,7 @@
 | 目录 | 内容 |
 |---|---|
 | `basic/` | 数据结构与算法基础(排序/树/图/动态规划 …) |
-| `llm/` | LLM 与 Agent 原理(Transformer/推理优化/RAG/多智能体 …) |
+| `llm-agent/` | LLM 与 Agent 原理(Transformer/推理优化/RAG/多智能体 …) |
 | `principles/` | 分布式系统原理(缓存/一致性/复制/消息/服务发现 …) |
 | `projects/` | 开源项目原理精读(Redis/Kafka/Kubernetes/Spark …) |
 | `topics/` | 跨项目主题横切对比(共识/存储/事务/网络 IO …) |
@@ -24,6 +24,8 @@
 ```
 
 `index.html` 永远是生成产物,改动请改 `design/` 下的 `.md`/`.svg` 或对应 `gen.py`,再重新生成。
+
+> 例外:`scenarios/` 无独立 `design/*.md` 源材料与 `gen.py`,其业务场景数据集中定义在根 `gen.py` 中、由根导航一并产出;调整业务场景请改根 `gen.py`。
 
 ## 重新生成
 
