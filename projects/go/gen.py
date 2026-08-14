@@ -346,6 +346,7 @@ TEMPLATE = r"""<!DOCTYPE html>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>Go · 交互式核心原理图谱</title>
+<script>(function(){try{var s=localStorage.getItem('atlas-nav-theme');if(s==='light')document.documentElement.setAttribute('data-theme','light');}catch(e){}})();</script>
 <style>
 :root{
   --c-bg:#1c1c1e; --c-bg2:#161618; --c-panel:#242426; --c-panel2:#2a2a2e;

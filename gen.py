@@ -1291,7 +1291,7 @@ def build_agent_cards():
 SCENARIOS = [
     {
         "slug": "ecommerce", "cn": "电商交易", "en": "E-Commerce Transaction",
-        "layer": "交易支付层", "color": "#f97316", "color2": "#ef4444",
+        "layer": "交易支付层", "color": "#4a7fd0", "color2": "#3a4a63",
         "tagline": "淘宝 / 京东 / 拼多多 —— 从浏览搜索到履约售后的交易主链路,核心是「高并发不超卖、支付强一致、履约可追溯」。",
         "domain": {
             "title": "电商交易架构 · 业务×技术",
@@ -1314,7 +1314,7 @@ SCENARIOS = [
     },
     {
         "slug": "social", "cn": "社交网络", "en": "Social Network",
-        "layer": "社交互动层", "color": "#8b5cf6", "color2": "#6366f1",
+        "layer": "社交互动层", "color": "#8a5cae", "color2": "#5a3a7a",
         "tagline": "微信 / 微博 / 小红书 —— 从关系链到内容分发的社交主链路,核心是「关系链海量存储、Feed 高效分发、消息必达」。",
         "domain": {
             "title": "社交网络架构 · 业务×技术",
@@ -1338,7 +1338,7 @@ SCENARIOS = [
 
     {
         "slug": "video", "cn": "短视频 / 直播", "en": "Short Video & Live Streaming",
-        "layer": "内容娱乐层", "color": "#ec4899", "color2": "#f43f5e",
+        "layer": "内容娱乐层", "color": "#8a5cae", "color2": "#5a3a7a",
         "tagline": "抖音 / 快手 / B站 —— 从创作上传到推荐播放的内容主链路,核心是「海量转码、毫秒推荐、低延迟直播」。",
         "domain": {
             "title": "短视频 / 直播架构 · 业务×技术",
@@ -1362,7 +1362,7 @@ SCENARIOS = [
     },
     {
         "slug": "game", "cn": "在线游戏", "en": "Online Gaming",
-        "layer": "实时交互层", "color": "#f59e0b", "color2": "#d97706",
+        "layer": "实时交互层", "color": "#2f9e6e", "color2": "#2f6b4e",
         "tagline": "腾讯游戏 / 米哈游 —— 从登录匹配到实时对战的游戏主链路,核心是「帧同步低延迟、状态强一致、反外挂安全」。",
         "domain": {
             "title": "在线游戏架构 · 业务×技术",
@@ -1385,7 +1385,7 @@ SCENARIOS = [
     },
     {
         "slug": "fintech", "cn": "金融科技", "en": "FinTech & Payment",
-        "layer": "交易支付层", "color": "#10b981", "color2": "#059669",
+        "layer": "交易支付层", "color": "#4a7fd0", "color2": "#3a4a63",
         "tagline": "蚂蚁 / 微信支付 / 招行 —— 从开户认证到清算合规的金融主链路,核心是「资金零差错、风控毫秒级、容灾 RPO=0」。",
         "domain": {
             "title": "金融科技架构 · 业务×技术",
@@ -1408,7 +1408,7 @@ SCENARIOS = [
     },
     {
         "slug": "o2o", "cn": "O2O 本地生活", "en": "O2O Local Services",
-        "layer": "调度履约层", "color": "#fb923c", "color2": "#f97316",
+        "layer": "调度履约层", "color": "#4a7fd0", "color2": "#3a4a63",
         "tagline": "美团 / 大众点评 / 饿了么 —— 从附近搜索到实时配送的本地生活主链路,核心是「LBS 空间索引、智能调度、实时轨迹」。",
         "domain": {
             "title": "O2O 本地生活架构 · 业务×技术",
@@ -1431,7 +1431,7 @@ SCENARIOS = [
     },
     {
         "slug": "mobility", "cn": "出行物流", "en": "Mobility & Logistics",
-        "layer": "调度履约层", "color": "#22d3ee", "color2": "#2dd4bf",
+        "layer": "调度履约层", "color": "#c99a3a", "color2": "#8a6417",
         "tagline": "滴滴 / 顺丰 / 高德 —— 从地点输入到派单履约的时空调度主链路,核心是「LBS 空间索引、全局最优调度、实时轨迹履约闭环」。",
         "domain": {
             "title": "出行物流架构 · 业务×技术",
@@ -1454,7 +1454,7 @@ SCENARIOS = [
     },
     {
         "slug": "edu", "cn": "在线教育", "en": "Online Education",
-        "layer": "实时互动层", "color": "#a78bfa", "color2": "#8b5cf6",
+        "layer": "实时互动层", "color": "#2f9e6e", "color2": "#2f6b4e",
         "tagline": "腾讯课堂 / 猿辅导 / 好未来 —— 从试听到续费的教学主链路,核心是「大规模实时音视频、低延迟互动白板、AI 辅助教学」。",
         "domain": {
             "title": "在线教育架构 · 业务×技术",
@@ -1477,7 +1477,7 @@ SCENARIOS = [
     },
     {
         "slug": "health", "cn": "医疗健康", "en": "Digital Healthcare",
-        "layer": "合规安全层", "color": "#34d399", "color2": "#10b981",
+        "layer": "合规安全层", "color": "#2f9e6e", "color2": "#2f6b4e",
         "tagline": "平安好医生 / 微医 / 京东健康 —— 从分诊到慢病管理的诊疗主链路,核心是「电子病历 EMR、AI 辅助诊断、隐私合规医疗安全」。",
         "domain": {
             "title": "医疗健康架构 · 业务×技术",
@@ -1500,7 +1500,7 @@ SCENARIOS = [
     },
     {
         "slug": "saas", "cn": "企业服务 SaaS", "en": "Enterprise SaaS",
-        "layer": "多租户平台层", "color": "#f472b6", "color2": "#38bdf8",
+        "layer": "多租户平台层", "color": "#c99a3a", "color2": "#8a6417",
         "tagline": "钉钉 / 飞书 / Salesforce —— 从租户注册到续费升级的协同主链路,核心是「多租户隔离、细粒度权限、工作流引擎」。",
         "domain": {
             "title": "企业服务 SaaS 架构 · 业务×技术",
@@ -1544,32 +1544,26 @@ def build_scenarios_cards():
     # 并移除其 presentation hex,让 index.html 里的 ag-* 深浅主题 CSS 生效(暗色不露白)。
     # 场景卡的分类彩色描边(stroke=#0071e3/#7c3aed/#34c759/#ff9f0a)保留不动,作为四分类语义色。
     svg_inline = svg_inline.replace('fill="#fbfbfd" class="ag-bg"', 'class="ag-bg"')
-    svg_inline = svg_inline.replace('stroke="#8a8f98" class="ag-line"', 'class="ag-line"')
+    svg_inline = svg_inline.replace('stroke="#a1a1a6" class="ag-line"', 'class="ag-line"')
     # 层容器 band(浅灰底)
-    svg_inline = svg_inline.replace('fill="#f4f4f7" stroke="#dcdce2" class="ag-band"', 'class="ag-band"')
+    svg_inline = svg_inline.replace('fill="#f4f4f6" stroke="#e4e7ec" class="ag-band"', 'class="ag-band"')
     # 上层四分类语义色分区 band(sf-band-pay/disc/social/growth):去 SVG 里的 fill=url(#xxxBand)+stroke，
     # 保留 sf-band-* class 由 index.html CSS 接管——亮色浅语义色、暗色各自深语义色(保分区色差,勿收敛成单色)。
     svg_inline = re.sub(
-        r'fill="url\(#sf\w+Band\)" stroke="#[0-9a-fA-F]{6}" (class="sf-band-\w+")',
+        r'fill="#[0-9a-fA-F]{6}" stroke="#[0-9a-fA-F]{6}" (class="sf-band-\w+")',
         r'\1', svg_inline)
     # 分类彩色标题(sf-cat-*):保留彩色 fill 作为四分类语义主色,不动。
-    # 旧结构白卡场景卡(stroke-width 1.6):去白 fill 挂 ag-card,保留彩色描边。
-    for _sk in ("#0071e3", "#7c3aed", "#34c759", "#ff9f0a"):
-        svg_inline = svg_inline.replace(
-            'fill="#ffffff" stroke="%s" stroke-width="1.6" class="sc-scene"' % _sk,
-            'stroke="%s" stroke-width="1.6" class="ag-card sc-scene"' % _sk)
-    # 新结构分类浅底场景卡(stroke-width 1.4 + sc-<cat>):去浅底 fill,保留 sc-scene sc-<cat> class
-    # 由 CSS 接管(亮色浅语义色/暗色深语义色),彩色描边保留。
+    # 场景卡(白底 #ffffff + 柔和语义色描边 stroke-width 1.2 + sc-scene sc-<cat>):
+    # 去白底 fill,保留彩色描边 + class,由 CSS 接管(亮色白底/暗色深底,不露白)。
     svg_inline = re.sub(
-        r'fill="#[0-9a-fA-F]{6}" (stroke="#[0-9a-fA-F]{6}" stroke-width="1\.4" class="sc-scene sc-\w+")',
+        r'fill="#ffffff" (stroke="#[0-9a-fA-F]{6}" stroke-width="1\.2" class="sc-scene sc-\w+")',
         r'\1', svg_inline)
     # 底层基础设施白卡
     svg_inline = svg_inline.replace(
-        'fill="#ffffff" stroke="#e4e4ec" class="ag-card"', 'class="ag-card"')
-    # 浅底 tint 小卡(4 种浅色,同 _tint_fills 语义)
-    for _tk in ("#f8fafc", "#f1f5f9", "#fcf4ff", "#fffcf0"):
-        svg_inline = svg_inline.replace(
-            'fill="%s" class="ag-tint"' % _tk, 'class="ag-tint"')
+        'fill="#ffffff" stroke="#e4e7ec" class="ag-card"', 'class="ag-card"')
+    # 浅底 tint 小卡(中层 7 组件,统一中性浅底)
+    svg_inline = svg_inline.replace(
+        'fill="#f6f7f9" stroke="#d7d7dd" class="ag-tint"', 'class="ag-tint"')
     # 分类灰字标签
     svg_inline = svg_inline.replace('fill="#8a8a8e" class="ag-sub"', 'class="ag-sub"')
     # 组件/基础设施卡内灰副标题
@@ -1588,10 +1582,10 @@ def build_scenarios_cards():
     # 热区 hover 高亮的 --accent 必须与其所属分区语义色一致(否则悬停边框/淡底
     # 颜色与分区背景不契合)。四分类语义主色:交易蓝/内容紫/实时绿/服务橙。
     _SCEN_ACCENT = {
-        "ecommerce": "#0071e3", "fintech": "#0071e3", "o2o": "#0071e3",
-        "social": "#7c3aed", "video": "#7c3aed",
-        "game": "#34c759", "edu": "#34c759", "health": "#34c759",
-        "mobility": "#ff9f0a", "saas": "#ff9f0a",
+        "ecommerce": "#4a7fd0", "fintech": "#4a7fd0", "o2o": "#4a7fd0",
+        "social": "#8a5cae", "video": "#8a5cae",
+        "game": "#2f9e6e", "edu": "#2f9e6e", "health": "#2f9e6e",
+        "mobility": "#c99a3a", "saas": "#c99a3a",
     }
     hot_html = []
     for el in root.iter():
@@ -3085,7 +3079,9 @@ footer{margin-top:40px;text-align:center;color:var(--c-sub);font-size:12px}
         '<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8">'
         '<meta name="viewport" content="width=device-width,initial-scale=1">'
         '<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 40 40\'%3E%3Crect width=\'40\' height=\'40\' rx=\'9\' fill=\'%23bfe0f5\'/%3E%3Ccircle cx=\'12.5\' cy=\'11.5\' r=\'4\' fill=\'%23fff\'/%3E%3Ccircle cx=\'27.5\' cy=\'11.5\' r=\'4\' fill=\'%23fff\'/%3E%3Ccircle cx=\'12.5\' cy=\'11.5\' r=\'1.6\' fill=\'%23e2e2e6\'/%3E%3Ccircle cx=\'27.5\' cy=\'11.5\' r=\'1.6\' fill=\'%23e2e2e6\'/%3E%3Cpath d=\'M8 19 Q8 9 20 9 Q32 9 32 19 Q32 30 20 31 Q8 30 8 19 Z\' fill=\'%23fff\' stroke=\'%238a8a8f\' stroke-width=\'1.4\'/%3E%3Cellipse cx=\'20\' cy=\'24\' rx=\'5.5\' ry=\'4.2\' fill=\'%23eef1f4\' stroke=\'%238a8a8f\' stroke-width=\'1.2\'/%3E%3Ccircle cx=\'16.5\' cy=\'18\' r=\'1.7\' fill=\'%231d1d1f\'/%3E%3Ccircle cx=\'23.5\' cy=\'18\' r=\'1.7\' fill=\'%231d1d1f\'/%3E%3Cellipse cx=\'20\' cy=\'22.5\' rx=\'2.4\' ry=\'1.8\' fill=\'%231d1d1f\'/%3E%3C/svg%3E">'
-        '<title>{cn} · 核心技术点</title><style>{css}</style></head>'
+        '<title>{cn} · 核心技术点</title>'
+        '<script>(function(){{try{{var s=localStorage.getItem("atlas-nav-theme")||"dark";if(s==="light")document.documentElement.setAttribute("data-theme","light");}}catch(e){{}}}})();</script>'
+        '<style>{css}</style></head>'
         '<body style="--accent:{accent}">'
         '<header class="top">'
         '<a class="logo" href="../../index.html#scenario" title="返回业务场景导航">'
@@ -3218,7 +3214,9 @@ TEMPLATE = r"""<!DOCTYPE html>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='9' fill='%23bfe0f5'/%3E%3Ccircle cx='12.5' cy='11.5' r='4' fill='%23fff'/%3E%3Ccircle cx='27.5' cy='11.5' r='4' fill='%23fff'/%3E%3Ccircle cx='12.5' cy='11.5' r='1.6' fill='%23e2e2e6'/%3E%3Ccircle cx='27.5' cy='11.5' r='1.6' fill='%23e2e2e6'/%3E%3Cpath d='M8 19 Q8 9 20 9 Q32 9 32 19 Q32 30 20 31 Q8 30 8 19 Z' fill='%23fff' stroke='%238a8a8f' stroke-width='1.4'/%3E%3Cellipse cx='20' cy='24' rx='5.5' ry='4.2' fill='%23eef1f4' stroke='%238a8a8f' stroke-width='1.2'/%3E%3Ccircle cx='16.5' cy='18' r='1.7' fill='%231d1d1f'/%3E%3Ccircle cx='23.5' cy='18' r='1.7' fill='%231d1d1f'/%3E%3Cellipse cx='20' cy='22.5' rx='2.4' ry='1.8' fill='%231d1d1f'/%3E%3C/svg%3E"/>
 <title>工程技术图谱 · 计算机体系架构导航</title>
+<script>(function(){try{var s=localStorage.getItem("atlas-nav-theme")||"light";if(s==="dark")document.documentElement.setAttribute("data-theme","dark");}catch(e){}})();</script>
 <style>
+:root{color-scheme:light dark}
 :root{
   --c-bg:#fbfbfd; --c-bg2:#f5f5f7; --c-panel:#ffffff; --c-panel2:#f5f5f7;
   --c-line:rgba(0,0,0,.09); --c-line2:rgba(0,0,0,.13);
@@ -3383,23 +3381,32 @@ body{font-family:var(--sans);color:var(--c-ink);min-height:100vh;-webkit-font-sm
 /* 内联总架构图:中性色随主题;品牌语义色保留 */
 .arch-svg .ag-bg{fill:#fbfbfd}
 .arch-svg .ag-card{fill:#ffffff;stroke:#c7c7cf !important;stroke-width:1.2}
-.arch-svg .ag-band{fill:#f4f4f7;stroke:#e2e2e8 !important;stroke-width:1.2}
-.arch-svg .ag-tint{fill:#f0f0f4;stroke:#d6d6de !important;stroke-width:1.1}
+.arch-svg .ag-band{fill:#f4f4f6;stroke:#e4e7ec !important;stroke-width:1.2}
+.arch-svg .ag-tint{fill:#f6f7f9;stroke:#d7d7dd !important;stroke-width:1.1}
 .arch-svg .ag-sub{fill:#8a8a8e}
 .arch-svg .ag-title{fill:#1d1d1f}
-.arch-svg .ag-line{stroke:#c2c4cc}
-/* 业务场景四分类:Apple 工业风克制中性化——分区 band 收敛到近中性极淡底(仅留一丝语义色相),
-   场景卡改纯白,四分类色差靠彩色标题(sf-cat-*)+卡描边(stroke)点睛,不再大面积浅彩,留白更多、更克制 */
-.arch-svg .sf-band-pay{fill:#f7f8fa;stroke:#eceef2 !important}
-.arch-svg .sf-band-disc{fill:#f8f7fa;stroke:#eeecf2 !important}
-.arch-svg .sf-band-social{fill:#f7f9f8;stroke:#eceef0 !important}
-.arch-svg .sf-band-growth{fill:#faf9f7;stroke:#f0eeec !important}
+.arch-svg .ag-line{stroke:#a1a1a6}
+/* 业务场景四分类:对齐 Replication 柔和语义色 Apple 工业风——分区 band 用柔和语义浅底
+   (蓝/紫/绿/金,克制不刺眼),场景卡纯白 + 柔和语义色描边,四分类色差靠彩标题+柔和浅底+卡描边点睛 */
+.arch-svg .sf-band-pay{fill:#eaf1fb;stroke:#c6d9f2 !important}
+.arch-svg .sf-band-disc{fill:#f4eefb;stroke:#dcc9ef !important}
+.arch-svg .sf-band-social{fill:#eaf6f0;stroke:#bfe3d1 !important}
+.arch-svg .sf-band-growth{fill:#fbf3e2;stroke:#ecd6a8 !important}
 .arch-svg .sc-pay{fill:#ffffff}
 .arch-svg .sc-disc{fill:#ffffff}
 .arch-svg .sc-social{fill:#ffffff}
 .arch-svg .sc-growth{fill:#ffffff}
-/* 场景卡彩描边减细为点睛级(1.4->1),配合中性白底更克制 */
-.arch-svg .sc-scene{stroke-width:1}
+/* 场景卡柔和语义色描边(1.2),配合纯白底克制点睛 */
+.arch-svg .sc-scene{stroke-width:1.2}
+/* 分类彩色标题(sf-cat-*):亮色柔和语义深字 / 暗色柔和语义亮字(!important 覆盖 SVG 硬编码 fill) */
+.arch-svg .sf-cat-pay{fill:#20375e !important}
+.arch-svg .sf-cat-disc{fill:#6f3ea8 !important}
+.arch-svg .sf-cat-social{fill:#2f6b4e !important}
+.arch-svg .sf-cat-growth{fill:#8a6417 !important}
+:root[data-theme="dark"] .arch-svg .sf-cat-pay{fill:#7aa5e0 !important}
+:root[data-theme="dark"] .arch-svg .sf-cat-disc{fill:#b58ed6 !important}
+:root[data-theme="dark"] .arch-svg .sf-cat-social{fill:#6bc79a !important}
+:root[data-theme="dark"] .arch-svg .sf-cat-growth{fill:#d6b463 !important}
 :root[data-theme="dark"] .arch-svg .ag-bg{fill:#15161a}
 :root[data-theme="dark"] .arch-svg .ag-card{fill:#22242b;stroke:#4a4d57 !important}
 :root[data-theme="dark"] .arch-svg .ag-band{fill:#1b1d23;stroke:#33353d !important}

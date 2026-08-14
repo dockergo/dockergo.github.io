@@ -642,6 +642,7 @@ def _head(title):
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>%s</title>
+<script>(function(){try{var s=localStorage.getItem('atlas-nav-theme');if(s==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();</script>
 <style>%s</style>
 </head>
 <body>""" % (esc(title), CSS))

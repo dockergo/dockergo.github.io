@@ -2427,6 +2427,7 @@ HTML_SHELL = r"""<!DOCTYPE html>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>Doris 引擎 · 交互式代码地图</title>
+<script>(function(){try{var s=localStorage.getItem('atlas-nav-theme');if(s==='light')document.documentElement.setAttribute('data-theme','light');}catch(e){}})();</script>
 <style>
 :root{
   --bg:#08090c; --bg2:#0d0f14; --panel:#14171e; --panel2:#0e1116;

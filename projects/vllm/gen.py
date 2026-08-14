@@ -524,6 +524,7 @@ def build_html():
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>{sub} · 原理图谱</title>
+<script>(function(){{try{{var s=localStorage.getItem('atlas-nav-theme');if(s==='dark')document.documentElement.setAttribute('data-theme','dark');}}catch(e){{}}}})();</script>
 <style>{css}</style>
 </head>
 <body>

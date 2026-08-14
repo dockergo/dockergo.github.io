@@ -292,6 +292,7 @@ TEMPLATE = r"""<!DOCTYPE html>
 <html lang="zh-CN"><head><meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>Redis 原理 · 交互式核心原理图谱</title>
+<script>(function(){try{var s=localStorage.getItem('atlas-nav-theme');if(s==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();</script>
 <style>
 :root{ --c-bg:#1c1c1e; --c-bg2:#161618; --c-panel:#242426; --c-panel2:#2c2c2e;
   --c-line:rgba(255,255,255,.11); --c-line2:rgba(255,255,255,.17);
